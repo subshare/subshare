@@ -1,16 +1,26 @@
-subprojects {
+allprojects {
     apply plugin: 'java'
-    apply plugin: 'eclipse'
+    apply plugin: 'maven'
+    group = 'org.subshare'
+    version = '0.1.0-SNAPSHOT'
 
     repositories {
-       mavenCentral()
+        mavenCentral()
+        mavenLocal()
+//        maven {
+//            url "http://codewizards.co/maven"
+//        }
     }
+
+   	project.ext.cloudstoreVersion = '0.9.5-SNAPSHOT'
+}
+
+subprojects {
+    apply plugin: 'eclipse'
 
     dependencies {
         testCompile 'junit:junit:4.8.2'
     }
-
-    version = '0.1.0-SNAPSHOT'
 
     jar {
         manifest.attributes provider: 'CodeWizards GmbH / SubShare Team'
