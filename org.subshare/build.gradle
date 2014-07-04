@@ -7,9 +7,12 @@ allprojects {
     repositories {
         mavenCentral()
         mavenLocal()
-//        maven {
-//            url "http://codewizards.co/maven"
-//        }
+        maven {
+            url "http://cloudstore.codewizards.co/maven/snapshot"
+        }
+        maven {
+            url "http://cloudstore.codewizards.co/maven/release"
+        }
     }
 
    	project.ext.cloudstoreVersion = '0.9.5-SNAPSHOT'
