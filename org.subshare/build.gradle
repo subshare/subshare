@@ -4,6 +4,11 @@ allprojects {
     group = 'org.subshare'
     version = '0.1.0-SNAPSHOT'
 
+	sourceCompatibility = JavaVersion.VERSION_1_6
+    targetCompatibility = JavaVersion.VERSION_1_6
+
+   	[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+
     repositories {
         mavenCentral()
         mavenLocal()
@@ -15,14 +20,17 @@ allprojects {
         }
     }
 
+   	project.ext.bouncycastleVersion = '1.50'
    	project.ext.cloudstoreVersion = '0.9.5-SNAPSHOT'
+   	project.ext.slf4jVersion = '1.7.5'
 }
 
 subprojects {
     apply plugin: 'eclipse'
 
     dependencies {
-        testCompile 'junit:junit:4.8.2'
+		compile "org.slf4j:slf4j-api:$slf4jVersion"
+        testCompile 'junit:junit:4.11', 'org.assertj:assertj-core:1.5.0'
     }
 
     jar {

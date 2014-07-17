@@ -1,2 +1,2 @@
 
-include "org.subshare.core", "org.subshare.rest.shared"
+include "org.subshare.core", "org.subshare.crypto", "org.subshare.rest.shared"
