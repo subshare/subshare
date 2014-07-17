@@ -33,9 +33,9 @@ import org.subshare.crypto.CipherOperationMode;
  */
 public class AEADBlockCipherImpl extends AbstractCipher
 {
-	private AEADBlockCipher delegate;
+	private final AEADBlockCipher delegate;
 
-	public AEADBlockCipherImpl(String transformation, AEADBlockCipher delegate) {
+	public AEADBlockCipherImpl(final String transformation, final AEADBlockCipher delegate) {
 		super(transformation);
 		this.delegate = delegate;
 	}
@@ -56,31 +56,31 @@ public class AEADBlockCipherImpl extends AbstractCipher
 	}
 
 	@Override
-	public int getUpdateOutputSize(int length) {
+	public int getUpdateOutputSize(final int length) {
 		return delegate.getUpdateOutputSize(length);
 	}
 
 	@Override
-	public int getOutputSize(int length) {
+	public int getOutputSize(final int length) {
 		return delegate.getOutputSize(length);
 	}
 
 	@Override
-	public int update(byte in, byte[] out, int outOff)
+	public int update(final byte in, final byte[] out, final int outOff)
 	throws DataLengthException, IllegalStateException, CryptoException
 	{
 		return delegate.processByte(in, out, outOff);
 	}
 
 	@Override
-	public int update(byte[] in, int inOff, int inLen, byte[] out, int outOff)
+	public int update(final byte[] in, final int inOff, final int inLen, final byte[] out, final int outOff)
 	throws DataLengthException, IllegalStateException, CryptoException
 	{
 		return delegate.processBytes(in, inOff, inLen, out, outOff);
 	}
 
 	@Override
-	public int doFinal(byte[] out, int outOff)
+	public int doFinal(final byte[] out, final int outOff)
 	throws DataLengthException, IllegalStateException, CryptoException
 	{
 		return delegate.doFinal(out, outOff);
@@ -93,7 +93,7 @@ public class AEADBlockCipherImpl extends AbstractCipher
 	{
 		int ivSize = this.ivSize;
 		if (ivSize < 0) {
-			BlockCipher underlyingCipher = delegate.getUnderlyingCipher();
+			final BlockCipher underlyingCipher = delegate.getUnderlyingCipher();
 
 			if (underlyingCipher instanceof CFBBlockCipher)
 				ivSize = ((CFBBlockCipher)underlyingCipher).getUnderlyingCipher().getBlockSize();
@@ -112,7 +112,7 @@ public class AEADBlockCipherImpl extends AbstractCipher
 	}
 
 	@Override
-	protected void _init(CipherOperationMode mode, CipherParameters parameters)
+	protected void _init(final CipherOperationMode mode, final CipherParameters parameters)
 	throws IllegalArgumentException
 	{
 		delegate.init(CipherOperationMode.ENCRYPT == mode, parameters);
@@ -130,7 +130,7 @@ public class AEADBlockCipherImpl extends AbstractCipher
 //	{
 //		String algorithmName = CryptoRegistry.splitTransformation(getTransformation())[0];
 //		try {
-//			return CryptoRegistry.sharedInstance().createSecretKeyGenerator(algorithmName, initWithDefaults);
+//			return CryptoRegistry.getInstance().createSecretKeyGenerator(algorithmName, initWithDefaults);
 //		} catch (NoSuchAlgorithmException e) {
 //			throw new RuntimeException(e); // We should be able to provide an SecretKeyGenerator for every Cipher => RuntimeException
 //		}

@@ -35,7 +35,7 @@ public class SecretKeyGeneratorImpl implements SecretKeyGenerator
 	private SecureRandom random;
 
 	@Override
-	public void init(KeyGenerationParameters params)
+	public void init(final KeyGenerationParameters params)
 	{
 		strength = 0;
 		random = null;
@@ -60,7 +60,7 @@ public class SecretKeyGeneratorImpl implements SecretKeyGenerator
 		if (random == null)
 			throw new IllegalStateException("init(...) was not yet called!");
 
-		byte[] key = new byte[strengthInBytes];
+		final byte[] key = new byte[strengthInBytes];
 		random.nextBytes(key);
 		return new KeyParameter(key);
 	}

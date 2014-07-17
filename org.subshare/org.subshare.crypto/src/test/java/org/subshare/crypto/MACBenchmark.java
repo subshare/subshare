@@ -29,7 +29,7 @@ public class MACBenchmark
 	@BeforeClass
 	public static void beforeClass()
 	{
-		CryptoRegistry.sharedInstance();
+		CryptoRegistry.getInstance();
 	}
 
 	@Test
@@ -37,7 +37,7 @@ public class MACBenchmark
 	throws Exception
 	{
 		for (int i = 0; i < ITERATION_COUNT; ++i) {
-			CryptoRegistry.sharedInstance().createMACCalculator(MAC_ALGORITHM, true);
+			CryptoRegistry.getInstance().createMACCalculator(MAC_ALGORITHM, true);
 		}
 	}
 
@@ -46,7 +46,7 @@ public class MACBenchmark
 	throws Exception
 	{
 		for (int i = 0; i < ITERATION_COUNT; ++i) {
-			CryptoRegistry.sharedInstance().createMACCalculator(MAC_ALGORITHM, false);
+			CryptoRegistry.getInstance().createMACCalculator(MAC_ALGORITHM, false);
 		}
 	}
 
@@ -57,7 +57,7 @@ public class MACBenchmark
 		byte[] data = new byte[10240 + random.nextInt(4096)];
 		random.nextBytes(data);
 
-		MACCalculator macCalculator = CryptoRegistry.sharedInstance().createMACCalculator(MAC_ALGORITHM, true);
+		MACCalculator macCalculator = CryptoRegistry.getInstance().createMACCalculator(MAC_ALGORITHM, true);
 		for (int i = 0; i < ITERATION_COUNT; ++i) {
 			byte[] mac = new byte[macCalculator.getMacSize()];
 			macCalculator.update(data, 0, data.length);
@@ -73,7 +73,7 @@ public class MACBenchmark
 		random.nextBytes(data);
 
 		for (int i = 0; i < ITERATION_COUNT; ++i) {
-			MACCalculator macCalculator = CryptoRegistry.sharedInstance().createMACCalculator(MAC_ALGORITHM, true);
+			MACCalculator macCalculator = CryptoRegistry.getInstance().createMACCalculator(MAC_ALGORITHM, true);
 			byte[] mac = new byte[macCalculator.getMacSize()];
 			macCalculator.update(data, 0, data.length);
 			macCalculator.doFinal(mac, 0);

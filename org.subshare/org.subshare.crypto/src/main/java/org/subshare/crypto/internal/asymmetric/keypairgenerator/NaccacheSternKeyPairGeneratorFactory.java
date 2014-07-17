@@ -31,9 +31,9 @@ extends AbstractAsymmetricCipherKeyPairGeneratorFactory
 	}
 
 	@Override
-	public AsymmetricCipherKeyPairGenerator createAsymmetricCipherKeyPairGenerator(boolean initWithDefaults)
+	public AsymmetricCipherKeyPairGenerator createAsymmetricCipherKeyPairGenerator(final boolean initWithDefaults)
 	{
-		NaccacheSternKeyPairGenerator generator = new NaccacheSternKeyPairGenerator();
+		final NaccacheSternKeyPairGenerator generator = new NaccacheSternKeyPairGenerator();
 
 		// TODO implement meaningful and secure defaults!
 		if (initWithDefaults)

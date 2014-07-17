@@ -46,10 +46,10 @@ public class MACTest
 	{
 		byte[] orig = new byte[1024 + random.nextInt(10240)];
 		random.nextBytes(orig);
-		for (String macAlgorithmName : CryptoRegistry.sharedInstance().getSupportedMACAlgorithms()) {
+		for (String macAlgorithmName : CryptoRegistry.getInstance().getSupportedMACAlgorithms()) {
 			logger.debug("------------------------------------------------------------------------");
 			logger.debug("testAllSupportedMACs: macAlgorithmName={}", macAlgorithmName);
-			MACCalculator macCalculator1 = CryptoRegistry.sharedInstance().createMACCalculator(macAlgorithmName, true);
+			MACCalculator macCalculator1 = CryptoRegistry.getInstance().createMACCalculator(macAlgorithmName, true);
 			Assert.assertNotNull("CryptoRegistry.createMACCalculator(...) returned null for macAlgorithmName=" + macAlgorithmName, macCalculator1);
 			byte[] mac1 = new byte[macCalculator1.getMacSize()];
 			macCalculator1.update(orig, 0, orig.length);
@@ -72,7 +72,7 @@ public class MACTest
 			logger.debug("testAllSupportedMACs: macKey={}", HashUtil.encodeHexStr(macKey));
 			logger.debug("testAllSupportedMACs: macIV={}", macIV == null ? null : HashUtil.encodeHexStr(macIV));
 
-			MACCalculator macCalculator2 = CryptoRegistry.sharedInstance().createMACCalculator(macAlgorithmName, false);
+			MACCalculator macCalculator2 = CryptoRegistry.getInstance().createMACCalculator(macAlgorithmName, false);
 			CipherParameters macCipherParameters2 = null;
 			if (macIV == null)
 				macCipherParameters2 = new KeyParameter(macKey);
@@ -94,7 +94,7 @@ public class MACTest
 			if (macIV != null) {
 				byte[] wrongMACIV = macIV.clone();
 				random.nextBytes(wrongMACIV);
-				MACCalculator macCalculator3 = CryptoRegistry.sharedInstance().createMACCalculator(macAlgorithmName, false);
+				MACCalculator macCalculator3 = CryptoRegistry.getInstance().createMACCalculator(macAlgorithmName, false);
 				CipherParameters macCipherParameters3 = new ParametersWithIV(new KeyParameter(macKey), wrongMACIV);
 				byte[] mac3 = new byte[macCalculator3.getMacSize()];
 				macCalculator3.init(macCipherParameters3);
@@ -110,7 +110,7 @@ public class MACTest
 			{
 				byte[] wrongMACKey = macKey.clone();
 				random.nextBytes(wrongMACKey);
-				MACCalculator macCalculator4 = CryptoRegistry.sharedInstance().createMACCalculator(macAlgorithmName, false);
+				MACCalculator macCalculator4 = CryptoRegistry.getInstance().createMACCalculator(macAlgorithmName, false);
 
 				CipherParameters macCipherParameters4 = null;
 				if (macIV == null)

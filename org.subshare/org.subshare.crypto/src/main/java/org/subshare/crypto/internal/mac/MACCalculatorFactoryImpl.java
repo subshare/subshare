@@ -53,7 +53,7 @@ extends AbstractMACCalculatorFactory
 	{
 		@Override
 		public MACCalculator _createMACCalculator() {
-			BlockCipher cipher = new DESEngine();
+			final BlockCipher cipher = new DESEngine();
 			return new MACCalculatorImpl(new CBCBlockCipherMac(cipher), cipher.getBlockSize(), cipher.getBlockSize());
 		}
 	}
@@ -63,7 +63,7 @@ extends AbstractMACCalculatorFactory
 	{
 		@Override
 		public MACCalculator _createMACCalculator() {
-			BlockCipher cipher = new DESEngine();
+			final BlockCipher cipher = new DESEngine();
 			return new MACCalculatorImpl(new CBCBlockCipherMac(cipher, 64), cipher.getBlockSize(), cipher.getBlockSize());
 		}
 	}
@@ -73,7 +73,7 @@ extends AbstractMACCalculatorFactory
 	{
 		@Override
 		public MACCalculator _createMACCalculator() {
-			BlockCipher cipher = new RC2Engine();
+			final BlockCipher cipher = new RC2Engine();
 			return new MACCalculatorImpl(new CBCBlockCipherMac(cipher), cipher.getBlockSize(), cipher.getBlockSize());
 		}
 	}
@@ -92,7 +92,7 @@ extends AbstractMACCalculatorFactory
 	{
 		@Override
 		public MACCalculator _createMACCalculator() {
-			BlockCipher cipher = new DESEngine();
+			final BlockCipher cipher = new DESEngine();
 			return new MACCalculatorImpl(new CFBBlockCipherMac(cipher), cipher.getBlockSize(), cipher.getBlockSize());
 		}
 	}
@@ -102,7 +102,7 @@ extends AbstractMACCalculatorFactory
 	{
 		@Override
 		public MACCalculator _createMACCalculator() {
-			BlockCipher cipher = new RC2Engine();
+			final BlockCipher cipher = new RC2Engine();
 			return new MACCalculatorImpl(new CFBBlockCipherMac(cipher), cipher.getBlockSize(), cipher.getBlockSize());
 		}
 	}
@@ -112,7 +112,7 @@ extends AbstractMACCalculatorFactory
 	{
 		@Override
 		public MACCalculator _createMACCalculator() {
-			BlockCipher cipher = new DESEngine();
+			final BlockCipher cipher = new DESEngine();
 			return new MACCalculatorImpl(new ISO9797Alg3Mac(cipher, new ISO7816d4Padding()), 24, cipher.getBlockSize());
 		}
 	}
@@ -122,7 +122,7 @@ extends AbstractMACCalculatorFactory
 	{
 		@Override
 		public MACCalculator _createMACCalculator() {
-			BlockCipher cipher = new DESEngine();
+			final BlockCipher cipher = new DESEngine();
 			return new MACCalculatorImpl(new ISO9797Alg3Mac(cipher), 24, cipher.getBlockSize());
 		}
 	}
@@ -132,7 +132,7 @@ extends AbstractMACCalculatorFactory
 	{
 		@Override
 		public MACCalculator _createMACCalculator() {
-			Digest digest = new MD2Digest();
+			final Digest digest = new MD2Digest();
 			return new MACCalculatorImpl(new HMac(digest), digest.getDigestSize(), 0); // IV not supported - throws exception when passing ParameterWithIV
 		}
 	}
@@ -142,7 +142,7 @@ extends AbstractMACCalculatorFactory
 	{
 		@Override
 		public MACCalculator _createMACCalculator() {
-			Digest digest = new MD4Digest();
+			final Digest digest = new MD4Digest();
 			return new MACCalculatorImpl(new HMac(digest), digest.getDigestSize(), 0); // IV not supported - throws exception when passing ParameterWithIV
 		}
 	}
@@ -152,7 +152,7 @@ extends AbstractMACCalculatorFactory
 	{
 		@Override
 		public MACCalculator _createMACCalculator() {
-			MD5Digest digest = new MD5Digest();
+			final MD5Digest digest = new MD5Digest();
 			return new MACCalculatorImpl(new HMac(digest), digest.getDigestSize(), 0); // IV not supported - throws exception when passing ParameterWithIV
 		}
 	}
@@ -162,7 +162,7 @@ extends AbstractMACCalculatorFactory
 	{
 		@Override
 		public MACCalculator _createMACCalculator() {
-			SHA1Digest digest = new SHA1Digest();
+			final SHA1Digest digest = new SHA1Digest();
 			return new MACCalculatorImpl(new HMac(digest), digest.getDigestSize(), 0); // IV not supported - throws exception when passing ParameterWithIV
 		}
 	}
@@ -172,7 +172,7 @@ extends AbstractMACCalculatorFactory
 	{
 		@Override
 		public MACCalculator _createMACCalculator() {
-			SHA224Digest digest = new SHA224Digest();
+			final SHA224Digest digest = new SHA224Digest();
 			return new MACCalculatorImpl(new HMac(digest), digest.getDigestSize(), 0); // IV not supported - throws exception when passing ParameterWithIV
 		}
 	}
@@ -182,7 +182,7 @@ extends AbstractMACCalculatorFactory
 	{
 		@Override
 		public MACCalculator _createMACCalculator() {
-			SHA256Digest digest = new SHA256Digest();
+			final SHA256Digest digest = new SHA256Digest();
 			return new MACCalculatorImpl(new HMac(digest), digest.getDigestSize(), 0); // IV not supported - throws exception when passing ParameterWithIV
 		}
 	}
@@ -192,7 +192,7 @@ extends AbstractMACCalculatorFactory
 	{
 		@Override
 		public MACCalculator _createMACCalculator() {
-			SHA384Digest digest = new SHA384Digest();
+			final SHA384Digest digest = new SHA384Digest();
 			return new MACCalculatorImpl(new HMac(digest), digest.getDigestSize(), 0); // IV not supported - throws exception when passing ParameterWithIV
 		}
 	}
@@ -206,7 +206,7 @@ extends AbstractMACCalculatorFactory
 	{
 		@Override
 		public MACCalculator _createMACCalculator() {
-			SHA384Digest digest = new SHA384Digest();
+			final SHA384Digest digest = new SHA384Digest();
 			return new MACCalculatorImpl(new OldHMac(digest), digest.getDigestSize(), 0); // IV not supported - throws exception when passing ParameterWithIV
 		}
 	}
@@ -216,7 +216,7 @@ extends AbstractMACCalculatorFactory
 	{
 		@Override
 		public MACCalculator _createMACCalculator() {
-			SHA512Digest digest = new SHA512Digest();
+			final SHA512Digest digest = new SHA512Digest();
 			return new MACCalculatorImpl(new HMac(digest), digest.getDigestSize(), 0); // IV not supported - throws exception when passing ParameterWithIV
 		}
 	}
@@ -230,7 +230,7 @@ extends AbstractMACCalculatorFactory
 	{
 		@Override
 		public MACCalculator _createMACCalculator() {
-			SHA512Digest digest = new SHA512Digest();
+			final SHA512Digest digest = new SHA512Digest();
 			return new MACCalculatorImpl(new OldHMac(digest), digest.getDigestSize(), 0); // IV not supported - throws exception when passing ParameterWithIV
 		}
 	}
@@ -240,7 +240,7 @@ extends AbstractMACCalculatorFactory
 	{
 		@Override
 		public MACCalculator _createMACCalculator() {
-			RIPEMD128Digest digest = new RIPEMD128Digest();
+			final RIPEMD128Digest digest = new RIPEMD128Digest();
 			return new MACCalculatorImpl(new HMac(digest), digest.getDigestSize(), 0); // IV not supported - throws exception when passing ParameterWithIV
 		}
 	}
@@ -250,7 +250,7 @@ extends AbstractMACCalculatorFactory
 	{
 		@Override
 		public MACCalculator _createMACCalculator() {
-			RIPEMD160Digest digest = new RIPEMD160Digest();
+			final RIPEMD160Digest digest = new RIPEMD160Digest();
 			return new MACCalculatorImpl(new HMac(digest), digest.getDigestSize(), 0); // IV not supported - throws exception when passing ParameterWithIV
 		}
 	}
@@ -260,7 +260,7 @@ extends AbstractMACCalculatorFactory
 	{
 		@Override
 		public MACCalculator _createMACCalculator() {
-			TigerDigest digest = new TigerDigest();
+			final TigerDigest digest = new TigerDigest();
 			return new MACCalculatorImpl(new HMac(digest), digest.getDigestSize(), 0); // IV not supported - throws exception when passing ParameterWithIV
 		}
 	}

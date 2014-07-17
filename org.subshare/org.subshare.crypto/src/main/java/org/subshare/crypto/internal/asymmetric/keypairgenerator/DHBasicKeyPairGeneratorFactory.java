@@ -31,9 +31,9 @@ extends AbstractAsymmetricCipherKeyPairGeneratorFactory
 	}
 
 	@Override
-	public AsymmetricCipherKeyPairGenerator createAsymmetricCipherKeyPairGenerator(boolean initWithDefaults)
+	public AsymmetricCipherKeyPairGenerator createAsymmetricCipherKeyPairGenerator(final boolean initWithDefaults)
 	{
-		DHBasicKeyPairGenerator generator = new DHBasicKeyPairGenerator();
+		final DHBasicKeyPairGenerator generator = new DHBasicKeyPairGenerator();
 
 		// TODO implement meaningful and secure defaults!
 		if (initWithDefaults)

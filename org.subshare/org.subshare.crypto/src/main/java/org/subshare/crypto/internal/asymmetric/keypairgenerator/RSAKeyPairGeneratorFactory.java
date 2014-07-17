@@ -40,9 +40,9 @@ extends AbstractAsymmetricCipherKeyPairGeneratorFactory
 	private SecureRandom random;
 
 	@Override
-	public AsymmetricCipherKeyPairGenerator createAsymmetricCipherKeyPairGenerator(boolean initWithDefaults)
+	public AsymmetricCipherKeyPairGenerator createAsymmetricCipherKeyPairGenerator(final boolean initWithDefaults)
 	{
-		RSAKeyPairGenerator generator = new RSAKeyPairGenerator();
+		final RSAKeyPairGenerator generator = new RSAKeyPairGenerator();
 
 		if (initWithDefaults) {
 			if (random == null)

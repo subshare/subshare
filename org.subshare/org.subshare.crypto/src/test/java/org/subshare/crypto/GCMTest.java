@@ -6,9 +6,6 @@ import org.bouncycastle.crypto.modes.AEADBlockCipher;
 import org.bouncycastle.crypto.modes.GCMBlockCipher;
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.bouncycastle.crypto.params.ParametersWithIV;
-import org.subshare.crypto.Cipher;
-import org.subshare.crypto.CipherOperationMode;
-import org.subshare.crypto.CryptoRegistry;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -34,8 +31,8 @@ public class GCMTest {
 //
 //		String transformation = "Twofish/GCM/NoPadding";
 ////		String transformation = "Twofish/CBC/PKCS5Padding";
-//		Cipher encrypter = CryptoRegistry.sharedInstance().createCipher(transformation);
-//		Cipher decrypter = CryptoRegistry.sharedInstance().createCipher(transformation);
+//		Cipher encrypter = CryptoRegistry.getInstance().createCipher(transformation);
+//		Cipher decrypter = CryptoRegistry.getInstance().createCipher(transformation);
 //
 ////		byte[] iv = new byte[encrypter.getIVSize()];
 ////		random.nextBytes(iv);
@@ -94,21 +91,21 @@ public class GCMTest {
 	@Test
 	public void testEncryptionWithCipher() throws Exception
 	{
-		byte[] plain = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 };
-		byte[] key = new byte[] {
+		final byte[] plain = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 };
+		final byte[] key = new byte[] {
 				 1,  2,  3,  4,  5,  6,  7,  8,
 				 9, 10, 11, 12, 13, 14, 15, 16,
 				17, 18, 19, 20, 21, 22, 23, 24,
 				25, 26, 27, 28, 29, 30, 31, 32
 		};
-		byte[] iv = new byte[] {
+		final byte[] iv = new byte[] {
 				 1,  2,  3,  4,  5,  6,  7,  8,
 				 9, 10, 11, 12, 13, 14, 15, 16
 		};
 		byte[] firstCiphertext = null;
 
-		Cipher cipher = CryptoRegistry.sharedInstance().createCipher("Twofish/GCM/NoPadding");
-//		Cipher cipher = CryptoRegistry.sharedInstance().createCipher("Twofish/CFB/NoPadding");
+		final Cipher cipher = CryptoRegistry.getInstance().createCipher("Twofish/GCM/NoPadding");
+//		Cipher cipher = CryptoRegistry.getInstance().createCipher("Twofish/CFB/NoPadding");
 		cipher.init(CipherOperationMode.ENCRYPT, new ParametersWithIV(new KeyParameter(key), iv));
 
 		for (int i = 0; i < 10000; ++i) {
@@ -119,7 +116,7 @@ public class GCMTest {
 			cipher.init(CipherOperationMode.ENCRYPT, new ParametersWithIV(null, iv));
 //			cipher.init(CipherOperationMode.ENCRYPT, new ParametersWithIV(new KeyParameter(key), iv));
 
-			byte[] ciphertext = cipher.doFinal(plain);
+			final byte[] ciphertext = cipher.doFinal(plain);
 			if (firstCiphertext == null)
 				firstCiphertext = ciphertext;
 			else
@@ -130,14 +127,14 @@ public class GCMTest {
 	@Test
 	public void testEncryptionWithBCLowLevelAPI() throws Exception
 	{
-		byte[] plain = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 };
-		byte[] key = new byte[] {
+		final byte[] plain = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 };
+		final byte[] key = new byte[] {
 				 1,  2,  3,  4,  5,  6,  7,  8,
 				 9, 10, 11, 12, 13, 14, 15, 16,
 				17, 18, 19, 20, 21, 22, 23, 24,
 				25, 26, 27, 28, 29, 30, 31, 32
 		};
-		byte[] iv = new byte[] {
+		final byte[] iv = new byte[] {
 				 1,  2,  3,  4,  5,  6,  7,  8,
 				 9, 10, 11, 12, 13, 14, 15, 16
 		};
@@ -169,10 +166,10 @@ public class GCMTest {
 
 
 		{ // now try GCM - fails on 'fhernhache', currently (2011-09-23).
-			CipherParameters parameters = new ParametersWithIV(new KeyParameter(key), iv);
+			final CipherParameters parameters = new ParametersWithIV(new KeyParameter(key), iv);
 			byte[] firstCiphertext = null;
 //			AEADParameters parameters = new AEADParameters(new KeyParameter(key), 128, iv, plain);
-			AEADBlockCipher cipher = new GCMBlockCipher(new TwofishEngine());
+			final AEADBlockCipher cipher = new GCMBlockCipher(new TwofishEngine());
 
 			cipher.init(true, parameters);
 
@@ -182,8 +179,8 @@ public class GCMTest {
 				// Whether we re-initialise with or without key does not matter.
 				cipher.init(true, parameters);
 
-				byte[] ciphertext = new byte[cipher.getOutputSize(plain.length)];
-				int encLength = cipher.processBytes(plain, 0, plain.length, ciphertext, 0);
+				final byte[] ciphertext = new byte[cipher.getOutputSize(plain.length)];
+				final int encLength = cipher.processBytes(plain, 0, plain.length, ciphertext, 0);
 				cipher.doFinal(ciphertext, encLength);
 
 				if (firstCiphertext == null)

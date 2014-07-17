@@ -39,19 +39,19 @@ public class AsymmetricKeyTest
 	public void encodeDecodeRSA()
 	throws Exception
 	{
-		AsymmetricCipherKeyPairGenerator keyPairGenerator = CryptoRegistry.sharedInstance().createKeyPairGenerator("RSA", true);
+		AsymmetricCipherKeyPairGenerator keyPairGenerator = CryptoRegistry.getInstance().createKeyPairGenerator("RSA", true);
 		AsymmetricCipherKeyPair keyPair = keyPairGenerator.generateKeyPair();
 
-		byte[] encodedPrivateKey = CryptoRegistry.sharedInstance().encodePrivateKey(keyPair.getPrivate());
-		byte[] encodedPublicKey = CryptoRegistry.sharedInstance().encodePublicKey(keyPair.getPublic());
+		byte[] encodedPrivateKey = CryptoRegistry.getInstance().encodePrivateKey(keyPair.getPrivate());
+		byte[] encodedPublicKey = CryptoRegistry.getInstance().encodePublicKey(keyPair.getPublic());
 
-		CipherParameters decodedPrivateKey = CryptoRegistry.sharedInstance().decodePrivateKey(encodedPrivateKey);
-		CipherParameters decodedPublicKey = CryptoRegistry.sharedInstance().decodePublicKey(encodedPublicKey);
+		CipherParameters decodedPrivateKey = CryptoRegistry.getInstance().decodePrivateKey(encodedPrivateKey);
+		CipherParameters decodedPublicKey = CryptoRegistry.getInstance().decodePublicKey(encodedPublicKey);
 
 		byte[] plainText = new byte[100 + secureRandom.nextInt(40)];
 		secureRandom.nextBytes(plainText);
 
-		Cipher cipher = CryptoRegistry.sharedInstance().createCipher("RSA");
+		Cipher cipher = CryptoRegistry.getInstance().createCipher("RSA");
 
 		cipher.init(CipherOperationMode.ENCRYPT, keyPair.getPublic());
 		byte[] encrypted1 = cipher.doFinal(plainText);

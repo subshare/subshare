@@ -36,15 +36,15 @@ import org.subshare.crypto.CryptoRegistry;
 public class BufferedBlockCipherImpl
 extends AbstractCipher
 {
-	private BufferedBlockCipher delegate;
+	private final BufferedBlockCipher delegate;
 
-	public BufferedBlockCipherImpl(String transformation, BufferedBlockCipher delegate) {
+	public BufferedBlockCipherImpl(final String transformation, final BufferedBlockCipher delegate) {
 		super(transformation);
 		this.delegate = delegate;
 	}
 
 	@Override
-	public void _init(CipherOperationMode mode, CipherParameters parameters)
+	public void _init(final CipherOperationMode mode, final CipherParameters parameters)
 	throws IllegalArgumentException
 	{
 		delegate.init(CipherOperationMode.ENCRYPT == mode, parameters);
@@ -68,31 +68,31 @@ extends AbstractCipher
 	}
 
 	@Override
-	public int getUpdateOutputSize(int len) {
+	public int getUpdateOutputSize(final int len) {
 		return delegate.getUpdateOutputSize(len);
 	}
 
 	@Override
-	public int getOutputSize(int length) {
+	public int getOutputSize(final int length) {
 		return delegate.getOutputSize(length);
 	}
 
 	@Override
-	public int update(byte in, byte[] out, int outOff)
+	public int update(final byte in, final byte[] out, final int outOff)
 	throws DataLengthException, IllegalStateException, CryptoException
 	{
 		return delegate.processByte(in, out, outOff);
 	}
 
 	@Override
-	public int update(byte[] in, int inOff, int len, byte[] out, int outOff)
+	public int update(final byte[] in, final int inOff, final int len, final byte[] out, final int outOff)
 	throws DataLengthException, IllegalStateException, CryptoException
 	{
 		return delegate.processBytes(in, inOff, len, out, outOff);
 	}
 
 	@Override
-	public int doFinal(byte[] out, int outOff)
+	public int doFinal(final byte[] out, final int outOff)
 	throws DataLengthException, IllegalStateException, CryptoException
 	{
 		return delegate.doFinal(out, outOff);
@@ -104,19 +104,19 @@ extends AbstractCipher
 	public int getIVSize()
 	{
 		if (ivSize < 0) {
-			String mode = CryptoRegistry.splitTransformation(getTransformation())[1];
+			final String mode = CryptoRegistry.splitTransformation(getTransformation())[1];
 			if ("".equals(mode) || "ECB".equals(mode))
 				ivSize = 0; // No block cipher mode (i.e. ECB) => no IV.
 			else {
 				if (delegate instanceof CTSBlockCipher) {
-					CTSBlockCipher cts = (CTSBlockCipher) delegate;
+					final CTSBlockCipher cts = (CTSBlockCipher) delegate;
 					if (cts.getUnderlyingCipher() instanceof CBCBlockCipher)
 						ivSize = cts.getUnderlyingCipher().getBlockSize();
 					else
 						ivSize = 0;
 				}
 				else {
-					BlockCipher underlyingCipher = delegate.getUnderlyingCipher();
+					final BlockCipher underlyingCipher = delegate.getUnderlyingCipher();
 
 					if (underlyingCipher instanceof CFBBlockCipher)
 						ivSize = ((CFBBlockCipher)underlyingCipher).getUnderlyingCipher().getBlockSize();
@@ -142,7 +142,7 @@ extends AbstractCipher
 //	{
 //		String algorithmName = CryptoRegistry.splitTransformation(getTransformation())[0];
 //		try {
-//			return CryptoRegistry.sharedInstance().createSecretKeyGenerator(algorithmName, initWithDefaults);
+//			return CryptoRegistry.getInstance().createSecretKeyGenerator(algorithmName, initWithDefaults);
 //		} catch (NoSuchAlgorithmException e) {
 //			throw new RuntimeException(e); // We should be able to provide an SecretKeyGenerator for every Cipher => RuntimeException
 //		}

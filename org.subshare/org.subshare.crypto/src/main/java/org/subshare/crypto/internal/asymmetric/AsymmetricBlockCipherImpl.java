@@ -30,15 +30,15 @@ import org.subshare.crypto.CipherOperationMode;
 public class AsymmetricBlockCipherImpl
 extends AbstractCipher
 {
-	private BufferedAsymmetricBlockCipher delegate;
+	private final BufferedAsymmetricBlockCipher delegate;
 
-	public AsymmetricBlockCipherImpl(String transformation, BufferedAsymmetricBlockCipher delegate) {
+	public AsymmetricBlockCipherImpl(final String transformation, final BufferedAsymmetricBlockCipher delegate) {
 		super(transformation);
 		this.delegate = delegate;
 	}
 
 	@Override
-	public void _init(CipherOperationMode mode, CipherParameters parameters) {
+	public void _init(final CipherOperationMode mode, final CipherParameters parameters) {
 		delegate.init(CipherOperationMode.ENCRYPT == mode, parameters);
 	}
 
@@ -58,17 +58,17 @@ extends AbstractCipher
 	}
 
 	@Override
-	public int getUpdateOutputSize(int length) {
+	public int getUpdateOutputSize(final int length) {
 		return getOutputSize(length); // this is not correct and very pessimistic, but for now, it is at least sth. that shouldn't produce any errors (the result should be >= the real value).
 	}
 
 	@Override
-	public int getOutputSize(int length) {
+	public int getOutputSize(final int length) {
 		return getOutputBlockSize(); // Copied this from org.bouncycastle.jce.provider.JCERSACipher.
 	}
 
 	@Override
-	public int update(byte in, byte[] out, int outOff)
+	public int update(final byte in, final byte[] out, final int outOff)
 	throws DataLengthException, IllegalStateException, CryptoException
 	{
 		delegate.processByte(in);
@@ -76,7 +76,7 @@ extends AbstractCipher
 	}
 
 	@Override
-	public int update(byte[] in, int inOff, int inLen, byte[] out, int outOff)
+	public int update(final byte[] in, final int inOff, final int inLen, final byte[] out, final int outOff)
 	throws DataLengthException, IllegalStateException, CryptoException
 	{
 		delegate.processBytes(in, inOff, inLen);
@@ -84,10 +84,10 @@ extends AbstractCipher
 	}
 
 	@Override
-	public int doFinal(byte[] out, int outOff)
+	public int doFinal(final byte[] out, final int outOff)
 	throws DataLengthException, IllegalStateException, CryptoException
 	{
-		byte[] encrypted = delegate.doFinal();
+		final byte[] encrypted = delegate.doFinal();
 		System.arraycopy(encrypted, 0, out, outOff, encrypted.length);
 		return encrypted.length;
 	}
@@ -102,7 +102,7 @@ extends AbstractCipher
 //	{
 //		String algorithmName = CryptoRegistry.splitTransformation(getTransformation())[0];
 //		try {
-//			return CryptoRegistry.sharedInstance().createKeyPairGenerator(algorithmName, initWithDefaults);
+//			return CryptoRegistry.getInstance().createKeyPairGenerator(algorithmName, initWithDefaults);
 //		} catch (NoSuchAlgorithmException e) {
 //			throw new RuntimeException(e); // We should be able to provide an Asymmetric...KeyPairGenerator for every Cipher => RuntimeException
 //		}

@@ -136,15 +136,15 @@ import org.slf4j.LoggerFactory;
 public final class CryptoRegistry
 {
 	private static final Logger logger = LoggerFactory.getLogger(CryptoRegistry.class);
-	private static CryptoRegistry sharedInstance = new CryptoRegistry();
+	private static final CryptoRegistry instance = new CryptoRegistry();
 
 	/**
 	 * Get the shared instance of this registry.
 	 * @return the shared instance.
 	 */
-	public static CryptoRegistry sharedInstance()
+	public static CryptoRegistry getInstance()
 	{
-		return sharedInstance;
+		return instance;
 	}
 
 	//////////////////// BEGIN cipher engines ////////////////////

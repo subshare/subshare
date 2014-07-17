@@ -9,7 +9,7 @@ import org.junit.Test;
  */
 public class ShowSupportedAlgosForDocumentation
 {
-	private static CryptoRegistry cryptoRegistry = CryptoRegistry.sharedInstance();
+	private static CryptoRegistry cryptoRegistry = CryptoRegistry.getInstance();
 
 	@Test
 	public void showSupportedCipherEngines() {

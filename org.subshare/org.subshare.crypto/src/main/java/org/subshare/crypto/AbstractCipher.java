@@ -29,9 +29,9 @@ import org.bouncycastle.crypto.DataLengthException;
  */
 public abstract class AbstractCipher implements Cipher
 {
-	private String transformation;
+	private final String transformation;
 
-	protected AbstractCipher(String transformation)
+	protected AbstractCipher(final String transformation)
 	{
 		if (transformation == null)
 			throw new IllegalArgumentException("transformation == null");
@@ -44,17 +44,18 @@ public abstract class AbstractCipher implements Cipher
 		return transformation;
 	}
 
-	public byte[] doFinal(byte[] in)
+	@Override
+	public byte[] doFinal(final byte[] in)
 	throws DataLengthException, IllegalStateException, CryptoException
 	{
-		byte[] out = new byte[getOutputSize(in.length)];
+		final byte[] out = new byte[getOutputSize(in.length)];
 		int outOff = update(in, 0, in.length, out, 0);
 		outOff += doFinal(out, outOff);
 
 		if (outOff == out.length)
 			return out;
 
-		byte[] truncOut = new byte[outOff];
+		final byte[] truncOut = new byte[outOff];
 		System.arraycopy(out, 0, truncOut, 0, truncOut.length);
 		return truncOut;
 	}
@@ -64,7 +65,7 @@ public abstract class AbstractCipher implements Cipher
 	private CipherParameters parameters;
 
 	@Override
-	public final void init(CipherOperationMode mode, CipherParameters parameters)
+	public final void init(final CipherOperationMode mode, final CipherParameters parameters)
 	throws IllegalArgumentException
 	{
 		if (mode == null)

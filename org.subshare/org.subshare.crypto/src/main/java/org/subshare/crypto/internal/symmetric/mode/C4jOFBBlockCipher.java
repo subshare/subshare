@@ -25,18 +25,18 @@ import org.bouncycastle.crypto.modes.OFBBlockCipher;
  */
 public class C4jOFBBlockCipher extends OFBBlockCipher
 {
-	private static int determineBitBlockSize(BlockCipher engine, String modeName)
+	private static int determineBitBlockSize(final BlockCipher engine, final String modeName)
 	{
 		if (modeName.length() != 3)
     {
-        int wordSize = Integer.parseInt(modeName.substring(3));
+        final int wordSize = Integer.parseInt(modeName.substring(3));
         return wordSize;
     }
 		else
 			return 8 * engine.getBlockSize();
 	}
 
-	public C4jOFBBlockCipher(BlockCipher engine, String modeName) {
+	public C4jOFBBlockCipher(final BlockCipher engine, final String modeName) {
 		super(engine, determineBitBlockSize(engine, modeName));
 	}
 }

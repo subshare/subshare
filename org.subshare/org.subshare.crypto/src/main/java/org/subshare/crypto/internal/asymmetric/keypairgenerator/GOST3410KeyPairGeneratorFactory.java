@@ -31,8 +31,8 @@ extends AbstractAsymmetricCipherKeyPairGeneratorFactory
 	}
 
 	@Override
-	public AsymmetricCipherKeyPairGenerator createAsymmetricCipherKeyPairGenerator(boolean initWithDefaults) {
-		GOST3410KeyPairGenerator generator = new GOST3410KeyPairGenerator();
+	public AsymmetricCipherKeyPairGenerator createAsymmetricCipherKeyPairGenerator(final boolean initWithDefaults) {
+		final GOST3410KeyPairGenerator generator = new GOST3410KeyPairGenerator();
 
 		// TODO implement meaningful and secure defaults!
 		if (initWithDefaults)

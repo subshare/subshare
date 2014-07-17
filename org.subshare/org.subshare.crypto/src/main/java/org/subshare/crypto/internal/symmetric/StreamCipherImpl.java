@@ -37,15 +37,15 @@ import org.subshare.crypto.CipherOperationMode;
 public class StreamCipherImpl
 extends AbstractCipher
 {
-	private StreamCipher delegate;
+	private final StreamCipher delegate;
 
-	public StreamCipherImpl(String transformation, StreamCipher delegate) {
+	public StreamCipherImpl(final String transformation, final StreamCipher delegate) {
 		super(transformation);
 		this.delegate = delegate;
 	}
 
 	@Override
-	public void _init(CipherOperationMode mode, CipherParameters parameters)
+	public void _init(final CipherOperationMode mode, final CipherParameters parameters)
 	throws IllegalArgumentException
 	{
 		delegate.init(CipherOperationMode.ENCRYPT == mode, parameters);
@@ -67,17 +67,17 @@ extends AbstractCipher
 	}
 
 	@Override
-	public int getUpdateOutputSize(int length) {
+	public int getUpdateOutputSize(final int length) {
 		return length;
 	}
 
 	@Override
-	public int getOutputSize(int length) {
+	public int getOutputSize(final int length) {
 		return length;
 	}
 
 	@Override
-	public int update(byte in, byte[] out, int outOff)
+	public int update(final byte in, final byte[] out, final int outOff)
 	throws DataLengthException, IllegalStateException, CryptoException
 	{
 		out[outOff] = delegate.returnByte(in);
@@ -85,7 +85,7 @@ extends AbstractCipher
 	}
 
 	@Override
-	public int update(byte[] in, int inOff, int inLen, byte[] out, int outOff)
+	public int update(final byte[] in, final int inOff, final int inLen, final byte[] out, final int outOff)
 	throws DataLengthException, IllegalStateException, CryptoException
 	{
 		delegate.processBytes(in, inOff, inLen, out, outOff);
@@ -93,7 +93,7 @@ extends AbstractCipher
 	}
 
 	@Override
-	public int doFinal(byte[] out, int outOff)
+	public int doFinal(final byte[] out, final int outOff)
 	throws DataLengthException, IllegalStateException, CryptoException
 	{
 		return 0;
@@ -137,7 +137,7 @@ extends AbstractCipher
 //	{
 //		String algorithmName = CryptoRegistry.splitTransformation(getTransformation())[0];
 //		try {
-//			return CryptoRegistry.sharedInstance().createSecretKeyGenerator(algorithmName, initWithDefaults);
+//			return CryptoRegistry.getInstance().createSecretKeyGenerator(algorithmName, initWithDefaults);
 //		} catch (NoSuchAlgorithmException e) {
 //			throw new RuntimeException(e); // We should be able to provide an SecretKeyGenerator for every Cipher => RuntimeException
 //		}

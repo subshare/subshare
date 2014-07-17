@@ -38,9 +38,6 @@ import javax.crypto.spec.SecretKeySpec;
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.bouncycastle.crypto.params.ParametersWithIV;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.subshare.crypto.CipherEngineType;
-import org.subshare.crypto.CipherOperationMode;
-import org.subshare.crypto.CryptoRegistry;
 import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -156,29 +153,29 @@ public class CipherTest
 	@Test
 	public void testLookupCompatibilityWithJCE()
 	{
-		List<String> transformations = new ArrayList<String>();
+		final List<String> transformations = new ArrayList<String>();
 		transformations.addAll(Arrays.asList(SYMMETRIC_TRANSFORMATIONS));
 		transformations.addAll(Arrays.asList(ASYMMETRIC_TRANSFORMATIONS));
 
-		for (String transformation : transformations) {
+		for (final String transformation : transformations) {
 			Throwable jceError = null;
 			Throwable cryptoRegistryError = null;
 
 			try {
 				Cipher.getInstance(transformation);
-			} catch (Throwable t) {
+			} catch (final Throwable t) {
 				jceError = t;
 			}
 
 			try {
-				CryptoRegistry.sharedInstance().createCipher(transformation);
-			} catch (Throwable t) {
+				CryptoRegistry.getInstance().createCipher(transformation);
+			} catch (final Throwable t) {
 				cryptoRegistryError = t;
 			}
 
 			if (jceError == null) {
 				if (cryptoRegistryError != null) {
-					String errorMessage = "JCE successfully provided a Cipher for transformation=\"" + transformation + "\", but our CryptoRegistry failed: " + cryptoRegistryError;
+					final String errorMessage = "JCE successfully provided a Cipher for transformation=\"" + transformation + "\", but our CryptoRegistry failed: " + cryptoRegistryError;
 					logger.error(errorMessage, cryptoRegistryError);
 					Assert.fail(errorMessage);
 				}
@@ -196,11 +193,11 @@ public class CipherTest
 	public void testLookupAllSupportedCiphers()
 	throws Exception
 	{
-		long start = System.currentTimeMillis();
-		Set<String> transformations = CryptoRegistry.sharedInstance().getSupportedCipherTransformations(null);
-		for (String transformation : transformations) {
+		final long start = System.currentTimeMillis();
+		final Set<String> transformations = CryptoRegistry.getInstance().getSupportedCipherTransformations(null);
+		for (final String transformation : transformations) {
 			logger.info("testLookupAllSupportedCiphers: Creating cipher for transformation \"{}\".", transformation);
-			CryptoRegistry.sharedInstance().createCipher(transformation);
+			CryptoRegistry.getInstance().createCipher(transformation);
 		}
 		logger.info(
 				"testLookupAllSupportedCiphers: Successfully created {} ciphers in {} msec.",
@@ -208,14 +205,14 @@ public class CipherTest
 		);
 	}
 
-	private SecureRandom random = new SecureRandom();
+	private final SecureRandom random = new SecureRandom();
 
-	private static String getEngineName(String transformation)
+	private static String getEngineName(final String transformation)
 	{
 		return CryptoRegistry.splitTransformation(transformation)[0];
 	}
 
-	private static String getPaddingName(String transformation)
+	private static String getPaddingName(final String transformation)
 	{
 		return CryptoRegistry.splitTransformation(transformation)[2];
 	}
@@ -238,7 +235,7 @@ public class CipherTest
 //					continue;
 //				}
 //
-//				org.cumulus4j.crypto.Cipher c4jCipher = CryptoRegistry.sharedInstance().createCipher(transformation);
+//				org.cumulus4j.crypto.Cipher c4jCipher = CryptoRegistry.getInstance().createCipher(transformation);
 //				byte[] original = new byte[1024 + random.nextInt(10240)];
 //				random.nextBytes(original);
 //
@@ -273,7 +270,7 @@ public class CipherTest
 			KeyGenerator kg;
 			try {
 				kg = KeyGenerator.getInstance("AES");
-			} catch (NoSuchAlgorithmException e) {
+			} catch (final NoSuchAlgorithmException e) {
 				logger.warn("KeyGenerator.getInstance(\"AES\") failed: " + e, e);
 				kg = null;
 			}
@@ -281,41 +278,41 @@ public class CipherTest
 			if (kg == null || kg.getProvider() != bouncyCastleProvider)
 				Assert.fail("Registering BouncyCastleProvider failed!");
 
-			for (String transformation : SYMMETRIC_TRANSFORMATIONS)
+			for (final String transformation : SYMMETRIC_TRANSFORMATIONS)
 			{
 				try {
-					String paddingName = getPaddingName(transformation);
+					final String paddingName = getPaddingName(transformation);
 					if ("".equals(paddingName) || "NOPADDING".equals(paddingName.toUpperCase(Locale.ENGLISH)))
 						continue;
 
 					Cipher jceCipher;
 					try {
 						jceCipher = Cipher.getInstance(transformation);
-					} catch (Throwable t) {
+					} catch (final Throwable t) {
 						continue;
 					}
 
-					org.subshare.crypto.Cipher c4jCipher = CryptoRegistry.sharedInstance().createCipher(transformation);
-					byte[] original = new byte[1024 + random.nextInt(10240)];
+					final org.subshare.crypto.Cipher c4jCipher = CryptoRegistry.getInstance().createCipher(transformation);
+					final byte[] original = new byte[1024 + random.nextInt(10240)];
 					random.nextBytes(original);
 
-					byte[] iv = new byte[c4jCipher.getIVSize()];
+					final byte[] iv = new byte[c4jCipher.getIVSize()];
 					random.nextBytes(iv);
 
 					// we generate a random 128 bit key
-					byte[] key = new byte[128 / 8];
+					final byte[] key = new byte[128 / 8];
 					random.nextBytes(key);
 
 					c4jCipher.init(CipherOperationMode.ENCRYPT, new ParametersWithIV(new KeyParameter(key), iv));
 					jceCipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(key, getEngineName(transformation)), new IvParameterSpec(iv));
 
-					byte[] encrypted = c4jCipher.doFinal(original);
-					byte[] decrypted = jceCipher.doFinal(encrypted);
+					final byte[] encrypted = c4jCipher.doFinal(original);
+					final byte[] decrypted = jceCipher.doFinal(encrypted);
 					Assert.assertTrue(
 							"Decrypted does not match original for transformation \"" + transformation + "\"!",
 							Arrays.equals(original, decrypted)
 					);
-				} catch (Exception x) {
+				} catch (final Exception x) {
 					throw new Exception("Processing transformation \"" + transformation + "\" failed: " + x, x);
 				}
 			}
@@ -324,9 +321,9 @@ public class CipherTest
 		}
 	}
 
-	private Map<Integer, byte[]> blockSize2Plaintext = new HashMap<Integer, byte[]>();
+	private final Map<Integer, byte[]> blockSize2Plaintext = new HashMap<Integer, byte[]>();
 
-	private byte[] getPlaintext(int blockSize)
+	private byte[] getPlaintext(final int blockSize)
 	{
 		byte[] plaintext = blockSize2Plaintext.get(blockSize);
 		if (plaintext == null) {
@@ -346,29 +343,29 @@ public class CipherTest
 	public void testNullAsKeyParameter()
 	throws Exception
 	{
-		Set<String> transformations = new TreeSet<String>();
+		final Set<String> transformations = new TreeSet<String>();
 //		transformations.add("AES.FAST/CTS/");
-		transformations.addAll(CryptoRegistry.sharedInstance().getSupportedCipherTransformations(CipherEngineType.symmetricBlock));
-		transformations.addAll(CryptoRegistry.sharedInstance().getSupportedCipherTransformations(CipherEngineType.symmetricStream));
+		transformations.addAll(CryptoRegistry.getInstance().getSupportedCipherTransformations(CipherEngineType.symmetricBlock));
+		transformations.addAll(CryptoRegistry.getInstance().getSupportedCipherTransformations(CipherEngineType.symmetricStream));
 
-		byte[] key = new byte[128 / 8];
+		final byte[] key = new byte[128 / 8];
 		random.nextBytes(key);
-		KeyParameter keyParameter = new KeyParameter(key);
+		final KeyParameter keyParameter = new KeyParameter(key);
 
-		Map<String, Throwable> transformation2throwable = new TreeMap<String, Throwable>();
+		final Map<String, Throwable> transformation2throwable = new TreeMap<String, Throwable>();
 
-		for (String transformation : transformations) {
+		for (final String transformation : transformations) {
 			logger.info("transformation={}", transformation);
 			try {
-				org.subshare.crypto.Cipher encrypter = CryptoRegistry.sharedInstance().createCipher(transformation);
-				org.subshare.crypto.Cipher decrypter = CryptoRegistry.sharedInstance().createCipher(transformation);
+				final org.subshare.crypto.Cipher encrypter = CryptoRegistry.getInstance().createCipher(transformation);
+				final org.subshare.crypto.Cipher decrypter = CryptoRegistry.getInstance().createCipher(transformation);
 
-				byte[] plaintext = getPlaintext(encrypter.getInputBlockSize());
+				final byte[] plaintext = getPlaintext(encrypter.getInputBlockSize());
 				if (plaintext.length < 1)
 					throw new IllegalStateException("plaintext.length < 1");
 
 				if (encrypter.getIVSize() > 0) {
-					byte[] iv = new byte[encrypter.getIVSize()];
+					final byte[] iv = new byte[encrypter.getIVSize()];
 					random.nextBytes(iv);
 					encrypter.init(CipherOperationMode.ENCRYPT, new ParametersWithIV(keyParameter, iv));
 					decrypter.init(CipherOperationMode.DECRYPT, new ParametersWithIV(keyParameter, iv));
@@ -381,17 +378,17 @@ public class CipherTest
 				if (encrypter.getIVSize() <= 0)
 					logger.info("testNullAsKeyParameter: Transformation \"{}\" does not support IV => Skipping.", transformation);
 				else {
-					byte[] iv = new byte[encrypter.getIVSize()];
+					final byte[] iv = new byte[encrypter.getIVSize()];
 					random.nextBytes(iv);
 
 					try {
 						encrypter.init(CipherOperationMode.ENCRYPT, new ParametersWithIV(null, iv));
 						decrypter.init(CipherOperationMode.DECRYPT, new ParametersWithIV(null, iv));
-					} catch (Exception x) {
+					} catch (final Exception x) {
 						transformation2throwable.put(transformation, x);
 					}
 				}
-			} catch (Exception x) {
+			} catch (final Exception x) {
 //				throw new RuntimeException("Test failed for transformation \"" + transformation + "\": " + x, x);
 				logger.error("transformation \"" + transformation + "\": " + x);
 			}
@@ -399,8 +396,8 @@ public class CipherTest
 
 		if (!transformation2throwable.isEmpty()) {
 			logger.error(">>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-			for (Map.Entry<String, Throwable> me : transformation2throwable.entrySet()) {
-				String transformation = me.getKey();
+			for (final Map.Entry<String, Throwable> me : transformation2throwable.entrySet()) {
+				final String transformation = me.getKey();
 				logger.error("transformation \"" + transformation + "\": " + me.getValue());
 			}
 			logger.error("<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
@@ -417,8 +414,8 @@ public class CipherTest
 ////		transformations.add("AES.FAST/CFB136/");
 //		transformations.add("AES.FAST/CTS/");
 //		transformations.add("AES.FAST/CBC-CTS/");
-////		transformations.addAll(CryptoRegistry.sharedInstance().getSupportedCipherTransformations(CipherEngineType.symmetricBlock));
-////		transformations.addAll(CryptoRegistry.sharedInstance().getSupportedCipherTransformations(CipherEngineType.symmetricStream));
+////		transformations.addAll(CryptoRegistry.getInstance().getSupportedCipherTransformations(CipherEngineType.symmetricBlock));
+////		transformations.addAll(CryptoRegistry.getInstance().getSupportedCipherTransformations(CipherEngineType.symmetricStream));
 //
 //		byte[] key = new byte[128 / 8];
 //		random.nextBytes(key);
@@ -427,8 +424,8 @@ public class CipherTest
 //		for (String transformation : transformations) {
 //			logger.info("transformation={}", transformation);
 //			try {
-//				org.cumulus4j.crypto.Cipher encrypter = CryptoRegistry.sharedInstance().createCipher(transformation);
-//				org.cumulus4j.crypto.Cipher decrypter = CryptoRegistry.sharedInstance().createCipher(transformation);
+//				org.cumulus4j.crypto.Cipher encrypter = CryptoRegistry.getInstance().createCipher(transformation);
+//				org.cumulus4j.crypto.Cipher decrypter = CryptoRegistry.getInstance().createCipher(transformation);
 //
 //				byte[] plaintext = getPlaintext(-1);
 ////				byte[] plaintext = getPlaintext(encrypter.getInputBlockSize());

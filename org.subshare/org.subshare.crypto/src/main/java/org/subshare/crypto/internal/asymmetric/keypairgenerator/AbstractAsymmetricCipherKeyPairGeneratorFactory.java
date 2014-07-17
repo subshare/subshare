@@ -33,7 +33,7 @@ implements AsymmetricCipherKeyPairGeneratorFactory
 	}
 
 	@Override
-	public void setAlgorithmName(String algorithmName)
+	public void setAlgorithmName(final String algorithmName)
 	{
 		if (this.algorithmName != null && !this.algorithmName.equals(algorithmName))
 			throw new IllegalStateException("this.algorithmName is already assigned! Cannot modify!");

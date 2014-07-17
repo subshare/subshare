@@ -28,12 +28,12 @@ import org.subshare.crypto.MACCalculator;
 public class MACCalculatorImpl
 implements MACCalculator
 {
-	private Mac macEngine;
+	private final Mac macEngine;
 
-	private int keySize;
-	private int ivSize;
+	private final int keySize;
+	private final int ivSize;
 
-	public MACCalculatorImpl(Mac macEngine, int keySize, int ivSize)
+	public MACCalculatorImpl(final Mac macEngine, final int keySize, final int ivSize)
 	{
 		if (macEngine == null)
 			throw new IllegalArgumentException("macEngine == null");
@@ -46,7 +46,7 @@ implements MACCalculator
 	private CipherParameters parameters;
 
 	@Override
-	public void init(CipherParameters params) throws IllegalArgumentException {
+	public void init(final CipherParameters params) throws IllegalArgumentException {
 		macEngine.init(params);
 		this.parameters = params;
 	}
@@ -69,7 +69,7 @@ implements MACCalculator
 	private String algorithmName;
 
 	@Override
-	public void setAlgorithmName(String algorithmName) {
+	public void setAlgorithmName(final String algorithmName) {
 		this.algorithmName = algorithmName;
 	}
 
@@ -87,30 +87,30 @@ implements MACCalculator
 	}
 
 	@Override
-	public void update(byte in)
+	public void update(final byte in)
 	throws IllegalStateException
 	{
 		macEngine.update(in);
 	}
 
 	@Override
-	public void update(byte[] in, int inOff, int len)
+	public void update(final byte[] in, final int inOff, final int len)
 	throws DataLengthException, IllegalStateException
 	{
 		macEngine.update(in, inOff, len);
 	}
 
 	@Override
-	public int doFinal(byte[] out, int outOff)
+	public int doFinal(final byte[] out, final int outOff)
 	throws DataLengthException, IllegalStateException
 	{
 		return macEngine.doFinal(out, outOff);
 	}
 
 	@Override
-	public byte[] doFinal(byte[] in) throws IllegalStateException
+	public byte[] doFinal(final byte[] in) throws IllegalStateException
 	{
-		byte[] mac = new byte[getMacSize()];
+		final byte[] mac = new byte[getMacSize()];
 		update(in, 0, in.length);
 		doFinal(mac, 0);
 		return mac;

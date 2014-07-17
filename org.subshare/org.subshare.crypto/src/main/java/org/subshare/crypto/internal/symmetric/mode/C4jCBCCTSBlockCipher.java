@@ -27,7 +27,7 @@ import org.bouncycastle.crypto.modes.CTSBlockCipher;
 public class C4jCBCCTSBlockCipher
 extends CTSBlockCipher
 {
-	public C4jCBCCTSBlockCipher(BlockCipher cipher) {
+	public C4jCBCCTSBlockCipher(final BlockCipher cipher) {
 		super(new CBCBlockCipher(cipher));
 	}
 }
