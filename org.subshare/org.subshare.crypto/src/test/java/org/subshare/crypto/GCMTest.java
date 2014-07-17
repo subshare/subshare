@@ -1,4 +1,4 @@
-package org.cumulus4j.crypto.test;
+package org.subshare.crypto;
 
 import org.bouncycastle.crypto.CipherParameters;
 import org.bouncycastle.crypto.engines.TwofishEngine;

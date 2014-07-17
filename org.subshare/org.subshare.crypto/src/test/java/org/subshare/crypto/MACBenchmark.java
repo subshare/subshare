@@ -1,4 +1,4 @@
-package org.cumulus4j.crypto.test;
+package org.subshare.crypto;
 
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;

@@ -1,4 +1,4 @@
-package org.cumulus4j.crypto.test;
+package org.subshare.crypto;
 
 import org.subshare.crypto.CipherEngineType;
 import org.subshare.crypto.CryptoRegistry;
