@@ -21,10 +21,7 @@ import java.security.SecureRandom;
 
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.bouncycastle.crypto.AsymmetricCipherKeyPairGenerator;
-import org.bouncycastle.crypto.CipherParameters;
-import org.subshare.crypto.Cipher;
-import org.subshare.crypto.CipherOperationMode;
-import org.subshare.crypto.CryptoRegistry;
+import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -33,39 +30,48 @@ import org.junit.Test;
  */
 public class AsymmetricKeyTest
 {
-	private SecureRandom secureRandom = new SecureRandom();
+	private final SecureRandom secureRandom = new SecureRandom();
 
 	@Test
-	public void encodeDecodeRSA()
-	throws Exception
-	{
-		AsymmetricCipherKeyPairGenerator keyPairGenerator = CryptoRegistry.getInstance().createKeyPairGenerator("RSA", true);
-		AsymmetricCipherKeyPair keyPair = keyPairGenerator.generateKeyPair();
+	public void encodeDecodeRSA() throws Exception {
+		encodeDecode("RSA/ECB/OAEPWITHSHA1ANDMGF1PADDING");
+	}
 
-		byte[] encodedPrivateKey = CryptoRegistry.getInstance().encodePrivateKey(keyPair.getPrivate());
-		byte[] encodedPublicKey = CryptoRegistry.getInstance().encodePublicKey(keyPair.getPublic());
+	@Test
+	public void encodeDecodeRSAwithOAEPwithSHA1andMGF1Padding() throws Exception {
+		encodeDecode("RSA/ECB/OAEPWITHSHA1ANDMGF1PADDING");
+	}
 
-		CipherParameters decodedPrivateKey = CryptoRegistry.getInstance().decodePrivateKey(encodedPrivateKey);
-		CipherParameters decodedPublicKey = CryptoRegistry.getInstance().decodePublicKey(encodedPublicKey);
+	private void encodeDecode(final String transformation) throws Exception {
+		final String engine = CryptoRegistry.splitTransformation(transformation)[0];
 
-		byte[] plainText = new byte[100 + secureRandom.nextInt(40)];
+		final AsymmetricCipherKeyPairGenerator keyPairGenerator = CryptoRegistry.getInstance().createKeyPairGenerator(engine, true);
+		final AsymmetricCipherKeyPair keyPair = keyPairGenerator.generateKeyPair();
+
+		final byte[] encodedPrivateKey = CryptoRegistry.getInstance().encodePrivateKey(keyPair.getPrivate());
+		final byte[] encodedPublicKey = CryptoRegistry.getInstance().encodePublicKey(keyPair.getPublic());
+
+		final AsymmetricKeyParameter decodedPrivateKey = CryptoRegistry.getInstance().decodePrivateKey(encodedPrivateKey);
+		final AsymmetricKeyParameter decodedPublicKey = CryptoRegistry.getInstance().decodePublicKey(encodedPublicKey);
+
+		final byte[] plainText = new byte[100 + secureRandom.nextInt(40)];
 		secureRandom.nextBytes(plainText);
 
-		Cipher cipher = CryptoRegistry.getInstance().createCipher("RSA");
+		final Cipher cipher = CryptoRegistry.getInstance().createCipher(transformation);
 
 		cipher.init(CipherOperationMode.ENCRYPT, keyPair.getPublic());
-		byte[] encrypted1 = cipher.doFinal(plainText);
+		final byte[] encrypted1 = cipher.doFinal(plainText);
 
 		cipher.init(CipherOperationMode.ENCRYPT, decodedPublicKey);
-		byte[] encrypted2 = cipher.doFinal(plainText);
+		final byte[] encrypted2 = cipher.doFinal(plainText);
 
 		cipher.init(CipherOperationMode.DECRYPT, keyPair.getPrivate());
-		byte[] decrypted1a = cipher.doFinal(encrypted1);
-		byte[] decrypted2a = cipher.doFinal(encrypted2);
+		final byte[] decrypted1a = cipher.doFinal(encrypted1);
+		final byte[] decrypted2a = cipher.doFinal(encrypted2);
 
 		cipher.init(CipherOperationMode.DECRYPT, decodedPrivateKey);
-		byte[] decrypted1b = cipher.doFinal(encrypted1);
-		byte[] decrypted2b = cipher.doFinal(encrypted2);
+		final byte[] decrypted1b = cipher.doFinal(encrypted1);
+		final byte[] decrypted2b = cipher.doFinal(encrypted2);
 
 		Assert.assertArrayEquals(plainText, decrypted1a);
 		Assert.assertArrayEquals(plainText, decrypted1b);

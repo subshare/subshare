@@ -1180,7 +1180,7 @@ public final class CryptoRegistry
 	 * @see #encodePublicKey(CipherParameters)
 	 * @see #decodePrivateKey(byte[])
 	 */
-	public CipherParameters decodePublicKey(final byte[] publicKeyData) throws IOException
+	public AsymmetricKeyParameter decodePublicKey(final byte[] publicKeyData) throws IOException
 	{
 		final AsymmetricKeyParameter asymmetricKeyParameter = PublicKeyFactory.createKey(publicKeyData);
 		return asymmetricKeyParameter;
@@ -1225,7 +1225,7 @@ public final class CryptoRegistry
 	 * @see #encodePrivateKey(CipherParameters)
 	 * @see #decodePublicKey(byte[])
 	 */
-	public CipherParameters decodePrivateKey(final byte[] privateKeyData) throws IOException
+	public AsymmetricKeyParameter decodePrivateKey(final byte[] privateKeyData) throws IOException
 	{
 		final AsymmetricKeyParameter asymmetricKeyParameter = PrivateKeyFactory.createKey(privateKeyData);
 		return asymmetricKeyParameter;

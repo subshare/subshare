@@ -141,20 +141,22 @@ public class CipherTest
 	private static final String[] ASYMMETRIC_TRANSFORMATIONS = {
 		"RSA",
 		"RSA//",
-		"RSA//NoPadding",
-		"RSA/ECB/NoPadding",
-		"RSA/CBC/NoPadding",
+		"RSA//NoPadding",    // same as: RSA/ECB/NoPadding
+		"RSA/ECB/NoPadding", // same as: RSA//NoPadding
+		"RSA/CBC/NoPadding", // does not exist!
 		"RSA//ISO9796-1",
 		"RSA//OAEP",
 		"RSA//PKCS1",
-		"RSA//PKCS1Padding"
+		"RSA//PKCS1Padding",
+		"RSA//OAEPWITHSHA1ANDMGF1PADDING",   // same as: RSA/ECB/OAEPWITHSHA1ANDMGF1PADDING
+		"RSA/ECB/OAEPWITHSHA1ANDMGF1PADDING" // same as: RSA//OAEPWITHSHA1ANDMGF1PADDING
 	};
 
 	@Test
 	public void testLookupCompatibilityWithJCE()
 	{
 		final List<String> transformations = new ArrayList<String>();
-		transformations.addAll(Arrays.asList(SYMMETRIC_TRANSFORMATIONS));
+//		transformations.addAll(Arrays.asList(SYMMETRIC_TRANSFORMATIONS));
 		transformations.addAll(Arrays.asList(ASYMMETRIC_TRANSFORMATIONS));
 
 		for (final String transformation : transformations) {
@@ -185,6 +187,8 @@ public class CipherTest
 					logger.warn("JCE fails to provide a Cipher for transformation=\"" + transformation + "\", but our CryptoRegistry succeeded!");
 				else if (jceError.getClass() != cryptoRegistryError.getClass())
 					Assert.fail("JCE fails to provide a Cipher for transformation=\"" + transformation + "\" with a " + jceError.getClass().getName() + ", but our CryptoRegistry failed with another exception: " + cryptoRegistryError.getClass());
+				else
+					logger.warn("Both JCE and CryptoRegistry failed to provide a cipher for transformation=\"" + transformation + "\" with the same type of exception: " + cryptoRegistryError.getClass().getName());
 			}
 		}
 	}
