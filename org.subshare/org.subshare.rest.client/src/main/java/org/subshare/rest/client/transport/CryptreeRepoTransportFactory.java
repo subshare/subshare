@@ -7,7 +7,7 @@ import co.codewizards.cloudstore.core.repo.transport.RepoTransport;
 import co.codewizards.cloudstore.rest.client.transport.RestRepoTransportFactory;
 
 public class CryptreeRepoTransportFactory extends AbstractRepoTransportFactory {
-	private final RestRepoTransportFactory restRepoTransportFactory = new RestRepoTransportFactory();
+	protected final RestRepoTransportFactory restRepoTransportFactory = new RestRepoTransportFactory();
 
 	@Override
 	public int getPriority() {

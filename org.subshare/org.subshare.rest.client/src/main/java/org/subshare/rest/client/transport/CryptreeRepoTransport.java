@@ -1,5 +1,7 @@
 package org.subshare.rest.client.transport;
 
+import static co.codewizards.cloudstore.core.util.Util.*;
+
 import java.net.URL;
 import java.util.Date;
 import java.util.UUID;
@@ -8,6 +10,8 @@ import co.codewizards.cloudstore.core.dto.ChangeSetDTO;
 import co.codewizards.cloudstore.core.dto.RepoFileDTO;
 import co.codewizards.cloudstore.core.dto.RepositoryDTO;
 import co.codewizards.cloudstore.core.repo.transport.AbstractRepoTransport;
+import co.codewizards.cloudstore.rest.client.transport.RestRepoTransport;
+import co.codewizards.cloudstore.rest.client.transport.RestRepoTransportFactory;
 
 public class CryptreeRepoTransport extends AbstractRepoTransport {
 
@@ -119,4 +123,20 @@ public class CryptreeRepoTransport extends AbstractRepoTransport {
 		throw new UnsupportedOperationException("NYI");
 	}
 
+	private RestRepoTransport restRepoTransport;
+
+	protected RestRepoTransport getRestRepoTransport() {
+		if (restRepoTransport == null) {
+			final RestRepoTransportFactory restRepoTransportFactory = getRepoTransportFactory().restRepoTransportFactory;
+			restRepoTransport = (RestRepoTransport) restRepoTransportFactory.createRepoTransport(
+					assertNotNull("getRemoteRoot()", getRemoteRoot()),
+					assertNotNull("getClientRepositoryId()", getClientRepositoryId()));
+		}
+		return restRepoTransport;
+	}
+
+	@Override
+	public final CryptreeRepoTransportFactory getRepoTransportFactory() {
+		return (CryptreeRepoTransportFactory) super.getRepoTransportFactory();
+	}
 }
