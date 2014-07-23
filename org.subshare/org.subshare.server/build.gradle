@@ -1,0 +1,3 @@
+dependencies {
+	compile group: 'co.codewizards.cloudstore', name: 'co.codewizards.cloudstore.server', version: cloudstoreVersion
+}

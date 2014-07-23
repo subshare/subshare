@@ -20,6 +20,8 @@ allprojects {
         }
     }
 
+	project.ext.subshareVersion = version
+
    	project.ext.bouncycastleVersion = '1.50'
    	project.ext.cloudstoreVersion = '0.9.6-SNAPSHOT'
    	project.ext.slf4jVersion = '1.7.7'
