@@ -1,0 +1,4 @@
+dependencies {
+	compile group: 'co.codewizards.cloudstore', name: 'co.codewizards.cloudstore.local', version: cloudstoreVersion
+	compile group: 'org.subshare', name: 'org.subshare.core', version: subshareVersion
+}
