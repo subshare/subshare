@@ -1,4 +1,4 @@
 dependencies {
 	compile group: 'co.codewizards.cloudstore', name: 'co.codewizards.cloudstore.rest.client', version: cloudstoreVersion
-	compile group: 'org.subshare', name: 'org.subshare.rest.shared', version: subshareVersion
+	compile project(':org.subshare.rest.shared')
 }

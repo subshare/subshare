@@ -8,7 +8,7 @@ configurations {
 
 dependencies {
 	compile group: 'co.codewizards.cloudstore', name: 'co.codewizards.cloudstore.local', version: cloudstoreVersion
-	compile group: 'org.subshare', name: 'org.subshare.core', version: subshareVersion
+	compile project(':org.subshare.core')
 //	provided group: 'org.slf4j', name: 'log4j-over-slf4j', version: slf4jVersion
 }
 
@@ -22,7 +22,7 @@ compileJava.doLast {
 	ant.echo("***********************************************");
 	ant.echo("******************* ENHANCE *******************");
 	ant.echo("***********************************************");
-	ant.echo("buildDir = ${buildDir}");
+	ant.echo("Note: You must run gradle with the '-i' option to see output from the enhancer!");
 
 	ant.taskdef(
 		name: 'datanucleusenhancer',
