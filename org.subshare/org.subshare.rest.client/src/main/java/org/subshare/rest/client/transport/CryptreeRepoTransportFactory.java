@@ -4,7 +4,6 @@ import java.net.URL;
 
 import co.codewizards.cloudstore.core.repo.transport.AbstractRepoTransportFactory;
 import co.codewizards.cloudstore.core.repo.transport.RepoTransport;
-import co.codewizards.cloudstore.rest.client.transport.RestRepoTransportFactory;
 
 public class CryptreeRepoTransportFactory extends AbstractRepoTransportFactory {
 	protected final RestRepoTransportFactory restRepoTransportFactory = new RestRepoTransportFactory();

@@ -7,41 +7,72 @@ import java.util.Date;
 import java.util.UUID;
 
 import co.codewizards.cloudstore.core.dto.ChangeSetDTO;
+import co.codewizards.cloudstore.core.dto.ModificationDTO;
 import co.codewizards.cloudstore.core.dto.RepoFileDTO;
 import co.codewizards.cloudstore.core.dto.RepositoryDTO;
 import co.codewizards.cloudstore.core.repo.transport.AbstractRepoTransport;
-import co.codewizards.cloudstore.rest.client.transport.RestRepoTransport;
-import co.codewizards.cloudstore.rest.client.transport.RestRepoTransportFactory;
 
 public class CryptreeRepoTransport extends AbstractRepoTransport {
 
+	private RestRepoTransport restRepoTransport;
+
 	@Override
 	public RepositoryDTO getRepositoryDTO() {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("NYI");
+		return getRestRepoTransport().getRepositoryDTO();
 	}
 
 	@Override
 	public UUID getRepositoryId() {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("NYI");
+		return getRestRepoTransport().getRepositoryId();
 	}
 
 	@Override
 	public byte[] getPublicKey() {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("NYI");
+		return getRestRepoTransport().getPublicKey();
 	}
 
 	@Override
 	public void requestRepoConnection(final byte[] publicKey) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("NYI");
+		getRestRepoTransport().requestRepoConnection(publicKey);
 	}
 
 	@Override
 	public ChangeSetDTO getChangeSetDTO(final boolean localSync) {
+		final ChangeSetDTO changeSetDTO = getRestRepoTransport().getChangeSetDTO(localSync);
+		return decryptChangeSetDTO(changeSetDTO);
+	}
+
+	private ChangeSetDTO decryptChangeSetDTO(final ChangeSetDTO changeSetDTO) {
+		assertNotNull("changeSetDTO", changeSetDTO);
+
+		final ChangeSetDTO decryptedChangeSetDTO = new ChangeSetDTO();
+		decryptedChangeSetDTO.setRepositoryDTO(changeSetDTO.getRepositoryDTO());
+
+		for (final ModificationDTO modificationDTO : changeSetDTO.getModificationDTOs()) {
+			final ModificationDTO decryptedModificationDTO = decryptModificationDTO(modificationDTO);
+			decryptedChangeSetDTO.getModificationDTOs().add(decryptedModificationDTO);
+		}
+
+		for (final RepoFileDTO repoFileDTO : changeSetDTO.getRepoFileDTOs()) {
+			final RepoFileDTO decryptedRepoFileDTO = decryptRepoFileDTO(repoFileDTO);
+			decryptedChangeSetDTO.getRepoFileDTOs().add(decryptedRepoFileDTO);
+		}
+		return decryptedChangeSetDTO;
+	}
+
+	private ModificationDTO decryptModificationDTO(final ModificationDTO modificationDTO) {
 		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("NYI");
+	}
+
+	private RepoFileDTO decryptRepoFileDTO(final RepoFileDTO repoFileDTO) {
+		final RepoFileDTO decryptedRepoFileDTO = new RepoFileDTO();
+		decryptedRepoFileDTO.setId(repoFileDTO.getId());
+//		decryptedRepoFileDTO.setLastModified(lastModified); // TODO!
+		decryptedRepoFileDTO.setLocalRevision(repoFileDTO.getLocalRevision());
+//		decryptedRepoFileDTO.setName(name); // TODO!
+		decryptedRepoFileDTO.setParentId(repoFileDTO.getParentId());
+//		return decryptedRepoFileDTO;
 		throw new UnsupportedOperationException("NYI");
 	}
 
@@ -119,11 +150,8 @@ public class CryptreeRepoTransport extends AbstractRepoTransport {
 
 	@Override
 	protected URL determineRemoteRootWithoutPathPrefix() {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("NYI");
+		return getRestRepoTransport().determineRemoteRootWithoutPathPrefix();
 	}
-
-	private RestRepoTransport restRepoTransport;
 
 	protected RestRepoTransport getRestRepoTransport() {
 		if (restRepoTransport == null) {
