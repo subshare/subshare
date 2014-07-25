@@ -1,5 +1,11 @@
 dependencies {
-	compile group: 'co.codewizards.cloudstore', name: 'co.codewizards.cloudstore.server', version: cloudstoreVersion
+	compile group: 'co.codewizards.cloudstore', name: 'co.codewizards.cloudstore.test', version: cloudstoreVersion
 	compile project(':org.subshare.rest.client')
 	compile project(':org.subshare.server')
+}
+
+test {
+	filter {
+		includeTestsMatching "*IT"
+	}
 }
