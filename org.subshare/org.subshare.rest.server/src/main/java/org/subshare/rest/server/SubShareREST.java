@@ -2,6 +2,7 @@ package org.subshare.rest.server;
 
 import javax.ws.rs.ApplicationPath;
 
+import org.subshare.rest.server.service.CryptoKeyChangeSetDTOService;
 import org.subshare.rest.server.service.TestSubShareService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +20,10 @@ public class SubShareREST extends CloudStoreREST {
 	{
 		logger.debug("<init>: Instance created.");
 
-		registerClasses(TestSubShareService.class);
+		registerClasses(
+				CryptoKeyChangeSetDTOService.class,
+				TestSubShareService.class
+				);
 	}
 
 }

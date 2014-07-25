@@ -3,11 +3,14 @@ package org.subshare.core.dto;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import co.codewizards.cloudstore.core.dto.RepoFileDTO;
+import co.codewizards.cloudstore.core.dto.Uid;
 
 @XmlRootElement
 public class CryptoRepoFileDTO {
 
 	private long repoFileId;
+
+	private Uid cryptoKeyId;
 
 	private byte[] encryptedRepoFileDTO;
 
@@ -20,6 +23,13 @@ public class CryptoRepoFileDTO {
 	}
 	public void setRepoFileId(final long repoFileId) {
 		this.repoFileId = repoFileId;
+	}
+
+	public Uid getCryptoKeyId() {
+		return cryptoKeyId;
+	}
+	public void setCryptoKeyId(final Uid cryptoKeyId) {
+		this.cryptoKeyId = cryptoKeyId;
 	}
 
 	public byte[] getEncryptedRepoFileDTO() {

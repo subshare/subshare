@@ -6,11 +6,15 @@ import java.net.URL;
 import java.util.Date;
 import java.util.UUID;
 
+import org.subshare.core.dto.CryptoKeyChangeSetDTO;
+import org.subshare.rest.client.transport.command.GetCryptoKeyChangeSetDTO;
+
 import co.codewizards.cloudstore.core.dto.ChangeSetDTO;
 import co.codewizards.cloudstore.core.dto.ModificationDTO;
 import co.codewizards.cloudstore.core.dto.RepoFileDTO;
 import co.codewizards.cloudstore.core.dto.RepositoryDTO;
 import co.codewizards.cloudstore.core.repo.transport.AbstractRepoTransport;
+import co.codewizards.cloudstore.rest.client.CloudStoreRestClient;
 
 public class CryptreeRepoTransport extends AbstractRepoTransport {
 
@@ -39,7 +43,13 @@ public class CryptreeRepoTransport extends AbstractRepoTransport {
 	@Override
 	public ChangeSetDTO getChangeSetDTO(final boolean localSync) {
 		final ChangeSetDTO changeSetDTO = getRestRepoTransport().getChangeSetDTO(localSync);
+		syncCryptoKeysFromRemoteRepo();
 		return decryptChangeSetDTO(changeSetDTO);
+	}
+
+	private void syncCryptoKeysFromRemoteRepo() {
+		final CryptoKeyChangeSetDTO cryptoKeyChangeSetDTO = getClient().execute(new GetCryptoKeyChangeSetDTO(getRepositoryId().toString()));
+		throw new UnsupportedOperationException("NYI");
 	}
 
 	private ChangeSetDTO decryptChangeSetDTO(final ChangeSetDTO changeSetDTO) {
@@ -151,6 +161,10 @@ public class CryptreeRepoTransport extends AbstractRepoTransport {
 	@Override
 	protected URL determineRemoteRootWithoutPathPrefix() {
 		return getRestRepoTransport().determineRemoteRootWithoutPathPrefix();
+	}
+
+	protected CloudStoreRestClient getClient() {
+		return getRestRepoTransport().getClient();
 	}
 
 	protected RestRepoTransport getRestRepoTransport() {
