@@ -7,6 +7,9 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.UUID;
 
+import org.subshare.core.crypto.KeyFactory;
+import org.subshare.core.user.UserRepoKey;
+import org.subshare.core.user.UserRepoKeyRing;
 import org.subshare.rest.client.transport.CryptreeRepoTransportFactory;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -71,18 +74,31 @@ public class RepoToRepoSyncIT extends AbstractIT {
 	public static void beforeClass() throws Exception {
 		cryptreeRepoTransportFactory = RepoTransportFactoryRegistry.getInstance().getRepoTransportFactoryOrFail(CryptreeRepoTransportFactory.class);
 		cryptreeRepoTransportFactory.setDynamicX509TrustManagerCallbackClass(TestDynamicX509TrustManagerCallback.class);
+		cryptreeRepoTransportFactory.setUserRepoKeyRing(createUserRepoKeyRing());
 	}
 
 	@AfterClass
 	public static void afterClass() {
 		cryptreeRepoTransportFactory.setDynamicX509TrustManagerCallbackClass(null);
+		cryptreeRepoTransportFactory.setUserRepoKeyRing(null);
+	}
+
+	private static UserRepoKeyRing createUserRepoKeyRing() {
+		final UserRepoKeyRing userRepoKeyRing = new UserRepoKeyRing();
+		userRepoKeyRing.addUserRepoKey(createUserRepoKey());
+		userRepoKeyRing.addUserRepoKey(createUserRepoKey());
+		return userRepoKeyRing;
+	}
+
+	private static UserRepoKey createUserRepoKey() {
+		final UserRepoKey userRepoKey = new UserRepoKey(KeyFactory.getInstance().createAsymmetricKeyPair());
+		return userRepoKey;
 	}
 
 	private URL getRemoteRootURLWithPathPrefix(final UUID remoteRepositoryId) throws MalformedURLException {
 		final URL remoteRootURL = new URL(getSecureUrl() + "/" + remoteRepositoryId + remotePathPrefix);
 		return remoteRootURL;
 	}
-
 
 	@Test
 	public void syncFromLocalToRemote() throws Exception {

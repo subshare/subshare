@@ -5,6 +5,8 @@ import static co.codewizards.cloudstore.core.util.Util.*;
 import javax.jdo.annotations.NullValue;
 import javax.jdo.annotations.PersistenceCapable;
 import javax.jdo.annotations.Persistent;
+import javax.jdo.annotations.Queries;
+import javax.jdo.annotations.Query;
 import javax.jdo.annotations.Unique;
 
 import org.subshare.core.dto.CryptoKeyRole;
@@ -22,9 +24,13 @@ import co.codewizards.cloudstore.local.persistence.RepoFile;
  */
 @PersistenceCapable
 @Unique(name="CryptoRepoFile_repoFile", members="repoFile")
+@Queries({
+	@Query(name="getCryptoRepoFile_repoFile", value="SELECT UNIQUE WHERE this.repoFile == :repoFile")
+})
 public class CryptoRepoFile extends Entity implements AutoTrackLocalRevision {
 
-	@Persistent(nullValue=NullValue.EXCEPTION)
+	private CryptoRepoFile parent;
+
 	private RepoFile repoFile;
 
 	@Persistent(nullValue=NullValue.EXCEPTION)
@@ -33,16 +39,30 @@ public class CryptoRepoFile extends Entity implements AutoTrackLocalRevision {
 	@Persistent(nullValue=NullValue.EXCEPTION)
 	private byte[] repoFileDTOData;
 
+	public CryptoRepoFile getParent() {
+		return parent;
+	}
+	public void setParent(final CryptoRepoFile parent) {
+		this.parent = parent;
+	}
+
 	/**
-	 * Gets the {@link RepoFile} on the SubShare-server-side.
+	 * Gets the corresponding {@link RepoFile}.
 	 * <p>
-	 * The file referenced here is encrypted and has no useful meta-data, anymore:
+	 * If this is the client side, the file referenced here is plain-text.
+	 * <p>
+	 * If this is the server side, the file referenced here is encrypted and has no useful meta-data, anymore:
 	 * <ul>
 	 * <li>Its {@link RepoFile#getName() name} is a hash code (unique per server-repository and real name).
 	 * <li>Its {@link RepoFile#getLastModified() lastModified} is always 0 (1970-01-01 00:00:00 UTC).
 	 * </ul>
 	 * <p>
 	 * The real meta-data is encoded as DTO and then encrypted on the client-side.
+	 * <p>
+	 * Please note, that this referenced {@code RepoFile} might be <code>null</code>, if it does not exist
+	 * locally. This is e.g. possible, when checking out a sub-tree only. In this case, the client still fetches
+	 * all the {@code CryptoRepoFile}s up to the root (=> backlinks) in order to know the plain-text path,
+	 * but there are no corresponding directories in the client's repository.
 	 * @return the {@link RepoFile} on the SubShare-server-side. Never <code>null</code> in persistent data
 	 * (but maybe <code>null</code> temporarily in memory).
 	 */

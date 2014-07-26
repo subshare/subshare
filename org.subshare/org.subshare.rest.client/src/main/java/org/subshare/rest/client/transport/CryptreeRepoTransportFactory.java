@@ -2,18 +2,28 @@ package org.subshare.rest.client.transport;
 
 import java.net.URL;
 
+import org.subshare.core.user.UserRepoKeyRing;
+
 import co.codewizards.cloudstore.core.repo.transport.AbstractRepoTransportFactory;
 import co.codewizards.cloudstore.core.repo.transport.RepoTransport;
 import co.codewizards.cloudstore.rest.client.ssl.DynamicX509TrustManagerCallback;
 
 public class CryptreeRepoTransportFactory extends AbstractRepoTransportFactory {
 	protected final RestRepoTransportFactory restRepoTransportFactory = new RestRepoTransportFactory();
+	private UserRepoKeyRing userRepoKeyRing;
 
 	public Class<? extends DynamicX509TrustManagerCallback> getDynamicX509TrustManagerCallbackClass() {
 		return restRepoTransportFactory.getDynamicX509TrustManagerCallbackClass();
 	}
 	public void setDynamicX509TrustManagerCallbackClass(final Class<? extends DynamicX509TrustManagerCallback> dynamicX509TrustManagerCallbackClass) {
 		restRepoTransportFactory.setDynamicX509TrustManagerCallbackClass(dynamicX509TrustManagerCallbackClass);
+	}
+
+	public UserRepoKeyRing getUserRepoKeyRing() {
+		return userRepoKeyRing;
+	}
+	public void setUserRepoKeyRing(final UserRepoKeyRing userRepoKeyRing) {
+		this.userRepoKeyRing = userRepoKeyRing;
 	}
 
 	@Override

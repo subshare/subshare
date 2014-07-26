@@ -56,6 +56,8 @@ public class CryptoKey extends Entity implements AutoTrackLocalRevision, StoreCa
 	@Persistent(mappedBy="fromCryptoKey")
 	private Set<CryptoLink> outCryptoLinks;
 
+	private boolean active = true;
+
 	public CryptoKey() { }
 
 	public CryptoKey(final Uid cryptoKeyId) {
@@ -73,6 +75,13 @@ public class CryptoKey extends Entity implements AutoTrackLocalRevision, StoreCa
 			cryptoKeyId = new Uid().toString();
 
 		return new Uid(cryptoKeyId);
+	}
+
+	public boolean isActive() {
+		return active;
+	}
+	public void setActive(final boolean active) {
+		this.active = active;
 	}
 
 	/**
