@@ -147,13 +147,4 @@ public class RepoToRepoSyncIT extends AbstractIT {
 //		assertDirectoriesAreEqualRecursively(getLocalRootWithPathPrefix(), getRemoteRootWithPathPrefix());
 	}
 
-	@Test
-	public void dummy1() throws Exception {
-		throw new Exception("dummy1");
-	}
-
-	@Test
-	public void dummy2() throws Exception {
-		throw new Exception("dummy2");
-	}
 }

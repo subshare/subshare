@@ -40,11 +40,6 @@ public class MACTest
 	private final SecureRandom random = new SecureRandom();
 
 	@Test
-	public void dummy3() throws Exception {
-		throw new Exception("dummy3");
-	}
-
-	@Test
 	public void testAllSupportedMACs() throws Exception
 	{
 		final byte[] orig = new byte[1024 + random.nextInt(10240)];
