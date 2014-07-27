@@ -3,6 +3,8 @@ package org.subshare.local.persistence;
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Index;
 import javax.jdo.annotations.Indices;
+import javax.jdo.annotations.Inheritance;
+import javax.jdo.annotations.InheritanceStrategy;
 import javax.jdo.annotations.NullValue;
 import javax.jdo.annotations.PersistenceCapable;
 import javax.jdo.annotations.Persistent;
@@ -26,6 +28,7 @@ import co.codewizards.cloudstore.local.persistence.Entity;
  * @author Marco หงุ่ยตระกูล-Schulze - marco at codewizards dot co
  */
 @PersistenceCapable
+@Inheritance(strategy=InheritanceStrategy.NEW_TABLE)
 @Unique(name="CryptoLink_cryptoLinkId", members="cryptoLinkId")
 @Indices({
 	@Index(name="CryptoLink_localRevision", members={"localRevision"})

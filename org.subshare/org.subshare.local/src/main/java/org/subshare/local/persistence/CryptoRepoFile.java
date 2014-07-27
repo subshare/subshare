@@ -2,6 +2,8 @@ package org.subshare.local.persistence;
 
 import static co.codewizards.cloudstore.core.util.Util.*;
 
+import javax.jdo.annotations.Inheritance;
+import javax.jdo.annotations.InheritanceStrategy;
 import javax.jdo.annotations.NullValue;
 import javax.jdo.annotations.PersistenceCapable;
 import javax.jdo.annotations.Persistent;
@@ -23,6 +25,7 @@ import co.codewizards.cloudstore.local.persistence.RepoFile;
  * @author Marco หงุ่ยตระกูล-Schulze - marco at codewizards dot co
  */
 @PersistenceCapable
+@Inheritance(strategy=InheritanceStrategy.NEW_TABLE)
 @Unique(name="CryptoRepoFile_repoFile", members="repoFile")
 @Queries({
 	@Query(name="getCryptoRepoFile_repoFile", value="SELECT UNIQUE WHERE this.repoFile == :repoFile")

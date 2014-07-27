@@ -3,9 +3,12 @@ package org.subshare.local;
 import static co.codewizards.cloudstore.core.util.Util.*;
 import static org.subshare.core.crypto.DummyCryptoUtil.*;
 
+import java.util.Arrays;
+
 import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.bouncycastle.crypto.params.ParametersWithIV;
+import org.subshare.core.crypto.KeyFactory;
 import org.subshare.core.dto.CryptoKeyPart;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.crypto.Cipher;
@@ -16,11 +19,52 @@ import org.subshare.local.persistence.CryptoLink;
 public class CryptreeNodeUtil {
 
 	public static byte[] decrypt(final byte[] encrypted, final UserRepoKey userRepoKey) {
-		return decrypt(encrypted, userRepoKey.getKeyPair().getPrivate());
+		// TODO better encoding format! And extract this into a nice class! With a test!
+		int index = 0;
+		if (encrypted[index++] != 1) // version
+			throw new IllegalStateException("Wrong encoding?! Wrong version?!");
+
+		final int encryptedKeyLength = (encrypted[index++] & 0xff) + ( (encrypted[index++] & 0xff) << 8 );
+		final byte[] encryptedKey = new byte[encryptedKeyLength];
+		System.arraycopy(encrypted, index, encryptedKey, 0, encryptedKeyLength);
+		index += encryptedKeyLength;
+
+		final byte[] encryptedData = new byte[encrypted.length - index];
+		System.arraycopy(encrypted, index, encryptedData, 0, encryptedData.length);
+
+		System.out.println("decrypt: userRepoKeyId: " + userRepoKey.getUserRepoKeyId());
+		System.out.println("encrypt: encryptedKeyLength: " + encryptedKeyLength);
+		System.out.println("encrypt: encryptedKey: " + Arrays.toString(encryptedKey));
+		final byte[] symmetricKeyBytes = decrypt(encryptedKey, userRepoKey.getKeyPair().getPrivate());
+		System.out.println("decrypt: symmetricKey: " + Arrays.toString(symmetricKeyBytes));
+		final KeyParameter symmetricKey = new KeyParameter(symmetricKeyBytes);
+
+		final byte[] plain = decrypt(encryptedData, symmetricKey);
+		return plain;
 	}
 
 	public static byte[] encrypt(final byte[] plain, final UserRepoKey userRepoKey) {
-		return decrypt(plain, userRepoKey.getKeyPair().getPublic());
+		// TODO better encoding format! And extract this into a nice class! With a test!
+		final KeyParameter symmetricKey = KeyFactory.getInstance().createSymmetricKey();
+		System.out.println("encrypt: userRepoKeyId: " + userRepoKey.getUserRepoKeyId());
+		System.out.println("encrypt: symmetricKey: " + Arrays.toString(symmetricKey.getKey()));
+		final byte[] encryptedKey = encrypt(symmetricKey.getKey(), userRepoKey.getKeyPair().getPublic());
+		System.out.println("encrypt: encryptedKey.length: " + encryptedKey.length);
+		System.out.println("encrypt: encryptedKey: " + Arrays.toString(encryptedKey));
+		final byte[] encryptedData = encrypt(plain, symmetricKey);
+		final byte[] combined = new byte[1 + 2 + encryptedKey.length + encryptedData.length];
+		if (encryptedKey.length > 65535)
+			throw new IllegalStateException("encryptedKey.length > 65535 :: length cannot be encoded in 2 bytes!");
+
+		int index = 0;
+		combined[index++] = 1; // version
+		combined[index++] = (byte) encryptedKey.length;
+		combined[index++] = (byte) (encryptedKey.length >>> 8);
+		System.arraycopy(encryptedKey, 0, combined, index, encryptedKey.length);
+		index += encryptedKey.length;
+		System.arraycopy(encryptedData, 0, combined, index, encryptedData.length);
+
+		return combined;
 	}
 
 	public static byte[] decrypt(final byte[] encrypted, final PlainCryptoKey plainCryptoKey) {

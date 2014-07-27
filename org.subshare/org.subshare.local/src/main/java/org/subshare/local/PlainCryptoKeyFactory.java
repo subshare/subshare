@@ -71,6 +71,7 @@ abstract class PlainCryptoKeyFactory {
 		public PlainCryptoKey createPlainCryptoKey() {
 			final CryptreeNode cryptreeNode = getCryptreeNodeOrFail();
 			final CryptoKeyPart cryptoKeyPart = getCryptoKeyPartOrFail();
+
 			final AsymmetricCipherKeyPair keyPair = KeyFactory.getInstance().createAsymmetricKeyPair();
 			final CryptoKey cryptoKey = createCryptoKey(CryptoKeyRole.clearanceKey, CryptoKeyType.asymmetric);
 

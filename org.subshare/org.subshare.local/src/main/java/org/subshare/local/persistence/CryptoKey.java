@@ -6,6 +6,8 @@ import java.util.Set;
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Index;
 import javax.jdo.annotations.Indices;
+import javax.jdo.annotations.Inheritance;
+import javax.jdo.annotations.InheritanceStrategy;
 import javax.jdo.annotations.NullValue;
 import javax.jdo.annotations.PersistenceCapable;
 import javax.jdo.annotations.Persistent;
@@ -23,6 +25,7 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 import co.codewizards.cloudstore.local.persistence.RepoFile;
 
 @PersistenceCapable
+@Inheritance(strategy=InheritanceStrategy.NEW_TABLE)
 @Unique(name="CryptoKey_cryptoKeyId", members="cryptoKeyId")
 @Indices({
 	@Index(name="CryptoKey_localRevision", members={"localRevision"}),

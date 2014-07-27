@@ -28,7 +28,7 @@ public class KeyFactory {
 
 	private static final Logger logger = LoggerFactory.getLogger(KeyFactory.class);
 
-	private static final SecureRandom random = new SecureRandom();
+	public static final SecureRandom random = new SecureRandom();
 
 	public KeyParameter createSymmetricKey() {
 		final int sizeInByte = SYMMETRIC_KEY_SIZE / 8;

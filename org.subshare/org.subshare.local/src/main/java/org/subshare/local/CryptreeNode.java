@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.bouncycastle.crypto.params.KeyParameter;
 import org.subshare.core.dto.CryptoKeyPart;
 import org.subshare.core.dto.CryptoKeyRole;
 import org.subshare.core.user.UserRepoKey;
@@ -50,6 +51,7 @@ public class CryptreeNode {
 	private CryptoRepoFile cryptoRepoFile; // maybe null - lazily loaded
 	private final RepoFileDTOConverter repoFileDTOConverter; // never null
 	private final List<CryptreeNode> children = new ArrayList<CryptreeNode>(0);
+	private boolean childrenLoaded = false;
 	private final RepoFileDTOIO repoFileDTOIO; // never null
 
 	public CryptreeNode(final UserRepoKeyRing userRepoKeyRing, final LocalRepoTransaction transaction, final RepoFile repoFile) {
@@ -83,6 +85,9 @@ public class CryptreeNode {
 
 		this.repoFileDTOIO = parent != null ? parent.repoFileDTOIO
 				: (child != null ? child.repoFileDTOIO : new RepoFileDTOIO());
+
+		if (child != null)
+			children.add(child);
 	}
 
 	protected UserRepoKeyRing getUserRepoKeyRing() {
@@ -144,6 +149,11 @@ public class CryptreeNode {
 	}
 
 	public Collection<CryptreeNode> getChildren() {
+		if (! childrenLoaded) {
+			// TODO load children!
+
+			childrenLoaded = true;
+		}
 		return Collections.unmodifiableList(children);
 	}
 
@@ -236,15 +246,25 @@ public class CryptreeNode {
 			if (plainCryptoKey.getCryptoKeyPart() != toCryptoKeyPart)
 				throw new IllegalStateException(String.format("plainCryptoKey.cryptoKeyPart != toCryptoKeyPart :: %s != %s", plainCryptoKey.getCryptoKeyPart(), toCryptoKeyPart));
 
-			final CryptoKey cryptoKey = transaction.getDAO(CryptoKeyDAO.class).makePersistent(plainCryptoKey.getCryptoKey());
+			final CryptoKeyDAO cryptoKeyDAO = transaction.getDAO(CryptoKeyDAO.class);
+			final CryptoKey cryptoKey = cryptoKeyDAO.makePersistent(plainCryptoKey.getCryptoKey());
 			plainCryptoKey = new PlainCryptoKey(cryptoKey, plainCryptoKey.getCryptoKeyPart(), plainCryptoKey.getCipherParameters());
 		}
 		return plainCryptoKey;
 	}
 
+	public KeyParameter getDataKey() {
+		final PlainCryptoKey plainCryptoKey = getPlainCryptoKeyOrCreate(CryptoKeyRole.dataKey, CryptoKeyPart.sharedSecret);
+		return plainCryptoKey.getKeyParameterOrFail();
+	}
+
 	public CryptreeNode getParent() {
 		if (parent == null) {
-			parent = null; // TODO find/create!
+			final RepoFile parentRepoFile = repoFile == null ? null : repoFile.getParent();
+			final CryptoRepoFile parentCryptoRepoFile =  cryptoRepoFile == null ? null : cryptoRepoFile.getParent();
+
+			if (parentRepoFile != null || parentCryptoRepoFile != null)
+				parent = new CryptreeNode(null, this, getUserRepoKeyRing(), getTransaction(), parentRepoFile, parentCryptoRepoFile);
 		}
 		return parent;
 	}

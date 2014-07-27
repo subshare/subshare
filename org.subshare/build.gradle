@@ -30,6 +30,12 @@ allprojects {
 subprojects {
     apply plugin: 'eclipse'
 
+	eclipse {
+		classpath {
+		   downloadSources = true
+		}
+	}
+
     dependencies {
 		compile "org.slf4j:slf4j-api:$slf4jVersion"
         testCompile 'junit:junit:4.11', 'org.assertj:assertj-core:1.5.0'
