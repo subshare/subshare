@@ -5,7 +5,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import co.codewizards.cloudstore.core.dto.Uid;
 
 @XmlRootElement
-public class CryptoLinkDTO {
+public class CryptoLinkDto {
 
 	private Uid cryptoLinkId;
 

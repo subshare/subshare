@@ -2,10 +2,10 @@ package org.subshare.local.persistence;
 
 import javax.jdo.Query;
 
-import co.codewizards.cloudstore.local.persistence.DAO;
+import co.codewizards.cloudstore.local.persistence.Dao;
 import co.codewizards.cloudstore.local.persistence.RepoFile;
 
-public class CryptoRepoFileDAO extends DAO<CryptoRepoFile, CryptoRepoFileDAO> {
+public class CryptoRepoFileDao extends Dao<CryptoRepoFile, CryptoRepoFileDao> {
 
 	public CryptoRepoFile getCryptoRepoFile(final RepoFile repoFile) {
 		final Query query = pm().newNamedQuery(getEntityClass(), "getCryptoRepoFile_repoFile");

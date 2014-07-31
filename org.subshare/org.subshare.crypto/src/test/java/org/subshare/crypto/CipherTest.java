@@ -17,6 +17,8 @@
  */
 package org.subshare.crypto;
 
+import static org.assertj.core.api.Assertions.*;
+
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.Security;
@@ -142,6 +144,7 @@ public class CipherTest
 		"RSA",
 		"RSA//",
 		"RSA//NoPadding",    // same as: RSA/ECB/NoPadding
+		"RSA/None/NoPadding", // same as: RSA//NoPadding
 		"RSA/ECB/NoPadding", // same as: RSA//NoPadding
 		"RSA/CBC/NoPadding", // does not exist!
 		"RSA//ISO9796-1",
@@ -149,12 +152,15 @@ public class CipherTest
 		"RSA//PKCS1",
 		"RSA//PKCS1Padding",
 		"RSA//OAEPWITHSHA1ANDMGF1PADDING",   // same as: RSA/ECB/OAEPWITHSHA1ANDMGF1PADDING
-		"RSA/ECB/OAEPWITHSHA1ANDMGF1PADDING" // same as: RSA//OAEPWITHSHA1ANDMGF1PADDING
+		"RSA/ECB/OAEPWITHSHA1ANDMGF1PADDING", // same as: RSA//OAEPWITHSHA1ANDMGF1PADDING
+		"RSA/None/OAEPWITHSHA1ANDMGF1PADDING" // same as: RSA//OAEPWITHSHA1ANDMGF1PADDING
 	};
 
 	@Test
 	public void testLookupCompatibilityWithJCE()
 	{
+//		Security.insertProviderAt(bouncyCastleProvider, 2);
+//		try {
 		final List<String> transformations = new ArrayList<String>();
 //		transformations.addAll(Arrays.asList(SYMMETRIC_TRANSFORMATIONS));
 		transformations.addAll(Arrays.asList(ASYMMETRIC_TRANSFORMATIONS));
@@ -191,6 +197,9 @@ public class CipherTest
 					logger.warn("Both JCE and CryptoRegistry failed to provide a cipher for transformation=\"" + transformation + "\" with the same type of exception: " + cryptoRegistryError.getClass().getName());
 			}
 		}
+//		} finally {
+//			Security.removeProvider(bouncyCastleProvider.getName());
+//		}
 	}
 
 	@Test
@@ -341,6 +350,70 @@ public class CipherTest
 			blockSize2Plaintext.put(blockSize, plaintext);
 		}
 		return plaintext;
+	}
+
+	@Test
+	public void testSymmetricEncryptionWithoutIv()
+	throws Exception
+	{
+		final Set<String> transformations = new TreeSet<String>();
+//		transformations.addAll(CryptoRegistry.getInstance().getSupportedCipherTransformations(CipherEngineType.symmetricBlock));
+		transformations.add("AES/CBC/PKCS5Padding");
+		transformations.add("AES/CFB/NoPadding");
+		transformations.add("Twofish/CBC/PKCS5Padding");
+		transformations.add("Twofish/CFB/NoPadding");
+
+		final byte[] key = new byte[128 / 8];
+		random.nextBytes(key);
+		final KeyParameter keyParameter = new KeyParameter(key);
+
+
+		for (int testMode = 0; testMode < 4; ++testMode) {
+			for (final String transformation : transformations) {
+				logger.info("transformation={}", transformation);
+				try {
+					final org.subshare.crypto.Cipher encrypter = CryptoRegistry.getInstance().createCipher(transformation);
+					final org.subshare.crypto.Cipher decrypter = CryptoRegistry.getInstance().createCipher(transformation);
+
+					final byte[] plaintext = getPlaintext(encrypter.getInputBlockSize());
+					if (plaintext.length < 1)
+						throw new IllegalStateException("plaintext.length < 1");
+
+					final byte[] nullIV = new byte[encrypter.getIVSize()];
+
+					switch (testMode) {
+						case 0:
+							encrypter.init(CipherOperationMode.ENCRYPT, keyParameter);
+							decrypter.init(CipherOperationMode.DECRYPT, keyParameter);
+							break;
+						case 1:
+							encrypter.init(CipherOperationMode.ENCRYPT, new ParametersWithIV(keyParameter, nullIV));
+							decrypter.init(CipherOperationMode.DECRYPT, keyParameter);
+							break;
+						case 2:
+							encrypter.init(CipherOperationMode.ENCRYPT, keyParameter);
+							decrypter.init(CipherOperationMode.DECRYPT, new ParametersWithIV(keyParameter, nullIV));
+							break;
+						case 3:
+							encrypter.init(CipherOperationMode.ENCRYPT, new ParametersWithIV(keyParameter, nullIV));
+							decrypter.init(CipherOperationMode.DECRYPT, new ParametersWithIV(keyParameter, nullIV));
+							break;
+						default:
+							throw new IllegalStateException("Unknown testMode: " + testMode);
+					}
+
+					final byte[] plain = new byte[random.nextInt(1024 * 1024)];
+					random.nextBytes(plain);
+
+					final byte[] encrypted = encrypter.doFinal(plain);
+					final byte[] decrypted = decrypter.doFinal(encrypted);
+
+					assertThat(decrypted).isEqualTo(plain);
+				} catch (final Exception x) {
+					throw new RuntimeException("Test failed for transformation \"" + transformation + "\": " + x, x);
+				}
+			}
+		}
 	}
 
 	@Test

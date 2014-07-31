@@ -9,7 +9,7 @@ import org.subshare.crypto.Cipher;
 public class DummyCryptoUtil {
 
 	public static final String SYMMETRIC_ENCRYPTION_TRANSFORMATION = "Twofish/CFB/NoPadding"; // TODO This should be configurable.
-	public static final String ASYMMETRIC_ENCRYPTION_TRANSFORMATION = "RSA/ECB/OAEPWITHSHA1ANDMGF1PADDING"; // TODO This should be configurable.
+	public static final String ASYMMETRIC_ENCRYPTION_TRANSFORMATION = "RSA//OAEPWITHSHA1ANDMGF1PADDING"; // TODO This should be configurable.
 	/**
 	 * The size of symmetric keys in bits.
 	 */

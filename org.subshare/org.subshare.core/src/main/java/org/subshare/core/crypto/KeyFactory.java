@@ -14,6 +14,10 @@ import org.subshare.crypto.CryptoRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * @deprecated This class sucks - it should be replaced by nicer constructions!
+ */
+@Deprecated
 public class KeyFactory {
 
 	private static final class Holder {
@@ -28,12 +32,12 @@ public class KeyFactory {
 
 	private static final Logger logger = LoggerFactory.getLogger(KeyFactory.class);
 
-	public static final SecureRandom random = new SecureRandom();
+	public static final SecureRandom secureRandom = new SecureRandom();
 
 	public KeyParameter createSymmetricKey() {
 		final int sizeInByte = SYMMETRIC_KEY_SIZE / 8;
 		final byte[] key = new byte[sizeInByte];
-		random.nextBytes(key);
+		secureRandom.nextBytes(key);
 		return new KeyParameter(key);
 	}
 

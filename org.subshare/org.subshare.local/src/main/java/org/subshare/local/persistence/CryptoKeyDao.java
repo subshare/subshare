@@ -7,10 +7,10 @@ import javax.jdo.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import co.codewizards.cloudstore.local.persistence.DAO;
+import co.codewizards.cloudstore.local.persistence.Dao;
 
-public class CryptoKeyDAO extends DAO<CryptoKey, CryptoKeyDAO> {
-	private static final Logger logger = LoggerFactory.getLogger(CryptoKeyDAO.class);
+public class CryptoKeyDao extends Dao<CryptoKey, CryptoKeyDao> {
+	private static final Logger logger = LoggerFactory.getLogger(CryptoKeyDao.class);
 
 	/**
 	 * Get those {@link CryptoKey}s whose {@link CryptoKey#getLocalRevision() localRevision} is greater

@@ -1,7 +1,6 @@
 package org.subshare.rest.client.transport;
 
 import static co.codewizards.cloudstore.core.util.Util.*;
-import static org.subshare.local.CryptreeNodeUtil.*;
 
 import java.io.File;
 import java.net.URL;
@@ -10,18 +9,21 @@ import java.util.Date;
 import java.util.StringTokenizer;
 import java.util.UUID;
 
-import org.subshare.core.dto.CryptoKeyChangeSetDTO;
+import org.bouncycastle.crypto.params.KeyParameter;
+import org.subshare.core.Cryptree;
+import org.subshare.core.CryptreeFactory;
+import org.subshare.core.CryptreeFactoryRegistry;
+import org.subshare.core.dto.CryptoChangeSetDto;
+import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKeyRing;
-import org.subshare.local.CryptreeNode;
-import org.subshare.local.persistence.CryptoRepoFile;
-import org.subshare.rest.client.transport.command.GetCryptoKeyChangeSetDTO;
+import org.subshare.rest.client.transport.command.GetCryptoChangeSetDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import co.codewizards.cloudstore.core.dto.ChangeSetDTO;
-import co.codewizards.cloudstore.core.dto.ModificationDTO;
-import co.codewizards.cloudstore.core.dto.RepoFileDTO;
-import co.codewizards.cloudstore.core.dto.RepositoryDTO;
+import co.codewizards.cloudstore.core.dto.ChangeSetDto;
+import co.codewizards.cloudstore.core.dto.ModificationDto;
+import co.codewizards.cloudstore.core.dto.RepoFileDto;
+import co.codewizards.cloudstore.core.dto.RepositoryDto;
 import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.repo.local.ContextWithLocalRepoManager;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
@@ -30,20 +32,20 @@ import co.codewizards.cloudstore.core.repo.local.LocalRepoRegistry;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
 import co.codewizards.cloudstore.core.repo.transport.AbstractRepoTransport;
 import co.codewizards.cloudstore.core.util.HashUtil;
-import co.codewizards.cloudstore.local.persistence.RepoFile;
-import co.codewizards.cloudstore.local.persistence.RepoFileDAO;
 import co.codewizards.cloudstore.rest.client.CloudStoreRestClient;
 
 public class CryptreeRepoTransport extends AbstractRepoTransport implements ContextWithLocalRepoManager {
 	private static final Logger logger = LoggerFactory.getLogger(CryptreeRepoTransport.class);
 	private static final Charset UTF8 = Charset.forName("UTF-8");
 
+	private UserRepoKey userRepoKey;
+	private CryptreeFactory cryptreeFactory;
 	private RestRepoTransport restRepoTransport;
 	private LocalRepoManager localRepoManager;
 
 	@Override
-	public RepositoryDTO getRepositoryDTO() {
-		return getRestRepoTransport().getRepositoryDTO();
+	public RepositoryDto getRepositoryDto() {
+		return getRestRepoTransport().getRepositoryDto();
 	}
 
 	@Override
@@ -62,51 +64,51 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 	}
 
 	@Override
-	public ChangeSetDTO getChangeSetDTO(final boolean localSync) {
-		final ChangeSetDTO changeSetDTO = getRestRepoTransport().getChangeSetDTO(localSync);
+	public ChangeSetDto getChangeSetDto(final boolean localSync) {
+		final ChangeSetDto changeSetDto = getRestRepoTransport().getChangeSetDto(localSync);
 //		syncCryptoKeysFromRemoteRepo();
-//		return decryptChangeSetDTO(changeSetDTO);
+//		return decryptChangeSetDto(changeSetDto);
 		// TODO implement this!
-		return changeSetDTO;
+		return changeSetDto;
 	}
 
 	private void syncCryptoKeysFromRemoteRepo() {
-		final CryptoKeyChangeSetDTO cryptoKeyChangeSetDTO = getClient().execute(new GetCryptoKeyChangeSetDTO(getRepositoryId().toString()));
+		final CryptoChangeSetDto cryptoChangeSetDto = getClient().execute(new GetCryptoChangeSetDto(getRepositoryId().toString()));
 		// TODO implement this!
 //		throw new UnsupportedOperationException("NYI");
 	}
 
-	private ChangeSetDTO decryptChangeSetDTO(final ChangeSetDTO changeSetDTO) {
-		assertNotNull("changeSetDTO", changeSetDTO);
+	private ChangeSetDto decryptChangeSetDto(final ChangeSetDto changeSetDto) {
+		assertNotNull("changeSetDto", changeSetDto);
 
-		final ChangeSetDTO decryptedChangeSetDTO = new ChangeSetDTO();
-		decryptedChangeSetDTO.setRepositoryDTO(changeSetDTO.getRepositoryDTO());
+		final ChangeSetDto decryptedChangeSetDto = new ChangeSetDto();
+		decryptedChangeSetDto.setRepositoryDto(changeSetDto.getRepositoryDto());
 
-		for (final ModificationDTO modificationDTO : changeSetDTO.getModificationDTOs()) {
-			final ModificationDTO decryptedModificationDTO = decryptModificationDTO(modificationDTO);
-			decryptedChangeSetDTO.getModificationDTOs().add(decryptedModificationDTO);
+		for (final ModificationDto modificationDto : changeSetDto.getModificationDtos()) {
+			final ModificationDto decryptedModificationDto = decryptModificationDto(modificationDto);
+			decryptedChangeSetDto.getModificationDtos().add(decryptedModificationDto);
 		}
 
-		for (final RepoFileDTO repoFileDTO : changeSetDTO.getRepoFileDTOs()) {
-			final RepoFileDTO decryptedRepoFileDTO = decryptRepoFileDTO(repoFileDTO);
-			decryptedChangeSetDTO.getRepoFileDTOs().add(decryptedRepoFileDTO);
+		for (final RepoFileDto repoFileDto : changeSetDto.getRepoFileDtos()) {
+			final RepoFileDto decryptedRepoFileDto = decryptRepoFileDto(repoFileDto);
+			decryptedChangeSetDto.getRepoFileDtos().add(decryptedRepoFileDto);
 		}
-		return decryptedChangeSetDTO;
+		return decryptedChangeSetDto;
 	}
 
-	private ModificationDTO decryptModificationDTO(final ModificationDTO modificationDTO) {
+	private ModificationDto decryptModificationDto(final ModificationDto modificationDto) {
 		// TODO implement this!
 		throw new UnsupportedOperationException("NYI");
 	}
 
-	private RepoFileDTO decryptRepoFileDTO(final RepoFileDTO repoFileDTO) {
-		final RepoFileDTO decryptedRepoFileDTO = new RepoFileDTO();
-		decryptedRepoFileDTO.setId(repoFileDTO.getId());
-//		decryptedRepoFileDTO.setLastModified(lastModified); // TODO!
-		decryptedRepoFileDTO.setLocalRevision(repoFileDTO.getLocalRevision());
-//		decryptedRepoFileDTO.setName(name); // TODO!
-		decryptedRepoFileDTO.setParentId(repoFileDTO.getParentId());
-//		return decryptedRepoFileDTO;
+	private RepoFileDto decryptRepoFileDto(final RepoFileDto repoFileDto) {
+		final RepoFileDto decryptedRepoFileDto = new RepoFileDto();
+		decryptedRepoFileDto.setId(repoFileDto.getId());
+//		decryptedRepoFileDto.setLastModified(lastModified); // TODO!
+		decryptedRepoFileDto.setLocalRevision(repoFileDto.getLocalRevision());
+//		decryptedRepoFileDto.setName(name); // TODO!
+		decryptedRepoFileDto.setParentId(repoFileDto.getParentId());
+//		return decryptedRepoFileDto;
 		// TODO implement this!
 		throw new UnsupportedOperationException("NYI");
 	}
@@ -117,19 +119,31 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 		final LocalRepoManager localRepoManager = getLocalRepoManager();
 		final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();
 		try {
-			final RepoFileDAO repoFileDAO = transaction.getDAO(RepoFileDAO.class);
-			final RepoFile repoFile = repoFileDAO.getRepoFile(localRepoManager.getLocalRoot(), new File(localRepoManager.getLocalRoot(), path));
-			assertNotNull("repoFile", repoFile);
-
-			final CryptreeNode cryptreeNode = new CryptreeNode(getUserRepoKeyRing(), transaction, repoFile);
-			final CryptoRepoFile cryptoRepoFile = cryptreeNode.getCryptoRepoFileOrCreate(true);
-
-			getRestRepoTransport().makeDirectory(getServerPath(path), new Date(0));
-
+			try (final Cryptree cryptree = createCryptree(transaction);) {
+				final CryptoChangeSetDto cryptoChangeSetDto = cryptree.createOrUpdateCryptoRepoFile(path);
+				cryptree.updateLastCryptoKeySyncToRemoteRepo();
+				putCryptoChangeSetDto(cryptoChangeSetDto);
+				getRestRepoTransport().makeDirectory(getServerPath(path), new Date(0));
+			}
 			transaction.commit();
 		} finally {
 			transaction.rollbackIfActive();
 		}
+	}
+
+	protected Cryptree createCryptree(final LocalRepoTransaction transaction) {
+		if (cryptreeFactory == null)
+			cryptreeFactory = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail();
+
+		return cryptreeFactory.createCryptree(transaction, getRepositoryId(), getUserRepoKey());
+	}
+
+	protected UserRepoKey getUserRepoKey() {
+		if (userRepoKey == null) { // we must use the same key for all operations during one sync - otherwise an attacker might find out which keys belong to the same keyring and thus same owner.
+			final UserRepoKeyRing userRepoKeyRing = getUserRepoKeyRing();
+			userRepoKey = userRepoKeyRing.getRandomUserRepoKeyOrFail();
+		}
+		return userRepoKey;
 	}
 
 	protected UserRepoKeyRing getUserRepoKeyRing() {
@@ -155,7 +169,7 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 	}
 
 	@Override
-	public RepoFileDTO getRepoFileDTO(final String path) {
+	public RepoFileDto getRepoFileDto(final String path) {
 		// TODO Auto-generated method stub
 //		throw new UnsupportedOperationException("NYI");
 		return null;
@@ -173,13 +187,6 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 		final LocalRepoManager localRepoManager = getLocalRepoManager();
 		final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();
 		try {
-			final RepoFileDAO repoFileDAO = transaction.getDAO(RepoFileDAO.class);
-			final RepoFile repoFile = repoFileDAO.getRepoFile(localRepoManager.getLocalRoot(), new File(localRepoManager.getLocalRoot(), path));
-			assertNotNull("repoFile", repoFile);
-
-			final CryptreeNode cryptreeNode = new CryptreeNode(getUserRepoKeyRing(), transaction, repoFile);
-			final CryptoRepoFile cryptoRepoFile = cryptreeNode.getCryptoRepoFileOrCreate(true);
-
 			getRestRepoTransport().beginPutFile(getServerPath(path));
 
 			transaction.commit();
@@ -194,20 +201,22 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 		final LocalRepoManager localRepoManager = getLocalRepoManager();
 		final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();
 		try {
-			final RepoFileDAO repoFileDAO = transaction.getDAO(RepoFileDAO.class);
-			final RepoFile repoFile = repoFileDAO.getRepoFile(localRepoManager.getLocalRoot(), new File(localRepoManager.getLocalRoot(), path));
-			assertNotNull("repoFile", repoFile);
+			try (final Cryptree cryptree = createCryptree(transaction);) {
+				final KeyParameter dataKey = cryptree.getDataKey(path);
+//				final byte[] encryptedFileData = encrypt(fileData, dataKey);
+//
+//				ByteArrayOutputStream bout = new ByteArrayOutputStream();
+//				EncrypterOutputStream encrypterOut = new EncrypterOutputStream(bout, cipherTransformation, dataKey, ivFactory);
+				// TODO this should not only be encrypted, but also signed!
 
-			final CryptreeNode cryptreeNode = new CryptreeNode(getUserRepoKeyRing(), transaction, repoFile);
-//			final CryptoRepoFile cryptoRepoFile = cryptreeNode.getCryptoRepoFileOrCreate(false);
-
-			final byte[] encryptedFileData = encrypt(fileData, cryptreeNode.getDataKey());
-
-			// TODO we *MUST* store the file chunks server-side in separate chunk-files permanently!
-			// The reason is that the chunks might be bigger (and usually are!) than the unencrypted files.
-			// Temporarily, we simply multiply the offset with a margin in order to have some reserve.
-			getRestRepoTransport().putFileData(getServerPath(path), getServerOffset(offset), encryptedFileData);
-
+				// TODO maybe we store only one IV per file and derive the chunk's IV from this combined with the offset (and all hashed)? this could save valuable entropy and should still be secure - maybe later.
+//
+//				// TODO we *MUST* store the file chunks server-side in separate chunk-files permanently!
+//				// The reason is that the chunks might be bigger (and usually are!) than the unencrypted files.
+//				// Temporarily, we simply multiply the offset with a margin in order to have some reserve.
+//				getRestRepoTransport().putFileData(getServerPath(path), getServerOffset(offset), encryptedFileData);
+				if (true) throw new UnsupportedOperationException("NYI");
+			}
 			transaction.commit();
 		} finally {
 			transaction.rollbackIfActive();
@@ -228,20 +237,21 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 		final LocalRepoManager localRepoManager = getLocalRepoManager();
 		final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();
 		try {
-			final RepoFileDAO repoFileDAO = transaction.getDAO(RepoFileDAO.class);
-			final RepoFile repoFile = repoFileDAO.getRepoFile(localRepoManager.getLocalRoot(), new File(localRepoManager.getLocalRoot(), path));
-			assertNotNull("repoFile", repoFile);
-
-			final CryptreeNode cryptreeNode = new CryptreeNode(getUserRepoKeyRing(), transaction, repoFile);
-			final CryptoRepoFile cryptoRepoFile = cryptreeNode.getCryptoRepoFileOrCreate(true);
-
-			// TODO need to calculate real SHA1 of encrypted data - is that feasable?! Or should we better make it optional?
-			getRestRepoTransport().endPutFile(getServerPath(path), new Date(0), getServerOffset(length), "DUMMY");
-
+			try (final Cryptree cryptree = createCryptree(transaction);) {
+				final CryptoChangeSetDto cryptoChangeSetDto = cryptree.createOrUpdateCryptoRepoFile(path);
+				cryptree.updateLastCryptoKeySyncToRemoteRepo();
+				putCryptoChangeSetDto(cryptoChangeSetDto);
+				// TODO need to calculate real SHA1 of encrypted data - is that feasable?! Or should we better make it optional?
+				getRestRepoTransport().endPutFile(getServerPath(path), new Date(0), getServerOffset(length), "DUMMY");
+			}
 			transaction.commit();
 		} finally {
 			transaction.rollbackIfActive();
 		}
+	}
+
+	private void putCryptoChangeSetDto(final CryptoChangeSetDto cryptoChangeSetDto) {
+		throw new UnsupportedOperationException("NYI");
 	}
 
 	@Override

@@ -13,7 +13,7 @@ import javax.jdo.annotations.Unique;
 
 import org.subshare.core.dto.CryptoKeyRole;
 
-import co.codewizards.cloudstore.core.dto.RepoFileDTO;
+import co.codewizards.cloudstore.core.dto.RepoFileDto;
 import co.codewizards.cloudstore.local.persistence.AutoTrackLocalRevision;
 import co.codewizards.cloudstore.local.persistence.Entity;
 import co.codewizards.cloudstore.local.persistence.RepoFile;
@@ -40,7 +40,7 @@ public class CryptoRepoFile extends Entity implements AutoTrackLocalRevision {
 	private CryptoKey cryptoKey;
 
 	@Persistent(nullValue=NullValue.EXCEPTION)
-	private byte[] repoFileDTOData;
+	private byte[] repoFileDtoData;
 
 	public CryptoRepoFile getParent() {
 		return parent;
@@ -60,7 +60,7 @@ public class CryptoRepoFile extends Entity implements AutoTrackLocalRevision {
 	 * <li>Its {@link RepoFile#getLastModified() lastModified} is always 0 (1970-01-01 00:00:00 UTC).
 	 * </ul>
 	 * <p>
-	 * The real meta-data is encoded as DTO and then encrypted on the client-side.
+	 * The real meta-data is encoded as Dto and then encrypted on the client-side.
 	 * <p>
 	 * Please note, that this referenced {@code RepoFile} might be <code>null</code>, if it does not exist
 	 * locally. This is e.g. possible, when checking out a sub-tree only. In this case, the client still fetches
@@ -77,9 +77,9 @@ public class CryptoRepoFile extends Entity implements AutoTrackLocalRevision {
 	}
 
 	/**
-	 * Gets the key used to encrypt {@link #getRepoFileDTOData() repoFileDTOData} as well as the
+	 * Gets the key used to encrypt {@link #getRepoFileDtoData() repoFileDtoData} as well as the
 	 * actual content of the file (if it is a normal file - no directory).
-	 * @return the key used to encrypt {@link #getRepoFileDTOData() repoFileDTOData} and - if applicable -
+	 * @return the key used to encrypt {@link #getRepoFileDtoData() repoFileDtoData} and - if applicable -
 	 * the file contents.
 	 */
 	public CryptoKey getCryptoKey() {
@@ -95,17 +95,17 @@ public class CryptoRepoFile extends Entity implements AutoTrackLocalRevision {
 	}
 
 	/**
-	 * Gets the encrypted real meta-data (an instance of a sub-class of {@link RepoFileDTO}).
+	 * Gets the encrypted real meta-data (an instance of a sub-class of {@link RepoFileDto}).
 	 * <p>
 	 * This meta-data is encrypted on the client-side using the referenced {@link #getCryptoKey() cryptoKey}.
-	 * @return the encrypted real meta-data (an instance of a sub-class of {@link RepoFileDTO}). Never <code>null</code> in persistent data
+	 * @return the encrypted real meta-data (an instance of a sub-class of {@link RepoFileDto}). Never <code>null</code> in persistent data
 	 * (but maybe <code>null</code> temporarily in memory).
 	 */
-	public byte[] getRepoFileDTOData() {
-		return repoFileDTOData;
+	public byte[] getRepoFileDtoData() {
+		return repoFileDtoData;
 	}
-	public void setRepoFileDTOData(final byte[] repoFileDTOData) {
-		this.repoFileDTOData = repoFileDTOData;
+	public void setRepoFileDtoData(final byte[] repoFileDtoData) {
+		this.repoFileDtoData = repoFileDtoData;
 	}
 
 	@Override

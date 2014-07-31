@@ -9,11 +9,11 @@ import org.subshare.core.dto.CryptoKeyRole;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import co.codewizards.cloudstore.local.persistence.DAO;
+import co.codewizards.cloudstore.local.persistence.Dao;
 import co.codewizards.cloudstore.local.persistence.RepoFile;
 
-public class CryptoLinkDAO extends DAO<CryptoLink, CryptoLinkDAO> {
-	private static final Logger logger = LoggerFactory.getLogger(CryptoLinkDAO.class);
+public class CryptoLinkDao extends Dao<CryptoLink, CryptoLinkDao> {
+	private static final Logger logger = LoggerFactory.getLogger(CryptoLinkDao.class);
 
 	/**
 	 * Get those {@link CryptoLink}s whose {@link CryptoLink#getLocalRevision() localRevision} is greater

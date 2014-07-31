@@ -79,7 +79,7 @@ abstract class PlainCryptoKeyFactory {
 			final PlainCryptoKey plainCryptoKey_private = new PlainCryptoKey(cryptoKey, CryptoKeyPart.privateKey, keyPair.getPrivate());
 
 			createCryptoLink(plainCryptoKey_public);
-			createCryptoLink(cryptreeNode.getUserRepoKeyRing().getRandomUserRepoKeyOrFail(), plainCryptoKey_private);
+			createCryptoLink(cryptreeNode.getUserRepoKey(), plainCryptoKey_private);
 
 			// TODO maybe we should give the clearance key other users, too?! not only the current user?!
 

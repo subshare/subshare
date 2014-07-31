@@ -16,6 +16,7 @@ import javax.jdo.annotations.Query;
 import javax.jdo.annotations.Unique;
 import javax.jdo.listener.StoreCallback;
 
+import org.subshare.core.dto.CryptoKeyPart;
 import org.subshare.core.dto.CryptoKeyRole;
 import org.subshare.core.dto.CryptoKeyType;
 
@@ -24,6 +25,25 @@ import co.codewizards.cloudstore.local.persistence.AutoTrackLocalRevision;
 import co.codewizards.cloudstore.local.persistence.Entity;
 import co.codewizards.cloudstore.local.persistence.RepoFile;
 
+/**
+ * Key used for encryption.
+ * <p>
+ * An instance of {@code CryptoKey} is mostly immutable. The only changes allowed after initial persistence
+ * are:
+ * <ul>
+ * <li>Switching {@link #isActive() active} from <code>true</code> to <code>false</code>. Switching back is
+ * not possible.
+ * <li>Adding new {@link CryptoLink} relations to {@link #getInCryptoLinks() inCryptoLinks} or
+ * {@link #getOutCryptoLinks() outCryptoLinks}.
+ * </ul>
+ * <p>
+ * Most importantly, the actual key which is contained in the
+ * {@linkplain #getInCryptoLinks() incoming crypto-links}, must never change and all incoming crypto-links
+ * must contain the same key. If it's an asymmetric key, then all parts of the key indicated by
+ * {@link CryptoLink#getToCryptoKeyPart() toCryptoKeyPart} must fit together - and be the same, if the
+ * {@link CryptoKeyPart} is the same.
+ * @author Marco หงุ่ยตระกูล-Schulze - marco at codewizards dot co
+ */
 @PersistenceCapable
 @Inheritance(strategy=InheritanceStrategy.NEW_TABLE)
 @Unique(name="CryptoKey_cryptoKeyId", members="cryptoKeyId")
@@ -113,6 +133,16 @@ public class CryptoKey extends Entity implements AutoTrackLocalRevision, StoreCa
 		this.cryptoKeyType = cryptoKeyType;
 	}
 
+	/**
+	 * Gets the incoming crypto-links.
+	 * <p>
+	 * The actual key data of {@code this} key (i.e. the shared secret or the public/private key) are
+	 * contained inside these {@link CryptoLink} instances.
+	 * <p>
+	 * Every incoming crypto-link references {@code this} via its
+	 * {@link CryptoLink#getToCryptoKey() toCryptoKey} property.
+	 * @return the incoming crypto-links. Never <code>null</code> and normally never empty, either.
+	 */
 	public Set<CryptoLink> getInCryptoLinks() {
 		if (inCryptoLinks == null)
 			inCryptoLinks = new HashSet<CryptoLink>();
@@ -120,6 +150,16 @@ public class CryptoKey extends Entity implements AutoTrackLocalRevision, StoreCa
 		return inCryptoLinks;
 	}
 
+	/**
+	 * Gets the outgoing crypto-links.
+	 * <p>
+	 * The actual key data contained in these {@link CryptoLink} instances is encrypted with {@code this}
+	 * key.
+	 * <p>
+	 * Every outgoing crypto-link references {@code this} via its
+	 * {@link CryptoLink#getFromCryptoKey() fromCryptoKey} property.
+	 * @return the outgoing crypto-links. Never <code>null</code>, but maybe empty.
+	 */
 	public Set<CryptoLink> getOutCryptoLinks() {
 		if (outCryptoLinks == null)
 			outCryptoLinks = new HashSet<CryptoLink>();

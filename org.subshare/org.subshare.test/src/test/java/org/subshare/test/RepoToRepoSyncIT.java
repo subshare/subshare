@@ -85,13 +85,14 @@ public class RepoToRepoSyncIT extends AbstractIT {
 
 	private static UserRepoKeyRing createUserRepoKeyRing() {
 		final UserRepoKeyRing userRepoKeyRing = new UserRepoKeyRing();
-		userRepoKeyRing.addUserRepoKey(createUserRepoKey());
-		userRepoKeyRing.addUserRepoKey(createUserRepoKey());
+		createUserRepoKey(userRepoKeyRing);
+		createUserRepoKey(userRepoKeyRing);
 		return userRepoKeyRing;
 	}
 
-	private static UserRepoKey createUserRepoKey() {
-		final UserRepoKey userRepoKey = new UserRepoKey(KeyFactory.getInstance().createAsymmetricKeyPair());
+	private static UserRepoKey createUserRepoKey(final UserRepoKeyRing userRepoKeyRing) {
+		final UserRepoKey userRepoKey = new UserRepoKey(userRepoKeyRing, KeyFactory.getInstance().createAsymmetricKeyPair());
+		userRepoKeyRing.addUserRepoKey(userRepoKey);
 		return userRepoKey;
 	}
 

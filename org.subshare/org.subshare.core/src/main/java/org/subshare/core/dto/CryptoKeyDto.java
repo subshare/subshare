@@ -5,7 +5,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import co.codewizards.cloudstore.core.dto.Uid;
 
 @XmlRootElement
-public class CryptoKeyDTO {
+public class CryptoKeyDto {
 
 	private Uid cryptoKeyId;
 
@@ -34,7 +34,7 @@ public class CryptoKeyDTO {
 	private String path;
 
 	/**
-	 * @deprecated TODO this should be replaced by a far more efficient way of encoding: repoFileId plus those RepoFileDTOs in the CryptoKeyChangeSetDTO that are need to reconstruct the path (or maybe only an id-to-pathsegment-map).
+	 * @deprecated TODO this should be replaced by a far more efficient way of encoding: repoFileId plus those RepoFileDtos in the CryptoChangeSetDto that are need to reconstruct the path (or maybe only an id-to-pathsegment-map).
 	 */
 	@Deprecated
 	public String getPath() {

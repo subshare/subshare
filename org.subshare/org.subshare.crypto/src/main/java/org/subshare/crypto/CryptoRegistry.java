@@ -649,10 +649,10 @@ public final class CryptoRegistry
 	private Cipher createCipherForAsymmetricBlockCipherEngine(final String transformation, final AsymmetricBlockCipher engine, final String engineName, final String modeName, final String paddingName)
 	throws NoSuchAlgorithmException, NoSuchPaddingException
 	{
-		if (modeName.isEmpty() || "ECB".equals(modeName))
+		if (modeName.isEmpty() || "ECB".equals(modeName) || "NONE".equals(modeName))
 			return createCipherForAsymmetricBlockCipherMode(transformation, engine, engineName, modeName, paddingName);
 
-		throw new NoSuchAlgorithmException("The asymmetric-block-cipher does not support the mode \"" + modeName + "\"! Only \"ECB\" or an empty string are allowed as mode!");
+		throw new NoSuchAlgorithmException("The asymmetric-block-cipher does not support the mode \"" + modeName + "\"! Only \"ECB\", \"NONE\" or an empty string are allowed as mode!");
 	}
 
 	/**

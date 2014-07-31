@@ -16,15 +16,21 @@ import co.codewizards.cloudstore.core.dto.Uid;
  */
 public class UserRepoKey {
 
+	private final UserRepoKeyRing userRepoKeyRing;
 	private final Uid userRepoKeyId;
 //	private final UUID repositoryId;
 	private final AsymmetricCipherKeyPair keyPair;
 
 //	public UserRepoKey(final UUID repositoryId, final AsymmetricCipherKeyPair keyPair) {
-	public UserRepoKey(final AsymmetricCipherKeyPair keyPair) { // TODO add the repositoryId!!!
+	public UserRepoKey(final UserRepoKeyRing userRepoKeyRing, final AsymmetricCipherKeyPair keyPair) { // TODO add the repositoryId!!!
+		this.userRepoKeyRing = assertNotNull("userRepoKeyRing", userRepoKeyRing);
 		this.userRepoKeyId = new Uid();
 //		this.repositoryId = assertNotNull("repositoryId", repositoryId);
 		this.keyPair = assertNotNull("keyPair", keyPair);
+	}
+
+	public UserRepoKeyRing getUserRepoKeyRing() {
+		return userRepoKeyRing;
 	}
 
 	public Uid getUserRepoKeyId() {
