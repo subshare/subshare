@@ -67,6 +67,11 @@ public class LimitedInputStream extends FilterInputStream
 	}
 
 	@Override
+	public synchronized void reset() throws IOException {
+		throw new IOException("mark/reset not supported");
+	}
+
+	@Override
 	public int read() throws IOException
 	{
 		if (readPos < maxLimit) {
