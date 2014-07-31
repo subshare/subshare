@@ -9,8 +9,8 @@ import java.io.InputStream;
 
 import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
 import org.bouncycastle.crypto.params.KeyParameter;
+import org.subshare.core.io.LimitedInputStream;
 
-import co.codewizards.cloudstore.core.io.LimitedInputStream;
 import co.codewizards.cloudstore.core.util.IOUtil;
 
 public class AsymCombiDecrypterInputStream extends FilterInputStream {
