@@ -135,7 +135,8 @@ public class EncrypterDecrypterStreamTest {
 				start = System.currentTimeMillis();
 
 				// The maximum that can be encrypted with plain RSA-4096 is 470 bytes.
-				final byte[] plain = new byte[random.nextInt(470 + 1)];
+				// At least one byte seems to be required, too. Thus, we generate a random length between 1 and 470 (including).
+				final byte[] plain = new byte[1 + random.nextInt(470)];
 				random.nextBytes(plain);
 
 				System.out.printf("asymmetricPlain: Generating %s random bytes plaintext took %s ms.\n", plain.length, System.currentTimeMillis() - start);

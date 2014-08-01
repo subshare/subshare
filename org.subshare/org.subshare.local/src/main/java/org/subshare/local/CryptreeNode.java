@@ -125,9 +125,9 @@ public class CryptreeNode {
 		return cryptoRepoFile;
 	}
 
-	public CryptoRepoFile getCryptoRepoFileOrCreate(final boolean forceUpdate) {
+	public CryptoRepoFile getCryptoRepoFileOrCreate(final boolean update) {
 		CryptoRepoFile cryptoRepoFile = getCryptoRepoFile();
-		if (cryptoRepoFile == null || forceUpdate) {
+		if (cryptoRepoFile == null || update) {
 			final CryptoRepoFileDao cryptoRepoFileDao = transaction.getDao(CryptoRepoFileDao.class);
 
 			if (cryptoRepoFile == null)
@@ -186,7 +186,7 @@ public class CryptreeNode {
 			if (fromUserRepoKeyId != null) {
 				final UserRepoKey userRepoKey = getUserRepoKeyRing().getUserRepoKey(fromUserRepoKeyId);
 				if (userRepoKey != null) {
-					final byte[] plain = decrypt(cryptoLink.getToCryptoKeyData(), userRepoKey);
+					final byte[] plain = decryptLarge(cryptoLink.getToCryptoKeyData(), userRepoKey);
 					return new PlainCryptoKey(cryptoLink.getToCryptoKey(), cryptoLink.getToCryptoKeyPart(), plain);
 				}
 			}

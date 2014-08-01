@@ -52,6 +52,7 @@ import co.codewizards.cloudstore.local.persistence.RepoFile;
 	@Index(name="CryptoKey_repoFile", members={"repoFile"})
 })
 @Queries({
+	@Query(name="getCryptoKey_cryptoKeyId", value="SELECT UNIQUE WHERE this.cryptoKeyId == :cryptoKeyId"),
 	@Query(name="getCryptoKeysChangedAfter_localRevision", value="SELECT WHERE this.localRevision > :localRevision")
 })
 public class CryptoKey extends Entity implements AutoTrackLocalRevision, StoreCallback {

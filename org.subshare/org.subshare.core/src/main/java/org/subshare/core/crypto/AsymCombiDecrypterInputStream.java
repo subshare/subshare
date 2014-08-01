@@ -13,12 +13,29 @@ import org.subshare.core.io.LimitedInputStream;
 
 import co.codewizards.cloudstore.core.util.IOUtil;
 
+/**
+ * {@code AsymCombiEncrypterOutputStream} combines asymmetric and symmetric cryptography to decrypt a given cipher-text.
+ * <p>
+ * An instance of this class can be used to decrypt data that was encrypted by
+ * {@link AsymCombiEncrypterOutputStream}.
+ * @author Marco หงุ่ยตระกูล-Schulze - marco at codewizards dot co
+ * @see AsymCombiEncrypterOutputStream
+ * @see DecrypterInputStream
+ */
 public class AsymCombiDecrypterInputStream extends FilterInputStream {
 
 	private final AsymmetricKeyParameter privateKey;
 	private final Header header;
 	private final InputStream symIn;
 
+	/**
+	 * Creates an instance of {@code AsymCombiDecrypterInputStream}.
+	 * @param in the underlying {@code InputStream}. Must not be <code>null</code>. The cipher-text
+	 * (encrypted data) is read from it.
+	 * @param privateKey the asymmetric key used for decryption. Must not be <code>null</code>. This key must
+	 * be kept secret.
+	 * @throws IOException if reading the header from the underlying {@code InputStream} fails.
+	 */
 	public AsymCombiDecrypterInputStream(final InputStream in, final AsymmetricKeyParameter privateKey) throws IOException {
 		super(assertNotNull("in", in));
 		this.privateKey = assertNotNull("privateKey", privateKey);

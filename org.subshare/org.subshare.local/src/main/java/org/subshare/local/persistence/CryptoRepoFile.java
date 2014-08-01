@@ -2,6 +2,7 @@ package org.subshare.local.persistence;
 
 import static co.codewizards.cloudstore.core.util.Util.*;
 
+import javax.jdo.annotations.Index;
 import javax.jdo.annotations.Inheritance;
 import javax.jdo.annotations.InheritanceStrategy;
 import javax.jdo.annotations.NullValue;
@@ -27,14 +28,29 @@ import co.codewizards.cloudstore.local.persistence.RepoFile;
 @PersistenceCapable
 @Inheritance(strategy=InheritanceStrategy.NEW_TABLE)
 @Unique(name="CryptoRepoFile_repoFile", members="repoFile")
+@Index(name="CryptoRepoFile_localRevision", members={"localRevision"})
 @Queries({
-	@Query(name="getCryptoRepoFile_repoFile", value="SELECT UNIQUE WHERE this.repoFile == :repoFile")
+	@Query(name="getCryptoRepoFile_repoFile", value="SELECT UNIQUE WHERE this.repoFile == :repoFile"),
+	@Query(
+			name="getCryptoRepoFileChangedAfter_localRevision_exclLastSyncFromRepositoryId",
+			value="SELECT WHERE this.localRevision > :localRevision && (this.lastSyncFromRepositoryId == null || this.lastSyncFromRepositoryId != :lastSyncFromRepositoryId)") // TODO this necessary == null is IMHO a DN bug!
 })
 public class CryptoRepoFile extends Entity implements AutoTrackLocalRevision {
 
 	private CryptoRepoFile parent;
 
 	private RepoFile repoFile;
+
+	private long localRevision;
+
+	// TODO 1: The direct partner-repository from which this was synced, should be a real relation to the RemoteRepository,
+	// because this is more efficient (not a String, but a long id).
+	// TODO 2: We should additionally store (and forward) the origin repositoryId (UUID/String) to use this feature during
+	// circular syncs over multiple repos - e.g. repoA ---> repoB ---> repoC ---> repoA (again) - this circle would currently
+	// cause https://github.com/cloudstore/cloudstore/issues/25 again (because issue 25 is only solved for direct partners - not indirect).
+	// TODO 3: We should switch from UUID to Uid everywhere (most importantly the repositoryId).
+	// Careful, though: Uid's String-representation is case-sensitive! Due to Windows, it must thus not be used for file names!
+	private String lastSyncFromRepositoryId;
 
 	@Persistent(nullValue=NullValue.EXCEPTION)
 	private CryptoKey cryptoKey;
@@ -110,11 +126,18 @@ public class CryptoRepoFile extends Entity implements AutoTrackLocalRevision {
 
 	@Override
 	public long getLocalRevision() {
-		return assertNotNull("repoFile", repoFile).getLocalRevision();
+		return localRevision;
 	}
 	@Override
 	public void setLocalRevision(final long localRevision) {
-		assertNotNull("repoFile", repoFile).setLocalRevision(localRevision);
+		this.localRevision = localRevision;
+	}
+
+	public String getLastSyncFromRepositoryId() {
+		return lastSyncFromRepositoryId;
+	}
+	public void setLastSyncFromRepositoryId(final String lastSyncFromRepositoryId) {
+		this.lastSyncFromRepositoryId = lastSyncFromRepositoryId;
 	}
 
 }

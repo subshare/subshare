@@ -8,11 +8,11 @@ import co.codewizards.cloudstore.core.dto.Uid;
 @XmlRootElement
 public class CryptoRepoFileDto {
 
-	private long repoFileId;
+	private long repoFileId = -1;
 
 	private Uid cryptoKeyId;
 
-	private byte[] encryptedRepoFileDto;
+	private byte[] repoFileDtoData;
 
 	/**
 	 * Gets the reference to {@link RepoFileDto#getId() RepoFileDto.id} - of the SubShare-server-side.
@@ -32,10 +32,10 @@ public class CryptoRepoFileDto {
 		this.cryptoKeyId = cryptoKeyId;
 	}
 
-	public byte[] getEncryptedRepoFileDto() {
-		return encryptedRepoFileDto;
+	public byte[] getRepoFileDtoData() {
+		return repoFileDtoData;
 	}
-	public void setEncryptedRepoFileDto(final byte[] encryptedRepoFileDto) {
-		this.encryptedRepoFileDto = encryptedRepoFileDto;
+	public void setRepoFileDtoData(final byte[] repoFileDtoData) {
+		this.repoFileDtoData = repoFileDtoData;
 	}
 }

@@ -34,6 +34,7 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 	@Index(name="CryptoLink_localRevision", members={"localRevision"})
 })
 @Queries({
+	@Query(name="getCryptoLink_cryptoLinkId", value="SELECT UNIQUE WHERE this.cryptoLinkId == :cryptoLinkId"),
 	@Query(name="getCryptoLinksChangedAfter_localRevision", value="SELECT WHERE this.localRevision > :localRevision"),
 	@Query(
 			name="getActiveCryptoLinks_toRepoFile_toCryptoKeyRole_toCryptoKeyPart",

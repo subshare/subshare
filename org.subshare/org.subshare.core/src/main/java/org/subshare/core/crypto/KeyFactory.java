@@ -11,6 +11,7 @@ import org.bouncycastle.crypto.KeyGenerationParameters;
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.bouncycastle.crypto.params.RSAKeyGenerationParameters;
 import org.subshare.crypto.CryptoRegistry;
+import org.subshare.crypto.SecretKeyGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,17 +36,21 @@ public class KeyFactory {
 	public static final SecureRandom secureRandom = new SecureRandom();
 
 	public KeyParameter createSymmetricKey() {
-		final int sizeInByte = SYMMETRIC_KEY_SIZE / 8;
-		final byte[] key = new byte[sizeInByte];
-		secureRandom.nextBytes(key);
-		return new KeyParameter(key);
+		final SecretKeyGenerator secretKeyGenerator;
+		try {
+			secretKeyGenerator = CryptoRegistry.getInstance().createSecretKeyGenerator(SYMMETRIC_ENCRYPTION_TRANSFORMATION, true);
+		} catch (final NoSuchAlgorithmException e) {
+			throw new RuntimeException(e);
+		}
+		final KeyParameter key = secretKeyGenerator.generateKey();
+		return key;
 	}
 
 	public AsymmetricCipherKeyPair createAsymmetricKeyPair(final KeyGenerationParameters keyGenerationParameters) {
 		final long startTimestamp = System.currentTimeMillis();
 		final String engine = CryptoRegistry.splitTransformation(ASYMMETRIC_ENCRYPTION_TRANSFORMATION)[0];
 
-		AsymmetricCipherKeyPairGenerator keyPairGenerator;
+		final AsymmetricCipherKeyPairGenerator keyPairGenerator;
 		try {
 			keyPairGenerator = CryptoRegistry.getInstance().createKeyPairGenerator(engine, keyGenerationParameters == null);
 		} catch (final NoSuchAlgorithmException e) {

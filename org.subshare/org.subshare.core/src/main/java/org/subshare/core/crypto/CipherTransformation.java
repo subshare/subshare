@@ -8,7 +8,24 @@ import java.util.Map;
 
 import org.subshare.core.dto.CryptoKeyType;
 
+/**
+ * Supported cipher transformations.
+ * <p>
+ * Each cipher transformation can either be asymmetric or symmetric.
+ * <p>
+ * Symmetric transformations are expected to cope with arbitrary length of plain-text data. This means, they
+ * are usually a combination of a symmetric block cipher, a mode of operation (e.g. CBC or CFB) and - if
+ * needed - a padding.
+ * <p>
+ * Asymmetric transformations are expected to encrypt a symmetric key, only (i.e. a pretty short single block
+ * of data).
+ * @author Marco หงุ่ยตระกูล-Schulze - marco at codewizards dot co
+ */
 public enum CipherTransformation {
+	// IMPORTANT: Do *not* modify the order of these enum values and do not insert new enum values inbetween!
+	// You may add new values at the end. These enum values are encoded in encrypted data via their ordinal
+	// (see java.lang.Enum.ordinal()). Changing the ordinal (= index) of existing values therefore causes
+	// encrypted data to not be readable anymore!!!
 
 	AES_CBC_PKCS5PADDING(CryptoKeyType.symmetric, "AES/CBC/PKCS5Padding"),
 	AES_CBC_PKCS7PADDING(CryptoKeyType.symmetric, "AES/CBC/PKCS7Padding"),
@@ -18,7 +35,7 @@ public enum CipherTransformation {
 	TWOFISH_CBC_PKCS7PADDING(CryptoKeyType.symmetric, "Twofish/CBC/PKCS7Padding"),
 	TWOFISH_CFB_NOPADDING(CryptoKeyType.symmetric, "Twofish/CFB/NoPadding"),
 
-	RSA_OAEPWITHSHA1ANDMGF1PADDING(CryptoKeyType.asymmetric, "RSA//OAEPWITHSHA1ANDMGF1PADDING")
+	RSA_OAEPWITHSHA1ANDMGF1PADDING(CryptoKeyType.asymmetric, "RSA/ECB/OAEPWITHSHA1ANDMGF1PADDING")
 	;
 
 	private static final Map<String, CipherTransformation> transformation2SymmetricCipherTransformation;

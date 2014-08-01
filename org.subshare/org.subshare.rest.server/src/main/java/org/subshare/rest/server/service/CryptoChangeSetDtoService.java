@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
@@ -35,15 +36,16 @@ public class CryptoChangeSetDtoService extends AbstractServiceWithRepoToRepoAuth
 	@GET
 	public CryptoChangeSetDto getCryptoChangeSetDto() {
 		CryptoChangeSetDto cryptoChangeSetDto;
-		final RepoTransport repoTransport = authenticateAndCreateLocalRepoTransport();
-		try {
+		try (
+				final RepoTransport repoTransport = authenticateAndCreateLocalRepoTransport();
+		) {
 			final UUID clientRepositoryId = assertNotNull("clientRepositoryId", repoTransport.getClientRepositoryId());
 			final LocalRepoManager localRepoManager = ((ContextWithLocalRepoManager) repoTransport).getLocalRepoManager();
 			transaction = localRepoManager.beginReadTransaction();
 			try {
 				final CryptreeFactory cryptreeFactory = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail();
 				try (
-						Cryptree cryptree = cryptreeFactory.createCryptree(transaction, clientRepositoryId);
+						final Cryptree cryptree = cryptreeFactory.createCryptree(transaction, clientRepositoryId);
 				) {
 					cryptoChangeSetDto = cryptree.getCryptoChangeSetDtoWithCryptoRepoFiles();
 					cryptree.updateLastCryptoKeySyncToRemoteRepo();
@@ -52,10 +54,30 @@ public class CryptoChangeSetDtoService extends AbstractServiceWithRepoToRepoAuth
 			} finally {
 				transaction.rollbackIfActive();
 			}
-		} finally {
-			repoTransport.close();
 		}
 		return cryptoChangeSetDto;
 	}
 
+	@PUT
+	public void putCryptoChangeSetDto(final CryptoChangeSetDto cryptoChangeSetDto) {
+		assertNotNull("cryptoChangeSetDto", cryptoChangeSetDto);
+		try (
+				final RepoTransport repoTransport = authenticateAndCreateLocalRepoTransport();
+		) {
+			final UUID clientRepositoryId = assertNotNull("clientRepositoryId", repoTransport.getClientRepositoryId());
+			final LocalRepoManager localRepoManager = ((ContextWithLocalRepoManager) repoTransport).getLocalRepoManager();
+			transaction = localRepoManager.beginReadTransaction();
+			try {
+				final CryptreeFactory cryptreeFactory = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail();
+				try (
+						final Cryptree cryptree = cryptreeFactory.createCryptree(transaction, clientRepositoryId);
+				) {
+					cryptree.putCryptoChangeSetDto(cryptoChangeSetDto);
+				}
+				transaction.commit();
+			} finally {
+				transaction.rollbackIfActive();
+			}
+		}
+	}
 }

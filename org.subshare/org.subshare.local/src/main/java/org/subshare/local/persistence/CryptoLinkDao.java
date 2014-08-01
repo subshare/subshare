@@ -1,5 +1,7 @@
 package org.subshare.local.persistence;
 
+import static co.codewizards.cloudstore.core.util.Util.*;
+
 import java.util.Collection;
 
 import javax.jdo.Query;
@@ -9,11 +11,23 @@ import org.subshare.core.dto.CryptoKeyRole;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.local.persistence.Dao;
 import co.codewizards.cloudstore.local.persistence.RepoFile;
 
 public class CryptoLinkDao extends Dao<CryptoLink, CryptoLinkDao> {
 	private static final Logger logger = LoggerFactory.getLogger(CryptoLinkDao.class);
+
+	public CryptoLink getCryptoLink(final Uid cryptoLinkId) {
+		assertNotNull("cryptoLinkId", cryptoLinkId);
+		final Query query = pm().newNamedQuery(getEntityClass(), "getCryptoLink_cryptoLinkId");
+		try {
+			final CryptoLink cryptoLink = (CryptoLink) query.execute(cryptoLinkId);
+			return cryptoLink;
+		} finally {
+			query.closeAll();
+		}
+	}
 
 	/**
 	 * Get those {@link CryptoLink}s whose {@link CryptoLink#getLocalRevision() localRevision} is greater

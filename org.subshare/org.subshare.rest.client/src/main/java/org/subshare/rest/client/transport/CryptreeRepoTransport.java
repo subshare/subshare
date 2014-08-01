@@ -2,17 +2,22 @@ package org.subshare.rest.client.transport;
 
 import static co.codewizards.cloudstore.core.util.Util.*;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
-import java.nio.charset.Charset;
 import java.util.Date;
-import java.util.StringTokenizer;
 import java.util.UUID;
 
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.subshare.core.Cryptree;
 import org.subshare.core.CryptreeFactory;
 import org.subshare.core.CryptreeFactoryRegistry;
+import org.subshare.core.crypto.CipherTransformation;
+import org.subshare.core.crypto.DummyCryptoUtil;
+import org.subshare.core.crypto.EncrypterOutputStream;
+import org.subshare.core.crypto.RandomIvFactory;
 import org.subshare.core.dto.CryptoChangeSetDto;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKeyRing;
@@ -24,19 +29,17 @@ import co.codewizards.cloudstore.core.dto.ChangeSetDto;
 import co.codewizards.cloudstore.core.dto.ModificationDto;
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
 import co.codewizards.cloudstore.core.dto.RepositoryDto;
-import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.repo.local.ContextWithLocalRepoManager;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManagerFactory;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoRegistry;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
 import co.codewizards.cloudstore.core.repo.transport.AbstractRepoTransport;
-import co.codewizards.cloudstore.core.util.HashUtil;
+import co.codewizards.cloudstore.core.util.IOUtil;
 import co.codewizards.cloudstore.rest.client.CloudStoreRestClient;
 
 public class CryptreeRepoTransport extends AbstractRepoTransport implements ContextWithLocalRepoManager {
 	private static final Logger logger = LoggerFactory.getLogger(CryptreeRepoTransport.class);
-	private static final Charset UTF8 = Charset.forName("UTF-8");
 
 	private UserRepoKey userRepoKey;
 	private CryptreeFactory cryptreeFactory;
@@ -123,7 +126,7 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 				final CryptoChangeSetDto cryptoChangeSetDto = cryptree.createOrUpdateCryptoRepoFile(path);
 				cryptree.updateLastCryptoKeySyncToRemoteRepo();
 				putCryptoChangeSetDto(cryptoChangeSetDto);
-				getRestRepoTransport().makeDirectory(getServerPath(path), new Date(0));
+				getRestRepoTransport().makeDirectory(cryptree.getServerPath(path), new Date(0));
 			}
 			transaction.commit();
 		} finally {
@@ -187,8 +190,19 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 		final LocalRepoManager localRepoManager = getLocalRepoManager();
 		final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();
 		try {
-			getRestRepoTransport().beginPutFile(getServerPath(path));
+			try (final Cryptree cryptree = createCryptree(transaction);) {
+				final CryptoChangeSetDto cryptoChangeSetDto = cryptree.createOrUpdateCryptoRepoFile(path);
 
+//				if (cryptoChangeSetDto.getCryptoRepoFileDtos().size() != 1)
+//					throw new IllegalStateException("cryptoChangeSetDto.cryptoRepoFileDtos.size != 1");
+//
+//				CryptoRepoFileDto cryptoRepoFileDto = cryptoChangeSetDto.getCryptoRepoFileDtos().get(0);
+
+				cryptree.updateLastCryptoKeySyncToRemoteRepo();
+				putCryptoChangeSetDto(cryptoChangeSetDto);
+
+				getRestRepoTransport().beginPutFile(cryptree.getServerPath(path));
+			}
 			transaction.commit();
 		} finally {
 			transaction.rollbackIfActive();
@@ -203,23 +217,31 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 		try {
 			try (final Cryptree cryptree = createCryptree(transaction);) {
 				final KeyParameter dataKey = cryptree.getDataKey(path);
-//				final byte[] encryptedFileData = encrypt(fileData, dataKey);
-//
-//				ByteArrayOutputStream bout = new ByteArrayOutputStream();
-//				EncrypterOutputStream encrypterOut = new EncrypterOutputStream(bout, cipherTransformation, dataKey, ivFactory);
+				final byte[] encryptedFileData = encrypt(fileData, dataKey);
 				// TODO this should not only be encrypted, but also signed!
-
 				// TODO maybe we store only one IV per file and derive the chunk's IV from this combined with the offset (and all hashed)? this could save valuable entropy and should still be secure - maybe later.
-//
-//				// TODO we *MUST* store the file chunks server-side in separate chunk-files permanently!
-//				// The reason is that the chunks might be bigger (and usually are!) than the unencrypted files.
-//				// Temporarily, we simply multiply the offset with a margin in order to have some reserve.
-//				getRestRepoTransport().putFileData(getServerPath(path), getServerOffset(offset), encryptedFileData);
-				if (true) throw new UnsupportedOperationException("NYI");
+
+				// TODO we *MUST* store the file chunks server-side in separate chunk-files permanently!
+				// The reason is that the chunks might be bigger (and usually are!) than the unencrypted files.
+				// Temporarily, we simply multiply the offset with a margin in order to have some reserve.
+				getRestRepoTransport().putFileData(cryptree.getServerPath(path), getServerOffset(offset), encryptedFileData);
 			}
 			transaction.commit();
 		} finally {
 			transaction.rollbackIfActive();
+		}
+	}
+
+	private byte[] encrypt(final byte[] plainText, final KeyParameter keyParameter) {
+		try {
+			final ByteArrayOutputStream bout = new ByteArrayOutputStream();
+			final EncrypterOutputStream encrypterOut = new EncrypterOutputStream(bout,
+					CipherTransformation.fromTransformation(DummyCryptoUtil.SYMMETRIC_ENCRYPTION_TRANSFORMATION),
+					keyParameter, new RandomIvFactory());
+			IOUtil.transferStreamData(new ByteArrayInputStream(plainText), encrypterOut);
+			return bout.toByteArray();
+		} catch (final IOException x) {
+			throw new RuntimeException(x);
 		}
 	}
 
@@ -238,11 +260,12 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 		final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();
 		try {
 			try (final Cryptree cryptree = createCryptree(transaction);) {
-				final CryptoChangeSetDto cryptoChangeSetDto = cryptree.createOrUpdateCryptoRepoFile(path);
+				final CryptoChangeSetDto cryptoChangeSetDto = cryptree.getCryptoChangeSetDtoOrFail(path);
 				cryptree.updateLastCryptoKeySyncToRemoteRepo();
 				putCryptoChangeSetDto(cryptoChangeSetDto);
-				// TODO need to calculate real SHA1 of encrypted data - is that feasable?! Or should we better make it optional?
-				getRestRepoTransport().endPutFile(getServerPath(path), new Date(0), getServerOffset(length), "DUMMY");
+
+				// Calculating the SHA1 of the encrypted data is too complicated. We thus omit it (now optional in CloudStore).
+				getRestRepoTransport().endPutFile(cryptree.getServerPath(path), new Date(0), getServerOffset(length), null);
 			}
 			transaction.commit();
 		} finally {
@@ -325,44 +348,4 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 		super.close();
 	}
 
-	private String getServerPath(final String plainPath) {
-		// TODO handle path correctly => pathPrefix on both sides possible!!! Maybe do this here?!
-		assertNotNull("plainPath", plainPath);
-		final StringBuilder result = new StringBuilder();
-		final StringTokenizer st = new StringTokenizer(plainPath, "/", true);
-		while (st.hasMoreTokens()) {
-			final String token = st.nextToken();
-			if ("/".equals(token))
-				result.append(token);
-			else
-				result.append(getServerFileName(token));
-		}
-		return result.toString();
-	}
-
-	/**
-	 * Gets the server-side name of the file named {@code plainName} locally.
-	 * <p>
-	 * The real (plain-text) name of the file is hashed with a repository-dependent salt. Thus the same name
-	 * will have the same hash in the same repository, but a different hash in other repositories.
-	 * <p>
-	 * In other words: Invoking this method multiple times with the same name and the same (remote)
-	 * repository is guaranteed to return the same result. Invoking it with the same name but another
-	 * (remote) repository, it is guaranteed to return a different result.
-	 * <p>
-	 * @param plainName the local name (in plain-text) of the file. Must not be <code>null</code>.
-	 * @return the server-side name of the file (a secure hash).
-	 * @see #getServerPath(String)
-	 */
-	private String getServerFileName(final String plainName) {
-		assertNotNull("plainName", plainName);
-		// TODO re-implement (I'm sure I already implemented this for another project before) a CombiInputStream combining multiple streams, so that we don't need to copy things around!
-		final byte[] repositoryIdBytes = new Uid(getRepositoryId().getMostSignificantBits(), getRepositoryId().getLeastSignificantBits()).toBytes();
-		final byte[] plainNameBytes = plainName.getBytes(UTF8);
-		final byte[] combined = new byte[repositoryIdBytes.length + plainNameBytes.length];
-		System.arraycopy(repositoryIdBytes, 0, combined, 0, repositoryIdBytes.length);
-		System.arraycopy(plainNameBytes, 0, combined, repositoryIdBytes.length, plainNameBytes.length);
-		final String sha1 = HashUtil.sha1(combined);
-		return sha1;
-	}
 }

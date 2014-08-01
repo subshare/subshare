@@ -20,6 +20,16 @@ import org.subshare.crypto.CryptoRegistry;
 
 import co.codewizards.cloudstore.core.util.IOUtil;
 
+/**
+ * {@code DecrypterInputStream} uses either symmetric or asymmetric cryptography to decrypt a given
+ * cipher-text.
+ * <p>
+ * Data encrypted with an instance of {@link EncrypterOutputStream} can be decrypted with an instance of
+ * this class.
+ * @author Marco หงุ่ยตระกูล-Schulze - marco at codewizards dot co
+ * @see EncrypterOutputStream
+ * @see AsymCombiDecrypterInputStream
+ */
 public class DecrypterInputStream extends FilterInputStream {
 
 	private final Header header;

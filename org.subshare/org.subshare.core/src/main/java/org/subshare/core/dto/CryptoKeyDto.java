@@ -11,6 +11,8 @@ public class CryptoKeyDto {
 
 //	private long repoFileId;
 
+	private boolean active;
+
 	private CryptoKeyType cryptoKeyType;
 
 	private CryptoKeyRole cryptoKeyRole;
@@ -42,6 +44,13 @@ public class CryptoKeyDto {
 	}
 	public void setPath(final String path) {
 		this.path = path;
+	}
+
+	public boolean isActive() {
+		return active;
+	}
+	public void setActive(final boolean active) {
+		this.active = active;
 	}
 
 	public CryptoKeyType getCryptoKeyType() {

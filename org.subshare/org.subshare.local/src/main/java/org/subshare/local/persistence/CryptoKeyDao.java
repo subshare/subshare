@@ -1,5 +1,7 @@
 package org.subshare.local.persistence;
 
+import static co.codewizards.cloudstore.core.util.Util.*;
+
 import java.util.Collection;
 
 import javax.jdo.Query;
@@ -7,10 +9,22 @@ import javax.jdo.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.local.persistence.Dao;
 
 public class CryptoKeyDao extends Dao<CryptoKey, CryptoKeyDao> {
 	private static final Logger logger = LoggerFactory.getLogger(CryptoKeyDao.class);
+
+	public CryptoKey getCryptoKey(final Uid cryptoKeyId) {
+		assertNotNull("cryptoKeyId", cryptoKeyId);
+		final Query query = pm().newNamedQuery(getEntityClass(), "getCryptoKey_cryptoKeyId");
+		try {
+			final CryptoKey cryptoKey = (CryptoKey) query.execute(cryptoKeyId);
+			return cryptoKey;
+		} finally {
+			query.closeAll();
+		}
+	}
 
 	/**
 	 * Get those {@link CryptoKey}s whose {@link CryptoKey#getLocalRevision() localRevision} is greater
@@ -42,5 +56,4 @@ public class CryptoKeyDao extends Dao<CryptoKey, CryptoKeyDao> {
 			query.closeAll();
 		}
 	}
-
 }
