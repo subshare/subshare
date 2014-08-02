@@ -222,10 +222,6 @@ public class EncrypterDecrypterStreamTest {
 		}
 	}
 
-	@Test
-	public void asymmetricCombiWithProblematicData() {
-	}
-
 	private void writeWithRandomBuffer(final InputStream in, final OutputStream out) throws IOException {
 		while (true) {
 			if (random.nextInt(100) <= 50) { // because it is slower, we do this only in 50% of the cases
