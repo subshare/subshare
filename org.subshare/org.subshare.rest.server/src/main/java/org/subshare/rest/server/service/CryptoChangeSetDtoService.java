@@ -66,7 +66,7 @@ public class CryptoChangeSetDtoService extends AbstractServiceWithRepoToRepoAuth
 		) {
 			final UUID clientRepositoryId = assertNotNull("clientRepositoryId", repoTransport.getClientRepositoryId());
 			final LocalRepoManager localRepoManager = ((ContextWithLocalRepoManager) repoTransport).getLocalRepoManager();
-			transaction = localRepoManager.beginReadTransaction();
+			transaction = localRepoManager.beginWriteTransaction();
 			try {
 				final CryptreeFactory cryptreeFactory = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail();
 				try (

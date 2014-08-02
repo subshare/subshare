@@ -6,6 +6,7 @@ import static co.codewizards.cloudstore.core.util.Util.*;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.bouncycastle.crypto.CipherParameters;
 import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
@@ -22,20 +23,28 @@ import org.subshare.core.dto.CryptoKeyPart;
 import org.subshare.core.dto.CryptoKeyType;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.local.persistence.CryptoLink;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CryptreeNodeUtil {
+
+	private static final Logger logger = LoggerFactory.getLogger(CryptreeNodeUtil.class);
 
 	public static byte[] encryptLarge(final byte[] plain, final UserRepoKey userRepoKey) {
 		assertNotNull("plain", plain);
 		assertNotNull("userRepoKey", userRepoKey);
 		try {
+			logger.debug("encryptLarge: userRepoKeyId={} plain={}", userRepoKey.getUserRepoKeyId(), Arrays.toString(plain));
 			final AsymmetricKeyParameter publicKey = userRepoKey.getKeyPair().getPublic();
 			final ByteArrayOutputStream bout = new ByteArrayOutputStream(plain.length + 10240); // don't know exactly, but I guess 10 KiB should be sufficient
 			final AsymCombiEncrypterOutputStream out = new AsymCombiEncrypterOutputStream(bout,
 					getCipherTransformation(publicKey), publicKey,
 					getSymmetricCipherTransformation(), new DefaultKeyParameterFactory());
 			transferStreamData(new ByteArrayInputStream(plain), out);
-			return bout.toByteArray();
+			out.close();
+			final byte[] encrypted = bout.toByteArray();
+			logger.debug("encryptLarge: userRepoKeyId={} encrypted={}", userRepoKey.getUserRepoKeyId(), Arrays.toString(encrypted));
+			return encrypted;
 		} catch (final IOException x) {
 			throw new RuntimeException(x);
 		}
@@ -45,11 +54,15 @@ public class CryptreeNodeUtil {
 		assertNotNull("encrypted", encrypted);
 		assertNotNull("userRepoKey", userRepoKey);
 		try {
+			logger.debug("decryptLarge: userRepoKeyId={} encrypted={}", userRepoKey.getUserRepoKeyId(), Arrays.toString(encrypted));
 			final AsymCombiDecrypterInputStream in = new AsymCombiDecrypterInputStream(
 					new ByteArrayInputStream(encrypted), userRepoKey.getKeyPair().getPrivate());
 			final ByteArrayOutputStream out = new ByteArrayOutputStream(encrypted.length);
 			transferStreamData(in, out);
-			return out.toByteArray();
+			in.close();
+			final byte[] plain = out.toByteArray();
+			logger.debug("decryptLarge: userRepoKeyId={} plain={}", userRepoKey.getUserRepoKeyId(), Arrays.toString(plain));
+			return plain;
 		} catch (final IOException x) {
 			throw new RuntimeException(x);
 		}
@@ -91,6 +104,7 @@ public class CryptreeNodeUtil {
 					bout, cipherTransformation, key,
 					CryptoKeyType.asymmetric == cipherTransformation.getType() ? null : new RandomIvFactory());
 			transferStreamData(new ByteArrayInputStream(plain), out);
+			out.close();
 			return bout.toByteArray();
 		} catch (final IOException x) {
 			throw new RuntimeException(x);
@@ -104,6 +118,7 @@ public class CryptreeNodeUtil {
 			final DecrypterInputStream in = new DecrypterInputStream(new ByteArrayInputStream(encrypted), key);
 			final ByteArrayOutputStream out = new ByteArrayOutputStream(encrypted.length);
 			transferStreamData(in, out);
+			in.close();
 			return out.toByteArray();
 		} catch (final IOException x) {
 			throw new RuntimeException(x);

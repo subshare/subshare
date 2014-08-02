@@ -13,16 +13,23 @@ import org.slf4j.LoggerFactory;
 
 import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.local.persistence.Dao;
-import co.codewizards.cloudstore.local.persistence.RepoFile;
 
 public class CryptoLinkDao extends Dao<CryptoLink, CryptoLinkDao> {
 	private static final Logger logger = LoggerFactory.getLogger(CryptoLinkDao.class);
+
+	public CryptoLink getCryptoLinkOrFail(final Uid cryptoLinkId) {
+		final CryptoLink cryptoLink = getCryptoLink(cryptoLinkId);
+		if (cryptoLink == null)
+			throw new IllegalArgumentException("There is no CryptoLink with this cryptoLinkId: " + cryptoLinkId);
+
+		return cryptoLink;
+	}
 
 	public CryptoLink getCryptoLink(final Uid cryptoLinkId) {
 		assertNotNull("cryptoLinkId", cryptoLinkId);
 		final Query query = pm().newNamedQuery(getEntityClass(), "getCryptoLink_cryptoLinkId");
 		try {
-			final CryptoLink cryptoLink = (CryptoLink) query.execute(cryptoLinkId);
+			final CryptoLink cryptoLink = (CryptoLink) query.execute(cryptoLinkId.toString());
 			return cryptoLink;
 		} finally {
 			query.closeAll();
@@ -60,12 +67,12 @@ public class CryptoLinkDao extends Dao<CryptoLink, CryptoLinkDao> {
 		}
 	}
 
-	public Collection<CryptoLink> getActiveCryptoLinks(final RepoFile toRepoFile, final CryptoKeyRole toCryptoKeyRole, final CryptoKeyPart toCryptoKeyPart) {
-		final Query query = pm().newNamedQuery(getEntityClass(), "getActiveCryptoLinks_toRepoFile_toCryptoKeyRole_toCryptoKeyPart");
+	public Collection<CryptoLink> getActiveCryptoLinks(final CryptoRepoFile toCryptoRepoFile, final CryptoKeyRole toCryptoKeyRole, final CryptoKeyPart toCryptoKeyPart) {
+		final Query query = pm().newNamedQuery(getEntityClass(), "getActiveCryptoLinks_toCryptoRepoFile_toCryptoKeyRole_toCryptoKeyPart");
 		try {
 			long startTimestamp = System.currentTimeMillis();
 			@SuppressWarnings("unchecked")
-			Collection<CryptoLink> cryptoLinks = (Collection<CryptoLink>) query.execute(toRepoFile, toCryptoKeyRole, toCryptoKeyPart);
+			Collection<CryptoLink> cryptoLinks = (Collection<CryptoLink>) query.execute(toCryptoRepoFile, toCryptoKeyRole, toCryptoKeyPart);
 			logger.debug("getActiveCryptoLinks: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
 
 			startTimestamp = System.currentTimeMillis();

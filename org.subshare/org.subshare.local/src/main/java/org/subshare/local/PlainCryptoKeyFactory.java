@@ -47,7 +47,7 @@ abstract class PlainCryptoKeyFactory {
 		assertNotNull("cryptoKeyRole", cryptoKeyRole);
 		assertNotNull("cryptoKeyType", cryptoKeyType);
 		final CryptoKey cryptoKey = new CryptoKey();
-		cryptoKey.setRepoFile(getCryptreeNodeOrFail().getRepoFile());
+		cryptoKey.setCryptoRepoFile(getCryptreeNodeOrFail().getCryptoRepoFile());
 		cryptoKey.setCryptoKeyRole(cryptoKeyRole);
 		cryptoKey.setCryptoKeyType(cryptoKeyType);
 		return cryptoKey;

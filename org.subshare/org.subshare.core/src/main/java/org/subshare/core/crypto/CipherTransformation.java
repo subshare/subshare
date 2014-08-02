@@ -35,7 +35,7 @@ public enum CipherTransformation {
 	TWOFISH_CBC_PKCS7PADDING(CryptoKeyType.symmetric, "Twofish/CBC/PKCS7Padding"),
 	TWOFISH_CFB_NOPADDING(CryptoKeyType.symmetric, "Twofish/CFB/NoPadding"),
 
-	RSA_OAEPWITHSHA1ANDMGF1PADDING(CryptoKeyType.asymmetric, "RSA/ECB/OAEPWITHSHA1ANDMGF1PADDING")
+	RSA_OAEPWITHSHA1ANDMGF1PADDING(CryptoKeyType.asymmetric, "RSA//OAEPWITHSHA1ANDMGF1PADDING")
 	;
 
 	private static final Map<String, CipherTransformation> transformation2SymmetricCipherTransformation;

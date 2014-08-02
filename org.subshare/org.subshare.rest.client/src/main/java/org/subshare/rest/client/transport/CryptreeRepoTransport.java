@@ -22,6 +22,7 @@ import org.subshare.core.dto.CryptoChangeSetDto;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKeyRing;
 import org.subshare.rest.client.transport.command.GetCryptoChangeSetDto;
+import org.subshare.rest.client.transport.command.PutCryptoChangeSetDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -274,7 +275,8 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 	}
 
 	private void putCryptoChangeSetDto(final CryptoChangeSetDto cryptoChangeSetDto) {
-		throw new UnsupportedOperationException("NYI");
+		assertNotNull("cryptoChangeSetDto", cryptoChangeSetDto);
+		getClient().execute(new PutCryptoChangeSetDto(getRepositoryId().toString(), cryptoChangeSetDto));
 	}
 
 	@Override

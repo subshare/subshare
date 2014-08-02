@@ -19,7 +19,7 @@ import co.codewizards.cloudstore.core.repo.local.LocalRepoManagerFactory;
 
 public abstract class AbstractIT {
 	static {
-		System.setProperty(ConfigDir.SYSTEM_PROPERTY_CONFIG_DIR, "target/.cloudstore");
+		System.setProperty(ConfigDir.SYSTEM_PROPERTY_CONFIG_DIR, "build/.cloudstore");
 		System.setProperty(LocalRepoManager.SYSTEM_PROPERTY_KEY_SIZE, "1024");
 	}
 

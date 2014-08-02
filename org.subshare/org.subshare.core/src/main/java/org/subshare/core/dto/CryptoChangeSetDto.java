@@ -44,4 +44,10 @@ public class CryptoChangeSetDto {
 		this.cryptoLinkDtos = cryptoLinkDtos;
 	}
 
+	@Override
+	public String toString() {
+		return "CryptoChangeSetDto [cryptoRepoFileDtos=" + cryptoRepoFileDtos
+				+ ", cryptoKeyDtos=" + cryptoKeyDtos + ", cryptoLinkDtos="
+				+ cryptoLinkDtos + "]";
+	}
 }

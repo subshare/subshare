@@ -9,7 +9,7 @@ public class CryptoKeyDto {
 
 	private Uid cryptoKeyId;
 
-//	private long repoFileId;
+	private Uid cryptoRepoFileId;
 
 	private boolean active;
 
@@ -26,24 +26,11 @@ public class CryptoKeyDto {
 		this.cryptoKeyId = cryptoKeyId;
 	}
 
-//	public long getRepoFileId() {
-//		return repoFileId;
-//	}
-//	public void setRepoFileId(final long repoFileId) {
-//		this.repoFileId = repoFileId;
-//	}
-
-	private String path;
-
-	/**
-	 * @deprecated TODO this should be replaced by a far more efficient way of encoding: repoFileId plus those RepoFileDtos in the CryptoChangeSetDto that are need to reconstruct the path (or maybe only an id-to-pathsegment-map).
-	 */
-	@Deprecated
-	public String getPath() {
-		return path;
+	public Uid getCryptoRepoFileId() {
+		return cryptoRepoFileId;
 	}
-	public void setPath(final String path) {
-		this.path = path;
+	public void setCryptoRepoFileId(final Uid cryptoRepoFileId) {
+		this.cryptoRepoFileId = cryptoRepoFileId;
 	}
 
 	public boolean isActive() {
@@ -74,4 +61,12 @@ public class CryptoKeyDto {
 		this.localRevision = localRevision;
 	}
 
+	@Override
+	public String toString() {
+		return "CryptoKeyDto [cryptoKeyId=" + cryptoKeyId
+				+ ", cryptoRepoFileId=" + cryptoRepoFileId + ", active="
+				+ active + ", cryptoKeyType=" + cryptoKeyType
+				+ ", cryptoKeyRole=" + cryptoKeyRole + ", localRevision="
+				+ localRevision + "]";
+	}
 }

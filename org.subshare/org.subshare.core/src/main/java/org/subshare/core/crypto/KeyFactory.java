@@ -36,9 +36,11 @@ public class KeyFactory {
 	public static final SecureRandom secureRandom = new SecureRandom();
 
 	public KeyParameter createSymmetricKey() {
+		final String engine = CryptoRegistry.splitTransformation(SYMMETRIC_ENCRYPTION_TRANSFORMATION)[0];
+
 		final SecretKeyGenerator secretKeyGenerator;
 		try {
-			secretKeyGenerator = CryptoRegistry.getInstance().createSecretKeyGenerator(SYMMETRIC_ENCRYPTION_TRANSFORMATION, true);
+			secretKeyGenerator = CryptoRegistry.getInstance().createSecretKeyGenerator(engine, true);
 		} catch (final NoSuchAlgorithmException e) {
 			throw new RuntimeException(e);
 		}

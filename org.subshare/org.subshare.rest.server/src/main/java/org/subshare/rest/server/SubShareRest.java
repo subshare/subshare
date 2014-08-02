@@ -7,11 +7,11 @@ import org.subshare.rest.server.service.TestSubShareService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import co.codewizards.cloudstore.rest.server.CloudStoreREST;
+import co.codewizards.cloudstore.rest.server.CloudStoreRest;
 
-@ApplicationPath("SubShareREST")
-public class SubShareREST extends CloudStoreREST {
-	private static final Logger logger = LoggerFactory.getLogger(SubShareREST.class);
+@ApplicationPath("SubShareRest")
+public class SubShareRest extends CloudStoreRest {
+	private static final Logger logger = LoggerFactory.getLogger(SubShareRest.class);
 
 	static {
 		logger.debug("<static_init>: Class loaded.");

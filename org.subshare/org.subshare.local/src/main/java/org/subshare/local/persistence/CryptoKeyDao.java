@@ -15,11 +15,19 @@ import co.codewizards.cloudstore.local.persistence.Dao;
 public class CryptoKeyDao extends Dao<CryptoKey, CryptoKeyDao> {
 	private static final Logger logger = LoggerFactory.getLogger(CryptoKeyDao.class);
 
+	public CryptoKey getCryptoKeyOrFail(final Uid cryptoKeyId) {
+		final CryptoKey cryptoKey = getCryptoKey(cryptoKeyId);
+		if (cryptoKey == null)
+			throw new IllegalArgumentException("There is no CryptoKey with this cryptoKeyId: " + cryptoKeyId);
+
+		return cryptoKey;
+	}
+
 	public CryptoKey getCryptoKey(final Uid cryptoKeyId) {
 		assertNotNull("cryptoKeyId", cryptoKeyId);
 		final Query query = pm().newNamedQuery(getEntityClass(), "getCryptoKey_cryptoKeyId");
 		try {
-			final CryptoKey cryptoKey = (CryptoKey) query.execute(cryptoKeyId);
+			final CryptoKey cryptoKey = (CryptoKey) query.execute(cryptoKeyId.toString());
 			return cryptoKey;
 		} finally {
 			query.closeAll();
@@ -56,4 +64,5 @@ public class CryptoKeyDao extends Dao<CryptoKey, CryptoKeyDao> {
 			query.closeAll();
 		}
 	}
+
 }

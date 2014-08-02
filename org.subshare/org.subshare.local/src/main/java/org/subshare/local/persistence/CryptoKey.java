@@ -23,7 +23,6 @@ import org.subshare.core.dto.CryptoKeyType;
 import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.local.persistence.AutoTrackLocalRevision;
 import co.codewizards.cloudstore.local.persistence.Entity;
-import co.codewizards.cloudstore.local.persistence.RepoFile;
 
 /**
  * Key used for encryption.
@@ -49,7 +48,7 @@ import co.codewizards.cloudstore.local.persistence.RepoFile;
 @Unique(name="CryptoKey_cryptoKeyId", members="cryptoKeyId")
 @Indices({
 	@Index(name="CryptoKey_localRevision", members={"localRevision"}),
-	@Index(name="CryptoKey_repoFile", members={"repoFile"})
+	@Index(name="CryptoKey_cryptoRepoFile", members={"cryptoRepoFile"})
 })
 @Queries({
 	@Query(name="getCryptoKey_cryptoKeyId", value="SELECT UNIQUE WHERE this.cryptoKeyId == :cryptoKeyId"),
@@ -62,7 +61,7 @@ public class CryptoKey extends Entity implements AutoTrackLocalRevision, StoreCa
 	private String cryptoKeyId;
 
 	@Persistent(nullValue=NullValue.EXCEPTION)
-	private RepoFile repoFile;
+	private CryptoRepoFile cryptoRepoFile;
 
 	@Persistent(nullValue=NullValue.EXCEPTION)
 	@Column(jdbcType="INTEGER")
@@ -110,14 +109,14 @@ public class CryptoKey extends Entity implements AutoTrackLocalRevision, StoreCa
 
 	/**
 	 * Gets the directory or file this key belongs to.
-	 * @return the directory or file this key belongs to. Never <code>null</code> in persistence, but maybe
-	 * <code>null</code> in memory.
+	 * @return the directory or file this key belongs to. Never <code>null</code> in persistence
+	 * (maybe <code>null</code> temporarily in memory).
 	 */
-	public RepoFile getRepoFile() {
-		return repoFile;
+	public CryptoRepoFile getCryptoRepoFile() {
+		return cryptoRepoFile;
 	}
-	public void setRepoFile(final RepoFile repoFile) {
-		this.repoFile = repoFile;
+	public void setCryptoRepoFile(final CryptoRepoFile cryptoRepoFile) {
+		this.cryptoRepoFile = cryptoRepoFile;
 	}
 
 	public CryptoKeyRole getCryptoKeyRole() {

@@ -4,12 +4,14 @@ import static co.codewizards.cloudstore.core.util.Util.*;
 import static org.subshare.local.CryptreeNodeUtil.*;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.GZIPOutputStream;
 
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.subshare.core.dto.CryptoKeyPart;
@@ -135,6 +137,12 @@ public class CryptreeNode {
 
 			cryptoRepoFile.setRepoFile(repoFile);
 
+			// getPlainCryptoKeyOrCreate(...) causes this method to be called again. We thus must prevent
+			// an eternal recursion by already assigning it to the field *now*.
+			// Furthermore, CryptoKey has a reference to this object and will thus persist it, anyway.
+			// Thus we explicitly persist it already here.
+			this.cryptoRepoFile = cryptoRepoFile = cryptoRepoFileDao.makePersistent(cryptoRepoFile);
+
 			final PlainCryptoKey plainCryptoKey = getPlainCryptoKeyOrCreate(CryptoKeyRole.dataKey, CryptoKeyPart.sharedSecret);
 			final CryptoKey cryptoKey = assertNotNull("plainCryptoKey", plainCryptoKey).getCryptoKey();
 			cryptoRepoFile.setCryptoKey(assertNotNull("plainCryptoKey.cryptoKey", cryptoKey));
@@ -143,13 +151,23 @@ public class CryptreeNode {
 			cryptoRepoFile.setParent(parent == null ? null : parent.getCryptoRepoFile());
 
 			// TODO can we assert here, that this code is invoked on the client-side with the plain-text RepoFile?!
+
+			// No need for local IDs. Because this DTO is shared across all repositories, local IDs make no sense.
+			repoFileDtoConverter.setExcludeLocalIds(true);
 			final RepoFileDto repoFileDto = repoFileDtoConverter.toRepoFileDto(repoFile, Integer.MAX_VALUE);
+
+			// Serialise to XML and compress.
 			final ByteArrayOutputStream out = new ByteArrayOutputStream();
-			repoFileDtoIo.serialize(repoFileDto, out);
+			try {
+				final GZIPOutputStream gzOut = new GZIPOutputStream(out);
+				repoFileDtoIo.serialize(repoFileDto, gzOut);
+				gzOut.close();
+			} catch (final IOException e) {
+				throw new RuntimeException(e);
+			}
 
 			cryptoRepoFile.setRepoFileDtoData(encrypt(out.toByteArray(), plainCryptoKey));
-
-			cryptoRepoFileDao.makePersistent(cryptoRepoFile);
+			cryptoRepoFile.setLastSyncFromRepositoryId(null);
 		}
 		return cryptoRepoFile;
 	}
@@ -171,7 +189,7 @@ public class CryptreeNode {
 		assertNotNull("toCryptoKeyRole", toCryptoKeyRole);
 		assertNotNull("toCryptoKeyPart", toCryptoKeyPart);
 		final CryptoLinkDao cryptoLinkDao = transaction.getDao(CryptoLinkDao.class);
-		final Collection<CryptoLink> cryptoLinks = cryptoLinkDao.getActiveCryptoLinks(getRepoFile(), toCryptoKeyRole, toCryptoKeyPart);
+		final Collection<CryptoLink> cryptoLinks = cryptoLinkDao.getActiveCryptoLinks(getCryptoRepoFile(), toCryptoKeyRole, toCryptoKeyPart);
 		return getPlainCryptoKey(cryptoLinks, toCryptoKeyPart);
 	}
 

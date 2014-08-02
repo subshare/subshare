@@ -13,6 +13,8 @@ public class CryptoLinkDto {
 
 	private Uid fromCryptoKeyId;
 
+	private Uid fromUserRepoKeyId;
+
 	private Uid toCryptoKeyId;
 
 	private CryptoKeyPart toCryptoKeyPart;
@@ -40,6 +42,13 @@ public class CryptoLinkDto {
 		this.fromCryptoKeyId = fromCryptoKeyId;
 	}
 
+	public Uid getFromUserRepoKeyId() {
+		return fromUserRepoKeyId;
+	}
+	public void setFromUserRepoKeyId(final Uid fromUserRepoKeyId) {
+		this.fromUserRepoKeyId = fromUserRepoKeyId;
+	}
+
 	public Uid getToCryptoKeyId() {
 		return toCryptoKeyId;
 	}
@@ -60,5 +69,12 @@ public class CryptoLinkDto {
 	public void setToCryptoKeyData(final byte[] toCryptoKeyData) {
 		this.toCryptoKeyData = toCryptoKeyData;
 	}
-
+	@Override
+	public String toString() {
+		return "CryptoLinkDto [cryptoLinkId=" + cryptoLinkId
+				+ ", localRevision=" + localRevision + ", fromCryptoKeyId="
+				+ fromCryptoKeyId + ", fromUserRepoKeyId=" + fromUserRepoKeyId
+				+ ", toCryptoKeyId=" + toCryptoKeyId + ", toCryptoKeyPart="
+				+ toCryptoKeyPart + "]";
+	}
 }

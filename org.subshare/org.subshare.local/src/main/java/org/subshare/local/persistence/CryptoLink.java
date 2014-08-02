@@ -37,10 +37,10 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 	@Query(name="getCryptoLink_cryptoLinkId", value="SELECT UNIQUE WHERE this.cryptoLinkId == :cryptoLinkId"),
 	@Query(name="getCryptoLinksChangedAfter_localRevision", value="SELECT WHERE this.localRevision > :localRevision"),
 	@Query(
-			name="getActiveCryptoLinks_toRepoFile_toCryptoKeyRole_toCryptoKeyPart",
+			name="getActiveCryptoLinks_toCryptoRepoFile_toCryptoKeyRole_toCryptoKeyPart",
 			value="SELECT WHERE "
 					+ "this.toCryptoKey.active == true && "
-					+ "this.toCryptoKey.repoFile == :toRepoFile && "
+					+ "this.toCryptoKey.cryptoRepoFile == :toCryptoRepoFile && "
 					+ "this.toCryptoKey.cryptoKeyRole == :toCryptoKeyRole && "
 					+ "this.toCryptoKeyPart == :toCryptoKeyPart")
 })
@@ -65,6 +65,12 @@ public class CryptoLink extends Entity implements AutoTrackLocalRevision, StoreC
 
 	@Persistent(nullValue=NullValue.EXCEPTION)
 	private byte[] toCryptoKeyData;
+
+	public CryptoLink() { }
+
+	public CryptoLink(final Uid cryptoLinkId) {
+		this.cryptoLinkId = cryptoLinkId == null ? null : cryptoLinkId.toString();
+	}
 
 	public Uid getCryptoLinkId() {
 		if (cryptoLinkId == null)
