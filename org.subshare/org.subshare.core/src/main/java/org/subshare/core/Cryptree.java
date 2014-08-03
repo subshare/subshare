@@ -9,6 +9,8 @@ import org.subshare.core.dto.CryptoLinkDto;
 import org.subshare.core.dto.CryptoRepoFileDto;
 import org.subshare.core.user.UserRepoKey;
 
+import co.codewizards.cloudstore.core.dto.RepoFileDto;
+import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
 
 public interface Cryptree extends AutoCloseable {
@@ -83,5 +85,10 @@ public interface Cryptree extends AutoCloseable {
 	void updateLastCryptoKeySyncToRemoteRepo();
 	KeyParameter getDataKey(String path);
 	void putCryptoChangeSetDto(CryptoChangeSetDto cryptoChangeSetDto);
+
+	Uid getRootCryptoRepoFileId();
+	RepoFileDto getDecryptedRepoFileDtoOrFail(Uid cryptoRepoFileId) throws AccessDeniedException;
+	RepoFileDto getDecryptedRepoFileDto(String localPath) throws AccessDeniedException;
+
 
 }

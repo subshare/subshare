@@ -48,9 +48,12 @@ import co.codewizards.cloudstore.local.persistence.RepoFile;
 	// CryptoRepoFile_repoFile is actually UNIQUE, but only, if repoFile is not null. There can be multiple
 	// CryptoRepoFile instances with repoFile == null!
 	@Index(name="CryptoRepoFile_repoFile", members="repoFile"),
+	@Index(name="CryptoRepoFile_parent", members="parent"),
 	@Index(name="CryptoRepoFile_localRevision", members={"localRevision"})
 })
 @Queries({
+	@Query(name="getChildCryptoRepoFiles_parent", value="SELECT WHERE this.parent == :parent"),
+	@Query(name="getChildCryptoRepoFile_parent_localName", value="SELECT UNIQUE WHERE this.parent == :parent && this.localName == :localName"),
 	@Query(name="getCryptoRepoFile_repoFile", value="SELECT UNIQUE WHERE this.repoFile == :repoFile"),
 	@Query(name="getCryptoRepoFilesWithoutRepoFile", value="SELECT WHERE this.repoFile == null"),
 	@Query(name="getCryptoRepoFile_cryptoRepoFileId", value="SELECT UNIQUE WHERE this.cryptoRepoFileId == :cryptoRepoFileId"),
@@ -85,6 +88,8 @@ public class CryptoRepoFile extends Entity implements AutoTrackLocalRevision, St
 //	@Persistent(nullValue=NullValue.EXCEPTION) // is temporarily null
 	private byte[] repoFileDtoData;
 
+	private String localName;
+
 	public CryptoRepoFile() { }
 
 	public CryptoRepoFile(final Uid cryptoRepoFileId) {
@@ -103,6 +108,24 @@ public class CryptoRepoFile extends Entity implements AutoTrackLocalRevision, St
 	}
 	public void setParent(final CryptoRepoFile parent) {
 		this.parent = parent;
+	}
+
+	/**
+	 * Gets the local, plain-text name (as opposed to the encrypted name on the server).
+	 * <p>
+	 * This property is always <code>null</code> on the server. On the client, it may be <code>null</code>, too,
+	 * which indicates that the user does not have the necessary access rights to decrypt it.
+	 * <p>
+	 * If it is non-<code>null</code>, it usually equals the associated {@link #getRepoFile() RepoFile}'s
+	 * {@link RepoFile#getName() name}. There might be differences, though, if the file was renamed and
+	 * not yet all objects were updated in the database.
+	 * @return the local, plain-text name or <code>null</code>.
+	 */
+	public String getLocalName() {
+		return localName;
+	}
+	public void setLocalName(final String localName) {
+		this.localName = localName;
 	}
 
 	/**
@@ -225,13 +248,16 @@ public class CryptoRepoFile extends Entity implements AutoTrackLocalRevision, St
 	}
 
 	/**
-	 * Gets the path from the root to <code>this</code>.
+	 * Gets the path from the root to <code>this</code> as visible on the server.
+	 * <p>
+	 * In contrast to the local path, containing the plain-text-names of the files, this path contains random
+	 * names as the real names are only in the encrypted meta-data.
 	 * <p>
 	 * The path's elements are separated by a slash ("/"). The path starts with a slash (like an absolute path), but
 	 * is relative to the server(!) repository's local root.
 	 * @return the path from the root to <code>this</code>. Never <code>null</code>. The repository's root itself has the path "/".
 	 */
-	public String getPath() {
+	public String getServerPath() {
 		final StringBuilder sb = new StringBuilder();
 		for (final CryptoRepoFile crf : getPathList()) {
 			if (crf.getParent() == null)
@@ -244,4 +270,5 @@ public class CryptoRepoFile extends Entity implements AutoTrackLocalRevision, St
 		}
 		return sb.toString();
 	}
+
 }

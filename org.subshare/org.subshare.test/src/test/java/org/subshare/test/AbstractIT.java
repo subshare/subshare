@@ -7,7 +7,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigInteger;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.SecureRandom;
+import java.util.Arrays;
 import java.util.Set;
 
 import org.junit.AfterClass;
@@ -16,6 +19,8 @@ import org.junit.BeforeClass;
 import co.codewizards.cloudstore.core.config.ConfigDir;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManagerFactory;
+import co.codewizards.cloudstore.core.util.IOUtil;
+import co.codewizards.cloudstore.local.FilenameFilterSkipMetaDir;
 
 public abstract class AbstractIT {
 	static {
@@ -120,5 +125,55 @@ public abstract class AbstractIT {
 		assertThat(file).isFile();
 		addToFilesInRepo(file);
 		return file;
+	}
+
+	protected void assertDirectoriesAreEqualRecursively(final File dir1, final File dir2) throws IOException {
+		assertThat(dir1).isDirectory();
+		assertThat(dir2).isDirectory();
+
+		final boolean dir1IsSymbolicLink = Files.isSymbolicLink(dir1.toPath());
+		final boolean dir2IsSymbolicLink = Files.isSymbolicLink(dir2.toPath());
+
+		assertThat(dir1IsSymbolicLink).isEqualTo(dir2IsSymbolicLink);
+
+		if (dir1IsSymbolicLink) {
+			final Path target1 = Files.readSymbolicLink(dir1.toPath());
+			final Path target2 = Files.readSymbolicLink(dir2.toPath());
+			assertThat(target1).isEqualTo(target2);
+			return;
+		}
+
+		final String[] children1 = dir1.list(new FilenameFilterSkipMetaDir());
+		assertThat(children1).isNotNull();
+
+		final String[] children2 = dir2.list(new FilenameFilterSkipMetaDir());
+		assertThat(children2).isNotNull();
+
+		Arrays.sort(children1);
+		Arrays.sort(children2);
+
+		assertThat(children1).containsOnly(children2);
+
+		for (final String childName : children1) {
+			final File child1 = new File(dir1, childName);
+			final File child2 = new File(dir2, childName);
+
+			final boolean child1IsSymbolicLink = Files.isSymbolicLink(child1.toPath());
+			final boolean child2IsSymbolicLink = Files.isSymbolicLink(child2.toPath());
+
+			assertThat(child1IsSymbolicLink).isEqualTo(child2IsSymbolicLink);
+
+			if (child1IsSymbolicLink) {
+				final Path target1 = Files.readSymbolicLink(child1.toPath());
+				final Path target2 = Files.readSymbolicLink(child2.toPath());
+				assertThat(target1).isEqualTo(target2);
+			}
+			else if (child1.isFile()) {
+				assertThat(child2.isFile());
+				assertThat(IOUtil.compareFiles(child1, child2)).isTrue();
+			}
+			else if (child1.isDirectory())
+				assertDirectoriesAreEqualRecursively(child1, child2);
+		}
 	}
 }

@@ -178,8 +178,7 @@ public class RepoToRepoSyncIT extends AbstractIT {
 		repoToRepoSync2.sync(new LoggerProgressMonitor(logger));
 		repoToRepoSync2.close();
 
-// TODO compare the source and the destination!
-//		assertDirectoriesAreEqualRecursively(getLocalRootWithPathPrefix(), localDestRoot);
+		assertDirectoriesAreEqualRecursively(getLocalRootWithPathPrefix(), localDestRoot);
 	}
 
 }

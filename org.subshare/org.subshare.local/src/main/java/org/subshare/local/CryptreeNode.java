@@ -3,17 +3,21 @@ package org.subshare.local;
 import static co.codewizards.cloudstore.core.util.Util.*;
 import static org.subshare.local.CryptreeNodeUtil.*;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import org.bouncycastle.crypto.params.KeyParameter;
+import org.subshare.core.AccessDeniedException;
 import org.subshare.core.dto.CryptoKeyPart;
 import org.subshare.core.dto.CryptoKeyRole;
 import org.subshare.core.user.UserRepoKey;
@@ -59,6 +63,10 @@ public class CryptreeNode {
 
 	public CryptreeNode(final UserRepoKey userRepoKey, final LocalRepoTransaction transaction, final RepoFile repoFile) {
 		this(userRepoKey, transaction, repoFile, null);
+	}
+
+	public CryptreeNode(final UserRepoKey userRepoKey, final LocalRepoTransaction transaction, final CryptoRepoFile cryptoRepoFile) {
+		this(userRepoKey, transaction, null, cryptoRepoFile);
 	}
 
 	private CryptreeNode(final UserRepoKey userRepoKey, final LocalRepoTransaction transaction, final RepoFile repoFile, final CryptoRepoFile cryptoRepoFile) {
@@ -116,6 +124,27 @@ public class CryptreeNode {
 		return repoFile;
 	}
 
+	public RepoFileDto getRepoFileDto() throws AccessDeniedException {
+		final CryptoRepoFile cryptoRepoFile = getCryptoRepoFile();
+		if (cryptoRepoFile == null)
+			return null;
+
+		final PlainCryptoKey plainCryptoKey = getPlainCryptoKey(CryptoKeyRole.dataKey, CryptoKeyPart.sharedSecret);
+		if (plainCryptoKey == null)
+			throw new AccessDeniedException(String.format("The CryptoRepoFile with cryptoRepoFileId=%s could not be decrypted! Access rights missing?!",
+					cryptoRepoFile.getCryptoRepoFileId()));
+
+		final byte[] plainRepoFileDtoData = assertNotNull("decrypt(...)", decrypt(cryptoRepoFile.getRepoFileDtoData(), plainCryptoKey));
+		try {
+			final InputStream in = new GZIPInputStream(new ByteArrayInputStream(plainRepoFileDtoData));
+			final RepoFileDto repoFileDto = repoFileDtoIo.deserialize(in);
+			in.close();
+			return repoFileDto;
+		} catch (final IOException x) {
+			throw new RuntimeException(x);
+		}
+	}
+
 	public CryptoRepoFile getCryptoRepoFile() {
 		if (cryptoRepoFile == null) {
 			if (repoFile == null) // at least one of them must be there!
@@ -155,6 +184,7 @@ public class CryptreeNode {
 			// No need for local IDs. Because this DTO is shared across all repositories, local IDs make no sense.
 			repoFileDtoConverter.setExcludeLocalIds(true);
 			final RepoFileDto repoFileDto = repoFileDtoConverter.toRepoFileDto(repoFile, Integer.MAX_VALUE);
+			cryptoRepoFile.setLocalName(repoFileDto.getName());
 
 			// Serialise to XML and compress.
 			final ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -166,7 +196,7 @@ public class CryptreeNode {
 				throw new RuntimeException(e);
 			}
 
-			cryptoRepoFile.setRepoFileDtoData(encrypt(out.toByteArray(), plainCryptoKey));
+			cryptoRepoFile.setRepoFileDtoData(assertNotNull("encrypt(...)", encrypt(out.toByteArray(), plainCryptoKey)));
 			cryptoRepoFile.setLastSyncFromRepositoryId(null);
 		}
 		return cryptoRepoFile;
@@ -182,7 +212,7 @@ public class CryptreeNode {
 	}
 
 	protected boolean isDirectory() {
-		return getRepoFile() instanceof Directory;
+		return assertNotNull("getRepoFile()", getRepoFile()) instanceof Directory;
 	}
 
 	protected PlainCryptoKey getPlainCryptoKey(final CryptoKeyRole toCryptoKeyRole, final CryptoKeyPart toCryptoKeyPart) {

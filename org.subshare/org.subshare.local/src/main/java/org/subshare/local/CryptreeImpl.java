@@ -9,6 +9,7 @@ import java.util.Map;
 
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.subshare.core.AbstractCryptree;
+import org.subshare.core.AccessDeniedException;
 import org.subshare.core.dto.CryptoChangeSetDto;
 import org.subshare.core.dto.CryptoKeyDto;
 import org.subshare.core.dto.CryptoLinkDto;
@@ -22,6 +23,7 @@ import org.subshare.local.persistence.CryptoRepoFileDao;
 import org.subshare.local.persistence.LastCryptoKeySyncToRemoteRepo;
 import org.subshare.local.persistence.LastCryptoKeySyncToRemoteRepoDao;
 
+import co.codewizards.cloudstore.core.dto.RepoFileDto;
 import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
@@ -34,10 +36,11 @@ import co.codewizards.cloudstore.local.persistence.RepoFileDao;
 
 public class CryptreeImpl extends AbstractCryptree {
 	private final Map<String, CryptreeNode> localPath2CryptreeNode = new HashMap<>();
+	private final Map<Uid, CryptreeNode> cryptoRepoFileId2CryptreeNode = new HashMap<>();
 
 	@Override
 	public CryptoChangeSetDto createOrUpdateCryptoRepoFile(final String localPath) {
-		final CryptreeNode cryptreeNode = getCryptreeNode(localPath);
+		final CryptreeNode cryptreeNode = getCryptreeNodeOrFail(localPath);
 		final CryptoRepoFile cryptoRepoFile = cryptreeNode.getCryptoRepoFileOrCreate(true);
 
 		final CryptoChangeSetDto cryptoChangeSetDto = getCryptoChangeSetDto(cryptoRepoFile);
@@ -46,7 +49,7 @@ public class CryptreeImpl extends AbstractCryptree {
 
 	@Override
 	public CryptoChangeSetDto getCryptoChangeSetDtoOrFail(final String localPath) {
-		final CryptreeNode cryptreeNode = getCryptreeNode(localPath);
+		final CryptreeNode cryptreeNode = getCryptreeNodeOrFail(localPath);
 		final CryptoRepoFile cryptoRepoFile = cryptreeNode.getCryptoRepoFile();
 		assertNotNull("cryptoRepoFile", cryptoRepoFile);
 
@@ -56,9 +59,10 @@ public class CryptreeImpl extends AbstractCryptree {
 
 	@Override
 	public String getServerPath(final String localPath) {
-		final CryptreeNode cryptreeNode = getCryptreeNode(localPath);
+		final CryptreeNode cryptreeNode = getCryptreeNodeOrFail(localPath);
 		final CryptoRepoFile cryptoRepoFile = cryptreeNode.getCryptoRepoFile();
-		return cryptoRepoFile.getPath();
+		assertNotNull("cryptoRepoFile", cryptoRepoFile);
+		return cryptoRepoFile.getServerPath();
 	}
 
 	@Override
@@ -138,17 +142,49 @@ public class CryptreeImpl extends AbstractCryptree {
 			}
 		}
 
+		if (! isOnServer()) {
+			for (final CryptoRepoFile cryptoRepoFile : cryptoRepoFileDto2CryptoRepoFile.values()) {
+				try {
+					final RepoFileDto decryptedRepoFileDto = getDecryptedRepoFileDtoOrFail(cryptoRepoFile.getCryptoRepoFileId());
+					cryptoRepoFile.setLocalName(decryptedRepoFileDto.getName());
+				} catch (final AccessDeniedException x) {
+					doNothing();
+				}
+			}
+		}
+
 		transaction.flush();
 	}
 
-//	/**
-//	 * Is the code currently executed on the server?
-//	 * @return <code>true</code>, if this method is invoked on the server. <code>false</code>, if this method
-//	 * is invoked on the client.
-//	 */
-//	protected boolean isOnServer() {
-//		return getUserRepoKey() == null; // We don't have user keys on the server.
-//	}
+	@Override
+	public Uid getRootCryptoRepoFileId() {
+		final CryptoRepoFileDao cryptoRepoFileDao = getTransactionOrFail().getDao(CryptoRepoFileDao.class);
+		final CryptoRepoFile rootCryptoRepoFile = cryptoRepoFileDao.getRootCryptoRepoFile();
+		return rootCryptoRepoFile == null ? null : rootCryptoRepoFile.getCryptoRepoFileId();
+	}
+
+	@Override
+	public RepoFileDto getDecryptedRepoFileDtoOrFail(final Uid cryptoRepoFileId) throws AccessDeniedException {
+		final CryptreeNode cryptreeNode = getCryptreeNodeOrFail(cryptoRepoFileId);
+		final RepoFileDto repoFileDto = cryptreeNode.getRepoFileDto();
+		assertNotNull("cryptreeNode.getRepoFileDto()", repoFileDto); // The cryptoRepoFile is present, thus this should never be null!
+		return repoFileDto;
+	}
+
+	@Override
+	public RepoFileDto getDecryptedRepoFileDto(final String localPath) throws AccessDeniedException {
+		final CryptreeNode cryptreeNode = getCryptreeNodeOrFail(localPath);
+		return cryptreeNode.getRepoFileDto();
+	}
+
+	/**
+	 * Is the code currently executed on the server?
+	 * @return <code>true</code>, if this method is invoked on the server. <code>false</code>, if this method
+	 * is invoked on the client.
+	 */
+	protected boolean isOnServer() {
+		return getUserRepoKey() == null; // We don't have user keys on the server.
+	}
 
 	private CryptoRepoFile putCryptoRepoFileDto(final CryptoRepoFileDto cryptoRepoFileDto) {
 		assertNotNull("cryptoRepoFileDto", cryptoRepoFileDto);
@@ -260,27 +296,61 @@ public class CryptreeImpl extends AbstractCryptree {
 		return lastCryptoKeySyncToRemoteRepo;
 	}
 
-	private CryptreeNode getCryptreeNode(final String localPath) {
+	private CryptreeNode getCryptreeNodeOrFail(final String localPath) {
 		CryptreeNode cryptreeNode = localPath2CryptreeNode.get(localPath);
 		if (cryptreeNode == null) {
-			cryptreeNode = createCryptreeNode(localPath);
+			cryptreeNode = createCryptreeNodeOrFail(localPath);
 			localPath2CryptreeNode.put(localPath, cryptreeNode);
 		}
 		return cryptreeNode;
 	}
 
-	private CryptreeNode createCryptreeNode(final String localPath) {
-		final RepoFile repoFile = getRepoFileOrFail(localPath);
-		final CryptreeNode cryptreeNode = new CryptreeNode(getUserRepoKeyOrFail(), getTransactionOrFail(), repoFile);
+	private CryptreeNode getCryptreeNodeOrFail(final Uid cryptoRepoFileId) {
+		CryptreeNode cryptreeNode = cryptoRepoFileId2CryptreeNode.get(cryptoRepoFileId);
+		if (cryptreeNode == null) {
+			cryptreeNode = createCryptreeNodeOrFail(cryptoRepoFileId);
+			cryptoRepoFileId2CryptreeNode.put(cryptoRepoFileId, cryptreeNode);
+		}
 		return cryptreeNode;
 	}
 
-	private RepoFile getRepoFileOrFail(final String path) {
+	private CryptreeNode createCryptreeNodeOrFail(final String localPath) {
+		final RepoFile repoFile = getRepoFile(localPath);
+		if (repoFile != null) {
+			final CryptreeNode cryptreeNode = new CryptreeNode(getUserRepoKeyOrFail(), getTransactionOrFail(), repoFile);
+			return cryptreeNode;
+		}
+		final CryptoRepoFile cryptoRepoFile = getCryptoRepoFileOrFail(localPath);
+		final CryptreeNode cryptreeNode = new CryptreeNode(getUserRepoKeyOrFail(), getTransactionOrFail(), cryptoRepoFile);
+		return cryptreeNode;
+	}
+
+	private CryptreeNode createCryptreeNodeOrFail(final Uid cryptoRepoFileId) {
+		final CryptoRepoFile cryptoRepoFile = getCryptoRepoFileOrFail(cryptoRepoFileId);
+		final CryptreeNode cryptreeNode = new CryptreeNode(getUserRepoKeyOrFail(), getTransactionOrFail(), cryptoRepoFile);
+		return cryptreeNode;
+	}
+
+	private CryptoRepoFile getCryptoRepoFileOrFail(final Uid cryptoRepoFileId) {
+		final LocalRepoTransaction transaction = getTransactionOrFail();
+		final CryptoRepoFileDao cryptoRepoFileDao = transaction.getDao(CryptoRepoFileDao.class);
+		final CryptoRepoFile cryptoRepoFile = cryptoRepoFileDao.getCryptoRepoFileOrFail(cryptoRepoFileId);
+		return cryptoRepoFile;
+	}
+
+	private CryptoRepoFile getCryptoRepoFileOrFail(final String localPath) {
+		final LocalRepoTransaction transaction = getTransactionOrFail();
+		final CryptoRepoFileDao cryptoRepoFileDao = transaction.getDao(CryptoRepoFileDao.class);
+		final CryptoRepoFile cryptoRepoFile = cryptoRepoFileDao.getCryptoRepoFile(localPath);
+		assertNotNull("cryptoRepoFile", cryptoRepoFile);
+		return cryptoRepoFile;
+	}
+
+	private RepoFile getRepoFile(final String localPath) {
 		final LocalRepoTransaction transaction = getTransactionOrFail();
 		final LocalRepoManager localRepoManager = transaction.getLocalRepoManager();
 		final RepoFileDao repoFileDao = transaction.getDao(RepoFileDao.class);
-		final RepoFile repoFile = repoFileDao.getRepoFile(localRepoManager.getLocalRoot(), new File(localRepoManager.getLocalRoot(), path));
-		assertNotNull("repoFile", repoFile);
+		final RepoFile repoFile = repoFileDao.getRepoFile(localRepoManager.getLocalRoot(), new File(localRepoManager.getLocalRoot(), localPath));
 		return repoFile;
 	}
 
