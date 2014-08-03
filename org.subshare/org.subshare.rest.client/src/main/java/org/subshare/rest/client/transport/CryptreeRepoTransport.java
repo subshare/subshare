@@ -21,6 +21,7 @@ import org.subshare.core.crypto.RandomIvFactory;
 import org.subshare.core.dto.CryptoChangeSetDto;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKeyRing;
+import org.subshare.rest.client.transport.command.EndGetCryptoChangeSetDto;
 import org.subshare.rest.client.transport.command.GetCryptoChangeSetDto;
 import org.subshare.rest.client.transport.command.PutCryptoChangeSetDto;
 import org.slf4j.Logger;
@@ -70,7 +71,7 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 	@Override
 	public ChangeSetDto getChangeSetDto(final boolean localSync) {
 		final ChangeSetDto changeSetDto = getRestRepoTransport().getChangeSetDto(localSync);
-//		syncCryptoKeysFromRemoteRepo();
+		syncCryptoKeysFromRemoteRepo();
 //		return decryptChangeSetDto(changeSetDto);
 		// TODO implement this!
 		return changeSetDto;
@@ -78,8 +79,18 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 
 	private void syncCryptoKeysFromRemoteRepo() {
 		final CryptoChangeSetDto cryptoChangeSetDto = getClient().execute(new GetCryptoChangeSetDto(getRepositoryId().toString()));
-		// TODO implement this!
-//		throw new UnsupportedOperationException("NYI");
+		final LocalRepoManager localRepoManager = getLocalRepoManager();
+		final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();
+		try {
+			try (final Cryptree cryptree = createCryptree(transaction);) {
+				cryptree.putCryptoChangeSetDto(cryptoChangeSetDto);
+			}
+			transaction.commit();
+		} finally {
+			transaction.rollbackIfActive();
+		}
+		// In case of successful commit, we notify the server in order to not receive the same changes again.
+		getClient().execute(new EndGetCryptoChangeSetDto(getRepositoryId().toString()));
 	}
 
 	private ChangeSetDto decryptChangeSetDto(final ChangeSetDto changeSetDto) {
@@ -125,8 +136,9 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 		try {
 			try (final Cryptree cryptree = createCryptree(transaction);) {
 				final CryptoChangeSetDto cryptoChangeSetDto = cryptree.createOrUpdateCryptoRepoFile(path);
-				cryptree.updateLastCryptoKeySyncToRemoteRepo();
 				putCryptoChangeSetDto(cryptoChangeSetDto);
+				cryptree.updateLastCryptoKeySyncToRemoteRepo();
+
 				getRestRepoTransport().makeDirectory(cryptree.getServerPath(path), new Date(0));
 			}
 			transaction.commit();
@@ -193,14 +205,8 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 		try {
 			try (final Cryptree cryptree = createCryptree(transaction);) {
 				final CryptoChangeSetDto cryptoChangeSetDto = cryptree.createOrUpdateCryptoRepoFile(path);
-
-//				if (cryptoChangeSetDto.getCryptoRepoFileDtos().size() != 1)
-//					throw new IllegalStateException("cryptoChangeSetDto.cryptoRepoFileDtos.size != 1");
-//
-//				CryptoRepoFileDto cryptoRepoFileDto = cryptoChangeSetDto.getCryptoRepoFileDtos().get(0);
-
-				cryptree.updateLastCryptoKeySyncToRemoteRepo();
 				putCryptoChangeSetDto(cryptoChangeSetDto);
+				cryptree.updateLastCryptoKeySyncToRemoteRepo();
 
 				getRestRepoTransport().beginPutFile(cryptree.getServerPath(path));
 			}
@@ -262,8 +268,8 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 		try {
 			try (final Cryptree cryptree = createCryptree(transaction);) {
 				final CryptoChangeSetDto cryptoChangeSetDto = cryptree.getCryptoChangeSetDtoOrFail(path);
-				cryptree.updateLastCryptoKeySyncToRemoteRepo();
 				putCryptoChangeSetDto(cryptoChangeSetDto);
+				cryptree.updateLastCryptoKeySyncToRemoteRepo();
 
 				// Calculating the SHA1 of the encrypted data is too complicated. We thus omit it (now optional in CloudStore).
 				getRestRepoTransport().endPutFile(cryptree.getServerPath(path), new Date(0), getServerOffset(length), null);

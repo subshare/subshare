@@ -76,7 +76,9 @@ public class CryptreeImpl extends AbstractCryptree {
 
 	@Override
 	public CryptoChangeSetDto getCryptoChangeSetDtoWithCryptoRepoFiles() {
+		final LocalRepository localRepository = getTransactionOrFail().getDao(LocalRepositoryDao.class).getLocalRepositoryOrFail();
 		final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo = getLastCryptoKeySyncToRemoteRepo();
+		lastCryptoKeySyncToRemoteRepo.setLocalRepositoryRevisionInProgress(localRepository.getRevision());
 
 		// First links then keys, because we query all changed *after* a certain localRevision - and not in a range.
 		// Thus, we might find newer keys when querying them after the links. Since the links reference the keys
@@ -92,10 +94,13 @@ public class CryptreeImpl extends AbstractCryptree {
 
 	@Override
 	public void updateLastCryptoKeySyncToRemoteRepo() {
-		final LocalRepoTransaction transaction = getTransactionOrFail();
-		final LocalRepository localRepository = transaction.getDao(LocalRepositoryDao.class).getLocalRepositoryOrFail();
 		final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo = getLastCryptoKeySyncToRemoteRepo();
-		lastCryptoKeySyncToRemoteRepo.setLocalRepositoryRevisionSynced(localRepository.getRevision());
+		final long localRepositoryRevisionInProgress = lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionInProgress();
+		if (localRepositoryRevisionInProgress < 0)
+			throw new IllegalStateException("localRepositoryRevisionInProgress < 0 :: There is no CryptoKey-sync in progress!");
+
+		lastCryptoKeySyncToRemoteRepo.setLocalRepositoryRevisionSynced(localRepositoryRevisionInProgress);
+		lastCryptoKeySyncToRemoteRepo.setLocalRepositoryRevisionInProgress(-1);
 	}
 
 	@Override
@@ -282,7 +287,9 @@ public class CryptreeImpl extends AbstractCryptree {
 	protected CryptoChangeSetDto getCryptoChangeSetDto(final CryptoRepoFile cryptoRepoFile) {
 		assertNotNull("cryptoRepoFile", cryptoRepoFile);
 
+		final LocalRepository localRepository = getTransactionOrFail().getDao(LocalRepositoryDao.class).getLocalRepositoryOrFail();
 		final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo = getLastCryptoKeySyncToRemoteRepo();
+		lastCryptoKeySyncToRemoteRepo.setLocalRepositoryRevisionInProgress(localRepository.getRevision());
 
 		final CryptoChangeSetDto cryptoChangeSetDto = new CryptoChangeSetDto();
 		cryptoChangeSetDto.getCryptoRepoFileDtos().add(toCryptoRepoFileDto(cryptoRepoFile));

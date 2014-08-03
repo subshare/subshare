@@ -102,8 +102,8 @@ public class RepoToRepoSyncIT extends AbstractIT {
 	}
 
 	@Test
-	public void syncFromLocalToRemote() throws Exception {
-		localRoot = newTestRepositoryLocalRoot("local");
+	public void syncFromLocalToRemoteToLocal() throws Exception {
+		localRoot = newTestRepositoryLocalRoot("local-src");
 		assertThat(localRoot).doesNotExist();
 		localRoot.mkdirs();
 		assertThat(localRoot).isDirectory();
@@ -121,6 +121,7 @@ public class RepoToRepoSyncIT extends AbstractIT {
 
 		final UUID remoteRepositoryId = localRepoManagerRemote.getRepositoryId();
 		remoteRootURLWithPathPrefix = getRemoteRootURLWithPathPrefix(remoteRepositoryId);
+		localRepoManagerRemote.close();
 
 		new CloudStoreClient("requestRepoConnection", getLocalRootWithPathPrefix().getPath(), remoteRootURLWithPathPrefix.toExternalForm()).execute();
 		new CloudStoreClient("acceptRepoConnection", getRemoteRootWithPathPrefix().getPath()).execute();
@@ -157,11 +158,28 @@ public class RepoToRepoSyncIT extends AbstractIT {
 //		assertThatFilesInRepoAreCorrect(localRoot);
 
 		localRepoManagerLocal.close();
-		localRepoManagerRemote.close();
 
 //		assertThatNoCollisionInRepo(localRoot);
 //		assertThatNoCollisionInRepo(remoteRoot);
-//		assertDirectoriesAreEqualRecursively(getLocalRootWithPathPrefix(), getRemoteRootWithPathPrefix());
+
+		final File localDestRoot = newTestRepositoryLocalRoot("local-dest");
+		assertThat(localDestRoot).doesNotExist();
+		localDestRoot.mkdirs();
+		assertThat(localDestRoot).isDirectory();
+
+		final LocalRepoManager localDestRepoManagerLocal = localRepoManagerFactory.createLocalRepoManagerForNewRepository(localDestRoot);
+		assertThat(localDestRepoManagerLocal).isNotNull();
+		localDestRepoManagerLocal.close();
+
+		new CloudStoreClient("requestRepoConnection", localDestRoot.getPath(), remoteRootURLWithPathPrefix.toExternalForm()).execute();
+		new CloudStoreClient("acceptRepoConnection", getRemoteRootWithPathPrefix().getPath()).execute();
+
+		final RepoToRepoSync repoToRepoSync2 = new RepoToRepoSync(localDestRoot, remoteRootURLWithPathPrefix);
+		repoToRepoSync2.sync(new LoggerProgressMonitor(logger));
+		repoToRepoSync2.close();
+
+// TODO compare the source and the destination!
+//		assertDirectoriesAreEqualRecursively(getLocalRootWithPathPrefix(), localDestRoot);
 	}
 
 }

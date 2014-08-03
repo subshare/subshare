@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -41,14 +42,13 @@ public class CryptoChangeSetDtoService extends AbstractServiceWithRepoToRepoAuth
 		) {
 			final UUID clientRepositoryId = assertNotNull("clientRepositoryId", repoTransport.getClientRepositoryId());
 			final LocalRepoManager localRepoManager = ((ContextWithLocalRepoManager) repoTransport).getLocalRepoManager();
-			transaction = localRepoManager.beginReadTransaction();
+			transaction = localRepoManager.beginWriteTransaction(); // We write LastCryptoKeySyncToRemoteRepo.
 			try {
 				final CryptreeFactory cryptreeFactory = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail();
 				try (
 						final Cryptree cryptree = cryptreeFactory.createCryptree(transaction, clientRepositoryId);
 				) {
 					cryptoChangeSetDto = cryptree.getCryptoChangeSetDtoWithCryptoRepoFiles();
-					cryptree.updateLastCryptoKeySyncToRemoteRepo();
 				}
 				transaction.commit();
 			} finally {
@@ -56,6 +56,29 @@ public class CryptoChangeSetDtoService extends AbstractServiceWithRepoToRepoAuth
 			}
 		}
 		return cryptoChangeSetDto;
+	}
+
+	@POST
+	@Path("endGet")
+	public void endGetCryptoChangeSetDto() {
+		try (
+				final RepoTransport repoTransport = authenticateAndCreateLocalRepoTransport();
+		) {
+			final UUID clientRepositoryId = assertNotNull("clientRepositoryId", repoTransport.getClientRepositoryId());
+			final LocalRepoManager localRepoManager = ((ContextWithLocalRepoManager) repoTransport).getLocalRepoManager();
+			transaction = localRepoManager.beginWriteTransaction();
+			try {
+				final CryptreeFactory cryptreeFactory = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail();
+				try (
+						final Cryptree cryptree = cryptreeFactory.createCryptree(transaction, clientRepositoryId);
+				) {
+					cryptree.updateLastCryptoKeySyncToRemoteRepo();
+				}
+				transaction.commit();
+			} finally {
+				transaction.rollbackIfActive();
+			}
+		}
 	}
 
 	@PUT

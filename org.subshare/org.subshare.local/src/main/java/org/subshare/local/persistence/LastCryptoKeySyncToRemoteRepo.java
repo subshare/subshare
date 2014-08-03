@@ -19,7 +19,7 @@ public class LastCryptoKeySyncToRemoteRepo extends Entity {
 	@Persistent(nullValue=NullValue.EXCEPTION)
 	private RemoteRepository remoteRepository;
 	private long localRepositoryRevisionSynced = -1;
-//	private long localRepositoryRevisionInProgress = -1;
+	private long localRepositoryRevisionInProgress = -1;
 
 	public RemoteRepository getRemoteRepository() {
 		return remoteRepository;
@@ -45,10 +45,10 @@ public class LastCryptoKeySyncToRemoteRepo extends Entity {
 		this.localRepositoryRevisionSynced = localRepositoryRevision;
 	}
 
-//	public long getLocalRepositoryRevisionInProgress() {
-//		return localRepositoryRevisionInProgress;
-//	}
-//	public void setLocalRepositoryRevisionInProgress(final long localRepositoryRevisionInProgress) {
-//		this.localRepositoryRevisionInProgress = localRepositoryRevisionInProgress;
-//	}
+	public long getLocalRepositoryRevisionInProgress() {
+		return localRepositoryRevisionInProgress;
+	}
+	public void setLocalRepositoryRevisionInProgress(final long localRepositoryRevisionInProgress) {
+		this.localRepositoryRevisionInProgress = localRepositoryRevisionInProgress;
+	}
 }
