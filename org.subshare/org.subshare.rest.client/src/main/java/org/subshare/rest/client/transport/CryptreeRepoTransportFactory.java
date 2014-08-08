@@ -50,7 +50,7 @@ public class CryptreeRepoTransportFactory extends AbstractRepoTransportFactory {
 	}
 
 	@Override
-	protected RepoTransport _createRepoTransport(final URL remoteRoot) {
+	protected RepoTransport _createRepoTransport() {
 		return new CryptreeRepoTransport();
 	}
 }
