@@ -7,9 +7,9 @@ import javax.ws.rs.core.MediaType;
 
 import org.subshare.core.dto.CryptoChangeSetDto;
 
-import co.codewizards.cloudstore.rest.client.command.AbstractCommand;
+import co.codewizards.cloudstore.rest.client.request.AbstractRequest;
 
-public class GetCryptoChangeSetDto extends AbstractCommand<CryptoChangeSetDto> {
+public class GetCryptoChangeSetDto extends AbstractRequest<CryptoChangeSetDto> {
 
 	private final String repositoryName;
 

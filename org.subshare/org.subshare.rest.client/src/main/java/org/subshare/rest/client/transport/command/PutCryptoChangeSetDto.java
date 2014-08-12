@@ -9,9 +9,9 @@ import javax.ws.rs.core.Response;
 
 import org.subshare.core.dto.CryptoChangeSetDto;
 
-import co.codewizards.cloudstore.rest.client.command.VoidCommand;
+import co.codewizards.cloudstore.rest.client.request.VoidRequest;
 
-public class PutCryptoChangeSetDto extends VoidCommand {
+public class PutCryptoChangeSetDto extends VoidRequest {
 
 	private final String repositoryName;
 	private final CryptoChangeSetDto cryptoChangeSetDto;
