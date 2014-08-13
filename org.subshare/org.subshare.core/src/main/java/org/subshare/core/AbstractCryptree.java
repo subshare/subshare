@@ -15,6 +15,7 @@ public abstract class AbstractCryptree implements Cryptree {
 	private LocalRepoTransaction transaction;
 	private UserRepoKey userRepoKey;
 	private UUID remoteRepositoryId;
+	private String remotePathPrefix;
 
 	@Override
 	public CryptreeFactory getCryptreeFactory() {
@@ -22,6 +23,9 @@ public abstract class AbstractCryptree implements Cryptree {
 	}
 	@Override
 	public void setCryptreeFactory(final CryptreeFactory cryptreeFactory) {
+		if (this.cryptreeFactory != null && this.cryptreeFactory != cryptreeFactory)
+			throw new IllegalStateException("this.cryptreeFactory already assigned! Cannot modify after initial assignment!");
+
 		this.cryptreeFactory = cryptreeFactory;
 	}
 	protected CryptreeFactory getCryptreeFactoryOrFail() {
@@ -62,10 +66,28 @@ public abstract class AbstractCryptree implements Cryptree {
 	}
 	@Override
 	public void setRemoteRepositoryId(final UUID remoteRepositoryId) {
+		if (this.remoteRepositoryId != null && !this.remoteRepositoryId.equals(remoteRepositoryId))
+			throw new IllegalStateException("this.remoteRepositoryId already assigned! Cannot modify after initial assignment!");
+
 		this.remoteRepositoryId = remoteRepositoryId;
 	}
 	protected UUID getRemoteRepositoryIdOrFail() {
 		return assertNotNull("getRemoteRepositoryId()", getRemoteRepositoryId());
+	}
+
+	@Override
+	public String getRemotePathPrefix() {
+		return remotePathPrefix;
+	}
+	@Override
+	public void setRemotePathPrefix(final String remotePathPrefix) {
+		if (this.remotePathPrefix != null && !this.remotePathPrefix.equals(remotePathPrefix))
+			throw new IllegalStateException("this.remotePathPrefix already assigned! Cannot modify after initial assignment!");
+
+		this.remotePathPrefix = remotePathPrefix;
+	}
+	protected String getRemotePathPrefixOrFail() {
+		return assertNotNull("getRemotePathPrefix()", getRemotePathPrefix());
 	}
 
 	@Override

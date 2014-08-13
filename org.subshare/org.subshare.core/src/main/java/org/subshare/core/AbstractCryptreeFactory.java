@@ -27,10 +27,12 @@ public abstract class AbstractCryptreeFactory implements CryptreeFactory {
 	}
 
 	@Override
-	public Cryptree createCryptree(final LocalRepoTransaction transaction, final UUID remoteRepositoryId, final UserRepoKey userRepoKey) {
+	public Cryptree createCryptree(final LocalRepoTransaction transaction, final UUID remoteRepositoryId, final String remotePathPrefix, final UserRepoKey userRepoKey) {
 		final Cryptree cryptree = createCryptree(transaction, remoteRepositoryId);
+		assertNotNull("remotePathPrefix", remotePathPrefix);
 		assertNotNull("userRepoKey", userRepoKey);
 		cryptree.setUserRepoKey(userRepoKey);
+		cryptree.setRemotePathPrefix(remotePathPrefix);
 		return cryptree;
 	}
 

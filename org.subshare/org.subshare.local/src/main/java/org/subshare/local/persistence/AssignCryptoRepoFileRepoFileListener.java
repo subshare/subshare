@@ -1,5 +1,7 @@
 package org.subshare.local.persistence;
 
+import static co.codewizards.cloudstore.core.util.Util.*;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -35,6 +37,10 @@ public class AssignCryptoRepoFileRepoFileListener extends AbstractLocalRepoTrans
 
 	@Override
 	public void onCommit() {
+		assignCryptoRepoFileRepoFile();
+	}
+
+	private void assignCryptoRepoFileRepoFile() {
 		if (repoFileName2RepoFile.isEmpty())
 			return;
 
@@ -52,7 +58,20 @@ public class AssignCryptoRepoFileRepoFileListener extends AbstractLocalRepoTrans
 		}
 	}
 
+	/**
+	 * Gets the {@link RepoFile} via {@link CryptoRepoFile#getLocalName() cryptoRepoFile.localName}.
+	 * <p>
+	 * This method only works and should thus only be executed on the client-side!
+	 * @param cryptoRepoFile
+	 * @return
+	 */
 	private RepoFile getRepoFileViaCryptoRepoFileLocalName(final CryptoRepoFile cryptoRepoFile) {
+		assertNotNull("cryptoRepoFile", cryptoRepoFile);
+
+		// Early failure: Check cryptoRepoFile.localName even if we don't need it.
+		final String localName = cryptoRepoFile.getLocalName();
+		assertNotNull("cryptoRepoFile.localName", localName);
+
 		RepoFile repoFile = cryptoRepoFile.getRepoFile();
 		if (repoFile == null) {
 			final CryptoRepoFile parentCryptoRepoFile = cryptoRepoFile.getParent();
@@ -61,14 +80,12 @@ public class AssignCryptoRepoFileRepoFileListener extends AbstractLocalRepoTrans
 				if (parentRepoFile == null)
 					return null;
 
-				final String localName = cryptoRepoFile.getLocalName();
-				if (localName == null)
-					throw new IllegalStateException("cryptoRepoFile.localName == null");
-
 				repoFile = getTransactionOrFail().getDao(RepoFileDao.class).getChildRepoFile(parentRepoFile, localName);
 			}
-			else // TODO this needs to be changed when we allow checking out sub-directories.
-				repoFile = getTransactionOrFail().getDao(RepoFileDao.class).getLocalRootDirectory();
+//			else {
+//				throw new IllegalStateException("The root was not initialised! It should have been, though!");
+////				repoFile = getTransactionOrFail().getDao(RepoFileDao.class).getLocalRootDirectory(); // works only, if no sub-dir is checked out.
+//			}
 
 			if (repoFile != null)
 				cryptoRepoFile.setRepoFile(repoFile);

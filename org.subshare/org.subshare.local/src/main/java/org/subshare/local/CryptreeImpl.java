@@ -218,20 +218,35 @@ public class CryptreeImpl extends AbstractCryptree {
 //			cryptoRepoFile.setRepoFile(repoFile); // TODO?!???
 //		}
 
-		if (parentCryptoRepoFileId == null) {
-			// This is the root! Since the root's directory name is the empty string, it cannot be associated
-			// by the AssignCryptoRepoFileRepoFileListener, which uses the RepoFile.name to associate them.
-			// On the server, the RepoFile.name equals the CryptoRepoFile.cryptoRepoFileId - except for the root!
-			final LocalRepository localRepository = transaction.getDao(LocalRepositoryDao.class).getLocalRepositoryOrFail();
-			cryptoRepoFile.setRepoFile(localRepository.getRoot());
+		boolean assignCryptoRepoFileForRemotePathPrefixIfPossible = false;
+		final String remotePathPrefix = getRemotePathPrefix();
+		if (remotePathPrefix == null // on server
+				|| remotePathPrefix.isEmpty()) { // on client and complete repo is checked out
+			if (parentCryptoRepoFileId == null) {
+				// This is the root! Since the root's directory name is the empty string, it cannot be associated
+				// by the AssignCryptoRepoFileRepoFileListener, which uses the RepoFile.name to associate them.
+				// On the server, the RepoFile.name equals the CryptoRepoFile.cryptoRepoFileId - except for the root!
+				final LocalRepository localRepository = transaction.getDao(LocalRepositoryDao.class).getLocalRepositoryOrFail();
+				cryptoRepoFile.setRepoFile(localRepository.getRoot());
+			}
 		}
+		else
+			assignCryptoRepoFileForRemotePathPrefixIfPossible = true;
 
 		final byte[] repoFileDtoData = assertNotNull("cryptoRepoFileDto.repoFileDtoData", cryptoRepoFileDto.getRepoFileDtoData());
 		cryptoRepoFile.setRepoFileDtoData(repoFileDtoData);
 
 		cryptoRepoFile.setLastSyncFromRepositoryId(getRemoteRepositoryId());
 
-		return cryptoRepoFileDao.makePersistent(cryptoRepoFile);
+		cryptoRepoFile = cryptoRepoFileDao.makePersistent(cryptoRepoFile);
+		if (assignCryptoRepoFileForRemotePathPrefixIfPossible) { // try to associate the root of the repo-connection (not the real root of the remote-repo, but a sub-dir).
+			final CryptoRepoFile prefixCryptoRepoFile = getCryptoRepoFileForRemotePathPrefix(); // may be null, if not yet synced.
+			if (cryptoRepoFile.equals(prefixCryptoRepoFile)) {
+				final LocalRepository localRepository = transaction.getDao(LocalRepositoryDao.class).getLocalRepositoryOrFail();
+				cryptoRepoFile.setRepoFile(localRepository.getRoot());
+			}
+		}
+		return cryptoRepoFile;
 	}
 
 	private CryptoKey putCryptoKeyDto(final CryptoKeyDto cryptoKeyDto) {
@@ -338,12 +353,76 @@ public class CryptreeImpl extends AbstractCryptree {
 		return cryptoRepoFile;
 	}
 
+	private CryptoRepoFile getCryptoRepoFile(final Uid cryptoRepoFileId) {
+		final LocalRepoTransaction transaction = getTransactionOrFail();
+		final CryptoRepoFileDao cryptoRepoFileDao = transaction.getDao(CryptoRepoFileDao.class);
+		final CryptoRepoFile cryptoRepoFile = cryptoRepoFileDao.getCryptoRepoFile(cryptoRepoFileId);
+		return cryptoRepoFile;
+	}
+
 	private CryptoRepoFile getCryptoRepoFileOrFail(final String localPath) {
 		final LocalRepoTransaction transaction = getTransactionOrFail();
 		final CryptoRepoFileDao cryptoRepoFileDao = transaction.getDao(CryptoRepoFileDao.class);
-		final CryptoRepoFile cryptoRepoFile = cryptoRepoFileDao.getCryptoRepoFile(localPath);
+		final CryptoRepoFile cryptoRepoFile = cryptoRepoFileDao.getCryptoRepoFile(prefixLocalPath(localPath));
 		assertNotNull("cryptoRepoFile", cryptoRepoFile);
 		return cryptoRepoFile;
+	}
+
+	private String prefixLocalPath(final String localPath) {
+		assertNotNull("localPath", localPath);
+
+		if (getRemotePathPrefixOrFail().isEmpty())
+			return localPath;
+
+		final CryptoRepoFile prefixCryptoRepoFile = getCryptoRepoFileForRemotePathPrefixOrFail();
+
+		if (localPath.isEmpty())
+			return prefixCryptoRepoFile.getLocalPathOrFail();
+		else {
+			if ("/".equals(localPath))
+				throw new IllegalStateException("localPath should never be '/', but instead it should be an empty String, if the real root is checked out!");
+
+			if (!localPath.startsWith("/"))
+				throw new IllegalStateException("localPath is neither empty nor does it start with '/'!");
+
+			final String prefix = prefixCryptoRepoFile.getLocalPathOrFail();
+
+			if (!prefix.isEmpty() && !prefix.startsWith("/"))
+				throw new IllegalStateException("prefixCryptoRepoFile.localPath is neither empty nor does it start with '/'!");
+
+			if (prefix.endsWith("/"))
+				throw new IllegalStateException("prefixCryptoRepoFile.localPath ends with '/'! It should not!");
+
+			return prefix + localPath;
+		}
+	}
+
+	private CryptoRepoFile getCryptoRepoFileForRemotePathPrefix() {
+		final Uid id = getCryptoRepoFileIdForRemotePathPrefixOrFail();
+		final CryptoRepoFile prefixCryptoRepoFile = getCryptoRepoFile(id);
+		return prefixCryptoRepoFile;
+	}
+
+	private CryptoRepoFile getCryptoRepoFileForRemotePathPrefixOrFail() {
+		final Uid id = getCryptoRepoFileIdForRemotePathPrefixOrFail();
+		final CryptoRepoFile prefixCryptoRepoFile = getCryptoRepoFileOrFail(id);
+		return prefixCryptoRepoFile;
+	}
+
+	private Uid getCryptoRepoFileIdForRemotePathPrefixOrFail() {
+		final String remotePathPrefix = getRemotePathPrefixOrFail();
+		if (remotePathPrefix.isEmpty())
+			throw new IllegalStateException("This method cannot be used, if there is no remotePathPrefix!");
+
+		if ("/".equals(remotePathPrefix))
+			throw new IllegalStateException("The remotePathPrefix should be an empty string, if the root is checked out!");
+
+		final int lastSlashIndex = remotePathPrefix.lastIndexOf('/');
+		if (lastSlashIndex < 0)
+			throw new IllegalStateException("encryptedPathPrefix is neither empty nor does it contain '/'! encryptedPathPrefix: " + remotePathPrefix);
+
+		final String uidStr = remotePathPrefix.substring(lastSlashIndex + 1);
+		return new Uid(uidStr);
 	}
 
 	private RepoFile getRepoFile(final String localPath) {
@@ -448,45 +527,4 @@ public class CryptreeImpl extends AbstractCryptree {
 		return cryptoKeyDto;
 	}
 
-//	@Override
-//	public String getServerPath(final String localPath) {
-//		// TODO handle path correctly => pathPrefix on both sides possible!!! Maybe do this here?!
-//		assertNotNull("path", localPath);
-//		final StringBuilder result = new StringBuilder();
-//		final StringTokenizer st = new StringTokenizer(localPath, "/", true);
-//		while (st.hasMoreTokens()) {
-//			final String token = st.nextToken();
-//			if ("/".equals(token))
-//				result.append(token);
-//			else
-//				result.append(getServerFileName(token));
-//		}
-//		return result.toString();
-//	}
-//
-//	/**
-//	 * Gets the server-side name of the file named {@code plainName} locally.
-//	 * <p>
-//	 * The real (plain-text) name of the file is hashed with a repository-dependent salt. Thus the same name
-//	 * will have the same hash in the same repository, but a different hash in other repositories.
-//	 * <p>
-//	 * In other words: Invoking this method multiple times with the same name and the same (remote)
-//	 * repository is guaranteed to return the same result. Invoking it with the same name but another
-//	 * (remote) repository, it is guaranteed to return a different result.
-//	 * <p>
-//	 * @param plainName the local name (in plain-text) of the file. Must not be <code>null</code>.
-//	 * @return the server-side name of the file (a secure hash).
-//	 * @see #getServerPath(String)
-//	 */
-//	private String getServerFileName(final String plainName) {
-//		assertNotNull("plainName", plainName);
-//		// TODO re-implement (I'm sure I already implemented this for another project before) a CombiInputStream combining multiple streams, so that we don't need to copy things around!
-//		final byte[] repositoryIdBytes = new Uid(getRemoteRepositoryId().getMostSignificantBits(), getRemoteRepositoryId().getLeastSignificantBits()).toBytes();
-//		final byte[] plainNameBytes = plainName.getBytes(UTF8);
-//		final byte[] combined = new byte[repositoryIdBytes.length + plainNameBytes.length];
-//		System.arraycopy(repositoryIdBytes, 0, combined, 0, repositoryIdBytes.length);
-//		System.arraycopy(plainNameBytes, 0, combined, repositoryIdBytes.length, plainNameBytes.length);
-//		final String sha1 = HashUtil.sha1(combined);
-//		return sha1;
-//	}
 }

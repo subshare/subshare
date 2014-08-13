@@ -271,4 +271,17 @@ public class CryptoRepoFile extends Entity implements AutoTrackLocalRevision, St
 		return sb.toString();
 	}
 
+	public String getLocalPathOrFail() {
+		final StringBuilder sb = new StringBuilder();
+		for (final CryptoRepoFile crf : getPathList()) {
+			if (crf.getParent() == null)
+				continue; // the root is just "/" without a name everywhere - locally, too!
+
+			if (sb.length() == 0 || sb.charAt(sb.length() - 1) != '/')
+				sb.append('/');
+
+			sb.append(assertNotNull("cryptoRepoFile.localName", crf.getLocalName())); // if this is null, we are not on the client-side (or we have no access at all). if we are on the client and do have access, we should be able to decrypt all parents due to the backlink-keys!
+		}
+		return sb.toString();
+	}
 }

@@ -10,7 +10,7 @@ public interface CryptreeFactory {
 
 	int getPriority();
 
-	Cryptree createCryptree(LocalRepoTransaction transaction, UUID remoteRepositoryId, UserRepoKey userRepoKey);
+	Cryptree createCryptree(LocalRepoTransaction transaction, UUID remoteRepositoryId, String remotePathPrefix, UserRepoKey userRepoKey);
 
 	Cryptree createCryptree(LocalRepoTransaction transaction, UUID remoteRepositoryId);
 

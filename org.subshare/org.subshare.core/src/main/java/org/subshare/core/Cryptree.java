@@ -27,6 +27,9 @@ public interface Cryptree extends AutoCloseable {
 	UUID getRemoteRepositoryId();
 	void setRemoteRepositoryId(UUID remoteRepositoryId);
 
+	String getRemotePathPrefix();
+	void setRemotePathPrefix(String remotePathPrefix);
+
 	@Override
 	void close();
 
@@ -89,6 +92,5 @@ public interface Cryptree extends AutoCloseable {
 	Uid getRootCryptoRepoFileId();
 	RepoFileDto getDecryptedRepoFileDtoOrFail(Uid cryptoRepoFileId) throws AccessDeniedException;
 	RepoFileDto getDecryptedRepoFileDto(String localPath) throws AccessDeniedException;
-
 
 }

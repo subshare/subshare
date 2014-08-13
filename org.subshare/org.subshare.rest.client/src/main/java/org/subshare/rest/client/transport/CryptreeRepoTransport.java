@@ -156,7 +156,8 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 				putCryptoChangeSetDto(cryptoChangeSetDto);
 				cryptree.updateLastCryptoKeySyncToRemoteRepo();
 
-				getRestRepoTransport().makeDirectory(cryptree.getServerPath(path), new Date(0));
+				final String unprefixedServerPath = unprefixPath(cryptree.getServerPath(path)); // it's automatically prefixed *again*, thus we must prefix it here (if we don't want to somehow suppress the automatic prefixing, which is probably quite a lot of work).
+				getRestRepoTransport().makeDirectory(unprefixedServerPath, new Date(0));
 			}
 			transaction.commit();
 		} finally {
@@ -168,7 +169,7 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 		if (cryptreeFactory == null)
 			cryptreeFactory = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail();
 
-		return cryptreeFactory.createCryptree(transaction, getRepositoryId(), getUserRepoKey());
+		return cryptreeFactory.createCryptree(transaction, getRepositoryId(), getPathPrefix(), getUserRepoKey());
 	}
 
 	protected UserRepoKey getUserRepoKey() {
@@ -225,9 +226,9 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 		final LocalRepoTransaction transaction = localRepoManager.beginReadTransaction();
 		try {
 			try (final Cryptree cryptree = createCryptree(transaction);) {
-				final String serverPath = cryptree.getServerPath(path);
 				final KeyParameter dataKey = cryptree.getDataKey(path);
-				final byte[] encryptedFileData = getRestRepoTransport().getFileData(serverPath, getServerOffset(offset), (int) getServerOffset(length));
+				final String unprefixedServerPath = unprefixPath(cryptree.getServerPath(path)); // it's automatically prefixed *again*, thus we must prefix it here (if we don't want to somehow suppress the automatic prefixing, which is probably quite a lot of work).
+				final byte[] encryptedFileData = getRestRepoTransport().getFileData(unprefixedServerPath, getServerOffset(offset), (int) getServerOffset(length));
 				decryptedFileData = decrypt(encryptedFileData, dataKey);
 			}
 			transaction.commit();
@@ -248,7 +249,8 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 				putCryptoChangeSetDto(cryptoChangeSetDto);
 				cryptree.updateLastCryptoKeySyncToRemoteRepo();
 
-				getRestRepoTransport().beginPutFile(cryptree.getServerPath(path));
+				final String unprefixedServerPath = unprefixPath(cryptree.getServerPath(path)); // it's automatically prefixed *again*, thus we must prefix it here (if we don't want to somehow suppress the automatic prefixing, which is probably quite a lot of work).
+				getRestRepoTransport().beginPutFile(unprefixedServerPath);
 			}
 			transaction.commit();
 		} finally {
@@ -271,7 +273,8 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 				// TODO we *MUST* store the file chunks server-side in separate chunk-files permanently!
 				// The reason is that the chunks might be bigger (and usually are!) than the unencrypted files.
 				// Temporarily, we simply multiply the offset with a margin in order to have some reserve.
-				getRestRepoTransport().putFileData(cryptree.getServerPath(path), getServerOffset(offset), encryptedFileData);
+				final String unprefixedServerPath = unprefixPath(cryptree.getServerPath(path)); // it's automatically prefixed *again*, thus we must prefix it here (if we don't want to somehow suppress the automatic prefixing, which is probably quite a lot of work).
+				getRestRepoTransport().putFileData(unprefixedServerPath, getServerOffset(offset), encryptedFileData);
 			}
 			transaction.commit();
 		} finally {
@@ -344,7 +347,8 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 				cryptree.updateLastCryptoKeySyncToRemoteRepo();
 
 				// Calculating the SHA1 of the encrypted data is too complicated. We thus omit it (now optional in CloudStore).
-				getRestRepoTransport().endPutFile(cryptree.getServerPath(path), new Date(0), getServerOffset(length), null);
+				final String unprefixedServerPath = unprefixPath(cryptree.getServerPath(path)); // it's automatically prefixed *again*, thus we must prefix it here (if we don't want to somehow suppress the automatic prefixing, which is probably quite a lot of work).
+				getRestRepoTransport().endPutFile(unprefixedServerPath, new Date(0), getServerOffset(length), null);
 			}
 			transaction.commit();
 		} finally {
