@@ -66,6 +66,7 @@ public abstract class AbstractIT {
 	public static void abstractIT_afterClass() {
 		if (subShareServerTestSupport.afterClass()) {
 			cryptreeRepoTransportFactory.setDynamicX509TrustManagerCallbackClass(null);
+			cryptreeRepoTransportFactory.setUserRepoKeyRing(null);
 			cryptreeRepoTransportFactory = null;
 		}
 	}
