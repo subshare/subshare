@@ -8,15 +8,9 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.UUID;
 
-import org.subshare.core.crypto.KeyFactory;
-import org.subshare.core.user.UserRepoKey;
-import org.subshare.core.user.UserRepoKeyRing;
 import org.subshare.local.persistence.CryptoRepoFile;
 import org.subshare.local.persistence.CryptoRepoFileDao;
-import org.subshare.rest.client.transport.CryptreeRepoTransportFactory;
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,13 +20,9 @@ import co.codewizards.cloudstore.core.progress.LoggerProgressMonitor;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
 import co.codewizards.cloudstore.core.repo.sync.RepoToRepoSync;
-import co.codewizards.cloudstore.core.repo.transport.RepoTransportFactoryRegistry;
 import co.codewizards.cloudstore.core.util.UrlUtil;
 import co.codewizards.cloudstore.local.persistence.RepoFile;
 import co.codewizards.cloudstore.local.persistence.RepoFileDao;
-import co.codewizards.cloudstore.rest.client.ssl.CheckServerTrustedCertificateExceptionContext;
-import co.codewizards.cloudstore.rest.client.ssl.CheckServerTrustedCertificateExceptionResult;
-import co.codewizards.cloudstore.rest.client.ssl.DynamicX509TrustManagerCallback;
 
 public class RepoToRepoSyncIT extends AbstractIT {
 
@@ -78,43 +68,6 @@ public class RepoToRepoSyncIT extends AbstractIT {
 
 		final File file = new File(remoteRoot, remotePathPrefix2Encrypted);
 		return file;
-	}
-
-	public static class TestDynamicX509TrustManagerCallback implements DynamicX509TrustManagerCallback {
-		@Override
-		public CheckServerTrustedCertificateExceptionResult handleCheckServerTrustedCertificateException(final CheckServerTrustedCertificateExceptionContext context) {
-			final CheckServerTrustedCertificateExceptionResult result = new CheckServerTrustedCertificateExceptionResult();
-			result.setTrusted(true);
-			return result;
-		}
-	}
-
-	private static CryptreeRepoTransportFactory cryptreeRepoTransportFactory;
-
-	@BeforeClass
-	public static void beforeClass() throws Exception {
-		cryptreeRepoTransportFactory = RepoTransportFactoryRegistry.getInstance().getRepoTransportFactoryOrFail(CryptreeRepoTransportFactory.class);
-		cryptreeRepoTransportFactory.setDynamicX509TrustManagerCallbackClass(TestDynamicX509TrustManagerCallback.class);
-		cryptreeRepoTransportFactory.setUserRepoKeyRing(createUserRepoKeyRing());
-	}
-
-	@AfterClass
-	public static void afterClass() {
-		cryptreeRepoTransportFactory.setDynamicX509TrustManagerCallbackClass(null);
-		cryptreeRepoTransportFactory.setUserRepoKeyRing(null);
-	}
-
-	private static UserRepoKeyRing createUserRepoKeyRing() {
-		final UserRepoKeyRing userRepoKeyRing = new UserRepoKeyRing();
-		createUserRepoKey(userRepoKeyRing);
-		createUserRepoKey(userRepoKeyRing);
-		return userRepoKeyRing;
-	}
-
-	private static UserRepoKey createUserRepoKey(final UserRepoKeyRing userRepoKeyRing) {
-		final UserRepoKey userRepoKey = new UserRepoKey(userRepoKeyRing, KeyFactory.getInstance().createAsymmetricKeyPair());
-		userRepoKeyRing.addUserRepoKey(userRepoKey);
-		return userRepoKey;
 	}
 
 	private URL getRemoteRootURLWithPathPrefix1(final UUID remoteRepositoryId) throws MalformedURLException {

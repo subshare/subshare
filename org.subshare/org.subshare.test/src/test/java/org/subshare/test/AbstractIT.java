@@ -13,14 +13,22 @@ import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Set;
 
+import org.subshare.core.crypto.KeyFactory;
+import org.subshare.core.user.UserRepoKey;
+import org.subshare.core.user.UserRepoKeyRing;
+import org.subshare.rest.client.transport.CryptreeRepoTransportFactory;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
 import co.codewizards.cloudstore.core.config.ConfigDir;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManagerFactory;
+import co.codewizards.cloudstore.core.repo.transport.RepoTransportFactoryRegistry;
 import co.codewizards.cloudstore.core.util.IOUtil;
 import co.codewizards.cloudstore.local.FilenameFilterSkipMetaDir;
+import co.codewizards.cloudstore.rest.client.ssl.CheckServerTrustedCertificateExceptionContext;
+import co.codewizards.cloudstore.rest.client.ssl.CheckServerTrustedCertificateExceptionResult;
+import co.codewizards.cloudstore.rest.client.ssl.DynamicX509TrustManagerCallback;
 
 public abstract class AbstractIT {
 	static {
@@ -40,14 +48,48 @@ public abstract class AbstractIT {
 		return subShareServerTestSupport.getSecureUrl();
 	}
 
+	private static CryptreeRepoTransportFactory cryptreeRepoTransportFactory;
+
 	@BeforeClass
 	public static void abstractIT_beforeClass() {
-		subShareServerTestSupport.beforeClass();
+		if (subShareServerTestSupport.beforeClass()) {
+			// *IMPORTANT* We run *all* tests in parallel in the same JVM. Therefore, we must - in this entire project - *not*
+			// set any other dynamicX509TrustManagerCallbackClass!!! This setting is JVM-wide!
+			cryptreeRepoTransportFactory = RepoTransportFactoryRegistry.getInstance().getRepoTransportFactoryOrFail(CryptreeRepoTransportFactory.class);
+			cryptreeRepoTransportFactory.setDynamicX509TrustManagerCallbackClass(TestDynamicX509TrustManagerCallback.class);
+
+			cryptreeRepoTransportFactory.setUserRepoKeyRing(createUserRepoKeyRing());
+		}
 	}
 
 	@AfterClass
 	public static void abstractIT_afterClass() {
-		subShareServerTestSupport.afterClass();
+		if (subShareServerTestSupport.afterClass()) {
+			cryptreeRepoTransportFactory.setDynamicX509TrustManagerCallbackClass(null);
+			cryptreeRepoTransportFactory = null;
+		}
+	}
+
+	protected static UserRepoKeyRing createUserRepoKeyRing() {
+		final UserRepoKeyRing userRepoKeyRing = new UserRepoKeyRing();
+		createUserRepoKey(userRepoKeyRing);
+		createUserRepoKey(userRepoKeyRing);
+		return userRepoKeyRing;
+	}
+
+	protected static UserRepoKey createUserRepoKey(final UserRepoKeyRing userRepoKeyRing) {
+		final UserRepoKey userRepoKey = new UserRepoKey(userRepoKeyRing, KeyFactory.getInstance().createAsymmetricKeyPair());
+		userRepoKeyRing.addUserRepoKey(userRepoKey);
+		return userRepoKey;
+	}
+
+	public static class TestDynamicX509TrustManagerCallback implements DynamicX509TrustManagerCallback {
+		@Override
+		public CheckServerTrustedCertificateExceptionResult handleCheckServerTrustedCertificateException(final CheckServerTrustedCertificateExceptionContext context) {
+			final CheckServerTrustedCertificateExceptionResult result = new CheckServerTrustedCertificateExceptionResult();
+			result.setTrusted(true);
+			return result;
+		}
 	}
 
 	protected File newTestRepositoryLocalRoot(final String suffix) throws IOException {
