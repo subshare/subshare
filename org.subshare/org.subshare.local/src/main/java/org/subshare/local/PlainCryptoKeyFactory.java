@@ -75,19 +75,27 @@ abstract class PlainCryptoKeyFactory {
 			final AsymmetricCipherKeyPair keyPair = KeyFactory.getInstance().createAsymmetricKeyPair();
 			final CryptoKey cryptoKey = createCryptoKey(CryptoKeyRole.clearanceKey, CryptoKeyType.asymmetric);
 
-			final PlainCryptoKey plainCryptoKey_public = new PlainCryptoKey(cryptoKey, CryptoKeyPart.publicKey, keyPair.getPublic());
-			final PlainCryptoKey plainCryptoKey_private = new PlainCryptoKey(cryptoKey, CryptoKeyPart.privateKey, keyPair.getPrivate());
+			final PlainCryptoKey clearanceKeyPlainCryptoKey_public = new PlainCryptoKey(cryptoKey, CryptoKeyPart.publicKey, keyPair.getPublic());
+			final PlainCryptoKey clearanceKeyPlainCryptoKey_private = new PlainCryptoKey(cryptoKey, CryptoKeyPart.privateKey, keyPair.getPrivate());
 
-			createCryptoLink(plainCryptoKey_public);
-			createCryptoLink(cryptreeNode.getUserRepoKey(), plainCryptoKey_private);
+			createCryptoLink(clearanceKeyPlainCryptoKey_public);
+			createCryptoLink(cryptreeNode.getUserRepoKey(), clearanceKeyPlainCryptoKey_private);
 
 			// TODO maybe we should give the clearance key other users, too?! not only the current user?!
 
+			final PlainCryptoKey subdirKeyPlainCryptoKey = cryptreeNode.getPlainCryptoKey(CryptoKeyRole.subdirKey, CryptoKeyPart.sharedSecret);
+			if (subdirKeyPlainCryptoKey == null) { // during initialisation, this is possible
+				if (cryptreeNode.getParent() != null) // but only, if there is no parent (see SubdirKeyPlainCryptoKeyFactory below)
+					throw new IllegalStateException("subdirKeyPlainCryptoKey == null, but cryptreeNode.parent != null");
+			}
+			else
+				createCryptoLink(clearanceKeyPlainCryptoKey_public, subdirKeyPlainCryptoKey);
+
 			switch(cryptoKeyPart) {
 				case publicKey:
-					return plainCryptoKey_public;
+					return clearanceKeyPlainCryptoKey_public;
 				case privateKey:
-					return plainCryptoKey_private;
+					return clearanceKeyPlainCryptoKey_private;
 				default:
 					throw new IllegalStateException("Property cryptoKeyPart has an unexpected value: " + cryptoKeyPart);
 			}

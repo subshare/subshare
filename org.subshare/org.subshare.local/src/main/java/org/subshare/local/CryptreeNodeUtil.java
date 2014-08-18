@@ -22,6 +22,7 @@ import org.subshare.core.crypto.RandomIvFactory;
 import org.subshare.core.dto.CryptoKeyPart;
 import org.subshare.core.dto.CryptoKeyType;
 import org.subshare.core.user.UserRepoKey;
+import org.subshare.core.user.UserRepoPublicKey;
 import org.subshare.local.persistence.CryptoLink;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,9 +34,23 @@ public class CryptreeNodeUtil {
 	public static byte[] encryptLarge(final byte[] plain, final UserRepoKey userRepoKey) {
 		assertNotNull("plain", plain);
 		assertNotNull("userRepoKey", userRepoKey);
+		logger.debug("encryptLarge: userRepoKeyId={} plain={}", userRepoKey.getUserRepoKeyId(), Arrays.toString(plain));
+		final AsymmetricKeyParameter publicKey = userRepoKey.getKeyPair().getPublic();
+		return encryptLarge(plain, publicKey);
+	}
+
+	public static byte[] encryptLarge(final byte[] plain, final UserRepoPublicKey userRepoPublicKey) {
+		assertNotNull("plain", plain);
+		assertNotNull("userRepoPublicKey", userRepoPublicKey);
+		logger.debug("encryptLarge: userRepoKeyId={} plain={}", userRepoPublicKey.getUserRepoKeyId(), Arrays.toString(plain));
+		final AsymmetricKeyParameter publicKey = userRepoPublicKey.getPublicKey();
+		return encryptLarge(plain, publicKey);
+	}
+
+	public static byte[] encryptLarge(final byte[] plain, final AsymmetricKeyParameter publicKey) {
+		assertNotNull("plain", plain);
+		assertNotNull("publicKey", publicKey);
 		try {
-			logger.debug("encryptLarge: userRepoKeyId={} plain={}", userRepoKey.getUserRepoKeyId(), Arrays.toString(plain));
-			final AsymmetricKeyParameter publicKey = userRepoKey.getKeyPair().getPublic();
 			final ByteArrayOutputStream bout = new ByteArrayOutputStream(plain.length + 10240); // don't know exactly, but I guess 10 KiB should be sufficient
 			final AsymCombiEncrypterOutputStream out = new AsymCombiEncrypterOutputStream(bout,
 					getCipherTransformation(publicKey), publicKey,
@@ -43,7 +58,7 @@ public class CryptreeNodeUtil {
 			transferStreamData(new ByteArrayInputStream(plain), out);
 			out.close();
 			final byte[] encrypted = bout.toByteArray();
-			logger.debug("encryptLarge: userRepoKeyId={} encrypted={}", userRepoKey.getUserRepoKeyId(), Arrays.toString(encrypted));
+			logger.debug("encryptLarge: encrypted={}", Arrays.toString(encrypted));
 			return encrypted;
 		} catch (final IOException x) {
 			throw new RuntimeException(x);
@@ -132,6 +147,18 @@ public class CryptreeNodeUtil {
 		cryptoLink.setFromCryptoKey(fromPlainCryptoKey.getCryptoKey());
 		cryptoLink.setToCryptoKey(toPlainCryptoKey.getCryptoKey());
 		cryptoLink.setToCryptoKeyData(encrypt(toPlainCryptoKey.getEncodedKey(), fromPlainCryptoKey));
+		cryptoLink.setToCryptoKeyPart(toPlainCryptoKey.getCryptoKeyPart());
+		toPlainCryptoKey.getCryptoKey().getInCryptoLinks().add(cryptoLink);
+		return cryptoLink;
+	}
+
+	public static CryptoLink createCryptoLink(final UserRepoPublicKey fromUserRepoPublicKey, final PlainCryptoKey toPlainCryptoKey) {
+		assertNotNull("fromUserRepoPublicKey", fromUserRepoPublicKey);
+		assertNotNull("toPlainCryptoKey", toPlainCryptoKey);
+		final CryptoLink cryptoLink = new CryptoLink();
+		cryptoLink.setFromUserRepoKeyId(fromUserRepoPublicKey.getUserRepoKeyId());
+		cryptoLink.setToCryptoKey(toPlainCryptoKey.getCryptoKey());
+		cryptoLink.setToCryptoKeyData(encryptLarge(toPlainCryptoKey.getEncodedKey(), fromUserRepoPublicKey));
 		cryptoLink.setToCryptoKeyPart(toPlainCryptoKey.getCryptoKeyPart());
 		toPlainCryptoKey.getCryptoKey().getInCryptoLinks().add(cryptoLink);
 		return cryptoLink;

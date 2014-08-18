@@ -12,6 +12,7 @@ import java.nio.file.Path;
 import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Set;
+import java.util.UUID;
 
 import org.subshare.core.crypto.KeyFactory;
 import org.subshare.core.user.UserRepoKey;
@@ -57,8 +58,6 @@ public abstract class AbstractIT {
 			// set any other dynamicX509TrustManagerCallbackClass!!! This setting is JVM-wide!
 			cryptreeRepoTransportFactory = RepoTransportFactoryRegistry.getInstance().getRepoTransportFactoryOrFail(CryptreeRepoTransportFactory.class);
 			cryptreeRepoTransportFactory.setDynamicX509TrustManagerCallbackClass(TestDynamicX509TrustManagerCallback.class);
-
-			cryptreeRepoTransportFactory.setUserRepoKeyRing(createUserRepoKeyRing());
 		}
 	}
 
@@ -71,8 +70,8 @@ public abstract class AbstractIT {
 		}
 	}
 
-	protected static UserRepoKeyRing createUserRepoKeyRing() {
-		final UserRepoKeyRing userRepoKeyRing = new UserRepoKeyRing();
+	protected static UserRepoKeyRing createUserRepoKeyRing(final UUID repositoryId) {
+		final UserRepoKeyRing userRepoKeyRing = new UserRepoKeyRing(repositoryId);
 		createUserRepoKey(userRepoKeyRing);
 		createUserRepoKey(userRepoKeyRing);
 		return userRepoKeyRing;

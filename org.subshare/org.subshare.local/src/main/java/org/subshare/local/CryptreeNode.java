@@ -22,6 +22,7 @@ import org.subshare.core.dto.CryptoKeyPart;
 import org.subshare.core.dto.CryptoKeyRole;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKeyRing;
+import org.subshare.core.user.UserRepoPublicKey;
 import org.subshare.local.persistence.CryptoKey;
 import org.subshare.local.persistence.CryptoKeyDao;
 import org.subshare.local.persistence.CryptoLink;
@@ -200,6 +201,12 @@ public class CryptreeNode {
 			cryptoRepoFile.setLastSyncFromRepositoryId(null);
 		}
 		return cryptoRepoFile;
+	}
+
+	public void grantReadAccess(final UserRepoPublicKey userRepoPublicKey) {
+		final PlainCryptoKey plainCryptoKey = getPlainCryptoKeyOrCreate(CryptoKeyRole.clearanceKey, CryptoKeyPart.privateKey);
+		final CryptoLink cryptoLink = createCryptoLink(userRepoPublicKey, plainCryptoKey);
+		transaction.getDao(CryptoLinkDao.class).makePersistent(cryptoLink);
 	}
 
 	public Collection<CryptreeNode> getChildren() {

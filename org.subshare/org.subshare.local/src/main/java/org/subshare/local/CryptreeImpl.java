@@ -14,6 +14,7 @@ import org.subshare.core.dto.CryptoChangeSetDto;
 import org.subshare.core.dto.CryptoKeyDto;
 import org.subshare.core.dto.CryptoLinkDto;
 import org.subshare.core.dto.CryptoRepoFileDto;
+import org.subshare.core.user.UserRepoPublicKey;
 import org.subshare.local.persistence.CryptoKey;
 import org.subshare.local.persistence.CryptoKeyDao;
 import org.subshare.local.persistence.CryptoLink;
@@ -68,7 +69,7 @@ public class CryptreeImpl extends AbstractCryptree {
 	}
 
 	@Override
-	public KeyParameter getDataKey(final String path) {
+	public KeyParameter getDataKey(final String path) { // TODO shouldn't this be 'localPath'?
 		assertNotNull("path", path);
 		final LocalRepoTransaction transaction = getTransactionOrFail();
 		final LocalRepoManager localRepoManager = transaction.getLocalRepoManager();
@@ -167,6 +168,7 @@ public class CryptreeImpl extends AbstractCryptree {
 
 	@Override
 	public RepoFileDto getDecryptedRepoFileDtoOrFail(final Uid cryptoRepoFileId) throws AccessDeniedException {
+		assertNotNull("cryptoRepoFileId", cryptoRepoFileId);
 		final CryptreeNode cryptreeNode = getCryptreeNodeOrFail(cryptoRepoFileId);
 		final RepoFileDto repoFileDto = cryptreeNode.getRepoFileDto();
 		assertNotNull("cryptreeNode.getRepoFileDto()", repoFileDto); // The cryptoRepoFile is present, thus this should never be null!
@@ -175,8 +177,17 @@ public class CryptreeImpl extends AbstractCryptree {
 
 	@Override
 	public RepoFileDto getDecryptedRepoFileDto(final String localPath) throws AccessDeniedException {
+		assertNotNull("localPath", localPath);
 		final CryptreeNode cryptreeNode = getCryptreeNodeOrFail(localPath);
 		return cryptreeNode.getRepoFileDto();
+	}
+
+	@Override
+	public void grantReadAccess(final String localPath, final UserRepoPublicKey userRepoPublicKey) {
+		assertNotNull("localPath", localPath);
+		assertNotNull("userRepoPublicKey", userRepoPublicKey);
+		final CryptreeNode cryptreeNode = getCryptreeNodeOrFail(localPath);
+		cryptreeNode.grantReadAccess(userRepoPublicKey);
 	}
 
 	/**

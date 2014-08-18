@@ -11,6 +11,7 @@ import java.util.Date;
 import java.util.UUID;
 
 import org.bouncycastle.crypto.params.KeyParameter;
+import org.subshare.core.AccessDeniedException;
 import org.subshare.core.Cryptree;
 import org.subshare.core.CryptreeFactory;
 import org.subshare.core.CryptreeFactoryRegistry;
@@ -139,7 +140,12 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 		if (cryptoRepoFileId == null) // there is no root before the very first up-sync!
 			return null;
 
-		final RepoFileDto decryptedRepoFileDto = cryptree.getDecryptedRepoFileDtoOrFail(cryptoRepoFileId);
+		final RepoFileDto decryptedRepoFileDto;
+		try {
+			decryptedRepoFileDto = cryptree.getDecryptedRepoFileDtoOrFail(cryptoRepoFileId);
+		} catch (final AccessDeniedException x) {
+			return null;
+		}
 		decryptedRepoFileDto.setId(repoFileDto.getId());
 		decryptedRepoFileDto.setParentId(repoFileDto.getParentId());
 		return decryptedRepoFileDto;

@@ -18,14 +18,12 @@ public class UserRepoKey {
 
 	private final UserRepoKeyRing userRepoKeyRing;
 	private final Uid userRepoKeyId;
-//	private final UUID repositoryId;
 	private final AsymmetricCipherKeyPair keyPair;
+	private UserRepoPublicKey userRepoPublicKey;
 
-//	public UserRepoKey(final UUID repositoryId, final AsymmetricCipherKeyPair keyPair) {
-	public UserRepoKey(final UserRepoKeyRing userRepoKeyRing, final AsymmetricCipherKeyPair keyPair) { // TODO add the repositoryId!!!
+	public UserRepoKey(final UserRepoKeyRing userRepoKeyRing, final AsymmetricCipherKeyPair keyPair) {
 		this.userRepoKeyRing = assertNotNull("userRepoKeyRing", userRepoKeyRing);
 		this.userRepoKeyId = new Uid();
-//		this.repositoryId = assertNotNull("repositoryId", repositoryId);
 		this.keyPair = assertNotNull("keyPair", keyPair);
 	}
 
@@ -37,12 +35,15 @@ public class UserRepoKey {
 		return userRepoKeyId;
 	}
 
-//	public UUID getRepositoryId() {
-//		return repositoryId;
-//	}
-
 	public AsymmetricCipherKeyPair getKeyPair() {
 		return keyPair;
 	}
 
+	public UserRepoPublicKey getUserRepoPublicKey() {
+		if (userRepoPublicKey == null)
+			userRepoPublicKey = new UserRepoPublicKey(
+					getUserRepoKeyRing().getRepositoryId(), getUserRepoKeyId(), getKeyPair().getPublic());
+
+		return userRepoPublicKey;
+	}
 }

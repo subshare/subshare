@@ -9,14 +9,24 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import co.codewizards.cloudstore.core.dto.Uid;
 
 public class UserRepoKeyRing {
 
 	private static SecureRandom random = new SecureRandom();
+	private final UUID repositoryId;
 	private final Map<Uid, UserRepoKey> userRepoKeyId2UserRepoKey = new HashMap<Uid, UserRepoKey>();
 	private List<UserRepoKey> userRepoKeyList;
+
+	public UserRepoKeyRing(final UUID repositoryId) {
+		this.repositoryId = assertNotNull("repositoryId", repositoryId);
+	}
+
+	public UUID getRepositoryId() {
+		return repositoryId;
+	}
 
 	public Collection<UserRepoKey> getUserRepoKeys() {
 		return getUserRepoKeyList();
