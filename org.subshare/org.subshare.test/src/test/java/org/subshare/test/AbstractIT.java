@@ -48,7 +48,7 @@ public abstract class AbstractIT {
 		return subShareServerTestSupport.getSecureUrl();
 	}
 
-	private static CryptreeRepoTransportFactory cryptreeRepoTransportFactory;
+	protected static CryptreeRepoTransportFactory cryptreeRepoTransportFactory;
 
 	@BeforeClass
 	public static void abstractIT_beforeClass() {

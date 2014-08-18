@@ -28,15 +28,17 @@ public class RepoToRepoSyncIT extends AbstractIT {
 
 	private static final Logger logger = LoggerFactory.getLogger(RepoToRepoSyncIT.class);
 
-	private File localRoot;
+	private File localSrcRoot;
+	private File localDestRoot;
 	private File remoteRoot;
 
 	private String localPathPrefix;
+	private UUID remoteRepositoryId;
 	private String remotePathPrefix1;
 	private String remotePathPrefix2Encrypted;
 	private String remotePathPrefix2Plain;
-	private URL remoteRootURLWithPathPrefix1;
-	private URL remoteRootURLWithPathPrefix2;
+	private URL remoteRootURLWithPathPrefixForLocalSrc;
+	private URL remoteRootURLWithPathPrefixForLocalDest;
 
 	@Before
 	public void before() {
@@ -48,9 +50,9 @@ public class RepoToRepoSyncIT extends AbstractIT {
 
 	private File getLocalRootWithPathPrefix() {
 		if (localPathPrefix.isEmpty())
-			return localRoot;
+			return localSrcRoot;
 
-		return new File(localRoot, localPathPrefix);
+		return new File(localSrcRoot, localPathPrefix);
 	}
 
 	private File getRemoteRootWithPathPrefix1() {
@@ -70,48 +72,88 @@ public class RepoToRepoSyncIT extends AbstractIT {
 		return file;
 	}
 
-	private URL getRemoteRootURLWithPathPrefix1(final UUID remoteRepositoryId) throws MalformedURLException {
+	private URL getRemoteRootURLWithPathPrefixForLocalSrc(final UUID remoteRepositoryId) throws MalformedURLException {
 		final URL remoteRootURL = UrlUtil.appendNonEncodedPath(new URL(getSecureUrl() + "/" + remoteRepositoryId),  remotePathPrefix1);
 		return remoteRootURL;
 	}
 
-	private URL getRemoteRootURLWithPathPrefix2(final UUID remoteRepositoryId) throws MalformedURLException {
+	private URL getRemoteRootURLWithPathPrefixForLocalDest(final UUID remoteRepositoryId) throws MalformedURLException {
 		final URL remoteRootURL = UrlUtil.appendNonEncodedPath(new URL(getSecureUrl() + "/" + remoteRepositoryId),  remotePathPrefix2Encrypted);
 		return remoteRootURL;
 	}
 
 	@Test
 	public void syncFromLocalToRemoteToLocal() throws Exception {
-		localRoot = newTestRepositoryLocalRoot("local-src");
-		assertThat(localRoot).doesNotExist();
-		localRoot.mkdirs();
-		assertThat(localRoot).isDirectory();
+		createLocalSourceAndRemoteRepo();
+		populateLocalSourceRepo();
+		syncFromLocalSrcToRemote();
+		determineRemotePathPrefix2Encrypted();
+		createLocalDestinationRepo();
+		syncFromRemoteToLocalDest();
+	}
+
+	@Test
+	public void syncFromLocalToRemoteToLocalWithPathPrefix() throws Exception {
+		remotePathPrefix2Plain = "/3 + &#ä";
+		syncFromLocalToRemoteToLocal();
+	}
+
+//	@Test
+//	public void syncFromLocalToRemoteToLocalWithPathPrefixWithSubdirClearanceKey() throws Exception {
+//		remotePathPrefix2Plain = "/3 + &#ä";
+//
+//		createLocalSourceAndRemoteRepo();
+//		populateLocalSourceRepo();
+//		syncFromLocalSrcToRemote();
+//		determineRemotePathPrefix2Encrypted();
+//
+//		UserRepoKeyRing otherUserRepoKeyRing = createUserRepoKeyRing();
+//		otherUserRepoKeyRing.getRandomUserRepoKey().get
+//		grantRemotePathPrefix2EncryptedReadAccessToOtherUser();
+//		final UserRepoKeyRing ownerUserRepoKeyRing = cryptreeRepoTransportFactory.getUserRepoKeyRing();
+//		assertThat(ownerUserRepoKeyRing).isNotNull();
+//		try {
+//			createLocalDestinationRepo();
+//			syncFromRemoteToLocalDest();
+//		} finally {
+//			cryptreeRepoTransportFactory.setUserRepoKeyRing(ownerUserRepoKeyRing);
+//		}
+//	}
+
+	private void createLocalSourceAndRemoteRepo() throws Exception {
+		localSrcRoot = newTestRepositoryLocalRoot("local-src");
+		assertThat(localSrcRoot).doesNotExist();
+		localSrcRoot.mkdirs();
+		assertThat(localSrcRoot).isDirectory();
 
 		remoteRoot = newTestRepositoryLocalRoot("remote");
 		assertThat(remoteRoot).doesNotExist();
 		remoteRoot.mkdirs();
 		assertThat(remoteRoot).isDirectory();
 
-		final LocalRepoManager localRepoManagerLocal = localRepoManagerFactory.createLocalRepoManagerForNewRepository(localRoot);
-		assertThat(localRepoManagerLocal).isNotNull();
-
+		final LocalRepoManager localRepoManagerLocal = localRepoManagerFactory.createLocalRepoManagerForNewRepository(localSrcRoot);
 		final LocalRepoManager localRepoManagerRemote = localRepoManagerFactory.createLocalRepoManagerForNewRepository(remoteRoot);
-		assertThat(localRepoManagerRemote).isNotNull();
 
-		final UUID remoteRepositoryId = localRepoManagerRemote.getRepositoryId();
-		remoteRootURLWithPathPrefix1 = getRemoteRootURLWithPathPrefix1(remoteRepositoryId);
+		remoteRepositoryId = localRepoManagerRemote.getRepositoryId();
+		remoteRootURLWithPathPrefixForLocalSrc = getRemoteRootURLWithPathPrefixForLocalSrc(remoteRepositoryId);
 		localRepoManagerRemote.close();
 
-		new CloudStoreClient("requestRepoConnection", getLocalRootWithPathPrefix().getPath(), remoteRootURLWithPathPrefix1.toExternalForm()).execute();
+		new CloudStoreClient("requestRepoConnection", getLocalRootWithPathPrefix().getPath(), remoteRootURLWithPathPrefixForLocalSrc.toExternalForm()).execute();
 		new CloudStoreClient("acceptRepoConnection", getRemoteRootWithPathPrefix1().getPath()).execute();
 
-		final File child_1 = createDirectory(localRoot, "1 {11 11ä11} 1");
+		localRepoManagerLocal.close();
+	}
+
+	private void populateLocalSourceRepo() throws Exception {
+		final LocalRepoManager localRepoManagerLocal = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(localSrcRoot);
+
+		final File child_1 = createDirectory(localSrcRoot, "1 {11 11ä11} 1");
 
 		createFileWithRandomContent(child_1, "a");
 		createFileWithRandomContent(child_1, "b");
 		createFileWithRandomContent(child_1, "c");
 
-		final File child_2 = createDirectory(localRoot, "2");
+		final File child_2 = createDirectory(localSrcRoot, "2");
 
 		createFileWithRandomContent(child_2, "a");
 
@@ -119,7 +161,7 @@ public class RepoToRepoSyncIT extends AbstractIT {
 		createFileWithRandomContent(child_2_1, "a");
 		createFileWithRandomContent(child_2_1, "b");
 
-		final File child_3 = createDirectory(localRoot, "3 + &#ä");
+		final File child_3 = createDirectory(localSrcRoot, "3 + &#ä");
 
 		createFileWithRandomContent(child_3, "a");
 		createFileWithRandomContent(child_3, "b");
@@ -131,14 +173,42 @@ public class RepoToRepoSyncIT extends AbstractIT {
 		createFileWithRandomContent(child_3_5, "i");
 
 		localRepoManagerLocal.localSync(new LoggerProgressMonitor(logger));
+	}
 
-//		assertThatFilesInRepoAreCorrect(localRoot);
+	private void syncFromLocalSrcToRemote() throws Exception {
+		final RepoToRepoSync repoToRepoSync = new RepoToRepoSync(getLocalRootWithPathPrefix(), remoteRootURLWithPathPrefixForLocalSrc);
+		repoToRepoSync.sync(new LoggerProgressMonitor(logger));
+		repoToRepoSync.close();
+	}
 
-		final RepoToRepoSync repoToRepoSync = new RepoToRepoSync(getLocalRootWithPathPrefix(), remoteRootURLWithPathPrefix1);
+	private void syncFromRemoteToLocalDest() throws Exception {
+		final RepoToRepoSync repoToRepoSync = new RepoToRepoSync(localDestRoot, remoteRootURLWithPathPrefixForLocalDest);
 		repoToRepoSync.sync(new LoggerProgressMonitor(logger));
 		repoToRepoSync.close();
 
-//		assertThatFilesInRepoAreCorrect(localRoot);
+		assertDirectoriesAreEqualRecursively(
+				(remotePathPrefix2Plain.isEmpty() ? getLocalRootWithPathPrefix() : new File(getLocalRootWithPathPrefix(), remotePathPrefix2Plain)),
+				localDestRoot);
+	}
+
+	private void createLocalDestinationRepo() throws Exception {
+		localDestRoot = newTestRepositoryLocalRoot("local-dest");
+		assertThat(localDestRoot).doesNotExist();
+		localDestRoot.mkdirs();
+		assertThat(localDestRoot).isDirectory();
+
+		final LocalRepoManager localDestRepoManagerLocal = localRepoManagerFactory.createLocalRepoManagerForNewRepository(localDestRoot);
+		assertThat(localDestRepoManagerLocal).isNotNull();
+		localDestRepoManagerLocal.close();
+
+		remoteRootURLWithPathPrefixForLocalDest = getRemoteRootURLWithPathPrefixForLocalDest(remoteRepositoryId);
+		new CloudStoreClient("requestRepoConnection", localDestRoot.getPath(), remoteRootURLWithPathPrefixForLocalDest.toExternalForm()).execute();
+		new CloudStoreClient("acceptRepoConnection", getRemoteRootWithPathPrefix2().getPath()).execute();
+	}
+
+
+	private void determineRemotePathPrefix2Encrypted() {
+		final LocalRepoManager localRepoManagerLocal = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(localSrcRoot);
 
 		final LocalRepoTransaction transaction = localRepoManagerLocal.beginReadTransaction();
 		final RepoFileDao repoFileDao = transaction.getDao(RepoFileDao.class);
@@ -148,36 +218,6 @@ public class RepoToRepoSyncIT extends AbstractIT {
 		transaction.commit();
 
 		localRepoManagerLocal.close();
-
-//		assertThatNoCollisionInRepo(localRoot);
-//		assertThatNoCollisionInRepo(remoteRoot);
-
-		final File localDestRoot = newTestRepositoryLocalRoot("local-dest");
-		assertThat(localDestRoot).doesNotExist();
-		localDestRoot.mkdirs();
-		assertThat(localDestRoot).isDirectory();
-
-		final LocalRepoManager localDestRepoManagerLocal = localRepoManagerFactory.createLocalRepoManagerForNewRepository(localDestRoot);
-		assertThat(localDestRepoManagerLocal).isNotNull();
-		localDestRepoManagerLocal.close();
-
-		remoteRootURLWithPathPrefix2 = getRemoteRootURLWithPathPrefix2(remoteRepositoryId);
-		new CloudStoreClient("requestRepoConnection", localDestRoot.getPath(), remoteRootURLWithPathPrefix2.toExternalForm()).execute();
-		new CloudStoreClient("acceptRepoConnection", getRemoteRootWithPathPrefix2().getPath()).execute();
-
-		final RepoToRepoSync repoToRepoSync2 = new RepoToRepoSync(localDestRoot, remoteRootURLWithPathPrefix2);
-		repoToRepoSync2.sync(new LoggerProgressMonitor(logger));
-		repoToRepoSync2.close();
-
-		assertDirectoriesAreEqualRecursively(
-				(remotePathPrefix2Plain.isEmpty() ? getLocalRootWithPathPrefix() : new File(getLocalRootWithPathPrefix(), remotePathPrefix2Plain)),
-				localDestRoot);
-	}
-
-	@Test
-	public void syncFromLocalToRemoteToLocalWithPathPrefix() throws Exception {
-		remotePathPrefix2Plain = "/3 + &#ä";
-		syncFromLocalToRemoteToLocal();
 	}
 
 }
