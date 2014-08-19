@@ -46,7 +46,8 @@ subprojects {
     }
 
 	tasks.withType(Test) {
-		jvmArgs "-XX:MaxPermSize=256m -Xmx512m"
+		jvmArgs "-XX:MaxPermSize=256m"
+		jvmArgs "-Xmx512m"
 		ignoreFailures = true
 // We don't use separate processes but separate threads in the same JVM, because this is faster.
 //		maxParallelForks = Runtime.runtime.availableProcessors() * 2
