@@ -1,6 +1,7 @@
 package org.subshare.core.dto;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlRootElement;
@@ -49,5 +50,13 @@ public class CryptoChangeSetDto {
 		return "CryptoChangeSetDto [cryptoRepoFileDtos=" + cryptoRepoFileDtos
 				+ ", cryptoKeyDtos=" + cryptoKeyDtos + ", cryptoLinkDtos="
 				+ cryptoLinkDtos + "]";
+	}
+
+	public boolean isEmpty() {
+		return isEmpty(cryptoRepoFileDtos) && isEmpty(cryptoKeyDtos) && isEmpty(cryptoLinkDtos);
+	}
+
+	private static boolean isEmpty(final Collection<?> c) {
+		return c == null || c.isEmpty();
 	}
 }

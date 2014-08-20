@@ -121,13 +121,13 @@ public class RepoToRepoSyncIT extends AbstractIT {
 		grantRemotePathPrefix2EncryptedReadAccessToOtherUser(
 				otherUserRepoKeyRing.getRandomUserRepoKey().getUserRepoPublicKey());
 
-		// TODO begin delete this
-		// If there is no "real" change, nothing is synced up. We need to extend CloudStore with RepoTransport.beginSync(From|To)Repository!
-//		createFileWithRandomContent(localSrcRoot, "xxxxxxx"); // TODO we must test this, too - in a separate test! had an exception for this NEW file!
-		final File child_2 = new File(localSrcRoot, "2");
-		new File(child_2, "a").delete();
-		createFileWithRandomContent(child_2, "a"); // overwrite
-		// TODO end delete this
+//		// TODO begin delete this
+//		// If there is no "real" change, nothing is synced up. We need to extend CloudStore with RepoTransport.beginSync(From|To)Repository!
+////		createFileWithRandomContent(localSrcRoot, "xxxxxxx"); // TODO we must test this, too - in a separate test! had an exception for this NEW file!
+//		final File child_2 = new File(localSrcRoot, "2");
+//		new File(child_2, "a").delete();
+//		createFileWithRandomContent(child_2, "a"); // overwrite
+//		// TODO end delete this
 
 		syncFromLocalSrcToRemote();
 

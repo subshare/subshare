@@ -229,7 +229,19 @@ abstract class PlainCryptoKeyFactory {
 			for (final CryptreeNode child : getCryptreeNodeOrFail().getChildren())
 				createCryptoLinkFromChildBacklinkKey(child, plainCryptoKey);
 
+			createCryptoLinkToParentBacklinkKey(plainCryptoKey);
+
 			return plainCryptoKey;
+		}
+
+		private void createCryptoLinkToParentBacklinkKey(final PlainCryptoKey fromPlainCryptoKey) {
+			assertNotNull("fromPlainCryptoKey", fromPlainCryptoKey);
+			final CryptreeNode cryptreeNode = getCryptreeNodeOrFail();
+			final CryptreeNode parent = cryptreeNode.getParent();
+			if (parent != null) {
+				final PlainCryptoKey parentBacklinkKeyPlainCryptoKey = parent.getPlainCryptoKeyOrCreate(CryptoKeyRole.backlinkKey, CryptoKeyPart.sharedSecret);
+				createCryptoLink(fromPlainCryptoKey, parentBacklinkKeyPlainCryptoKey);
+			}
 		}
 
 		private void createCryptoLinkFromSubdirKey(final PlainCryptoKey toPlainCryptoKey) {
