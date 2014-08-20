@@ -79,14 +79,15 @@ abstract class PlainCryptoKeyFactory {
 			final PlainCryptoKey clearanceKeyPlainCryptoKey_private = new PlainCryptoKey(cryptoKey, CryptoKeyPart.privateKey, keyPair.getPrivate());
 
 			createCryptoLink(clearanceKeyPlainCryptoKey_public);
-			createCryptoLink(cryptreeNode.getUserRepoKey(), clearanceKeyPlainCryptoKey_private);
+			createCryptoLink(cryptreeNode.getUserRepoKeyPublicKey(), clearanceKeyPlainCryptoKey_private);
 
 			// TODO maybe we should give the clearance key other users, too?! not only the current user?!
 
-			final PlainCryptoKey subdirKeyPlainCryptoKey = cryptreeNode.getPlainCryptoKey(CryptoKeyRole.subdirKey, CryptoKeyPart.sharedSecret);
+			final PlainCryptoKey subdirKeyPlainCryptoKey = cryptreeNode.getActivePlainCryptoKey(CryptoKeyRole.subdirKey, CryptoKeyPart.sharedSecret);
 			if (subdirKeyPlainCryptoKey == null) { // during initialisation, this is possible
-				if (cryptreeNode.getParent() != null) // but only, if there is no parent (see SubdirKeyPlainCryptoKeyFactory below)
-					throw new IllegalStateException("subdirKeyPlainCryptoKey == null, but cryptreeNode.parent != null");
+				// This is also possible during revocation of read-access-rights. We thus must allow it.
+//				if (cryptreeNode.getParent() != null) // but only, if there is no parent (see SubdirKeyPlainCryptoKeyFactory below)
+//					throw new IllegalStateException("subdirKeyPlainCryptoKey == null, but cryptreeNode.parent != null");
 			}
 			else
 				createCryptoLink(clearanceKeyPlainCryptoKey_public, subdirKeyPlainCryptoKey);
@@ -118,7 +119,7 @@ abstract class PlainCryptoKeyFactory {
 			if (! saved)
 				throw new IllegalStateException("Cannot create subdirKey because nobody has a clearance key leading directly or indirectly to it!");
 
-			for (final CryptreeNode child : getCryptreeNodeOrFail().getChildren()) {
+			for (final CryptreeNode child : cryptreeNode.getChildren()) {
 				createCryptoLinkToChildSubdirKey(plainCryptoKey, child);
 				createCryptoLinkToChildDataKey(plainCryptoKey, child);
 			}
@@ -135,7 +136,7 @@ abstract class PlainCryptoKeyFactory {
 
 			// The key on the *to*-side of the CryptoLink *must* exist! But to easily avoid endless recursions
 			// (without further code), we don't create the key when following the link forward.
-			final PlainCryptoKey childSubdirKeyPlainCryptoKey = toChild.getPlainCryptoKey(CryptoKeyRole.subdirKey, CryptoKeyPart.sharedSecret);
+			final PlainCryptoKey childSubdirKeyPlainCryptoKey = toChild.getActivePlainCryptoKey(CryptoKeyRole.subdirKey, CryptoKeyPart.sharedSecret);
 			if (childSubdirKeyPlainCryptoKey != null)
 				createCryptoLink(fromPlainCryptoKey, childSubdirKeyPlainCryptoKey);
 		}
@@ -149,7 +150,7 @@ abstract class PlainCryptoKeyFactory {
 
 			// The key on the *to*-side of the CryptoLink *must* exist! But to easily avoid endless recursions
 			// (without further code), we don't create the key when following the link forward.
-			final PlainCryptoKey childDataKeyPlainCryptoKey = toChild.getPlainCryptoKey(CryptoKeyRole.dataKey, CryptoKeyPart.sharedSecret);
+			final PlainCryptoKey childDataKeyPlainCryptoKey = toChild.getActivePlainCryptoKey(CryptoKeyRole.dataKey, CryptoKeyPart.sharedSecret);
 			if (childDataKeyPlainCryptoKey != null)
 				createCryptoLink(fromPlainCryptoKey, childDataKeyPlainCryptoKey);
 		}
@@ -159,7 +160,7 @@ abstract class PlainCryptoKeyFactory {
 			final CryptreeNode cryptreeNode = getCryptreeNodeOrFail();
 			final CryptreeNode parent = cryptreeNode.getParent();
 			if (parent != null) {
-				final PlainCryptoKey subdirKeyPlainCryptoKey = parent.getPlainCryptoKeyOrCreate(CryptoKeyRole.subdirKey, CryptoKeyPart.sharedSecret);
+				final PlainCryptoKey subdirKeyPlainCryptoKey = parent.getActivePlainCryptoKeyOrCreate(CryptoKeyRole.subdirKey, CryptoKeyPart.sharedSecret);
 				createCryptoLink(subdirKeyPlainCryptoKey, toPlainCryptoKey);
 				return true;
 			}
@@ -172,9 +173,9 @@ abstract class PlainCryptoKeyFactory {
 
 			final PlainCryptoKey clearanceKeyPlainCryptoKey_public;
 			if (cryptreeNode.getParent() == null) // If it's the root and there is no public key, yet, we become the owner of the repo, now ;-)
-				clearanceKeyPlainCryptoKey_public = cryptreeNode.getPlainCryptoKeyOrCreate(CryptoKeyRole.clearanceKey, CryptoKeyPart.publicKey);
+				clearanceKeyPlainCryptoKey_public = cryptreeNode.getActivePlainCryptoKeyOrCreate(CryptoKeyRole.clearanceKey, CryptoKeyPart.publicKey);
 			else
-				clearanceKeyPlainCryptoKey_public = cryptreeNode.getPlainCryptoKey(CryptoKeyRole.clearanceKey, CryptoKeyPart.publicKey);
+				clearanceKeyPlainCryptoKey_public = cryptreeNode.getActivePlainCryptoKey(CryptoKeyRole.clearanceKey, CryptoKeyPart.publicKey);
 
 			if (clearanceKeyPlainCryptoKey_public != null) {
 				createCryptoLink(clearanceKeyPlainCryptoKey_public, toPlainCryptoKey);
@@ -204,7 +205,7 @@ abstract class PlainCryptoKeyFactory {
 		private void createCryptoLinkFromSubdirKey(final PlainCryptoKey toPlainCryptoKey) {
 			assertNotNull("toPlainCryptoKey", toPlainCryptoKey);
 			final CryptreeNode cryptreeNode = getCryptreeNodeOrFail();
-			final PlainCryptoKey subdirKeyPlainCryptoKey = cryptreeNode.getPlainCryptoKeyOrCreate(CryptoKeyRole.subdirKey, CryptoKeyPart.sharedSecret);
+			final PlainCryptoKey subdirKeyPlainCryptoKey = cryptreeNode.getActivePlainCryptoKeyOrCreate(CryptoKeyRole.subdirKey, CryptoKeyPart.sharedSecret);
 			createCryptoLink(subdirKeyPlainCryptoKey, toPlainCryptoKey);
 		}
 
@@ -214,7 +215,7 @@ abstract class PlainCryptoKeyFactory {
 
 			// The key on the *to*-side of the CryptoLink *must* exist! But to easily avoid endless recursions
 			// (without further code), we don't create the key when following the link forward.
-			final PlainCryptoKey childDataKeyPlainCryptoKey = toChild.getPlainCryptoKey(CryptoKeyRole.dataKey, CryptoKeyPart.sharedSecret);
+			final PlainCryptoKey childDataKeyPlainCryptoKey = toChild.getActivePlainCryptoKey(CryptoKeyRole.dataKey, CryptoKeyPart.sharedSecret);
 			if (childDataKeyPlainCryptoKey != null)
 				createCryptoLink(fromPlainCryptoKey, childDataKeyPlainCryptoKey);
 		}
@@ -239,7 +240,7 @@ abstract class PlainCryptoKeyFactory {
 			final CryptreeNode cryptreeNode = getCryptreeNodeOrFail();
 			final CryptreeNode parent = cryptreeNode.getParent();
 			if (parent != null) {
-				final PlainCryptoKey parentBacklinkKeyPlainCryptoKey = parent.getPlainCryptoKeyOrCreate(CryptoKeyRole.backlinkKey, CryptoKeyPart.sharedSecret);
+				final PlainCryptoKey parentBacklinkKeyPlainCryptoKey = parent.getActivePlainCryptoKeyOrCreate(CryptoKeyRole.backlinkKey, CryptoKeyPart.sharedSecret);
 				createCryptoLink(fromPlainCryptoKey, parentBacklinkKeyPlainCryptoKey);
 			}
 		}
@@ -251,14 +252,14 @@ abstract class PlainCryptoKeyFactory {
 			if (! cryptreeNode.isDirectory())
 				return;
 
-			final PlainCryptoKey subdirKeyPlainCryptoKey = cryptreeNode.getPlainCryptoKeyOrCreate(CryptoKeyRole.subdirKey, CryptoKeyPart.sharedSecret);
+			final PlainCryptoKey subdirKeyPlainCryptoKey = cryptreeNode.getActivePlainCryptoKeyOrCreate(CryptoKeyRole.subdirKey, CryptoKeyPart.sharedSecret);
 			createCryptoLink(subdirKeyPlainCryptoKey, toPlainCryptoKey);
 		}
 
 		private void createCryptoLinkFromChildBacklinkKey(final CryptreeNode fromChild, final PlainCryptoKey toPlainCryptoKey) {
 			assertNotNull("fromChild", fromChild);
 			assertNotNull("toPlainCryptoKey", toPlainCryptoKey);
-			final PlainCryptoKey childBacklinkKeyPlainCryptoKey = fromChild.getPlainCryptoKey(CryptoKeyRole.backlinkKey, CryptoKeyPart.sharedSecret);
+			final PlainCryptoKey childBacklinkKeyPlainCryptoKey = fromChild.getActivePlainCryptoKey(CryptoKeyRole.backlinkKey, CryptoKeyPart.sharedSecret);
 			if (childBacklinkKeyPlainCryptoKey != null)
 				createCryptoLink(childBacklinkKeyPlainCryptoKey, toPlainCryptoKey);
 		}
@@ -279,9 +280,9 @@ abstract class PlainCryptoKeyFactory {
 
 			final PlainCryptoKey backlinkKeyPlainCryptoKey;
 			if (cryptreeNode.isDirectory())
-				backlinkKeyPlainCryptoKey = cryptreeNode.getPlainCryptoKeyOrCreate(CryptoKeyRole.backlinkKey, CryptoKeyPart.sharedSecret);
+				backlinkKeyPlainCryptoKey = cryptreeNode.getActivePlainCryptoKeyOrCreate(CryptoKeyRole.backlinkKey, CryptoKeyPart.sharedSecret);
 			else
-				backlinkKeyPlainCryptoKey = cryptreeNode.getPlainCryptoKey(CryptoKeyRole.backlinkKey, CryptoKeyPart.sharedSecret);
+				backlinkKeyPlainCryptoKey = cryptreeNode.getActivePlainCryptoKey(CryptoKeyRole.backlinkKey, CryptoKeyPart.sharedSecret);
 
 			if (backlinkKeyPlainCryptoKey != null)
 				createCryptoLink(backlinkKeyPlainCryptoKey, toPlainCryptoKey);
@@ -298,7 +299,7 @@ abstract class PlainCryptoKeyFactory {
 			if (parent == null)
 				throw new IllegalStateException("cryptreeNode is *not* a directory, but parent == null !!!");
 
-			final PlainCryptoKey fileKeyPlainCryptoKey = parent.getPlainCryptoKeyOrCreate(CryptoKeyRole.fileKey, CryptoKeyPart.sharedSecret);
+			final PlainCryptoKey fileKeyPlainCryptoKey = parent.getActivePlainCryptoKeyOrCreate(CryptoKeyRole.fileKey, CryptoKeyPart.sharedSecret);
 			createCryptoLink(fileKeyPlainCryptoKey, toPlainCryptoKey);
 		}
 	}

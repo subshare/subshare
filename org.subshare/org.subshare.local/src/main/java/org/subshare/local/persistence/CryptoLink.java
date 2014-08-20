@@ -31,7 +31,7 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 @Inheritance(strategy=InheritanceStrategy.NEW_TABLE)
 @Unique(name="CryptoLink_cryptoLinkId", members="cryptoLinkId")
 @Indices({
-	@Index(name="CryptoLink_localRevision", members={"localRevision"})
+	@Index(name="CryptoLink_localRevision", members="localRevision")
 })
 @Queries({
 	@Query(name="getCryptoLink_cryptoLinkId", value="SELECT UNIQUE WHERE this.cryptoLinkId == :cryptoLinkId"),
@@ -54,7 +54,7 @@ public class CryptoLink extends Entity implements AutoTrackLocalRevision, StoreC
 
 	private CryptoKey fromCryptoKey;
 
-	private String fromUserRepoKeyId;
+	private UserRepoKeyPublicKey fromUserRepoKeyPublicKey;
 
 	@Persistent(nullValue=NullValue.EXCEPTION)
 	private CryptoKey toCryptoKey;
@@ -98,24 +98,30 @@ public class CryptoLink extends Entity implements AutoTrackLocalRevision, StoreC
 		this.fromCryptoKey = fromCryptoKey;
 	}
 
-	/**
-	 * Gets the {@linkplain UserRepoKey#getUserRepoKeyId() user's master key ID} used to encrypt
-	 * {@link #getToCryptoKeyData() toCryptoKeyData}.
-	 * <p>
-	 * <b>Important:</b> This property must be <code>null</code>, if
-	 * {@link #getFromCryptoKey() fromCryptoKey} is not <code>null</code>. Only at most one of them can be a
-	 * non-<code>null</code> value (both can be <code>null</code>).
-	 * @return the universal identifier of the {@link UserRepoKey} used to encrypt
-	 * {@link #getToCryptoKeyData() toCryptoKeyData}. Is <code>null</code>, if the key data
-	 * is plain-text or if it is encrypted with {@link #getFromCryptoKey() fromCryptoKey}.
-	 * @see #getFromCryptoKey()
-	 * @see #getToCryptoKeyData()
-	 */
-	public Uid getFromUserRepoKeyId() {
-		return fromUserRepoKeyId == null ? null : new Uid(fromUserRepoKeyId);
+//	/**
+//	 * Gets the {@linkplain UserRepoKey#getUserRepoKeyId() user's master key ID} used to encrypt
+//	 * {@link #getToCryptoKeyData() toCryptoKeyData}.
+//	 * <p>
+//	 * <b>Important:</b> This property must be <code>null</code>, if
+//	 * {@link #getFromCryptoKey() fromCryptoKey} is not <code>null</code>. Only at most one of them can be a
+//	 * non-<code>null</code> value (both can be <code>null</code>).
+//	 * @return the universal identifier of the {@link UserRepoKey} used to encrypt
+//	 * {@link #getToCryptoKeyData() toCryptoKeyData}. Is <code>null</code>, if the key data
+//	 * is plain-text or if it is encrypted with {@link #getFromCryptoKey() fromCryptoKey}.
+//	 * @see #getFromCryptoKey()
+//	 * @see #getToCryptoKeyData()
+//	 */
+//	public Uid getFromUserRepoKeyId() {
+//		return fromUserRepoKeyId == null ? null : new Uid(fromUserRepoKeyId);
+//	}
+//	public void setFromUserRepoKeyId(final Uid userRepoKeyId) {
+//		this.fromUserRepoKeyId = userRepoKeyId == null ? null : userRepoKeyId.toString();
+//	}
+	public UserRepoKeyPublicKey getFromUserRepoKeyPublicKey() {
+		return fromUserRepoKeyPublicKey;
 	}
-	public void setFromUserRepoKeyId(final Uid userRepoKeyId) {
-		this.fromUserRepoKeyId = userRepoKeyId == null ? null : userRepoKeyId.toString();
+	public void setFromUserRepoKeyPublicKey(final UserRepoKeyPublicKey fromUserRepoKeyPublicKey) {
+		this.fromUserRepoKeyPublicKey = fromUserRepoKeyPublicKey;
 	}
 
 	public CryptoKey getToCryptoKey() {
@@ -166,7 +172,7 @@ public class CryptoLink extends Entity implements AutoTrackLocalRevision, StoreC
 	public void jdoPreStore() {
 		getCryptoLinkId();
 
-		if (fromCryptoKey != null && fromUserRepoKeyId != null)
-			throw new IllegalStateException("fromCryptoKey != null && fromUserRepoKeyId != null :: toCryptoKeyData can only be encrypted with one key!");
+		if (fromCryptoKey != null && fromUserRepoKeyPublicKey != null)
+			throw new IllegalStateException("fromCryptoKey != null && fromUserRepoKeyPublicKey != null :: toCryptoKeyData can only be encrypted with one key!");
 	}
 }

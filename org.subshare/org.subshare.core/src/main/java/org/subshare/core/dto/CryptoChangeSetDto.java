@@ -15,6 +15,8 @@ public class CryptoChangeSetDto {
 
 	private List<CryptoLinkDto> cryptoLinkDtos;
 
+	private List<UserRepoKeyPublicKeyDto> userRepoKeyPublicKeyDtos;
+
 	public List<CryptoRepoFileDto> getCryptoRepoFileDtos() {
 		if (cryptoRepoFileDtos == null)
 			cryptoRepoFileDtos = new ArrayList<CryptoRepoFileDto>();
@@ -45,15 +47,28 @@ public class CryptoChangeSetDto {
 		this.cryptoLinkDtos = cryptoLinkDtos;
 	}
 
+	public List<UserRepoKeyPublicKeyDto> getUserRepoKeyPublicKeyDtos() {
+		if (userRepoKeyPublicKeyDtos == null)
+			userRepoKeyPublicKeyDtos = new ArrayList<UserRepoKeyPublicKeyDto>();
+
+		return userRepoKeyPublicKeyDtos;
+	}
+	public void setUserRepoKeyPublicKeyDtos(final List<UserRepoKeyPublicKeyDto> userRepoKeyPublicKeyDtos) {
+		this.userRepoKeyPublicKeyDtos = userRepoKeyPublicKeyDtos;
+	}
+
 	@Override
 	public String toString() {
-		return "CryptoChangeSetDto [cryptoRepoFileDtos=" + cryptoRepoFileDtos
+		return "CryptoChangeSetDto[cryptoRepoFileDtos=" + cryptoRepoFileDtos
 				+ ", cryptoKeyDtos=" + cryptoKeyDtos + ", cryptoLinkDtos="
-				+ cryptoLinkDtos + "]";
+				+ cryptoLinkDtos + ", userRepoKeyPublicKeyDtos=" + userRepoKeyPublicKeyDtos + "]";
 	}
 
 	public boolean isEmpty() {
-		return isEmpty(cryptoRepoFileDtos) && isEmpty(cryptoKeyDtos) && isEmpty(cryptoLinkDtos);
+		return isEmpty(cryptoRepoFileDtos)
+				&& isEmpty(cryptoKeyDtos)
+				&& isEmpty(cryptoLinkDtos)
+				&& isEmpty(userRepoKeyPublicKeyDtos);
 	}
 
 	private static boolean isEmpty(final Collection<?> c) {

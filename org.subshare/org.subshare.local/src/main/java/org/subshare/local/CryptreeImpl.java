@@ -6,6 +6,7 @@ import java.io.File;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.subshare.core.AbstractCryptree;
@@ -14,7 +15,8 @@ import org.subshare.core.dto.CryptoChangeSetDto;
 import org.subshare.core.dto.CryptoKeyDto;
 import org.subshare.core.dto.CryptoLinkDto;
 import org.subshare.core.dto.CryptoRepoFileDto;
-import org.subshare.core.user.UserRepoPublicKey;
+import org.subshare.core.dto.UserRepoKeyPublicKeyDto;
+import org.subshare.core.user.UserRepoKey;
 import org.subshare.local.persistence.CryptoKey;
 import org.subshare.local.persistence.CryptoKeyDao;
 import org.subshare.local.persistence.CryptoLink;
@@ -23,6 +25,8 @@ import org.subshare.local.persistence.CryptoRepoFile;
 import org.subshare.local.persistence.CryptoRepoFileDao;
 import org.subshare.local.persistence.LastCryptoKeySyncToRemoteRepo;
 import org.subshare.local.persistence.LastCryptoKeySyncToRemoteRepoDao;
+import org.subshare.local.persistence.UserRepoKeyPublicKey;
+import org.subshare.local.persistence.UserRepoKeyPublicKeyDao;
 
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
 import co.codewizards.cloudstore.core.dto.Uid;
@@ -92,6 +96,7 @@ public class CryptreeImpl extends AbstractCryptree {
 		// (collection is mapped-by) and we currently don't delete anything, this guarantees that all references can
 		// be fulfilled on the remote side. Extremely unlikely, but still better ;-)
 		final CryptoChangeSetDto cryptoChangeSetDto = new CryptoChangeSetDto();
+		populateChangedUserRepoKeyPublicKeyDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 		populateChangedCryptoRepoFileDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 		populateChangedCryptoLinkDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 		populateChangedCryptoKeyDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
@@ -119,6 +124,9 @@ public class CryptreeImpl extends AbstractCryptree {
 		final Map<Uid, CryptoKey> cryptoKeyId2CryptoKey = new HashMap<>();
 
 		// This order is important, because the keys must first be persisted, before links or file-meta-data can reference them.
+		for (final UserRepoKeyPublicKeyDto userRepoKeyPublicKeyDto : cryptoChangeSetDto.getUserRepoKeyPublicKeyDtos())
+			putUserRepoKeyPublicKeyDto(userRepoKeyPublicKeyDto);
+
 		for (final CryptoRepoFileDto cryptoRepoFileDto : cryptoChangeSetDto.getCryptoRepoFileDtos())
 			cryptoRepoFileDto2CryptoRepoFile.put(cryptoRepoFileDto, putCryptoRepoFileDto(cryptoRepoFileDto));
 
@@ -183,11 +191,19 @@ public class CryptreeImpl extends AbstractCryptree {
 	}
 
 	@Override
-	public void grantReadAccess(final String localPath, final UserRepoPublicKey userRepoPublicKey) {
+	public void grantReadAccess(final String localPath, final UserRepoKey.PublicKey userRepoKeyPublicKey) {
 		assertNotNull("localPath", localPath);
-		assertNotNull("userRepoPublicKey", userRepoPublicKey);
+		assertNotNull("userRepoKeyPublicKey", userRepoKeyPublicKey);
 		final CryptreeNode cryptreeNode = getCryptreeNodeOrFail(localPath);
-		cryptreeNode.grantReadAccess(userRepoPublicKey);
+		cryptreeNode.grantReadAccess(userRepoKeyPublicKey);
+	}
+
+	@Override
+	public void revokeReadAccess(final String localPath, final Set<Uid> userRepoKeyIds) {
+		assertNotNull("localPath", localPath);
+		assertNotNull("userRepoKeyIds", userRepoKeyIds);
+		final CryptreeNode cryptreeNode = getCryptreeNodeOrFail(localPath);
+		cryptreeNode.revokeReadAccess(userRepoKeyIds);
 	}
 
 	/**
@@ -244,6 +260,22 @@ public class CryptreeImpl extends AbstractCryptree {
 		return cryptoRepoFileDao.makePersistent(cryptoRepoFile);
 	}
 
+	private UserRepoKeyPublicKey putUserRepoKeyPublicKeyDto(final UserRepoKeyPublicKeyDto userRepoKeyPublicKeyDto) {
+		assertNotNull("userRepoKeyPublicKeyDto", userRepoKeyPublicKeyDto);
+		final LocalRepoTransaction transaction = getTransactionOrFail();
+		final UserRepoKeyPublicKeyDao userRepoKeyPublicKeyDao = transaction.getDao(UserRepoKeyPublicKeyDao.class);
+
+		final Uid userRepoKeyId = assertNotNull("userRepoKeyPublicKeyDto.userRepoKeyId", userRepoKeyPublicKeyDto.getUserRepoKeyId());
+		UserRepoKeyPublicKey userRepoKeyPublicKey = userRepoKeyPublicKeyDao.getUserRepoKeyPublicKey(userRepoKeyId);
+		if (userRepoKeyPublicKey == null)
+			userRepoKeyPublicKey = new UserRepoKeyPublicKey(userRepoKeyId);
+
+		userRepoKeyPublicKey.setRepositoryId(userRepoKeyPublicKeyDto.getRepositoryId());
+		userRepoKeyPublicKey.setPublicKeyData(userRepoKeyPublicKeyDto.getPublicKeyData());
+
+		return userRepoKeyPublicKeyDao.makePersistent(userRepoKeyPublicKey);
+	}
+
 	private CryptoKey putCryptoKeyDto(final CryptoKeyDto cryptoKeyDto) {
 		assertNotNull("cryptoKeyDto", cryptoKeyDto);
 		final LocalRepoTransaction transaction = getTransactionOrFail();
@@ -255,7 +287,7 @@ public class CryptreeImpl extends AbstractCryptree {
 		if (cryptoKey == null)
 			cryptoKey = new CryptoKey(cryptoKeyId);
 
-		if (!cryptoKeyDto.isActive()) // it's a one-way change - we never re-activate a key.
+		if (! cryptoKeyDto.isActive()) // it's a one-way change - we never re-activate a key.
 			cryptoKey.setActive(false);
 
 		cryptoKey.setCryptoKeyRole(cryptoKeyDto.getCryptoKeyRole());
@@ -273,6 +305,7 @@ public class CryptreeImpl extends AbstractCryptree {
 		final LocalRepoTransaction transaction = getTransactionOrFail();
 		final CryptoLinkDao cryptoLinkDao = transaction.getDao(CryptoLinkDao.class);
 		final CryptoKeyDao cryptoKeyDao = transaction.getDao(CryptoKeyDao.class);
+		final UserRepoKeyPublicKeyDao userRepoKeyPublicKeyDao = transaction.getDao(UserRepoKeyPublicKeyDao.class);
 
 		final Uid cryptoLinkId = assertNotNull("cryptoLinkDto.cryptoLinkId", cryptoLinkDto.getCryptoLinkId());
 		CryptoLink cryptoLink = cryptoLinkDao.getCryptoLink(cryptoLinkId);
@@ -282,10 +315,12 @@ public class CryptreeImpl extends AbstractCryptree {
 		final Uid fromCryptoKeyId = cryptoLinkDto.getFromCryptoKeyId();
 		cryptoLink.setFromCryptoKey(fromCryptoKeyId == null ? null : cryptoKeyDao.getCryptoKeyOrFail(fromCryptoKeyId));
 
+		final Uid fromUserRepoKeyId = cryptoLinkDto.getFromUserRepoKeyId();
+		cryptoLink.setFromUserRepoKeyPublicKey(fromUserRepoKeyId == null ? null : userRepoKeyPublicKeyDao.getUserRepoKeyPublicKeyOrFail(fromUserRepoKeyId));
+
 		final Uid toCryptoKeyId = assertNotNull("cryptoLinkDto.toCryptoKeyId", cryptoLinkDto.getToCryptoKeyId());
 		cryptoLink.setToCryptoKey(cryptoKeyDao.getCryptoKeyOrFail(toCryptoKeyId));
 
-		cryptoLink.setFromUserRepoKeyId(cryptoLinkDto.getFromUserRepoKeyId());
 		cryptoLink.setToCryptoKeyData(cryptoLinkDto.getToCryptoKeyData());
 		cryptoLink.setToCryptoKeyPart(cryptoLinkDto.getToCryptoKeyPart());
 
@@ -441,11 +476,23 @@ public class CryptreeImpl extends AbstractCryptree {
 
 		final CryptoChangeSetDto cryptoChangeSetDto = new CryptoChangeSetDto();
 		cryptoChangeSetDto.getCryptoRepoFileDtos().add(toCryptoRepoFileDto(cryptoRepoFile));
+		populateChangedUserRepoKeyPublicKeyDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 		populateChangedCryptoLinkDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 		populateChangedCryptoKeyDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 
 		return cryptoChangeSetDto;
 	}
+
+	private void populateChangedUserRepoKeyPublicKeyDtos(final CryptoChangeSetDto cryptoChangeSetDto, final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {
+		final UserRepoKeyPublicKeyDao userRepoKeyPublicKeyDao = getTransactionOrFail().getDao(UserRepoKeyPublicKeyDao.class);
+
+		final Collection<UserRepoKeyPublicKey> userRepoKeyPublicKeys = userRepoKeyPublicKeyDao.getUserRepoKeyPublicKeysChangedAfter(
+				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced());
+
+		for (final UserRepoKeyPublicKey userRepoKeyPublicKey : userRepoKeyPublicKeys)
+			cryptoChangeSetDto.getUserRepoKeyPublicKeyDtos().add(toUserRepoKeyPublicKeyDto(userRepoKeyPublicKey));
+	}
+
 	private void populateChangedCryptoRepoFileDtos(final CryptoChangeSetDto cryptoChangeSetDto, final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {
 		final CryptoRepoFileDao cryptoRepoFileDao = getTransactionOrFail().getDao(CryptoRepoFileDao.class);
 
@@ -474,6 +521,16 @@ public class CryptreeImpl extends AbstractCryptree {
 
 		for (final CryptoKey cryptoKey : cryptoKeys)
 			cryptoChangeSetDto.getCryptoKeyDtos().add(toCryptoKeyDto(cryptoKey));
+	}
+
+	private UserRepoKeyPublicKeyDto toUserRepoKeyPublicKeyDto(final UserRepoKeyPublicKey userRepoKeyPublicKey) {
+		assertNotNull("userRepoKeyPublicKey", userRepoKeyPublicKey);
+		final UserRepoKeyPublicKeyDto userRepoKeyPublicKeyDto = new UserRepoKeyPublicKeyDto();
+		userRepoKeyPublicKeyDto.setLocalRevision(userRepoKeyPublicKey.getLocalRevision());
+		userRepoKeyPublicKeyDto.setPublicKeyData(userRepoKeyPublicKey.getPublicKeyData());
+		userRepoKeyPublicKeyDto.setRepositoryId(userRepoKeyPublicKey.getRepositoryId());
+		userRepoKeyPublicKeyDto.setUserRepoKeyId(userRepoKeyPublicKey.getUserRepoKeyId());
+		return userRepoKeyPublicKeyDto;
 	}
 
 	private CryptoRepoFileDto toCryptoRepoFileDto(final CryptoRepoFile cryptoRepoFile) {
@@ -506,7 +563,8 @@ public class CryptreeImpl extends AbstractCryptree {
 		final CryptoKey fromCryptoKey = cryptoLink.getFromCryptoKey();
 		cryptoLinkDto.setFromCryptoKeyId(fromCryptoKey == null ? null : fromCryptoKey.getCryptoKeyId());
 
-		cryptoLinkDto.setFromUserRepoKeyId(cryptoLink.getFromUserRepoKeyId());
+		final UserRepoKeyPublicKey fromUserRepoKeyPublicKey = cryptoLink.getFromUserRepoKeyPublicKey();
+		cryptoLinkDto.setFromUserRepoKeyId(fromUserRepoKeyPublicKey == null ? null : fromUserRepoKeyPublicKey.getUserRepoKeyId());
 		cryptoLinkDto.setLocalRevision(cryptoLink.getLocalRevision());
 		cryptoLinkDto.setToCryptoKeyData(cryptoLink.getToCryptoKeyData());
 		cryptoLinkDto.setToCryptoKeyId(cryptoLink.getToCryptoKey().getCryptoKeyId());

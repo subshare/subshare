@@ -47,8 +47,8 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 @Inheritance(strategy=InheritanceStrategy.NEW_TABLE)
 @Unique(name="CryptoKey_cryptoKeyId", members="cryptoKeyId")
 @Indices({
-	@Index(name="CryptoKey_localRevision", members={"localRevision"}),
-	@Index(name="CryptoKey_cryptoRepoFile", members={"cryptoRepoFile"})
+	@Index(name="CryptoKey_localRevision", members="localRevision"),
+	@Index(name="CryptoKey_cryptoRepoFile", members="cryptoRepoFile")
 })
 @Queries({
 	@Query(name="getCryptoKey_cryptoKeyId", value="SELECT UNIQUE WHERE this.cryptoKeyId == :cryptoKeyId"),

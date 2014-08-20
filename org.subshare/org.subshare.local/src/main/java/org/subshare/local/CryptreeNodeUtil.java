@@ -22,8 +22,8 @@ import org.subshare.core.crypto.RandomIvFactory;
 import org.subshare.core.dto.CryptoKeyPart;
 import org.subshare.core.dto.CryptoKeyType;
 import org.subshare.core.user.UserRepoKey;
-import org.subshare.core.user.UserRepoPublicKey;
 import org.subshare.local.persistence.CryptoLink;
+import org.subshare.local.persistence.UserRepoKeyPublicKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,19 +31,19 @@ public class CryptreeNodeUtil {
 
 	private static final Logger logger = LoggerFactory.getLogger(CryptreeNodeUtil.class);
 
-	public static byte[] encryptLarge(final byte[] plain, final UserRepoKey userRepoKey) {
-		assertNotNull("plain", plain);
-		assertNotNull("userRepoKey", userRepoKey);
-		logger.debug("encryptLarge: userRepoKeyId={} plain={}", userRepoKey.getUserRepoKeyId(), Arrays.toString(plain));
-		final AsymmetricKeyParameter publicKey = userRepoKey.getKeyPair().getPublic();
-		return encryptLarge(plain, publicKey);
-	}
+//	public static byte[] encryptLarge(final byte[] plain, final UserRepoKey userRepoKey) {
+//		assertNotNull("plain", plain);
+//		assertNotNull("userRepoKey", userRepoKey);
+//		logger.debug("encryptLarge: userRepoKeyId={} plain={}", userRepoKey.getUserRepoKeyId(), Arrays.toString(plain));
+//		final AsymmetricKeyParameter publicKey = userRepoKey.getKeyPair().getPublic();
+//		return encryptLarge(plain, publicKey);
+//	}
 
-	public static byte[] encryptLarge(final byte[] plain, final UserRepoPublicKey userRepoPublicKey) {
+	public static byte[] encryptLarge(final byte[] plain, final UserRepoKeyPublicKey userRepoKeyPublicKey) {
 		assertNotNull("plain", plain);
-		assertNotNull("userRepoPublicKey", userRepoPublicKey);
-		logger.debug("encryptLarge: userRepoKeyId={} plain={}", userRepoPublicKey.getUserRepoKeyId(), Arrays.toString(plain));
-		final AsymmetricKeyParameter publicKey = userRepoPublicKey.getPublicKey();
+		assertNotNull("userRepoKeyPublicKey", userRepoKeyPublicKey);
+		logger.debug("encryptLarge: userRepoKeyId={} plain={}", userRepoKeyPublicKey.getUserRepoKeyId(), Arrays.toString(plain));
+		final AsymmetricKeyParameter publicKey = userRepoKeyPublicKey.getPublicKey().getPublicKey();
 		return encryptLarge(plain, publicKey);
 	}
 
@@ -152,29 +152,29 @@ public class CryptreeNodeUtil {
 		return cryptoLink;
 	}
 
-	public static CryptoLink createCryptoLink(final UserRepoPublicKey fromUserRepoPublicKey, final PlainCryptoKey toPlainCryptoKey) {
-		assertNotNull("fromUserRepoPublicKey", fromUserRepoPublicKey);
+	public static CryptoLink createCryptoLink(final UserRepoKeyPublicKey fromUserRepoKeyPublicKey, final PlainCryptoKey toPlainCryptoKey) {
+		assertNotNull("fromUserRepoKeyPublicKey", fromUserRepoKeyPublicKey);
 		assertNotNull("toPlainCryptoKey", toPlainCryptoKey);
 		final CryptoLink cryptoLink = new CryptoLink();
-		cryptoLink.setFromUserRepoKeyId(fromUserRepoPublicKey.getUserRepoKeyId());
+		cryptoLink.setFromUserRepoKeyPublicKey(fromUserRepoKeyPublicKey);
 		cryptoLink.setToCryptoKey(toPlainCryptoKey.getCryptoKey());
-		cryptoLink.setToCryptoKeyData(encryptLarge(toPlainCryptoKey.getEncodedKey(), fromUserRepoPublicKey));
+		cryptoLink.setToCryptoKeyData(encryptLarge(toPlainCryptoKey.getEncodedKey(), fromUserRepoKeyPublicKey));
 		cryptoLink.setToCryptoKeyPart(toPlainCryptoKey.getCryptoKeyPart());
 		toPlainCryptoKey.getCryptoKey().getInCryptoLinks().add(cryptoLink);
 		return cryptoLink;
 	}
 
-	public static CryptoLink createCryptoLink(final UserRepoKey fromUserRepoKey, final PlainCryptoKey toPlainCryptoKey) {
-		assertNotNull("fromUserRepoKey", fromUserRepoKey);
-		assertNotNull("toPlainCryptoKey", toPlainCryptoKey);
-		final CryptoLink cryptoLink = new CryptoLink();
-		cryptoLink.setFromUserRepoKeyId(fromUserRepoKey.getUserRepoKeyId());
-		cryptoLink.setToCryptoKey(toPlainCryptoKey.getCryptoKey());
-		cryptoLink.setToCryptoKeyData(encryptLarge(toPlainCryptoKey.getEncodedKey(), fromUserRepoKey));
-		cryptoLink.setToCryptoKeyPart(toPlainCryptoKey.getCryptoKeyPart());
-		toPlainCryptoKey.getCryptoKey().getInCryptoLinks().add(cryptoLink);
-		return cryptoLink;
-	}
+//	public static CryptoLink createCryptoLink(final UserRepoKey fromUserRepoKey, final PlainCryptoKey toPlainCryptoKey) {
+//		assertNotNull("fromUserRepoKey", fromUserRepoKey);
+//		assertNotNull("toPlainCryptoKey", toPlainCryptoKey);
+//		final CryptoLink cryptoLink = new CryptoLink();
+//		cryptoLink.setFromUserRepoKeyId(fromUserRepoKey.getUserRepoKeyId());
+//		cryptoLink.setToCryptoKey(toPlainCryptoKey.getCryptoKey());
+//		cryptoLink.setToCryptoKeyData(encryptLarge(toPlainCryptoKey.getEncodedKey(), fromUserRepoKey));
+//		cryptoLink.setToCryptoKeyPart(toPlainCryptoKey.getCryptoKeyPart());
+//		toPlainCryptoKey.getCryptoKey().getInCryptoLinks().add(cryptoLink);
+//		return cryptoLink;
+//	}
 
 	public static CryptoLink createCryptoLink(final PlainCryptoKey toPlainCryptoKey) { // plain-text = UNENCRYPTED!!!
 		assertNotNull("toPlainCryptoKey", toPlainCryptoKey);

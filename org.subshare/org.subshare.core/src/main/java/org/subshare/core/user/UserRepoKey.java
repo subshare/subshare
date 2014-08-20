@@ -2,7 +2,10 @@ package org.subshare.core.user;
 
 import static co.codewizards.cloudstore.core.util.Util.*;
 
+import java.util.UUID;
+
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
+import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
 
 import co.codewizards.cloudstore.core.dto.Uid;
 
@@ -19,7 +22,7 @@ public class UserRepoKey {
 	private final UserRepoKeyRing userRepoKeyRing;
 	private final Uid userRepoKeyId;
 	private final AsymmetricCipherKeyPair keyPair;
-	private UserRepoPublicKey userRepoPublicKey;
+	private PublicKey publicKey;
 
 	public UserRepoKey(final UserRepoKeyRing userRepoKeyRing, final AsymmetricCipherKeyPair keyPair) {
 		this.userRepoKeyRing = assertNotNull("userRepoKeyRing", userRepoKeyRing);
@@ -39,11 +42,36 @@ public class UserRepoKey {
 		return keyPair;
 	}
 
-	public UserRepoPublicKey getUserRepoPublicKey() {
-		if (userRepoPublicKey == null)
-			userRepoPublicKey = new UserRepoPublicKey(
-					getUserRepoKeyRing().getRepositoryId(), getUserRepoKeyId(), getKeyPair().getPublic());
+	public PublicKey getPublicKey() {
+		if (publicKey == null)
+			publicKey = new PublicKey(
+					getUserRepoKeyId(), getUserRepoKeyRing().getRepositoryId(), getKeyPair().getPublic());
 
-		return userRepoPublicKey;
+		return publicKey;
+	}
+
+	public static class PublicKey {
+
+		private final Uid userRepoKeyId;
+		private final UUID repositoryId;
+		private final AsymmetricKeyParameter publicKey;
+
+		public PublicKey(final Uid userRepoKeyId, final UUID repositoryId, final AsymmetricKeyParameter publicKey) {
+			this.userRepoKeyId = assertNotNull("userRepoKeyId", userRepoKeyId);
+			this.repositoryId = assertNotNull("repositoryId", repositoryId);
+			this.publicKey = assertNotNull("publicKey", publicKey);
+		}
+
+		public Uid getUserRepoKeyId() {
+			return userRepoKeyId;
+		}
+
+		public UUID getRepositoryId() {
+			return repositoryId;
+		}
+
+		public AsymmetricKeyParameter getPublicKey() {
+			return publicKey;
+		}
 	}
 }

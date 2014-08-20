@@ -1,5 +1,6 @@
 package org.subshare.core;
 
+import java.util.Set;
 import java.util.UUID;
 
 import org.bouncycastle.crypto.params.KeyParameter;
@@ -8,7 +9,6 @@ import org.subshare.core.dto.CryptoKeyDto;
 import org.subshare.core.dto.CryptoLinkDto;
 import org.subshare.core.dto.CryptoRepoFileDto;
 import org.subshare.core.user.UserRepoKey;
-import org.subshare.core.user.UserRepoPublicKey;
 
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
 import co.codewizards.cloudstore.core.dto.Uid;
@@ -94,6 +94,7 @@ public interface Cryptree extends AutoCloseable {
 	RepoFileDto getDecryptedRepoFileDtoOrFail(Uid cryptoRepoFileId) throws AccessDeniedException;
 	RepoFileDto getDecryptedRepoFileDto(String localPath) throws AccessDeniedException;
 
-	void grantReadAccess(String localPath, UserRepoPublicKey userRepoPublicKey);
+	void grantReadAccess(String localPath, UserRepoKey.PublicKey userRepoKeyPublicKey);
+	void revokeReadAccess(String localPath, Set<Uid> userRepoKeyIds);
 
 }

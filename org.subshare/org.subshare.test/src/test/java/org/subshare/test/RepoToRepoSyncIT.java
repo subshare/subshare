@@ -6,13 +6,15 @@ import static org.assertj.core.api.Assertions.*;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Collections;
 import java.util.UUID;
 
 import org.subshare.core.AccessDeniedException;
 import org.subshare.core.Cryptree;
 import org.subshare.core.CryptreeFactoryRegistry;
+import org.subshare.core.user.UserRepoKey;
+import org.subshare.core.user.UserRepoKey.PublicKey;
 import org.subshare.core.user.UserRepoKeyRing;
-import org.subshare.core.user.UserRepoPublicKey;
 import org.subshare.local.persistence.CryptoRepoFile;
 import org.subshare.local.persistence.CryptoRepoFileDao;
 import org.junit.Before;
@@ -108,6 +110,38 @@ public class RepoToRepoSyncIT extends AbstractIT {
 		syncFromLocalToRemoteToLocal();
 	}
 
+//	@Test // TODO test this, too! ... or maybe we better integrate it in the following test?!
+//	public void multiSyncFromLocalToRemoteToLocalWithPathPrefixWithSubdirClearanceKey() throws Exception {
+//		remotePathPrefix2Plain = "/3 + &#ä";
+//
+//		createLocalSourceAndRemoteRepo();
+//		populateLocalSourceRepo();
+//		syncFromLocalSrcToRemote();
+//		determineRemotePathPrefix2Encrypted();
+//
+//		final UserRepoKeyRing otherUserRepoKeyRing = createUserRepoKeyRing();
+//		grantRemotePathPrefix2EncryptedReadAccessToOtherUser(
+//				otherUserRepoKeyRing.getRandomUserRepoKey().getPublicKey());
+//
+//		// If there is no "real" change, nothing is synced up. We need to extend CloudStore with RepoTransport.beginSync(From|To)Repository!
+////		createFileWithRandomContent(localSrcRoot, "xxxxxxx"); // TODO we must test this, too - in a separate test! had an exception for this NEW file!
+//		final File child_2 = new File(localSrcRoot, "2");
+//		new File(child_2, "a").delete();
+//		createFileWithRandomContent(child_2, "a"); // overwrite
+//
+//		syncFromLocalSrcToRemote();
+//
+//		final UserRepoKeyRing ownerUserRepoKeyRing = cryptreeRepoTransportFactory.getUserRepoKeyRing();
+//		assertThat(ownerUserRepoKeyRing).isNotNull();
+//		try {
+//			cryptreeRepoTransportFactory.setUserRepoKeyRing(otherUserRepoKeyRing);
+//			createLocalDestinationRepo();
+//			syncFromRemoteToLocalDest();
+//		} finally {
+//			cryptreeRepoTransportFactory.setUserRepoKeyRing(ownerUserRepoKeyRing);
+//		}
+//	}
+
 	@Test
 	public void syncFromLocalToRemoteToLocalWithPathPrefixWithSubdirClearanceKey() throws Exception {
 		remotePathPrefix2Plain = "/3 + &#ä";
@@ -117,29 +151,45 @@ public class RepoToRepoSyncIT extends AbstractIT {
 		syncFromLocalSrcToRemote();
 		determineRemotePathPrefix2Encrypted();
 
-		final UserRepoKeyRing otherUserRepoKeyRing = createUserRepoKeyRing();
+		final UserRepoKeyRing otherUserRepoKeyRing1 = createUserRepoKeyRing();
+		final UserRepoKeyRing otherUserRepoKeyRing2 = createUserRepoKeyRing();
+		final PublicKey publicKey1 = otherUserRepoKeyRing1.getRandomUserRepoKey().getPublicKey();
 		grantRemotePathPrefix2EncryptedReadAccessToOtherUser(
-				otherUserRepoKeyRing.getRandomUserRepoKey().getUserRepoPublicKey());
-
-//		// TODO begin delete this
-//		// If there is no "real" change, nothing is synced up. We need to extend CloudStore with RepoTransport.beginSync(From|To)Repository!
-////		createFileWithRandomContent(localSrcRoot, "xxxxxxx"); // TODO we must test this, too - in a separate test! had an exception for this NEW file!
-//		final File child_2 = new File(localSrcRoot, "2");
-//		new File(child_2, "a").delete();
-//		createFileWithRandomContent(child_2, "a"); // overwrite
-//		// TODO end delete this
+				publicKey1);
+		grantRemotePathPrefix2EncryptedReadAccessToOtherUser(
+				otherUserRepoKeyRing2.getRandomUserRepoKey().getPublicKey());
 
 		syncFromLocalSrcToRemote();
 
 		final UserRepoKeyRing ownerUserRepoKeyRing = cryptreeRepoTransportFactory.getUserRepoKeyRing();
 		assertThat(ownerUserRepoKeyRing).isNotNull();
 		try {
-			cryptreeRepoTransportFactory.setUserRepoKeyRing(otherUserRepoKeyRing);
+			cryptreeRepoTransportFactory.setUserRepoKeyRing(otherUserRepoKeyRing1);
 			createLocalDestinationRepo();
 			syncFromRemoteToLocalDest();
 		} finally {
 			cryptreeRepoTransportFactory.setUserRepoKeyRing(ownerUserRepoKeyRing);
 		}
+
+// TODO CC-97 re-enable the following!
+//		revokeRemotePathPrefix2EncryptedReadAccessToOtherUser(publicKey1);
+//
+//		try {
+//			cryptreeRepoTransportFactory.setUserRepoKeyRing(otherUserRepoKeyRing1);
+//			createLocalDestinationRepo();
+//			try {
+//				syncFromRemoteToLocalDest();
+//				fail("Could still check-out after access rights were revoked!");
+//			} catch (final AccessDeniedException x) {
+//				logger.info("Fine! Expected this AccessDeniedException: " + x);
+//			}
+//
+//			cryptreeRepoTransportFactory.setUserRepoKeyRing(otherUserRepoKeyRing2);
+//			createLocalDestinationRepo();
+//			syncFromRemoteToLocalDest();
+//		} finally {
+//			cryptreeRepoTransportFactory.setUserRepoKeyRing(ownerUserRepoKeyRing);
+//		}
 	}
 
 	@Test
@@ -274,7 +324,7 @@ public class RepoToRepoSyncIT extends AbstractIT {
 		}
 	}
 
-	private void grantRemotePathPrefix2EncryptedReadAccessToOtherUser(final UserRepoPublicKey userRepoPublicKey) {
+	private void grantRemotePathPrefix2EncryptedReadAccessToOtherUser(final UserRepoKey.PublicKey userRepoKeyPublicKey) {
 		try (final LocalRepoManager localRepoManagerLocal = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(localSrcRoot);)
 		{
 			try (final LocalRepoTransaction transaction = localRepoManagerLocal.beginWriteTransaction();)
@@ -283,11 +333,26 @@ public class RepoToRepoSyncIT extends AbstractIT {
 						transaction, remoteRepositoryId,
 						remotePathPrefix2Encrypted,
 						cryptreeRepoTransportFactory.getUserRepoKeyRing().getRandomUserRepoKey());
-				cryptree.grantReadAccess(remotePathPrefix2Plain, userRepoPublicKey);
+				cryptree.grantReadAccess(remotePathPrefix2Plain, userRepoKeyPublicKey);
 				cryptree.close();
 				transaction.commit();
 			}
 		}
 	}
 
+	private void revokeRemotePathPrefix2EncryptedReadAccessToOtherUser(final UserRepoKey.PublicKey userRepoKeyPublicKey) {
+		try (final LocalRepoManager localRepoManagerLocal = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(localSrcRoot);)
+		{
+			try (final LocalRepoTransaction transaction = localRepoManagerLocal.beginWriteTransaction();)
+			{
+				final Cryptree cryptree = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail().createCryptree(
+						transaction, remoteRepositoryId,
+						remotePathPrefix2Encrypted,
+						cryptreeRepoTransportFactory.getUserRepoKeyRing().getRandomUserRepoKey());
+				cryptree.revokeReadAccess(remotePathPrefix2Plain, Collections.singleton(userRepoKeyPublicKey.getUserRepoKeyId()));
+				cryptree.close();
+				transaction.commit();
+			}
+		}
+	}
 }

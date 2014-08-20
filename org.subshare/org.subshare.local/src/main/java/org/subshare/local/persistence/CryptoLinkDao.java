@@ -80,26 +80,26 @@ public class CryptoLinkDao extends Dao<CryptoLink, CryptoLinkDao> {
 			logger.debug("getActiveCryptoLinks: Loading result-set with {} elements took {} ms.", cryptoLinks.size(), System.currentTimeMillis() - startTimestamp);
 
 			return cryptoLinks;
-//			final Iterator<CryptoLink> iterator = cryptoLinks.iterator();
-//
-//			if (! iterator.hasNext())
-//				return null;
-//
-//			CryptoLink newestCryptoLink = iterator.next();
-//
-//			// There should only be one single active CryptoLink, but due to sync collisions, there might be
-//			// multiple. In this case, we simply use the newest (TODO we should maybe mark the other one as non-active, but we don't know, if we are in read-tx or a write-tx).
-//			while (iterator.hasNext()) {
-//				final CryptoLink cryptoLink = iterator.next();
-//				if (newestCryptoLink == null || newestCryptoLink.getCreated().before(cryptoLink.getCreated()))
-//					newestCryptoLink = cryptoLink;
-//			}
-//
-//			return newestCryptoLink;
 		} finally {
 			query.closeAll();
 		}
-
 	}
 
+//	public Collection<CryptoLink> getActiveCryptoLinks(final CryptoRepoFile toCryptoRepoFile, final CryptoKeyRole toCryptoKeyRole, final Uid fromUserRepoKeyId) {
+//		final Query query = pm().newNamedQuery(getEntityClass(), "getActiveCryptoLinks_toCryptoRepoFile_toCryptoKeyRole_fromUserRepoKeyId");
+//		try {
+//			long startTimestamp = System.currentTimeMillis();
+//			@SuppressWarnings("unchecked")
+//			Collection<CryptoLink> cryptoLinks = (Collection<CryptoLink>) query.execute(toCryptoRepoFile, toCryptoKeyRole, fromUserRepoKeyId);
+//			logger.debug("getActiveCryptoLinks: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
+//
+//			startTimestamp = System.currentTimeMillis();
+//			cryptoLinks = load(cryptoLinks);
+//			logger.debug("getActiveCryptoLinks: Loading result-set with {} elements took {} ms.", cryptoLinks.size(), System.currentTimeMillis() - startTimestamp);
+//
+//			return cryptoLinks;
+//		} finally {
+//			query.closeAll();
+//		}
+//	}
 }

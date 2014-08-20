@@ -1,0 +1,43 @@
+package org.subshare.core.dto;
+
+import java.util.UUID;
+
+import javax.xml.bind.annotation.XmlRootElement;
+
+import co.codewizards.cloudstore.core.dto.Uid;
+
+@XmlRootElement
+public class UserRepoKeyPublicKeyDto {
+	private Uid userRepoKeyId;
+	private UUID repositoryId;
+	private byte[] publicKeyData;
+	private long localRevision;
+
+	public Uid getUserRepoKeyId() {
+		return userRepoKeyId;
+	}
+	public void setUserRepoKeyId(final Uid userRepoKeyId) {
+		this.userRepoKeyId = userRepoKeyId;
+	}
+
+	public UUID getRepositoryId() {
+		return repositoryId;
+	}
+	public void setRepositoryId(final UUID repositoryId) {
+		this.repositoryId = repositoryId;
+	}
+
+	public byte[] getPublicKeyData() {
+		return publicKeyData;
+	}
+	public void setPublicKeyData(final byte[] publicKeyData) {
+		this.publicKeyData = publicKeyData;
+	}
+
+	public long getLocalRevision() {
+		return localRevision;
+	}
+	public void setLocalRevision(final long localRevision) {
+		this.localRevision = localRevision;
+	}
+}
