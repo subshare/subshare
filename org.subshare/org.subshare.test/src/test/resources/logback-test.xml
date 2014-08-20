@@ -15,8 +15,7 @@
 	</logger>
 -->
 
-	<!-- The level of the root logger is set to DEBUG by default. But we want to be able to change it here. -->
-	<root level="ALL">
+	<root level="INFO">
 		<appender-ref ref="STDOUT" />
 	</root>
 </configuration>
