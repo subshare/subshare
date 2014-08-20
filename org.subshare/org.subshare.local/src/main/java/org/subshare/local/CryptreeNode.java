@@ -117,10 +117,16 @@ public class CryptreeNode {
 
 	public RepoFile getRepoFile() {
 		if (repoFile == null) {
-
-
-			repoFile = null; // TODO find/create!
-			throw new UnsupportedOperationException("NYI!");
+			repoFile = getCryptoRepoFile().getRepoFile();
+			if (repoFile == null) {
+				final RepoFileDto repoFileDto = getRepoFileDto();
+				// We expect the line above to throw an AccessDeniedException - otherwise the repoFile shouldn't be null anymore.
+				// Hence, we throw an IllegalStateException, if we come here.
+				throw new IllegalStateException(String.format("cryptoRepoFile.repoFile is null, but getRepoFileDto() was able to decrypt! "
+						+ "cryptoRepoFileId=%s repoFileDto.name='%s'",
+						getCryptoRepoFile().getCryptoRepoFileId(),
+						repoFileDto == null ? "<<repoFileDto == null>>" : repoFileDto.getName()));
+			}
 		}
 		return repoFile;
 	}
@@ -152,7 +158,7 @@ public class CryptreeNode {
 				throw new IllegalArgumentException("repoFile == null && cryptoRepoFile == null");
 
 			final CryptoRepoFileDao cryptoRepoFileDao = transaction.getDao(CryptoRepoFileDao.class);
-			cryptoRepoFile = cryptoRepoFileDao.getCryptoRepoFile(repoFile);
+			cryptoRepoFile = cryptoRepoFileDao.getCryptoRepoFile(repoFile); // may be null!
 		}
 		return cryptoRepoFile;
 	}
