@@ -72,6 +72,10 @@ abstract class PlainCryptoKeyFactory {
 			final CryptreeNode cryptreeNode = getCryptreeNodeOrFail();
 			final CryptoKeyPart cryptoKeyPart = getCryptoKeyPartOrFail();
 
+			// TODO we must check, if there is already a clearance key to which we have no access.
+			// We should not implicitly create a clearance key, we we maybe simply don't have access.
+			// In this case, we must throw an AccessDeniedException instead!
+
 			final AsymmetricCipherKeyPair keyPair = KeyFactory.getInstance().createAsymmetricKeyPair();
 			final CryptoKey cryptoKey = createCryptoKey(CryptoKeyRole.clearanceKey, CryptoKeyType.asymmetric);
 
@@ -81,7 +85,7 @@ abstract class PlainCryptoKeyFactory {
 			createCryptoLink(clearanceKeyPlainCryptoKey_public);
 			createCryptoLink(cryptreeNode.getUserRepoKeyPublicKey(), clearanceKeyPlainCryptoKey_private);
 
-			// TODO maybe we should give the clearance key other users, too?! not only the current user?!
+			// TODO maybe we should give the clearance key other users, too?! not only the current user?! NO, this happens outside. At least right now and I think this is good.
 
 			final PlainCryptoKey subdirKeyPlainCryptoKey = cryptreeNode.getActivePlainCryptoKey(CryptoKeyRole.subdirKey, CryptoKeyPart.sharedSecret);
 			if (subdirKeyPlainCryptoKey == null) { // during initialisation, this is possible

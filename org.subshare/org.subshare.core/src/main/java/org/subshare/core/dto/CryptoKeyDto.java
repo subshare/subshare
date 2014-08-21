@@ -63,7 +63,7 @@ public class CryptoKeyDto {
 
 	@Override
 	public String toString() {
-		return "CryptoKeyDto [cryptoKeyId=" + cryptoKeyId
+		return "CryptoKeyDto[cryptoKeyId=" + cryptoKeyId
 				+ ", cryptoRepoFileId=" + cryptoRepoFileId + ", active="
 				+ active + ", cryptoKeyType=" + cryptoKeyType
 				+ ", cryptoKeyRole=" + cryptoKeyRole + ", localRevision="

@@ -8,6 +8,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 import org.bouncycastle.crypto.params.KeyParameter;
@@ -32,6 +34,7 @@ import org.slf4j.LoggerFactory;
 import co.codewizards.cloudstore.core.dto.ChangeSetDto;
 import co.codewizards.cloudstore.core.dto.ModificationDto;
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
+import co.codewizards.cloudstore.core.dto.RepoFileDtoTreeNode;
 import co.codewizards.cloudstore.core.dto.RepositoryDto;
 import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.repo.local.ContextWithLocalRepoManager;
@@ -97,7 +100,7 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 		final ChangeSetDto decryptedChangeSetDto = new ChangeSetDto();
 
 		final LocalRepoManager localRepoManager = getLocalRepoManager();
-		try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
+		try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) { // TODO read-transaction?!
 			try (final Cryptree cryptree = createCryptree(transaction);) {
 
 				decryptedChangeSetDto.setRepositoryDto(changeSetDto.getRepositoryDto());
@@ -108,11 +111,27 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 						decryptedChangeSetDto.getModificationDtos().add(decryptedModificationDto);
 				}
 
-				for (final RepoFileDto repoFileDto : changeSetDto.getRepoFileDtos()) {
-					final RepoFileDto decryptedRepoFileDto = decryptRepoFileDto(cryptree, repoFileDto);
-					// TODO we should remove the superfluous data to make sure the result looks exactly as it would do in a normal CloudStore sync!
-					if (decryptedRepoFileDto != null) // if it's null, it could not be decrypted (missing access rights?!) and should be ignored.
-						decryptedChangeSetDto.getRepoFileDtos().add(decryptedRepoFileDto);
+				final Set<Long> nonDecryptableRepoFileIds = new HashSet<Long>();
+				// TODO instead of building the tree here (again), we should do this *only* on the server side
+				// and guarantee this order. Or shouldn't we?!
+				final RepoFileDtoTreeNode tree = RepoFileDtoTreeNode.createTree(changeSetDto.getRepoFileDtos());
+				if (tree != null) {
+					for (final RepoFileDtoTreeNode node : tree) {
+						final RepoFileDto repoFileDto = node.getRepoFileDto();
+						if (nonDecryptableRepoFileIds.contains(repoFileDto.getParentId())) {
+							nonDecryptableRepoFileIds.add(repoFileDto.getId()); // transitive for all children and children's children
+							continue;
+						}
+
+						final RepoFileDto decryptedRepoFileDto = decryptRepoFileDto(cryptree, repoFileDto);
+						// TODO we should remove the superfluous data to make sure the result looks exactly as it would do in a normal CloudStore sync!
+
+						// if it's null, it could not be decrypted (missing access rights?!) and should be ignored.
+						if (decryptedRepoFileDto == null)
+							nonDecryptableRepoFileIds.add(repoFileDto.getId());
+						else
+							decryptedChangeSetDto.getRepoFileDtos().add(decryptedRepoFileDto);
+					}
 				}
 			}
 			transaction.commit();
@@ -219,7 +238,7 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 		final LocalRepoManager localRepoManager = getLocalRepoManager();
 		try (final LocalRepoTransaction transaction = localRepoManager.beginReadTransaction();) {
 			try (final Cryptree cryptree = createCryptree(transaction);) {
-				final KeyParameter dataKey = cryptree.getDataKey(path);
+				final KeyParameter dataKey = cryptree.getDataKeyOrFail(path);
 				final String unprefixedServerPath = unprefixPath(cryptree.getServerPath(path)); // it's automatically prefixed *again*, thus we must prefix it here (if we don't want to somehow suppress the automatic prefixing, which is probably quite a lot of work).
 				final byte[] encryptedFileData = getRestRepoTransport().getFileData(unprefixedServerPath, getServerOffset(offset), (int) getServerOffset(length));
 				decryptedFileData = decrypt(encryptedFileData, dataKey);
@@ -250,7 +269,7 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 		final LocalRepoManager localRepoManager = getLocalRepoManager();
 		try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
 			try (final Cryptree cryptree = createCryptree(transaction);) {
-				final KeyParameter dataKey = cryptree.getDataKey(path);
+				final KeyParameter dataKey = cryptree.getDataKeyOrFail(path);
 				final byte[] encryptedFileData = encrypt(fileData, dataKey);
 				// TODO this should not only be encrypted, but also signed!
 				// TODO maybe we store only one IV per file and derive the chunk's IV from this combined with the offset (and all hashed)? this could save valuable entropy and should still be secure - maybe later.
@@ -345,6 +364,17 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 	@Override
 	public void endSyncFromRepository() {
 		getRestRepoTransport().endSyncFromRepository();
+
+		final LocalRepoManager localRepoManager = getLocalRepoManager();
+		try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
+			try (final Cryptree cryptree = createCryptree(transaction);) {
+				// We want to ensure that the root directory is readable. If it isn't this throws an AccessDeniedException.
+				// Without this, we would silently sync nothing, if the root is not readable (important: this "root" might be
+				// a sub-directory!).
+				if (! cryptree.isEmpty())
+					cryptree.getDataKeyOrFail("");
+			}
+		}
 	}
 
 	@Override

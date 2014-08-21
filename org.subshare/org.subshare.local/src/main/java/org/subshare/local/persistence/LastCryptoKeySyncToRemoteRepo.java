@@ -1,5 +1,7 @@
 package org.subshare.local.persistence;
 
+import static co.codewizards.cloudstore.core.util.Util.*;
+
 import javax.jdo.annotations.NullValue;
 import javax.jdo.annotations.PersistenceCapable;
 import javax.jdo.annotations.Persistent;
@@ -25,7 +27,8 @@ public class LastCryptoKeySyncToRemoteRepo extends Entity {
 		return remoteRepository;
 	}
 	public void setRemoteRepository(final RemoteRepository remoteRepository) {
-		this.remoteRepository = remoteRepository;
+		if (! equal(this.remoteRepository, remoteRepository))
+			this.remoteRepository = remoteRepository;
 	}
 
 	/**
@@ -42,13 +45,15 @@ public class LastCryptoKeySyncToRemoteRepo extends Entity {
 		return localRepositoryRevisionSynced;
 	}
 	public void setLocalRepositoryRevisionSynced(final long localRepositoryRevision) {
-		this.localRepositoryRevisionSynced = localRepositoryRevision;
+		if (! equal(this.localRepositoryRevisionSynced, localRepositoryRevision))
+			this.localRepositoryRevisionSynced = localRepositoryRevision;
 	}
 
 	public long getLocalRepositoryRevisionInProgress() {
 		return localRepositoryRevisionInProgress;
 	}
 	public void setLocalRepositoryRevisionInProgress(final long localRepositoryRevisionInProgress) {
-		this.localRepositoryRevisionInProgress = localRepositoryRevisionInProgress;
+		if (! equal(this.localRepositoryRevisionInProgress, localRepositoryRevisionInProgress))
+			this.localRepositoryRevisionInProgress = localRepositoryRevisionInProgress;
 	}
 }

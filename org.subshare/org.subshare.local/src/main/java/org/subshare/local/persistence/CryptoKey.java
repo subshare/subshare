@@ -1,5 +1,7 @@
 package org.subshare.local.persistence;
 
+import static co.codewizards.cloudstore.core.util.Util.*;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -104,7 +106,8 @@ public class CryptoKey extends Entity implements AutoTrackLocalRevision, StoreCa
 		return active;
 	}
 	public void setActive(final boolean active) {
-		this.active = active;
+		if (! equal(this.active, active))
+			this.active = active;
 	}
 
 	/**
@@ -116,21 +119,24 @@ public class CryptoKey extends Entity implements AutoTrackLocalRevision, StoreCa
 		return cryptoRepoFile;
 	}
 	public void setCryptoRepoFile(final CryptoRepoFile cryptoRepoFile) {
-		this.cryptoRepoFile = cryptoRepoFile;
+		if (! equal(this.cryptoRepoFile, cryptoRepoFile))
+			this.cryptoRepoFile = cryptoRepoFile;
 	}
 
 	public CryptoKeyRole getCryptoKeyRole() {
 		return cryptoKeyRole;
 	}
 	public void setCryptoKeyRole(final CryptoKeyRole cryptoKeyRole) {
-		this.cryptoKeyRole = cryptoKeyRole;
+		if (! equal(this.cryptoKeyRole, cryptoKeyRole))
+			this.cryptoKeyRole = cryptoKeyRole;
 	}
 
 	public CryptoKeyType getCryptoKeyType() {
 		return cryptoKeyType;
 	}
 	public void setCryptoKeyType(final CryptoKeyType cryptoKeyType) {
-		this.cryptoKeyType = cryptoKeyType;
+		if (! equal(this.cryptoKeyType, cryptoKeyType))
+			this.cryptoKeyType = cryptoKeyType;
 	}
 
 	/**
@@ -173,7 +179,8 @@ public class CryptoKey extends Entity implements AutoTrackLocalRevision, StoreCa
 	}
 	@Override
 	public void setLocalRevision(final long localRevision) {
-		this.localRevision = localRevision;
+		if (! equal(this.localRevision, localRevision))
+			this.localRevision = localRevision;
 	}
 
 	@Override

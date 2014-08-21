@@ -1,5 +1,7 @@
 package org.subshare.local.persistence;
 
+import static co.codewizards.cloudstore.core.util.Util.*;
+
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Index;
 import javax.jdo.annotations.Indices;
@@ -95,7 +97,8 @@ public class CryptoLink extends Entity implements AutoTrackLocalRevision, StoreC
 		return fromCryptoKey;
 	}
 	public void setFromCryptoKey(final CryptoKey fromCryptoKey) {
-		this.fromCryptoKey = fromCryptoKey;
+		if (! equal(this.fromCryptoKey, fromCryptoKey))
+			this.fromCryptoKey = fromCryptoKey;
 	}
 
 //	/**
@@ -121,21 +124,24 @@ public class CryptoLink extends Entity implements AutoTrackLocalRevision, StoreC
 		return fromUserRepoKeyPublicKey;
 	}
 	public void setFromUserRepoKeyPublicKey(final UserRepoKeyPublicKey fromUserRepoKeyPublicKey) {
-		this.fromUserRepoKeyPublicKey = fromUserRepoKeyPublicKey;
+		if (! equal(this.fromUserRepoKeyPublicKey, fromUserRepoKeyPublicKey))
+			this.fromUserRepoKeyPublicKey = fromUserRepoKeyPublicKey;
 	}
 
 	public CryptoKey getToCryptoKey() {
 		return toCryptoKey;
 	}
 	public void setToCryptoKey(final CryptoKey cryptoKey) {
-		this.toCryptoKey = cryptoKey;
+		if (! equal(this.toCryptoKey, cryptoKey))
+			this.toCryptoKey = cryptoKey;
 	}
 
 	public CryptoKeyPart getToCryptoKeyPart() {
 		return toCryptoKeyPart;
 	}
 	public void setToCryptoKeyPart(final CryptoKeyPart toCryptoKeyPart) {
-		this.toCryptoKeyPart = toCryptoKeyPart;
+		if (! equal(this.toCryptoKeyPart, toCryptoKeyPart))
+			this.toCryptoKeyPart = toCryptoKeyPart;
 	}
 
 	/**
@@ -156,7 +162,8 @@ public class CryptoLink extends Entity implements AutoTrackLocalRevision, StoreC
 		return toCryptoKeyData;
 	}
 	public void setToCryptoKeyData(final byte[] toCryptoKeyData) {
-		this.toCryptoKeyData = toCryptoKeyData;
+		if (! equal(this.toCryptoKeyData, toCryptoKeyData))
+			this.toCryptoKeyData = toCryptoKeyData;
 	}
 
 	@Override
@@ -165,7 +172,8 @@ public class CryptoLink extends Entity implements AutoTrackLocalRevision, StoreC
 	}
 	@Override
 	public void setLocalRevision(final long localRevision) {
-		this.localRevision = localRevision;
+		if (! equal(this.localRevision, localRevision))
+			this.localRevision = localRevision;
 	}
 
 	@Override

@@ -87,7 +87,7 @@ public interface Cryptree extends AutoCloseable {
 	CryptoChangeSetDto getCryptoChangeSetDtoWithCryptoRepoFiles();
 
 	void updateLastCryptoKeySyncToRemoteRepo();
-	KeyParameter getDataKey(String path);
+	KeyParameter getDataKeyOrFail(String path);
 	void putCryptoChangeSetDto(CryptoChangeSetDto cryptoChangeSetDto);
 
 	Uid getRootCryptoRepoFileId();
@@ -96,5 +96,6 @@ public interface Cryptree extends AutoCloseable {
 
 	void grantReadAccess(String localPath, UserRepoKey.PublicKey userRepoKeyPublicKey);
 	void revokeReadAccess(String localPath, Set<Uid> userRepoKeyIds);
+	boolean isEmpty();
 
 }

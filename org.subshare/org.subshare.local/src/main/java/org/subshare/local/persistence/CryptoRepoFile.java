@@ -90,6 +90,8 @@ public class CryptoRepoFile extends Entity implements AutoTrackLocalRevision, St
 
 	private String localName;
 
+	private boolean directory;
+
 	public CryptoRepoFile() { }
 
 	public CryptoRepoFile(final Uid cryptoRepoFileId) {
@@ -164,12 +166,14 @@ public class CryptoRepoFile extends Entity implements AutoTrackLocalRevision, St
 		return cryptoKey;
 	}
 	public void setCryptoKey(final CryptoKey cryptoKey) {
-		if (cryptoKey != null) {
-			final CryptoKeyRole cryptoKeyRole = assertNotNull("cryptoKey.cryptoKeyRole", cryptoKey.getCryptoKeyRole());
-			if (CryptoKeyRole.dataKey != cryptoKeyRole)
-				throw new IllegalArgumentException("cryptoKey.cryptoKeyRole != dataKey");
+		if (! equal(this.cryptoKey, cryptoKey)) {
+			if (cryptoKey != null) {
+				final CryptoKeyRole cryptoKeyRole = assertNotNull("cryptoKey.cryptoKeyRole", cryptoKey.getCryptoKeyRole());
+				if (CryptoKeyRole.dataKey != cryptoKeyRole)
+					throw new IllegalArgumentException("cryptoKey.cryptoKeyRole != dataKey");
+			}
+			this.cryptoKey = cryptoKey;
 		}
-		this.cryptoKey = cryptoKey;
 	}
 
 	/**
@@ -184,7 +188,8 @@ public class CryptoRepoFile extends Entity implements AutoTrackLocalRevision, St
 		return repoFileDtoData;
 	}
 	public void setRepoFileDtoData(final byte[] repoFileDtoData) {
-		this.repoFileDtoData = repoFileDtoData;
+		if (! equal(this.repoFileDtoData, repoFileDtoData))
+			this.repoFileDtoData = repoFileDtoData;
 	}
 
 	@Override
@@ -193,14 +198,16 @@ public class CryptoRepoFile extends Entity implements AutoTrackLocalRevision, St
 	}
 	@Override
 	public void setLocalRevision(final long localRevision) {
-		this.localRevision = localRevision;
+		if (! equal(this.localRevision, localRevision))
+			this.localRevision = localRevision;
 	}
 
 	public UUID getLastSyncFromRepositoryId() {
 		return lastSyncFromRepositoryId == null ? null : UUID.fromString(lastSyncFromRepositoryId);
 	}
 	public void setLastSyncFromRepositoryId(final UUID repositoryId) {
-		this.lastSyncFromRepositoryId = repositoryId == null ? null : repositoryId.toString();
+		if (! equal(this.getLastSyncFromRepositoryId(), repositoryId))
+			this.lastSyncFromRepositoryId = repositoryId == null ? null : repositoryId.toString();
 	}
 
 	@Override
@@ -283,5 +290,12 @@ public class CryptoRepoFile extends Entity implements AutoTrackLocalRevision, St
 			sb.append(assertNotNull("cryptoRepoFile.localName", crf.getLocalName())); // if this is null, we are not on the client-side (or we have no access at all). if we are on the client and do have access, we should be able to decrypt all parents due to the backlink-keys!
 		}
 		return sb.toString();
+	}
+
+	public boolean isDirectory() {
+		return directory;
+	}
+	public void setDirectory(final boolean directory) {
+		this.directory = directory;
 	}
 }

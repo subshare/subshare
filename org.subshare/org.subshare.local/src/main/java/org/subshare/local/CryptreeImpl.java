@@ -73,7 +73,7 @@ public class CryptreeImpl extends AbstractCryptree {
 	}
 
 	@Override
-	public KeyParameter getDataKey(final String path) { // TODO shouldn't this be 'localPath'?
+	public KeyParameter getDataKeyOrFail(final String path) { // TODO shouldn't this be 'localPath'?
 		assertNotNull("path", path);
 		final LocalRepoTransaction transaction = getTransactionOrFail();
 		final LocalRepoManager localRepoManager = transaction.getLocalRepoManager();
@@ -82,7 +82,7 @@ public class CryptreeImpl extends AbstractCryptree {
 		assertNotNull("repoFile", repoFile);
 
 		final CryptreeNode cryptreeNode = new CryptreeNode(getUserRepoKeyOrFail(), transaction, repoFile);
-		return cryptreeNode.getDataKey();
+		return cryptreeNode.getDataKeyOrFail();
 	}
 
 	@Override
@@ -255,6 +255,7 @@ public class CryptreeImpl extends AbstractCryptree {
 		final byte[] repoFileDtoData = assertNotNull("cryptoRepoFileDto.repoFileDtoData", cryptoRepoFileDto.getRepoFileDtoData());
 		cryptoRepoFile.setRepoFileDtoData(repoFileDtoData);
 
+		cryptoRepoFile.setDirectory(cryptoRepoFileDto.isDirectory());
 		cryptoRepoFile.setLastSyncFromRepositoryId(getRemoteRepositoryId());
 
 		return cryptoRepoFileDao.makePersistent(cryptoRepoFile);
@@ -406,15 +407,15 @@ public class CryptreeImpl extends AbstractCryptree {
 				throw new IllegalStateException("localPath should never be '/', but instead it should be an empty String, if the real root is checked out!");
 
 			if (!localPath.startsWith("/"))
-				throw new IllegalStateException("localPath is neither empty nor does it start with '/'!");
+				throw new IllegalStateException(String.format("localPath '%s' is neither empty nor does it start with '/'!", localPath));
 
 			final String prefix = prefixCryptoRepoFile.getLocalPathOrFail();
 
 			if (!prefix.isEmpty() && !prefix.startsWith("/"))
-				throw new IllegalStateException("prefixCryptoRepoFile.localPath is neither empty nor does it start with '/'!");
+				throw new IllegalStateException(String.format("prefixCryptoRepoFile.localPath '%s' is neither empty nor does it start with '/'!", prefix));
 
 			if (prefix.endsWith("/"))
-				throw new IllegalStateException("prefixCryptoRepoFile.localPath ends with '/'! It should not!");
+				throw new IllegalStateException(String.format("prefixCryptoRepoFile.localPath '%s' ends with '/'! It should not!", prefix));
 
 			return prefix + localPath;
 		}
@@ -545,12 +546,10 @@ public class CryptreeImpl extends AbstractCryptree {
 		final CryptoKey cryptoKey = assertNotNull("cryptoRepoFile.cryptoKey", cryptoRepoFile.getCryptoKey());
 		cryptoRepoFileDto.setCryptoKeyId(cryptoKey.getCryptoKeyId());
 
+		cryptoRepoFileDto.setDirectory(cryptoRepoFile.isDirectory());
+
 		final byte[] repoFileDtoData = assertNotNull("cryptoRepoFile.repoFileDtoData", cryptoRepoFile.getRepoFileDtoData());
 		cryptoRepoFileDto.setRepoFileDtoData(repoFileDtoData);
-
-//		final RepoFile repoFile = cryptoRepoFile.getRepoFile();
-//		if (repoFile != null)
-//			cryptoRepoFileDto.setRepoFileId(repoFile.getId());
 
 		return cryptoRepoFileDto;
 	}
@@ -584,4 +583,9 @@ public class CryptreeImpl extends AbstractCryptree {
 		return cryptoKeyDto;
 	}
 
+	@Override
+	public boolean isEmpty() {
+		final Collection<CryptoRepoFile> childCryptoRepoFiles = getTransactionOrFail().getDao(CryptoRepoFileDao.class).getChildCryptoRepoFiles(null);
+		return childCryptoRepoFiles.isEmpty();
+	}
 }

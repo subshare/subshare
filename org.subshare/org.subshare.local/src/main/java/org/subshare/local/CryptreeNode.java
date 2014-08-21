@@ -127,13 +127,12 @@ public class CryptreeNode {
 		if (repoFile == null) {
 			repoFile = getCryptoRepoFile().getRepoFile();
 			if (repoFile == null) {
-				final RepoFileDto repoFileDto = getRepoFileDto();
-				// We expect the line above to throw an AccessDeniedException - otherwise the repoFile shouldn't be null anymore.
-				// Hence, we throw an IllegalStateException, if we come here.
-				throw new IllegalStateException(String.format("cryptoRepoFile.repoFile is null, but getRepoFileDto() was able to decrypt! "
-						+ "cryptoRepoFileId=%s repoFileDto.name='%s'",
-						getCryptoRepoFile().getCryptoRepoFileId(),
-						repoFileDto == null ? "<<repoFileDto == null>>" : repoFileDto.getName()));
+				getRepoFileDto();
+				// We expect the line above to throw an AccessDeniedException, if the user is not allowed to access it.
+				// But if we checked out a sub-directory, it's a valid state that the parent-RepoFile objects do *not*
+				// exist (because we don't have local file representations) and still we can decrypt the RepoFileDto
+				// of the parent directories.
+				// This RepoFile is therefore clearly optional!
 			}
 		}
 		return repoFile;
@@ -179,7 +178,8 @@ public class CryptreeNode {
 			if (cryptoRepoFile == null)
 				cryptoRepoFile = new CryptoRepoFile();
 
-			cryptoRepoFile.setRepoFile(repoFile);
+			cryptoRepoFile.setRepoFile(repoFile); // repoFile is guaranteed to be *not* null, because of getCryptoRepoFile() above.
+			cryptoRepoFile.setDirectory(repoFile instanceof Directory);
 
 			// getPlainCryptoKeyOrCreate(...) causes this method to be called again. We thus must prevent
 			// an eternal recursion by already assigning it to the field *now*.
@@ -199,7 +199,13 @@ public class CryptreeNode {
 			// No need for local IDs. Because this DTO is shared across all repositories, local IDs make no sense.
 			repoFileDtoConverter.setExcludeLocalIds(true);
 			final RepoFileDto repoFileDto = repoFileDtoConverter.toRepoFileDto(repoFile, Integer.MAX_VALUE);
-			cryptoRepoFile.setLocalName(repoFileDto.getName());
+
+			// Prevent overriding the real name with "", if we checked out a sub-directory. In this case, we cannot
+			// change the localName locally and must make sure, it is preserved.
+			if (cryptoRepoFile.getLocalName() == null || repoFile.getParent() != null)
+				cryptoRepoFile.setLocalName(repoFileDto.getName());
+			else
+				repoFileDto.setName(cryptoRepoFile.getLocalName());
 
 			// Serialise to XML and compress.
 			final ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -322,7 +328,10 @@ public class CryptreeNode {
 	}
 
 	protected boolean isDirectory() {
-		return assertNotNull("getRepoFile()", getRepoFile()) instanceof Directory;
+		if (repoFile != null)
+			return repoFile instanceof Directory;
+
+		return cryptoRepoFile.isDirectory();
 	}
 
 	protected PlainCryptoKey getActivePlainCryptoKey(final CryptoKeyRole toCryptoKeyRole, final CryptoKeyPart toCryptoKeyPart) {
@@ -424,8 +433,28 @@ public class CryptreeNode {
 		return plainCryptoKey;
 	}
 
-	public KeyParameter getDataKey() {
-		final PlainCryptoKey plainCryptoKey = getActivePlainCryptoKeyOrCreate(CryptoKeyRole.dataKey, CryptoKeyPart.sharedSecret);
+	/**
+	 * Gets the current data key as indicated by {@link CryptoRepoFile#getCryptoKey()}.
+	 * @return
+	 */
+	public KeyParameter getDataKeyOrFail() {
+		final CryptoRepoFile cryptoRepoFile = getCryptoRepoFile();
+		assertNotNull("cryptoRepoFile", cryptoRepoFile);
+
+		// We can use the following method, because it's *symmetric* - thus it works for both decrypting and encrypting!
+		final PlainCryptoKey plainCryptoKey = getPlainCryptoKeyForDecrypting(cryptoRepoFile.getCryptoKey());
+		if (plainCryptoKey == null)
+			throw new AccessDeniedException(String.format("Cannot decrypt dataKey for cryptoRepoFileId=%s!",
+					cryptoRepoFile.getCryptoRepoFileId()));
+
+		assertNotNull("plainCryptoKey.cryptoKey", plainCryptoKey.getCryptoKey());
+
+		if (CryptoKeyRole.dataKey != plainCryptoKey.getCryptoKey().getCryptoKeyRole())
+			throw new IllegalStateException("CryptoKeyRole.dataKey != plainCryptoKey.getCryptoKey().getCryptoKeyRole()");
+
+		if (CryptoKeyPart.sharedSecret != plainCryptoKey.getCryptoKeyPart())
+			throw new IllegalStateException("CryptoKeyPart.sharedSecret != plainCryptoKey.getCryptoKeyPart()");
+
 		return plainCryptoKey.getKeyParameterOrFail();
 	}
 

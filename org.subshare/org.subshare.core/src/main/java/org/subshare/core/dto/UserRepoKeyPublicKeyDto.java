@@ -1,5 +1,6 @@
 package org.subshare.core.dto;
 
+import java.util.Arrays;
 import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlRootElement;
@@ -39,5 +40,12 @@ public class UserRepoKeyPublicKeyDto {
 	}
 	public void setLocalRevision(final long localRevision) {
 		this.localRevision = localRevision;
+	}
+	@Override
+	public String toString() {
+		return "UserRepoKeyPublicKeyDto[userRepoKeyId=" + userRepoKeyId
+				+ ", repositoryId=" + repositoryId + ", publicKeyData="
+				+ Arrays.toString(publicKeyData) + ", localRevision="
+				+ localRevision + "]";
 	}
 }

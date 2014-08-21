@@ -11,9 +11,9 @@ public class CryptoRepoFileDto {
 
 	private Uid parentCryptoRepoFileId;
 
-//	private long repoFileId = -1;
-
 	private Uid cryptoKeyId;
+
+	private boolean directory;
 
 	private byte[] repoFileDtoData;
 
@@ -31,22 +31,18 @@ public class CryptoRepoFileDto {
 		this.parentCryptoRepoFileId = parentCryptoRepoFileId;
 	}
 
-//	/**
-//	 * Gets the reference to {@link RepoFileDto#getId() RepoFileDto.id} - of the SubShare-server-side.
-//	 * @return the reference to {@link RepoFileDto#getId() RepoFileDto.id} - of the SubShare-server-side.
-//	 */
-//	public long getRepoFileId() {
-//		return repoFileId;
-//	}
-//	public void setRepoFileId(final long repoFileId) {
-//		this.repoFileId = repoFileId;
-//	}
-
 	public Uid getCryptoKeyId() {
 		return cryptoKeyId;
 	}
 	public void setCryptoKeyId(final Uid cryptoKeyId) {
 		this.cryptoKeyId = cryptoKeyId;
+	}
+
+	public boolean isDirectory() {
+		return directory;
+	}
+	public void setDirectory(final boolean directory) {
+		this.directory = directory;
 	}
 
 	public byte[] getRepoFileDtoData() {
@@ -58,8 +54,8 @@ public class CryptoRepoFileDto {
 
 	@Override
 	public String toString() {
-		return "CryptoRepoFileDto [cryptoRepoFileId=" + cryptoRepoFileId
+		return "CryptoRepoFileDto[cryptoRepoFileId=" + cryptoRepoFileId
 				+ ", parentCryptoRepoFileId=" + parentCryptoRepoFileId
-				+ ", cryptoKeyId=" + cryptoKeyId + "]";
+				+ ", cryptoKeyId=" + cryptoKeyId + ", directory=" + directory + "]";
 	}
 }

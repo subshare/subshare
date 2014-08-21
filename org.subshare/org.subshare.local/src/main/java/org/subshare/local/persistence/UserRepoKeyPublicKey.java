@@ -68,20 +68,23 @@ public class UserRepoKeyPublicKey extends Entity implements AutoTrackLocalRevisi
 		return userRepoKeyId == null ? null : new Uid(userRepoKeyId);
 	}
 	protected void setUserRepoKeyId(final Uid userRepoKeyId) {
-		this.userRepoKeyId = userRepoKeyId == null ? null : userRepoKeyId.toString();
+		if (! equal(this.getUserRepoKeyId(), userRepoKeyId))
+			this.userRepoKeyId = userRepoKeyId == null ? null : userRepoKeyId.toString();
 	}
 
 	public UUID getRepositoryId() {
 		return repositoryId == null ? null : UUID.fromString(repositoryId);
 	}
 	public void setRepositoryId(final UUID repositoryId) {
-		this.repositoryId = repositoryId == null ? null : repositoryId.toString();
+		if (! equal(this.getRepositoryId(), repositoryId))
+			this.repositoryId = repositoryId == null ? null : repositoryId.toString();
 	}
 	public byte[] getPublicKeyData() {
 		return publicKeyData;
 	}
 	public void setPublicKeyData(final byte[] publicKeyData) {
-		this.publicKeyData = publicKeyData;
+		if (! equal(this.publicKeyData, publicKeyData))
+			this.publicKeyData = publicKeyData;
 	}
 
 	@Override
@@ -90,17 +93,16 @@ public class UserRepoKeyPublicKey extends Entity implements AutoTrackLocalRevisi
 	}
 	@Override
 	public void setLocalRevision(final long localRevision) {
-		this.localRevision = localRevision;
+		if (! equal(this.localRevision, localRevision))
+			this.localRevision = localRevision;
 	}
 
 	public UserRepoKey.PublicKey getPublicKey() {
-		UserRepoKey.PublicKey publicKey = this.publicKey;
 		if (publicKey == null)
 			try {
 				publicKey = new UserRepoKey.PublicKey(
 						getUserRepoKeyId(), getRepositoryId(),
 						CryptoRegistry.getInstance().decodePublicKey(getPublicKeyData()));
-				return publicKey;
 			} catch (final IOException e) {
 				throw new RuntimeException(e);
 			}

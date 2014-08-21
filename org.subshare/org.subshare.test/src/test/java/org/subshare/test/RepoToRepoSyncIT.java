@@ -110,37 +110,60 @@ public class RepoToRepoSyncIT extends AbstractIT {
 		syncFromLocalToRemoteToLocal();
 	}
 
-//	@Test // TODO test this, too! ... or maybe we better integrate it in the following test?!
-//	public void multiSyncFromLocalToRemoteToLocalWithPathPrefixWithSubdirClearanceKey() throws Exception {
-//		remotePathPrefix2Plain = "/3 + &#ä";
-//
-//		createLocalSourceAndRemoteRepo();
-//		populateLocalSourceRepo();
-//		syncFromLocalSrcToRemote();
-//		determineRemotePathPrefix2Encrypted();
-//
-//		final UserRepoKeyRing otherUserRepoKeyRing = createUserRepoKeyRing();
-//		grantRemotePathPrefix2EncryptedReadAccessToOtherUser(
-//				otherUserRepoKeyRing.getRandomUserRepoKey().getPublicKey());
-//
-//		// If there is no "real" change, nothing is synced up. We need to extend CloudStore with RepoTransport.beginSync(From|To)Repository!
-////		createFileWithRandomContent(localSrcRoot, "xxxxxxx"); // TODO we must test this, too - in a separate test! had an exception for this NEW file!
-//		final File child_2 = new File(localSrcRoot, "2");
-//		new File(child_2, "a").delete();
-//		createFileWithRandomContent(child_2, "a"); // overwrite
-//
-//		syncFromLocalSrcToRemote();
-//
-//		final UserRepoKeyRing ownerUserRepoKeyRing = cryptreeRepoTransportFactory.getUserRepoKeyRing();
-//		assertThat(ownerUserRepoKeyRing).isNotNull();
-//		try {
-//			cryptreeRepoTransportFactory.setUserRepoKeyRing(otherUserRepoKeyRing);
-//			createLocalDestinationRepo();
-//			syncFromRemoteToLocalDest();
-//		} finally {
-//			cryptreeRepoTransportFactory.setUserRepoKeyRing(ownerUserRepoKeyRing);
-//		}
-//	}
+	@Test
+	public void multiSyncFromLocalToRemoteToLocalWithPathPrefixWithSubdirClearanceKey() throws Exception {
+		remotePathPrefix2Plain = "/3 + &#ä";
+
+		createLocalSourceAndRemoteRepo();
+		populateLocalSourceRepo();
+		syncFromLocalSrcToRemote();
+		determineRemotePathPrefix2Encrypted();
+
+		final UserRepoKeyRing otherUserRepoKeyRing = createUserRepoKeyRing();
+		grantRemotePathPrefix2EncryptedReadAccessToOtherUser(
+				otherUserRepoKeyRing.getRandomUserRepoKey().getPublicKey());
+
+		createFileWithRandomContent(localSrcRoot, "xxxxxxx");
+
+		final File child_2 = new File(localSrcRoot, "2");
+		new File(child_2, "a").delete();
+		createFileWithRandomContent(child_2, "a"); // overwrite
+		createFileWithRandomContent(child_2, "yyyyyyyy"); // new file
+
+		final File child_3 = new File(localSrcRoot, remotePathPrefix2Plain);
+		new File(child_3, "b").delete();
+		createFileWithRandomContent(child_3, "b"); // overwrite
+		createFileWithRandomContent(child_3, "zzzzzzz"); // new file
+
+		syncFromLocalSrcToRemote();
+
+		final UserRepoKeyRing ownerUserRepoKeyRing = cryptreeRepoTransportFactory.getUserRepoKeyRing();
+		assertThat(ownerUserRepoKeyRing).isNotNull();
+		try {
+			cryptreeRepoTransportFactory.setUserRepoKeyRing(otherUserRepoKeyRing);
+			createLocalDestinationRepo();
+			syncFromRemoteToLocalDest();
+		} finally {
+			cryptreeRepoTransportFactory.setUserRepoKeyRing(ownerUserRepoKeyRing);
+		}
+
+		new File(child_2, "yyyyyyyy").delete();
+		createFileWithRandomContent(child_2, "yyyyyyyy"); // overwrite
+		createFileWithRandomContent(child_2, "ttttt"); // new file
+
+		new File(child_3, "c").delete();
+		createFileWithRandomContent(child_3, "c"); // overwrite
+		createFileWithRandomContent(child_3, "kkkkk"); // new file
+
+		syncFromLocalSrcToRemote();
+
+		try {
+			cryptreeRepoTransportFactory.setUserRepoKeyRing(otherUserRepoKeyRing);
+			syncFromRemoteToLocalDest();
+		} finally {
+			cryptreeRepoTransportFactory.setUserRepoKeyRing(ownerUserRepoKeyRing);
+		}
+	}
 
 	@Test
 	public void syncFromLocalToRemoteToLocalWithPathPrefixWithSubdirClearanceKey() throws Exception {
@@ -171,25 +194,43 @@ public class RepoToRepoSyncIT extends AbstractIT {
 			cryptreeRepoTransportFactory.setUserRepoKeyRing(ownerUserRepoKeyRing);
 		}
 
-// TODO CC-97 re-enable the following!
-//		revokeRemotePathPrefix2EncryptedReadAccessToOtherUser(publicKey1);
-//
-//		try {
-//			cryptreeRepoTransportFactory.setUserRepoKeyRing(otherUserRepoKeyRing1);
-//			createLocalDestinationRepo();
-//			try {
-//				syncFromRemoteToLocalDest();
-//				fail("Could still check-out after access rights were revoked!");
-//			} catch (final AccessDeniedException x) {
-//				logger.info("Fine! Expected this AccessDeniedException: " + x);
-//			}
-//
+		revokeRemotePathPrefix2EncryptedReadAccessToOtherUser(publicKey1);
+		syncFromLocalSrcToRemote();
+
+		try {
+			cryptreeRepoTransportFactory.setUserRepoKeyRing(otherUserRepoKeyRing1);
+			createLocalDestinationRepo();
+
+			// The following sync should still work, because the original files/dirs were not yet modified
+			// and revoking the access rights therefore does not yet affect anything. This is called
+			// lazy revocation.
+			syncFromRemoteToLocalDest();
+		} finally {
+			cryptreeRepoTransportFactory.setUserRepoKeyRing(ownerUserRepoKeyRing);
+		}
+
+		// Now, we modify the directory locally and sync it up again. This should cause the next down-sync
+		// with the revoked key to fail.
+		getLocalRootWithPathPrefix().setLastModified(getLocalRootWithPathPrefix().lastModified() + 3000);
+		syncFromLocalSrcToRemote();
+
+		try {
+			cryptreeRepoTransportFactory.setUserRepoKeyRing(otherUserRepoKeyRing1);
+			createLocalDestinationRepo();
+			try {
+				syncFromRemoteToLocalDest();
+				fail("Could still check-out after access rights were revoked!");
+			} catch (final AccessDeniedException x) {
+				logger.info("Fine! Expected this AccessDeniedException: " + x);
+			}
+
+// TODO there's still sth. foul: the following fails :-(
 //			cryptreeRepoTransportFactory.setUserRepoKeyRing(otherUserRepoKeyRing2);
 //			createLocalDestinationRepo();
 //			syncFromRemoteToLocalDest();
-//		} finally {
-//			cryptreeRepoTransportFactory.setUserRepoKeyRing(ownerUserRepoKeyRing);
-//		}
+		} finally {
+			cryptreeRepoTransportFactory.setUserRepoKeyRing(ownerUserRepoKeyRing);
+		}
 	}
 
 	@Test

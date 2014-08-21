@@ -71,7 +71,7 @@ public class CryptoLinkDto {
 	}
 	@Override
 	public String toString() {
-		return "CryptoLinkDto [cryptoLinkId=" + cryptoLinkId
+		return "CryptoLinkDto[cryptoLinkId=" + cryptoLinkId
 				+ ", localRevision=" + localRevision + ", fromCryptoKeyId="
 				+ fromCryptoKeyId + ", fromUserRepoKeyId=" + fromUserRepoKeyId
 				+ ", toCryptoKeyId=" + toCryptoKeyId + ", toCryptoKeyPart="
