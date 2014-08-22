@@ -32,6 +32,8 @@ import org.subshare.local.persistence.CryptoRepoFile;
 import org.subshare.local.persistence.CryptoRepoFileDao;
 import org.subshare.local.persistence.UserRepoKeyPublicKey;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyDao;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
 import co.codewizards.cloudstore.core.dto.Uid;
@@ -43,6 +45,8 @@ import co.codewizards.cloudstore.local.persistence.RepoFile;
 import co.codewizards.cloudstore.local.persistence.RepoFileDao;
 
 public class CryptreeNode {
+
+	private static final Logger logger = LoggerFactory.getLogger(CryptreeNode.class);
 
 	private static final Map<CryptoKeyRole, Class<? extends PlainCryptoKeyFactory>> cryptoKeyRole2PlainCryptoKeyFactory;
 	static {
@@ -254,8 +258,8 @@ public class CryptreeNode {
 		// Make sure the changes are written to the DB, so that a new active clearance key is generated in the following.
 		getTransaction().flush();
 
-		// Create a *new* clearance key *immediately*.
-		final PlainCryptoKey plainCryptoKey = getActivePlainCryptoKeyOrCreate(CryptoKeyRole.clearanceKey, CryptoKeyPart.privateKey);
+		// Create a *new* clearance key *immediately*, but only if needed.
+		PlainCryptoKey clearanceKeyPlainCryptoKey = null;
 
 		// And grant read access to everyone except for the users that should be removed.
 		for (final CryptoLink cryptoLink : cryptoLinks) {
@@ -268,10 +272,22 @@ public class CryptreeNode {
 			if (fromUserRepoKeyId != null && fromUserRepoKeyId.equals(getUserRepoKey().getUserRepoKeyId()))
 				continue;
 
-			createCryptoLink(fromUserRepoKeyPublicKey, plainCryptoKey);
+			if (clearanceKeyPlainCryptoKey == null)
+				clearanceKeyPlainCryptoKey = getActivePlainCryptoKeyOrCreate(CryptoKeyRole.clearanceKey, CryptoKeyPart.privateKey);
+
+			createCryptoLink(fromUserRepoKeyPublicKey, clearanceKeyPlainCryptoKey);
 		}
 
-		createSubdirKeyIfNeededChildrenRecursively();
+		if (clearanceKeyPlainCryptoKey != null)
+			createBacklinkKeyForFile();
+
+		createSubdirKeyAndBacklinkKeyIfNeededChildrenRecursively();
+		createBacklinkKeyIfNeededParentsRecursively();
+	}
+
+	private void createBacklinkKeyForFile() {
+		if (! isDirectory())
+			getActivePlainCryptoKeyOrCreate(CryptoKeyRole.backlinkKey, CryptoKeyPart.sharedSecret);
 	}
 
 	private void makeCryptoKeyAndDescendantsNonActive(final CryptoKey cryptoKey, final Set<CryptoKey> processedCryptoKeys) {
@@ -283,14 +299,29 @@ public class CryptreeNode {
 			makeCryptoKeyAndDescendantsNonActive(cryptoLink.getToCryptoKey(), processedCryptoKeys);
 	}
 
-	private void createSubdirKeyIfNeededChildrenRecursively() {
-		if (! isDirectory()) // only directories have subdir-keys (and further children).
+	private void createSubdirKeyAndBacklinkKeyIfNeededChildrenRecursively() {
+		// Only directories have a subdirKey (and further children). The backlinkKeys of the files
+		// are optional and didn't get dirty, because they are not in the CryptoLink-chain of the parent.
+		// The backlinkKey only got dirty, if this is a file. We handle this separately in
+		// createBacklinkKeyIfNeededFile().
+		if (! isDirectory())
 			return;
 
-		final PlainCryptoKey plainCryptoKey = getActivePlainCryptoKeyOrCreate(CryptoKeyRole.subdirKey, CryptoKeyPart.sharedSecret);
-		assertNotNull("plainCryptoKey", plainCryptoKey);
+		getActivePlainCryptoKeyOrCreate(CryptoKeyRole.subdirKey, CryptoKeyPart.sharedSecret);
+		getActivePlainCryptoKeyOrCreate(CryptoKeyRole.backlinkKey, CryptoKeyPart.sharedSecret);
+
 		for (final CryptreeNode child : getChildren())
-			child.createSubdirKeyIfNeededChildrenRecursively();
+			child.createSubdirKeyAndBacklinkKeyIfNeededChildrenRecursively();
+	}
+
+	private void createBacklinkKeyIfNeededParentsRecursively() {
+		// If this is a file, the backlinkKey is optional - and created in createBacklinkKeyIfNeededFile().
+		if (isDirectory())
+			getActivePlainCryptoKeyOrCreate(CryptoKeyRole.backlinkKey, CryptoKeyPart.sharedSecret);
+
+		final CryptreeNode parent = getParent();
+		if (parent != null)
+			parent.createBacklinkKeyIfNeededParentsRecursively();
 	}
 
 	private boolean containsFromUserRepoKeyId(final Collection<CryptoLink> cryptoLinks, final Set<Uid> fromUserRepoKeyIds) {
@@ -337,6 +368,8 @@ public class CryptreeNode {
 	protected PlainCryptoKey getActivePlainCryptoKey(final CryptoKeyRole toCryptoKeyRole, final CryptoKeyPart toCryptoKeyPart) {
 		assertNotNull("toCryptoKeyRole", toCryptoKeyRole);
 		assertNotNull("toCryptoKeyPart", toCryptoKeyPart);
+		logger.debug("getActivePlainCryptoKey: cryptoRepoFile={} repoFile={} toCryptoKeyRole={} toCryptoKeyPart={}",
+				cryptoRepoFile, repoFile, toCryptoKeyRole, toCryptoKeyPart);
 		final CryptoLinkDao cryptoLinkDao = transaction.getDao(CryptoLinkDao.class);
 		final Collection<CryptoLink> cryptoLinks = cryptoLinkDao.getActiveCryptoLinks(getCryptoRepoFile(), toCryptoKeyRole, toCryptoKeyPart);
 		return getPlainCryptoKey(cryptoLinks, toCryptoKeyPart);
@@ -344,6 +377,8 @@ public class CryptreeNode {
 
 	protected PlainCryptoKey getPlainCryptoKeyForDecrypting(final CryptoKey cryptoKey) {
 		assertNotNull("cryptoKey", cryptoKey);
+		logger.debug("getPlainCryptoKeyForDecrypting: cryptoRepoFile={} repoFile={} cryptoKey={}",
+				cryptoRepoFile, repoFile, cryptoKey);
 		final PlainCryptoKey plainCryptoKey = getPlainCryptoKey(cryptoKey.getInCryptoLinks(), getCryptoKeyPartForDecrypting(cryptoKey));
 		return plainCryptoKey; // may be null!
 	}
@@ -357,15 +392,24 @@ public class CryptreeNode {
 
 			final UserRepoKeyPublicKey fromUserRepoKeyPublicKey = cryptoLink.getFromUserRepoKeyPublicKey();
 			if (fromUserRepoKeyPublicKey != null) {
+				logger.debug("getPlainCryptoKey: >>> cryptoRepoFile={} repoFile={} cryptoLink={} fromUserRepoKeyPublicKey={}",
+						cryptoRepoFile, repoFile, cryptoLink, fromUserRepoKeyPublicKey);
 				final Uid userRepoKeyId = fromUserRepoKeyPublicKey.getUserRepoKeyId();
 				final UserRepoKey userRepoKey = getUserRepoKeyRing().getUserRepoKey(userRepoKeyId);
 				if (userRepoKey != null) {
+					logger.debug("getPlainCryptoKey: <<< cryptoRepoFile={} repoFile={} cryptoLink={} fromUserRepoKeyPublicKey={}: DECRYPTED!",
+							cryptoRepoFile, repoFile, cryptoLink, fromUserRepoKeyPublicKey);
 					final byte[] plain = decryptLarge(cryptoLink.getToCryptoKeyData(), userRepoKey);
 					return new PlainCryptoKey(cryptoLink.getToCryptoKey(), cryptoLink.getToCryptoKeyPart(), plain);
 				}
+				else
+					logger.debug("getPlainCryptoKey: <<< cryptoRepoFile={} repoFile={} cryptoLink={} fromUserRepoKeyPublicKey={}: FAILED TO DECRYPT!",
+							cryptoRepoFile, repoFile, cryptoLink, fromUserRepoKeyPublicKey);
 			}
 			else if (cryptoLink.getFromCryptoKey() == null) {
 				// *not* encrypted
+				logger.debug("getPlainCryptoKey: *** cryptoRepoFile={} repoFile={} cryptoLink={}: PLAIN!",
+						cryptoRepoFile, repoFile, cryptoLink);
 				return new PlainCryptoKey(cryptoLink.getToCryptoKey(), cryptoLink.getToCryptoKeyPart(), cryptoLink.getToCryptoKeyData());
 			}
 		}
@@ -376,14 +420,21 @@ public class CryptreeNode {
 
 			final CryptoKey fromCryptoKey = cryptoLink.getFromCryptoKey();
 			if (fromCryptoKey != null) {
+				logger.debug("getPlainCryptoKey: >>> cryptoRepoFile={} repoFile={} cryptoLink={} fromCryptoKey={}",
+						cryptoRepoFile, repoFile, cryptoLink, fromCryptoKey);
 				final PlainCryptoKey plainFromCryptoKey = getPlainCryptoKey(
 						fromCryptoKey.getInCryptoLinks(), getCryptoKeyPartForDecrypting(fromCryptoKey));
 				if (plainFromCryptoKey != null) {
+					logger.debug("getPlainCryptoKey: <<< cryptoRepoFile={} repoFile={} cryptoLink={} fromCryptoKey={}: DECRYPTED!",
+							cryptoRepoFile, repoFile, cryptoLink, fromCryptoKey);
 					final byte[] plain = decrypt(
 							cryptoLink.getToCryptoKeyData(),
 							plainFromCryptoKey);
 					return new PlainCryptoKey(cryptoLink.getToCryptoKey(), cryptoLink.getToCryptoKeyPart(), plain);
 				}
+				else
+					logger.debug("getPlainCryptoKey: <<< cryptoRepoFile={} repoFile={} cryptoLink={} fromCryptoKey={}: FAILED TO DECRYPT!",
+							cryptoRepoFile, repoFile, cryptoLink, fromCryptoKey);
 			}
 		}
 		return null;

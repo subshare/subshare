@@ -187,4 +187,14 @@ public class CryptoKey extends Entity implements AutoTrackLocalRevision, StoreCa
 	public void jdoPreStore() {
 		getCryptoKeyId();
 	}
+
+	@Override
+	public String toString() {
+		return String.format("%s{cryptoKeyId=%s, cryptoRepoFile=%s, cryptoKeyType=%s, cryptoKeyRole=%s}",
+				super.toString(),
+				cryptoKeyId,
+				cryptoRepoFile,
+				cryptoKeyType,
+				cryptoKeyRole);
+	}
 }

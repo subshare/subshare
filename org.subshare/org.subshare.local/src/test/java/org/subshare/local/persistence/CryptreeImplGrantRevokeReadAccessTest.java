@@ -110,14 +110,13 @@ public class CryptreeImplGrantRevokeReadAccessTest extends AbstractTest {
 		assertReadAccessCorrect(friend2UserRepoKeyRing, "/3");
 
 		// Modify a few more.
-		createOrUpdateCryptoRepoFiles("/3/3_a", "/3/3_1/3_1_b");
+		createOrUpdateCryptoRepoFiles("/", "/3/3_a", "/3/3_1/3_1_b");
 
 		// All those modified should *not* be accessible anymore.
-		assertReadAccessDenied(friend1UserRepoKeyRing, "/3", "/3/3_a", "/3/3_1/3_1_b");
+		assertReadAccessDenied(friend1UserRepoKeyRing, "/", "/3", "/3/3_a", "/3/3_1/3_1_b");
 
 		// All those not yet modified should still be accessible.
 		assertReadAccessGranted(friend1UserRepoKeyRing,
-				"/",
 				"/3/3_b",
 				"/3/3_1/",
 				"/3/3_1/3_1_a",

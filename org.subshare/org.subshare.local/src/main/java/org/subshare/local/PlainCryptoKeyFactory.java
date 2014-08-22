@@ -10,6 +10,8 @@ import org.subshare.core.dto.CryptoKeyPart;
 import org.subshare.core.dto.CryptoKeyRole;
 import org.subshare.core.dto.CryptoKeyType;
 import org.subshare.local.persistence.CryptoKey;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 abstract class PlainCryptoKeyFactory {
 
@@ -66,14 +68,18 @@ abstract class PlainCryptoKeyFactory {
 	}
 
 	static class ClearanceKeyPlainCryptoKeyFactory extends PlainCryptoKeyFactory {
+		private static final Logger logger = LoggerFactory.getLogger(PlainCryptoKeyFactory.ClearanceKeyPlainCryptoKeyFactory.class);
 
 		@Override
 		public PlainCryptoKey createPlainCryptoKey() {
 			final CryptreeNode cryptreeNode = getCryptreeNodeOrFail();
 			final CryptoKeyPart cryptoKeyPart = getCryptoKeyPartOrFail();
 
+			logger.debug("createPlainCryptoKey: cryptoRepoFile={} repoFile={}",
+					cryptreeNode.getCryptoRepoFile(), cryptreeNode.getRepoFile());
+
 			// TODO we must check, if there is already a clearance key to which we have no access.
-			// We should not implicitly create a clearance key, we we maybe simply don't have access.
+			// We should not implicitly create a clearance key - we maybe simply don't have access.
 			// In this case, we must throw an AccessDeniedException instead!
 
 			final AsymmetricCipherKeyPair keyPair = KeyFactory.getInstance().createAsymmetricKeyPair();
@@ -108,9 +114,15 @@ abstract class PlainCryptoKeyFactory {
 	}
 
 	static class SubdirKeyPlainCryptoKeyFactory extends PlainCryptoKeyFactory {
+		private static final Logger logger = LoggerFactory.getLogger(PlainCryptoKeyFactory.SubdirKeyPlainCryptoKeyFactory.class);
+
 		@Override
 		public PlainCryptoKey createPlainCryptoKey() {
 			final CryptreeNode cryptreeNode = getCryptreeNodeOrFail();
+
+			logger.debug("createPlainCryptoKey: cryptoRepoFile={} repoFile={}",
+					cryptreeNode.getCryptoRepoFile(), cryptreeNode.getRepoFile());
+
 			if (! cryptreeNode.isDirectory())
 				throw new IllegalStateException("Cannot create a subdirKey, because this CryptreeNode is *not* a directory!");
 
@@ -190,9 +202,15 @@ abstract class PlainCryptoKeyFactory {
 	}
 
 	static class FileKeyPlainCryptoKeyFactory extends PlainCryptoKeyFactory {
+		private static final Logger logger = LoggerFactory.getLogger(PlainCryptoKeyFactory.FileKeyPlainCryptoKeyFactory.class);
+
 		@Override
 		public PlainCryptoKey createPlainCryptoKey() {
 			final CryptreeNode cryptreeNode = getCryptreeNodeOrFail();
+
+			logger.debug("createPlainCryptoKey: cryptoRepoFile={} repoFile={}",
+					cryptreeNode.getCryptoRepoFile(), cryptreeNode.getRepoFile());
+
 			if (! cryptreeNode.isDirectory())
 				throw new IllegalStateException("Cannot create a fileKey, because this CryptreeNode is *not* a directory!");
 
@@ -226,8 +244,15 @@ abstract class PlainCryptoKeyFactory {
 	}
 
 	static class BacklinkKeyPlainCryptoKeyFactory extends PlainCryptoKeyFactory {
+		private static final Logger logger = LoggerFactory.getLogger(PlainCryptoKeyFactory.BacklinkKeyPlainCryptoKeyFactory.class);
+
 		@Override
 		public PlainCryptoKey createPlainCryptoKey() {
+			final CryptreeNode cryptreeNode = getCryptreeNodeOrFail();
+
+			logger.debug("createPlainCryptoKey: cryptoRepoFile={} repoFile={}",
+					cryptreeNode.getCryptoRepoFile(), cryptreeNode.getRepoFile());
+
 			final PlainCryptoKey plainCryptoKey = createSymmetricPlainCryptoKey(CryptoKeyRole.backlinkKey);
 			createCryptoLinkFromSubdirKey(plainCryptoKey);
 
@@ -270,8 +295,15 @@ abstract class PlainCryptoKeyFactory {
 	}
 
 	static class DataKeyPlainCryptoKeyFactory extends PlainCryptoKeyFactory {
+		private static final Logger logger = LoggerFactory.getLogger(PlainCryptoKeyFactory.DataKeyPlainCryptoKeyFactory.class);
+
 		@Override
 		public PlainCryptoKey createPlainCryptoKey() {
+			final CryptreeNode cryptreeNode = getCryptreeNodeOrFail();
+
+			logger.debug("createPlainCryptoKey: cryptoRepoFile={} repoFile={}",
+					cryptreeNode.getCryptoRepoFile(), cryptreeNode.getRepoFile());
+
 			final PlainCryptoKey plainCryptoKey = createSymmetricPlainCryptoKey(CryptoKeyRole.dataKey);
 			createCryptoLinkFromBacklinkKey(plainCryptoKey);
 			createCryptoLinkFromFileKey(plainCryptoKey);

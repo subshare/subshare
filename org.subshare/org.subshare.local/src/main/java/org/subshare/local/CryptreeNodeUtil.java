@@ -42,7 +42,10 @@ public class CryptreeNodeUtil {
 	public static byte[] encryptLarge(final byte[] plain, final UserRepoKeyPublicKey userRepoKeyPublicKey) {
 		assertNotNull("plain", plain);
 		assertNotNull("userRepoKeyPublicKey", userRepoKeyPublicKey);
-		logger.debug("encryptLarge: userRepoKeyId={} plain={}", userRepoKeyPublicKey.getUserRepoKeyId(), Arrays.toString(plain));
+
+		if (logger.isTraceEnabled())
+			logger.trace("encryptLarge: userRepoKeyId={} plain={}", userRepoKeyPublicKey.getUserRepoKeyId(), Arrays.toString(plain));
+
 		final AsymmetricKeyParameter publicKey = userRepoKeyPublicKey.getPublicKey().getPublicKey();
 		return encryptLarge(plain, publicKey);
 	}
@@ -58,7 +61,10 @@ public class CryptreeNodeUtil {
 			transferStreamData(new ByteArrayInputStream(plain), out);
 			out.close();
 			final byte[] encrypted = bout.toByteArray();
-			logger.debug("encryptLarge: encrypted={}", Arrays.toString(encrypted));
+
+			if (logger.isTraceEnabled())
+				logger.trace("encryptLarge: encrypted={}", Arrays.toString(encrypted));
+
 			return encrypted;
 		} catch (final IOException x) {
 			throw new RuntimeException(x);
@@ -69,14 +75,19 @@ public class CryptreeNodeUtil {
 		assertNotNull("encrypted", encrypted);
 		assertNotNull("userRepoKey", userRepoKey);
 		try {
-			logger.debug("decryptLarge: userRepoKeyId={} encrypted={}", userRepoKey.getUserRepoKeyId(), Arrays.toString(encrypted));
+			if (logger.isTraceEnabled())
+				logger.trace("decryptLarge: userRepoKeyId={} encrypted={}", userRepoKey.getUserRepoKeyId(), Arrays.toString(encrypted));
+
 			final AsymCombiDecrypterInputStream in = new AsymCombiDecrypterInputStream(
 					new ByteArrayInputStream(encrypted), userRepoKey.getKeyPair().getPrivate());
 			final ByteArrayOutputStream out = new ByteArrayOutputStream(encrypted.length);
 			transferStreamData(in, out);
 			in.close();
 			final byte[] plain = out.toByteArray();
-			logger.debug("decryptLarge: userRepoKeyId={} plain={}", userRepoKey.getUserRepoKeyId(), Arrays.toString(plain));
+
+			if (logger.isTraceEnabled())
+				logger.trace("decryptLarge: userRepoKeyId={} plain={}", userRepoKey.getUserRepoKeyId(), Arrays.toString(plain));
+
 			return plain;
 		} catch (final IOException x) {
 			throw new RuntimeException(x);

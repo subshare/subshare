@@ -231,10 +231,14 @@ public class RepoToRepoSyncIT extends AbstractIT {
 				logger.info("Fine! Expected this AccessDeniedException: " + x);
 			}
 
-// TODO there's still sth. foul: the following fails :-(
-//			cryptreeRepoTransportFactory.setUserRepoKeyRing(otherUserRepoKeyRing2);
-//			createLocalDestinationRepo();
-//			syncFromRemoteToLocalDest();
+			cryptreeRepoTransportFactory.setUserRepoKeyRing(otherUserRepoKeyRing2);
+			createLocalDestinationRepo();
+
+			logger.info("");
+			logger.info("");
+			logger.info("");
+			logger.info("*** before syncFromRemoteToLocalDest() ***");
+			syncFromRemoteToLocalDest();
 		} finally {
 			cryptreeRepoTransportFactory.setUserRepoKeyRing(ownerUserRepoKeyRing);
 		}

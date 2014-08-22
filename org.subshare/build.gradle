@@ -25,6 +25,7 @@ allprojects {
    	project.ext.bouncycastleVersion = '1.50'
    	project.ext.cloudstoreVersion = '0.9.6-SNAPSHOT'
    	project.ext.slf4jVersion = '1.7.7'
+	project.ext.logbackVersion = '1.0.13'
 }
 
 subprojects {
@@ -39,6 +40,7 @@ subprojects {
     dependencies {
 		compile "org.slf4j:slf4j-api:$slf4jVersion"
         testCompile 'junit:junit:4.11', 'org.assertj:assertj-core:1.5.0'
+		testCompile "org.slf4j:log4j-over-slf4j:$slf4jVersion", "ch.qos.logback:logback-classic:$logbackVersion"
     }
 
     jar {

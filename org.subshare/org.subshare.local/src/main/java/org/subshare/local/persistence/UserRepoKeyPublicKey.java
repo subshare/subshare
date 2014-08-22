@@ -109,4 +109,12 @@ public class UserRepoKeyPublicKey extends Entity implements AutoTrackLocalRevisi
 
 		return publicKey;
 	}
+
+	@Override
+	public String toString() {
+		return String.format("%s{userRepoKeyId=%s, repositoryId=%s}",
+				super.toString(),
+				userRepoKeyId,
+				repositoryId);
+	}
 }

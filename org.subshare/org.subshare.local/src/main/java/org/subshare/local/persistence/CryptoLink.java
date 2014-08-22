@@ -183,4 +183,15 @@ public class CryptoLink extends Entity implements AutoTrackLocalRevision, StoreC
 		if (fromCryptoKey != null && fromUserRepoKeyPublicKey != null)
 			throw new IllegalStateException("fromCryptoKey != null && fromUserRepoKeyPublicKey != null :: toCryptoKeyData can only be encrypted with one key!");
 	}
+
+	@Override
+	public String toString() {
+		return String.format("%s{cryptoLinkId=%s, fromCryptoKey=%s, fromUserRepoKeyPublicKey=%s, toCryptoKey=%s, toCryptoKeyPart=%s}",
+				super.toString(),
+				cryptoLinkId,
+				fromCryptoKey,
+				fromUserRepoKeyPublicKey,
+				toCryptoKey,
+				toCryptoKeyPart);
+	}
 }
