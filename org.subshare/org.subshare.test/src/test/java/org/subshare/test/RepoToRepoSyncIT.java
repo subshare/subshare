@@ -115,53 +115,60 @@ public class RepoToRepoSyncIT extends AbstractIT {
 		remotePathPrefix2Plain = "/3 + &#ä";
 
 		createLocalSourceAndRemoteRepo();
-		populateLocalSourceRepo();
-		syncFromLocalSrcToRemote();
-		determineRemotePathPrefix2Encrypted();
 
-		final UserRepoKeyRing otherUserRepoKeyRing = createUserRepoKeyRing();
-		grantRemotePathPrefix2EncryptedReadAccessToOtherUser(
-				otherUserRepoKeyRing.getRandomUserRepoKey().getPublicKey());
+		// Opening localRepoManagerLocal to make sure it's not discarded while test is running.
+		// This caused occasional build errors - especially on slower machines - when creating files
+		// 'yyyyyyyy' etc. below.
+		try (final LocalRepoManager localRepoManagerLocal = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(localSrcRoot);)
+		{
+			populateLocalSourceRepo();
+			syncFromLocalSrcToRemote();
+			determineRemotePathPrefix2Encrypted();
 
-		createFileWithRandomContent(localSrcRoot, "xxxxxxx");
+			final UserRepoKeyRing otherUserRepoKeyRing = createUserRepoKeyRing();
+			grantRemotePathPrefix2EncryptedReadAccessToOtherUser(
+					otherUserRepoKeyRing.getRandomUserRepoKey().getPublicKey());
 
-		final File child_2 = new File(localSrcRoot, "2");
-		new File(child_2, "a").delete();
-		createFileWithRandomContent(child_2, "a"); // overwrite
-		createFileWithRandomContent(child_2, "yyyyyyyy"); // new file
+			createFileWithRandomContent(localSrcRoot, "xxxxxxx");
 
-		final File child_3 = new File(localSrcRoot, remotePathPrefix2Plain);
-		new File(child_3, "b").delete();
-		createFileWithRandomContent(child_3, "b"); // overwrite
-		createFileWithRandomContent(child_3, "zzzzzzz"); // new file
+			final File child_2 = new File(localSrcRoot, "2");
+			new File(child_2, "a").delete();
+			createFileWithRandomContent(child_2, "a"); // overwrite
+			createFileWithRandomContent(child_2, "yyyyyyyy"); // new file
 
-		syncFromLocalSrcToRemote();
+			final File child_3 = new File(localSrcRoot, remotePathPrefix2Plain);
+			new File(child_3, "b").delete();
+			createFileWithRandomContent(child_3, "b"); // overwrite
+			createFileWithRandomContent(child_3, "zzzzzzz"); // new file
 
-		final UserRepoKeyRing ownerUserRepoKeyRing = cryptreeRepoTransportFactory.getUserRepoKeyRing();
-		assertThat(ownerUserRepoKeyRing).isNotNull();
-		try {
-			cryptreeRepoTransportFactory.setUserRepoKeyRing(otherUserRepoKeyRing);
-			createLocalDestinationRepo();
-			syncFromRemoteToLocalDest();
-		} finally {
-			cryptreeRepoTransportFactory.setUserRepoKeyRing(ownerUserRepoKeyRing);
-		}
+			syncFromLocalSrcToRemote();
 
-		new File(child_2, "yyyyyyyy").delete();
-		createFileWithRandomContent(child_2, "yyyyyyyy"); // overwrite
-		createFileWithRandomContent(child_2, "ttttt"); // new file
+			final UserRepoKeyRing ownerUserRepoKeyRing = cryptreeRepoTransportFactory.getUserRepoKeyRing();
+			assertThat(ownerUserRepoKeyRing).isNotNull();
+			try {
+				cryptreeRepoTransportFactory.setUserRepoKeyRing(otherUserRepoKeyRing);
+				createLocalDestinationRepo();
+				syncFromRemoteToLocalDest();
+			} finally {
+				cryptreeRepoTransportFactory.setUserRepoKeyRing(ownerUserRepoKeyRing);
+			}
 
-		new File(child_3, "c").delete();
-		createFileWithRandomContent(child_3, "c"); // overwrite
-		createFileWithRandomContent(child_3, "kkkkk"); // new file
+			new File(child_2, "yyyyyyyy").delete();
+			createFileWithRandomContent(child_2, "yyyyyyyy"); // overwrite
+			createFileWithRandomContent(child_2, "ttttt"); // new file
 
-		syncFromLocalSrcToRemote();
+			new File(child_3, "c").delete();
+			createFileWithRandomContent(child_3, "c"); // overwrite
+			createFileWithRandomContent(child_3, "kkkkk"); // new file
 
-		try {
-			cryptreeRepoTransportFactory.setUserRepoKeyRing(otherUserRepoKeyRing);
-			syncFromRemoteToLocalDest();
-		} finally {
-			cryptreeRepoTransportFactory.setUserRepoKeyRing(ownerUserRepoKeyRing);
+			syncFromLocalSrcToRemote();
+
+			try {
+				cryptreeRepoTransportFactory.setUserRepoKeyRing(otherUserRepoKeyRing);
+				syncFromRemoteToLocalDest();
+			} finally {
+				cryptreeRepoTransportFactory.setUserRepoKeyRing(ownerUserRepoKeyRing);
+			}
 		}
 	}
 
