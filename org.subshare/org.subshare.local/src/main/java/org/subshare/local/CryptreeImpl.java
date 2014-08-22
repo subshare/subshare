@@ -320,11 +320,13 @@ public class CryptreeImpl extends AbstractCryptree {
 		cryptoLink.setFromUserRepoKeyPublicKey(fromUserRepoKeyId == null ? null : userRepoKeyPublicKeyDao.getUserRepoKeyPublicKeyOrFail(fromUserRepoKeyId));
 
 		final Uid toCryptoKeyId = assertNotNull("cryptoLinkDto.toCryptoKeyId", cryptoLinkDto.getToCryptoKeyId());
-		cryptoLink.setToCryptoKey(cryptoKeyDao.getCryptoKeyOrFail(toCryptoKeyId));
+		final CryptoKey toCryptoKey = cryptoKeyDao.getCryptoKeyOrFail(toCryptoKeyId);
+		cryptoLink.setToCryptoKey(toCryptoKey);
 
 		cryptoLink.setToCryptoKeyData(cryptoLinkDto.getToCryptoKeyData());
 		cryptoLink.setToCryptoKeyPart(cryptoLinkDto.getToCryptoKeyPart());
 
+		toCryptoKey.getInCryptoLinks().add(cryptoLink);
 		return cryptoLinkDao.makePersistent(cryptoLink);
 	}
 
