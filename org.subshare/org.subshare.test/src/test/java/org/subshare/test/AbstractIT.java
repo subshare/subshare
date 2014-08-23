@@ -71,14 +71,14 @@ public abstract class AbstractIT {
 	}
 
 	protected static UserRepoKeyRing createUserRepoKeyRing(final UUID repositoryId) {
-		final UserRepoKeyRing userRepoKeyRing = new UserRepoKeyRing(repositoryId);
-		createUserRepoKey(userRepoKeyRing);
-		createUserRepoKey(userRepoKeyRing);
+		final UserRepoKeyRing userRepoKeyRing = new UserRepoKeyRing();
+		createUserRepoKey(userRepoKeyRing, repositoryId);
+		createUserRepoKey(userRepoKeyRing, repositoryId);
 		return userRepoKeyRing;
 	}
 
-	protected static UserRepoKey createUserRepoKey(final UserRepoKeyRing userRepoKeyRing) {
-		final UserRepoKey userRepoKey = new UserRepoKey(userRepoKeyRing, KeyFactory.getInstance().createAsymmetricKeyPair());
+	protected static UserRepoKey createUserRepoKey(final UserRepoKeyRing userRepoKeyRing, final UUID repositoryId) {
+		final UserRepoKey userRepoKey = new UserRepoKey(userRepoKeyRing, repositoryId, KeyFactory.getInstance().createAsymmetricKeyPair());
 		userRepoKeyRing.addUserRepoKey(userRepoKey);
 		return userRepoKey;
 	}

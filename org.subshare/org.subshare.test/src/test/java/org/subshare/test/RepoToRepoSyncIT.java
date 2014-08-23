@@ -127,7 +127,7 @@ public class RepoToRepoSyncIT extends AbstractIT {
 
 			final UserRepoKeyRing otherUserRepoKeyRing = createUserRepoKeyRing();
 			grantRemotePathPrefix2EncryptedReadAccessToOtherUser(
-					otherUserRepoKeyRing.getRandomUserRepoKey().getPublicKey());
+					otherUserRepoKeyRing.getRandomUserRepoKey(remoteRepositoryId).getPublicKey());
 
 			createFileWithRandomContent(localSrcRoot, "xxxxxxx");
 
@@ -183,11 +183,11 @@ public class RepoToRepoSyncIT extends AbstractIT {
 
 		final UserRepoKeyRing otherUserRepoKeyRing1 = createUserRepoKeyRing();
 		final UserRepoKeyRing otherUserRepoKeyRing2 = createUserRepoKeyRing();
-		final PublicKey publicKey1 = otherUserRepoKeyRing1.getRandomUserRepoKey().getPublicKey();
+		final PublicKey publicKey1 = otherUserRepoKeyRing1.getRandomUserRepoKey(remoteRepositoryId).getPublicKey();
 		grantRemotePathPrefix2EncryptedReadAccessToOtherUser(
 				publicKey1);
 		grantRemotePathPrefix2EncryptedReadAccessToOtherUser(
-				otherUserRepoKeyRing2.getRandomUserRepoKey().getPublicKey());
+				otherUserRepoKeyRing2.getRandomUserRepoKey(remoteRepositoryId).getPublicKey());
 
 		syncFromLocalSrcToRemote();
 
@@ -384,7 +384,7 @@ public class RepoToRepoSyncIT extends AbstractIT {
 				final Cryptree cryptree = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail().createCryptree(
 						transaction, remoteRepositoryId,
 						remotePathPrefix2Encrypted,
-						cryptreeRepoTransportFactory.getUserRepoKeyRing().getRandomUserRepoKey());
+						cryptreeRepoTransportFactory.getUserRepoKeyRing().getRandomUserRepoKey(remoteRepositoryId));
 				cryptree.grantReadAccess(remotePathPrefix2Plain, userRepoKeyPublicKey);
 				cryptree.close();
 				transaction.commit();
@@ -400,7 +400,7 @@ public class RepoToRepoSyncIT extends AbstractIT {
 				final Cryptree cryptree = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail().createCryptree(
 						transaction, remoteRepositoryId,
 						remotePathPrefix2Encrypted,
-						cryptreeRepoTransportFactory.getUserRepoKeyRing().getRandomUserRepoKey());
+						cryptreeRepoTransportFactory.getUserRepoKeyRing().getRandomUserRepoKey(remoteRepositoryId));
 				cryptree.revokeReadAccess(remotePathPrefix2Plain, Collections.singleton(userRepoKeyPublicKey.getUserRepoKeyId()));
 				cryptree.close();
 				transaction.commit();

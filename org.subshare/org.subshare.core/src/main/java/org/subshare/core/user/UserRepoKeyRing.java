@@ -16,31 +16,28 @@ import co.codewizards.cloudstore.core.dto.Uid;
 public class UserRepoKeyRing {
 
 	private static SecureRandom random = new SecureRandom();
-	private final UUID repositoryId;
-	private final Map<Uid, UserRepoKey> userRepoKeyId2UserRepoKey = new HashMap<Uid, UserRepoKey>();
-	private List<UserRepoKey> userRepoKeyList;
 
-	public UserRepoKeyRing(final UUID repositoryId) {
-		this.repositoryId = assertNotNull("repositoryId", repositoryId);
+	private final Map<Uid, UserRepoKey> userRepoKeyId2UserRepoKey = new HashMap<>();
+	private final Map<UUID, List<UserRepoKey>> repositoryId2userRepoKeyList = new HashMap<>();
+
+	public Collection<UserRepoKey> getUserRepoKeys(final UUID repositoryId) {
+		return getUserRepoKeyList(repositoryId);
 	}
 
-	public UUID getRepositoryId() {
-		return repositoryId;
-	}
+	protected synchronized List<UserRepoKey> getUserRepoKeyList(final UUID repositoryId) {
+		assertNotNull("repositoryId", repositoryId);
+		List<UserRepoKey> userRepoKeyList = repositoryId2userRepoKeyList.get(repositoryId);
 
-	public Collection<UserRepoKey> getUserRepoKeys() {
-		return getUserRepoKeyList();
-	}
-
-	protected List<UserRepoKey> getUserRepoKeyList() {
-		if (userRepoKeyList == null)
+		if (userRepoKeyList == null) {
 			userRepoKeyList = Collections.unmodifiableList(new ArrayList<UserRepoKey>(userRepoKeyId2UserRepoKey.values()));
+			repositoryId2userRepoKeyList.put(repositoryId, userRepoKeyList);
+		}
 
 		return userRepoKeyList;
 	}
 
-	public UserRepoKey getRandomUserRepoKey() {
-		final List<UserRepoKey> list = getUserRepoKeyList();
+	public UserRepoKey getRandomUserRepoKey(final UUID repositoryId) {
+		final List<UserRepoKey> list = getUserRepoKeyList(repositoryId);
 		if (list.isEmpty())
 			return null;
 
@@ -48,30 +45,31 @@ public class UserRepoKeyRing {
 		return userRepoKey;
 	}
 
-	public UserRepoKey getRandomUserRepoKeyOrFail() {
-		final UserRepoKey userRepoKey = getRandomUserRepoKey();
+	public UserRepoKey getRandomUserRepoKeyOrFail(final UUID repositoryId) {
+		final UserRepoKey userRepoKey = getRandomUserRepoKey(repositoryId);
 		if (userRepoKey == null)
-			throw new IllegalStateException("This UserRepoKeyRing is empty!");
+			throw new IllegalStateException(String.format("This UserRepoKeyRing does not contain any entry for repositoryId=%s!", repositoryId));
 
 		return userRepoKey;
 	}
 
-	public void addUserRepoKey(final UserRepoKey userRepoKey) {
+	public synchronized void addUserRepoKey(final UserRepoKey userRepoKey) {
 		assertNotNull("userRepoKey", userRepoKey);
 		userRepoKeyId2UserRepoKey.put(userRepoKey.getUserRepoKeyId(), userRepoKey);
-		userRepoKeyList = null;
+		repositoryId2userRepoKeyList.remove(userRepoKey.getRepositoryId());
 	}
 
 	public void removeUserRepoKey(final UserRepoKey userRepoKey) {
 		removeUserRepoKey(assertNotNull("userRepoKey", userRepoKey).getUserRepoKeyId());
 	}
 
-	public void removeUserRepoKey(final Uid userRepoKeyId) {
-		userRepoKeyId2UserRepoKey.remove(assertNotNull("userRepoKeyId", userRepoKeyId));
-		userRepoKeyList = null;
+	public synchronized void removeUserRepoKey(final Uid userRepoKeyId) {
+		final UserRepoKey userRepoKey = userRepoKeyId2UserRepoKey.remove(assertNotNull("userRepoKeyId", userRepoKeyId));
+		if (userRepoKey != null)
+			repositoryId2userRepoKeyList.remove(userRepoKey.getRepositoryId());
 	}
 
-	public UserRepoKey getUserRepoKey(final Uid userRepoKeyId) {
+	public synchronized UserRepoKey getUserRepoKey(final Uid userRepoKeyId) {
 		return userRepoKeyId2UserRepoKey.get(assertNotNull("userRepoKeyId", userRepoKeyId));
 	}
 

@@ -158,17 +158,17 @@ public class CryptreeImplGrantRevokeReadAccessTest extends AbstractTest {
 		ownerUserRepoKeyRing = createUserRepoKeyRing(remoteRepositoryId);
 
 		friend1UserRepoKeyRing = createUserRepoKeyRing(remoteRepositoryId);
-		friend1UserRepoKey = friend1UserRepoKeyRing.getRandomUserRepoKeyOrFail();
+		friend1UserRepoKey = friend1UserRepoKeyRing.getRandomUserRepoKeyOrFail(remoteRepositoryId);
 
 		friend2UserRepoKeyRing = createUserRepoKeyRing(remoteRepositoryId);
-		friend2UserRepoKey = friend2UserRepoKeyRing.getRandomUserRepoKeyOrFail();
+		friend2UserRepoKey = friend2UserRepoKeyRing.getRandomUserRepoKeyOrFail(remoteRepositoryId);
 	}
 
 	private void createOrUpdateCryptoRepoFiles(final String ... localPaths) {
 		try (LocalRepoManager localRepoManager = createLocalRepoManagerForExistingRepository(localRoot);) {
 			localRepoManager.localSync(new LoggerProgressMonitor(logger));
 			try (LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
-				try (Cryptree cryptree = createCryptree(transaction, remoteRepositoryId, "", ownerUserRepoKeyRing.getRandomUserRepoKeyOrFail());) {
+				try (Cryptree cryptree = createCryptree(transaction, remoteRepositoryId, "", ownerUserRepoKeyRing.getRandomUserRepoKeyOrFail(remoteRepositoryId));) {
 					for (String localPath : localPaths) {
 						localPath = removeFinalSlash(localPath);
 						cryptree.createOrUpdateCryptoRepoFile(localPath);
@@ -183,7 +183,7 @@ public class CryptreeImplGrantRevokeReadAccessTest extends AbstractTest {
 		try (LocalRepoManager localRepoManager = createLocalRepoManagerForExistingRepository(localRoot);) {
 			localRepoManager.localSync(new LoggerProgressMonitor(logger));
 			try (LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
-				try (Cryptree cryptree = createCryptree(transaction, remoteRepositoryId, "", ownerUserRepoKeyRing.getRandomUserRepoKeyOrFail());) {
+				try (Cryptree cryptree = createCryptree(transaction, remoteRepositoryId, "", ownerUserRepoKeyRing.getRandomUserRepoKeyOrFail(remoteRepositoryId));) {
 					for (final UserRepoKey.PublicKey publicKey : publicKeys)
 						cryptree.grantReadAccess(localPath, publicKey);
 				}
@@ -196,7 +196,7 @@ public class CryptreeImplGrantRevokeReadAccessTest extends AbstractTest {
 		try (LocalRepoManager localRepoManager = createLocalRepoManagerForExistingRepository(localRoot);) {
 			localRepoManager.localSync(new LoggerProgressMonitor(logger));
 			try (LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
-				try (Cryptree cryptree = createCryptree(transaction, remoteRepositoryId, "", ownerUserRepoKeyRing.getRandomUserRepoKeyOrFail());) {
+				try (Cryptree cryptree = createCryptree(transaction, remoteRepositoryId, "", ownerUserRepoKeyRing.getRandomUserRepoKeyOrFail(remoteRepositoryId));) {
 					cryptree.revokeReadAccess(localPath, new HashSet<Uid>(Arrays.asList(userRepoKeyIds)));
 				}
 				transaction.commit();
@@ -208,7 +208,7 @@ public class CryptreeImplGrantRevokeReadAccessTest extends AbstractTest {
 		try (LocalRepoManager localRepoManager = createLocalRepoManagerForExistingRepository(localRoot);) {
 			localRepoManager.localSync(new LoggerProgressMonitor(logger));
 			try (LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
-				try (Cryptree cryptree = createCryptree(transaction, remoteRepositoryId, "", userRepoKeyRing.getRandomUserRepoKeyOrFail());) {
+				try (Cryptree cryptree = createCryptree(transaction, remoteRepositoryId, "", userRepoKeyRing.getRandomUserRepoKeyOrFail(remoteRepositoryId));) {
 					for (String localPath : localPaths) {
 						localPath = removeFinalSlash(localPath);
 						try {
@@ -239,7 +239,7 @@ public class CryptreeImplGrantRevokeReadAccessTest extends AbstractTest {
 		try (LocalRepoManager localRepoManager = createLocalRepoManagerForExistingRepository(localRoot);) {
 			localRepoManager.localSync(new LoggerProgressMonitor(logger));
 			try (LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
-				try (Cryptree cryptree = createCryptree(transaction, remoteRepositoryId, "", userRepoKeyRing.getRandomUserRepoKeyOrFail());) {
+				try (Cryptree cryptree = createCryptree(transaction, remoteRepositoryId, "", userRepoKeyRing.getRandomUserRepoKeyOrFail(remoteRepositoryId));) {
 					for (String localPath : localPaths) {
 						localPath = removeFinalSlash(localPath);
 						try {
@@ -266,7 +266,7 @@ public class CryptreeImplGrantRevokeReadAccessTest extends AbstractTest {
 		try (LocalRepoManager localRepoManager = createLocalRepoManagerForExistingRepository(localRoot);) {
 			localRepoManager.localSync(new LoggerProgressMonitor(logger));
 			try (LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
-				try (Cryptree cryptree = createCryptree(transaction, remoteRepositoryId, "", userRepoKeyRing.getRandomUserRepoKeyOrFail());) {
+				try (Cryptree cryptree = createCryptree(transaction, remoteRepositoryId, "", userRepoKeyRing.getRandomUserRepoKeyOrFail(remoteRepositoryId));) {
 					for (String localPath : localPaths) {
 						localPath = removeFinalSlash(localPath);
 						try {

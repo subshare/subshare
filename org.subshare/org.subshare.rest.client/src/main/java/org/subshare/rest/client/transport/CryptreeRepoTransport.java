@@ -191,7 +191,7 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 	protected UserRepoKey getUserRepoKey() {
 		if (userRepoKey == null) { // we must use the same key for all operations during one sync - otherwise an attacker might find out which keys belong to the same keyring and thus same owner.
 			final UserRepoKeyRing userRepoKeyRing = getUserRepoKeyRing();
-			userRepoKey = userRepoKeyRing.getRandomUserRepoKeyOrFail();
+			userRepoKey = userRepoKeyRing.getRandomUserRepoKeyOrFail(getRepositoryId());
 		}
 		return userRepoKey;
 	}
