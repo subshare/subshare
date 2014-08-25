@@ -19,7 +19,7 @@ import co.codewizards.cloudstore.core.config.ConfigDir;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManagerFactory;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
-import co.codewizards.cloudstore.oio.api.File;
+import co.codewizards.cloudstore.core.oio.File;
 
 public abstract class AbstractTest {
 	static {

@@ -31,7 +31,7 @@ import co.codewizards.cloudstore.core.repo.sync.RepoToRepoSync;
 import co.codewizards.cloudstore.core.util.UrlUtil;
 import co.codewizards.cloudstore.local.persistence.RepoFile;
 import co.codewizards.cloudstore.local.persistence.RepoFileDao;
-import co.codewizards.cloudstore.oio.api.File;
+import co.codewizards.cloudstore.core.oio.File;
 
 public class RepoToRepoSyncIT extends AbstractIT {
 
