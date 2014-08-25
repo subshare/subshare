@@ -1,9 +1,9 @@
 package org.subshare.test;
 
-import static co.codewizards.cloudstore.core.util.Util.*;
+import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static org.assertj.core.api.Assertions.*;
+import static org.junit.Assert.*;
 
-import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collections;
@@ -17,6 +17,7 @@ import org.subshare.core.user.UserRepoKey.PublicKey;
 import org.subshare.core.user.UserRepoKeyRing;
 import org.subshare.local.persistence.CryptoRepoFile;
 import org.subshare.local.persistence.CryptoRepoFileDao;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -30,6 +31,7 @@ import co.codewizards.cloudstore.core.repo.sync.RepoToRepoSync;
 import co.codewizards.cloudstore.core.util.UrlUtil;
 import co.codewizards.cloudstore.local.persistence.RepoFile;
 import co.codewizards.cloudstore.local.persistence.RepoFileDao;
+import co.codewizards.cloudstore.oio.api.File;
 
 public class RepoToRepoSyncIT extends AbstractIT {
 
@@ -59,14 +61,14 @@ public class RepoToRepoSyncIT extends AbstractIT {
 		if (localPathPrefix.isEmpty())
 			return localSrcRoot;
 
-		return new File(localSrcRoot, localPathPrefix);
+		return createFile(localSrcRoot, localPathPrefix);
 	}
 
 	private File getRemoteRootWithPathPrefix1() {
 		if (remotePathPrefix1.isEmpty())
 			return remoteRoot;
 
-		final File file = new File(remoteRoot, remotePathPrefix1);
+		final File file = createFile(remoteRoot, remotePathPrefix1);
 		return file;
 	}
 
@@ -75,7 +77,7 @@ public class RepoToRepoSyncIT extends AbstractIT {
 		if (remotePathPrefix2Encrypted.isEmpty())
 			return remoteRoot;
 
-		final File file = new File(remoteRoot, remotePathPrefix2Encrypted);
+		final File file = createFile(remoteRoot, remotePathPrefix2Encrypted);
 		return file;
 	}
 
@@ -131,13 +133,13 @@ public class RepoToRepoSyncIT extends AbstractIT {
 
 			createFileWithRandomContent(localSrcRoot, "xxxxxxx");
 
-			final File child_2 = new File(localSrcRoot, "2");
-			new File(child_2, "a").delete();
+			final File child_2 = createFile(localSrcRoot, "2");
+			createFile(child_2, "a").delete();
 			createFileWithRandomContent(child_2, "a"); // overwrite
 			createFileWithRandomContent(child_2, "yyyyyyyy"); // new file
 
-			final File child_3 = new File(localSrcRoot, remotePathPrefix2Plain);
-			new File(child_3, "b").delete();
+			final File child_3 = createFile(localSrcRoot, remotePathPrefix2Plain);
+			createFile(child_3, "b").delete();
 			createFileWithRandomContent(child_3, "b"); // overwrite
 			createFileWithRandomContent(child_3, "zzzzzzz"); // new file
 
@@ -153,11 +155,11 @@ public class RepoToRepoSyncIT extends AbstractIT {
 				cryptreeRepoTransportFactory.setUserRepoKeyRing(ownerUserRepoKeyRing);
 			}
 
-			new File(child_2, "yyyyyyyy").delete();
+			createFile(child_2, "yyyyyyyy").delete();
 			createFileWithRandomContent(child_2, "yyyyyyyy"); // overwrite
 			createFileWithRandomContent(child_2, "ttttt"); // new file
 
-			new File(child_3, "c").delete();
+			createFile(child_3, "c").delete();
 			createFileWithRandomContent(child_3, "c"); // overwrite
 			createFileWithRandomContent(child_3, "kkkkk"); // new file
 
@@ -226,7 +228,7 @@ public class RepoToRepoSyncIT extends AbstractIT {
 			createLocalDestinationRepo();
 			try {
 				syncFromRemoteToLocalDest();
-				fail("Could still check-out after access rights were revoked!");
+				Assert.fail("Could still check-out after access rights were revoked!");
 			} catch (final AccessDeniedException x) {
 				logger.info("Fine! Expected this AccessDeniedException: " + x);
 			}
@@ -263,7 +265,7 @@ public class RepoToRepoSyncIT extends AbstractIT {
 
 			try {
 				syncFromRemoteToLocalDest();
-				fail("AccessDeniedException was *not* thrown! It should have been!");
+				Assert.fail("AccessDeniedException was *not* thrown! It should have been!");
 			} catch (final AccessDeniedException x) {
 				logger.info("syncFromLocalToRemoteToLocalWithPathPrefixWithoutSubdirClearanceKey: Caught AccessDeniedException as expected.");
 			}
@@ -274,14 +276,14 @@ public class RepoToRepoSyncIT extends AbstractIT {
 
 	private void createLocalSourceAndRemoteRepo() throws Exception {
 		localSrcRoot = newTestRepositoryLocalRoot("local-src");
-		assertThat(localSrcRoot).doesNotExist();
+		assertThat(localSrcRoot.exists()).isFalse();
 		localSrcRoot.mkdirs();
-		assertThat(localSrcRoot).isDirectory();
+		assertThat(localSrcRoot.isDirectory()).isTrue();
 
 		remoteRoot = newTestRepositoryLocalRoot("remote");
-		assertThat(remoteRoot).doesNotExist();
+		assertThat(remoteRoot.exists()).isFalse();
 		remoteRoot.mkdirs();
-		assertThat(remoteRoot).isDirectory();
+		assertThat(remoteRoot.isDirectory()).isTrue();
 
 		final LocalRepoManager localRepoManagerLocal = localRepoManagerFactory.createLocalRepoManagerForNewRepository(localSrcRoot);
 		final LocalRepoManager localRepoManagerRemote = localRepoManagerFactory.createLocalRepoManagerForNewRepository(remoteRoot);
@@ -343,15 +345,15 @@ public class RepoToRepoSyncIT extends AbstractIT {
 		repoToRepoSync.close();
 
 		assertDirectoriesAreEqualRecursively(
-				(remotePathPrefix2Plain.isEmpty() ? getLocalRootWithPathPrefix() : new File(getLocalRootWithPathPrefix(), remotePathPrefix2Plain)),
+				(remotePathPrefix2Plain.isEmpty() ? getLocalRootWithPathPrefix() : createFile(getLocalRootWithPathPrefix(), remotePathPrefix2Plain)),
 				localDestRoot);
 	}
 
 	private void createLocalDestinationRepo() throws Exception {
 		localDestRoot = newTestRepositoryLocalRoot("local-dest");
-		assertThat(localDestRoot).doesNotExist();
+		assertThat(localDestRoot.exists()).isFalse();
 		localDestRoot.mkdirs();
-		assertThat(localDestRoot).isDirectory();
+		assertThat(localDestRoot.isDirectory()).isTrue();
 
 		final LocalRepoManager localDestRepoManagerLocal = localRepoManagerFactory.createLocalRepoManagerForNewRepository(localDestRoot);
 		assertThat(localDestRepoManagerLocal).isNotNull();
@@ -368,7 +370,7 @@ public class RepoToRepoSyncIT extends AbstractIT {
 			try (final LocalRepoTransaction transaction = localRepoManagerLocal.beginReadTransaction();)
 			{
 				final RepoFileDao repoFileDao = transaction.getDao(RepoFileDao.class);
-				final RepoFile repoFile = repoFileDao.getRepoFile(getLocalRootWithPathPrefix(), new File(getLocalRootWithPathPrefix(), remotePathPrefix2Plain));
+				final RepoFile repoFile = repoFileDao.getRepoFile(getLocalRootWithPathPrefix(), createFile(getLocalRootWithPathPrefix(), remotePathPrefix2Plain));
 				final CryptoRepoFile cryptoRepoFile = transaction.getDao(CryptoRepoFileDao.class).getCryptoRepoFileOrFail(repoFile);
 				remotePathPrefix2Encrypted = cryptoRepoFile.getServerPath();
 				transaction.commit();

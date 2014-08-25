@@ -3,7 +3,6 @@ package org.subshare.local.persistence;
 import static co.codewizards.cloudstore.core.util.Util.*;
 import static org.assertj.core.api.Assertions.*;
 
-import java.io.File;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.UUID;
@@ -20,6 +19,7 @@ import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.progress.LoggerProgressMonitor;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
+import co.codewizards.cloudstore.oio.api.File;
 
 public class CryptreeImplGrantRevokeReadAccessTest extends AbstractTest {
 

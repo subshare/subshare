@@ -1,8 +1,8 @@
 package org.subshare.local;
 
+import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
 
-import java.io.File;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -78,7 +78,7 @@ public class CryptreeImpl extends AbstractCryptree {
 		final LocalRepoTransaction transaction = getTransactionOrFail();
 		final LocalRepoManager localRepoManager = transaction.getLocalRepoManager();
 		final RepoFileDao repoFileDao = transaction.getDao(RepoFileDao.class);
-		final RepoFile repoFile = repoFileDao.getRepoFile(localRepoManager.getLocalRoot(), new File(localRepoManager.getLocalRoot(), path));
+		final RepoFile repoFile = repoFileDao.getRepoFile(localRepoManager.getLocalRoot(), createFile(localRepoManager.getLocalRoot(), path));
 		assertNotNull("repoFile", repoFile);
 
 		final CryptreeNode cryptreeNode = new CryptreeNode(getUserRepoKeyOrFail(), transaction, repoFile);
@@ -466,7 +466,7 @@ public class CryptreeImpl extends AbstractCryptree {
 		final LocalRepoTransaction transaction = getTransactionOrFail();
 		final LocalRepoManager localRepoManager = transaction.getLocalRepoManager();
 		final RepoFileDao repoFileDao = transaction.getDao(RepoFileDao.class);
-		final RepoFile repoFile = repoFileDao.getRepoFile(localRepoManager.getLocalRoot(), new File(localRepoManager.getLocalRoot(), localPath));
+		final RepoFile repoFile = repoFileDao.getRepoFile(localRepoManager.getLocalRoot(), createFile(localRepoManager.getLocalRoot(), localPath));
 		return repoFile;
 	}
 

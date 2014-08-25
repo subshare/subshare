@@ -1,14 +1,11 @@
 package org.subshare.test;
 
+import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static org.assertj.core.api.Assertions.*;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigInteger;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Set;
@@ -27,6 +24,7 @@ import co.codewizards.cloudstore.core.repo.local.LocalRepoManagerFactory;
 import co.codewizards.cloudstore.core.repo.transport.RepoTransportFactoryRegistry;
 import co.codewizards.cloudstore.core.util.IOUtil;
 import co.codewizards.cloudstore.local.FilenameFilterSkipMetaDir;
+import co.codewizards.cloudstore.oio.api.File;
 import co.codewizards.cloudstore.rest.client.ssl.CheckServerTrustedCertificateExceptionContext;
 import co.codewizards.cloudstore.rest.client.ssl.CheckServerTrustedCertificateExceptionResult;
 import co.codewizards.cloudstore.rest.client.ssl.DynamicX509TrustManagerCallback;
@@ -97,7 +95,7 @@ public abstract class AbstractIT {
 		final long timestamp = System.currentTimeMillis();
 		final int randomNumber = random.nextInt(BigInteger.valueOf(36).pow(5).intValue());
 		final String repoName = Long.toString(timestamp, 36) + '-' + Integer.toString(randomNumber, 36) + (suffix.isEmpty() ? "" : "-") + suffix;
-		final File localRoot = new File(getTestRepositoryBaseDir(), repoName);
+		final File localRoot = createFile(getTestRepositoryBaseDir(), repoName);
 		addToFilesInRepo(localRoot, localRoot);
 		return localRoot;
 	}
@@ -132,31 +130,31 @@ public abstract class AbstractIT {
 	}
 
 	protected File getTestRepositoryBaseDir() {
-		final File dir = new File(new File("build"), "repo");
+		final File dir = createFile(createFile("build"), "repo");
 		dir.mkdirs();
 		return dir;
 	}
 
 	protected File createDirectory(final File parent, final String name) throws IOException {
-		final File dir = new File(parent, name);
+		final File dir = createFile(parent, name);
 		return createDirectory(dir);
 	}
 	protected File createDirectory(final File dir) throws IOException {
-		assertThat(dir).doesNotExist();
+		assertThat(dir.exists()).isFalse();
 		dir.mkdir();
-		assertThat(dir).isDirectory();
+		assertThat(dir.isDirectory()).isTrue();
 		addToFilesInRepo(dir);
 		return dir;
 	}
 
 	protected File createFileWithRandomContent(final File parent, final String name) throws IOException {
-		final File file = new File(parent, name);
+		final File file = createFile(parent, name);
 		return createFileWithRandomContent(file);
 	}
 
 	protected File createFileWithRandomContent(final File file) throws IOException {
-		assertThat(file).doesNotExist(); // prevent accidentally overwriting important data ;-)
-		final OutputStream out = new FileOutputStream(file);
+		assertThat(file.exists()).isFalse(); // prevent accidentally overwriting important data ;-)
+		final OutputStream out = file.createFileOutputStream();
 		final byte[] buf = new byte[1 + random.nextInt(10241)];
 		final int loops = 1 + random.nextInt(100);
 		for (int i = 0; i < loops; ++i) {
@@ -164,23 +162,23 @@ public abstract class AbstractIT {
 			out.write(buf);
 		}
 		out.close();
-		assertThat(file).isFile();
+		assertThat(file.isFile()).isTrue();
 		addToFilesInRepo(file);
 		return file;
 	}
 
 	protected void assertDirectoriesAreEqualRecursively(final File dir1, final File dir2) throws IOException {
-		assertThat(dir1).isDirectory();
-		assertThat(dir2).isDirectory();
+		assertThat(dir1.isDirectory()).isTrue();
+		assertThat(dir2.isDirectory()).isTrue();
 
-		final boolean dir1IsSymbolicLink = Files.isSymbolicLink(dir1.toPath());
-		final boolean dir2IsSymbolicLink = Files.isSymbolicLink(dir2.toPath());
+		final boolean dir1IsSymbolicLink = dir1.isSymbolicLink();
+		final boolean dir2IsSymbolicLink = dir2.isSymbolicLink();
 
 		assertThat(dir1IsSymbolicLink).isEqualTo(dir2IsSymbolicLink);
 
 		if (dir1IsSymbolicLink) {
-			final Path target1 = Files.readSymbolicLink(dir1.toPath());
-			final Path target2 = Files.readSymbolicLink(dir2.toPath());
+			final String target1 = dir1.readSymbolicLinkToPathString();
+			final String target2 = dir2.readSymbolicLinkToPathString();
 			assertThat(target1).isEqualTo(target2);
 			return;
 		}
@@ -197,17 +195,17 @@ public abstract class AbstractIT {
 		assertThat(children1).containsOnly(children2);
 
 		for (final String childName : children1) {
-			final File child1 = new File(dir1, childName);
-			final File child2 = new File(dir2, childName);
+			final File child1 = createFile(dir1, childName);
+			final File child2 = createFile(dir2, childName);
 
-			final boolean child1IsSymbolicLink = Files.isSymbolicLink(child1.toPath());
-			final boolean child2IsSymbolicLink = Files.isSymbolicLink(child2.toPath());
+			final boolean child1IsSymbolicLink = child1.isSymbolicLink();
+			final boolean child2IsSymbolicLink = child2.isSymbolicLink();
 
 			assertThat(child1IsSymbolicLink).isEqualTo(child2IsSymbolicLink);
 
 			if (child1IsSymbolicLink) {
-				final Path target1 = Files.readSymbolicLink(child1.toPath());
-				final Path target2 = Files.readSymbolicLink(child2.toPath());
+				final String target1 = child1.readSymbolicLinkToPathString();
+				final String target2 = child2.readSymbolicLinkToPathString();
 				assertThat(target1).isEqualTo(target2);
 			}
 			else if (child1.isFile()) {

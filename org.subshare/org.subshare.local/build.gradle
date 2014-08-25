@@ -8,6 +8,7 @@ configurations {
 
 dependencies {
 	compile group: 'co.codewizards.cloudstore', name: 'co.codewizards.cloudstore.local', version: cloudstoreVersion
+	compile group: 'co.codewizards.cloudstore', name: 'co.codewizards.cloudstore.core', version: cloudstoreVersion
 	compile project(':org.subshare.core')
 //	provided group: 'org.slf4j', name: 'log4j-over-slf4j', version: slf4jVersion
 }
