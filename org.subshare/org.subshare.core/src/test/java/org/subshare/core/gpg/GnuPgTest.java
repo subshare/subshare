@@ -131,7 +131,7 @@ public class GnuPgTest {
 			assertThat(encryptedDataObjects.hasNext()).isFalse();
 
 			final PublicKeyDataDecryptorFactory dataDecryptorFactory = new BcPublicKeyDataDecryptorFactory(
-					getPgpPrivateKeyOrFail(encryptedData.getKeyID(), "test12345"));
+					getPgpPrivateKeyOrFail(encryptedData.getKeyID(), "test12345".toCharArray()));
 
 			try (InputStream plainIn = encryptedData.getDataStream(dataDecryptorFactory);) {
 				final ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -272,7 +272,7 @@ public class GnuPgTest {
 		}
 
 		final PublicKeyDataDecryptorFactory dataDecryptorFactory = new BcPublicKeyDataDecryptorFactory(
-				getPgpPrivateKeyOrFail(pbe.getKeyID(), "test12345"));
+				getPgpPrivateKeyOrFail(pbe.getKeyID(), passwd));
 
 		final InputStream clear = pbe.getDataStream(dataDecryptorFactory);
 
@@ -367,12 +367,12 @@ public class GnuPgTest {
 		return publicKey;
 	}
 
-	private static PGPPrivateKey getPgpPrivateKeyOrFail(final long keyId, final String passphrase) throws IOException, PGPException {
+	private static PGPPrivateKey getPgpPrivateKeyOrFail(final long keyId, final char[] passphrase) throws IOException, PGPException {
 		final PGPSecretKey secretKey = getPgpSecretKeyOrFail(keyId);
 
 		final PGPDigestCalculatorProvider calculatorProvider = new BcPGPDigestCalculatorProvider();
 		final BcPBESecretKeyDecryptorBuilder secretKeyDecryptorBuilder = new BcPBESecretKeyDecryptorBuilder(calculatorProvider);
-		final PBESecretKeyDecryptor secretKeyDecryptor = secretKeyDecryptorBuilder.build(passphrase.toCharArray());
+		final PBESecretKeyDecryptor secretKeyDecryptor = secretKeyDecryptorBuilder.build(passphrase);
 		final PGPPrivateKey privateKey = secretKey.extractPrivateKey(secretKeyDecryptor);
 		return privateKey;
 	}
