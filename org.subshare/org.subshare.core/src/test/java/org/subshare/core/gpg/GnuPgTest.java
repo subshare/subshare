@@ -5,6 +5,7 @@ import static co.codewizards.cloudstore.core.util.IOUtil.*;
 import static org.assertj.core.api.Assertions.*;
 
 import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -12,14 +13,28 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.security.NoSuchProviderException;
+import java.security.SecureRandom;
+import java.security.SignatureException;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.Random;
 
+import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.bcpg.BCPGInputStream;
+import org.bouncycastle.bcpg.CompressionAlgorithmTags;
+import org.bouncycastle.bcpg.HashAlgorithmTags;
 import org.bouncycastle.bcpg.SymmetricKeyAlgorithmTags;
+import org.bouncycastle.openpgp.PGPCompressedData;
+import org.bouncycastle.openpgp.PGPCompressedDataGenerator;
 import org.bouncycastle.openpgp.PGPEncryptedDataGenerator;
 import org.bouncycastle.openpgp.PGPEncryptedDataList;
 import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPLiteralData;
+import org.bouncycastle.openpgp.PGPLiteralDataGenerator;
+import org.bouncycastle.openpgp.PGPObjectFactory;
+import org.bouncycastle.openpgp.PGPOnePassSignature;
+import org.bouncycastle.openpgp.PGPOnePassSignatureList;
 import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyEncryptedData;
@@ -29,6 +44,9 @@ import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.PGPSignatureGenerator;
+import org.bouncycastle.openpgp.PGPSignatureList;
+import org.bouncycastle.openpgp.PGPSignatureSubpacketGenerator;
 import org.bouncycastle.openpgp.PGPUtil;
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.bouncycastle.openpgp.operator.PGPDataEncryptorBuilder;
@@ -36,10 +54,13 @@ import org.bouncycastle.openpgp.operator.PGPDigestCalculatorProvider;
 import org.bouncycastle.openpgp.operator.PGPKeyEncryptionMethodGenerator;
 import org.bouncycastle.openpgp.operator.PublicKeyDataDecryptorFactory;
 import org.bouncycastle.openpgp.operator.bc.BcPBESecretKeyDecryptorBuilder;
+import org.bouncycastle.openpgp.operator.bc.BcPGPContentSignerBuilder;
+import org.bouncycastle.openpgp.operator.bc.BcPGPContentVerifierBuilderProvider;
 import org.bouncycastle.openpgp.operator.bc.BcPGPDataEncryptorBuilder;
 import org.bouncycastle.openpgp.operator.bc.BcPGPDigestCalculatorProvider;
 import org.bouncycastle.openpgp.operator.bc.BcPublicKeyDataDecryptorFactory;
 import org.bouncycastle.openpgp.operator.bc.BcPublicKeyKeyEncryptionMethodGenerator;
+import org.bouncycastle.util.io.Streams;
 import org.junit.Test;
 
 public class GnuPgTest {
@@ -124,7 +145,217 @@ public class GnuPgTest {
 		encryptedFile.delete(); // delete it, if this test did not fail
 	}
 
-	private PGPPublicKey getPgpPublicKeyOrFail(final long keyId) throws IOException, PGPException {
+	@Test
+	public void encryptSignAndDecryptVerify() throws Exception {
+
+		final byte[] plain = new byte[1 + random.nextInt(1024 * 1024)];
+		random.nextBytes(plain);
+
+		// armor means whether to use base64-encoding and thus make it transferable in pure ASCII.
+		final boolean armor = false;
+
+		// this seems to be an additional integrity check - it's not the signature.
+		final boolean withIntegrityCheck = true;
+
+		final File encryptedFile = File.createTempFile("encrypted_", ".tmp");
+		try (final OutputStream encryptedOut = new FileOutputStream(encryptedFile);) {
+			encryptAndSign(new ByteArrayInputStream(plain), "dummy", encryptedOut,
+					getPgpPublicKeyOrFail(bytesToLong(decodeHexStr("d7a92a24aa97ddbd"))),
+					getPgpSecretKeyOrFail(bytesToLong(decodeHexStr("70c642ca41cd4390"))),
+					armor, withIntegrityCheck,
+					"test12345".toCharArray());
+		}
+
+		final byte[] decrypted;
+		try (InputStream in = new FileInputStream(encryptedFile)) {
+			try (InputStream pubKeyIn = new BufferedInputStream(GnuPgTest.class.getResourceAsStream("pubring.gpg"));) {
+				try (InputStream secKeyIn = new BufferedInputStream(GnuPgTest.class.getResourceAsStream("secring.gpg"));) {
+					final ByteArrayOutputStream decryptedOut = new ByteArrayOutputStream();
+					decryptAndVerify(in, secKeyIn, "test12345".toCharArray(), decryptedOut, pubKeyIn);
+					decrypted = decryptedOut.toByteArray();
+				}
+			}
+		}
+
+		assertThat(decrypted).isEqualTo(plain);
+
+		encryptedFile.delete(); // delete it, if this test did not fail
+	}
+
+	private static void encryptAndSign(final InputStream in, final String fileName, OutputStream out, final PGPPublicKey encKey, final PGPSecretKey pgpSec, final boolean armor, final boolean withIntegrityCheck, final char[] pass) throws IOException, PGPException, SignatureException {
+		final int BUFFER_SIZE = 1024 * 64;
+	    if (armor) {
+	        out = new ArmoredOutputStream(out);
+	    }
+
+	    final PGPEncryptedDataGenerator encGen =
+	    		new PGPEncryptedDataGenerator(
+	    				new BcPGPDataEncryptorBuilder(SymmetricKeyAlgorithmTags.TWOFISH).setWithIntegrityPacket(withIntegrityCheck).setSecureRandom(
+	    						new SecureRandom()));
+	    encGen.addMethod(new BcPublicKeyKeyEncryptionMethodGenerator(encKey));
+	    final OutputStream encryptedOut = encGen.open(out, new byte[BUFFER_SIZE]);
+
+	    final PGPCompressedDataGenerator comData = new PGPCompressedDataGenerator(CompressionAlgorithmTags.ZIP);
+	    final OutputStream compressedData = comData.open(encryptedOut);
+
+	    final PGPPrivateKey pgpPrivKey = pgpSec.extractPrivateKey(
+	    		new BcPBESecretKeyDecryptorBuilder(new BcPGPDigestCalculatorProvider()).build(pass));
+	    final PGPSignatureGenerator sGen = new PGPSignatureGenerator(new BcPGPContentSignerBuilder(
+	    		pgpSec.getPublicKey().getAlgorithm(), HashAlgorithmTags.SHA1));
+	    sGen.init(PGPSignature.BINARY_DOCUMENT, pgpPrivKey);
+	    final Iterator<?> it = pgpSec.getPublicKey().getUserIDs();
+	    if (it.hasNext()) {
+	    	final PGPSignatureSubpacketGenerator spGen = new PGPSignatureSubpacketGenerator();
+	    	spGen.setSignerUserID(false, (String) it.next());
+	    	sGen.setHashedSubpackets(spGen.generate());
+	    }
+
+	    sGen.generateOnePassVersion(false).encode(compressedData);
+
+	    final PGPLiteralDataGenerator lGen = new PGPLiteralDataGenerator();
+	    final OutputStream lOut = lGen.open(compressedData, PGPLiteralData.BINARY, fileName, new Date(), new byte[BUFFER_SIZE]);
+
+	    int ch;
+
+	    while ((ch = in.read()) >= 0) {
+	    	lOut.write(ch);
+	    	sGen.update((byte) ch);
+	    }
+
+	    lOut.close();
+	    lGen.close();
+
+	    sGen.generate().encode(compressedData);
+
+
+	    comData.close();
+	    compressedData.close();
+
+	    encryptedOut.close();
+	    encGen.close();
+
+	    if (armor) {
+	    	out.close();
+	    }
+	}
+
+	public static void decryptAndVerify(InputStream in, final InputStream keyIn, final char[] passwd, final OutputStream fOut, final InputStream publicKeyIn) throws IOException, NoSuchProviderException, SignatureException, PGPException {
+		in = PGPUtil.getDecoderStream(in);
+
+		final PGPObjectFactory pgpF = new PGPObjectFactory(in);
+		PGPEncryptedDataList enc;
+
+		final Object o = pgpF.nextObject();
+		//
+		// the first object might be a PGP marker packet.
+		//
+		if (o instanceof PGPEncryptedDataList) {
+			enc = (PGPEncryptedDataList) o;
+		} else {
+			enc = (PGPEncryptedDataList) pgpF.nextObject();
+		}
+
+		//
+		// find the secret key
+		//
+		final Iterator<?> it = enc.getEncryptedDataObjects();
+		PGPPrivateKey sKey = null;
+		PGPPublicKeyEncryptedData pbe = null;
+
+		while (sKey == null && it.hasNext()) {
+			pbe = (PGPPublicKeyEncryptedData) it.next();
+			sKey = findSecretKey(keyIn, pbe.getKeyID(), passwd);
+		}
+
+		if (sKey == null) {
+			throw new IllegalArgumentException("secret key for message not found.");
+		}
+
+		final PublicKeyDataDecryptorFactory dataDecryptorFactory = new BcPublicKeyDataDecryptorFactory(
+				getPgpPrivateKeyOrFail(pbe.getKeyID(), "test12345"));
+
+		final InputStream clear = pbe.getDataStream(dataDecryptorFactory);
+
+		PGPObjectFactory plainFact = new PGPObjectFactory(clear);
+
+		Object message = null;
+
+		PGPOnePassSignatureList onePassSignatureList = null;
+		PGPSignatureList signatureList = null;
+		PGPCompressedData compressedData = null;
+
+		message = plainFact.nextObject();
+		final ByteArrayOutputStream actualOutput = new ByteArrayOutputStream();
+
+		while (message != null) {
+			if (message instanceof PGPCompressedData) {
+				compressedData = (PGPCompressedData) message;
+				plainFact = new PGPObjectFactory(compressedData.getDataStream());
+				message = plainFact.nextObject();
+			}
+
+			if (message instanceof PGPLiteralData) {
+				// have to read it and keep it somewhere.
+				Streams.pipeAll(((PGPLiteralData) message).getInputStream(), actualOutput);
+			} else if (message instanceof PGPOnePassSignatureList) {
+				onePassSignatureList = (PGPOnePassSignatureList) message;
+			} else if (message instanceof PGPSignatureList) {
+				signatureList = (PGPSignatureList) message;
+			} else {
+				throw new PGPException("message unknown message type.");
+			}
+			message = plainFact.nextObject();
+		}
+		actualOutput.close();
+		PGPPublicKey publicKey = null;
+		final byte[] output = actualOutput.toByteArray();
+		if (onePassSignatureList == null || signatureList == null) {
+			throw new PGPException("Poor PGP. Signatures not found.");
+		} else {
+
+			for (int i = 0; i < onePassSignatureList.size(); i++) {
+				final PGPOnePassSignature ops = onePassSignatureList.get(0);
+				final PGPPublicKeyRingCollection pgpRing = new PGPPublicKeyRingCollection(
+						PGPUtil.getDecoderStream(publicKeyIn));
+				publicKey = pgpRing.getPublicKey(ops.getKeyID());
+				if (publicKey != null) {
+					ops.init(new BcPGPContentVerifierBuilderProvider(), publicKey);
+					ops.update(output);
+					final PGPSignature signature = signatureList.get(i);
+					if (ops.verify(signature)) {
+						final Iterator<?> userIds = publicKey.getUserIDs();
+						while (userIds.hasNext()) {
+							final String userId = (String) userIds.next();
+						}
+					} else {
+						throw new SignatureException("Signature verification failed");
+					}
+				}
+			}
+
+		}
+
+		if (pbe.isIntegrityProtected() && !pbe.verify()) {
+			throw new PGPException("Data is integrity protected but integrity is lost.");
+		} else if (publicKey == null) {
+			throw new SignatureException("Signature not found");
+		} else {
+			fOut.write(output);
+			fOut.flush();
+			fOut.close();
+		}
+	}
+
+	public static PGPPrivateKey findSecretKey(final InputStream keyIn, final long keyID, final char[] pass) throws IOException, PGPException {
+	    final PGPSecretKeyRingCollection pgpSec = new PGPSecretKeyRingCollection(PGPUtil.getDecoderStream(keyIn));
+	    final PGPSecretKey pgpSecKey = pgpSec.getSecretKey(keyID);
+	    if (pgpSecKey == null) return null;
+
+	    final PBESecretKeyDecryptor decryptor = new BcPBESecretKeyDecryptorBuilder(new BcPGPDigestCalculatorProvider()).build(pass);
+	    return pgpSecKey.extractPrivateKey(decryptor);
+	}
+
+	private static PGPPublicKey getPgpPublicKeyOrFail(final long keyId) throws IOException, PGPException {
 		PGPPublicKeyRingCollection pgpPublicKeyRingCollection;
 		try (InputStream in = new BufferedInputStream(GnuPgTest.class.getResourceAsStream("pubring.gpg"));) {
 			pgpPublicKeyRingCollection = new PGPPublicKeyRingCollection(PGPUtil.getDecoderStream(in));
@@ -136,7 +367,7 @@ public class GnuPgTest {
 		return publicKey;
 	}
 
-	private PGPPrivateKey getPgpPrivateKeyOrFail(final long keyId, final String passphrase) throws IOException, PGPException {
+	private static PGPPrivateKey getPgpPrivateKeyOrFail(final long keyId, final String passphrase) throws IOException, PGPException {
 		final PGPSecretKey secretKey = getPgpSecretKeyOrFail(keyId);
 
 		final PGPDigestCalculatorProvider calculatorProvider = new BcPGPDigestCalculatorProvider();
@@ -146,7 +377,7 @@ public class GnuPgTest {
 		return privateKey;
 	}
 
-	private PGPSecretKey getPgpSecretKeyOrFail(final long keyId) throws IOException, PGPException {
+	private static PGPSecretKey getPgpSecretKeyOrFail(final long keyId) throws IOException, PGPException {
 		PGPSecretKeyRingCollection pgpSecretKeyRingCollection;
 		try (InputStream in = new BufferedInputStream(GnuPgTest.class.getResourceAsStream("secring.gpg"));) {
 			pgpSecretKeyRingCollection = new PGPSecretKeyRingCollection(PGPUtil.getDecoderStream(in));
@@ -158,7 +389,7 @@ public class GnuPgTest {
 		return secretKey;
 	}
 
-	private byte[] longToBytes(final long l) {
+	private static byte[] longToBytes(final long l) {
 		final byte[] bytes = new byte[8];
 		for (int i = 0; i < 8; ++i)
 			bytes[i] = (byte) (l >>> (8 * (7 - i)));
@@ -166,7 +397,7 @@ public class GnuPgTest {
 		return bytes;
 	}
 
-	private long bytesToLong(final byte[] bytes) {
+	private static long bytesToLong(final byte[] bytes) {
 		long l = 0;
 		for (int i = 0; i < 8; ++i)
 			l |= ((long) (bytes[i] & 0xff)) << (8 * (7 - i));
