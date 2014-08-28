@@ -105,44 +105,52 @@ public class GnuPgTest {
 
 	@Test
 	public void encryptAndDecrypt() throws Exception {
-		final PGPDataEncryptorBuilder encryptorBuilder = new BcPGPDataEncryptorBuilder(SymmetricKeyAlgorithmTags.TWOFISH);
-		final PGPEncryptedDataGenerator encryptedDataGenerator = new PGPEncryptedDataGenerator(encryptorBuilder);
-		final PGPKeyEncryptionMethodGenerator keyEncryptionMethodGenerator = new BcPublicKeyKeyEncryptionMethodGenerator(
-				getPgpPublicKeyOrFail(bytesToLong(decodeHexStr("d7a92a24aa97ddbd"))));
+		// both keys have property encryptionKey==true
+		final String[] keyIds = {
+				"d7a92a24aa97ddbd", // master-key
+				"a58da7d810b74edf" // sub-key
+		};
 
-		encryptedDataGenerator.addMethod(keyEncryptionMethodGenerator);
+		for (final String keyId : keyIds) {
+			final PGPDataEncryptorBuilder encryptorBuilder = new BcPGPDataEncryptorBuilder(SymmetricKeyAlgorithmTags.TWOFISH);
+			final PGPEncryptedDataGenerator encryptedDataGenerator = new PGPEncryptedDataGenerator(encryptorBuilder);
+			final PGPKeyEncryptionMethodGenerator keyEncryptionMethodGenerator = new BcPublicKeyKeyEncryptionMethodGenerator(
+					getPgpPublicKeyOrFail(bytesToLong(decodeHexStr(keyId))));
 
-		final byte[] plain = new byte[1 + random.nextInt(1024 * 1024)];
-		random.nextBytes(plain);
+			encryptedDataGenerator.addMethod(keyEncryptionMethodGenerator);
 
-		final File encryptedFile = File.createTempFile("encrypted_", ".tmp");
-		try (final OutputStream encryptedOut = new FileOutputStream(encryptedFile);) {
-			try (final OutputStream plainOut = encryptedDataGenerator.open(encryptedOut, new byte[1024 * 16]);) {
-				plainOut.write(plain);
+			final byte[] plain = new byte[1 + random.nextInt(1024 * 1024)];
+			random.nextBytes(plain);
+
+			final File encryptedFile = File.createTempFile("encrypted_", ".tmp");
+			try (final OutputStream encryptedOut = new FileOutputStream(encryptedFile);) {
+				try (final OutputStream plainOut = encryptedDataGenerator.open(encryptedOut, new byte[1024 * 16]);) {
+					plainOut.write(plain);
+				}
 			}
-		}
 
-		final byte[] decrypted;
-		try (InputStream in = new FileInputStream(encryptedFile)) {
-			final PGPEncryptedDataList encryptedDataList = new PGPEncryptedDataList(new BCPGInputStream(in));
-			final Iterator<?> encryptedDataObjects = encryptedDataList.getEncryptedDataObjects();
-			assertThat(encryptedDataObjects.hasNext()).isTrue();
-			final PGPPublicKeyEncryptedData encryptedData = (PGPPublicKeyEncryptedData) encryptedDataObjects.next();
-			assertThat(encryptedDataObjects.hasNext()).isFalse();
+			final byte[] decrypted;
+			try (InputStream in = new FileInputStream(encryptedFile)) {
+				final PGPEncryptedDataList encryptedDataList = new PGPEncryptedDataList(new BCPGInputStream(in));
+				final Iterator<?> encryptedDataObjects = encryptedDataList.getEncryptedDataObjects();
+				assertThat(encryptedDataObjects.hasNext()).isTrue();
+				final PGPPublicKeyEncryptedData encryptedData = (PGPPublicKeyEncryptedData) encryptedDataObjects.next();
+				assertThat(encryptedDataObjects.hasNext()).isFalse();
 
-			final PublicKeyDataDecryptorFactory dataDecryptorFactory = new BcPublicKeyDataDecryptorFactory(
-					getPgpPrivateKeyOrFail(encryptedData.getKeyID(), "test12345".toCharArray()));
+				final PublicKeyDataDecryptorFactory dataDecryptorFactory = new BcPublicKeyDataDecryptorFactory(
+						getPgpPrivateKeyOrFail(encryptedData.getKeyID(), "test12345".toCharArray()));
 
-			try (InputStream plainIn = encryptedData.getDataStream(dataDecryptorFactory);) {
-				final ByteArrayOutputStream out = new ByteArrayOutputStream();
-				transferStreamData(plainIn, out);
-				decrypted = out.toByteArray();
+				try (InputStream plainIn = encryptedData.getDataStream(dataDecryptorFactory);) {
+					final ByteArrayOutputStream out = new ByteArrayOutputStream();
+					transferStreamData(plainIn, out);
+					decrypted = out.toByteArray();
+				}
 			}
+
+			assertThat(decrypted).isEqualTo(plain);
+
+			encryptedFile.delete(); // delete it, if this test did not fail
 		}
-
-		assertThat(decrypted).isEqualTo(plain);
-
-		encryptedFile.delete(); // delete it, if this test did not fail
 	}
 
 	@Test
@@ -198,6 +206,8 @@ public class GnuPgTest {
 	    final PGPCompressedDataGenerator comData = new PGPCompressedDataGenerator(CompressionAlgorithmTags.ZIP);
 	    final OutputStream compressedData = comData.open(encryptedOut);
 
+
+//	    if (pgpSec.getKeyEncryptionAlgorithm() != SymmetricKeyAlgorithmTags.NULL)
 	    final PGPPrivateKey pgpPrivKey = pgpSec.extractPrivateKey(
 	    		new BcPBESecretKeyDecryptorBuilder(new BcPGPDigestCalculatorProvider()).build(pass));
 	    final PGPSignatureGenerator sGen = new PGPSignatureGenerator(new BcPGPContentSignerBuilder(
