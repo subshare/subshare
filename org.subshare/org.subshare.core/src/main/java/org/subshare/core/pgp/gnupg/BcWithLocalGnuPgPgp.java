@@ -21,7 +21,6 @@ import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPUtil;
-import org.subshare.core.gpg.GnuPgTest;
 import org.subshare.core.pgp.AbstractPgp;
 import org.subshare.core.pgp.PgpDecoder;
 import org.subshare.core.pgp.PgpEncoder;
