@@ -8,23 +8,25 @@ import java.io.OutputStream;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
 
-import org.subshare.core.crypto.KeyFactory;
-import org.subshare.core.user.UserRepoKey;
+import org.subshare.core.user.User;
+import org.subshare.core.user.UserRegistry;
 import org.subshare.core.user.UserRepoKeyRing;
 import org.subshare.rest.client.transport.CryptreeRepoTransportFactory;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
 import co.codewizards.cloudstore.core.config.ConfigDir;
+import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManagerFactory;
 import co.codewizards.cloudstore.core.repo.transport.RepoTransportFactoryRegistry;
 import co.codewizards.cloudstore.core.util.IOUtil;
 import co.codewizards.cloudstore.local.FilenameFilterSkipMetaDir;
-import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.rest.client.ssl.CheckServerTrustedCertificateExceptionContext;
 import co.codewizards.cloudstore.rest.client.ssl.CheckServerTrustedCertificateExceptionResult;
 import co.codewizards.cloudstore.rest.client.ssl.DynamicX509TrustManagerCallback;
@@ -69,17 +71,53 @@ public abstract class AbstractIT {
 	}
 
 	protected static UserRepoKeyRing createUserRepoKeyRing(final UUID repositoryId) {
-		final UserRepoKeyRing userRepoKeyRing = new UserRepoKeyRing();
-		createUserRepoKey(userRepoKeyRing, repositoryId);
-		createUserRepoKey(userRepoKeyRing, repositoryId);
+		final UserRegistry userRegistry = new TestUserRegistry();
+		final User user = userRegistry.getUsers().iterator().next();
+		final UserRepoKeyRing userRepoKeyRing = user.getUserRepoKeyRingOrCreate();
+		user.createUserRepoKey(repositoryId);
+		user.createUserRepoKey(repositoryId);
 		return userRepoKeyRing;
 	}
 
-	protected static UserRepoKey createUserRepoKey(final UserRepoKeyRing userRepoKeyRing, final UUID repositoryId) {
-		final UserRepoKey userRepoKey = new UserRepoKey(userRepoKeyRing, repositoryId, KeyFactory.getInstance().createAsymmetricKeyPair());
-		userRepoKeyRing.addUserRepoKey(userRepoKey);
-		return userRepoKey;
+	private static class TestUserRegistry extends UserRegistry {
+		private final User user;
+
+		public TestUserRegistry() {
+			user = new User();
+			user.getPgpKeyIds().add(0L);
+			user.getEmails().add("user@domain.tld");
+			user.setFirstName("Hans");
+			user.setLastName("Müller");
+			user.getUserRepoKeyRingOrCreate();
+		}
+
+		@Override
+		protected void readUserListFile() {
+			// nothing
+		}
+		@Override
+		protected void readPgpUsers() {
+			// nothing
+		}
+
+		@Override
+		public synchronized Collection<User> getUsers() {
+			return Collections.singleton(user);
+		}
 	}
+
+//	protected static UserRepoKeyRing createUserRepoKeyRing(final UUID repositoryId) {
+//		final UserRepoKeyRing userRepoKeyRing = new UserRepoKeyRing();
+//		createUserRepoKey(userRepoKeyRing, repositoryId);
+//		createUserRepoKey(userRepoKeyRing, repositoryId);
+//		return userRepoKeyRing;
+//	}
+//
+//	protected static UserRepoKey createUserRepoKey(final UserRepoKeyRing userRepoKeyRing, final UUID repositoryId) {
+//		final UserRepoKey userRepoKey = new UserRepoKey(userRepoKeyRing, repositoryId, KeyFactory.getInstance().createAsymmetricKeyPair());
+//		userRepoKeyRing.addUserRepoKey(userRepoKey);
+//		return userRepoKey;
+//	}
 
 	public static class TestDynamicX509TrustManagerCallback implements DynamicX509TrustManagerCallback {
 		@Override

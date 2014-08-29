@@ -3,6 +3,7 @@ package org.subshare.core.pgp.gnupg;
 import static co.codewizards.cloudstore.core.util.Util.*;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import org.bouncycastle.openpgp.PGPPublicKey;
@@ -53,6 +54,10 @@ public class BcPgpKey {
 			pgpKey.setPgpKeyId(pgpKeyId);
 			pgpKey.setFingerprint(assertNotNull("publicKey", publicKey).getFingerprint());
 			pgpKey.setPrivateKeyAvailable(secretKey != null && ! secretKey.isPrivateKeyEmpty());
+
+			for (final Iterator<?> itUserIDs = publicKey.getUserIDs(); itUserIDs.hasNext(); )
+				pgpKey.getUserIds().add((String) itUserIDs.next());
+
 			this.pgpKey = pgpKey;
 		}
 		return pgpKey;

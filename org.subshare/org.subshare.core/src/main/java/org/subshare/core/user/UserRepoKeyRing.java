@@ -17,8 +17,8 @@ public class UserRepoKeyRing {
 
 	private static SecureRandom random = new SecureRandom();
 
-	private final List<Long> pgpKeyIds = new ArrayList<Long>();
-	private List<Long> _pgpKeyIds;
+//	private final List<Long> pgpKeyIds = new ArrayList<Long>();
+//	private List<Long> _pgpKeyIds;
 
 	private final Map<Uid, UserRepoKey> userRepoKeyId2UserRepoKey = new HashMap<>();
 	private final Map<UUID, List<UserRepoKey>> repositoryId2userRepoKeyList = new HashMap<>();
@@ -43,24 +43,24 @@ public class UserRepoKeyRing {
 		return userRepoKeyList;
 	}
 
-	public synchronized Collection<Long> getPgpKeyIds() {
-		if (_pgpKeyIds == null)
-			_pgpKeyIds = Collections.unmodifiableList(new ArrayList<Long>(pgpKeyIds));
-
-		return _pgpKeyIds;
-	}
-
-	public synchronized void addPgpKeyId(final long pgpKeyId) {
-		if (!pgpKeyIds.contains(pgpKeyId)) {
-			pgpKeyIds.add(pgpKeyId);
-			_pgpKeyIds = null;
-		}
-	}
-
-	public synchronized void removePgpKeyId(final long pgpKeyId) {
-		pgpKeyIds.remove(Long.valueOf(pgpKeyId));
-		_pgpKeyIds = null;
-	}
+//	public synchronized Collection<Long> getPgpKeyIds() {
+//		if (_pgpKeyIds == null)
+//			_pgpKeyIds = Collections.unmodifiableList(new ArrayList<Long>(pgpKeyIds));
+//
+//		return _pgpKeyIds;
+//	}
+//
+//	public synchronized void addPgpKeyId(final long pgpKeyId) {
+//		if (!pgpKeyIds.contains(pgpKeyId)) {
+//			pgpKeyIds.add(pgpKeyId);
+//			_pgpKeyIds = null;
+//		}
+//	}
+//
+//	public synchronized void removePgpKeyId(final long pgpKeyId) {
+//		pgpKeyIds.remove(Long.valueOf(pgpKeyId));
+//		_pgpKeyIds = null;
+//	}
 
 	public UserRepoKey getRandomUserRepoKey(final UUID repositoryId) {
 		final List<UserRepoKey> list = getUserRepoKeyList(repositoryId);

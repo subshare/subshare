@@ -4,8 +4,8 @@ import java.util.ServiceLoader;
 
 public class PgpRegistry {
 
-	private PgpAuthenticationCallback pgpAuthenticationCallback;
 	private Pgp pgp;
+	private PgpAuthenticationCallback pgpAuthenticationCallback;
 
 	protected PgpRegistry() { }
 

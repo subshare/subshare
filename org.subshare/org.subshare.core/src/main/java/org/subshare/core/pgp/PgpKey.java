@@ -5,6 +5,13 @@ import java.util.List;
 
 public class PgpKey {
 
+	public static final long TEST_DUMMY_PGP_KEY_ID = 0;
+
+	public static final PgpKey TEST_DUMMY_PGP_KEY = new PgpKey();
+	static {
+		TEST_DUMMY_PGP_KEY.setPrivateKeyAvailable(true);
+	}
+
 	private long pgpKeyId;
 
 	private byte[] fingerprint;

@@ -66,10 +66,21 @@ import org.junit.Test;
 public class GnuPgTest {
 	private static final Random random = new Random();
 
+	public static final String PUBRING_FILE_NAME = "pubring.gpg";
+	public static final String SECRING_FILE_NAME = "secring.gpg";
+
+	public static InputStream createPubringInputStream() {
+		return GnuPgTest.class.getResourceAsStream(PUBRING_FILE_NAME);
+	}
+
+	public static InputStream createSecringInputStream() {
+		return GnuPgTest.class.getResourceAsStream(SECRING_FILE_NAME);
+	}
+
 	@Test
 	public void readPubringGpg() throws Exception {
 		PGPPublicKeyRingCollection pgpPublicKeyRingCollection;
-		try (InputStream in = new BufferedInputStream(GnuPgTest.class.getResourceAsStream("pubring.gpg"));) {
+		try (InputStream in = new BufferedInputStream(createPubringInputStream());) {
 			pgpPublicKeyRingCollection = new PGPPublicKeyRingCollection(PGPUtil.getDecoderStream(in));
 		}
 		for (final Iterator<?> it1 = pgpPublicKeyRingCollection.getKeyRings(); it1.hasNext(); ) {
@@ -85,7 +96,7 @@ public class GnuPgTest {
 	@Test
 	public void readSecringGpg() throws Exception {
 		PGPSecretKeyRingCollection pgpSecretKeyRingCollection;
-		try (InputStream in = new BufferedInputStream(GnuPgTest.class.getResourceAsStream("secring.gpg"));) {
+		try (InputStream in = new BufferedInputStream(createSecringInputStream());) {
 			pgpSecretKeyRingCollection = new PGPSecretKeyRingCollection(PGPUtil.getDecoderStream(in));
 		}
 		for (final Iterator<?> it1 = pgpSecretKeyRingCollection.getKeyRings(); it1.hasNext(); ) {

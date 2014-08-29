@@ -7,19 +7,23 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigInteger;
 import java.security.SecureRandom;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.UUID;
 
 import org.subshare.core.Cryptree;
 import org.subshare.core.CryptreeFactoryRegistry;
-import org.subshare.core.crypto.KeyFactory;
+import org.subshare.core.pgp.PgpKey;
+import org.subshare.core.user.User;
+import org.subshare.core.user.UserRegistry;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKeyRing;
 
 import co.codewizards.cloudstore.core.config.ConfigDir;
+import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManagerFactory;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
-import co.codewizards.cloudstore.core.oio.File;
 
 public abstract class AbstractTest {
 	static {
@@ -30,17 +34,46 @@ public abstract class AbstractTest {
 	protected static final SecureRandom random = new SecureRandom();
 
 	protected static UserRepoKeyRing createUserRepoKeyRing(final UUID repositoryId) {
-		final UserRepoKeyRing userRepoKeyRing = new UserRepoKeyRing();
-		createUserRepoKey(userRepoKeyRing, repositoryId);
-		createUserRepoKey(userRepoKeyRing, repositoryId);
+		final UserRegistry userRegistry = new TestUserRegistry();
+		final User user = userRegistry.getUsers().iterator().next();
+		final UserRepoKeyRing userRepoKeyRing = user.getUserRepoKeyRingOrCreate();
+		user.createUserRepoKey(repositoryId);
+		user.createUserRepoKey(repositoryId);
 		return userRepoKeyRing;
 	}
 
-	protected static UserRepoKey createUserRepoKey(final UserRepoKeyRing userRepoKeyRing, final UUID repositoryId) {
-		final UserRepoKey userRepoKey = new UserRepoKey(userRepoKeyRing, repositoryId, KeyFactory.getInstance().createAsymmetricKeyPair());
-		userRepoKeyRing.addUserRepoKey(userRepoKey);
-		return userRepoKey;
+	private static class TestUserRegistry extends UserRegistry {
+		private final User user;
+
+		public TestUserRegistry() {
+			user = new User();
+			user.getPgpKeyIds().add(PgpKey.TEST_DUMMY_PGP_KEY_ID);
+			user.getEmails().add("user@domain.tld");
+			user.setFirstName("Hans");
+			user.setLastName("Müller");
+			user.getUserRepoKeyRingOrCreate();
+		}
+
+		@Override
+		protected void readUserListFile() {
+			// nothing
+		}
+		@Override
+		protected void readPgpUsers() {
+			// nothing
+		}
+
+		@Override
+		public synchronized Collection<User> getUsers() {
+			return Collections.singleton(user);
+		}
 	}
+
+//	protected static UserRepoKey createUserRepoKey(final UserRepoKeyRing userRepoKeyRing, final UUID repositoryId) {
+//		final UserRepoKey userRepoKey = new UserRepoKey(userRepoKeyRing, repositoryId, KeyFactory.getInstance().createAsymmetricKeyPair());
+//		userRepoKeyRing.addUserRepoKey(userRepoKey);
+//		return userRepoKey;
+//	}
 
 	protected File newTestRepositoryLocalRoot(final String suffix) throws IOException {
 		assertThat(suffix).isNotNull();

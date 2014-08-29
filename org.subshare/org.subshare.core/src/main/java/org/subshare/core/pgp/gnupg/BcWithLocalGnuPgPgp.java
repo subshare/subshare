@@ -27,11 +27,9 @@ import org.subshare.core.pgp.PgpEncoder;
 import org.subshare.core.pgp.PgpKey;
 
 import co.codewizards.cloudstore.core.oio.File;
-import co.codewizards.cloudstore.core.util.IOUtil;
 
 public class BcWithLocalGnuPgPgp extends AbstractPgp {
 
-	private File gnuPgDir;
 	private File pubringFile;
 	private File secringFile;
 
@@ -53,11 +51,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 	}
 
 	public File getGnuPgDir() {
-		// TODO make this configurable!
-		if (gnuPgDir == null)
-			gnuPgDir = createFile(IOUtil.getUserHome(), ".gnupg");
-
-		return gnuPgDir;
+		return GnuPgDir.getInstance().getFile();
 	}
 
 	@Override
@@ -72,6 +66,11 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 
 	@Override
 	public PgpKey getPgpKey(final long pgpKeyId) {
+		loadIfNeeded();
+
+		if (PgpKey.TEST_DUMMY_PGP_KEY_ID == pgpKeyId)
+			return PgpKey.TEST_DUMMY_PGP_KEY;
+
 		final BcPgpKey bcPgpKey = pgpKeyId2bcPgpKey.get(pgpKeyId);
 		return bcPgpKey == null ? null : bcPgpKey.getPgpKey();
 	}
@@ -90,6 +89,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 	}
 
 	public BcPgpKey getBcPgpKey(final long pgpKeyId) {
+		loadIfNeeded();
 		final BcPgpKey bcPgpKey = pgpKeyId2bcPgpKey.get(pgpKeyId);
 		return bcPgpKey;
 	}
@@ -106,14 +106,14 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 
 	protected File getPubringFile() {
 		if (pubringFile == null)
-			pubringFile = createFile(getGnuPgDir(), "pubring.gpg");
+			pubringFile = createFile(GnuPgDir.getInstance().getFile(), "pubring.gpg");
 
 		return pubringFile;
 	}
 
 	protected File getSecringFile() {
 		if (secringFile == null)
-			secringFile = createFile(getGnuPgDir(), "secring.gpg");
+			secringFile = createFile(GnuPgDir.getInstance().getFile(), "secring.gpg");
 
 		return secringFile;
 	}

@@ -15,7 +15,7 @@ public abstract class AbstractPgpEncoder implements PgpEncoder {
 
 	private final Set<PgpKey> encryptPgpKeys = new HashSet<PgpKey>(0);
 	private PgpKey signPgpKey;
-	private String fileName;
+	private String fileName = "";
 
 	private boolean withIntegrityCheck;
 	private SymmetricEncryptionAlgorithm symmetricEncryptionAlgorithm = SymmetricEncryptionAlgorithm.AES_256;
@@ -111,7 +111,7 @@ public abstract class AbstractPgpEncoder implements PgpEncoder {
 		return fileName;
 	}
 	public void setFileName(final String fileName) {
-		this.fileName = fileName;
+		this.fileName = assertNotNull("fileName", fileName);
 	}
 
 	protected PgpAuthenticationCallback getPgpAuthenticationCallback() {
