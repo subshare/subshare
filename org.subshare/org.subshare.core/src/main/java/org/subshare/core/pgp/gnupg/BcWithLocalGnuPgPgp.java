@@ -137,7 +137,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 			secringFileLastModified = secringFile.lastModified();
 			if (secringFile.isFile()) {
 				PGPSecretKeyRingCollection pgpSecretKeyRingCollection;
-				try (InputStream in = new BufferedInputStream(GnuPgTest.class.getResourceAsStream("secring.gpg"));) {
+				try (InputStream in = new BufferedInputStream(secringFile.createFileInputStream());) {
 					pgpSecretKeyRingCollection = new PGPSecretKeyRingCollection(PGPUtil.getDecoderStream(in));
 				}
 				BcPgpKey lastMasterKey = null;
