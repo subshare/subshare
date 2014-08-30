@@ -8,10 +8,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
@@ -20,11 +23,15 @@ import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
+import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPUtil;
 import org.subshare.core.pgp.AbstractPgp;
 import org.subshare.core.pgp.PgpDecoder;
 import org.subshare.core.pgp.PgpEncoder;
 import org.subshare.core.pgp.PgpKey;
+import org.subshare.core.pgp.PgpKeyTrustLevel;
+import org.subshare.core.pgp.PgpSignature;
+import org.subshare.core.pgp.PgpSignatureType;
 
 import co.codewizards.cloudstore.core.oio.File;
 
@@ -61,7 +68,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 		for (final BcPgpKey bcPgpKey : pgpKeyId2masterKey.values())
 			pgpKeys.add(bcPgpKey.getPgpKey());
 
-		return pgpKeys;
+		return Collections.unmodifiableList(pgpKeys);
 	}
 
 	@Override
@@ -188,6 +195,59 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 		this.pgpKeyId2masterKey = pgpKeyId2masterKey;
 	}
 
+	@Override
+	public Collection<PgpSignature> getSignatures(final PgpKey pgpKey) {
+		final BcPgpKey bcPgpKey = getBcPgpKeyOrFail(pgpKey);
+		final List<PgpSignature> result = new ArrayList<PgpSignature>();
+		for (final Iterator<?> it = bcPgpKey.getPublicKey().getSignatures(); it.hasNext(); ) {
+			final PGPSignature bcPgpSignature = (PGPSignature) it.next();
+			final PgpSignature pgpSignature = new PgpSignature();
+			pgpSignature.setPgpKeyId(bcPgpSignature.getKeyID());
+			pgpSignature.setCreated(bcPgpSignature.getCreationTime());
+			pgpSignature.setSignatureType(signatureTypeToEnum(bcPgpSignature.getSignatureType()));
+			result.add(pgpSignature);
+		}
+		return Collections.unmodifiableList(result);
+	}
+
+	@Override
+	public Collection<PgpKey> getMasterKeysWithPrivateKey() {
+		final List<PgpKey> result = new ArrayList<PgpKey>();
+		final Collection<PgpKey> masterKeys = getMasterKeys();
+		for (final PgpKey pgpKey : masterKeys) {
+			if (pgpKey.isPrivateKeyAvailable())
+				result.add(pgpKey);
+		}
+		return Collections.unmodifiableList(result);
+	}
+
+	@Override
+	public boolean isTrusted(final PgpKey pgpKey) {
+		return getKeyTrustLevel(pgpKey).compareTo(PgpKeyTrustLevel.TRUSTED_EXPIRED) >= 0;
+	}
+
+	@Override
+	public PgpKeyTrustLevel getKeyTrustLevel(final PgpKey pgpKey) {
+		// PGPPublicKey.getTrustData() returns *always* null, hence we must calculate it ourselves :-(
+		// TODO we must manage the "owner-trust", too!
+		// TODO we should improve this algorithm and store the results in a database, too!
+		// TODO is it expired?!
+		// For now, we take only direct trust relations into account.
+		final Set<PgpKey> masterKeysWithPrivateKey = new HashSet<PgpKey>(getMasterKeysWithPrivateKey());
+		if (masterKeysWithPrivateKey.contains(pgpKey))
+			return PgpKeyTrustLevel.ULTIMATE;
+
+		for (final PgpSignature signature : getSignatures(pgpKey)) {
+			if (signature.getSignatureType().getTrustLevel() < PgpSignatureType.CASUAL_CERTIFICATION.getTrustLevel())
+				continue;
+
+			final PgpKey signingKey = getPgpKey(signature.getPgpKeyId());
+			if (masterKeysWithPrivateKey.contains(signingKey))
+				return PgpKeyTrustLevel.TRUSTED;
+		}
+		return PgpKeyTrustLevel.NOT_TRUSTED;
+	}
+
 	private BcPgpKey enlistPublicKey(final Map<Long, BcPgpKey> pgpKeyId2bcPgpKey,
 			final Map<Long, BcPgpKey> pgpKeyId2masterKey,
 			BcPgpKey lastMasterKey, final PGPPublicKey publicKey)
@@ -213,4 +273,41 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 		return lastMasterKey;
 	}
 
+	private PgpSignatureType signatureTypeToEnum(final int signatureType) {
+		switch (signatureType) {
+			case PGPSignature.BINARY_DOCUMENT:
+				return PgpSignatureType.BINARY_DOCUMENT;
+			case PGPSignature.CANONICAL_TEXT_DOCUMENT:
+				return PgpSignatureType.CANONICAL_TEXT_DOCUMENT;
+			case PGPSignature.STAND_ALONE:
+				return PgpSignatureType.STAND_ALONE;
+
+			case PGPSignature.DEFAULT_CERTIFICATION:
+				return PgpSignatureType.DEFAULT_CERTIFICATION;
+			case PGPSignature.NO_CERTIFICATION:
+				return PgpSignatureType.NO_CERTIFICATION;
+			case PGPSignature.CASUAL_CERTIFICATION:
+				return PgpSignatureType.CASUAL_CERTIFICATION;
+			case PGPSignature.POSITIVE_CERTIFICATION:
+				return PgpSignatureType.POSITIVE_CERTIFICATION;
+
+			case PGPSignature.SUBKEY_BINDING:
+				return PgpSignatureType.SUBKEY_BINDING;
+			case PGPSignature.PRIMARYKEY_BINDING:
+				return PgpSignatureType.PRIMARYKEY_BINDING;
+			case PGPSignature.DIRECT_KEY:
+				return PgpSignatureType.DIRECT_KEY;
+			case PGPSignature.KEY_REVOCATION:
+				return PgpSignatureType.KEY_REVOCATION;
+			case PGPSignature.SUBKEY_REVOCATION:
+				return PgpSignatureType.SUBKEY_REVOCATION;
+			case PGPSignature.CERTIFICATION_REVOCATION:
+				return PgpSignatureType.CERTIFICATION_REVOCATION;
+			case PGPSignature.TIMESTAMP:
+				return PgpSignatureType.TIMESTAMP;
+
+			default:
+				throw new IllegalArgumentException("Unknown signatureType: " + signatureType);
+		}
+	}
 }

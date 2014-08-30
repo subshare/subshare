@@ -218,7 +218,6 @@ public class GnuPgTest {
 	    final OutputStream compressedData = comData.open(encryptedOut);
 
 
-//	    if (pgpSec.getKeyEncryptionAlgorithm() != SymmetricKeyAlgorithmTags.NULL)
 	    final PGPPrivateKey pgpPrivKey = pgpSec.extractPrivateKey(
 	    		new BcPBESecretKeyDecryptorBuilder(new BcPGPDigestCalculatorProvider()).build(pass));
 	    final PGPSignatureGenerator sGen = new PGPSignatureGenerator(new BcPGPContentSignerBuilder(
@@ -410,7 +409,7 @@ public class GnuPgTest {
 		return secretKey;
 	}
 
-	private static byte[] longToBytes(final long l) {
+	public static byte[] longToBytes(final long l) {
 		final byte[] bytes = new byte[8];
 		for (int i = 0; i < 8; ++i)
 			bytes[i] = (byte) (l >>> (8 * (7 - i)));
@@ -418,7 +417,7 @@ public class GnuPgTest {
 		return bytes;
 	}
 
-	private static long bytesToLong(final byte[] bytes) {
+	public static long bytesToLong(final byte[] bytes) {
 		long l = 0;
 		for (int i = 0; i < 8; ++i)
 			l |= ((long) (bytes[i] & 0xff)) << (8 * (7 - i));
@@ -448,6 +447,9 @@ public class GnuPgTest {
 		System.out.println("fingerprint: " + (fingerprint == null ? "" : formatEncodedHexStrForHuman(encodeHexStr(fingerprint))));
 		System.out.println("masterKey: " + publicKey.isMasterKey());
 		System.out.println("encryptionKey: " + publicKey.isEncryptionKey());
+		// trustData is *always* null :-(
+//		final byte[] trustData = publicKey.getTrustData();
+//		System.out.println("trustData: " + (trustData == null ? null : encodeHexStr(trustData)));
 
 		for (final Iterator<?> it3 = publicKey.getUserIDs(); it3.hasNext(); ) {
 			final String userId = (String) it3.next();
@@ -457,8 +459,47 @@ public class GnuPgTest {
 		for (final Iterator<?> it4 = publicKey.getSignatures(); it4.hasNext(); ) {
 			final PGPSignature signature = (PGPSignature) it4.next();
 			System.out.println("signature.keyID: " + encodeHexStr(longToBytes(signature.getKeyID())));
+			System.out.println("signature.signatureType: " + signatureTypeToString(signature.getSignatureType()));
 		}
 		System.out.println("<<< pub <<<");
+	}
+
+	private String signatureTypeToString(final int signatureType) {
+		switch (signatureType) {
+			case PGPSignature.BINARY_DOCUMENT:
+				return "BINARY_DOCUMENT";
+			case PGPSignature.CANONICAL_TEXT_DOCUMENT:
+				return "CANONICAL_TEXT_DOCUMENT";
+			case PGPSignature.STAND_ALONE:
+				return "STAND_ALONE";
+
+			case PGPSignature.DEFAULT_CERTIFICATION:
+				return "DEFAULT_CERTIFICATION";
+			case PGPSignature.NO_CERTIFICATION:
+				return "NO_CERTIFICATION";
+			case PGPSignature.CASUAL_CERTIFICATION:
+				return "CASUAL_CERTIFICATION";
+			case PGPSignature.POSITIVE_CERTIFICATION:
+				return "POSITIVE_CERTIFICATION";
+
+			case PGPSignature.SUBKEY_BINDING:
+				return "SUBKEY_BINDING";
+			case PGPSignature.PRIMARYKEY_BINDING:
+				return "PRIMARYKEY_BINDING";
+			case PGPSignature.DIRECT_KEY:
+				return "DIRECT_KEY";
+			case PGPSignature.KEY_REVOCATION:
+				return "KEY_REVOCATION";
+			case PGPSignature.SUBKEY_REVOCATION:
+				return "SUBKEY_REVOCATION";
+			case PGPSignature.CERTIFICATION_REVOCATION:
+				return "CERTIFICATION_REVOCATION";
+			case PGPSignature.TIMESTAMP:
+				return "TIMESTAMP";
+
+			default:
+				return Integer.toHexString(signatureType);
+		}
 	}
 
 	private void printSecretKey(final PGPSecretKey secretKey) {
@@ -471,13 +512,4 @@ public class GnuPgTest {
 		System.out.println("<<< sec <<<");
 	}
 
-
-	private static File getUserHome()
-	{
-		final String userHome = System.getProperty("user.home"); //$NON-NLS-1$
-		if (userHome == null)
-			throw new IllegalStateException("System property user.home is not set! This should never happen!"); //$NON-NLS-1$
-
-		return new File(userHome);
-	}
 }

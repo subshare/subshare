@@ -22,8 +22,6 @@ public class PgpKey {
 
 	private final List<PgpKey> subKeys = new ArrayList<PgpKey>(1);
 
-	private final List<Long> signaturePgpKeyIds = new ArrayList<Long>(3);
-
 	public long getPgpKeyId() {
 		return pgpKeyId;
 	}
@@ -53,8 +51,24 @@ public class PgpKey {
 		return subKeys;
 	}
 
-	public List<Long> getSignaturePgpKeyIds() {
-		return signaturePgpKeyIds;
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + (int) (pgpKeyId ^ (pgpKeyId >>> 32));
+		return result;
+	}
+
+	@Override
+	public boolean equals(final Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		final PgpKey other = (PgpKey) obj;
+		return this.pgpKeyId == other.pgpKeyId;
 	}
 
 }

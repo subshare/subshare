@@ -7,11 +7,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import org.subshare.core.gpg.GnuPgTest;
+import org.subshare.core.pgp.Pgp;
 import org.subshare.core.pgp.PgpAuthenticationCallback;
 import org.subshare.core.pgp.PgpKey;
+import org.subshare.core.pgp.PgpKeyTrustLevel;
 import org.subshare.core.pgp.PgpRegistry;
 import org.subshare.core.pgp.gnupg.GnuPgDir;
 import org.junit.BeforeClass;
@@ -32,14 +36,8 @@ public class UserRegistryTest {
 	}
 
 	@Test
-	public void readGpgKeys() throws Exception {
-		createGnuPgDir();
-		PgpRegistry.getInstance().setPgpAuthenticationCallback(new PgpAuthenticationCallback() {
-			@Override
-			public char[] getPassphrase(final PgpKey pgpKey) {
-				return "test12345".toCharArray();
-			}
-		});
+	public void initUserRegistryFromGpgKeys() throws Exception {
+		initPgp();
 
 		final UserRegistry userRegistry = new TestUserRegistry();
 		final Collection<User> users = userRegistry.getUsers();
@@ -61,7 +59,44 @@ public class UserRegistryTest {
 		marcoAtCodeWizards.createUserRepoKey(UUID.randomUUID());
 	}
 
-	private void createGnuPgDir() throws IOException {
+	@Test
+	public void initialiseUserRegistryFromGpgKeys() throws Exception {
+		initPgp();
+
+		final UserRegistry userRegistry = new TestUserRegistry();
+		final Pgp pgp = PgpRegistry.getInstance().getPgpOrFail();
+
+		final Map<String, PgpKeyTrustLevel> email2ExpectedPgpKeyTrustLevel = new HashMap<String, PgpKeyTrustLevel>();
+		email2ExpectedPgpKeyTrustLevel.put("marco@codewizards.co", PgpKeyTrustLevel.ULTIMATE);
+		email2ExpectedPgpKeyTrustLevel.put("alex@nightlabs.de", PgpKeyTrustLevel.TRUSTED);
+		email2ExpectedPgpKeyTrustLevel.put("daniel@nightlabs.de", PgpKeyTrustLevel.TRUSTED);
+		email2ExpectedPgpKeyTrustLevel.put("janmorti@gmx.de", PgpKeyTrustLevel.NOT_TRUSTED);
+		email2ExpectedPgpKeyTrustLevel.put("jonathan@codewizards.co", PgpKeyTrustLevel.NOT_TRUSTED);
+		email2ExpectedPgpKeyTrustLevel.put("marc@nightlabs.de", PgpKeyTrustLevel.NOT_TRUSTED);
+
+		for (final Map.Entry<String, PgpKeyTrustLevel> me : email2ExpectedPgpKeyTrustLevel.entrySet()) {
+			final String email = me.getKey();
+			final PgpKeyTrustLevel expectedPgpKeyTrustLevel = me.getValue();
+
+			final Collection<User> users = userRegistry.getUsersByEmail(email);
+			assertThat(users).hasSize(1);
+			final User user = users.iterator().next();
+
+			PgpKeyTrustLevel highestKeyTrustLevel = null;
+			for (final Long pgpKeyId : user.getPgpKeyIds()) {
+				final PgpKey pgpKey = pgp.getPgpKey(pgpKeyId);
+				if (pgpKey != null) {
+					final PgpKeyTrustLevel ktl = pgp.getKeyTrustLevel(pgpKey);
+					if (highestKeyTrustLevel == null || ktl.compareTo(highestKeyTrustLevel) > 0)
+						highestKeyTrustLevel = ktl;
+				}
+			}
+			assertThat(highestKeyTrustLevel).isNotNull();
+			assertThat(highestKeyTrustLevel).isEqualTo(expectedPgpKeyTrustLevel);
+		}
+	}
+
+	private void initPgp() throws IOException {
 		GnuPgDir.getInstance().getFile().mkdir();
 		try (
 				OutputStream out = createFile(GnuPgDir.getInstance().getFile(), GnuPgTest.PUBRING_FILE_NAME).createFileOutputStream();
@@ -75,6 +110,13 @@ public class UserRegistryTest {
 				) {
 			IOUtil.transferStreamData(in, out);
 		}
+
+		PgpRegistry.getInstance().setPgpAuthenticationCallback(new PgpAuthenticationCallback() {
+			@Override
+			public char[] getPassphrase(final PgpKey pgpKey) {
+				return "test12345".toCharArray();
+			}
+		});
 	}
 
 }

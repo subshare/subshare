@@ -11,7 +11,7 @@ import co.codewizards.cloudstore.core.dto.Uid;
 public class UserRepoKeyPrivateKeyDto {
 	private Uid userRepoKeyId;
 	private UUID repositoryId;
-	private byte[] privateKeyData;
+	private byte[] encryptedSignedPrivateKeyData;
 
 	public Uid getUserRepoKeyId() {
 		return userRepoKeyId;
@@ -31,17 +31,17 @@ public class UserRepoKeyPrivateKeyDto {
 	 * Gets the encrypted (OpenPGP) private key.
 	 * @return the encrypted (OpenPGP) private key.
 	 */
-	public byte[] getPrivateKeyData() {
-		return privateKeyData;
+	public byte[] getEncryptedSignedPrivateKeyData() {
+		return encryptedSignedPrivateKeyData;
 	}
-	public void setPrivateKeyData(final byte[] privateKeyData) {
-		this.privateKeyData = privateKeyData;
+	public void setEncryptedSignedPrivateKeyData(final byte[] privateKeyData) {
+		this.encryptedSignedPrivateKeyData = privateKeyData;
 	}
 
 	@Override
 	public String toString() {
 		return "UserRepoKeyPrivateKeyDto[userRepoKeyId=" + userRepoKeyId
-				+ ", repositoryId=" + repositoryId + ", privateKeyData="
-				+ Arrays.toString(privateKeyData) + "]";
+				+ ", repositoryId=" + repositoryId + ", encryptedSignedPrivateKeyData="
+				+ Arrays.toString(encryptedSignedPrivateKeyData) + "]";
 	}
 }

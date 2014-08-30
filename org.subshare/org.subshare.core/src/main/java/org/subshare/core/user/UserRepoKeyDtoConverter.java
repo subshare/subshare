@@ -11,8 +11,7 @@ public class UserRepoKeyDtoConverter {
 		final UserRepoKeyPrivateKeyDto privateKeyDto = new UserRepoKeyPrivateKeyDto();
 		privateKeyDto.setUserRepoKeyId(userRepoKey.getUserRepoKeyId());
 		privateKeyDto.setRepositoryId(userRepoKey.getRepositoryId());
-//		privateKeyDto.setPrivateKeyData(); // TODO
-		if (true) throw new UnsupportedOperationException("NYI");
+		privateKeyDto.setEncryptedSignedPrivateKeyData(userRepoKey.getEncryptedSignedPrivateKeyData());
 		userRepoKeyDto.setPrivateKeyDto(privateKeyDto);
 		userRepoKeyDto.setPublicKeyDto(userRepoKeyPublicKeyDtoConverter.toUserRepoKeyPublicKeyDto(userRepoKey.getPublicKey()));
 		return userRepoKeyDto;

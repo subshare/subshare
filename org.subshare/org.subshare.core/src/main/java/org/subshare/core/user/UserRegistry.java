@@ -1,14 +1,19 @@
 package org.subshare.core.user;
 
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
+import static co.codewizards.cloudstore.core.util.StringUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import org.subshare.core.dto.UserDto;
 import org.subshare.core.dto.UserListDto;
@@ -28,7 +33,8 @@ public class UserRegistry {
 
 	private final Map<Long, User> pgpKeyId2User = new HashMap<Long, User>();
 	private final List<User> users = new ArrayList<User>();
-	private List<User> _users;
+	private List<User> cache_users;
+	private Map<String, Set<User>> cache_email2Users;
 	private final File userListFile;
 	private final UserListDtoIo userListDtoIo = new UserListDtoIo();
 
@@ -64,12 +70,28 @@ public class UserRegistry {
 		for (final PgpKey pgpKey : PgpRegistry.getInstance().getPgpOrFail().getMasterKeys()) {
 			User user = pgpKeyId2User.get(pgpKey.getPgpKeyId());
 			if (user == null) {
+				boolean newUser = true;
 				user = new User();
-				pgpKeyId2User.put(pgpKey.getPgpKeyId(), user);
-				users.add(user);
-				_users = null;
 				for (final String userId : pgpKey.getUserIds())
 					populateUserFromPgpUserId(user, userId);
+
+				// Try to deduplicate by e-mail address.
+				for (final String email : user.getEmails()) {
+					final Collection<User> usersByEmail = getUsersByEmail(email);
+					if (! usersByEmail.isEmpty()) {
+						newUser = false;
+						user = usersByEmail.iterator().next();
+
+						for (final String userId : pgpKey.getUserIds())
+							populateUserFromPgpUserId(user, userId);
+					}
+				}
+
+				if (newUser) {
+					pgpKeyId2User.put(pgpKey.getPgpKeyId(), user);
+					users.add(user);
+					cleanCache();
+				}
 			}
 
 			if (! user.getPgpKeyIds().contains(pgpKey.getPgpKeyId()))
@@ -102,10 +124,10 @@ public class UserRegistry {
 
 			user.getEmails().add(email);
 
-			if (!firstAndLastName[0].isEmpty())
+			if (isEmpty(user.getFirstName()) && !firstAndLastName[0].isEmpty())
 				user.setFirstName(firstAndLastName[0]);
 
-			if (!firstAndLastName[1].isEmpty())
+			if (isEmpty(user.getLastName()) && !firstAndLastName[1].isEmpty())
 				user.setLastName(firstAndLastName[1]);
 		}
 	}
@@ -131,10 +153,40 @@ public class UserRegistry {
 	}
 
 	public synchronized Collection<User> getUsers() {
-		if (_users == null)
-			_users = Collections.unmodifiableList(new ArrayList<User>(users));
+		if (cache_users == null)
+			cache_users = Collections.unmodifiableList(new ArrayList<User>(users));
 
-		return _users;
+		return cache_users;
+	}
+
+	private void cleanCache() {
+		cache_users = null;
+		cache_email2Users = null;
+	}
+
+	public synchronized Collection<User> getUsersByEmail(final String email) {
+		if (cache_email2Users == null) {
+			final Map<String, Set<User>> cache_email2Users = new HashMap<String, Set<User>>();
+			for (final User user : getUsers()) {
+				for (String eml : user.getEmails()) {
+					eml = eml.toLowerCase(Locale.UK);
+					Set<User> users = cache_email2Users.get(eml);
+					if (users == null) {
+						users = new HashSet<User>();
+						cache_email2Users.put(eml, users);
+					}
+					users.add(user);
+				}
+			}
+
+			for (final Map.Entry<String, Set<User>> me : cache_email2Users.entrySet())
+				me.setValue(Collections.unmodifiableSet(me.getValue()));
+
+			this.cache_email2Users = Collections.unmodifiableMap(cache_email2Users);
+		}
+
+		final Set<User> users = cache_email2Users.get(email.toLowerCase(Locale.UK));
+		return users != null ? users : Collections.unmodifiableList(new LinkedList<User>());
 	}
 
 	private LockFile acquireLockFile() {

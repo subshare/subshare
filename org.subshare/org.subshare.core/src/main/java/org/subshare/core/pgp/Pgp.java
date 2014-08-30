@@ -18,4 +18,12 @@ public interface Pgp {
 
 	PgpDecoder createDecoder(InputStream in, OutputStream out);
 
+	Collection<PgpSignature> getSignatures(PgpKey pgpKey);
+
+	Collection<PgpKey> getMasterKeysWithPrivateKey();
+
+	boolean isTrusted(PgpKey pgpKey);
+
+	PgpKeyTrustLevel getKeyTrustLevel(PgpKey pgpKey);
+
 }
