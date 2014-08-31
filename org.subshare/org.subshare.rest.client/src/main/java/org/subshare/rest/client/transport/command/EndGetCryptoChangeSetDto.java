@@ -1,6 +1,6 @@
 package org.subshare.rest.client.transport.command;
 
-import static co.codewizards.cloudstore.core.util.Util.*;
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;

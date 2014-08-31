@@ -1,6 +1,7 @@
 package org.subshare.core;
 
-import static co.codewizards.cloudstore.core.util.Util.*;
+
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.util.UUID;
 

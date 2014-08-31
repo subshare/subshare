@@ -1,6 +1,6 @@
 package org.subshare.local;
 
-import static co.codewizards.cloudstore.core.util.Util.*;
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static org.subshare.local.CryptreeNodeUtil.*;
 
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;

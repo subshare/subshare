@@ -1,6 +1,6 @@
 package org.subshare.core.crypto;
 
-import static co.codewizards.cloudstore.core.util.Util.*;
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static org.subshare.core.crypto.EncrypterDecrypterStreamUtil.*;
 
 import java.io.FilterInputStream;

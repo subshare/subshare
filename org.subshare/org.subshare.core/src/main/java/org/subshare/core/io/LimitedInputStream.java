@@ -1,6 +1,6 @@
 package org.subshare.core.io;
 
-import static co.codewizards.cloudstore.core.util.Util.*;
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.io.FilterInputStream;
 import java.io.IOException;

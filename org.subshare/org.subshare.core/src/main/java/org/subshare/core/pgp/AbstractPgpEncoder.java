@@ -1,6 +1,6 @@
 package org.subshare.core.pgp;
 
-import static co.codewizards.cloudstore.core.util.Util.*;
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.io.InputStream;
 import java.io.OutputStream;

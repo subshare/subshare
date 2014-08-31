@@ -1,7 +1,7 @@
 package org.subshare.core.pgp.gnupg;
 
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
-import static co.codewizards.cloudstore.core.util.Util.*;
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;

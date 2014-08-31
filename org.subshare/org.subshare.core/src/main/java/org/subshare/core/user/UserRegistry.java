@@ -1,8 +1,8 @@
 package org.subshare.core.user;
 
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
-import static co.codewizards.cloudstore.core.util.Util.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
