@@ -99,13 +99,13 @@ public class UserRegistryTest {
 	private void initPgp() throws IOException {
 		GnuPgDir.getInstance().getFile().mkdir();
 		try (
-				OutputStream out = createFile(GnuPgDir.getInstance().getFile(), GnuPgTest.PUBRING_FILE_NAME).createFileOutputStream();
+				OutputStream out = createFile(GnuPgDir.getInstance().getFile(), GnuPgTest.PUBRING_FILE_NAME).createOutputStream();
 				InputStream in = GnuPgTest.createPubringInputStream();
 				) {
 			IOUtil.transferStreamData(in, out);
 		}
 		try (
-				OutputStream out = createFile(GnuPgDir.getInstance().getFile(), GnuPgTest.SECRING_FILE_NAME).createFileOutputStream();
+				OutputStream out = createFile(GnuPgDir.getInstance().getFile(), GnuPgTest.SECRING_FILE_NAME).createOutputStream();
 				InputStream in = GnuPgTest.createSecringInputStream();
 				) {
 			IOUtil.transferStreamData(in, out);

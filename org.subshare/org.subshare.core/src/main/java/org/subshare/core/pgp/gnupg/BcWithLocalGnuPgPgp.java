@@ -143,7 +143,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 			secringFileLastModified = secringFile.lastModified();
 			if (secringFile.isFile()) {
 				PGPSecretKeyRingCollection pgpSecretKeyRingCollection;
-				try (InputStream in = new BufferedInputStream(secringFile.createFileInputStream());) {
+				try (InputStream in = new BufferedInputStream(secringFile.createInputStream());) {
 					pgpSecretKeyRingCollection = new PGPSecretKeyRingCollection(PGPUtil.getDecoderStream(in));
 				}
 				BcPgpKey lastMasterKey = null;
@@ -171,7 +171,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 			pubringFileLastModified = pubringFile.lastModified();
 			if (pubringFile.isFile()) {
 				PGPPublicKeyRingCollection pgpPublicKeyRingCollection;
-				try (InputStream in = new BufferedInputStream(pubringFile.createFileInputStream());) {
+				try (InputStream in = new BufferedInputStream(pubringFile.createInputStream());) {
 					pgpPublicKeyRingCollection = new PGPPublicKeyRingCollection(PGPUtil.getDecoderStream(in));
 				}
 
