@@ -31,15 +31,11 @@ public class UserRegistryTest {
 		System.setProperty(Config.SYSTEM_PROPERTY_PREFIX + GnuPgDir.CONFIG_KEY_GNU_PG_DIR, "build/.gnupg");
 	}
 
-	private static class TestUserRegistry extends UserRegistry {
-
-	}
-
 	@Test
 	public void initUserRegistryFromGpgKeys() throws Exception {
 		initPgp();
 
-		final UserRegistry userRegistry = new TestUserRegistry();
+		final UserRegistry userRegistry = new UserRegistry();
 		final Collection<User> users = userRegistry.getUsers();
 		assertThat(users).isNotEmpty();
 
@@ -60,10 +56,10 @@ public class UserRegistryTest {
 	}
 
 	@Test
-	public void initialiseUserRegistryFromGpgKeys() throws Exception {
+	public void testGpgKeyTrustLevels() throws Exception {
 		initPgp();
 
-		final UserRegistry userRegistry = new TestUserRegistry();
+		final UserRegistry userRegistry = new UserRegistry();
 		final Pgp pgp = PgpRegistry.getInstance().getPgpOrFail();
 
 		final Map<String, PgpKeyTrustLevel> email2ExpectedPgpKeyTrustLevel = new HashMap<String, PgpKeyTrustLevel>();
