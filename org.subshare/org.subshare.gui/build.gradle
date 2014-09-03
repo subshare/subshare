@@ -1,3 +1,28 @@
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
+
+sourceSets {
+	main {
+		java {
+			srcDir 'src/main/java'
+		}
+		resources {
+			srcDir 'src/main/java'
+			srcDir 'src/main/resources'
+		}
+	}
+
+	test {
+		java {
+			srcDir 'src/test/java'
+		}
+		resources {
+			srcDir 'src/test/java'
+			srcDir 'src/test/resources'
+		}
+	}
+}
+
 dependencies {
 	compile project(':org.subshare.local')
 	compile project(':org.subshare.rest.client')
