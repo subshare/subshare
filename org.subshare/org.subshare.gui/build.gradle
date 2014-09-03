@@ -1,4 +1,4 @@
 dependencies {
-	compile project(':org.subshare.client')
-	compile project(':org.subshare.server')
+	compile project(':org.subshare.local')
+	compile project(':org.subshare.rest.client')
 }
