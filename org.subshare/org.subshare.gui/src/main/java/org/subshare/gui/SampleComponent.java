@@ -1,7 +1,8 @@
 package org.subshare.gui;
 
+import static org.subshare.gui.util.ResourceBundleUtil.*;
+
 import java.io.IOException;
-import java.util.ResourceBundle;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -13,7 +14,7 @@ public class SampleComponent extends BorderPane {
 	public SampleComponent() {
 		final FXMLLoader fxmlLoader = new FXMLLoader(
 				SampleComponent.class.getResource("Sample.fxml"),
-				ResourceBundle.getBundle("org.subshare.gui.messages"));
+				getResourceBundle(SampleComponent.class, "messages"));
 
 		fxmlLoader.setRoot(this);
 		fxmlLoader.setController(this);

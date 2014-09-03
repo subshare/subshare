@@ -1,30 +1,25 @@
 package org.subshare.gui;
 
-import java.util.ResourceBundle;
-
+import static org.subshare.gui.util.ResourceBundleUtil.*;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 
 public class SubShareGui extends Application {
 
 	@Override
 	public void start(final Stage primaryStage) throws Exception {
-		try {
-			final GridPane root = FXMLLoader.load(
-					SubShareGui.class.getResource("Example1Pane.fxml"),
-					ResourceBundle.getBundle("org.subshare.gui.messages"));
+		final Parent root = FXMLLoader.load(
+				SubShareGui.class.getResource("MainPane.fxml"),
+				getMessages(SubShareGui.class));
 
-			final Scene scene = new Scene(root,400,400);
-			scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
-			primaryStage.setScene(scene);
-			primaryStage.setTitle("Hello world!");
-			primaryStage.show();
-		} catch(final Exception e) {
-			e.printStackTrace();
-		}
+		final Scene scene = new Scene(root, 800, 600);
+		scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
+		primaryStage.setScene(scene);
+		primaryStage.setTitle("SubShare");
+		primaryStage.show();
 	}
 
 	public static void main(final String[] args) {
