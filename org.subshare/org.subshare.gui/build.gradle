@@ -1,0 +1,4 @@
+dependencies {
+	compile project(':org.subshare.client')
+	compile project(':org.subshare.server')
+}
