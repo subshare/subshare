@@ -22,7 +22,7 @@ public class FxmlUtil {
 	 * @param componentClass
 	 * @param component
 	 */
-	public static void loadCustomComponent(final Class<?> componentClass, final Object component) {
+	public static void loadDynamicComponentFxml(final Class<?> componentClass, final Object component) {
 		final FXMLLoader fxmlLoader = createFxmlLoader(componentClass);
 
 		fxmlLoader.setRoot(component);

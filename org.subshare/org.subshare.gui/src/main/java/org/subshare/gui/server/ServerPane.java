@@ -6,7 +6,7 @@ import javafx.scene.layout.GridPane;
 public class ServerPane extends GridPane {
 
 	public ServerPane() {
-		loadCustomComponent(ServerPane.class, this);
+		loadDynamicComponentFxml(ServerPane.class, this);
 	}
 
 }

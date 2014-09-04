@@ -4,13 +4,83 @@
 -->
 
 <?import java.lang.*?>
-<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.Tooltip?>
+<?import javafx.scene.control.cell.PropertyValueFactory?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.FlowPane?>
 <?scenebuilder-preview-i18n-resource messages.properties?>
 
 <fx:root xmlns:fx="http://javafx.com/fxml" type="BorderPane">
 
 	<top>
-		<Label text="UserListPane"/> 
+		<FlowPane> 
+			<Button fx:id="addButton"> 
+				<graphic>
+					<ImageView> 
+						<image>
+							<Image url="@add-24x24.png"/> 
+						</image>
+					</ImageView>
+				</graphic>
+				<tooltip>
+					<Tooltip text="Add a new user."/> 
+				</tooltip>
+			</Button>
+			<Button fx:id="editButton"> 
+				<graphic>
+					<ImageView> 
+						<image>
+							<Image url="@edit-24x24.png"/> 
+						</image>
+					</ImageView>
+				</graphic>
+				<tooltip>
+					<Tooltip text="Edit the selected user."/> 
+				</tooltip>
+			</Button>
+			<Button fx:id="deleteButton"> 
+				<graphic>
+					<ImageView> 
+						<image>
+							<Image url="@delete-24x24.png"/> 
+						</image>
+					</ImageView>
+				</graphic>
+				<tooltip>
+					<Tooltip text="Delete the selected users."/> 
+				</tooltip>
+			</Button>
+		</FlowPane>
 	</top>
+	<center>
+		<TableView fx:id="tableView"> 
+			<columns>
+				<TableColumn fx:id="firstNameColumn" text="First name" prefWidth="100"> 
+					<cellValueFactory>
+						<PropertyValueFactory property="firstName"/> 
+					</cellValueFactory>
+				</TableColumn>
+				<TableColumn fx:id="lastNameColumn" text="Last name" prefWidth="100"> 
+					<cellValueFactory>
+						<PropertyValueFactory property="lastName"/> 
+					</cellValueFactory>
+				</TableColumn>
+				<TableColumn fx:id="emailColumn" text="E-mail" prefWidth="200"> 
+					<cellValueFactory>
+						<PropertyValueFactory property="email"/> 
+					</cellValueFactory>
+				</TableColumn>
+				<TableColumn fx:id="emailColumn" text="Key trust level" prefWidth="120"> 
+					<cellValueFactory>
+						<PropertyValueFactory property="keyTrustLevel"/> 
+					</cellValueFactory>
+				</TableColumn>
+			</columns>
+		</TableView>
+	</center>
 </fx:root>
