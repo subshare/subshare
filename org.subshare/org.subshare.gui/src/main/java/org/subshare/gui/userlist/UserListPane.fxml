@@ -19,7 +19,7 @@
 
 	<top>
 		<FlowPane> 
-			<Button fx:id="addButton"> 
+			<Button fx:id="addButton" onAction="#addButtonClicked"> 
 				<graphic>
 					<ImageView> 
 						<image>
@@ -31,7 +31,7 @@
 					<Tooltip text="Add a new user."/> 
 				</tooltip>
 			</Button>
-			<Button fx:id="editButton"> 
+			<Button fx:id="editButton" onAction="#editButtonClicked"> 
 				<graphic>
 					<ImageView> 
 						<image>
@@ -43,7 +43,7 @@
 					<Tooltip text="Edit the selected user."/> 
 				</tooltip>
 			</Button>
-			<Button fx:id="deleteButton"> 
+			<Button fx:id="deleteButton" onAction="#deleteButtonClicked"> 
 				<graphic>
 					<ImageView> 
 						<image>

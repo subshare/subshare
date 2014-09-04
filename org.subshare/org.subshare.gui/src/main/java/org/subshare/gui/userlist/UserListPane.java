@@ -5,9 +5,12 @@ import static org.subshare.gui.util.FxmlUtil.*;
 import java.util.Collection;
 import java.util.concurrent.ExecutionException;
 
+import javafx.collections.ListChangeListener;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableView;
 import javafx.scene.layout.BorderPane;
@@ -18,12 +21,34 @@ import org.subshare.core.user.UserRegistry;
 public class UserListPane extends BorderPane {
 
 	@FXML
+	private Button addButton;
+	@FXML
+	private Button editButton;
+	@FXML
+	private Button deleteButton;
+
+	@FXML
 	private TableView<UserListItem> tableView;
+
+	private final ListChangeListener<UserListItem> selectionListener = new ListChangeListener<UserListItem>() {
+		@Override
+		public void onChanged(final ListChangeListener.Change<? extends UserListItem> c) {
+			updateEnabled();
+		}
+	};
 
 	public UserListPane() {
 		loadDynamicComponentFxml(UserListPane.class, this);
 		tableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+		tableView.getSelectionModel().getSelectedItems().addListener(selectionListener);
 		populateTableViewAsync();
+		updateEnabled();
+	}
+
+	private void updateEnabled() {
+		final boolean selectionEmpty = tableView.getSelectionModel().getSelectedItems().isEmpty();
+		editButton.disableProperty().set(selectionEmpty);
+		deleteButton.disableProperty().set(selectionEmpty);
 	}
 
 	private void populateTableViewAsync() {
@@ -54,4 +79,18 @@ public class UserListPane extends BorderPane {
 		tableView.requestLayout();
 	}
 
+	@FXML
+	private void addButtonClicked(final ActionEvent event) {
+		System.out.println("addButtonClicked: " + event);
+	}
+
+	@FXML
+	private void editButtonClicked(final ActionEvent event) {
+		System.out.println("editButtonClicked: " + event);
+	}
+
+	@FXML
+	private void deleteButtonClicked(final ActionEvent event) {
+		System.out.println("deleteButtonClicked: " + event);
+	}
 }

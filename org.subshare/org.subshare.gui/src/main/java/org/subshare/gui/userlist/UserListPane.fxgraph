@@ -18,15 +18,18 @@ dynamic component UserListPane resourcefile "messages.properties" {
 		top : FlowPane {
 			Button id addButton {
 				graphic : ImageView { image : Image { url : "@add-24x24.png" } },
-				tooltip : Tooltip { text : "Add a new user." }
+				tooltip : Tooltip { text : "Add a new user." },
+				onAction : controllermethod addButtonClicked
 			},
 			Button id editButton {
 				graphic : ImageView { image : Image { url : "@edit-24x24.png" } },
-				tooltip : Tooltip { text : "Edit the selected user." }
+				tooltip : Tooltip { text : "Edit the selected user." },
+				onAction : controllermethod editButtonClicked
 			},
 			Button id deleteButton {
 				graphic : ImageView { image : Image { url : "@delete-24x24.png" } },
-				tooltip : Tooltip { text : "Delete the selected users." }
+				tooltip : Tooltip { text : "Delete the selected users." },
+				onAction : controllermethod deleteButtonClicked
 			}
 		},
 		center : TableView < UserListItem > id tableView {

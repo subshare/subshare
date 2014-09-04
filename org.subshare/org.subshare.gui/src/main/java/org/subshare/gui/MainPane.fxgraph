@@ -13,7 +13,7 @@ component MainPane controlledby MainPaneController resourcefile "messages.proper
 	SplitPane id splitPane {
 		TreeView<MainTreeItem> id mainTree,
 		BorderPane id mainDetail {
-			center : Sample
+//			center : Sample
 		}
 	}
 }

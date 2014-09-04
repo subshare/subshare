@@ -7,15 +7,10 @@
 <?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.control.TreeView?>
 <?import javafx.scene.layout.BorderPane?>
-<?import org.subshare.gui.Sample?>
 <?scenebuilder-preview-i18n-resource messages.properties?>
 
 <SplitPane xmlns:fx="http://javafx.com/fxml" fx:id="splitPane" fx:controller="org.subshare.gui.MainPaneController">
 
 	<TreeView fx:id="mainTree"/> 
-	<BorderPane fx:id="mainDetail"> 
-		<center>
-			<Sample/> 
-		</center>
-	</BorderPane>
+	<BorderPane fx:id="mainDetail"/> 
 </SplitPane>
