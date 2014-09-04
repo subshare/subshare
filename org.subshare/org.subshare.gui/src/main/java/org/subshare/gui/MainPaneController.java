@@ -13,6 +13,7 @@ import javafx.scene.control.TreeView;
 import javafx.scene.layout.BorderPane;
 
 import org.subshare.gui.maintree.MainTreeItem;
+import org.subshare.gui.maintree.RepositoryMainTreeItem;
 import org.subshare.gui.maintree.ServerMainTreeItem;
 import org.subshare.gui.maintree.UserListMainTreeItem;
 
@@ -41,8 +42,12 @@ public class MainPaneController {
 	public void initialize() {
 		final TreeItem<MainTreeItem> root = new TreeItem<MainTreeItem>();
 
-		for (final ServerMainTreeItem serverMainTreeItem : getServerMainTreeItems())
-			root.getChildren().add(new TreeItem<MainTreeItem>(serverMainTreeItem));
+		for (final ServerMainTreeItem serverMainTreeItem : getServerMainTreeItems()) {
+			final TreeItem<MainTreeItem> serverTI = new TreeItem<MainTreeItem>(serverMainTreeItem);
+			root.getChildren().add(serverTI);
+			for (final RepositoryMainTreeItem repositoryMainTreeItem : serverMainTreeItem.getRepositoryMainTreeItems())
+				serverTI.getChildren().add(new TreeItem<MainTreeItem>(repositoryMainTreeItem));
+		}
 
 		root.getChildren().add(new TreeItem<MainTreeItem>(new UserListMainTreeItem()));
 		mainTree.setShowRoot(false);
@@ -65,6 +70,15 @@ public class MainPaneController {
 
 		final ServerMainTreeItem serverMainTreeItem = new ServerMainTreeItem();
 		serverMainTreeItem.setName("SubShare");
+
+		final RepositoryMainTreeItem repositoryMainTreeItem1 = new RepositoryMainTreeItem(serverMainTreeItem);
+		repositoryMainTreeItem1.setName("Dummy repository 1");
+		serverMainTreeItem.getRepositoryMainTreeItems().add(repositoryMainTreeItem1);
+
+		final RepositoryMainTreeItem repositoryMainTreeItem2 = new RepositoryMainTreeItem(serverMainTreeItem);
+		repositoryMainTreeItem2.setName("Dummy repository 2");
+		serverMainTreeItem.getRepositoryMainTreeItems().add(repositoryMainTreeItem2);
+
 		return Collections.singletonList(serverMainTreeItem);
 	}
 

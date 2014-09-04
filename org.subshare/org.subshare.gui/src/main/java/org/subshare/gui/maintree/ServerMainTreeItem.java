@@ -1,11 +1,15 @@
 package org.subshare.gui.maintree;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javafx.scene.Parent;
 
 import org.subshare.gui.server.ServerPane;
 
 public class ServerMainTreeItem extends MainTreeItem {
 	private String name;
+	private final List<RepositoryMainTreeItem> repositoryMainTreeItems = new ArrayList<RepositoryMainTreeItem>();
 
 	public String getName() {
 		return name;
@@ -24,4 +28,7 @@ public class ServerMainTreeItem extends MainTreeItem {
 		return new ServerPane();
 	}
 
+	public List<RepositoryMainTreeItem> getRepositoryMainTreeItems() {
+		return repositoryMainTreeItems;
+	}
 }
