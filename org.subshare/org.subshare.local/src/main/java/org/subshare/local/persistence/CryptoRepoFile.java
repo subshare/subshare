@@ -3,6 +3,8 @@ package org.subshare.local.persistence;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -25,7 +27,11 @@ import javax.jdo.annotations.Unique;
 import javax.jdo.annotations.Uniques;
 import javax.jdo.listener.StoreCallback;
 
+import org.subshare.core.crypto.Signable;
 import org.subshare.core.dto.CryptoKeyRole;
+import org.subshare.core.dto.CryptoRepoFileDto;
+import org.subshare.core.io.InputStreamSource;
+import org.subshare.core.io.MultiInputStream;
 
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
 import co.codewizards.cloudstore.core.dto.Uid;
@@ -62,7 +68,7 @@ import co.codewizards.cloudstore.local.persistence.RepoFile;
 			name="getCryptoRepoFileChangedAfter_localRevision_exclLastSyncFromRepositoryId",
 			value="SELECT WHERE this.localRevision > :localRevision && (this.lastSyncFromRepositoryId == null || this.lastSyncFromRepositoryId != :lastSyncFromRepositoryId)") // TODO this necessary == null is IMHO a DN bug!
 })
-public class CryptoRepoFile extends Entity implements AutoTrackLocalRevision, StoreCallback {
+public class CryptoRepoFile extends Entity implements Signable, AutoTrackLocalRevision, StoreCallback {
 
 	@Persistent(nullValue=NullValue.EXCEPTION)
 	@Column(length=22)
@@ -92,6 +98,8 @@ public class CryptoRepoFile extends Entity implements AutoTrackLocalRevision, St
 	private String localName;
 
 	private boolean directory;
+
+	private byte[] signatureData; // is temporarily null TODO is this necessary?!
 
 	public CryptoRepoFile() { }
 
@@ -299,4 +307,43 @@ public class CryptoRepoFile extends Entity implements AutoTrackLocalRevision, St
 	public void setDirectory(final boolean directory) {
 		this.directory = directory;
 	}
+
+	@Override
+	public int getSignedDataVersion() {
+		return 0;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * <b>Important:</b> The implementation in {@code CryptoRepoFile} must exactly match the one in {@link CryptoRepoFileDto}!
+	 */
+	@Override
+	public InputStream getSignedData(final int signedDataVersion) {
+		try {
+			return new MultiInputStream(
+					InputStreamSource.Helper.createInputStreamSource(getCryptoRepoFileId()),
+					InputStreamSource.Helper.createInputStreamSource(parent == null ? null : parent.getCryptoRepoFileId()),
+//			getRepoFile();
+//			getLocalRevision();
+//			getLastSyncFromRepositoryId(),
+					InputStreamSource.Helper.createInputStreamSource(cryptoKey == null ? null : cryptoKey.getCryptoKeyId()),
+					InputStreamSource.Helper.createInputStreamSource(getRepoFileDtoData()),
+//			localName;
+					InputStreamSource.Helper.createInputStreamSource(directory)
+					);
+		} catch (final IOException x) {
+			throw new RuntimeException(x);
+		}
+	}
+
+	@Override
+	public byte[] getSignatureData() {
+		return signatureData;
+	}
+	@Override
+	public void setSignatureData(final byte[] signatureData) {
+		this.signatureData = signatureData;
+	}
+
 }

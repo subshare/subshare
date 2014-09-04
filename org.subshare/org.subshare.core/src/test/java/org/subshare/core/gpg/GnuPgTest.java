@@ -409,35 +409,6 @@ public class GnuPgTest {
 		return secretKey;
 	}
 
-	public static byte[] longToBytes(final long l) {
-		final byte[] bytes = new byte[8];
-		for (int i = 0; i < 8; ++i)
-			bytes[i] = (byte) (l >>> (8 * (7 - i)));
-
-		return bytes;
-	}
-
-	public static long bytesToLong(final byte[] bytes) {
-		long l = 0;
-		for (int i = 0; i < 8; ++i)
-			l |= ((long) (bytes[i] & 0xff)) << (8 * (7 - i));
-
-		return l;
-	}
-
-	@Test
-	public void bytesToLongToBytes() {
-		final byte[] bytes = longToBytes(Long.MAX_VALUE);
-		long l = bytesToLong(bytes);
-		assertThat(l).isEqualTo(Long.MAX_VALUE);
-
-		for (int i = 0; i < 100; ++i) {
-			random.nextBytes(bytes);
-			l = bytesToLong(bytes);
-			final byte[] bytes2 = longToBytes(l);
-			assertThat(bytes2).isEqualTo(bytes);
-		}
-	}
 
 	private void printPublicKey(final PGPPublicKey publicKey) {
 		final byte[] fingerprint = publicKey.getFingerprint();

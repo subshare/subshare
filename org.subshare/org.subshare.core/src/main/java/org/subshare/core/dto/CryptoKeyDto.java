@@ -1,11 +1,18 @@
 package org.subshare.core.dto;
 
+import java.io.IOException;
+import java.io.InputStream;
+
 import javax.xml.bind.annotation.XmlRootElement;
+
+import org.subshare.core.crypto.Signable;
+import org.subshare.core.io.InputStreamSource;
+import org.subshare.core.io.MultiInputStream;
 
 import co.codewizards.cloudstore.core.dto.Uid;
 
 @XmlRootElement
-public class CryptoKeyDto {
+public class CryptoKeyDto implements Signable {
 
 	private Uid cryptoKeyId;
 
@@ -18,6 +25,8 @@ public class CryptoKeyDto {
 	private CryptoKeyRole cryptoKeyRole;
 
 	private long localRevision;
+
+	private byte[] signatureData;
 
 	public Uid getCryptoKeyId() {
 		return cryptoKeyId;
@@ -59,6 +68,43 @@ public class CryptoKeyDto {
 	}
 	public void setLocalRevision(final long localRevision) {
 		this.localRevision = localRevision;
+	}
+
+	@Override
+	public int getSignedDataVersion() {
+		return 0;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * <b>Important:</b> The implementation in {@code CryptoRepoFile} must exactly match the one in {@link CryptoRepoFileDto}!
+	 */
+	@Override
+	public InputStream getSignedData(final int signedDataVersion) {
+		try {
+			return new MultiInputStream(
+					InputStreamSource.Helper.createInputStreamSource(cryptoKeyId),
+					InputStreamSource.Helper.createInputStreamSource(cryptoRepoFileId),
+					InputStreamSource.Helper.createInputStreamSource(cryptoKeyType.ordinal()),
+					InputStreamSource.Helper.createInputStreamSource(cryptoKeyRole.ordinal()),
+//					localRevision
+//					inCryptoLinks
+//					outCryptoLinks
+					InputStreamSource.Helper.createInputStreamSource(active)
+					);
+		} catch (final IOException x) {
+			throw new RuntimeException(x);
+		}
+	}
+
+	@Override
+	public byte[] getSignatureData() {
+		return signatureData;
+	}
+	@Override
+	public void setSignatureData(final byte[] signatureData) {
+		this.signatureData = signatureData;
 	}
 
 	@Override

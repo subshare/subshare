@@ -2,6 +2,8 @@ package org.subshare.local.persistence;
 
 import static co.codewizards.cloudstore.core.util.Util.*;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -18,9 +20,13 @@ import javax.jdo.annotations.Query;
 import javax.jdo.annotations.Unique;
 import javax.jdo.listener.StoreCallback;
 
+import org.subshare.core.crypto.Signable;
 import org.subshare.core.dto.CryptoKeyPart;
 import org.subshare.core.dto.CryptoKeyRole;
 import org.subshare.core.dto.CryptoKeyType;
+import org.subshare.core.dto.CryptoRepoFileDto;
+import org.subshare.core.io.InputStreamSource;
+import org.subshare.core.io.MultiInputStream;
 
 import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.local.persistence.AutoTrackLocalRevision;
@@ -56,7 +62,7 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 	@Query(name="getCryptoKey_cryptoKeyId", value="SELECT UNIQUE WHERE this.cryptoKeyId == :cryptoKeyId"),
 	@Query(name="getCryptoKeysChangedAfter_localRevision", value="SELECT WHERE this.localRevision > :localRevision")
 })
-public class CryptoKey extends Entity implements AutoTrackLocalRevision, StoreCallback {
+public class CryptoKey extends Entity implements Signable, AutoTrackLocalRevision, StoreCallback {
 
 	@Persistent(nullValue=NullValue.EXCEPTION)
 	@Column(length=22)
@@ -82,6 +88,8 @@ public class CryptoKey extends Entity implements AutoTrackLocalRevision, StoreCa
 	private Set<CryptoLink> outCryptoLinks;
 
 	private boolean active = true;
+
+	private byte[] signatureData; // is temporarily null TODO is this necessary?!
 
 	public CryptoKey() { }
 
@@ -186,6 +194,43 @@ public class CryptoKey extends Entity implements AutoTrackLocalRevision, StoreCa
 	@Override
 	public void jdoPreStore() {
 		getCryptoKeyId();
+	}
+
+	@Override
+	public int getSignedDataVersion() {
+		return 0;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * <b>Important:</b> The implementation in {@code CryptoRepoFile} must exactly match the one in {@link CryptoRepoFileDto}!
+	 */
+	@Override
+	public InputStream getSignedData(final int signedDataVersion) {
+		try {
+			return new MultiInputStream(
+					InputStreamSource.Helper.createInputStreamSource(getCryptoKeyId()),
+					InputStreamSource.Helper.createInputStreamSource(cryptoRepoFile.getCryptoRepoFileId()),
+					InputStreamSource.Helper.createInputStreamSource(cryptoKeyType.ordinal()),
+					InputStreamSource.Helper.createInputStreamSource(cryptoKeyRole.ordinal()),
+//					localRevision
+//					inCryptoLinks
+//					outCryptoLinks
+					InputStreamSource.Helper.createInputStreamSource(active)
+					);
+		} catch (final IOException x) {
+			throw new RuntimeException(x);
+		}
+	}
+
+	@Override
+	public byte[] getSignatureData() {
+		return signatureData;
+	}
+	@Override
+	public void setSignatureData(final byte[] signatureData) {
+		this.signatureData = signatureData;
 	}
 
 	@Override
