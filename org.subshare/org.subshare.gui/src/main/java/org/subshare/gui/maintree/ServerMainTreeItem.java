@@ -1,5 +1,9 @@
 package org.subshare.gui.maintree;
 
+import javafx.scene.Parent;
+
+import org.subshare.gui.server.ServerPane;
+
 public class ServerMainTreeItem extends MainTreeItem {
 	private String name;
 
@@ -14,4 +18,10 @@ public class ServerMainTreeItem extends MainTreeItem {
 	public String toString() {
 		return name;
 	}
+
+	@Override
+	protected Parent createMainDetailContent() {
+		return new ServerPane();
+	}
+
 }

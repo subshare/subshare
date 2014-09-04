@@ -3,7 +3,7 @@ package org.subshare.gui
 import org.subshare.gui.maintree.MainTreeItem
 import javafx.scene.layout.BorderPane
 import org.subshare.gui.MainPaneController
-import org.subshare.gui.SampleComponent
+import org.subshare.gui.Sample
 import javafx.scene.layout.GridPane
 import javafx.scene.control.TreeView
 import javafx.scene.control.Button
@@ -11,7 +11,9 @@ import javafx.scene.control.SplitPane
 
 component MainPane controlledby MainPaneController resourcefile "messages.properties" {
 	SplitPane id splitPane {
-		TreeView<MainTreeItem> id mainTree { },
-		SampleComponent { }
+		TreeView<MainTreeItem> id mainTree,
+		BorderPane id mainDetail {
+			center : Sample
+		}
 	}
 }

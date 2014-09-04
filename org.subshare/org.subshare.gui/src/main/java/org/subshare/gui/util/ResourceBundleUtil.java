@@ -9,6 +9,8 @@ public class ResourceBundleUtil {
 
 	public static final String MESSAGES_NAME = "messages";
 
+	private ResourceBundleUtil() { }
+
 	public static ResourceBundle getMessages(final Class<?> clazz) {
 		return getResourceBundle(clazz, MESSAGES_NAME);
 	}

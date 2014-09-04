@@ -6,7 +6,6 @@ import javafx.scene.control.Accordion
 import javafx.scene.control.TitledPane
 import javafx.scene.control.Button
 import org.subshare.gui.Sample
-import org.subshare.gui.SampleComponent
 
 component Example1Pane controlledby Example1Controller {
 	GridPane {
@@ -20,7 +19,7 @@ component Example1Pane controlledby Example1Controller {
 				TitledPane {
 					^id : "TitledPane2",
 					text : "The title 2",
-					content : SampleComponent
+					content : Sample
 				}
 			]
 		}

@@ -1,0 +1,11 @@
+package org.subshare.gui.server
+
+import javafx.scene.layout.GridPane
+import org.subshare.gui.server.ServerPane
+import javafx.scene.control.Label
+
+dynamic component ServerPane resourcefile "messages.properties" {
+	GridPane {
+		Label { text : "ServerPane" }
+	}
+}

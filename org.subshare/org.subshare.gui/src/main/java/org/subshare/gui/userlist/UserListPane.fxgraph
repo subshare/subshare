@@ -1,0 +1,11 @@
+package org.subshare.gui.userlist
+
+import javafx.scene.layout.BorderPane
+import org.subshare.gui.userlist.UserListPane
+import javafx.scene.control.Label
+
+dynamic component UserListPane resourcefile "messages.properties" {
+	BorderPane {
+		top : Label { text : "UserListPane" }
+	}
+}

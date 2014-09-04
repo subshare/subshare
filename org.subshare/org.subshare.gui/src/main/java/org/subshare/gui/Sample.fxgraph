@@ -7,7 +7,7 @@ import javafx.scene.control.Label
 
 dynamic component Sample resourcefile "messages.properties" {
 	BorderPane {
-		top : Label { text : "You're all fucking idiots!" },
+		top : Label { text : "Damn fucking shit!" },
 		center: Button {
 			^id : "myFirstButton",
 			text : rstring "myFirstButton.text",

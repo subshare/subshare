@@ -4,14 +4,17 @@ import java.util.Collections;
 import java.util.List;
 
 import javafx.application.Platform;
+import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
+import javafx.scene.layout.BorderPane;
 
 import org.subshare.gui.maintree.MainTreeItem;
 import org.subshare.gui.maintree.ServerMainTreeItem;
-import org.subshare.gui.maintree.UserManagementMainTreeItem;
+import org.subshare.gui.maintree.UserListMainTreeItem;
 
 public class MainPaneController {
 
@@ -21,15 +24,30 @@ public class MainPaneController {
 	@FXML
 	private TreeView<MainTreeItem> mainTree;
 
+	@FXML
+	private BorderPane mainDetail;
+
+	private final ListChangeListener<? super TreeItem<MainTreeItem>> mainTreeSelectionListener = new ListChangeListener<TreeItem<MainTreeItem>>() {
+		@Override
+		public void onChanged(final ListChangeListener.Change<? extends TreeItem<MainTreeItem>> c) {
+			final ObservableList<? extends TreeItem<MainTreeItem>> selection = c.getList();
+			if (selection.isEmpty())
+				mainDetail.setCenter(null);
+			else
+				mainDetail.setCenter(selection.get(0).getValue().getMainDetailContent());
+		}
+	};
+
 	public void initialize() {
 		final TreeItem<MainTreeItem> root = new TreeItem<MainTreeItem>();
 
 		for (final ServerMainTreeItem serverMainTreeItem : getServerMainTreeItems())
 			root.getChildren().add(new TreeItem<MainTreeItem>(serverMainTreeItem));
 
-		root.getChildren().add(new TreeItem<MainTreeItem>(new UserManagementMainTreeItem()));
+		root.getChildren().add(new TreeItem<MainTreeItem>(new UserListMainTreeItem()));
 		mainTree.setShowRoot(false);
 		mainTree.setRoot(root);
+		mainTree.getSelectionModel().getSelectedItems().addListener(mainTreeSelectionListener);
 
 		Platform.runLater(new Runnable() {
 			@Override

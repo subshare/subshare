@@ -9,12 +9,12 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.layout.BorderPane;
 
-public class SampleComponent extends BorderPane {
+public class Sample extends BorderPane {
 
-	public SampleComponent() {
+	public Sample() {
 		final FXMLLoader fxmlLoader = new FXMLLoader(
-				SampleComponent.class.getResource("Sample.fxml"),
-				getResourceBundle(SampleComponent.class, "messages"));
+				Sample.class.getResource("Sample.fxml"),
+				getMessages(Sample.class));
 
 		fxmlLoader.setRoot(this);
 		fxmlLoader.setController(this);
