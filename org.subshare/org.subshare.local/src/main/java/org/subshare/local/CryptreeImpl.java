@@ -336,12 +336,10 @@ public class CryptreeImpl extends AbstractCryptree {
 
 		cryptoLink.setToCryptoKeyData(cryptoLinkDto.getToCryptoKeyData());
 		cryptoLink.setToCryptoKeyPart(cryptoLinkDto.getToCryptoKeyPart());
-
-		toCryptoKey.getInCryptoLinks().add(cryptoLink);
-
 		cryptoLink.setSignatureData(cryptoLinkDto.getSignatureData());
 		cryptoLink.setSigningUserRepoKeyId(cryptoLinkDto.getSigningUserRepoKeyId());
 
+		toCryptoKey.getInCryptoLinks().add(cryptoLink);
 		return cryptoLinkDao.makePersistent(cryptoLink);
 	}
 
