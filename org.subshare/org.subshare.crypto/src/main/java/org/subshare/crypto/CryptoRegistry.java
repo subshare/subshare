@@ -45,7 +45,20 @@ import org.bouncycastle.crypto.BlockCipher;
 import org.bouncycastle.crypto.BufferedAsymmetricBlockCipher;
 import org.bouncycastle.crypto.BufferedBlockCipher;
 import org.bouncycastle.crypto.CipherParameters;
+import org.bouncycastle.crypto.Digest;
+import org.bouncycastle.crypto.Signer;
 import org.bouncycastle.crypto.StreamCipher;
+import org.bouncycastle.crypto.digests.MD5Digest;
+import org.bouncycastle.crypto.digests.RIPEMD128Digest;
+import org.bouncycastle.crypto.digests.RIPEMD160Digest;
+import org.bouncycastle.crypto.digests.RIPEMD256Digest;
+import org.bouncycastle.crypto.digests.RIPEMD320Digest;
+import org.bouncycastle.crypto.digests.SHA1Digest;
+import org.bouncycastle.crypto.digests.SHA224Digest;
+import org.bouncycastle.crypto.digests.SHA256Digest;
+import org.bouncycastle.crypto.digests.SHA384Digest;
+import org.bouncycastle.crypto.digests.SHA512Digest;
+import org.bouncycastle.crypto.digests.WhirlpoolDigest;
 import org.bouncycastle.crypto.encodings.ISO9796d1Encoding;
 import org.bouncycastle.crypto.encodings.OAEPEncoding;
 import org.bouncycastle.crypto.encodings.PKCS1Encoding;
@@ -102,6 +115,7 @@ import org.bouncycastle.crypto.paddings.ZeroBytePadding;
 import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
 import org.bouncycastle.crypto.params.RSAKeyParameters;
 import org.bouncycastle.crypto.params.RSAPrivateCrtKeyParameters;
+import org.bouncycastle.crypto.signers.GenericSigner;
 import org.bouncycastle.crypto.util.PrivateKeyFactory;
 import org.bouncycastle.crypto.util.PublicKeyFactory;
 import org.subshare.crypto.internal.asymmetric.AsymmetricBlockCipherImpl;
@@ -271,6 +285,34 @@ public final class CryptoRegistry
 	//////////////////// END asymmetric key generators ////////////////////
 
 
+	//////////////////// BEGIN digests ////////////////////
+	private final Map<String, Class<? extends Digest>> digestName2digestClass = new HashMap<String, Class<? extends Digest>>();
+	private void registerDigest(final Class<? extends Digest> digestClass) {
+		if (digestClass == null)
+			throw new IllegalArgumentException("digestClass == null");
+
+		final String digestClassName = digestClass.getSimpleName();
+
+		final String suffix = "Digest";
+		if (!digestClassName.endsWith(suffix))
+			throw new IllegalArgumentException(String.format("digestClass name does not end on '%s'!", suffix));
+
+		final String digestName = digestClassName.substring(0, digestClassName.length() - suffix.length());
+		registerDigest(digestName, digestClass);
+	}
+
+	private void registerDigest(final String digestName, final Class<? extends Digest> digestClass) {
+		if (digestName == null)
+			throw new IllegalArgumentException("digestName == null");
+
+		if (digestClass == null)
+			throw new IllegalArgumentException("digestClass == null");
+
+		digestName2digestClass.put(digestName, digestClass);
+	}
+	//////////////////// END digests ////////////////////
+
+
 	private CryptoRegistry() {
 		// *** BEGIN AsymmetricBlockCipher engines ***
 		registerAsymmetricBlockCipherEngineClass("ElGamal", ElGamalEngine.class);
@@ -401,6 +443,21 @@ public final class CryptoRegistry
 		registerAsymmetricCipherKeyPairGeneratorFactory(new NaccacheSternKeyPairGeneratorFactory());
 		registerAsymmetricCipherKeyPairGeneratorFactory(new RSAKeyPairGeneratorFactory());
 		// *** END asymmetric key pair generators ***
+
+		// *** BEGIN digests ***
+		registerDigest(MD5Digest.class);
+		registerDigest(RIPEMD128Digest.class);
+		registerDigest(RIPEMD160Digest.class);
+		registerDigest(RIPEMD256Digest.class);
+		registerDigest(RIPEMD320Digest.class);
+		registerDigest(SHA1Digest.class);
+		registerDigest(SHA224Digest.class);
+		registerDigest(SHA256Digest.class);
+		registerDigest(SHA384Digest.class);
+		registerDigest(SHA512Digest.class);
+		registerDigest(WhirlpoolDigest.class);
+		// TODO there are many more - register them all (and create sub-classes where needed => no-arg constructor!)
+		// *** END digests ***
 	}
 
 	private void testAsymmetricBlockCipherPaddings()
@@ -655,6 +712,14 @@ public final class CryptoRegistry
 		throw new NoSuchAlgorithmException("The asymmetric-block-cipher does not support the mode \"" + modeName + "\"! Only \"ECB\", \"NONE\" or an empty string are allowed as mode!");
 	}
 
+	private Digest createDigest(final String digestName) {
+		final Class<? extends Digest> digestClass = digestName2digestClass.get(digestName);
+		if (digestClass == null)
+			return null;
+
+		return newInstance(digestClass);
+	}
+
 	/**
 	 * Get all supported cipher engines. A cipher engine implements a raw
 	 * <a target="_blank" href="http://en.wikipedia.org/wiki/Encryption_algorithm">encryption algorithm</a>;
@@ -678,6 +743,10 @@ public final class CryptoRegistry
 			result.addAll(algorithmName2asymmetricBlockCipherEngineClass.keySet());
 
 		return Collections.unmodifiableSortedSet(result);
+	}
+
+	public Set<String> getSupportedDigests() {
+		return Collections.unmodifiableSortedSet(new TreeSet<String>(digestName2digestClass.keySet()));
 	}
 
 	/**
@@ -1065,7 +1134,46 @@ public final class CryptoRegistry
 				return createCipherForStreamCipherEngine(transformation, engine, engineName, modeName, paddingName);
 		}
 
-		throw new NoSuchAlgorithmException("There is no cipher-engine-class registered with the algorithmName \"" + engineName + "\"!");
+		throw new NoSuchAlgorithmException("There is no cipher-engine-class registered with the name \"" + engineName + "\"!");
+	}
+
+	/**
+	 * Creates a {@code Signer} using the given transformation.
+	 * <p>
+	 * The transformation consists of 2 parts:
+	 * <ul>
+	 * <li>asymmetric encryption algorithm (required)
+	 * <li>digest algorithm (required)
+	 * </ul>
+	 * <p>
+	 * For example:
+	 * <ul>
+	 * <li>RSA/SHA1
+	 * <li>RSA/SHA256
+	 * <li>ElGamal/Whirlpool
+	 * </ul>
+	 * Please consult {@link #getSupportedCipherEngines(CipherEngineType)} and {@link #getSupportedDigests()}
+	 * for a list of all the possible values (every combination of the two is possible).
+	 * @param transformation the cryptographic transformation to be used for the signature, e.g. RSA/SHA256.
+	 * Must not be <code>null</code>.
+	 * @return a new {@code Signer} instance.
+	 * @throws NoSuchAlgorithmException if there is no encryption engine or no digest registered to suit the given transformation.
+	 */
+	public Signer createSigner(final String transformation) throws NoSuchAlgorithmException {
+		final String[] transformationParts = splitTransformation(transformation);
+		final String engineName = transformationParts[0].toUpperCase(Locale.ENGLISH);
+		final String digestName = transformationParts[1].toUpperCase(Locale.ENGLISH);
+
+		final AsymmetricBlockCipher engine = createAsymmetricBlockCipherEngine(engineName);
+		if (engine == null)
+			throw new NoSuchAlgorithmException(String.format("There is no asymmetric cipher-engine-class registered with the name \"%s\"!", engineName));
+
+		final Digest digest = createDigest(digestName);
+		if (digest == null)
+			throw new NoSuchAlgorithmException(String.format("There is no digest-class registered with the name \"%s\"!", digestName));
+
+		final GenericSigner genericSigner = new GenericSigner(engine, digest);
+		return genericSigner;
 	}
 
 	/**

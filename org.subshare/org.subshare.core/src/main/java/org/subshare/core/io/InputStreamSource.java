@@ -53,6 +53,17 @@ public interface InputStreamSource {
 			return createInputStreamSource(b.booleanValue());
 		}
 
+		public static InputStreamSource createInputStreamSource(final byte value) {
+			return createInputStreamSource(new byte[] { value });
+		}
+
+		public static InputStreamSource createInputStreamSource(final Byte value) {
+			if (value == null)
+				return createInputStreamSource((byte[]) null);
+
+			return createInputStreamSource(value.byteValue());
+		}
+
 		public static InputStreamSource createInputStreamSource(final int value) {
 			return createInputStreamSource(intToBytes(value));
 		}
@@ -63,6 +74,18 @@ public interface InputStreamSource {
 
 			return createInputStreamSource(value.intValue());
 		}
+
+		public static InputStreamSource createInputStreamSource(final long value) {
+			return createInputStreamSource(longToBytes(value));
+		}
+
+		public static InputStreamSource createInputStreamSource(final Long value) {
+			if (value == null)
+				return createInputStreamSource((byte[]) null);
+
+			return createInputStreamSource(value.longValue());
+		}
+
 
 		public static InputStreamSource createInputStreamSource(final InputStream in) {
 			return new InputStreamSource() {

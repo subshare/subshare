@@ -2,6 +2,9 @@ package org.subshare.local.persistence;
 
 import static co.codewizards.cloudstore.core.util.Util.*;
 
+import java.io.IOException;
+import java.io.InputStream;
+
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Index;
 import javax.jdo.annotations.Indices;
@@ -16,6 +19,10 @@ import javax.jdo.annotations.Unique;
 import javax.jdo.listener.StoreCallback;
 
 import org.subshare.core.dto.CryptoKeyPart;
+import org.subshare.core.dto.CryptoLinkDto;
+import org.subshare.core.io.InputStreamSource;
+import org.subshare.core.io.MultiInputStream;
+import org.subshare.core.sign.Signable;
 import org.subshare.core.user.UserRepoKey;
 
 import co.codewizards.cloudstore.core.dto.Uid;
@@ -46,7 +53,7 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 					+ "this.toCryptoKey.cryptoKeyRole == :toCryptoKeyRole && "
 					+ "this.toCryptoKeyPart == :toCryptoKeyPart")
 })
-public class CryptoLink extends Entity implements AutoTrackLocalRevision, StoreCallback {
+public class CryptoLink extends Entity implements Signable, AutoTrackLocalRevision, StoreCallback {
 
 	@Persistent(nullValue=NullValue.EXCEPTION)
 	@Column(length=22)
@@ -67,6 +74,12 @@ public class CryptoLink extends Entity implements AutoTrackLocalRevision, StoreC
 
 	@Persistent(nullValue=NullValue.EXCEPTION)
 	private byte[] toCryptoKeyData;
+
+	@Persistent(nullValue=NullValue.EXCEPTION)
+	private String signingUserRepoKeyId;
+
+	@Persistent(nullValue=NullValue.EXCEPTION)
+	private byte[] signatureData;
 
 	public CryptoLink() { }
 
@@ -182,6 +195,61 @@ public class CryptoLink extends Entity implements AutoTrackLocalRevision, StoreC
 
 		if (fromCryptoKey != null && fromUserRepoKeyPublicKey != null)
 			throw new IllegalStateException("fromCryptoKey != null && fromUserRepoKeyPublicKey != null :: toCryptoKeyData can only be encrypted with one key!");
+	}
+
+	@Override
+	public int getSignedDataVersion() {
+		return 0;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * <b>Important:</b> The implementation in {@code CryptoLink} must exactly match the one in {@link CryptoLinkDto}!
+	 */
+	@Override
+	public InputStream getSignedData(final int signedDataVersion) {
+		try {
+			byte separatorIndex = 0;
+			return new MultiInputStream(
+					InputStreamSource.Helper.createInputStreamSource(getCryptoLinkId()),
+//					localRevision
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
+					InputStreamSource.Helper.createInputStreamSource(fromCryptoKey == null ? null : fromCryptoKey.getCryptoKeyId()),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
+					InputStreamSource.Helper.createInputStreamSource(fromUserRepoKeyPublicKey == null ? null : fromUserRepoKeyPublicKey.getUserRepoKeyId()),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
+					InputStreamSource.Helper.createInputStreamSource(toCryptoKey.getCryptoKeyId()),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
+					InputStreamSource.Helper.createInputStreamSource(toCryptoKeyPart.ordinal()),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
+					InputStreamSource.Helper.createInputStreamSource(toCryptoKeyData)
+					);
+		} catch (final IOException x) {
+			throw new RuntimeException(x);
+		}
+	}
+
+	@Override
+	public Uid getSigningUserRepoKeyId() {
+		return signingUserRepoKeyId == null ? null : new Uid(signingUserRepoKeyId);
+	}
+	@Override
+	public void setSigningUserRepoKeyId(final Uid signingUserRepoKeyId) {
+		this.signingUserRepoKeyId = signingUserRepoKeyId == null ? null : signingUserRepoKeyId.toString();
+	}
+
+	@Override
+	public byte[] getSignatureData() {
+		return signatureData;
+	}
+	@Override
+	public void setSignatureData(final byte[] signatureData) {
+		this.signatureData = signatureData;
 	}
 
 	@Override

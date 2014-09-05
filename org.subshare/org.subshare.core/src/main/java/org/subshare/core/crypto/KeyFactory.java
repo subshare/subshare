@@ -1,6 +1,6 @@
 package org.subshare.core.crypto;
 
-import static org.subshare.core.crypto.DummyCryptoUtil.*;
+import static org.subshare.core.crypto.CryptoConfigUtil.*;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -36,7 +36,8 @@ public class KeyFactory {
 	public static final SecureRandom secureRandom = new SecureRandom();
 
 	public KeyParameter createSymmetricKey() {
-		final String engine = CryptoRegistry.splitTransformation(SYMMETRIC_ENCRYPTION_TRANSFORMATION)[0];
+		final CipherTransformation symmetricCipherTransformation = getSymmetricCipherTransformation();
+		final String engine = CryptoRegistry.splitTransformation(symmetricCipherTransformation.getTransformation())[0];
 
 		final SecretKeyGenerator secretKeyGenerator;
 		try {
@@ -50,7 +51,8 @@ public class KeyFactory {
 
 	public AsymmetricCipherKeyPair createAsymmetricKeyPair(final KeyGenerationParameters keyGenerationParameters) {
 		final long startTimestamp = System.currentTimeMillis();
-		final String engine = CryptoRegistry.splitTransformation(ASYMMETRIC_ENCRYPTION_TRANSFORMATION)[0];
+		final CipherTransformation asymmetricCipherTransformation = getAsymmetricCipherTransformation();
+		final String engine = CryptoRegistry.splitTransformation(asymmetricCipherTransformation.getTransformation())[0];
 
 		final AsymmetricCipherKeyPairGenerator keyPairGenerator;
 		try {

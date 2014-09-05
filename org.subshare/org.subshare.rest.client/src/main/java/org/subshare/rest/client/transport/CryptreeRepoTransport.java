@@ -1,6 +1,7 @@
 package org.subshare.rest.client.transport;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static org.subshare.core.crypto.CryptoConfigUtil.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -16,9 +17,7 @@ import org.subshare.core.AccessDeniedException;
 import org.subshare.core.Cryptree;
 import org.subshare.core.CryptreeFactory;
 import org.subshare.core.CryptreeFactoryRegistry;
-import org.subshare.core.crypto.CipherTransformation;
 import org.subshare.core.crypto.DecrypterInputStream;
-import org.subshare.core.crypto.DummyCryptoUtil;
 import org.subshare.core.crypto.EncrypterOutputStream;
 import org.subshare.core.crypto.RandomIvFactory;
 import org.subshare.core.dto.CryptoChangeSetDto;
@@ -36,6 +35,7 @@ import co.codewizards.cloudstore.core.dto.RepoFileDto;
 import co.codewizards.cloudstore.core.dto.RepoFileDtoTreeNode;
 import co.codewizards.cloudstore.core.dto.RepositoryDto;
 import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.repo.local.ContextWithLocalRepoManager;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManagerFactory;
@@ -43,7 +43,6 @@ import co.codewizards.cloudstore.core.repo.local.LocalRepoRegistry;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
 import co.codewizards.cloudstore.core.repo.transport.AbstractRepoTransport;
 import co.codewizards.cloudstore.core.util.IOUtil;
-import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.rest.client.CloudStoreRestClient;
 
 public class CryptreeRepoTransport extends AbstractRepoTransport implements ContextWithLocalRepoManager {
@@ -288,7 +287,7 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 		final ByteArrayOutputStream bout = new ByteArrayOutputStream();
 		try (
 				final EncrypterOutputStream encrypterOut = new EncrypterOutputStream(bout,
-						CipherTransformation.fromTransformation(DummyCryptoUtil.SYMMETRIC_ENCRYPTION_TRANSFORMATION),
+						getSymmetricCipherTransformation(),
 						keyParameter, new RandomIvFactory());
 		) {
 			encrypterOut.write(1); // version

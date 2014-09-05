@@ -1,7 +1,8 @@
 package org.subshare.local;
 
-import static co.codewizards.cloudstore.core.util.IOUtil.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static co.codewizards.cloudstore.core.util.IOUtil.*;
+import static org.subshare.core.crypto.CryptoConfigUtil.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -16,11 +17,11 @@ import org.subshare.core.crypto.AsymCombiEncrypterOutputStream;
 import org.subshare.core.crypto.CipherTransformation;
 import org.subshare.core.crypto.DecrypterInputStream;
 import org.subshare.core.crypto.DefaultKeyParameterFactory;
-import org.subshare.core.crypto.DummyCryptoUtil;
 import org.subshare.core.crypto.EncrypterOutputStream;
 import org.subshare.core.crypto.RandomIvFactory;
 import org.subshare.core.dto.CryptoKeyPart;
 import org.subshare.core.dto.CryptoKeyType;
+import org.subshare.core.sign.SignableSigner;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.local.persistence.CryptoLink;
 import org.subshare.local.persistence.UserRepoKeyPublicKey;
@@ -151,7 +152,7 @@ public class CryptreeNodeUtil {
 		}
 	}
 
-	public static CryptoLink createCryptoLink(final PlainCryptoKey fromPlainCryptoKey, final PlainCryptoKey toPlainCryptoKey) {
+	public static CryptoLink createCryptoLink(final PlainCryptoKey fromPlainCryptoKey, final PlainCryptoKey toPlainCryptoKey, final SignableSigner signableSigner) {
 		assertNotNull("fromPlainCryptoKey", fromPlainCryptoKey);
 		assertNotNull("toPlainCryptoKey", toPlainCryptoKey);
 		final CryptoLink cryptoLink = new CryptoLink();
@@ -159,11 +160,12 @@ public class CryptreeNodeUtil {
 		cryptoLink.setToCryptoKey(toPlainCryptoKey.getCryptoKey());
 		cryptoLink.setToCryptoKeyData(encrypt(toPlainCryptoKey.getEncodedKey(), fromPlainCryptoKey));
 		cryptoLink.setToCryptoKeyPart(toPlainCryptoKey.getCryptoKeyPart());
+		signableSigner.sign(cryptoLink);
 		toPlainCryptoKey.getCryptoKey().getInCryptoLinks().add(cryptoLink);
 		return cryptoLink;
 	}
 
-	public static CryptoLink createCryptoLink(final UserRepoKeyPublicKey fromUserRepoKeyPublicKey, final PlainCryptoKey toPlainCryptoKey) {
+	public static CryptoLink createCryptoLink(final UserRepoKeyPublicKey fromUserRepoKeyPublicKey, final PlainCryptoKey toPlainCryptoKey, final SignableSigner signableSigner) {
 		assertNotNull("fromUserRepoKeyPublicKey", fromUserRepoKeyPublicKey);
 		assertNotNull("toPlainCryptoKey", toPlainCryptoKey);
 		final CryptoLink cryptoLink = new CryptoLink();
@@ -171,23 +173,12 @@ public class CryptreeNodeUtil {
 		cryptoLink.setToCryptoKey(toPlainCryptoKey.getCryptoKey());
 		cryptoLink.setToCryptoKeyData(encryptLarge(toPlainCryptoKey.getEncodedKey(), fromUserRepoKeyPublicKey));
 		cryptoLink.setToCryptoKeyPart(toPlainCryptoKey.getCryptoKeyPart());
+		signableSigner.sign(cryptoLink);
 		toPlainCryptoKey.getCryptoKey().getInCryptoLinks().add(cryptoLink);
 		return cryptoLink;
 	}
 
-//	public static CryptoLink createCryptoLink(final UserRepoKey fromUserRepoKey, final PlainCryptoKey toPlainCryptoKey) {
-//		assertNotNull("fromUserRepoKey", fromUserRepoKey);
-//		assertNotNull("toPlainCryptoKey", toPlainCryptoKey);
-//		final CryptoLink cryptoLink = new CryptoLink();
-//		cryptoLink.setFromUserRepoKeyId(fromUserRepoKey.getUserRepoKeyId());
-//		cryptoLink.setToCryptoKey(toPlainCryptoKey.getCryptoKey());
-//		cryptoLink.setToCryptoKeyData(encryptLarge(toPlainCryptoKey.getEncodedKey(), fromUserRepoKey));
-//		cryptoLink.setToCryptoKeyPart(toPlainCryptoKey.getCryptoKeyPart());
-//		toPlainCryptoKey.getCryptoKey().getInCryptoLinks().add(cryptoLink);
-//		return cryptoLink;
-//	}
-
-	public static CryptoLink createCryptoLink(final PlainCryptoKey toPlainCryptoKey) { // plain-text = UNENCRYPTED!!!
+	public static CryptoLink createCryptoLink(final PlainCryptoKey toPlainCryptoKey, final SignableSigner signableSigner) { // plain-text = UNENCRYPTED!!!
 		assertNotNull("toPlainCryptoKey", toPlainCryptoKey);
 
 		if (CryptoKeyPart.publicKey != toPlainCryptoKey.getCryptoKeyPart())
@@ -197,6 +188,7 @@ public class CryptreeNodeUtil {
 		cryptoLink.setToCryptoKey(toPlainCryptoKey.getCryptoKey());
 		cryptoLink.setToCryptoKeyData(toPlainCryptoKey.getEncodedKey());
 		cryptoLink.setToCryptoKeyPart(toPlainCryptoKey.getCryptoKeyPart());
+		signableSigner.sign(cryptoLink);
 		toPlainCryptoKey.getCryptoKey().getInCryptoLinks().add(cryptoLink);
 		return cryptoLink;
 	}
@@ -213,16 +205,9 @@ public class CryptreeNodeUtil {
 		if (key instanceof KeyParameter)
 			return getSymmetricCipherTransformation();
 		else if (key instanceof AsymmetricKeyParameter)
-			return CipherTransformation.fromTransformation(DummyCryptoUtil.ASYMMETRIC_ENCRYPTION_TRANSFORMATION);
+			return getAsymmetricCipherTransformation();
 		else
 			throw new IllegalArgumentException("Unexpected key type: " + key.getClass().getName());
 	}
 
-	/**
-	 * Gets the configured/preferred transformation for symmetric encryption.
-	 * @return the configured/preferred transformation for symmetric encryption. Never <code>null</code>.
-	 */
-	private static CipherTransformation getSymmetricCipherTransformation() {
-		return CipherTransformation.fromTransformation(DummyCryptoUtil.SYMMETRIC_ENCRYPTION_TRANSFORMATION);
-	}
 }

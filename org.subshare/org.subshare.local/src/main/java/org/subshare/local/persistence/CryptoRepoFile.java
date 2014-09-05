@@ -27,11 +27,11 @@ import javax.jdo.annotations.Unique;
 import javax.jdo.annotations.Uniques;
 import javax.jdo.listener.StoreCallback;
 
-import org.subshare.core.crypto.Signable;
 import org.subshare.core.dto.CryptoKeyRole;
 import org.subshare.core.dto.CryptoRepoFileDto;
 import org.subshare.core.io.InputStreamSource;
 import org.subshare.core.io.MultiInputStream;
+import org.subshare.core.sign.Signable;
 
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
 import co.codewizards.cloudstore.core.dto.Uid;
@@ -99,7 +99,11 @@ public class CryptoRepoFile extends Entity implements Signable, AutoTrackLocalRe
 
 	private boolean directory;
 
-	private byte[] signatureData; // is temporarily null TODO is this necessary?!
+	@Persistent(nullValue=NullValue.EXCEPTION)
+	private String signingUserRepoKeyId;
+
+	@Persistent(nullValue=NullValue.EXCEPTION)
+	private byte[] signatureData;
 
 	public CryptoRepoFile() { }
 
@@ -321,20 +325,36 @@ public class CryptoRepoFile extends Entity implements Signable, AutoTrackLocalRe
 	@Override
 	public InputStream getSignedData(final int signedDataVersion) {
 		try {
+			byte separatorIndex = 0;
 			return new MultiInputStream(
 					InputStreamSource.Helper.createInputStreamSource(getCryptoRepoFileId()),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(parent == null ? null : parent.getCryptoRepoFileId()),
 //			getRepoFile();
 //			getLocalRevision();
 //			getLastSyncFromRepositoryId(),
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(cryptoKey == null ? null : cryptoKey.getCryptoKeyId()),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(getRepoFileDtoData()),
 //			localName;
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(directory)
 					);
 		} catch (final IOException x) {
 			throw new RuntimeException(x);
 		}
+	}
+
+	@Override
+	public Uid getSigningUserRepoKeyId() {
+		return signingUserRepoKeyId == null ? null : new Uid(signingUserRepoKeyId);
+	}
+	@Override
+	public void setSigningUserRepoKeyId(final Uid signingUserRepoKeyId) {
+		this.signingUserRepoKeyId = signingUserRepoKeyId == null ? null : signingUserRepoKeyId.toString();
 	}
 
 	@Override

@@ -9,7 +9,7 @@ import org.subshare.core.dto.CryptoKeyType;
 
 class EncrypterDecrypterStreamUtil {
 
-	static final int MAX_UNSIGNED_2_BYTE_VALUE = 256 * 256 - 1;
+	static final int MAX_UNSIGNED_2_BYTE_VALUE = 0xffff;
 
 	static CipherParameters assertValidKey(final CipherTransformation cipherTransformation, final CipherParameters key) {
 		assertNotNull("cipherTransformation", cipherTransformation);

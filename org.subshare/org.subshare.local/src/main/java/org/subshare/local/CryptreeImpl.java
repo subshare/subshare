@@ -82,8 +82,12 @@ public class CryptreeImpl extends AbstractCryptree {
 		final RepoFile repoFile = repoFileDao.getRepoFile(localRepoManager.getLocalRoot(), createFile(localRepoManager.getLocalRoot(), path));
 		assertNotNull("repoFile", repoFile);
 
-		final CryptreeNode cryptreeNode = new CryptreeNode(getUserRepoKeyOrFail(), transaction, repoFile);
+		final CryptreeNode cryptreeNode = new CryptreeNode(getCryptreeContextOrFail(), repoFile);
 		return cryptreeNode.getDataKeyOrFail();
+	}
+
+	protected CryptreeContext getCryptreeContextOrFail() {
+		return new CryptreeContext(getUserRepoKeyOrFail(), getTransactionOrFail());
 	}
 
 	@Override
@@ -259,6 +263,9 @@ public class CryptreeImpl extends AbstractCryptree {
 		cryptoRepoFile.setDirectory(cryptoRepoFileDto.isDirectory());
 		cryptoRepoFile.setLastSyncFromRepositoryId(getRemoteRepositoryId());
 
+		cryptoRepoFile.setSignatureData(cryptoRepoFileDto.getSignatureData());
+		cryptoRepoFile.setSigningUserRepoKeyId(cryptoRepoFileDto.getSigningUserRepoKeyId());
+
 		return cryptoRepoFileDao.makePersistent(cryptoRepoFile);
 	}
 
@@ -299,6 +306,9 @@ public class CryptreeImpl extends AbstractCryptree {
 		final CryptoRepoFile cryptoRepoFile = cryptoRepoFileDao.getCryptoRepoFileOrFail(cryptoRepoFileId);
 		cryptoKey.setCryptoRepoFile(cryptoRepoFile);
 
+		cryptoKey.setSignatureData(cryptoKeyDto.getSignatureData());
+		cryptoKey.setSigningUserRepoKeyId(cryptoKeyDto.getSigningUserRepoKeyId());
+
 		return cryptoKeyDao.makePersistent(cryptoKey);
 	}
 
@@ -328,6 +338,10 @@ public class CryptreeImpl extends AbstractCryptree {
 		cryptoLink.setToCryptoKeyPart(cryptoLinkDto.getToCryptoKeyPart());
 
 		toCryptoKey.getInCryptoLinks().add(cryptoLink);
+
+		cryptoLink.setSignatureData(cryptoLinkDto.getSignatureData());
+		cryptoLink.setSigningUserRepoKeyId(cryptoLinkDto.getSigningUserRepoKeyId());
+
 		return cryptoLinkDao.makePersistent(cryptoLink);
 	}
 
@@ -366,17 +380,17 @@ public class CryptreeImpl extends AbstractCryptree {
 	private CryptreeNode createCryptreeNodeOrFail(final String localPath) {
 		final RepoFile repoFile = getRepoFile(localPath);
 		if (repoFile != null) {
-			final CryptreeNode cryptreeNode = new CryptreeNode(getUserRepoKeyOrFail(), getTransactionOrFail(), repoFile);
+			final CryptreeNode cryptreeNode = new CryptreeNode(getCryptreeContextOrFail(), repoFile);
 			return cryptreeNode;
 		}
 		final CryptoRepoFile cryptoRepoFile = getCryptoRepoFileOrFail(localPath);
-		final CryptreeNode cryptreeNode = new CryptreeNode(getUserRepoKeyOrFail(), getTransactionOrFail(), cryptoRepoFile);
+		final CryptreeNode cryptreeNode = new CryptreeNode(getCryptreeContextOrFail(), cryptoRepoFile);
 		return cryptreeNode;
 	}
 
 	private CryptreeNode createCryptreeNodeOrFail(final Uid cryptoRepoFileId) {
 		final CryptoRepoFile cryptoRepoFile = getCryptoRepoFileOrFail(cryptoRepoFileId);
-		final CryptreeNode cryptreeNode = new CryptreeNode(getUserRepoKeyOrFail(), getTransactionOrFail(), cryptoRepoFile);
+		final CryptreeNode cryptreeNode = new CryptreeNode(getCryptreeContextOrFail(), cryptoRepoFile);
 		return cryptreeNode;
 	}
 
@@ -554,6 +568,9 @@ public class CryptreeImpl extends AbstractCryptree {
 		final byte[] repoFileDtoData = assertNotNull("cryptoRepoFile.repoFileDtoData", cryptoRepoFile.getRepoFileDtoData());
 		cryptoRepoFileDto.setRepoFileDtoData(repoFileDtoData);
 
+		cryptoRepoFileDto.setSignatureData(cryptoRepoFile.getSignatureData());
+		cryptoRepoFileDto.setSigningUserRepoKeyId(cryptoRepoFile.getSigningUserRepoKeyId());
+
 		return cryptoRepoFileDto;
 	}
 
@@ -571,7 +588,8 @@ public class CryptreeImpl extends AbstractCryptree {
 		cryptoLinkDto.setToCryptoKeyData(cryptoLink.getToCryptoKeyData());
 		cryptoLinkDto.setToCryptoKeyId(cryptoLink.getToCryptoKey().getCryptoKeyId());
 		cryptoLinkDto.setToCryptoKeyPart(cryptoLink.getToCryptoKeyPart());
-
+		cryptoLinkDto.setSignatureData(cryptoLink.getSignatureData());
+		cryptoLinkDto.setSigningUserRepoKeyId(cryptoLink.getSigningUserRepoKeyId());
 		return cryptoLinkDto;
 	}
 
@@ -583,6 +601,8 @@ public class CryptreeImpl extends AbstractCryptree {
 		cryptoKeyDto.setActive(cryptoKey.isActive());
 		cryptoKeyDto.setCryptoKeyRole(cryptoKey.getCryptoKeyRole());
 		cryptoKeyDto.setCryptoKeyType(cryptoKey.getCryptoKeyType());
+		cryptoKeyDto.setSignatureData(cryptoKey.getSignatureData());
+		cryptoKeyDto.setSigningUserRepoKeyId(cryptoKey.getSigningUserRepoKeyId());
 		return cryptoKeyDto;
 	}
 

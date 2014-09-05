@@ -7,9 +7,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.subshare.core.dto.CryptoKeyType;
+import org.subshare.crypto.Cipher;
+
+import co.codewizards.cloudstore.core.config.Config;
 
 /**
- * Supported cipher transformations.
+ * Supported {@link Cipher} transformations.
  * <p>
  * Each cipher transformation can either be asymmetric or symmetric.
  * <p>
@@ -38,13 +41,13 @@ public enum CipherTransformation {
 	RSA_OAEPWITHSHA1ANDMGF1PADDING(CryptoKeyType.asymmetric, "RSA//OAEPWITHSHA1ANDMGF1PADDING")
 	;
 
-	private static final Map<String, CipherTransformation> transformation2SymmetricCipherTransformation;
+	private static final Map<String, CipherTransformation> transformation2CipherTransformation;
 	static {
 		final Map<String, CipherTransformation> m = new HashMap<String, CipherTransformation>(values().length);
-		for (final CipherTransformation seTransformation : values()) {
-			m.put(seTransformation.getTransformation(), seTransformation);
+		for (final CipherTransformation ct : values()) {
+			m.put(ct.getTransformation(), ct);
 		}
-		transformation2SymmetricCipherTransformation = Collections.unmodifiableMap(m);
+		transformation2CipherTransformation = Collections.unmodifiableMap(m);
 	}
 
 	private final CryptoKeyType type;
@@ -65,11 +68,28 @@ public enum CipherTransformation {
 
 	public static CipherTransformation fromTransformation(final String transformation) {
 		assertNotNull("transformation", transformation);
-		final CipherTransformation seTransformation = transformation2SymmetricCipherTransformation.get(transformation);
-		if (seTransformation == null)
+		final CipherTransformation ct = transformation2CipherTransformation.get(transformation);
+		if (ct == null)
 			throw new IllegalArgumentException("There is no CipherTransformation for this transformation: " + transformation);
 
-		return seTransformation;
+		return ct;
 	}
 
+	/**
+	 * The {@code key} used with {@link Config#getPropertyAsEnum(String, Enum)} for asymmetric encryption.
+	 */
+	public static final String CONFIG_KEY_ASYMMETRIC = "asymmetricCipherTransformation"; //$NON-NLS-1$
+	/**
+	 * The {@code defaultValue} used with {@link Config#getPropertyAsEnum(String, Enum)} for asymmetric encryption.
+	 */
+	public static final CipherTransformation CONFIG_DEFAULT_VALUE_ASYMMETRIC = RSA_OAEPWITHSHA1ANDMGF1PADDING;
+
+	/**
+	 * The {@code key} used with {@link Config#getPropertyAsEnum(String, Enum)} for symmetric encryption.
+	 */
+	public static final String CONFIG_KEY_SYMMETRIC = "symmetricCipherTransformation"; //$NON-NLS-1$
+	/**
+	 * The {@code defaultValue} used with {@link Config#getPropertyAsEnum(String, Enum)} for symmetric encryption.
+	 */
+	public static final CipherTransformation CONFIG_DEFAULT_VALUE_SYMMETRIC = TWOFISH_CFB_NOPADDING;
 }

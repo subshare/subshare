@@ -23,7 +23,6 @@ import org.subshare.core.AccessDeniedException;
 import org.subshare.core.dto.CryptoKeyPart;
 import org.subshare.core.dto.CryptoKeyRole;
 import org.subshare.core.user.UserRepoKey;
-import org.subshare.core.user.UserRepoKeyRing;
 import org.subshare.local.persistence.CryptoKey;
 import org.subshare.local.persistence.CryptoKeyDao;
 import org.subshare.local.persistence.CryptoLink;
@@ -37,8 +36,6 @@ import org.slf4j.LoggerFactory;
 
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
 import co.codewizards.cloudstore.core.dto.Uid;
-import co.codewizards.cloudstore.core.dto.jaxb.RepoFileDtoIo;
-import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
 import co.codewizards.cloudstore.local.dto.RepoFileDtoConverter;
 import co.codewizards.cloudstore.local.persistence.Directory;
 import co.codewizards.cloudstore.local.persistence.RepoFile;
@@ -59,72 +56,51 @@ public class CryptreeNode {
 		cryptoKeyRole2PlainCryptoKeyFactory = Collections.unmodifiableMap(m);
 	}
 
-	private final UserRepoKeyRing userRepoKeyRing; // never null
-	private final UserRepoKey userRepoKey; // never null
+	private final CryptreeContext context;
 	private final UserRepoKeyPublicKey userRepoKeyPublicKey; // never null;
 	private CryptreeNode parent; // maybe null - lazily loaded, if there is one
-	private final LocalRepoTransaction transaction; // never null
 	private RepoFile repoFile; // maybe null - lazily loaded
 	private CryptoRepoFile cryptoRepoFile; // maybe null - lazily loaded
 	private final RepoFileDtoConverter repoFileDtoConverter; // never null
 	private final List<CryptreeNode> children = new ArrayList<CryptreeNode>(0);
 	private boolean childrenLoaded = false;
-	private final RepoFileDtoIo repoFileDtoIo; // never null
 
-	public CryptreeNode(final UserRepoKey userRepoKey, final LocalRepoTransaction transaction, final RepoFile repoFile) {
-		this(userRepoKey, transaction, repoFile, null);
+	public CryptreeNode(final CryptreeContext context, final RepoFile repoFile) {
+		this(context, repoFile, null);
 	}
 
-	public CryptreeNode(final UserRepoKey userRepoKey, final LocalRepoTransaction transaction, final CryptoRepoFile cryptoRepoFile) {
-		this(userRepoKey, transaction, null, cryptoRepoFile);
+	public CryptreeNode(final CryptreeContext context, final CryptoRepoFile cryptoRepoFile) {
+		this(context, null, cryptoRepoFile);
 	}
 
-	private CryptreeNode(final UserRepoKey userRepoKey, final LocalRepoTransaction transaction, final RepoFile repoFile, final CryptoRepoFile cryptoRepoFile) {
-		this(null, null, userRepoKey,
-				assertNotNull("transaction", transaction), repoFile, cryptoRepoFile);
+	private CryptreeNode(final CryptreeContext context, final RepoFile repoFile, final CryptoRepoFile cryptoRepoFile) {
+		this(null, null, context, repoFile, cryptoRepoFile);
 	}
 
-	private CryptreeNode(final CryptreeNode parent, final CryptreeNode child, final UserRepoKey userRepoKey, final LocalRepoTransaction transaction, final RepoFile repoFile, final CryptoRepoFile cryptoRepoFile) {
-		if (parent == null && child == null && userRepoKey == null)
-			throw new IllegalArgumentException("parent == null && child == null && userRepoKey == null");
-
-		if (parent == null && child == null && transaction == null)
-			throw new IllegalArgumentException("parent == null && child == null && transaction == null");
+	private CryptreeNode(final CryptreeNode parent, final CryptreeNode child, final CryptreeContext context, final RepoFile repoFile, final CryptoRepoFile cryptoRepoFile) {
+		if (parent == null && child == null && context == null)
+			throw new IllegalArgumentException("parent == null && child == null && context == null");
 
 		if (repoFile == null && cryptoRepoFile == null)
 			throw new IllegalArgumentException("repoFile == null && cryptoRepoFile == null");
 
 		this.parent = parent;
-		this.userRepoKey = userRepoKey != null ? userRepoKey
-				: (parent != null ? parent.getUserRepoKey() : child.getUserRepoKey());
-		this.userRepoKeyRing = assertNotNull("userRepoKey.userRepoKeyRing", userRepoKey.getUserRepoKeyRing());
-		this.transaction = transaction != null ? transaction
-				: (parent != null ? parent.getTransaction() : child.getTransaction());
+		this.context = context != null ? context
+				: (parent != null ? parent.getContext() : child.getContext());
 
 		this.repoFile = repoFile != null ? repoFile : cryptoRepoFile.getRepoFile();
 		this.cryptoRepoFile = cryptoRepoFile;
-		this.repoFileDtoConverter = new RepoFileDtoConverter(transaction);
-
-		this.repoFileDtoIo = parent != null ? parent.repoFileDtoIo
-				: (child != null ? child.repoFileDtoIo : new RepoFileDtoIo());
+		this.repoFileDtoConverter = new RepoFileDtoConverter(context.transaction);
 
 		if (child != null)
 			children.add(child);
 
 		this.userRepoKeyPublicKey = parent != null ? parent.userRepoKeyPublicKey :
-			(child != null ? child.userRepoKeyPublicKey : getUserRepoKeyPublicKey(this.userRepoKey));
+			(child != null ? child.userRepoKeyPublicKey : getUserRepoKeyPublicKey(context.userRepoKey));
 	}
 
-	protected UserRepoKeyRing getUserRepoKeyRing() {
-		return userRepoKeyRing;
-	}
-
-	protected UserRepoKey getUserRepoKey() {
-		return userRepoKey;
-	}
-
-	protected LocalRepoTransaction getTransaction() {
-		return transaction;
+	public CryptreeContext getContext() {
+		return context;
 	}
 
 	public RepoFile getRepoFile() {
@@ -155,7 +131,7 @@ public class CryptreeNode {
 		final byte[] plainRepoFileDtoData = assertNotNull("decrypt(...)", decrypt(cryptoRepoFile.getRepoFileDtoData(), plainCryptoKey));
 		try {
 			final InputStream in = new GZIPInputStream(new ByteArrayInputStream(plainRepoFileDtoData));
-			final RepoFileDto repoFileDto = repoFileDtoIo.deserialize(in);
+			final RepoFileDto repoFileDto = context.repoFileDtoIo.deserialize(in);
 			in.close();
 			return repoFileDto;
 		} catch (final IOException x) {
@@ -168,7 +144,7 @@ public class CryptreeNode {
 			if (repoFile == null) // at least one of them must be there!
 				throw new IllegalStateException("repoFile == null && cryptoRepoFile == null");
 
-			final CryptoRepoFileDao cryptoRepoFileDao = transaction.getDao(CryptoRepoFileDao.class);
+			final CryptoRepoFileDao cryptoRepoFileDao = context.transaction.getDao(CryptoRepoFileDao.class);
 			cryptoRepoFile = cryptoRepoFileDao.getCryptoRepoFile(repoFile); // may be null!
 		}
 		return cryptoRepoFile;
@@ -177,10 +153,15 @@ public class CryptreeNode {
 	public CryptoRepoFile getCryptoRepoFileOrCreate(final boolean update) {
 		CryptoRepoFile cryptoRepoFile = getCryptoRepoFile();
 		if (cryptoRepoFile == null || update) {
-			final CryptoRepoFileDao cryptoRepoFileDao = transaction.getDao(CryptoRepoFileDao.class);
+			final CryptoRepoFileDao cryptoRepoFileDao = context.transaction.getDao(CryptoRepoFileDao.class);
 
-			if (cryptoRepoFile == null)
+			if (cryptoRepoFile == null) {
 				cryptoRepoFile = new CryptoRepoFile();
+
+				// We sign *after* we persist, hence we store this dummy value to avoid allowing NULL.
+				cryptoRepoFile.setSignatureData(new byte[] { 7 });
+				cryptoRepoFile.setSigningUserRepoKeyId(new Uid(0, 0));
+			}
 
 			cryptoRepoFile.setRepoFile(repoFile); // repoFile is guaranteed to be *not* null, because of getCryptoRepoFile() above.
 			cryptoRepoFile.setDirectory(repoFile instanceof Directory);
@@ -215,7 +196,7 @@ public class CryptreeNode {
 			final ByteArrayOutputStream out = new ByteArrayOutputStream();
 			try {
 				final GZIPOutputStream gzOut = new GZIPOutputStream(out);
-				repoFileDtoIo.serialize(repoFileDto, gzOut);
+				context.repoFileDtoIo.serialize(repoFileDto, gzOut);
 				gzOut.close();
 			} catch (final IOException e) {
 				throw new RuntimeException(e);
@@ -223,6 +204,8 @@ public class CryptreeNode {
 
 			cryptoRepoFile.setRepoFileDtoData(assertNotNull("encrypt(...)", encrypt(out.toByteArray(), plainCryptoKey)));
 			cryptoRepoFile.setLastSyncFromRepositoryId(null);
+
+			context.signableSigner.sign(cryptoRepoFile);
 		}
 		return cryptoRepoFile;
 	}
@@ -230,7 +213,7 @@ public class CryptreeNode {
 	public void grantReadAccess(final UserRepoKey.PublicKey publicKey) {
 		assertNotNull("publicKey", publicKey);
 		final PlainCryptoKey plainCryptoKey = getActivePlainCryptoKeyOrCreate(CryptoKeyRole.clearanceKey, CryptoKeyPart.privateKey);
-		createCryptoLink(getUserRepoKeyPublicKey(publicKey), plainCryptoKey);
+		createCryptoLink(getUserRepoKeyPublicKey(publicKey), plainCryptoKey, context.signableSigner);
 	}
 
 	public void revokeReadAccess(final Set<Uid> userRepoKeyIds) {
@@ -242,7 +225,7 @@ public class CryptreeNode {
 		if (cryptoRepoFile == null)
 			return; // There is no CryptoRepoFile, thus there can be no read-access which could be revoked.
 
-		final CryptoLinkDao cryptoLinkDao = getTransaction().getDao(CryptoLinkDao.class);
+		final CryptoLinkDao cryptoLinkDao = context.transaction.getDao(CryptoLinkDao.class);
 		final Collection<CryptoLink> cryptoLinks = cryptoLinkDao.getActiveCryptoLinks(
 				cryptoRepoFile, CryptoKeyRole.clearanceKey, CryptoKeyPart.privateKey);
 
@@ -256,7 +239,7 @@ public class CryptreeNode {
 			makeCryptoKeyAndDescendantsNonActive(cryptoLink.getToCryptoKey(), processedCryptoKeys); // likely the same CryptoKey for all cryptoLinks => deduplicate via Set
 
 		// Make sure the changes are written to the DB, so that a new active clearance key is generated in the following.
-		getTransaction().flush();
+		context.transaction.flush();
 
 		// Create a *new* clearance key *immediately*, but only if needed.
 		PlainCryptoKey clearanceKeyPlainCryptoKey = null;
@@ -269,13 +252,13 @@ public class CryptreeNode {
 				continue;
 
 			// The current user is already granted access when the clearing key was created above.
-			if (fromUserRepoKeyId != null && fromUserRepoKeyId.equals(getUserRepoKey().getUserRepoKeyId()))
+			if (fromUserRepoKeyId != null && fromUserRepoKeyId.equals(context.userRepoKey.getUserRepoKeyId()))
 				continue;
 
 			if (clearanceKeyPlainCryptoKey == null)
 				clearanceKeyPlainCryptoKey = getActivePlainCryptoKeyOrCreate(CryptoKeyRole.clearanceKey, CryptoKeyPart.privateKey);
 
-			createCryptoLink(fromUserRepoKeyPublicKey, clearanceKeyPlainCryptoKey);
+			createCryptoLink(fromUserRepoKeyPublicKey, clearanceKeyPlainCryptoKey, context.signableSigner);
 		}
 
 		if (clearanceKeyPlainCryptoKey != null)
@@ -339,16 +322,16 @@ public class CryptreeNode {
 	public Collection<CryptreeNode> getChildren() {
 		if (! childrenLoaded) {
 			if (cryptoRepoFile != null) {
-				final CryptoRepoFileDao dao = getTransaction().getDao(CryptoRepoFileDao.class);
+				final CryptoRepoFileDao dao = context.transaction.getDao(CryptoRepoFileDao.class);
 				final Collection<CryptoRepoFile> childCryptoRepoFiles = dao.getChildCryptoRepoFiles(cryptoRepoFile);
 				for (final CryptoRepoFile childCryptoRepoFile : childCryptoRepoFiles)
-					children.add(new CryptreeNode(this, null, getUserRepoKey(), getTransaction(), null, childCryptoRepoFile));
+					children.add(new CryptreeNode(this, null, getContext(), null, childCryptoRepoFile));
 			}
 			else if (repoFile != null) {
-				final RepoFileDao dao = getTransaction().getDao(RepoFileDao.class);
+				final RepoFileDao dao = context.transaction.getDao(RepoFileDao.class);
 				final Collection<RepoFile> childRepoFiles = dao.getChildRepoFiles(repoFile);
 				for (final RepoFile childRepoFile : childRepoFiles)
-					children.add(new CryptreeNode(this, null, getUserRepoKey(), getTransaction(), childRepoFile, null));
+					children.add(new CryptreeNode(this, null, getContext(), childRepoFile, null));
 			}
 			else
 				throw new IllegalStateException("repoFile == null && cryptoRepoFile == null");
@@ -370,7 +353,7 @@ public class CryptreeNode {
 		assertNotNull("toCryptoKeyPart", toCryptoKeyPart);
 		logger.debug("getActivePlainCryptoKey: cryptoRepoFile={} repoFile={} toCryptoKeyRole={} toCryptoKeyPart={}",
 				cryptoRepoFile, repoFile, toCryptoKeyRole, toCryptoKeyPart);
-		final CryptoLinkDao cryptoLinkDao = transaction.getDao(CryptoLinkDao.class);
+		final CryptoLinkDao cryptoLinkDao = context.transaction.getDao(CryptoLinkDao.class);
 		final Collection<CryptoLink> cryptoLinks = cryptoLinkDao.getActiveCryptoLinks(getCryptoRepoFile(), toCryptoKeyRole, toCryptoKeyPart);
 		return getPlainCryptoKey(cryptoLinks, toCryptoKeyPart);
 	}
@@ -395,7 +378,7 @@ public class CryptreeNode {
 				logger.debug("getPlainCryptoKey: >>> cryptoRepoFile={} repoFile={} cryptoLink={} fromUserRepoKeyPublicKey={}",
 						cryptoRepoFile, repoFile, cryptoLink, fromUserRepoKeyPublicKey);
 				final Uid userRepoKeyId = fromUserRepoKeyPublicKey.getUserRepoKeyId();
-				final UserRepoKey userRepoKey = getUserRepoKeyRing().getUserRepoKey(userRepoKeyId);
+				final UserRepoKey userRepoKey = context.userRepoKeyRing.getUserRepoKey(userRepoKeyId);
 				if (userRepoKey != null) {
 					logger.debug("getPlainCryptoKey: <<< cryptoRepoFile={} repoFile={} cryptoLink={} fromUserRepoKeyPublicKey={}: DECRYPTED!",
 							cryptoRepoFile, repoFile, cryptoLink, fromUserRepoKeyPublicKey);
@@ -477,7 +460,7 @@ public class CryptreeNode {
 			if (plainCryptoKey.getCryptoKeyPart() != toCryptoKeyPart)
 				throw new IllegalStateException(String.format("plainCryptoKey.cryptoKeyPart != toCryptoKeyPart :: %s != %s", plainCryptoKey.getCryptoKeyPart(), toCryptoKeyPart));
 
-			final CryptoKeyDao cryptoKeyDao = transaction.getDao(CryptoKeyDao.class);
+			final CryptoKeyDao cryptoKeyDao = context.transaction.getDao(CryptoKeyDao.class);
 			final CryptoKey cryptoKey = cryptoKeyDao.makePersistent(plainCryptoKey.getCryptoKey());
 			plainCryptoKey = new PlainCryptoKey(cryptoKey, plainCryptoKey.getCryptoKeyPart(), plainCryptoKey.getCipherParameters());
 		}
@@ -515,7 +498,7 @@ public class CryptreeNode {
 			final CryptoRepoFile parentCryptoRepoFile =  cryptoRepoFile == null ? null : cryptoRepoFile.getParent();
 
 			if (parentRepoFile != null || parentCryptoRepoFile != null)
-				parent = new CryptreeNode(null, this, getUserRepoKey(), getTransaction(), parentRepoFile, parentCryptoRepoFile);
+				parent = new CryptreeNode(null, this, getContext(), parentRepoFile, parentCryptoRepoFile);
 		}
 		return parent;
 	}
@@ -531,7 +514,7 @@ public class CryptreeNode {
 
 	private UserRepoKeyPublicKey getUserRepoKeyPublicKey(final UserRepoKey.PublicKey publicKey) {
 		assertNotNull("publicKey", publicKey);
-		final UserRepoKeyPublicKeyDao dao = getTransaction().getDao(UserRepoKeyPublicKeyDao.class);
+		final UserRepoKeyPublicKeyDao dao = context.transaction.getDao(UserRepoKeyPublicKeyDao.class);
 		UserRepoKeyPublicKey userRepoKeyPublicKey = dao.getUserRepoKeyPublicKey(publicKey.getUserRepoKeyId());
 		if (userRepoKeyPublicKey == null)
 			userRepoKeyPublicKey = dao.makePersistent(new UserRepoKeyPublicKey(publicKey));

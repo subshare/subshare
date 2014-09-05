@@ -5,9 +5,9 @@ import java.io.InputStream;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.subshare.core.crypto.Signable;
 import org.subshare.core.io.InputStreamSource;
 import org.subshare.core.io.MultiInputStream;
+import org.subshare.core.sign.Signable;
 
 import co.codewizards.cloudstore.core.dto.Uid;
 
@@ -25,6 +25,8 @@ public class CryptoKeyDto implements Signable {
 	private CryptoKeyRole cryptoKeyRole;
 
 	private long localRevision;
+
+	private Uid signingUserRepoKeyId;
 
 	private byte[] signatureData;
 
@@ -78,24 +80,41 @@ public class CryptoKeyDto implements Signable {
 	/**
 	 * {@inheritDoc}
 	 * <p>
-	 * <b>Important:</b> The implementation in {@code CryptoRepoFile} must exactly match the one in {@link CryptoRepoFileDto}!
+	 * <b>Important:</b> The implementation in {@code CryptoKey} must exactly match the one in {@code CryptoKeyDto}!
 	 */
 	@Override
 	public InputStream getSignedData(final int signedDataVersion) {
 		try {
+			byte separatorIndex = 0;
 			return new MultiInputStream(
 					InputStreamSource.Helper.createInputStreamSource(cryptoKeyId),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(cryptoRepoFileId),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(cryptoKeyType.ordinal()),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(cryptoKeyRole.ordinal()),
 //					localRevision
 //					inCryptoLinks
 //					outCryptoLinks
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(active)
 					);
 		} catch (final IOException x) {
 			throw new RuntimeException(x);
 		}
+	}
+
+	@Override
+	public Uid getSigningUserRepoKeyId() {
+		return signingUserRepoKeyId;
+	}
+	@Override
+	public void setSigningUserRepoKeyId(final Uid signingUserRepoKeyId) {
+		this.signingUserRepoKeyId = signingUserRepoKeyId;
 	}
 
 	@Override

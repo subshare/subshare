@@ -20,13 +20,13 @@ import javax.jdo.annotations.Query;
 import javax.jdo.annotations.Unique;
 import javax.jdo.listener.StoreCallback;
 
-import org.subshare.core.crypto.Signable;
+import org.subshare.core.dto.CryptoKeyDto;
 import org.subshare.core.dto.CryptoKeyPart;
 import org.subshare.core.dto.CryptoKeyRole;
 import org.subshare.core.dto.CryptoKeyType;
-import org.subshare.core.dto.CryptoRepoFileDto;
 import org.subshare.core.io.InputStreamSource;
 import org.subshare.core.io.MultiInputStream;
+import org.subshare.core.sign.Signable;
 
 import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.local.persistence.AutoTrackLocalRevision;
@@ -89,7 +89,11 @@ public class CryptoKey extends Entity implements Signable, AutoTrackLocalRevisio
 
 	private boolean active = true;
 
-	private byte[] signatureData; // is temporarily null TODO is this necessary?!
+	@Persistent(nullValue=NullValue.EXCEPTION)
+	private String signingUserRepoKeyId;
+
+	@Persistent(nullValue=NullValue.EXCEPTION)
+	private byte[] signatureData;
 
 	public CryptoKey() { }
 
@@ -204,24 +208,41 @@ public class CryptoKey extends Entity implements Signable, AutoTrackLocalRevisio
 	/**
 	 * {@inheritDoc}
 	 * <p>
-	 * <b>Important:</b> The implementation in {@code CryptoRepoFile} must exactly match the one in {@link CryptoRepoFileDto}!
+	 * <b>Important:</b> The implementation in {@code CryptoKey} must exactly match the one in {@link CryptoKeyDto}!
 	 */
 	@Override
 	public InputStream getSignedData(final int signedDataVersion) {
 		try {
+			byte separatorIndex = 0;
 			return new MultiInputStream(
 					InputStreamSource.Helper.createInputStreamSource(getCryptoKeyId()),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(cryptoRepoFile.getCryptoRepoFileId()),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(cryptoKeyType.ordinal()),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(cryptoKeyRole.ordinal()),
 //					localRevision
 //					inCryptoLinks
 //					outCryptoLinks
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(active)
 					);
 		} catch (final IOException x) {
 			throw new RuntimeException(x);
 		}
+	}
+
+	@Override
+	public Uid getSigningUserRepoKeyId() {
+		return signingUserRepoKeyId == null ? null : new Uid(signingUserRepoKeyId);
+	}
+	@Override
+	public void setSigningUserRepoKeyId(final Uid signingUserRepoKeyId) {
+		this.signingUserRepoKeyId = signingUserRepoKeyId == null ? null : signingUserRepoKeyId.toString();
 	}
 
 	@Override
