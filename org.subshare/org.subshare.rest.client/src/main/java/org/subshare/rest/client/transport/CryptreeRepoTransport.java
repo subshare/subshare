@@ -34,6 +34,7 @@ import co.codewizards.cloudstore.core.dto.ModificationDto;
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
 import co.codewizards.cloudstore.core.dto.RepoFileDtoTreeNode;
 import co.codewizards.cloudstore.core.dto.RepositoryDto;
+import co.codewizards.cloudstore.core.dto.ResumeFileDto;
 import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.repo.local.ContextWithLocalRepoManager;
@@ -71,6 +72,13 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 	@Override
 	public void requestRepoConnection(final byte[] publicKey) {
 		getRestRepoTransport().requestRepoConnection(publicKey);
+	}
+
+
+	@Override
+	public ResumeFileDto getResumeFileDto() {
+		// resuming is always only possible on local file system.
+		return null;
 	}
 
 	@Override

@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<configuration>
+<!DOCTYPE log4j:configuration PUBLIC "-//APACHE//DTD LOG4J 1.2//EN"
+    "http://logging.apache.org/log4j/1.2/apidocs/org/apache/log4j/xml/doc-files/log4j.dtd">
+<log4j:configuration>
 
 	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
 		<!-- encoders are assigned the type ch.qos.logback.classic.encoder.PatternLayoutEncoder 
@@ -14,10 +16,20 @@
 		<appender-ref ref="STDOUT" />
 	</logger>
 -->
+	<!-- BEGIN DataNucleus http://www.datanucleus.org/products/datanucleus/logging.html -->
+	<logger name="DataNucleus" level="ERROR" />
+	<!--
+	<logger name="DataNucleus.Datastore" level="INFO" />
+	<logger name="DataNucleus.Datastore.Schema" level="INFO" />
+	<logger name="DataNucleus.Datastore.Native" level="ALL" />
+	<logger name="DataNucleus.Query" level="INFO" />
+	-->
+	<logger name="DataNucleus.Enhancer" level="DEBUG" />
+	<!-- END DataNucleus -->
 
 	<logger name="org.subshare.local" level="DEBUG"/>
 
 	<root level="INFO">
 		<appender-ref ref="STDOUT" />
 	</root>
-</configuration>
+</log4j:configuration>
