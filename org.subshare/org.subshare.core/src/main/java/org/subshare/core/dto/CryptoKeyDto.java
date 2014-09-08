@@ -3,11 +3,14 @@ package org.subshare.core.dto;
 import java.io.IOException;
 import java.io.InputStream;
 
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 import org.subshare.core.io.InputStreamSource;
 import org.subshare.core.io.MultiInputStream;
 import org.subshare.core.sign.Signable;
+import org.subshare.core.sign.Signature;
 
 import co.codewizards.cloudstore.core.dto.Uid;
 
@@ -26,9 +29,8 @@ public class CryptoKeyDto implements Signable {
 
 	private long localRevision;
 
-	private Uid signingUserRepoKeyId;
-
-	private byte[] signatureData;
+	@XmlElement
+	private SignatureDto signatureDto;
 
 	public Uid getCryptoKeyId() {
 		return cryptoKeyId;
@@ -108,22 +110,15 @@ public class CryptoKeyDto implements Signable {
 		}
 	}
 
+	@XmlTransient
 	@Override
-	public Uid getSigningUserRepoKeyId() {
-		return signingUserRepoKeyId;
-	}
-	@Override
-	public void setSigningUserRepoKeyId(final Uid signingUserRepoKeyId) {
-		this.signingUserRepoKeyId = signingUserRepoKeyId;
+	public Signature getSignature() {
+		return signatureDto;
 	}
 
 	@Override
-	public byte[] getSignatureData() {
-		return signatureData;
-	}
-	@Override
-	public void setSignatureData(final byte[] signatureData) {
-		this.signatureData = signatureData;
+	public void setSignature(final Signature signature) {
+		this.signatureDto = SignatureDto.copyIfNeeded(signature);
 	}
 
 	@Override

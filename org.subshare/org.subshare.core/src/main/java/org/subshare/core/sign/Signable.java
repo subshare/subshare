@@ -2,8 +2,6 @@ package org.subshare.core.sign;
 
 import java.io.InputStream;
 
-import co.codewizards.cloudstore.core.dto.Uid;
-
 public interface Signable {
 
 	int getSignedDataVersion();
@@ -19,11 +17,7 @@ public interface Signable {
 	 */
 	InputStream getSignedData(int signedDataVersion);
 
-	Uid getSigningUserRepoKeyId();
+	Signature getSignature();
 
-	void setSigningUserRepoKeyId(Uid signingUserRepoKeyId);
-
-	byte[] getSignatureData();
-
-	void setSignatureData(byte[] signatureData);
+	void setSignature(Signature signature);
 }

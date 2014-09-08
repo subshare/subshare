@@ -16,7 +16,6 @@ public class UserRepoKeyPublicKeyDao extends Dao<UserRepoKeyPublicKey, UserRepoK
 
 	private static final Logger logger = LoggerFactory.getLogger(UserRepoKeyPublicKeyDao.class);
 
-
 	public UserRepoKeyPublicKey getUserRepoKeyPublicKeyOrFail(final Uid userRepoKeyId) {
 		final UserRepoKeyPublicKey key = getUserRepoKeyPublicKey(userRepoKeyId);
 		if (key == null)

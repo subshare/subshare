@@ -17,6 +17,7 @@ import org.subshare.core.dto.CryptoKeyDto;
 import org.subshare.core.dto.CryptoLinkDto;
 import org.subshare.core.dto.CryptoRepoFileDto;
 import org.subshare.core.dto.UserRepoKeyPublicKeyDto;
+import org.subshare.core.sign.Signature;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.local.persistence.CryptoKey;
 import org.subshare.local.persistence.CryptoKeyDao;
@@ -263,8 +264,7 @@ public class CryptreeImpl extends AbstractCryptree {
 		cryptoRepoFile.setDirectory(cryptoRepoFileDto.isDirectory());
 		cryptoRepoFile.setLastSyncFromRepositoryId(getRemoteRepositoryId());
 
-		cryptoRepoFile.setSignatureData(cryptoRepoFileDto.getSignatureData());
-		cryptoRepoFile.setSigningUserRepoKeyId(cryptoRepoFileDto.getSigningUserRepoKeyId());
+		cryptoRepoFile.setSignature(cryptoRepoFileDto.getSignature());
 
 		return cryptoRepoFileDao.makePersistent(cryptoRepoFile);
 	}
@@ -292,12 +292,18 @@ public class CryptreeImpl extends AbstractCryptree {
 		final CryptoRepoFileDao cryptoRepoFileDao = transaction.getDao(CryptoRepoFileDao.class);
 
 		final Uid cryptoKeyId = assertNotNull("cryptoKeyDto.cryptoKeyId", cryptoKeyDto.getCryptoKeyId());
+		boolean modified = false;
 		CryptoKey cryptoKey = cryptoKeyDao.getCryptoKey(cryptoKeyId);
 		if (cryptoKey == null)
 			cryptoKey = new CryptoKey(cryptoKeyId);
 
-		if (! cryptoKeyDto.isActive()) // it's a one-way change - we never re-activate a key.
+		// Because of the signature, we cannot modify anything on the server side!
+		if (isOnServer())
+			cryptoKey.setActive(cryptoKeyDto.isActive());
+		else if (! cryptoKeyDto.isActive()) // it's a one-way change - we never re-activate a key.
 			cryptoKey.setActive(false);
+
+		modified |= cryptoKeyDto.isActive() != cryptoKey.isActive();
 
 		cryptoKey.setCryptoKeyRole(cryptoKeyDto.getCryptoKeyRole());
 		cryptoKey.setCryptoKeyType(cryptoKeyDto.getCryptoKeyType());
@@ -306,8 +312,15 @@ public class CryptreeImpl extends AbstractCryptree {
 		final CryptoRepoFile cryptoRepoFile = cryptoRepoFileDao.getCryptoRepoFileOrFail(cryptoRepoFileId);
 		cryptoKey.setCryptoRepoFile(cryptoRepoFile);
 
-		cryptoKey.setSignatureData(cryptoKeyDto.getSignatureData());
-		cryptoKey.setSigningUserRepoKeyId(cryptoKeyDto.getSigningUserRepoKeyId());
+		assertNotNull("cryptoKeyDto.signature", cryptoKeyDto.getSignature());
+		assertNotNull("cryptoKeyDto.signature.signatureCreated", cryptoKeyDto.getSignature().getSignatureCreated());
+		assertNotNull("cryptoKeyDto.signature.signingUserRepoKeyId", cryptoKeyDto.getSignature().getSigningUserRepoKeyId());
+		assertNotNull("cryptoKeyDto.signature.signatureData", cryptoKeyDto.getSignature().getSignatureData());
+
+		if (modified)
+			getCryptreeContextOrFail().signableSigner.sign(cryptoKey);
+		else
+			cryptoKey.setSignature(cryptoKeyDto.getSignature());
 
 		return cryptoKeyDao.makePersistent(cryptoKey);
 	}
@@ -336,8 +349,7 @@ public class CryptreeImpl extends AbstractCryptree {
 
 		cryptoLink.setToCryptoKeyData(cryptoLinkDto.getToCryptoKeyData());
 		cryptoLink.setToCryptoKeyPart(cryptoLinkDto.getToCryptoKeyPart());
-		cryptoLink.setSignatureData(cryptoLinkDto.getSignatureData());
-		cryptoLink.setSigningUserRepoKeyId(cryptoLinkDto.getSigningUserRepoKeyId());
+		cryptoLink.setSignature(cryptoLinkDto.getSignature());
 
 		toCryptoKey.getInCryptoLinks().add(cryptoLink);
 		return cryptoLinkDao.makePersistent(cryptoLink);
@@ -566,8 +578,7 @@ public class CryptreeImpl extends AbstractCryptree {
 		final byte[] repoFileDtoData = assertNotNull("cryptoRepoFile.repoFileDtoData", cryptoRepoFile.getRepoFileDtoData());
 		cryptoRepoFileDto.setRepoFileDtoData(repoFileDtoData);
 
-		cryptoRepoFileDto.setSignatureData(cryptoRepoFile.getSignatureData());
-		cryptoRepoFileDto.setSigningUserRepoKeyId(cryptoRepoFile.getSigningUserRepoKeyId());
+		cryptoRepoFileDto.setSignature(assertNotNull("cryptoRepoFile.signature", cryptoRepoFile.getSignature()));
 
 		return cryptoRepoFileDto;
 	}
@@ -586,8 +597,7 @@ public class CryptreeImpl extends AbstractCryptree {
 		cryptoLinkDto.setToCryptoKeyData(cryptoLink.getToCryptoKeyData());
 		cryptoLinkDto.setToCryptoKeyId(cryptoLink.getToCryptoKey().getCryptoKeyId());
 		cryptoLinkDto.setToCryptoKeyPart(cryptoLink.getToCryptoKeyPart());
-		cryptoLinkDto.setSignatureData(cryptoLink.getSignatureData());
-		cryptoLinkDto.setSigningUserRepoKeyId(cryptoLink.getSigningUserRepoKeyId());
+		cryptoLinkDto.setSignature(assertNotNull("cryptoLink.signature", cryptoLink.getSignature()));
 		return cryptoLinkDto;
 	}
 
@@ -597,10 +607,15 @@ public class CryptreeImpl extends AbstractCryptree {
 		cryptoKeyDto.setCryptoKeyId(cryptoKey.getCryptoKeyId());
 		cryptoKeyDto.setCryptoRepoFileId(cryptoKey.getCryptoRepoFile().getCryptoRepoFileId());
 		cryptoKeyDto.setActive(cryptoKey.isActive());
-		cryptoKeyDto.setCryptoKeyRole(cryptoKey.getCryptoKeyRole());
-		cryptoKeyDto.setCryptoKeyType(cryptoKey.getCryptoKeyType());
-		cryptoKeyDto.setSignatureData(cryptoKey.getSignatureData());
-		cryptoKeyDto.setSigningUserRepoKeyId(cryptoKey.getSigningUserRepoKeyId());
+		cryptoKeyDto.setCryptoKeyRole(assertNotNull("cryptoKey.cryptoKeyRole", cryptoKey.getCryptoKeyRole()));
+		cryptoKeyDto.setCryptoKeyType(assertNotNull("cryptoKey.cryptoKeyType", cryptoKey.getCryptoKeyType()));
+
+		final Signature signature = cryptoKey.getSignature();
+		cryptoKeyDto.setSignature(assertNotNull("cryptoKey.signature", signature));
+		assertNotNull("cryptoKey.signature.signatureCreated", signature.getSignatureCreated());
+		assertNotNull("cryptoKey.signature.signingUserRepoKeyId", signature.getSigningUserRepoKeyId());
+		assertNotNull("cryptoKey.signature.signatureData", signature.getSignatureData());
+
 		return cryptoKeyDto;
 	}
 

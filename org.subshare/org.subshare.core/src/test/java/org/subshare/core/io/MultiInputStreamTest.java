@@ -22,7 +22,7 @@ public class MultiInputStreamTest {
 		{
 			final ByteArrayOutputStream expectedOut = new ByteArrayOutputStream();
 			for (int i = 0; i < inputStreamCount; ++i) {
-				final byte[] buf = new byte[random.nextInt(10 * 1024 * 1024)];
+				final byte[] buf = new byte[random.nextInt(1024 * 1024)];
 				random.nextBytes(buf);
 				expectedOut.write(buf);
 				inputStreamSources.add(InputStreamSource.Helper.createInputStreamSource(buf));
@@ -42,7 +42,7 @@ public class MultiInputStreamTest {
 					foundOut.write(read);
 				}
 				else {
-					final byte[] buf = new byte[random.nextInt(1024 * 1024)];
+					final byte[] buf = new byte[random.nextInt(100 * 1024)];
 					final int read = in.read(buf);
 					if (read < 0)
 						break;

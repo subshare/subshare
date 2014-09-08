@@ -55,5 +55,6 @@ subprojects {
 		ignoreFailures = igFa == null ? false : Boolean.parseBoolean(igFa);
 // We don't use separate processes but separate threads in the same JVM, because this is faster.
 //		maxParallelForks = Runtime.runtime.availableProcessors() * 2
+// ...actually we don't do this, yet - and we may very well need multiple JVMs, because quite a few things are configured gobally per JVM!
 	}
 }

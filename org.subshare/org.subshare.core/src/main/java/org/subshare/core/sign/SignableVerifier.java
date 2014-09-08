@@ -7,6 +7,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.NoSuchAlgorithmException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -29,13 +30,21 @@ public class SignableVerifier {
 	}
 
 	public void verify(final Signable signable) throws SignatureException {
-		final Uid signingUserRepoKeyId = assertNotNull("signable", signable).getSigningUserRepoKeyId();
-		if (signingUserRepoKeyId == null)
-			throw new SignatureException("There is no signature! signingUserRepoKeyId == null");
+		final Signature signature = assertNotNull("signable", signable).getSignature();
+		if (signature == null)
+			throw new SignatureException("There is no signature! signable.signature == null");
 
-		final byte[] signatureData = signable.getSignatureData();
+		final Date signatureCreated = signature.getSignatureCreated();
+		if (signatureCreated == null)
+			throw new SignatureException("There is no signature! signable.signature.signatureCreated == null");
+
+		final Uid signingUserRepoKeyId = signature.getSigningUserRepoKeyId();
+		if (signingUserRepoKeyId == null)
+			throw new SignatureException("There is no signature! signable.signature.signingUserRepoKeyId == null");
+
+		final byte[] signatureData = signature.getSignatureData();
 		if (signatureData == null)
-			throw new SignatureException("There is no signature! signatureData == null");
+			throw new SignatureException("There is no signature! signable.signature.signatureData == null");
 
 		if (signatureData.length < 3)
 			throw new SignatureException("There is no signature! signatureData.length < 3");
@@ -60,12 +69,17 @@ public class SignableVerifier {
 
 			final int signedDataVersion = readOrFail(in) + (readOrFail(in) << 8);
 
-			final int signatureLength = readOrFail(in) + (readOrFail(in) << 8) + (readOrFail(in) << 16) + (readOrFail(in) << 24);
-			final byte[] signature = new byte[signatureLength];
-			readOrFail(in, signature, 0, signatureLength);
+			final int signatureBytesLength = readOrFail(in) + (readOrFail(in) << 8) + (readOrFail(in) << 16) + (readOrFail(in) << 24);
+			final byte[] signatureBytes = new byte[signatureBytesLength];
+			readOrFail(in, signatureBytes, 0, signatureBytesLength);
 
 			final Signer signer = getSigner(signerTransformation);
-			signer.reset();
+			signer.init(false, userRepoKeyPublicKey.getPublicKey());
+//			signer.reset(); // already be done by init(...) above.
+
+			final byte[] signatureCreatedBytes = longToBytes(signatureCreated.getTime());
+			signer.update(signatureCreatedBytes, 0, signatureCreatedBytes.length);
+
 			final byte[] buf = new byte[BUFFER_SIZE];
 			int bytesRead;
 			try (InputStream signedDataInputStream = signable.getSignedData(signedDataVersion);) {
@@ -74,7 +88,8 @@ public class SignableVerifier {
 						signer.update(buf, 0, bytesRead);
 				}
 			}
-			if (!signer.verifySignature(signature))
+
+			if (!signer.verifySignature(signatureBytes))
 				throw new SignatureException("Signature not valid!");
 		} catch (final IOException x) {
 			throw new SignatureException(x);

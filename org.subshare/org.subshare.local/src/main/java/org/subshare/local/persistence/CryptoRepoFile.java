@@ -6,6 +6,7 @@ import static co.codewizards.cloudstore.core.util.Util.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -32,6 +33,7 @@ import org.subshare.core.dto.CryptoRepoFileDto;
 import org.subshare.core.io.InputStreamSource;
 import org.subshare.core.io.MultiInputStream;
 import org.subshare.core.sign.Signable;
+import org.subshare.core.sign.Signature;
 
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
 import co.codewizards.cloudstore.core.dto.Uid;
@@ -99,11 +101,21 @@ public class CryptoRepoFile extends Entity implements Signable, AutoTrackLocalRe
 
 	private boolean directory;
 
+// TODO BEGIN WORKAROUND for http://www.datanucleus.org/servlet/jira/browse/NUCCORE-1247
+//		@Persistent(nullValue=NullValue.EXCEPTION)
+//		@Embedded
+//		private SignatureImpl signature;
+
 	@Persistent(nullValue=NullValue.EXCEPTION)
+	private Date signatureCreated;
+
+	@Persistent(nullValue=NullValue.EXCEPTION)
+	@Column(length=22)
 	private String signingUserRepoKeyId;
 
 	@Persistent(nullValue=NullValue.EXCEPTION)
 	private byte[] signatureData;
+// END WORKAROUND for http://www.datanucleus.org/servlet/jira/browse/NUCCORE-1247
 
 	public CryptoRepoFile() { }
 
@@ -348,22 +360,27 @@ public class CryptoRepoFile extends Entity implements Signable, AutoTrackLocalRe
 		}
 	}
 
+// TODO BEGIN WORKAROUND for http://www.datanucleus.org/servlet/jira/browse/NUCCORE-1247
+//			@Override
+//			public Signature getSignature() {
+//				return signature;
+//			}
+//			@Override
+//			public void setSignature(final Signature signature) {
+//				if (!equal(this.signature, signature))
+//					this.signature = SignatureImpl.copy(signature);
+//			}
 	@Override
-	public Uid getSigningUserRepoKeyId() {
-		return signingUserRepoKeyId == null ? null : new Uid(signingUserRepoKeyId);
+	public Signature getSignature() {
+		String.valueOf(signatureCreated);
+		String.valueOf(signingUserRepoKeyId);
+		String.valueOf(signatureData);
+		return SignableEmbeddedWorkaround.getSignature(this);
 	}
 	@Override
-	public void setSigningUserRepoKeyId(final Uid signingUserRepoKeyId) {
-		this.signingUserRepoKeyId = signingUserRepoKeyId == null ? null : signingUserRepoKeyId.toString();
+	public void setSignature(final Signature signature) {
+		SignableEmbeddedWorkaround.setSignature(this, signature);
 	}
-
-	@Override
-	public byte[] getSignatureData() {
-		return signatureData;
-	}
-	@Override
-	public void setSignatureData(final byte[] signatureData) {
-		this.signatureData = signatureData;
-	}
+// END WORKAROUND for http://www.datanucleus.org/servlet/jira/browse/NUCCORE-1247
 
 }

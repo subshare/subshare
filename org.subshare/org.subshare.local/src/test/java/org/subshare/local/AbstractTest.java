@@ -1,4 +1,4 @@
-package org.subshare.local.persistence;
+package org.subshare.local;
 
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static org.assertj.core.api.Assertions.*;

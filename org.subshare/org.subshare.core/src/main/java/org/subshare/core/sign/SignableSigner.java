@@ -1,15 +1,18 @@
 package org.subshare.core.sign;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static co.codewizards.cloudstore.core.util.IOUtil.*;
 import static org.subshare.core.crypto.CryptoConfigUtil.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.NoSuchAlgorithmException;
+import java.util.Date;
 
 import org.bouncycastle.crypto.CryptoException;
 import org.bouncycastle.crypto.Signer;
+import org.subshare.core.dto.SignatureDto;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.crypto.CryptoRegistry;
 
@@ -35,7 +38,12 @@ public class SignableSigner {
 	}
 
 	public void sign(final Signable signable) {
-		assertNotNull("signable", signable).setSigningUserRepoKeyId(userRepoKey.getUserRepoKeyId());
+		assertNotNull("signable", signable);
+
+		final Date signatureCreated = new Date();
+		final SignatureDto signatureDto = new SignatureDto();
+		signatureDto.setSignatureCreated(signatureCreated);
+		signatureDto.setSigningUserRepoKeyId(userRepoKey.getUserRepoKeyId());
 
 		final int signedDataVersion = signable.getSignedDataVersion();
 		if (signedDataVersion > MAX_UNSIGNED_2_BYTE_VALUE)
@@ -56,6 +64,10 @@ public class SignableSigner {
 			out.write(signedDataVersion >>> 8);
 
 			signer.reset();
+
+			final byte[] signatureCreatedBytes = longToBytes(signatureCreated.getTime());
+			signer.update(signatureCreatedBytes, 0, signatureCreatedBytes.length);
+
 			final byte[] buf = new byte[BUFFER_SIZE];
 			int bytesRead;
 			try (InputStream signedDataInputStream = signable.getSignedData(signedDataVersion);) {
@@ -64,16 +76,18 @@ public class SignableSigner {
 						signer.update(buf, 0, bytesRead);
 				}
 			}
-			final byte[] signature = signer.generateSignature();
 
-			final int signatureLength = signature.length;
-			out.write(signatureLength);
-			out.write(signatureLength >>> 8);
-			out.write(signatureLength >>> 16);
-			out.write(signatureLength >>> 24);
-			out.write(signature);
+			final byte[] signatureBytes = signer.generateSignature();
 
-			signable.setSignatureData(out.toByteArray());
+			final int signatureBytesLength = signatureBytes.length;
+			out.write(signatureBytesLength);
+			out.write(signatureBytesLength >>> 8);
+			out.write(signatureBytesLength >>> 16);
+			out.write(signatureBytesLength >>> 24);
+			out.write(signatureBytes);
+
+			signatureDto.setSignatureData(out.toByteArray());
+			signable.setSignature(signatureDto);
 		} catch (IOException | CryptoException x) {
 			throw new RuntimeException(x);
 		}

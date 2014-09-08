@@ -10,6 +10,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -22,6 +23,7 @@ import org.bouncycastle.crypto.params.KeyParameter;
 import org.subshare.core.AccessDeniedException;
 import org.subshare.core.dto.CryptoKeyPart;
 import org.subshare.core.dto.CryptoKeyRole;
+import org.subshare.core.dto.SignatureDto;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.local.persistence.CryptoKey;
 import org.subshare.local.persistence.CryptoKeyDao;
@@ -158,9 +160,10 @@ public class CryptreeNode {
 			if (cryptoRepoFile == null) {
 				cryptoRepoFile = new CryptoRepoFile();
 
-				// We sign *after* we persist, hence we store this dummy value to avoid allowing NULL.
-				cryptoRepoFile.setSignatureData(new byte[] { 7 });
-				cryptoRepoFile.setSigningUserRepoKeyId(new Uid(0, 0));
+				// We sign *after* we persist below in this *same* *method*, hence we store this
+				// dummy value temporarily to avoid allowing NULL. It's set to the real value in
+				// the same transaction, anyway. Hence we should never end up with this in the DB.
+				cryptoRepoFile.setSignature(new SignatureDto(new Date(0), new Uid(0, 0), new byte[] { 7 }));
 			}
 
 			cryptoRepoFile.setRepoFile(repoFile); // repoFile is guaranteed to be *not* null, because of getCryptoRepoFile() above.
