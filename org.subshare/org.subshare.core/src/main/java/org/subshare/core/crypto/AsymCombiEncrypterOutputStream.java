@@ -113,7 +113,7 @@ public class AsymCombiEncrypterOutputStream extends FilterOutputStream {
 		final ByteArrayOutputStream bout = new ByteArrayOutputStream();
 		final EncrypterOutputStream asymOut = new EncrypterOutputStream(
 				bout, asymmetricCipherTransformation, publicKey, null);
-		asymOut.setCloseUnderlyingOutputStream(false);
+		asymOut.setCloseUnderlyingStream(false);
 		try {
 			asymOut.write(symmetricKey.getKey());
 		} finally {

@@ -19,7 +19,7 @@ import org.subshare.crypto.CryptoRegistry;
 public class SignableSigner {
 
 	private static final int BUFFER_SIZE = 32 * 1024;
-	private static final int MAX_UNSIGNED_2_BYTE_VALUE = 0xffff;
+	static final int MAX_UNSIGNED_2_BYTE_VALUE = 0xffff;
 
 	private final UserRepoKey userRepoKey;
 	private final SignerTransformation signerTransformation;

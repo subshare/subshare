@@ -50,7 +50,7 @@ public class EncrypterOutputStream extends FilterOutputStream {
 	private final byte[] iv;
 	private byte[] cipherBuffer;
 	private boolean closed;
-	private boolean closeUnderlyingOutputStream = true;
+	private boolean closeUnderlyingStream = true;
 
 	/**
 	 * Convencience constructor to be used for asymmetric encryption or symmetric encryption without IV.
@@ -201,12 +201,12 @@ public class EncrypterOutputStream extends FilterOutputStream {
 
 	private void assertNotClosed() {
 		if (closed)
-			throw new IllegalStateException("Cipher already closed!");
+			throw new IllegalStateException("EncrypterOutputStream already closed!");
 	}
 
 	@Override
 	public void close() throws IOException {
-		if (!closed) {
+		if (! closed) {
 			closed = true;
 
 			final int outputSize = cipher.getOutputSize(0);
@@ -220,17 +220,17 @@ public class EncrypterOutputStream extends FilterOutputStream {
 			}
 			if (bytesWritten > 0)
 				out.write(cipherBuffer, 0, bytesWritten);
+
+			if (isCloseUnderlyingStream())
+				out.close();
 		}
-
-		if (isCloseUnderlyingOutputStream())
-			out.close();
 	}
 
-	public boolean isCloseUnderlyingOutputStream() {
-		return closeUnderlyingOutputStream;
+	public boolean isCloseUnderlyingStream() {
+		return closeUnderlyingStream;
 	}
-	public void setCloseUnderlyingOutputStream(final boolean closeUnderlyingOutputStream) {
-		this.closeUnderlyingOutputStream = closeUnderlyingOutputStream;
+	public void setCloseUnderlyingStream(final boolean closeUnderlyingStream) {
+		this.closeUnderlyingStream = closeUnderlyingStream;
 	}
 
 	private void ensureCipherBufferMinLength(final int minLength) {

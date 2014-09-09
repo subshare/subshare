@@ -41,7 +41,7 @@ public class DecrypterInputStream extends FilterInputStream {
 	private int cipherBufferReadOff = 0;
 	private int cipherBufferUsedLen = 0;
 	private boolean closed;
-	private boolean closeUnderlyingOutputStream = true;
+	private boolean closeUnderlyingStream = true;
 
 	public DecrypterInputStream(final InputStream in, final CipherParameters key) throws IOException {
 		super(assertNotNull("in", in));
@@ -109,6 +109,7 @@ public class DecrypterInputStream extends FilterInputStream {
 
 	@Override
 	public int read() throws IOException {
+		assertNotClosed();
 		int bytesRead;
 		while ((bytesRead = read(singleByteArray, 0, singleByteArray.length)) == 0) { }
 		if (bytesRead < 0)
@@ -219,8 +220,12 @@ public class DecrypterInputStream extends FilterInputStream {
 
 	@Override
 	public void close() throws IOException {
-		if (isCloseUnderlyingOutputStream())
-			in.close();
+		if (! closed) {
+			closed = true;
+
+			if (isCloseUnderlyingStream())
+				in.close();
+		}
 	}
 
 	@Override
@@ -236,11 +241,11 @@ public class DecrypterInputStream extends FilterInputStream {
 		return false;
 	}
 
-	public boolean isCloseUnderlyingOutputStream() {
-		return closeUnderlyingOutputStream;
+	public boolean isCloseUnderlyingStream() {
+		return closeUnderlyingStream;
 	}
-	public void setCloseUnderlyingOutputStream(final boolean closeUnderlyingOutputStream) {
-		this.closeUnderlyingOutputStream = closeUnderlyingOutputStream;
+	public void setCloseUnderlyingStream(final boolean closeUnderlyingStream) {
+		this.closeUnderlyingStream = closeUnderlyingStream;
 	}
 
 	private void ensureCipherBufferMinLength(final int minLength) {
@@ -269,7 +274,7 @@ public class DecrypterInputStream extends FilterInputStream {
 
 	private void assertNotClosed() {
 		if (closed)
-			throw new IllegalStateException("InputStream already closed!");
+			throw new IllegalStateException("DecrypterInputStream already closed!");
 	}
 
 }
