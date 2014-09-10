@@ -4,6 +4,7 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.IOUtil.*;
 import static org.subshare.core.crypto.CryptoConfigUtil.*;
 import static org.subshare.core.sign.SignableSigner.*;
+import static org.subshare.core.sign.VerifierInputStream.*;
 
 import java.io.FilterOutputStream;
 import java.io.IOException;
@@ -55,6 +56,8 @@ public class SignerOutputStream extends FilterOutputStream {
 		if (signingUserRepoKeyIdBytes.length != 16)
 			throw new IllegalStateException(String.format("signingUserRepoKeyIdBytes.length != 16 :: %s != 16", signingUserRepoKeyIdBytes.length));
 
+		out.write(signingUserRepoKeyIdBytes);
+
 		final byte[] signatureCreatedBytes = longToBytes(signatureCreated.getTime());
 		if (signatureCreatedBytes.length != 8)
 			throw new IllegalStateException(String.format("signatureCreatedBytes.length != 8 :: %s != 8", signatureCreatedBytes.length));
@@ -66,14 +69,18 @@ public class SignerOutputStream extends FilterOutputStream {
 	private void writeSignature() throws DataLengthException, CryptoException, IOException {
 		final byte[] signatureBytes = signer.generateSignature();
 
-		out.write(signatureBytes, 0, signatureBytes.length);
+		final int footerLength = signatureBytes.length + 4 /* signatureLength */;
+		if (footerLength > MAX_FOOTER_LENGTH)
+			throw new IllegalStateException(String.format("footerLength > MAX_FOOTER_LENGTH :: %s > %s",
+					footerLength, MAX_FOOTER_LENGTH));
+
+		out.write(signatureBytes);
 
 		final int signatureBytesLength = signatureBytes.length;
 		out.write(signatureBytesLength);
 		out.write(signatureBytesLength >>> 8);
 		out.write(signatureBytesLength >>> 16);
 		out.write(signatureBytesLength >>> 24);
-		out.write(signatureBytes);
 	}
 
 	@Override
