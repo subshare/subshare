@@ -11,7 +11,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 
 import org.bouncycastle.crypto.Signer;
-import org.subshare.core.user.UserRepoKey.PublicKey;
+import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKeyPublicKeyLookup;
 import org.subshare.crypto.CryptoRegistry;
 
@@ -36,6 +36,7 @@ public class VerifierInputStream extends FilterInputStream {
 	private Footer footer;
 	private long offset;
 	private final Signer signer;
+	private final UserRepoKey.PublicKey signingUserRepoKeyPublicKey;
 
 	public VerifierInputStream(final InputStream in, final UserRepoKeyPublicKeyLookup lookup) throws IOException {
 		super(new BufferedInputStream(in));
@@ -48,11 +49,11 @@ public class VerifierInputStream extends FilterInputStream {
 			throw new RuntimeException(e);
 		}
 
-		final PublicKey userRepoKeyPublicKey = lookup.getUserRepoKeyPublicKey(header.signingUserRepoKeyId);
-		if (userRepoKeyPublicKey == null)
+		signingUserRepoKeyPublicKey = lookup.getUserRepoKeyPublicKey(header.signingUserRepoKeyId);
+		if (signingUserRepoKeyPublicKey == null)
 			throw new SignatureException(String.format("No public key found for signingUserRepoKeyId=%s!", header.signingUserRepoKeyId));
 
-		signer.init(false, userRepoKeyPublicKey.getPublicKey());
+		signer.init(false, signingUserRepoKeyPublicKey.getPublicKey());
 
 		final byte[] signatureCreatedBytes = longToBytes(header.signatureCreated.getTime());
 		signer.update(signatureCreatedBytes, 0, signatureCreatedBytes.length);
@@ -105,13 +106,19 @@ public class VerifierInputStream extends FilterInputStream {
 		return new Header(version, signerTransformation, signingUserRepoKeyId, signatureCreated);
 	}
 
+	public UserRepoKey.PublicKey getSigningUserRepoKeyPublicKey() {
+		return signingUserRepoKeyPublicKey;
+	}
+
+	public Date getSignatureCreated() {
+		return header.signatureCreated;
+	}
+
 	@Override
 	public int read() throws IOException {
 		assertNotClosed();
-		if (readFooterIfNearAhead(1) < 1) {
-			verify();
+		if (readFooterIfNearAhead(1) < 1)
 			return -1;
-		}
 
 		final int read = in.read();
 
@@ -128,10 +135,8 @@ public class VerifierInputStream extends FilterInputStream {
 		assertNotClosed();
 
 		final int l = readFooterIfNearAhead(len);
-		if (l < 1) {
-			verify();
+		if (l < 1)
 			return -1;
-		}
 
 		final int read = in.read(b, off, l);
 
@@ -272,6 +277,8 @@ public class VerifierInputStream extends FilterInputStream {
 
 			if (isCloseUnderlyingStream())
 				in.close();
+
+			verify();
 		}
 	}
 

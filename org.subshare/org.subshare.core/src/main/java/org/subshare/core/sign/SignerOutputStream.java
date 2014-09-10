@@ -27,9 +27,9 @@ public class SignerOutputStream extends FilterOutputStream {
 	private final Signer signer;
 	private final Date signatureCreated = new Date();
 
-	public SignerOutputStream(final OutputStream out, final UserRepoKey userRepoKey) throws IOException {
+	public SignerOutputStream(final OutputStream out, final UserRepoKey signingUserRepoKey) throws IOException {
 		super(out);
-		this.userRepoKey = assertNotNull("userRepoKey", userRepoKey);
+		this.userRepoKey = assertNotNull("userRepoKey", signingUserRepoKey);
 		this.signerTransformation = getSignerTransformation();
 
 		try {
@@ -37,7 +37,7 @@ public class SignerOutputStream extends FilterOutputStream {
 		} catch (final NoSuchAlgorithmException e) {
 			throw new RuntimeException(e);
 		}
-		signer.init(true, userRepoKey.getKeyPair().getPrivate());
+		signer.init(true, signingUserRepoKey.getKeyPair().getPrivate());
 
 		writeHeader();
 	}

@@ -19,6 +19,7 @@ import org.subshare.core.dto.CryptoRepoFileDto;
 import org.subshare.core.dto.UserRepoKeyPublicKeyDto;
 import org.subshare.core.sign.Signature;
 import org.subshare.core.user.UserRepoKey;
+import org.subshare.core.user.UserRepoKeyPublicKeyLookup;
 import org.subshare.local.persistence.CryptoKey;
 import org.subshare.local.persistence.CryptoKeyDao;
 import org.subshare.local.persistence.CryptoLink;
@@ -29,6 +30,7 @@ import org.subshare.local.persistence.LastCryptoKeySyncToRemoteRepo;
 import org.subshare.local.persistence.LastCryptoKeySyncToRemoteRepoDao;
 import org.subshare.local.persistence.UserRepoKeyPublicKey;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyDao;
+import org.subshare.local.persistence.UserRepoKeyPublicKeyLookupImpl;
 
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
 import co.codewizards.cloudstore.core.dto.Uid;
@@ -46,6 +48,16 @@ public class CryptreeImpl extends AbstractCryptree {
 	private final Map<Uid, CryptreeNode> cryptoRepoFileId2CryptreeNode = new HashMap<>();
 
 	private Uid cryptoRepoFileIdForRemotePathPrefix;
+
+	private UserRepoKeyPublicKeyLookupImpl userRepoKeyPublicKeyLookup;
+
+	@Override
+	public UserRepoKeyPublicKeyLookup getUserRepoKeyPublicKeyLookup() {
+		if (userRepoKeyPublicKeyLookup == null)
+			userRepoKeyPublicKeyLookup = new UserRepoKeyPublicKeyLookupImpl(getTransactionOrFail());
+
+		return userRepoKeyPublicKeyLookup;
+	}
 
 	@Override
 	public CryptoChangeSetDto createOrUpdateCryptoRepoFile(final String localPath) {

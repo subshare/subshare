@@ -21,7 +21,11 @@ import org.subshare.core.crypto.DecrypterInputStream;
 import org.subshare.core.crypto.EncrypterOutputStream;
 import org.subshare.core.crypto.RandomIvFactory;
 import org.subshare.core.dto.CryptoChangeSetDto;
+import org.subshare.core.io.LimitedInputStream;
+import org.subshare.core.sign.SignerOutputStream;
+import org.subshare.core.sign.VerifierInputStream;
 import org.subshare.core.user.UserRepoKey;
+import org.subshare.core.user.UserRepoKeyPublicKeyLookup;
 import org.subshare.core.user.UserRepoKeyRing;
 import org.subshare.rest.client.transport.command.EndGetCryptoChangeSetDto;
 import org.subshare.rest.client.transport.command.GetCryptoChangeSetDto;
@@ -240,7 +244,7 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 				final KeyParameter dataKey = cryptree.getDataKeyOrFail(path);
 				final String unprefixedServerPath = unprefixPath(cryptree.getServerPath(path)); // it's automatically prefixed *again*, thus we must prefix it here (if we don't want to somehow suppress the automatic prefixing, which is probably quite a lot of work).
 				final byte[] encryptedFileData = getRestRepoTransport().getFileData(unprefixedServerPath, getServerOffset(offset), (int) getServerOffset(length));
-				decryptedFileData = decrypt(encryptedFileData, dataKey);
+				decryptedFileData = verifyAndDecrypt(encryptedFileData, dataKey, cryptree.getUserRepoKeyPublicKeyLookup());
 			}
 			transaction.commit();
 		}
@@ -269,7 +273,7 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 		try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
 			try (final Cryptree cryptree = createCryptree(transaction);) {
 				final KeyParameter dataKey = cryptree.getDataKeyOrFail(path);
-				final byte[] encryptedFileData = encrypt(fileData, dataKey);
+				final byte[] encryptedFileData = encryptAndSign(fileData, dataKey);
 				// TODO this should not only be encrypted, but also signed!
 				// TODO maybe we store only one IV per file and derive the chunk's IV from this combined with the offset (and all hashed)? this could save valuable entropy and should still be secure - maybe later.
 
@@ -283,49 +287,80 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 		}
 	}
 
-	private byte[] encrypt(final byte[] plainText, final KeyParameter keyParameter) {
+	private byte[] encryptAndSign(final byte[] plainText, final KeyParameter keyParameter) {
 		final ByteArrayOutputStream bout = new ByteArrayOutputStream();
-		try (
-				final EncrypterOutputStream encrypterOut = new EncrypterOutputStream(bout,
-						getSymmetricCipherTransformation(),
-						keyParameter, new RandomIvFactory());
-		) {
-			encrypterOut.write(1); // version
+		try {
+			try (SignerOutputStream signerOut = new SignerOutputStream(bout, getUserRepoKey())) {
+				try (
+						final EncrypterOutputStream encrypterOut = new EncrypterOutputStream(signerOut,
+								getSymmetricCipherTransformation(),
+								keyParameter, new RandomIvFactory());
+				) {
+//					encrypterOut.write(1); // version
+//
+//					encrypterOut.write(plainText.length);
+//					encrypterOut.write(plainText.length >> 8);
+//					encrypterOut.write(plainText.length >> 16);
+//					encrypterOut.write(plainText.length >> 24);
 
-			encrypterOut.write(plainText.length);
-			encrypterOut.write(plainText.length >> 8);
-			encrypterOut.write(plainText.length >> 16);
-			encrypterOut.write(plainText.length >> 24);
+					IOUtil.transferStreamData(new ByteArrayInputStream(plainText), encrypterOut);
+// TODO we should maybe keep the plaintext-length and then fill with a padding to hide the real length. maybe do this somewhere else though.
+				}
+			}
 
-			IOUtil.transferStreamData(new ByteArrayInputStream(plainText), encrypterOut);
+// TODO remove this length! we don't need it anymore once we store the chunks properly separately on the server! But we should still keep the version! So that we have the flexibility to change this again in the future.
+			final byte[] raw = bout.toByteArray();
+			final byte[] result = new byte[raw.length + 5];
+			int idx = -1;
+			result[++idx] = 1; // version
+			result[++idx] = (byte) raw.length;
+			result[++idx] = (byte) (raw.length >> 8);
+			result[++idx] = (byte) (raw.length >> 16);
+			result[++idx] = (byte) (raw.length >> 24);
+			System.arraycopy(raw, 0, result, ++idx, raw.length);
+			return result;
 		} catch (final IOException x) {
 			throw new RuntimeException(x);
 		}
-		return bout.toByteArray();
 	}
 
-	private byte[] decrypt(final byte[] cipherText, final KeyParameter keyParameter) {
-		final int plainTextLength;
-		final ByteArrayOutputStream bout = new ByteArrayOutputStream();
-		try (
-				final DecrypterInputStream decrypterIn = new DecrypterInputStream(new ByteArrayInputStream(cipherText), keyParameter);
-		) {
-			final int version = decrypterIn.read();
+	private byte[] verifyAndDecrypt(final byte[] cipherText, final KeyParameter keyParameter, final UserRepoKeyPublicKeyLookup userRepoKeyPublicKeyLookup) {
+		try {
+			final ByteArrayInputStream in = new ByteArrayInputStream(cipherText);
+			final int version = in.read();
 			if (version != 1)
 				throw new IllegalStateException("version != 1");
 
-			plainTextLength = decrypterIn.read() + (decrypterIn.read() << 8) + (decrypterIn.read() << 16) + (decrypterIn.read() << 24);
+			final int length = in.read() + (in.read() << 8) + (in.read() << 16) + (in.read() << 24);
 
-			IOUtil.transferStreamData(decrypterIn, bout, 0, plainTextLength);
+			try (final VerifierInputStream verifierIn = new VerifierInputStream(new LimitedInputStream(in, length, length), userRepoKeyPublicKeyLookup);) {
+//				final int plainTextLength;
+				final ByteArrayOutputStream bout = new ByteArrayOutputStream();
+				try (final DecrypterInputStream decrypterIn = new DecrypterInputStream(verifierIn, keyParameter);) {
+//					final int version = decrypterIn.read();
+//					if (version != 1)
+//						throw new IllegalStateException("version != 1");
+//
+//					plainTextLength = decrypterIn.read() + (decrypterIn.read() << 8) + (decrypterIn.read() << 16) + (decrypterIn.read() << 24);
+//
+//					IOUtil.transferStreamData(decrypterIn, bout, 0, plainTextLength);
+//
+//					// Read verifierIn completely, because verification happens only when hitting EOF.
+//					final byte[] buf = new byte[4096];
+//					while (verifierIn.read(buf) >= 0);
+					IOUtil.transferStreamData(decrypterIn, bout);
+				}
+
+				final byte[] plainText = bout.toByteArray();
+//				if (plainText.length != plainTextLength)
+//					throw new IllegalStateException(String.format("plainText.length != plainTextLength :: %s != %s",
+//							plainText.length, plainTextLength));
+
+				return plainText;
+			}
 		} catch (final IOException x) {
 			throw new RuntimeException(x);
 		}
-		final byte[] plainText = bout.toByteArray();
-		if (plainText.length != plainTextLength)
-			throw new IllegalStateException(String.format("plainText.length != plainTextLength :: %s != %s",
-					plainText.length, plainTextLength));
-
-		return plainText;
 	}
 
 	// TODO we *MUST* store the file chunks server-side in separate chunk-files permanently!

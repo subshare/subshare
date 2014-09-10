@@ -9,6 +9,7 @@ import org.subshare.core.dto.CryptoKeyDto;
 import org.subshare.core.dto.CryptoLinkDto;
 import org.subshare.core.dto.CryptoRepoFileDto;
 import org.subshare.core.user.UserRepoKey;
+import org.subshare.core.user.UserRepoKeyPublicKeyLookup;
 
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
 import co.codewizards.cloudstore.core.dto.Uid;
@@ -97,5 +98,7 @@ public interface Cryptree extends AutoCloseable {
 	void grantReadAccess(String localPath, UserRepoKey.PublicKey userRepoKeyPublicKey);
 	void revokeReadAccess(String localPath, Set<Uid> userRepoKeyIds);
 	boolean isEmpty();
+
+	UserRepoKeyPublicKeyLookup getUserRepoKeyPublicKeyLookup();
 
 }
