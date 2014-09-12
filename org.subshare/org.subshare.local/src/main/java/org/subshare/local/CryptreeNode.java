@@ -92,7 +92,7 @@ public class CryptreeNode {
 
 		this.repoFile = repoFile != null ? repoFile : cryptoRepoFile.getRepoFile();
 		this.cryptoRepoFile = cryptoRepoFile;
-		this.repoFileDtoConverter = new RepoFileDtoConverter(context.transaction);
+		this.repoFileDtoConverter = RepoFileDtoConverter.create(context.transaction);
 
 		if (child != null)
 			children.add(child);

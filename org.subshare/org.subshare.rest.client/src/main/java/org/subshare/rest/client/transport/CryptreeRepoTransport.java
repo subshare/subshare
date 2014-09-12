@@ -216,6 +216,12 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 	}
 
 	@Override
+	public void moveFileInProgressToRepo(final String fromPath, final String toPath) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("NYI");
+	}
+
+	@Override
 	public void delete(final String path) {
 		// TODO Auto-generated method stub
 		throw new UnsupportedOperationException("NYI");
@@ -252,7 +258,7 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 	}
 
 	@Override
-	public void beginPutFile(final String path) {
+	public void beginPutFile(final String path, final boolean isInProgress) {
 		final LocalRepoManager localRepoManager = getLocalRepoManager();
 		try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
 			try (final Cryptree cryptree = createCryptree(transaction);) {
@@ -261,7 +267,7 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 				cryptree.updateLastCryptoKeySyncToRemoteRepo();
 
 				final String unprefixedServerPath = unprefixPath(cryptree.getServerPath(path)); // it's automatically prefixed *again*, thus we must prefix it here (if we don't want to somehow suppress the automatic prefixing, which is probably quite a lot of work).
-				getRestRepoTransport().beginPutFile(unprefixedServerPath);
+				getRestRepoTransport().beginPutFile(unprefixedServerPath, isInProgress);
 			}
 			transaction.commit();
 		}
