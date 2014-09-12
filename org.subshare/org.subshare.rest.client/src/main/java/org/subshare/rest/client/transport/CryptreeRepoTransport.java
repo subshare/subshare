@@ -1,5 +1,6 @@
 package org.subshare.rest.client.transport;
 
+import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static org.subshare.core.crypto.CryptoConfigUtil.*;
 
@@ -20,13 +21,18 @@ import org.subshare.core.CryptreeFactoryRegistry;
 import org.subshare.core.crypto.DecrypterInputStream;
 import org.subshare.core.crypto.EncrypterOutputStream;
 import org.subshare.core.crypto.RandomIvFactory;
+import org.subshare.core.dto.SsDirectoryDto;
+import org.subshare.core.dto.SsNormalFileDto;
 import org.subshare.core.dto.CryptoChangeSetDto;
 import org.subshare.core.io.LimitedInputStream;
+import org.subshare.core.sign.SignableSigner;
 import org.subshare.core.sign.SignerOutputStream;
 import org.subshare.core.sign.VerifierInputStream;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKeyPublicKeyLookup;
 import org.subshare.core.user.UserRepoKeyRing;
+import org.subshare.rest.client.transport.command.SsBeginPutFile;
+import org.subshare.rest.client.transport.command.SsMakeDirectory;
 import org.subshare.rest.client.transport.command.EndGetCryptoChangeSetDto;
 import org.subshare.rest.client.transport.command.GetCryptoChangeSetDto;
 import org.subshare.rest.client.transport.command.PutCryptoChangeSetDto;
@@ -90,6 +96,7 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 
 		try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
 			try (final Cryptree cryptree = createCryptree(transaction);) {
+				cryptree.initLocalRepositoryType();
 				cryptree.putCryptoChangeSetDto(cryptoChangeSetDto);
 			}
 			transaction.commit();
@@ -177,8 +184,20 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 				putCryptoChangeSetDto(cryptoChangeSetDto);
 				cryptree.updateLastCryptoKeySyncToRemoteRepo();
 
-				final String unprefixedServerPath = unprefixPath(cryptree.getServerPath(path)); // it's automatically prefixed *again*, thus we must prefix it here (if we don't want to somehow suppress the automatic prefixing, which is probably quite a lot of work).
-				getRestRepoTransport().makeDirectory(unprefixedServerPath, new Date(0));
+				final String serverPath = cryptree.getServerPath(path);
+
+				final SsDirectoryDto directoryDto = new SsDirectoryDto();
+
+				final File f = createFile(serverPath);
+				directoryDto.setName(f.getName());
+
+				final File pf = f.getParentFile();
+				directoryDto.setParentName(pf == null ? null : pf.getName());
+
+				final SignableSigner signableSigner = new SignableSigner(getUserRepoKey());
+				signableSigner.sign(directoryDto);
+
+				getClient().execute(new SsMakeDirectory(getRepositoryId().toString(), serverPath, new Date(0), directoryDto));
 			}
 			transaction.commit();
 		}
@@ -260,8 +279,20 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 				putCryptoChangeSetDto(cryptoChangeSetDto);
 				cryptree.updateLastCryptoKeySyncToRemoteRepo();
 
-				final String unprefixedServerPath = unprefixPath(cryptree.getServerPath(path)); // it's automatically prefixed *again*, thus we must prefix it here (if we don't want to somehow suppress the automatic prefixing, which is probably quite a lot of work).
-				getRestRepoTransport().beginPutFile(unprefixedServerPath);
+				final String serverPath = cryptree.getServerPath(path);
+
+				final SsNormalFileDto normalFileDto = new SsNormalFileDto();
+
+				final File f = createFile(serverPath);
+				normalFileDto.setName(f.getName());
+
+				final File pf = f.getParentFile();
+				normalFileDto.setParentName(pf == null ? null : pf.getName());
+
+				final SignableSigner signableSigner = new SignableSigner(getUserRepoKey());
+				signableSigner.sign(normalFileDto);
+
+				getClient().execute(new SsBeginPutFile(getRepositoryId().toString(), serverPath, normalFileDto));
 			}
 			transaction.commit();
 		}
@@ -274,7 +305,6 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 			try (final Cryptree cryptree = createCryptree(transaction);) {
 				final KeyParameter dataKey = cryptree.getDataKeyOrFail(path);
 				final byte[] encryptedFileData = encryptAndSign(fileData, dataKey);
-				// TODO this should not only be encrypted, but also signed!
 				// TODO maybe we store only one IV per file and derive the chunk's IV from this combined with the offset (and all hashed)? this could save valuable entropy and should still be secure - maybe later.
 
 				// TODO we *MUST* store the file chunks server-side in separate chunk-files permanently!

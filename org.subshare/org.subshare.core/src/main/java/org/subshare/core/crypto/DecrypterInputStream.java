@@ -125,9 +125,15 @@ public class DecrypterInputStream extends FilterInputStream {
 	@Override
 	public int read(final byte[] b, final int off, final int len) throws IOException {
 		assertNotClosed();
+
+		if (len == 0)
+			return 0;
+
 		int readFromCipherBuffer = readFromCipherBuffer(b, off, len);
 		if (readFromCipherBuffer > 0)
 			return readFromCipherBuffer;
+
+		int consecutiveEmptyReadCount = 0;
 
 		while (true) {
 			if (cipherFinalized)
@@ -135,7 +141,12 @@ public class DecrypterInputStream extends FilterInputStream {
 
 			ensureReadBufferMinLength(len);
 			final int bytesRead = in.read(readBuffer, 0, len);
-			if (bytesRead != 0) {
+			if (bytesRead == 0) {
+				if (++consecutiveEmptyReadCount > 5)
+					throw new IOException(String.format("Encountered %s consecutive empty read operations (but no end-of-stream)!", consecutiveEmptyReadCount));
+			}
+			else {
+				consecutiveEmptyReadCount = 0;
 				if (bytesRead > 0)
 					ensureCipherBufferMinLength(cipher.getOutputSize(bytesRead));
 
@@ -257,8 +268,8 @@ public class DecrypterInputStream extends FilterInputStream {
 	}
 
 	private void ensureReadBufferMinLength(final int minLength) {
-		if (minLength < 0)
-			throw new IllegalArgumentException("minLength < 0");
+		if (minLength <= 0)
+			throw new IllegalArgumentException("minLength <= 0");
 
 		if (readBuffer == null || readBuffer.length < minLength)
 			readBuffer = new byte[minLength];

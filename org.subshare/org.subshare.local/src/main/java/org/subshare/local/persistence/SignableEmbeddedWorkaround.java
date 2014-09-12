@@ -9,7 +9,6 @@ import java.util.Date;
 import javax.jdo.JDOHelper;
 
 import org.subshare.core.dto.SignatureDto;
-import org.subshare.core.sign.Signable;
 import org.subshare.core.sign.Signature;
 
 import co.codewizards.cloudstore.core.dto.Uid;
@@ -23,10 +22,10 @@ public class SignableEmbeddedWorkaround {
 
 	private SignableEmbeddedWorkaround() { }
 
-	public static Signature getSignature(final Signable signable) {
-		final Date signatureCreated = (Date) getFieldValue(signable, "signatureCreated");
-		final String signingUserRepoKeyId = (String) getFieldValue(signable, "signingUserRepoKeyId");
-		final byte[] signatureData = (byte[]) getFieldValue(signable, "signatureData");
+	public static Signature getSignature(final Object entity) {
+		final Date signatureCreated = (Date) getFieldValue(entity, "signatureCreated");
+		final String signingUserRepoKeyId = (String) getFieldValue(entity, "signingUserRepoKeyId");
+		final byte[] signatureData = (byte[]) getFieldValue(entity, "signatureData");
 
 		if (signatureCreated == null || signingUserRepoKeyId == null)
 			return null;
@@ -34,12 +33,12 @@ public class SignableEmbeddedWorkaround {
 		return SignatureImpl.copy(new SignatureDto(signatureCreated, new Uid(signingUserRepoKeyId), signatureData));
 	}
 
-	public static void setSignature(final Signable signable, final Signature signature) {
-		if (!equal(getSignature(signable), signature)) {
-			setFieldValue(signable, "signatureCreated", signature == null ? null : signature.getSignatureCreated());
+	public static void setSignature(final Object entity, final Signature signature) {
+		if (!equal(getSignature(entity), signature)) {
+			setFieldValue(entity, "signatureCreated", signature == null ? null : signature.getSignatureCreated());
 			final Uid signingUserRepoKeyId = signature == null ? null : signature.getSigningUserRepoKeyId();
-			setFieldValue(signable, "signingUserRepoKeyId", signingUserRepoKeyId == null ? null : signingUserRepoKeyId.toString());
-			setFieldValue(signable, "signatureData", signature == null ? null : assertNotNull("signature.signatureData", signature.getSignatureData()));
+			setFieldValue(entity, "signingUserRepoKeyId", signingUserRepoKeyId == null ? null : signingUserRepoKeyId.toString());
+			setFieldValue(entity, "signatureData", signature == null ? null : assertNotNull("signature.signatureData", signature.getSignatureData()));
 		}
 	}
 

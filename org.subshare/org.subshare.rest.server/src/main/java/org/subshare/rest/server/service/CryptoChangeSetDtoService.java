@@ -45,9 +45,8 @@ public class CryptoChangeSetDtoService extends AbstractServiceWithRepoToRepoAuth
 			transaction = localRepoManager.beginWriteTransaction(); // We write LastCryptoKeySyncToRemoteRepo.
 			try {
 				final CryptreeFactory cryptreeFactory = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail();
-				try (
-						final Cryptree cryptree = cryptreeFactory.createCryptree(transaction, clientRepositoryId);
-				) {
+				try (final Cryptree cryptree = cryptreeFactory.createCryptree(transaction, clientRepositoryId);) {
+					cryptree.initLocalRepositoryType();
 					cryptoChangeSetDto = cryptree.getCryptoChangeSetDtoWithCryptoRepoFiles();
 				}
 				transaction.commit();
@@ -69,9 +68,7 @@ public class CryptoChangeSetDtoService extends AbstractServiceWithRepoToRepoAuth
 			transaction = localRepoManager.beginWriteTransaction();
 			try {
 				final CryptreeFactory cryptreeFactory = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail();
-				try (
-						final Cryptree cryptree = cryptreeFactory.createCryptree(transaction, clientRepositoryId);
-				) {
+				try (final Cryptree cryptree = cryptreeFactory.createCryptree(transaction, clientRepositoryId);) {
 					cryptree.updateLastCryptoKeySyncToRemoteRepo();
 				}
 				transaction.commit();
@@ -92,9 +89,7 @@ public class CryptoChangeSetDtoService extends AbstractServiceWithRepoToRepoAuth
 			transaction = localRepoManager.beginWriteTransaction();
 			try {
 				final CryptreeFactory cryptreeFactory = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail();
-				try (
-						final Cryptree cryptree = cryptreeFactory.createCryptree(transaction, clientRepositoryId);
-				) {
+				try (final Cryptree cryptree = cryptreeFactory.createCryptree(transaction, clientRepositoryId);) {
 					cryptree.putCryptoChangeSetDto(cryptoChangeSetDto);
 				}
 				transaction.commit();

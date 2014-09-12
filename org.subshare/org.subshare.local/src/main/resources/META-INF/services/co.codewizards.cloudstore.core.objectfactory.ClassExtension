@@ -1,1 +1,5 @@
-org.subshare.local.LocalRepoSyncClassExtension
+org.subshare.local.SsLocalRepoSyncClassExtension
+org.subshare.local.persistence.SsDirectoryClassExtension
+org.subshare.local.persistence.SsLocalRepositoryClassExtension
+org.subshare.local.persistence.SsNormalFileClassExtension
+org.subshare.local.persistence.SsSymlinkClassExtension

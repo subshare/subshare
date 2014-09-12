@@ -21,6 +21,7 @@ import java.util.zip.GZIPOutputStream;
 
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.subshare.core.AccessDeniedException;
+import org.subshare.core.dto.SsRepoFileDto;
 import org.subshare.core.dto.CryptoKeyPart;
 import org.subshare.core.dto.CryptoKeyRole;
 import org.subshare.core.dto.SignatureDto;
@@ -187,6 +188,10 @@ public class CryptreeNode {
 			// No need for local IDs. Because this DTO is shared across all repositories, local IDs make no sense.
 			repoFileDtoConverter.setExcludeLocalIds(true);
 			final RepoFileDto repoFileDto = repoFileDtoConverter.toRepoFileDto(repoFile, Integer.MAX_VALUE);
+
+			((SsRepoFileDto) repoFileDto).setParentName(null); // only needed for uploading to the server.
+			if (((SsRepoFileDto) repoFileDto).getSignature() != null) // must be null on the client - and this method is never called on the server.
+				throw new IllegalStateException("repoFileDto.signature != null");
 
 			// Prevent overriding the real name with "", if we checked out a sub-directory. In this case, we cannot
 			// change the localName locally and must make sure, it is preserved.

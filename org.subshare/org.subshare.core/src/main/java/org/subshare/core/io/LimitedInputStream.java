@@ -99,8 +99,11 @@ public class LimitedInputStream extends FilterInputStream
 	@Override
 	public int read(final byte[] b, final int off, int len) throws IOException
 	{
-		if (readPos + len > maxLimit)
+		if (readPos + len > maxLimit) {
 			len = maxLimit - readPos;
+			if (len == 0)
+				return -1;
+		}
 
 		if (len > 0) {
 			final int bytesRead = in.read(b, off, len);
@@ -111,15 +114,12 @@ public class LimitedInputStream extends FilterInputStream
 			if (bytesRead < 0 && readPos < minLimit)
 				throw new IOException("inputStream is closed; only "+readPos+" Bytes read, but minLimit = "+minLimit+" Bytes!");
 
-			if (bytesRead == 0)
-				throw new IllegalStateException("according to the documentation, InputStream.read(...) should never return 0 if len != 0, but it happened!");
-
 			return bytesRead;
 		}
 		else if (len < 0)
 			throw new IndexOutOfBoundsException("len < 0!");
 		else
-			return -1;
+			return 0;
 	}
 
 	@Override
@@ -137,7 +137,7 @@ public class LimitedInputStream extends FilterInputStream
 			return bytesSkipped;
 		}
 		else
-			return -1;
+			return 0;
 	}
 
 	/**

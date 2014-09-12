@@ -8,9 +8,11 @@ import java.io.FileInputStream;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.UUID;
 
 import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.util.IOUtil;
 
 public interface InputStreamSource {
 
@@ -86,6 +88,16 @@ public interface InputStreamSource {
 			return createInputStreamSource(value.longValue());
 		}
 
+		public static InputStreamSource createInputStreamSource(final String value) {
+			if (value == null)
+				return createInputStreamSource((byte[]) null);
+
+			try {
+				return createInputStreamSource(value.getBytes(IOUtil.CHARSET_NAME_UTF_8));
+			} catch (final UnsupportedEncodingException e) {
+				throw new RuntimeException(e);
+			}
+		}
 
 		public static InputStreamSource createInputStreamSource(final InputStream in) {
 			return new InputStreamSource() {

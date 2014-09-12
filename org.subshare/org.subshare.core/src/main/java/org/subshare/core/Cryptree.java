@@ -35,6 +35,8 @@ public interface Cryptree extends AutoCloseable {
 	@Override
 	void close();
 
+	void initLocalRepositoryType();
+
 	/**
 	 * Creates or updates the {@code CryptoRepoFile} associated to the given path. Then returns a
 	 * {@link CryptoChangeSetDto} with this one corresponding {@link CryptoRepoFileDto} and

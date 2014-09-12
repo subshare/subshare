@@ -20,6 +20,7 @@ import org.subshare.core.dto.UserRepoKeyPublicKeyDto;
 import org.subshare.core.sign.Signature;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKeyPublicKeyLookup;
+import org.subshare.local.persistence.SsLocalRepository;
 import org.subshare.local.persistence.CryptoKey;
 import org.subshare.local.persistence.CryptoKeyDao;
 import org.subshare.local.persistence.CryptoLink;
@@ -28,6 +29,7 @@ import org.subshare.local.persistence.CryptoRepoFile;
 import org.subshare.local.persistence.CryptoRepoFileDao;
 import org.subshare.local.persistence.LastCryptoKeySyncToRemoteRepo;
 import org.subshare.local.persistence.LastCryptoKeySyncToRemoteRepoDao;
+import org.subshare.local.persistence.LocalRepositoryType;
 import org.subshare.local.persistence.UserRepoKeyPublicKey;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyDao;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyLookupImpl;
@@ -635,5 +637,28 @@ public class CryptreeImpl extends AbstractCryptree {
 	public boolean isEmpty() {
 		final Collection<CryptoRepoFile> childCryptoRepoFiles = getTransactionOrFail().getDao(CryptoRepoFileDao.class).getChildCryptoRepoFiles(null);
 		return childCryptoRepoFiles.isEmpty();
+	}
+
+	@Override
+	public void initLocalRepositoryType() {
+		final LocalRepository lr = getTransactionOrFail().getDao(LocalRepositoryDao.class).getLocalRepositoryOrFail();
+		final SsLocalRepository localRepository = (SsLocalRepository) lr;
+
+		final LocalRepositoryType localRepositoryType = localRepository.getLocalRepositoryType();
+		switch (localRepositoryType) {
+			case UNINITIALISED:
+				localRepository.setLocalRepositoryType(isOnServer() ? LocalRepositoryType.SERVER : LocalRepositoryType.CLIENT);
+				break;
+			case CLIENT:
+				if (isOnServer())
+					throw new IllegalStateException("SsLocalRepository.localRepositoryType is already initialised to CLIENT! Cannot switch to SERVER!");
+				break;
+			case SERVER:
+				if (! isOnServer())
+					throw new IllegalStateException("SsLocalRepository.localRepositoryType is already initialised to SERVER! Cannot switch to CLIENT!");
+				break;
+			default:
+				throw new IllegalStateException("Unknown localRepositoryType: " + localRepositoryType);
+		}
 	}
 }
