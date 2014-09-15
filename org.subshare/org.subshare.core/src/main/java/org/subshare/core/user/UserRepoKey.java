@@ -30,7 +30,7 @@ public class UserRepoKey {
 
 	private final UserRepoKeyRing userRepoKeyRing;
 	private final Uid userRepoKeyId;
-	private final UUID repositoryId;
+	private final UUID serverRepositoryId;
 	private final AsymmetricCipherKeyPair keyPair;
 	private PublicKey publicKey;
 
@@ -40,7 +40,7 @@ public class UserRepoKey {
 	public UserRepoKey(final UserRepoKeyRing userRepoKeyRing, final UUID repositoryId, final AsymmetricCipherKeyPair keyPair, final PgpKey pgpKey) {
 		this.userRepoKeyRing = assertNotNull("userRepoKeyRing", userRepoKeyRing);
 		this.userRepoKeyId = new Uid();
-		this.repositoryId = assertNotNull("repositoryId", repositoryId);
+		this.serverRepositoryId = assertNotNull("serverRepositoryId", repositoryId);
 		this.keyPair = assertNotNull("keyPair", keyPair);
 		assertNotNull("pgpKey", pgpKey);
 		this.encryptedSignedPrivateKeyData = encryptSignPrivateKeyData(pgpKey);
@@ -50,7 +50,7 @@ public class UserRepoKey {
 	public UserRepoKey(final UserRepoKeyRing userRepoKeyRing, final Uid userRepoKeyId, final UUID repositoryId, final byte[] encryptedSignedPrivateKeyData, final byte[] signedPublicKeyData) {
 		this.userRepoKeyRing = assertNotNull("userRepoKeyRing", userRepoKeyRing);
 		this.userRepoKeyId = assertNotNull("userRepoKeyId", userRepoKeyId);
-		this.repositoryId = assertNotNull("repositoryId", repositoryId);
+		this.serverRepositoryId = assertNotNull("serverRepositoryId", repositoryId);
 		this.encryptedSignedPrivateKeyData = assertNotNull("encryptedSignedPrivateKeyData", encryptedSignedPrivateKeyData);
 		this.signedPublicKeyData = assertNotNull("signedPublicKeyData", signedPublicKeyData);
 		this.keyPair = new AsymmetricCipherKeyPair(verifyPublicKeyData(), decryptVerifyPrivateKeyData());
@@ -64,8 +64,8 @@ public class UserRepoKey {
 		return userRepoKeyId;
 	}
 
-	public UUID getRepositoryId() {
-		return repositoryId;
+	public UUID getServerRepositoryId() {
+		return serverRepositoryId;
 	}
 
 	public AsymmetricCipherKeyPair getKeyPair() {
@@ -75,7 +75,7 @@ public class UserRepoKey {
 	public PublicKey getPublicKey() {
 		if (publicKey == null)
 			publicKey = new PublicKey(
-					getUserRepoKeyId(), getRepositoryId(), getKeyPair().getPublic());
+					getUserRepoKeyId(), getServerRepositoryId(), getKeyPair().getPublic());
 
 		return publicKey;
 	}
@@ -150,12 +150,12 @@ public class UserRepoKey {
 
 	public static class PublicKey {
 		private final Uid userRepoKeyId;
-		private final UUID repositoryId;
+		private final UUID serverRepositoryId;
 		private final AsymmetricKeyParameter publicKey;
 
 		public PublicKey(final Uid userRepoKeyId, final UUID repositoryId, final AsymmetricKeyParameter publicKey) {
 			this.userRepoKeyId = assertNotNull("userRepoKeyId", userRepoKeyId);
-			this.repositoryId = assertNotNull("repositoryId", repositoryId);
+			this.serverRepositoryId = assertNotNull("serverRepositoryId", repositoryId);
 			this.publicKey = assertNotNull("publicKey", publicKey);
 		}
 
@@ -163,8 +163,8 @@ public class UserRepoKey {
 			return userRepoKeyId;
 		}
 
-		public UUID getRepositoryId() {
-			return repositoryId;
+		public UUID getServerRepositoryId() {
+			return serverRepositoryId;
 		}
 
 		public AsymmetricKeyParameter getPublicKey() {

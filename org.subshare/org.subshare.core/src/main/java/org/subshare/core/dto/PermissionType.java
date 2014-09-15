@@ -1,4 +1,4 @@
-package org.subshare.local.persistence;
+package org.subshare.core.dto;
 
 public enum PermissionType {
 

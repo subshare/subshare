@@ -1,23 +1,24 @@
 package org.subshare.local.persistence;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
+import java.util.UUID;
 
-import javax.jdo.JDOHelper;
-import javax.jdo.PersistenceManager;
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Inheritance;
 import javax.jdo.annotations.InheritanceStrategy;
 import javax.jdo.annotations.NullValue;
 import javax.jdo.annotations.PersistenceCapable;
 import javax.jdo.annotations.Persistent;
+import javax.jdo.annotations.Queries;
+import javax.jdo.annotations.Query;
+import javax.jdo.annotations.Unique;
 import javax.jdo.listener.StoreCallback;
 
-import org.subshare.core.dto.CryptoLinkDto;
+import org.subshare.core.dto.RepositoryOwnerDto;
 import org.subshare.core.io.InputStreamSource;
 import org.subshare.core.io.MultiInputStream;
 import org.subshare.core.sign.Signable;
@@ -28,8 +29,15 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 
 @PersistenceCapable
 @Inheritance(strategy=InheritanceStrategy.NEW_TABLE)
-//@Unique(name="RepositoryOwner_userRepoKeyPublicKey", members="userRepoKeyPublicKey")
+@Unique(name="RepositoryOwner_serverRepositoryId", members="serverRepositoryId")
+@Queries({
+	@Query(name="getRepositoryOwner_serverRepositoryId", value="SELECT UNIQUE WHERE this.serverRepositoryId == :serverRepositoryId")
+})
 public class RepositoryOwner extends Entity implements Signable, AutoTrackLocalRevision, StoreCallback {
+
+	@Persistent(nullValue=NullValue.EXCEPTION)
+	@Column(length=36)
+	private String serverRepositoryId;
 
 	@Persistent(nullValue=NullValue.EXCEPTION)
 	private UserRepoKeyPublicKey userRepoKeyPublicKey;
@@ -56,15 +64,28 @@ public class RepositoryOwner extends Entity implements Signable, AutoTrackLocalR
 
 	@Override
 	public void jdoPreStore() {
-		final PersistenceManager pm = assertNotNull("JDOHelper.getPersistenceManager(this)", JDOHelper.getPersistenceManager(this));
-		final RepositoryOwner persistentInstance = new RepositoryOwnerDao().persistenceManager(pm).getRepositoryOwner();
-		if (persistentInstance != null && ! persistentInstance.equals(this))
-			throw new IllegalStateException("Cannot persist a 2nd RepositoryOwner!");
+//		final PersistenceManager pm = assertNotNull("JDOHelper.getPersistenceManager(this)", JDOHelper.getPersistenceManager(this));
+//		final RepositoryOwner persistentInstance = new RepositoryOwnerDao().persistenceManager(pm).getRepositoryOwner();
+//		if (persistentInstance != null && ! persistentInstance.equals(this))
+//			throw new IllegalStateException("Cannot persist a 2nd RepositoryOwner!");
 
 		if (userRepoKeyPublicKey != null && signingUserRepoKeyId != null
 				&& ! signingUserRepoKeyId.equals(userRepoKeyPublicKey.getUserRepoKeyId()))
 			throw new IllegalStateException(String.format("RepositoryOwner must be self-signed! signingUserRepoKeyId != userRepoKeyPublicKey.userRepoKeyId :: %s != %s",
 					signingUserRepoKeyId, userRepoKeyPublicKey.getUserRepoKeyId()));
+	}
+
+	public UUID getServerRepositoryId() {
+		return serverRepositoryId == null ? null : UUID.fromString(serverRepositoryId);
+	}
+
+	public UserRepoKeyPublicKey getUserRepoKeyPublicKey() {
+		return userRepoKeyPublicKey;
+	}
+	public void setUserRepoKeyPublicKey(final UserRepoKeyPublicKey userRepoKeyPublicKey) {
+		this.userRepoKeyPublicKey = userRepoKeyPublicKey;
+		final UUID srid = userRepoKeyPublicKey == null ? null : userRepoKeyPublicKey.getServerRepositoryId();
+		this.serverRepositoryId = srid == null ? null : srid.toString();
 	}
 
 	@Override
@@ -85,14 +106,17 @@ public class RepositoryOwner extends Entity implements Signable, AutoTrackLocalR
 	/**
 	 * {@inheritDoc}
 	 * <p>
-	 * <b>Important:</b> The implementation in {@code CryptoLink} must exactly match the one in {@link CryptoLinkDto}!
+	 * <b>Important:</b> The implementation in {@code RepositoryOwner} must exactly match the one in {@link RepositoryOwnerDto}!
 	 */
 	@Override
 	public InputStream getSignedData(final int signedDataVersion) {
+		byte separatorIndex = 0;
 		try {
 			return new MultiInputStream(
-					InputStreamSource.Helper.createInputStreamSource(userRepoKeyPublicKey.getUserRepoKeyId())
+					InputStreamSource.Helper.createInputStreamSource(getServerRepositoryId()),
 //					localRevision
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
+					InputStreamSource.Helper.createInputStreamSource(userRepoKeyPublicKey.getUserRepoKeyId())
 					);
 		} catch (final IOException x) {
 			throw new RuntimeException(x);

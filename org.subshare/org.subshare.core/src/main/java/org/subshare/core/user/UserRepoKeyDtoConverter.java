@@ -10,7 +10,7 @@ public class UserRepoKeyDtoConverter {
 		final UserRepoKeyDto userRepoKeyDto = new UserRepoKeyDto();
 		final UserRepoKeyPrivateKeyDto privateKeyDto = new UserRepoKeyPrivateKeyDto();
 		privateKeyDto.setUserRepoKeyId(userRepoKey.getUserRepoKeyId());
-		privateKeyDto.setRepositoryId(userRepoKey.getRepositoryId());
+		privateKeyDto.setServerRepositoryId(userRepoKey.getServerRepositoryId());
 		privateKeyDto.setEncryptedSignedPrivateKeyData(userRepoKey.getEncryptedSignedPrivateKeyData());
 		userRepoKeyDto.setPrivateKeyDto(privateKeyDto);
 		userRepoKeyDto.setPublicKeyDto(userRepoKeyPublicKeyDtoConverter.toUserRepoKeyPublicKeyDto(userRepoKey.getPublicKey()));

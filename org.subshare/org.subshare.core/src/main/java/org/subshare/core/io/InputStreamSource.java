@@ -9,6 +9,7 @@ import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.util.Date;
 import java.util.UUID;
 
 import co.codewizards.cloudstore.core.dto.Uid;
@@ -97,6 +98,10 @@ public interface InputStreamSource {
 			} catch (final UnsupportedEncodingException e) {
 				throw new RuntimeException(e);
 			}
+		}
+
+		public static InputStreamSource createInputStreamSource(final Date value) {
+			return createInputStreamSource(value == null ? null : value.getTime());
 		}
 
 		public static InputStreamSource createInputStreamSource(final InputStream in) {

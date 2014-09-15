@@ -41,7 +41,7 @@ public class UserRepoKeyPublicKey extends Entity implements AutoTrackLocalRevisi
 
 	@Persistent(nullValue=NullValue.EXCEPTION)
 	@Column(length=36)
-	private String repositoryId;
+	private String serverRepositoryId;
 
 	@Persistent(nullValue=NullValue.EXCEPTION)
 	private byte[] publicKeyData;
@@ -61,7 +61,7 @@ public class UserRepoKeyPublicKey extends Entity implements AutoTrackLocalRevisi
 		assertNotNull("publicKey", publicKey);
 		this.publicKey = publicKey;
 		setUserRepoKeyId(publicKey.getUserRepoKeyId());
-		setRepositoryId(publicKey.getRepositoryId());
+		setServerRepositoryId(publicKey.getServerRepositoryId());
 		setPublicKeyData(CryptoRegistry.getInstance().encodePublicKey(publicKey.getPublicKey()));
 	}
 
@@ -73,12 +73,12 @@ public class UserRepoKeyPublicKey extends Entity implements AutoTrackLocalRevisi
 			this.userRepoKeyId = userRepoKeyId == null ? null : userRepoKeyId.toString();
 	}
 
-	public UUID getRepositoryId() {
-		return repositoryId == null ? null : UUID.fromString(repositoryId);
+	public UUID getServerRepositoryId() {
+		return serverRepositoryId == null ? null : UUID.fromString(serverRepositoryId);
 	}
-	public void setRepositoryId(final UUID repositoryId) {
-		if (! equal(this.getRepositoryId(), repositoryId))
-			this.repositoryId = repositoryId == null ? null : repositoryId.toString();
+	public void setServerRepositoryId(final UUID serverRepositoryId) {
+		if (! equal(this.getServerRepositoryId(), serverRepositoryId))
+			this.serverRepositoryId = serverRepositoryId == null ? null : serverRepositoryId.toString();
 	}
 	public byte[] getPublicKeyData() {
 		return publicKeyData;
@@ -102,7 +102,7 @@ public class UserRepoKeyPublicKey extends Entity implements AutoTrackLocalRevisi
 		if (publicKey == null)
 			try {
 				publicKey = new UserRepoKey.PublicKey(
-						getUserRepoKeyId(), getRepositoryId(),
+						getUserRepoKeyId(), getServerRepositoryId(),
 						CryptoRegistry.getInstance().decodePublicKey(getPublicKeyData()));
 			} catch (final IOException e) {
 				throw new RuntimeException(e);
@@ -113,9 +113,9 @@ public class UserRepoKeyPublicKey extends Entity implements AutoTrackLocalRevisi
 
 	@Override
 	public String toString() {
-		return String.format("%s{userRepoKeyId=%s, repositoryId=%s}",
+		return String.format("%s{userRepoKeyId=%s, serverRepositoryId=%s}",
 				super.toString(),
 				userRepoKeyId,
-				repositoryId);
+				serverRepositoryId);
 	}
 }

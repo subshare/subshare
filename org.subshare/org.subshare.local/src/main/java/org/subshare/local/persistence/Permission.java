@@ -20,6 +20,8 @@ import javax.jdo.annotations.Unique;
 import javax.jdo.annotations.Uniques;
 import javax.jdo.listener.StoreCallback;
 
+import org.subshare.core.dto.PermissionDto;
+import org.subshare.core.dto.PermissionType;
 import org.subshare.core.io.InputStreamSource;
 import org.subshare.core.io.MultiInputStream;
 import org.subshare.core.sign.Signable;
@@ -29,21 +31,25 @@ import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.local.persistence.AutoTrackLocalRevision;
 import co.codewizards.cloudstore.local.persistence.Entity;
 
-//TODO This does not work this way! We need to make this temporal and thus keep the historic data to check whether data signed
-//before and synchronised after permissions were revoked were signed correctly! Otherwise we can never sync a repository
-//after revocation of write permissions!
-
 @PersistenceCapable
 @Inheritance(strategy=InheritanceStrategy.NEW_TABLE)
 @Uniques({
-	@Unique(name="Permission_permissionId", members="permissionId"),
-	@Unique(name="Permission_permissionSet_userRepoKeyPublicKey_permissionType", members={"permissionSet", "userRepoKeyPublicKey", "permissionType"})
+	@Unique(name="Permission_permissionId", members="permissionId")
+//	@Unique(name="Permission_permissionSet_userRepoKeyPublicKey_permissionType", members={"permissionSet", "userRepoKeyPublicKey", "permissionType"})
 })
 @Indices({
 	@Index(name="Permission_localRevision", members="localRevision")
 })
 @Queries({
 	@Query(name="getPermission_permissionId", value="SELECT UNIQUE WHERE this.permissionId == :permissionId"),
+	@Query(
+			name="getNonRevokedPermissions_permissionSet_permissionType_userRepoKeyIds",
+			value="SELECT WHERE "
+					+ "this.permissionSet == :permissionSet "
+					+ "&& this.permissionType == :permissionType "
+					+ "&& :userRepoKeyIds.contains(this.userRepoKeyPublicKey.userRepoKeyId) "
+					+ "&& this.revoked == null"
+			),
 	@Query(name="getPermissionsChangedAfter_localRevision", value="SELECT WHERE this.localRevision > :localRevision")
 })
 public class Permission extends Entity implements Signable, AutoTrackLocalRevision, StoreCallback {
@@ -62,6 +68,13 @@ public class Permission extends Entity implements Signable, AutoTrackLocalRevisi
 	@Column(jdbcType="INTEGER")
 	private PermissionType permissionType;
 
+	@Persistent(nullValue=NullValue.EXCEPTION)
+	private Date validFrom = new Date();
+
+	private Date revoked;
+
+	private Date validTo;
+
 	private long localRevision;
 
 // TODO BEGIN WORKAROUND for http://www.datanucleus.org/servlet/jira/browse/NUCCORE-1247
@@ -79,7 +92,6 @@ public class Permission extends Entity implements Signable, AutoTrackLocalRevisi
 	@Persistent(nullValue=NullValue.EXCEPTION)
 	private byte[] signatureData;
 // END WORKAROUND for http://www.datanucleus.org/servlet/jira/browse/NUCCORE-1247
-
 
 	public Permission() { }
 
@@ -136,6 +148,32 @@ public class Permission extends Entity implements Signable, AutoTrackLocalRevisi
 		return 0;
 	}
 
+	@Override
+	public Date getCreated() {
+		return super.getCreated();
+	}
+
+	public Date getRevoked() {
+		return revoked;
+	}
+	public void setRevoked(final Date revoked) {
+		this.revoked = revoked;
+	}
+
+	public Date getValidFrom() {
+		return validFrom;
+	}
+	public void setValidFrom(final Date validFrom) {
+		this.validFrom = validFrom;
+	}
+
+	public Date getValidTo() {
+		return validTo;
+	}
+	public void setValidTo(final Date validTo) {
+		this.validTo = validTo;
+	}
+
 	/**
 	 * {@inheritDoc}
 	 * <p>
@@ -155,7 +193,16 @@ public class Permission extends Entity implements Signable, AutoTrackLocalRevisi
 					InputStreamSource.Helper.createInputStreamSource(userRepoKeyPublicKey.getUserRepoKeyId()),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
-					InputStreamSource.Helper.createInputStreamSource(permissionType.ordinal())
+					InputStreamSource.Helper.createInputStreamSource(permissionType.ordinal()),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
+					InputStreamSource.Helper.createInputStreamSource(revoked),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
+					InputStreamSource.Helper.createInputStreamSource(validFrom),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
+					InputStreamSource.Helper.createInputStreamSource(validTo)
 					);
 		} catch (final IOException x) {
 			throw new RuntimeException(x);

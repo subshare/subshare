@@ -1,28 +1,27 @@
 package org.subshare.local.persistence;
 
-import java.util.Iterator;
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+
+import java.util.UUID;
+
+import javax.jdo.Query;
 
 import co.codewizards.cloudstore.local.persistence.Dao;
 
 public class RepositoryOwnerDao extends Dao<RepositoryOwner, RepositoryOwnerDao> {
 
-	public RepositoryOwner getRepositoryOwnerOrFail() {
-		final RepositoryOwner repositoryOwner = getRepositoryOwner();
+	public RepositoryOwner getRepositoryOwnerOrFail(final UUID serverRepositoryId) {
+		final RepositoryOwner repositoryOwner = getRepositoryOwner(serverRepositoryId);
 		if (repositoryOwner == null)
-			throw new IllegalStateException("RepositoryOwner entity not found in database.");
+			throw new IllegalStateException(String.format("RepositoryOwner with serverRepositoryId=%s not found!", serverRepositoryId));
 
 		return repositoryOwner;
 	}
 
-	public RepositoryOwner getRepositoryOwner() {
-		final Iterator<RepositoryOwner> iterator = pm().getExtent(RepositoryOwner.class).iterator();
-		if (!iterator.hasNext())
-			return null;
-
-		final RepositoryOwner repositoryOwner = iterator.next();
-		if (iterator.hasNext()) {
-			throw new IllegalStateException("Multiple RepositoryOwner entities in database.");
-		}
+	public RepositoryOwner getRepositoryOwner(final UUID serverRepositoryId) {
+		assertNotNull("serverRepositoryId", serverRepositoryId);
+		final Query q = pm().newNamedQuery(getEntityClass(), "getRepositoryOwner_serverRepositoryId");
+		final RepositoryOwner repositoryOwner = (RepositoryOwner) q.execute(serverRepositoryId);
 		return repositoryOwner;
 	}
 

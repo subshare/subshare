@@ -186,7 +186,7 @@ public class CryptreeImplGrantRevokeReadAccessTest extends AbstractTest {
 			try (LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
 				try (Cryptree cryptree = createCryptree(transaction, remoteRepositoryId, "", ownerUserRepoKeyRing.getRandomUserRepoKeyOrFail(remoteRepositoryId));) {
 					for (final UserRepoKey.PublicKey publicKey : publicKeys)
-						cryptree.grantReadAccess(localPath, publicKey);
+						cryptree.grantReadPermission(localPath, publicKey);
 				}
 				transaction.commit();
 			}
@@ -198,7 +198,7 @@ public class CryptreeImplGrantRevokeReadAccessTest extends AbstractTest {
 			localRepoManager.localSync(new LoggerProgressMonitor(logger));
 			try (LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
 				try (Cryptree cryptree = createCryptree(transaction, remoteRepositoryId, "", ownerUserRepoKeyRing.getRandomUserRepoKeyOrFail(remoteRepositoryId));) {
-					cryptree.revokeReadAccess(localPath, new HashSet<Uid>(Arrays.asList(userRepoKeyIds)));
+					cryptree.revokeReadPermission(localPath, new HashSet<Uid>(Arrays.asList(userRepoKeyIds)));
 				}
 				transaction.commit();
 			}

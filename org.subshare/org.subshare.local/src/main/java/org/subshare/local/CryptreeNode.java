@@ -24,6 +24,7 @@ import org.subshare.core.AccessDeniedException;
 import org.subshare.core.dto.SsRepoFileDto;
 import org.subshare.core.dto.CryptoKeyPart;
 import org.subshare.core.dto.CryptoKeyRole;
+import org.subshare.core.dto.PermissionType;
 import org.subshare.core.dto.SignatureDto;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.local.persistence.CryptoKey;
@@ -32,6 +33,10 @@ import org.subshare.local.persistence.CryptoLink;
 import org.subshare.local.persistence.CryptoLinkDao;
 import org.subshare.local.persistence.CryptoRepoFile;
 import org.subshare.local.persistence.CryptoRepoFileDao;
+import org.subshare.local.persistence.Permission;
+import org.subshare.local.persistence.PermissionDao;
+import org.subshare.local.persistence.PermissionSet;
+import org.subshare.local.persistence.PermissionSetDao;
 import org.subshare.local.persistence.UserRepoKeyPublicKey;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyDao;
 import org.slf4j.Logger;
@@ -64,6 +69,7 @@ public class CryptreeNode {
 	private CryptreeNode parent; // maybe null - lazily loaded, if there is one
 	private RepoFile repoFile; // maybe null - lazily loaded
 	private CryptoRepoFile cryptoRepoFile; // maybe null - lazily loaded
+	private PermissionSet permissionSet; // maybe null - lazily loaded, if there is one
 	private final RepoFileDtoConverter repoFileDtoConverter; // never null
 	private final List<CryptreeNode> children = new ArrayList<CryptreeNode>(0);
 	private boolean childrenLoaded = false;
@@ -218,13 +224,13 @@ public class CryptreeNode {
 		return cryptoRepoFile;
 	}
 
-	public void grantReadAccess(final UserRepoKey.PublicKey publicKey) {
+	public void grantReadPermission(final UserRepoKey.PublicKey publicKey) {
 		assertNotNull("publicKey", publicKey);
 		final PlainCryptoKey plainCryptoKey = getActivePlainCryptoKeyOrCreate(CryptoKeyRole.clearanceKey, CryptoKeyPart.privateKey);
 		createCryptoLink(getUserRepoKeyPublicKey(publicKey), plainCryptoKey, context.signableSigner);
 	}
 
-	public void revokeReadAccess(final Set<Uid> userRepoKeyIds) {
+	public void revokeReadPermission(final Set<Uid> userRepoKeyIds) {
 		assertNotNull("userRepoKeyIds", userRepoKeyIds);
 		if (userRepoKeyIds.isEmpty())
 			return;
@@ -528,5 +534,71 @@ public class CryptreeNode {
 			userRepoKeyPublicKey = dao.makePersistent(new UserRepoKeyPublicKey(publicKey));
 
 		return userRepoKeyPublicKey;
+	}
+
+	public void grantGrantPermission(final UserRepoKey.PublicKey publicKey) {
+		grantPermission(PermissionType.grant, publicKey);
+	}
+
+	public void grantWritePermission(final UserRepoKey.PublicKey publicKey) {
+		grantPermission(PermissionType.write, publicKey);
+	}
+
+	public void revokeGrantPermission(final Set<Uid> userRepoKeyIds) {
+		revokePermission(PermissionType.grant, userRepoKeyIds);
+	}
+
+	public void revokeWritePermission(final Set<Uid> userRepoKeyIds) {
+		revokePermission(PermissionType.write, userRepoKeyIds);
+	}
+
+	private void grantPermission(final PermissionType permissionType, final UserRepoKey.PublicKey publicKey) {
+		final PermissionSet permissionSet = getPermissionSetOrCreate();
+		final PermissionDao dao = context.transaction.getDao(PermissionDao.class);
+		final UserRepoKeyPublicKey userRepoKeyPublicKey = getUserRepoKeyPublicKey(publicKey);
+		final Collection<Permission> permissions = dao.getNonRevokedPermissions(permissionSet, permissionType, userRepoKeyPublicKey);
+		if (permissions.isEmpty()) {
+			Permission permission = new Permission();
+			permission.setPermissionSet(permissionSet);
+			permission.setPermissionType(permissionType);
+			permission.setUserRepoKeyPublicKey(userRepoKeyPublicKey);
+			context.signableSigner.sign(permission);
+			permission = dao.makePersistent(permission);
+		}
+	}
+
+	private void revokePermission(final PermissionType permissionType, final Set<Uid> userRepoKeyIds) {
+		final PermissionSet permissionSet = getPermissionSet();
+		if (permissionSet == null)
+			return;
+
+		final PermissionDao dao = context.transaction.getDao(PermissionDao.class);
+		final Collection<Permission> permissions = dao.getNonRevokedPermissions(permissionSet, permissionType, userRepoKeyIds);
+
+		for (final Permission permission : permissions) {
+			permission.setRevoked(new Date());
+			context.signableSigner.sign(permission);
+		}
+	}
+
+	public PermissionSet getPermissionSet() {
+		if (permissionSet == null) {
+			final PermissionSetDao dao = context.transaction.getDao(PermissionSetDao.class);
+			permissionSet = dao.getPermissionSet(getCryptoRepoFileOrCreate(false));
+		}
+		return permissionSet;
+	}
+
+	public PermissionSet getPermissionSetOrCreate() {
+		PermissionSet permissionSet = getPermissionSet();
+		if (permissionSet == null) {
+			permissionSet = new PermissionSet();
+			permissionSet.setCryptoRepoFile(assertNotNull("getCryptoRepoFile()", getCryptoRepoFile()));
+			context.signableSigner.sign(permissionSet);
+
+			final PermissionSetDao dao = context.transaction.getDao(PermissionSetDao.class);
+			this.permissionSet = permissionSet = dao.makePersistent(permissionSet);
+		}
+		return permissionSet;
 	}
 }

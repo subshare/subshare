@@ -15,7 +15,7 @@ public abstract class AbstractCryptree implements Cryptree {
 	private CryptreeFactory cryptreeFactory;
 	private LocalRepoTransaction transaction;
 	private UserRepoKey userRepoKey;
-	private UUID remoteRepositoryId;
+	private UUID serverRepositoryId;
 	private String remotePathPrefix;
 
 	@Override
@@ -61,34 +61,32 @@ public abstract class AbstractCryptree implements Cryptree {
 		return assertNotNull("getUserRepoKeyOrFail().getUserRepoKeyRing()", getUserRepoKeyOrFail().getUserRepoKeyRing());
 	}
 
-	@Override
-	public UUID getRemoteRepositoryId() {
-		return remoteRepositoryId;
+	public UUID getServerRepositoryId() {
+		return serverRepositoryId;
 	}
-	@Override
-	public void setRemoteRepositoryId(final UUID remoteRepositoryId) {
-		if (this.remoteRepositoryId != null && !this.remoteRepositoryId.equals(remoteRepositoryId))
+	public void setServerRepositoryId(final UUID serverRepositoryId) {
+		if (this.serverRepositoryId != null && !this.serverRepositoryId.equals(serverRepositoryId))
 			throw new IllegalStateException("this.remoteRepositoryId already assigned! Cannot modify after initial assignment!");
 
-		this.remoteRepositoryId = remoteRepositoryId;
+		this.serverRepositoryId = serverRepositoryId;
 	}
 	protected UUID getRemoteRepositoryIdOrFail() {
-		return assertNotNull("getRemoteRepositoryId()", getRemoteRepositoryId());
+		return assertNotNull("getRemoteRepositoryId()", getServerRepositoryId());
 	}
 
 	@Override
-	public String getRemotePathPrefix() {
+	public String getServerPathPrefix() {
 		return remotePathPrefix;
 	}
 	@Override
-	public void setRemotePathPrefix(final String remotePathPrefix) {
+	public void setServerPathPrefix(final String remotePathPrefix) {
 		if (this.remotePathPrefix != null && !this.remotePathPrefix.equals(remotePathPrefix))
 			throw new IllegalStateException("this.remotePathPrefix already assigned! Cannot modify after initial assignment!");
 
 		this.remotePathPrefix = remotePathPrefix;
 	}
 	protected String getRemotePathPrefixOrFail() {
-		return assertNotNull("getRemotePathPrefix()", getRemotePathPrefix());
+		return assertNotNull("getRemotePathPrefix()", getServerPathPrefix());
 	}
 
 	@Override

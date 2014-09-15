@@ -22,7 +22,7 @@ public abstract class AbstractCryptreeFactory implements CryptreeFactory {
 		final Cryptree cryptree = _createCryptree();
 		cryptree.setCryptreeFactory(this);
 		cryptree.setTransaction(transaction);
-		cryptree.setRemoteRepositoryId(remoteRepositoryId);
+		cryptree.setServerRepositoryId(remoteRepositoryId);
 		return cryptree;
 	}
 
@@ -32,7 +32,7 @@ public abstract class AbstractCryptreeFactory implements CryptreeFactory {
 		assertNotNull("remotePathPrefix", remotePathPrefix);
 		assertNotNull("userRepoKey", userRepoKey);
 		cryptree.setUserRepoKey(userRepoKey);
-		cryptree.setRemotePathPrefix(remotePathPrefix);
+		cryptree.setServerPathPrefix(remotePathPrefix);
 		return cryptree;
 	}
 

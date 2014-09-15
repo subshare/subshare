@@ -17,6 +17,7 @@ import org.subshare.core.dto.CryptoKeyDto;
 import org.subshare.core.dto.CryptoLinkDto;
 import org.subshare.core.dto.CryptoRepoFileDto;
 import org.subshare.core.dto.UserRepoKeyPublicKeyDto;
+import org.subshare.core.sign.SignableSigner;
 import org.subshare.core.sign.Signature;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKeyPublicKeyLookup;
@@ -30,6 +31,8 @@ import org.subshare.local.persistence.CryptoRepoFileDao;
 import org.subshare.local.persistence.LastCryptoKeySyncToRemoteRepo;
 import org.subshare.local.persistence.LastCryptoKeySyncToRemoteRepoDao;
 import org.subshare.local.persistence.LocalRepositoryType;
+import org.subshare.local.persistence.RepositoryOwner;
+import org.subshare.local.persistence.RepositoryOwnerDao;
 import org.subshare.local.persistence.UserRepoKeyPublicKey;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyDao;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyLookupImpl;
@@ -211,19 +214,51 @@ public class CryptreeImpl extends AbstractCryptree {
 	}
 
 	@Override
-	public void grantReadAccess(final String localPath, final UserRepoKey.PublicKey userRepoKeyPublicKey) {
+	public void grantReadPermission(final String localPath, final UserRepoKey.PublicKey userRepoKeyPublicKey) {
 		assertNotNull("localPath", localPath);
 		assertNotNull("userRepoKeyPublicKey", userRepoKeyPublicKey);
 		final CryptreeNode cryptreeNode = getCryptreeNodeOrFail(localPath);
-		cryptreeNode.grantReadAccess(userRepoKeyPublicKey);
+		cryptreeNode.grantReadPermission(userRepoKeyPublicKey);
 	}
 
 	@Override
-	public void revokeReadAccess(final String localPath, final Set<Uid> userRepoKeyIds) {
+	public void revokeReadPermission(final String localPath, final Set<Uid> userRepoKeyIds) {
 		assertNotNull("localPath", localPath);
 		assertNotNull("userRepoKeyIds", userRepoKeyIds);
 		final CryptreeNode cryptreeNode = getCryptreeNodeOrFail(localPath);
-		cryptreeNode.revokeReadAccess(userRepoKeyIds);
+		cryptreeNode.revokeReadPermission(userRepoKeyIds);
+	}
+
+	@Override
+	public void grantGrantPermission(final String localPath, final UserRepoKey.PublicKey userRepoKeyPublicKey) {
+		assertNotNull("localPath", localPath);
+		assertNotNull("userRepoKeyPublicKey", userRepoKeyPublicKey);
+		final CryptreeNode cryptreeNode = getCryptreeNodeOrFail(localPath);
+		cryptreeNode.grantGrantPermission(userRepoKeyPublicKey);
+	}
+
+	@Override
+	public void revokeGrantPermission(final String localPath, final Set<Uid> userRepoKeyIds) {
+		assertNotNull("localPath", localPath);
+		assertNotNull("userRepoKeyIds", userRepoKeyIds);
+		final CryptreeNode cryptreeNode = getCryptreeNodeOrFail(localPath);
+		cryptreeNode.revokeGrantPermission(userRepoKeyIds);
+	}
+
+	@Override
+	public void grantWritePermission(final String localPath, final UserRepoKey.PublicKey userRepoKeyPublicKey) {
+		assertNotNull("localPath", localPath);
+		assertNotNull("userRepoKeyPublicKey", userRepoKeyPublicKey);
+		final CryptreeNode cryptreeNode = getCryptreeNodeOrFail(localPath);
+		cryptreeNode.grantWritePermission(userRepoKeyPublicKey);
+	}
+
+	@Override
+	public void revokeWritePermission(final String localPath, final Set<Uid> userRepoKeyIds) {
+		assertNotNull("localPath", localPath);
+		assertNotNull("userRepoKeyIds", userRepoKeyIds);
+		final CryptreeNode cryptreeNode = getCryptreeNodeOrFail(localPath);
+		cryptreeNode.revokeWritePermission(userRepoKeyIds);
 	}
 
 	/**
@@ -253,7 +288,7 @@ public class CryptreeImpl extends AbstractCryptree {
 		cryptoRepoFile.setParent(parentCryptoRepoFileId == null ? null
 				: cryptoRepoFileDao.getCryptoRepoFileOrFail(parentCryptoRepoFileId));
 
-		final String remotePathPrefix = getRemotePathPrefix();
+		final String remotePathPrefix = getServerPathPrefix();
 		if (remotePathPrefix == null // on server
 				|| remotePathPrefix.isEmpty()) { // on client and complete repo is checked out
 			if (parentCryptoRepoFileId == null) {
@@ -276,7 +311,7 @@ public class CryptreeImpl extends AbstractCryptree {
 		cryptoRepoFile.setRepoFileDtoData(repoFileDtoData);
 
 		cryptoRepoFile.setDirectory(cryptoRepoFileDto.isDirectory());
-		cryptoRepoFile.setLastSyncFromRepositoryId(getRemoteRepositoryId());
+		cryptoRepoFile.setLastSyncFromRepositoryId(getServerRepositoryId());
 
 		cryptoRepoFile.setSignature(cryptoRepoFileDto.getSignature());
 
@@ -293,7 +328,7 @@ public class CryptreeImpl extends AbstractCryptree {
 		if (userRepoKeyPublicKey == null)
 			userRepoKeyPublicKey = new UserRepoKeyPublicKey(userRepoKeyId);
 
-		userRepoKeyPublicKey.setRepositoryId(userRepoKeyPublicKeyDto.getRepositoryId());
+		userRepoKeyPublicKey.setServerRepositoryId(userRepoKeyPublicKeyDto.getRepositoryId());
 		userRepoKeyPublicKey.setPublicKeyData(userRepoKeyPublicKeyDto.getPublicKeyData());
 
 		return userRepoKeyPublicKeyDao.makePersistent(userRepoKeyPublicKey);
@@ -474,7 +509,7 @@ public class CryptreeImpl extends AbstractCryptree {
 	 * <p>
 	 * This method can only be used, if the local repository is connected to a sub-directory of the server
 	 * repository. If it is connected to the server repository's root, there is no
-	 * {@link #getRemotePathPrefix() remotePathPrefix} (it is an empty string) and the ID can therefore not
+	 * {@link #getServerPathPrefix() remotePathPrefix} (it is an empty string) and the ID can therefore not
 	 * be read from it.
 	 * @return the {@link CryptoRepoFile#getCryptoRepoFileId() cryptoRepoFileId} of the {@code CryptoRepoFile}
 	 * which is the connection point of the local repository to the server's repository.
@@ -570,7 +605,7 @@ public class CryptreeImpl extends AbstractCryptree {
 		final UserRepoKeyPublicKeyDto userRepoKeyPublicKeyDto = new UserRepoKeyPublicKeyDto();
 		userRepoKeyPublicKeyDto.setLocalRevision(userRepoKeyPublicKey.getLocalRevision());
 		userRepoKeyPublicKeyDto.setPublicKeyData(userRepoKeyPublicKey.getPublicKeyData());
-		userRepoKeyPublicKeyDto.setRepositoryId(userRepoKeyPublicKey.getRepositoryId());
+		userRepoKeyPublicKeyDto.setRepositoryId(userRepoKeyPublicKey.getServerRepositoryId());
 		userRepoKeyPublicKeyDto.setUserRepoKeyId(userRepoKeyPublicKey.getUserRepoKeyId());
 		return userRepoKeyPublicKeyDto;
 	}
@@ -641,7 +676,8 @@ public class CryptreeImpl extends AbstractCryptree {
 
 	@Override
 	public void initLocalRepositoryType() {
-		final LocalRepository lr = getTransactionOrFail().getDao(LocalRepositoryDao.class).getLocalRepositoryOrFail();
+		final LocalRepoTransaction transaction = getTransactionOrFail();
+		final LocalRepository lr = transaction.getDao(LocalRepositoryDao.class).getLocalRepositoryOrFail();
 		final SsLocalRepository localRepository = (SsLocalRepository) lr;
 
 		final LocalRepositoryType localRepositoryType = localRepository.getLocalRepositoryType();
@@ -659,6 +695,19 @@ public class CryptreeImpl extends AbstractCryptree {
 				break;
 			default:
 				throw new IllegalStateException("Unknown localRepositoryType: " + localRepositoryType);
+		}
+
+		final RepositoryOwnerDao repositoryOwnerDao = transaction.getDao(RepositoryOwnerDao.class);
+		RepositoryOwner repositoryOwner = repositoryOwnerDao.getRepositoryOwner(getServerRepositoryId());
+		if (repositoryOwner == null) {
+			repositoryOwner = new RepositoryOwner();
+			final UserRepoKey userRepoKey = getUserRepoKeyOrFail();
+			final UserRepoKeyPublicKey userRepoKeyPublicKey = transaction.getDao(UserRepoKeyPublicKeyDao.class).getUserRepoKeyPublicKey(userRepoKey.getUserRepoKeyId());
+			if (userRepoKeyPublicKey == null)
+				throw new IllegalStateException(String.format("UserRepoKeyPublicKey not found in database for userRepoKeyId=%s!", userRepoKey.getUserRepoKeyId()));
+
+			repositoryOwner.setUserRepoKeyPublicKey(userRepoKeyPublicKey);
+			new SignableSigner(userRepoKey).sign(repositoryOwner);
 		}
 	}
 }

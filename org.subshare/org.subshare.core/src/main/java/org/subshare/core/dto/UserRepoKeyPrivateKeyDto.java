@@ -10,7 +10,7 @@ import co.codewizards.cloudstore.core.dto.Uid;
 @XmlRootElement
 public class UserRepoKeyPrivateKeyDto {
 	private Uid userRepoKeyId;
-	private UUID repositoryId;
+	private UUID serverRepositoryId;
 	private byte[] encryptedSignedPrivateKeyData;
 
 	public Uid getUserRepoKeyId() {
@@ -20,11 +20,11 @@ public class UserRepoKeyPrivateKeyDto {
 		this.userRepoKeyId = userRepoKeyId;
 	}
 
-	public UUID getRepositoryId() {
-		return repositoryId;
+	public UUID getServerRepositoryId() {
+		return serverRepositoryId;
 	}
-	public void setRepositoryId(final UUID repositoryId) {
-		this.repositoryId = repositoryId;
+	public void setServerRepositoryId(final UUID repositoryId) {
+		this.serverRepositoryId = repositoryId;
 	}
 
 	/**
@@ -41,7 +41,7 @@ public class UserRepoKeyPrivateKeyDto {
 	@Override
 	public String toString() {
 		return "UserRepoKeyPrivateKeyDto[userRepoKeyId=" + userRepoKeyId
-				+ ", repositoryId=" + repositoryId + ", encryptedSignedPrivateKeyData="
+				+ ", serverRepositoryId=" + serverRepositoryId + ", encryptedSignedPrivateKeyData="
 				+ Arrays.toString(encryptedSignedPrivateKeyData) + "]";
 	}
 }

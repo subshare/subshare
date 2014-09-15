@@ -387,7 +387,7 @@ public class RepoToRepoSyncIT extends AbstractIT {
 						transaction, remoteRepositoryId,
 						remotePathPrefix2Encrypted,
 						cryptreeRepoTransportFactory.getUserRepoKeyRing().getRandomUserRepoKey(remoteRepositoryId));
-				cryptree.grantReadAccess(remotePathPrefix2Plain, userRepoKeyPublicKey);
+				cryptree.grantReadPermission(remotePathPrefix2Plain, userRepoKeyPublicKey);
 				cryptree.close();
 				transaction.commit();
 			}
@@ -403,7 +403,7 @@ public class RepoToRepoSyncIT extends AbstractIT {
 						transaction, remoteRepositoryId,
 						remotePathPrefix2Encrypted,
 						cryptreeRepoTransportFactory.getUserRepoKeyRing().getRandomUserRepoKey(remoteRepositoryId));
-				cryptree.revokeReadAccess(remotePathPrefix2Plain, Collections.singleton(userRepoKeyPublicKey.getUserRepoKeyId()));
+				cryptree.revokeReadPermission(remotePathPrefix2Plain, Collections.singleton(userRepoKeyPublicKey.getUserRepoKeyId()));
 				cryptree.close();
 				transaction.commit();
 			}

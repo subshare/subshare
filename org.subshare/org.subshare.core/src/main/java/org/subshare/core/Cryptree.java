@@ -9,6 +9,7 @@ import org.subshare.core.dto.CryptoKeyDto;
 import org.subshare.core.dto.CryptoLinkDto;
 import org.subshare.core.dto.CryptoRepoFileDto;
 import org.subshare.core.user.UserRepoKey;
+import org.subshare.core.user.UserRepoKey.PublicKey;
 import org.subshare.core.user.UserRepoKeyPublicKeyLookup;
 
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
@@ -26,11 +27,11 @@ public interface Cryptree extends AutoCloseable {
 	UserRepoKey getUserRepoKey();
 	void setUserRepoKey(UserRepoKey userRepoKey);
 
-	UUID getRemoteRepositoryId();
-	void setRemoteRepositoryId(UUID remoteRepositoryId);
+	UUID getServerRepositoryId();
+	void setServerRepositoryId(UUID serverRepositoryId);
 
-	String getRemotePathPrefix();
-	void setRemotePathPrefix(String remotePathPrefix);
+	String getServerPathPrefix();
+	void setServerPathPrefix(String remotePathPrefix);
 
 	@Override
 	void close();
@@ -97,10 +98,16 @@ public interface Cryptree extends AutoCloseable {
 	RepoFileDto getDecryptedRepoFileDtoOrFail(Uid cryptoRepoFileId) throws AccessDeniedException;
 	RepoFileDto getDecryptedRepoFileDto(String localPath) throws AccessDeniedException;
 
-	void grantReadAccess(String localPath, UserRepoKey.PublicKey userRepoKeyPublicKey);
-	void revokeReadAccess(String localPath, Set<Uid> userRepoKeyIds);
 	boolean isEmpty();
 
 	UserRepoKeyPublicKeyLookup getUserRepoKeyPublicKeyLookup();
 
+	void grantReadPermission(String localPath, UserRepoKey.PublicKey userRepoKeyPublicKey);
+	void revokeReadPermission(String localPath, Set<Uid> userRepoKeyIds);
+
+	void grantGrantPermission(String localPath, PublicKey userRepoKeyPublicKey);
+	void revokeGrantPermission(String localPath, Set<Uid> userRepoKeyIds);
+
+	void grantWritePermission(String localPath, PublicKey userRepoKeyPublicKey);
+	void revokeWritePermission(String localPath, Set<Uid> userRepoKeyIds);
 }

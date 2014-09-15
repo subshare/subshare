@@ -82,7 +82,7 @@ public class UserRepoKeyRing {
 	public synchronized void addUserRepoKey(final UserRepoKey userRepoKey) {
 		assertNotNull("userRepoKey", userRepoKey);
 		userRepoKeyId2UserRepoKey.put(userRepoKey.getUserRepoKeyId(), userRepoKey);
-		repositoryId2userRepoKeyList.remove(userRepoKey.getRepositoryId());
+		repositoryId2userRepoKeyList.remove(userRepoKey.getServerRepositoryId());
 	}
 
 	public void removeUserRepoKey(final UserRepoKey userRepoKey) {
@@ -92,7 +92,7 @@ public class UserRepoKeyRing {
 	public synchronized void removeUserRepoKey(final Uid userRepoKeyId) {
 		final UserRepoKey userRepoKey = userRepoKeyId2UserRepoKey.remove(assertNotNull("userRepoKeyId", userRepoKeyId));
 		if (userRepoKey != null)
-			repositoryId2userRepoKeyList.remove(userRepoKey.getRepositoryId());
+			repositoryId2userRepoKeyList.remove(userRepoKey.getServerRepositoryId());
 	}
 
 	public synchronized UserRepoKey getUserRepoKey(final Uid userRepoKeyId) {

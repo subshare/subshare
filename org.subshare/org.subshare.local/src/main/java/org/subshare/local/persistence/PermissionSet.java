@@ -18,6 +18,7 @@ import javax.jdo.annotations.Query;
 import javax.jdo.annotations.Unique;
 import javax.jdo.annotations.Uniques;
 
+import org.subshare.core.dto.PermissionSetDto;
 import org.subshare.core.io.InputStreamSource;
 import org.subshare.core.io.MultiInputStream;
 import org.subshare.core.sign.Signable;
@@ -25,10 +26,6 @@ import org.subshare.core.sign.Signature;
 
 import co.codewizards.cloudstore.local.persistence.AutoTrackLocalRevision;
 import co.codewizards.cloudstore.local.persistence.Entity;
-
-// TODO This does not work this way! We need to make this temporal and thus keep the historic data to check whether data signed
-// before and synchronised after permissions were revoked were signed correctly! Otherwise we can never sync a repository
-// after revocation of write permissions!
 
 @PersistenceCapable
 @Inheritance(strategy=InheritanceStrategy.NEW_TABLE)
