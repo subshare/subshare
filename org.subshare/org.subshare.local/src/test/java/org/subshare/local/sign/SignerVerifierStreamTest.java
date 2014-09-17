@@ -1,14 +1,10 @@
 package org.subshare.local.sign;
 
-import static co.codewizards.cloudstore.core.util.IOUtil.*;
 import static org.assertj.core.api.Assertions.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.Random;
 import java.util.UUID;
@@ -175,118 +171,69 @@ public class SignerVerifierStreamTest extends AbstractTest {
 			final byte[] plain = plainAndSigned[0];
 			final byte[] signed = plainAndSigned[1];
 
-			verifySimple(signed);
+//			verifySimple(signed);
+//
+//			final Signer signer = CryptoRegistry.getInstance().createSigner(SignerTransformation.RSA_SHA1.getTransformation());
+//			signer.init(true, userRepoKey.getKeyPair().getPrivate());
+//			final byte[] signatureCreatedBytes = longToBytes(signatureCreated.getTime());
+//			signer.update(signatureCreatedBytes, 0, signatureCreatedBytes.length);
+//			signer.update(plain, 0, plain.length);
+//			final byte[] signature = signer.generateSignature();
+//			final byte[] extractedSignature = extractSignature(signed);
+//			assertThat(signature).isEqualTo(extractedSignature);
 
-			final Signer signer = CryptoRegistry.getInstance().createSigner(SignerTransformation.RSA_SHA1.getTransformation());
-			signer.init(true, userRepoKey.getKeyPair().getPrivate());
-			final byte[] signatureCreatedBytes = longToBytes(signatureCreated.getTime());
-			signer.update(signatureCreatedBytes, 0, signatureCreatedBytes.length);
-			signer.update(plain, 0, plain.length);
-			final byte[] signature = signer.generateSignature();
-			final byte[] extractedSignature = extractSignature(signed);
-			assertThat(signature).isEqualTo(extractedSignature);
-
-			try {
-				verify(plain, signed);
-
-//				try (final ByteArrayOutputStream signedOut = new ByteArrayOutputStream();) {
-//					try (final SignerOutputStream signerOutputStream = new SignerOutputStream(signedOut, userRepoKey, signatureCreated);) {
-//						signerOutputStream.write(plain);
-//					}
-//					final byte[] signed2 = signedOut.toByteArray();
-//					assertThat(signed2).isEqualTo(signed);
-//				}
-			} catch (final SignatureException x) {
-				x.printStackTrace();
-
-				writeTempFile("plain", plain);
-				writeTempFile("signed", signed);
-				writeTempFile("privateKey", CryptoRegistry.getInstance().encodePrivateKey(userRepoKey.getKeyPair().getPrivate()));
-				writeTempFile("publicKey", CryptoRegistry.getInstance().encodePublicKey(userRepoKey.getKeyPair().getPublic()));
-				writeTempFile("signature", signature);
-
-				fail("BUMMM!!!");
-
-				for (int n = 0; n < 10; ++n) {
-					final byte[] signed2;
-					try (final ByteArrayOutputStream signedOut = new ByteArrayOutputStream();) {
-						try (final SignerOutputStream signerOutputStream = new SignerOutputStream(signedOut, userRepoKey, signatureCreated);) {
-							signerOutputStream.write(plain);
-						}
-						signed2 = signedOut.toByteArray();
-						if (Arrays.equals(signed, signed2))
-							System.out.println("signed == signed2");
-						else
-							System.out.println("signed != signed2");
-					}
-
-					verifySimple(signed);
-
-					try {
-						try (VerifierInputStream in = new VerifierInputStream(new ByteArrayInputStream(signed2), userRepoKeyPublicKeyLookup);) {
-							while (true) {
-								final byte[] buf = new byte[1024 * 1024];
-								final int read = in.read(buf);
-								if (read < 0)
-									break;
-							}
-						}
-					} catch (final SignatureException y) {
-						y.printStackTrace();
-					}
-				}
-			}
+			verify(plain, signed);
 		}
 	}
 
-	private void writeTempFile(final String fileNameSuffix, final byte[] data) throws IOException {
-		final File file = File.createTempFile(Long.toString(System.currentTimeMillis(), 36) + "_", "." + fileNameSuffix);
-		try (FileOutputStream out = new FileOutputStream(file);) {
-			out.write(data, 0, data.length);
-		}
-	}
+//	private void writeTempFile(final String fileNameSuffix, final byte[] data) throws IOException {
+//		final File file = File.createTempFile(Long.toString(System.currentTimeMillis(), 36) + "_", "." + fileNameSuffix);
+//		try (FileOutputStream out = new FileOutputStream(file);) {
+//			out.write(data, 0, data.length);
+//		}
+//	}
 
-	private byte[] extractSignature(final byte[] signed) {
-		final byte[] signatureBytesLength = new byte[4];
-		System.arraycopy(signed, signed.length - signatureBytesLength.length, signatureBytesLength, 0, signatureBytesLength.length);
-		reverse(signatureBytesLength);
+//	private byte[] extractSignature(final byte[] signed) {
+//		final byte[] signatureBytesLength = new byte[4];
+//		System.arraycopy(signed, signed.length - signatureBytesLength.length, signatureBytesLength, 0, signatureBytesLength.length);
+//		reverse(signatureBytesLength);
+//
+//		final byte[] signatureBytes = new byte[bytesToInt(signatureBytesLength)];
+//		System.arraycopy(signed, signed.length - signatureBytes.length - signatureBytesLength.length, signatureBytes, 0, signatureBytes.length);
+//		return signatureBytes;
+//	}
 
-		final byte[] signatureBytes = new byte[bytesToInt(signatureBytesLength)];
-		System.arraycopy(signed, signed.length - signatureBytes.length - signatureBytesLength.length, signatureBytes, 0, signatureBytes.length);
-		return signatureBytes;
-	}
-
-	private static final int signatureCreatedOffset = 19;
-
-	private boolean verifySimple(final byte[] signed) throws Exception {
-		final Signer signer = CryptoRegistry.getInstance().createSigner(SignerTransformation.RSA_SHA1.getTransformation());
-		signer.init(false, userRepoKey.getKeyPair().getPublic());
-
-		final byte[] signatureCreatedBytes = new byte[8];
-		System.arraycopy(signed, signatureCreatedOffset, signatureCreatedBytes, 0, signatureCreatedBytes.length);
-		reverse(signatureCreatedBytes);
-		signer.update(signatureCreatedBytes, 0, signatureCreatedBytes.length);
-
-		final byte[] signatureBytesLength = new byte[4];
-		System.arraycopy(signed, signed.length - signatureBytesLength.length, signatureBytesLength, 0, signatureBytesLength.length);
-		reverse(signatureBytesLength);
-
-		final byte[] signatureBytes = new byte[bytesToInt(signatureBytesLength)];
-		System.arraycopy(signed, signed.length - signatureBytes.length - signatureBytesLength.length, signatureBytes, 0, signatureBytes.length);
-
-		final int payloadOffset = signatureCreatedOffset + signatureCreatedBytes.length;
-		final int payloadLength = signed.length - payloadOffset - signatureBytes.length - signatureBytesLength.length;
-		signer.update(signed, payloadOffset, payloadLength);
-
-		if (signer.verifySignature(signatureBytes)) {
-			System.out.println("SIGNATURE VALID!!!");
-			return true;
-		}
-		else {
-			System.out.println("SIGNATURE *NOT* VALID!!!");
-			return false;
-		}
-	}
+//	private static final int signatureCreatedOffset = 19;
+//
+//	private boolean verifySimple(final byte[] signed) throws Exception {
+//		final Signer signer = CryptoRegistry.getInstance().createSigner(SignerTransformation.RSA_SHA1.getTransformation());
+//		signer.init(false, userRepoKey.getKeyPair().getPublic());
+//
+//		final byte[] signatureCreatedBytes = new byte[8];
+//		System.arraycopy(signed, signatureCreatedOffset, signatureCreatedBytes, 0, signatureCreatedBytes.length);
+//		reverse(signatureCreatedBytes);
+//		signer.update(signatureCreatedBytes, 0, signatureCreatedBytes.length);
+//
+//		final byte[] signatureBytesLength = new byte[4];
+//		System.arraycopy(signed, signed.length - signatureBytesLength.length, signatureBytesLength, 0, signatureBytesLength.length);
+//		reverse(signatureBytesLength);
+//
+//		final byte[] signatureBytes = new byte[bytesToInt(signatureBytesLength)];
+//		System.arraycopy(signed, signed.length - signatureBytes.length - signatureBytesLength.length, signatureBytes, 0, signatureBytes.length);
+//
+//		final int payloadOffset = signatureCreatedOffset + signatureCreatedBytes.length;
+//		final int payloadLength = signed.length - payloadOffset - signatureBytes.length - signatureBytesLength.length;
+//		signer.update(signed, payloadOffset, payloadLength);
+//
+//		if (signer.verifySignature(signatureBytes)) {
+//			System.out.println("SIGNATURE VALID!!!");
+//			return true;
+//		}
+//		else {
+//			System.out.println("SIGNATURE *NOT* VALID!!!");
+//			return false;
+//		}
+//	}
 
 	private void reverse(final byte[] bytes) {
 		for (int i = 0; i < (bytes.length / 2); ++i) {
