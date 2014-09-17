@@ -8,19 +8,13 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Random;
 import java.util.UUID;
 
-import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.bouncycastle.crypto.Signer;
 import org.bouncycastle.crypto.digests.SHA1Digest;
-import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
-import org.bouncycastle.crypto.util.PrivateKeyFactory;
-import org.bouncycastle.crypto.util.PublicKeyFactory;
-import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.sign.SignerOutputStream;
 import org.subshare.core.sign.SignerTransformation;
 import org.subshare.core.sign.VerifierInputStream;
@@ -244,66 +238,6 @@ public class SignerVerifierStreamTest extends AbstractTest {
 			}
 		}
 	}
-
-	@Test
-	public void signAndVerifyProblematicData() throws Exception {
-		final byte[] plain = readResource("sign_verify_1_plain");
-		final AsymmetricKeyParameter privateKey = PrivateKeyFactory.createKey(readResource("sign_verify_1_key.private"));
-		final AsymmetricKeyParameter publicKey = PublicKeyFactory.createKey(readResource("sign_verify_1_key.public"));
-		final AsymmetricCipherKeyPair keyPair = new AsymmetricCipherKeyPair(publicKey, privateKey);
-		final UserRepoKey userRepoKey = new UserRepoKey(userRepoKeyRing, UUID.randomUUID(), keyPair, PgpKey.TEST_DUMMY_PGP_KEY);
-
-		final UserRepoKeyPublicKeyLookup userRepoKeyPublicKeyLookup = new UserRepoKeyPublicKeyLookup() {
-			@Override
-			public PublicKey getUserRepoKeyPublicKey(final Uid userRepoKeyId) {
-				if (!userRepoKeyId.equals(userRepoKey.getUserRepoKeyId()))
-					throw new IllegalArgumentException("Unexpected userRepoKeyId: " + userRepoKeyId);
-
-				return userRepoKey.getPublicKey();
-			}
-		};
-
-		final Signer signer = CryptoRegistry.getInstance().createSigner(SignerTransformation.RSA_SHA1.getTransformation());
-		signer.init(true, privateKey);
-		signer.reset();
-		final byte[] signatureCreatedBytes = longToBytes(signatureCreated.getTime());
-		signer.update(signatureCreatedBytes, 0, signatureCreatedBytes.length);
-		signer.update(plain, 0, plain.length);
-		final byte[] signature = signer.generateSignature();
-
-		final Signer verifier = CryptoRegistry.getInstance().createSigner(SignerTransformation.RSA_SHA1.getTransformation());
-		verifier.init(false, publicKey);
-		verifier.update(signatureCreatedBytes, 0, signatureCreatedBytes.length);
-		verifier.update(plain, 0, plain.length);
-		assertThat(verifier.verifySignature(signature)).isTrue();
-
-
-		final byte[] signed;
-		try (final ByteArrayOutputStream signedOut = new ByteArrayOutputStream();) {
-			try (final SignerOutputStream signerOutputStream = new SignerOutputStream(signedOut, userRepoKey, signatureCreated);) {
-				signerOutputStream.write(plain);
-			}
-			signed = signedOut.toByteArray();
-		}
-
-		try (VerifierInputStream in = new VerifierInputStream(new ByteArrayInputStream(signed), userRepoKeyPublicKeyLookup);) {
-			while (true) {
-				final byte[] buf = new byte[1024 * 1024];
-				final int read = in.read(buf);
-				if (read < 0)
-					break;
-			}
-		}
-	}
-
-	private byte[] readResource(final String name) throws IOException {
-		final InputStream in = BcSignerTest.class.getResourceAsStream(name);
-		final ByteArrayOutputStream out = new ByteArrayOutputStream();
-		transferStreamData(in, out);
-		in.close();
-		return out.toByteArray();
-	}
-
 
 	private void writeTempFile(final String fileNameSuffix, final byte[] data) throws IOException {
 		final File file = File.createTempFile(Long.toString(System.currentTimeMillis(), 36) + "_", "." + fileNameSuffix);
