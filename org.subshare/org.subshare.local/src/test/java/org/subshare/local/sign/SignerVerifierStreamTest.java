@@ -235,13 +235,13 @@ public class SignerVerifierStreamTest extends AbstractTest {
 //		}
 //	}
 
-	private void reverse(final byte[] bytes) {
-		for (int i = 0; i < (bytes.length / 2); ++i) {
-			final byte b = bytes[i];
-			bytes[i] = bytes[bytes.length - 1 - i];
-			bytes[bytes.length - 1 - i] = b;
-		}
-	}
+//	private void reverse(final byte[] bytes) {
+//		for (int i = 0; i < (bytes.length / 2); ++i) {
+//			final byte b = bytes[i];
+//			bytes[i] = bytes[bytes.length - 1 - i];
+//			bytes[bytes.length - 1 - i] = b;
+//		}
+//	}
 
 	@Test(expected = SignatureException.class)
 	public void signAndVerifyRandomBroken() throws Exception {
