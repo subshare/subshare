@@ -13,7 +13,7 @@ public class LimitedInputStreamTest {
 
 	@Test
 	public void randomLengthWithUnderlyingSameLength() throws Exception {
-		for (int i = 0; i < 10000; ++i) {
+		for (int i = 0; i < 500; ++i) {
 			final int length = random.nextInt(1024 * 1024);
 			int totalBytesRead = 0;
 			try (final LimitedInputStream lin = new LimitedInputStream(new ByteArrayInputStream(new byte[length]), length, length);) {

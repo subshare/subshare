@@ -43,12 +43,21 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 @Queries({
 	@Query(name="getPermission_permissionId", value="SELECT UNIQUE WHERE this.permissionId == :permissionId"),
 	@Query(
-			name="getNonRevokedPermissions_permissionSet_permissionType_userRepoKeyIds",
+			name="getNonRevokedPermissions_permissionSet_permissionType_userRepoKeyId",
 			value="SELECT WHERE "
 					+ "this.permissionSet == :permissionSet "
 					+ "&& this.permissionType == :permissionType "
-					+ "&& :userRepoKeyIds.contains(this.userRepoKeyPublicKey.userRepoKeyId) "
+					+ "&& this.userRepoKeyPublicKey.userRepoKeyId == :userRepoKeyId "
 					+ "&& this.revoked == null"
+			),
+	@Query(
+			name="getValidPermissions_permissionSet_permissionType_userRepoKeyId_timestamp",
+			value="SELECT WHERE "
+					+ "this.permissionSet == :permissionSet "
+					+ "&& this.permissionType == :permissionType "
+					+ "&& this.userRepoKeyPublicKey.userRepoKeyId == :userRepoKeyId "
+					+ "&& this.validFrom <= :timestamp "
+					+ "&& ( this.validTo == null || this.validTo >= :timestamp )"
 			),
 	@Query(name="getPermissionsChangedAfter_localRevision", value="SELECT WHERE this.localRevision > :localRevision")
 })

@@ -2,9 +2,11 @@ package org.subshare.local.persistence;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -25,7 +27,7 @@ public class PermissionDao extends Dao<Permission, PermissionDao> {
 		assertNotNull("permissionSet", permissionSet);
 		assertNotNull("permissionType", permissionType);
 		assertNotNull("userRepoKeyPublicKey", userRepoKeyPublicKey);
-		return getNonRevokedPermissions(permissionSet, permissionType, Collections.singleton(userRepoKeyPublicKey.getUserRepoKeyId()));
+		return getNonRevokedPermissions(permissionSet, permissionType, userRepoKeyPublicKey.getUserRepoKeyId());
 	}
 
 	public Collection<Permission> getNonRevokedPermissions(final PermissionSet permissionSet, final PermissionType permissionType, final Set<Uid> userRepoKeyIds) {
@@ -33,21 +35,64 @@ public class PermissionDao extends Dao<Permission, PermissionDao> {
 		assertNotNull("permissionType", permissionType);
 		assertNotNull("userRepoKeyIds", userRepoKeyIds);
 
-		final Query query = pm().newNamedQuery(getEntityClass(), "getNonRevokedPermissions_permissionSet_permissionType_userRepoKeyIds");
+		final List<Permission> permissions = new ArrayList<Permission>();
+		for (final Uid userRepoKeyId : userRepoKeyIds) {
+			final Collection<Permission> c = getNonRevokedPermissions(permissionSet, permissionType, userRepoKeyId);
+			permissions.addAll(c);
+		}
+		return permissions;
+	}
+
+	public Collection<Permission> getNonRevokedPermissions(final PermissionSet permissionSet, final PermissionType permissionType, final Uid userRepoKeyId) {
+		assertNotNull("permissionSet", permissionSet);
+		assertNotNull("permissionType", permissionType);
+		assertNotNull("userRepoKeyId", userRepoKeyId);
+
+		final Query query = pm().newNamedQuery(getEntityClass(), "getNonRevokedPermissions_permissionSet_permissionType_userRepoKeyId");
 		try {
 			final Map<String, Object> params = new HashMap<String, Object>(3);
 			params.put("permissionSet", permissionSet);
 			params.put("permissionType", permissionType);
-			params.put("userRepoKeyIds", userRepoKeyIds);
+			params.put("userRepoKeyId", userRepoKeyId.toString());
 
 			long startTimestamp = System.currentTimeMillis();
 			@SuppressWarnings("unchecked")
 			Collection<Permission> permissions = (Collection<Permission>) query.executeWithMap(params);
-			logger.debug("getPermissionsChangedAfter: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
+			logger.debug("getNonRevokedPermissions: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
 
 			startTimestamp = System.currentTimeMillis();
 			permissions = load(permissions);
-			logger.debug("getPermissionsChangedAfter: Loading result-set with {} elements took {} ms.", permissions.size(), System.currentTimeMillis() - startTimestamp);
+			logger.debug("getNonRevokedPermissions: Loading result-set with {} elements took {} ms.", permissions.size(), System.currentTimeMillis() - startTimestamp);
+
+			return permissions;
+		} finally {
+			query.closeAll();
+		}
+	}
+
+	public Collection<Permission> getValidPermissions(
+			final PermissionSet permissionSet, final PermissionType permissionType, final Uid userRepoKeyId, final Date timestamp) {
+		assertNotNull("permissionSet", permissionSet);
+		assertNotNull("permissionType", permissionType);
+		assertNotNull("userRepoKeyId", userRepoKeyId);
+		assertNotNull("timestamp", timestamp);
+
+		final Query query = pm().newNamedQuery(getEntityClass(), "getValidPermissions_permissionSet_permissionType_userRepoKeyId_timestamp");
+		try {
+			final Map<String, Object> params = new HashMap<String, Object>(3);
+			params.put("permissionSet", permissionSet);
+			params.put("permissionType", permissionType);
+			params.put("userRepoKeyId", userRepoKeyId.toString());
+			params.put("timestamp", timestamp);
+
+			long startTimestamp = System.currentTimeMillis();
+			@SuppressWarnings("unchecked")
+			Collection<Permission> permissions = (Collection<Permission>) query.executeWithMap(params);
+			logger.debug("getValidPermissions: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
+
+			startTimestamp = System.currentTimeMillis();
+			permissions = load(permissions);
+			logger.debug("getValidPermissions: Loading result-set with {} elements took {} ms.", permissions.size(), System.currentTimeMillis() - startTimestamp);
 
 			return permissions;
 		} finally {

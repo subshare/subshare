@@ -25,12 +25,17 @@ public class SignerOutputStream extends FilterOutputStream {
 	private final UserRepoKey userRepoKey;
 	private final SignerTransformation signerTransformation;
 	private final Signer signer;
-	private final Date signatureCreated = new Date();
+	private final Date signatureCreated;
 
 	public SignerOutputStream(final OutputStream out, final UserRepoKey signingUserRepoKey) throws IOException {
+		this(out, signingUserRepoKey, new Date());
+	}
+
+	public SignerOutputStream(final OutputStream out, final UserRepoKey signingUserRepoKey, final Date signatureCreated) throws IOException {
 		super(out);
 		this.userRepoKey = assertNotNull("userRepoKey", signingUserRepoKey);
 		this.signerTransformation = getSignerTransformation();
+		this.signatureCreated = signatureCreated;
 
 		try {
 			signer = CryptoRegistry.getInstance().createSigner(signerTransformation.getTransformation());
@@ -69,7 +74,7 @@ public class SignerOutputStream extends FilterOutputStream {
 	private void writeSignature() throws DataLengthException, CryptoException, IOException {
 		final byte[] signatureBytes = signer.generateSignature();
 
-		final int footerLength = signatureBytes.length + 4 /* signatureLength */;
+		final int footerLength = signatureBytes.length + 4 /* signatureBytesLength */;
 		if (footerLength > MAX_FOOTER_LENGTH)
 			throw new IllegalStateException(String.format("footerLength > MAX_FOOTER_LENGTH :: %s > %s",
 					footerLength, MAX_FOOTER_LENGTH));

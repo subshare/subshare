@@ -1,6 +1,6 @@
 package org.subshare.core;
 
-public class AccessDeniedException extends RuntimeException {
+public abstract class AccessDeniedException extends RuntimeException {
 	private static final long serialVersionUID = 1L;
 
 	public AccessDeniedException() { }

@@ -317,7 +317,7 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 		}
 	}
 
-	private byte[] encryptAndSign(final byte[] plainText, final KeyParameter keyParameter) {
+	protected byte[] encryptAndSign(final byte[] plainText, final KeyParameter keyParameter) {
 		final ByteArrayOutputStream bout = new ByteArrayOutputStream();
 		try {
 			try (SignerOutputStream signerOut = new SignerOutputStream(bout, getUserRepoKey())) {
@@ -334,7 +334,7 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 //					encrypterOut.write(plainText.length >> 24);
 
 					IOUtil.transferStreamData(new ByteArrayInputStream(plainText), encrypterOut);
-// TODO we should maybe keep the plaintext-length and then fill with a padding to hide the real length. maybe do this somewhere else though.
+// TODO we should maybe keep the plaintext-length and then fill with a padding to hide the real length. maybe do this somewhere else though (so that we can even have additional padding-chunks, not only some padding-bytes within a chunk).
 				}
 			}
 
@@ -354,7 +354,7 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 		}
 	}
 
-	private byte[] verifyAndDecrypt(final byte[] cipherText, final KeyParameter keyParameter, final UserRepoKeyPublicKeyLookup userRepoKeyPublicKeyLookup) {
+	protected byte[] verifyAndDecrypt(final byte[] cipherText, final KeyParameter keyParameter, final UserRepoKeyPublicKeyLookup userRepoKeyPublicKeyLookup) {
 		try {
 			final ByteArrayInputStream in = new ByteArrayInputStream(cipherText);
 			final int version = in.read();

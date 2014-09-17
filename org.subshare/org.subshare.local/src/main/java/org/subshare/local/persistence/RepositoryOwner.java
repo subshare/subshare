@@ -69,10 +69,11 @@ public class RepositoryOwner extends Entity implements Signable, AutoTrackLocalR
 //		if (persistentInstance != null && ! persistentInstance.equals(this))
 //			throw new IllegalStateException("Cannot persist a 2nd RepositoryOwner!");
 
-		if (userRepoKeyPublicKey != null && signingUserRepoKeyId != null
-				&& ! signingUserRepoKeyId.equals(userRepoKeyPublicKey.getUserRepoKeyId()))
+		final Signature signature = getSignature();
+		if (userRepoKeyPublicKey != null && signature != null
+				&& ! signature.getSigningUserRepoKeyId().equals(userRepoKeyPublicKey.getUserRepoKeyId()))
 			throw new IllegalStateException(String.format("RepositoryOwner must be self-signed! signingUserRepoKeyId != userRepoKeyPublicKey.userRepoKeyId :: %s != %s",
-					signingUserRepoKeyId, userRepoKeyPublicKey.getUserRepoKeyId()));
+					signature.getSigningUserRepoKeyId(), userRepoKeyPublicKey.getUserRepoKeyId()));
 	}
 
 	public UUID getServerRepositoryId() {

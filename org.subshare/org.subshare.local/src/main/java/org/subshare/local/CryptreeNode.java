@@ -21,11 +21,15 @@ import java.util.zip.GZIPOutputStream;
 
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.subshare.core.AccessDeniedException;
+import org.subshare.core.GrantAccessDeniedException;
+import org.subshare.core.ReadAccessDeniedException;
+import org.subshare.core.WriteAccessDeniedException;
 import org.subshare.core.dto.SsRepoFileDto;
 import org.subshare.core.dto.CryptoKeyPart;
 import org.subshare.core.dto.CryptoKeyRole;
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.dto.SignatureDto;
+import org.subshare.core.sign.Signable;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.local.persistence.CryptoKey;
 import org.subshare.local.persistence.CryptoKeyDao;
@@ -42,6 +46,7 @@ import org.subshare.local.persistence.UserRepoKeyPublicKeyDao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import co.codewizards.cloudstore.core.auth.SignatureException;
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
 import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.local.dto.RepoFileDtoConverter;
@@ -73,6 +78,9 @@ public class CryptreeNode {
 	private final RepoFileDtoConverter repoFileDtoConverter; // never null
 	private final List<CryptreeNode> children = new ArrayList<CryptreeNode>(0);
 	private boolean childrenLoaded = false;
+
+	private final Set<Permission> permissionsBeingCheckedNow = new HashSet<Permission>();
+	private final Set<Permission> permissionsAlreadyCheckedOk = new HashSet<Permission>();
 
 	public CryptreeNode(final CryptreeContext context, final RepoFile repoFile) {
 		this(context, repoFile, null);
@@ -134,7 +142,7 @@ public class CryptreeNode {
 
 		final PlainCryptoKey plainCryptoKey = getPlainCryptoKeyForDecrypting(cryptoRepoFile.getCryptoKey());
 		if (plainCryptoKey == null)
-			throw new AccessDeniedException(String.format("The CryptoRepoFile with cryptoRepoFileId=%s could not be decrypted! Access rights missing?!",
+			throw new ReadAccessDeniedException(String.format("The CryptoRepoFile with cryptoRepoFileId=%s could not be decrypted! Access rights missing?!",
 					cryptoRepoFile.getCryptoRepoFileId()));
 
 		final byte[] plainRepoFileDtoData = assertNotNull("decrypt(...)", decrypt(cryptoRepoFile.getRepoFileDtoData(), plainCryptoKey));
@@ -220,6 +228,12 @@ public class CryptreeNode {
 			cryptoRepoFile.setLastSyncFromRepositoryId(null);
 
 			context.signableSigner.sign(cryptoRepoFile);
+			try {
+				assertSignatureOk(cryptoRepoFile, PermissionType.write);
+			} catch (final SignatureException x) { // TODO BC-BUG: remove this workaround after upgrading BouncyCastle!
+				context.signableSigner.sign(cryptoRepoFile);
+				assertSignatureOk(cryptoRepoFile, PermissionType.write);
+			}
 		}
 		return cryptoRepoFile;
 	}
@@ -492,7 +506,7 @@ public class CryptreeNode {
 		// We can use the following method, because it's *symmetric* - thus it works for both decrypting and encrypting!
 		final PlainCryptoKey plainCryptoKey = getPlainCryptoKeyForDecrypting(cryptoRepoFile.getCryptoKey());
 		if (plainCryptoKey == null)
-			throw new AccessDeniedException(String.format("Cannot decrypt dataKey for cryptoRepoFileId=%s!",
+			throw new ReadAccessDeniedException(String.format("Cannot decrypt dataKey for cryptoRepoFileId=%s!",
 					cryptoRepoFile.getCryptoRepoFileId()));
 
 		assertNotNull("plainCryptoKey.cryptoKey", plainCryptoKey.getCryptoKey());
@@ -553,6 +567,13 @@ public class CryptreeNode {
 	}
 
 	private void grantPermission(final PermissionType permissionType, final UserRepoKey.PublicKey publicKey) {
+		assertNotNull("permissionType", permissionType);
+		assertNotNull("publicKey", publicKey);
+
+		final Uid ownerUserRepoKeyId = context.getRepositoryOwner().getUserRepoKeyPublicKey().getUserRepoKeyId();
+		if (ownerUserRepoKeyId.equals(publicKey.getUserRepoKeyId()))
+			return;
+
 		final PermissionSet permissionSet = getPermissionSetOrCreate();
 		final PermissionDao dao = context.transaction.getDao(PermissionDao.class);
 		final UserRepoKeyPublicKey userRepoKeyPublicKey = getUserRepoKeyPublicKey(publicKey);
@@ -564,6 +585,7 @@ public class CryptreeNode {
 			permission.setUserRepoKeyPublicKey(userRepoKeyPublicKey);
 			context.signableSigner.sign(permission);
 			permission = dao.makePersistent(permission);
+			assertPermissionOk(permission);
 		}
 	}
 
@@ -576,15 +598,91 @@ public class CryptreeNode {
 		final Collection<Permission> permissions = dao.getNonRevokedPermissions(permissionSet, permissionType, userRepoKeyIds);
 
 		for (final Permission permission : permissions) {
+			permissionsAlreadyCheckedOk.remove(permission);
 			permission.setRevoked(new Date());
 			context.signableSigner.sign(permission);
+			assertPermissionOk(permission);
 		}
+	}
+
+//	public void assertHasGrantPermission(final Uid userRepoKeyId, final Date timestamp) {
+//		assertNotNull("userRepoKeyId", userRepoKeyId);
+//		assertNotNull("timestamp", timestamp);
+//		assertHasPermission(PermissionType.grant, userRepoKeyId, timestamp);
+//	}
+
+	private void assertHasPermission(final PermissionType permissionType, final Uid userRepoKeyId, final Date timestamp) {
+		assertNotNull("permissionType", permissionType);
+		assertNotNull("userRepoKeyId", userRepoKeyId);
+		assertNotNull("timestamp", timestamp);
+
+		if (userRepoKeyId.equals(context.getRepositoryOwner().getUserRepoKeyPublicKey().getUserRepoKeyId()))
+			return; // The owner always has all permissions.
+
+		final PermissionSet permissionSet = getPermissionSet();
+		if (permissionSet != null) {
+			final PermissionDao dao = context.transaction.getDao(PermissionDao.class);
+			final Set<Permission> permissions = new HashSet<>(dao.getValidPermissions(permissionSet, permissionType, userRepoKeyId, timestamp));
+
+			permissions.removeAll(permissionsBeingCheckedNow);
+
+			if (!permissions.isEmpty()) {
+				for (final Permission permission : permissions)
+					assertPermissionOk(permission);
+
+				return; // We found a valid permission in this directory/file level => silently leaving.
+			}
+		}
+
+		if (permissionSet == null || permissionSet.isPermissionsInherited()) {
+			final CryptreeNode parent = getParent();
+			if (parent != null) {
+				parent.assertHasPermission(permissionType, userRepoKeyId, timestamp);
+				return; // The parent (or its parent recursively) found the permission => silently leaving.
+			}
+		}
+
+		final String exceptionMsg = String.format("No '%s' permission found for userRepoKeyId=%s and timestamp=%s!", permissionType, userRepoKeyId, timestamp);
+		switch (permissionType) {
+			case grant:
+				throw new GrantAccessDeniedException(exceptionMsg);
+			case write:
+				throw new WriteAccessDeniedException(exceptionMsg);
+			default:
+				throw new IllegalArgumentException("Unknown permissionType: " + permissionType);
+		}
+	}
+
+	private void assertPermissionOk(final Permission permission) throws SignatureException {
+		assertNotNull("permission", permission);
+		if (permissionsAlreadyCheckedOk.contains(permission))
+			return;
+
+		if (! permissionsBeingCheckedNow.add(permission))
+			throw new IllegalStateException("Circular permission check! " + permission);
+		try {
+			assertSignatureOk(permission, PermissionType.grant);
+			permissionsAlreadyCheckedOk.add(permission);
+		} finally {
+			permissionsBeingCheckedNow.remove(permission);
+		}
+	}
+
+	private void assertSignatureOk(final Signable signable, final PermissionType requiredPermissionType) throws SignatureException {
+		assertNotNull("signable", signable);
+		assertNotNull("requiredPermissionType", requiredPermissionType);
+		context.signableVerifier.verify(signable);
+		final Uid signingUserRepoKeyId = signable.getSignature().getSigningUserRepoKeyId();
+		assertHasPermission(requiredPermissionType, signingUserRepoKeyId, signable.getSignature().getSignatureCreated());
 	}
 
 	public PermissionSet getPermissionSet() {
 		if (permissionSet == null) {
 			final PermissionSetDao dao = context.transaction.getDao(PermissionSetDao.class);
 			permissionSet = dao.getPermissionSet(getCryptoRepoFileOrCreate(false));
+
+			if (permissionSet != null)
+				assertSignatureOk(permissionSet, PermissionType.grant);
 		}
 		return permissionSet;
 	}

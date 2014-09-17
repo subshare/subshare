@@ -17,7 +17,6 @@ import org.subshare.core.dto.CryptoKeyDto;
 import org.subshare.core.dto.CryptoLinkDto;
 import org.subshare.core.dto.CryptoRepoFileDto;
 import org.subshare.core.dto.UserRepoKeyPublicKeyDto;
-import org.subshare.core.sign.SignableSigner;
 import org.subshare.core.sign.Signature;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKeyPublicKeyLookup;
@@ -31,8 +30,6 @@ import org.subshare.local.persistence.CryptoRepoFileDao;
 import org.subshare.local.persistence.LastCryptoKeySyncToRemoteRepo;
 import org.subshare.local.persistence.LastCryptoKeySyncToRemoteRepoDao;
 import org.subshare.local.persistence.LocalRepositoryType;
-import org.subshare.local.persistence.RepositoryOwner;
-import org.subshare.local.persistence.RepositoryOwnerDao;
 import org.subshare.local.persistence.UserRepoKeyPublicKey;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyDao;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyLookupImpl;
@@ -697,17 +694,7 @@ public class CryptreeImpl extends AbstractCryptree {
 				throw new IllegalStateException("Unknown localRepositoryType: " + localRepositoryType);
 		}
 
-		final RepositoryOwnerDao repositoryOwnerDao = transaction.getDao(RepositoryOwnerDao.class);
-		RepositoryOwner repositoryOwner = repositoryOwnerDao.getRepositoryOwner(getServerRepositoryId());
-		if (repositoryOwner == null) {
-			repositoryOwner = new RepositoryOwner();
-			final UserRepoKey userRepoKey = getUserRepoKeyOrFail();
-			final UserRepoKeyPublicKey userRepoKeyPublicKey = transaction.getDao(UserRepoKeyPublicKeyDao.class).getUserRepoKeyPublicKey(userRepoKey.getUserRepoKeyId());
-			if (userRepoKeyPublicKey == null)
-				throw new IllegalStateException(String.format("UserRepoKeyPublicKey not found in database for userRepoKeyId=%s!", userRepoKey.getUserRepoKeyId()));
-
-			repositoryOwner.setUserRepoKeyPublicKey(userRepoKeyPublicKey);
-			new SignableSigner(userRepoKey).sign(repositoryOwner);
-		}
+		if (! isOnServer())
+			getCryptreeContextOrFail().getRepositoryOwner(); // creates the RepositoryOwner object, if it does not yet exist.
 	}
 }

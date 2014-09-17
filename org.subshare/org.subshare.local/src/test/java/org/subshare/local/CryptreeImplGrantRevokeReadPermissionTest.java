@@ -1,0 +1,167 @@
+package org.subshare.local;
+
+import static co.codewizards.cloudstore.core.util.Util.*;
+import static org.assertj.core.api.Assertions.*;
+
+import org.subshare.core.Cryptree;
+import org.subshare.core.ReadAccessDeniedException;
+import org.subshare.core.user.UserRepoKeyRing;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import co.codewizards.cloudstore.core.progress.LoggerProgressMonitor;
+import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
+import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
+
+public class CryptreeImplGrantRevokeReadPermissionTest extends AbstractPermissionTest {
+
+	private static final Logger logger = LoggerFactory.getLogger(CryptreeImplGrantRevokeReadPermissionTest.class);
+
+	@Test
+	public void grantAndRevokeReadPermission() throws Exception {
+		grantReadPermission("/3", friend1UserRepoKey.getPublicKey(), friend2UserRepoKey.getPublicKey());
+
+		assertReadPermissionCorrect(friend1UserRepoKeyRing, "/3");
+		assertReadPermissionCorrect(friend2UserRepoKeyRing, "/3");
+
+		revokeReadPermission("/3", friend1UserRepoKey.getUserRepoKeyId());
+
+		// Should still be readable, because we have lazy revocation and there was no modification, yet!
+		assertReadPermissionCorrect(friend1UserRepoKeyRing, "/3");
+		assertReadPermissionCorrect(friend2UserRepoKeyRing, "/3");
+
+		createOrUpdateCryptoRepoFiles("/3");
+
+		assertReadPermissionDenied(friend1UserRepoKeyRing, "/3");
+
+		// We modified only "/3" and none of the children - and neither the parent (the root "/").
+		// Due to the lazy revocation, they should thus still be readable.
+		assertReadPermissionGranted(friend1UserRepoKeyRing,
+				"/",
+				"/3/3_a",
+				"/3/3_b",
+				"/3/3_1/",
+				"/3/3_1/3_1_a",
+				"/3/3_1/3_1_b",
+				"/3/3_1/3_1_c",
+				"/3/3_2/",
+				"/3/3_2/3_2_a",
+				"/3/3_2/3_2_b",
+				"/3/3_3/",
+				"/3/3_3/3_3_a",
+				"/3/3_2/3_2_1/",
+				"/3/3_2/3_2_1/3_2_1_a"
+				);
+
+		// The 2nd user should be unaffected by the revocation.
+		assertReadPermissionCorrect(friend2UserRepoKeyRing, "/3");
+
+		// Modify a few more.
+		createOrUpdateCryptoRepoFiles("/", "/3/3_a", "/3/3_1/3_1_b");
+
+		// All those modified should *not* be accessible anymore.
+		assertReadPermissionDenied(friend1UserRepoKeyRing, "/", "/3", "/3/3_a", "/3/3_1/3_1_b");
+
+		// All those not yet modified should still be accessible.
+		assertReadPermissionGranted(friend1UserRepoKeyRing,
+				"/3/3_b",
+				"/3/3_1/",
+				"/3/3_1/3_1_a",
+				"/3/3_1/3_1_c",
+				"/3/3_2/",
+				"/3/3_2/3_2_a",
+				"/3/3_2/3_2_b",
+				"/3/3_3/",
+				"/3/3_3/3_3_a",
+				"/3/3_2/3_2_1/",
+				"/3/3_2/3_2_1/3_2_1_a"
+				);
+
+		// Still, the 2nd user should be unaffected by the revocation.
+		assertReadPermissionCorrect(friend2UserRepoKeyRing, "/3");
+	}
+
+	protected void assertReadPermissionCorrect(final UserRepoKeyRing userRepoKeyRing, final String localPathReadAccessGranted) {
+		try (LocalRepoManager localRepoManager = createLocalRepoManagerForExistingRepository(localRoot);) {
+			localRepoManager.localSync(new LoggerProgressMonitor(logger));
+			try (LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
+				try (Cryptree cryptree = createCryptree(transaction, remoteRepositoryId, "", userRepoKeyRing.getRandomUserRepoKeyOrFail(remoteRepositoryId));) {
+					for (String localPath : localPaths) {
+						localPath = removeFinalSlash(localPath);
+						try {
+							cryptree.getDecryptedRepoFileDto(localPath);
+							if (! isChildOrEqual(localPathReadAccessGranted, localPath) && ! isParentOrEqual(localPathReadAccessGranted, localPath))
+								fail("We should not have access to this: " + localPath);
+						} catch (final ReadAccessDeniedException x) {
+							if (isChildOrEqual(localPathReadAccessGranted, localPath) || isParentOrEqual(localPathReadAccessGranted, localPath))
+								fail("We should have access to this: " + localPath, x);
+						}
+
+						try {
+							cryptree.getDataKeyOrFail(localPath);
+							if (! isChildOrEqual(localPathReadAccessGranted, localPath) && ! isParentOrEqual(localPathReadAccessGranted, localPath))
+								fail("We should not have access to this: " + localPath);
+						} catch (final ReadAccessDeniedException x) {
+							if (isChildOrEqual(localPathReadAccessGranted, localPath) || isParentOrEqual(localPathReadAccessGranted, localPath))
+								fail("We should have access to this: " + localPath, x);
+						}
+					}
+				}
+				transaction.commit();
+			}
+		}
+	}
+
+	protected void assertReadPermissionDenied(final UserRepoKeyRing userRepoKeyRing, final String ... localPaths) {
+		try (LocalRepoManager localRepoManager = createLocalRepoManagerForExistingRepository(localRoot);) {
+			localRepoManager.localSync(new LoggerProgressMonitor(logger));
+			try (LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
+				try (Cryptree cryptree = createCryptree(transaction, remoteRepositoryId, "", userRepoKeyRing.getRandomUserRepoKeyOrFail(remoteRepositoryId));) {
+					for (String localPath : localPaths) {
+						localPath = removeFinalSlash(localPath);
+						try {
+							cryptree.getDecryptedRepoFileDto(localPath);
+							fail("We should not have access to this: " + localPath);
+						} catch (final ReadAccessDeniedException x) {
+							doNothing(); // we expect exactly this!
+						}
+
+						try {
+							cryptree.getDataKeyOrFail(localPath);
+							fail("We should not have access to this: " + localPath);
+						} catch (final ReadAccessDeniedException x) {
+							doNothing(); // we expect exactly this!
+						}
+					}
+				}
+				transaction.commit();
+			}
+		}
+	}
+
+	protected void assertReadPermissionGranted(final UserRepoKeyRing userRepoKeyRing, final String ... localPaths) {
+		try (LocalRepoManager localRepoManager = createLocalRepoManagerForExistingRepository(localRoot);) {
+			localRepoManager.localSync(new LoggerProgressMonitor(logger));
+			try (LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
+				try (Cryptree cryptree = createCryptree(transaction, remoteRepositoryId, "", userRepoKeyRing.getRandomUserRepoKeyOrFail(remoteRepositoryId));) {
+					for (String localPath : localPaths) {
+						localPath = removeFinalSlash(localPath);
+						try {
+							cryptree.getDecryptedRepoFileDto(localPath);
+						} catch (final ReadAccessDeniedException x) {
+							fail("We should have access to this: " + localPath, x);
+						}
+
+						try {
+							cryptree.getDataKeyOrFail(localPath);
+						} catch (final ReadAccessDeniedException x) {
+							fail("We should have access to this: " + localPath, x);
+						}
+					}
+				}
+				transaction.commit();
+			}
+		}
+	}
+}
