@@ -410,7 +410,7 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 				return plainText;
 			}
 		} catch (final IOException x) {
-			throw new RuntimeException(x);
+			throw new RuntimeException(x.getMessage() + " cipherText.length=" + cipherText.length, x);
 		}
 	}
 

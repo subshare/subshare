@@ -84,9 +84,14 @@ public class RepositoryOwner extends Entity implements Signable, AutoTrackLocalR
 		return userRepoKeyPublicKey;
 	}
 	public void setUserRepoKeyPublicKey(final UserRepoKeyPublicKey userRepoKeyPublicKey) {
-		this.userRepoKeyPublicKey = userRepoKeyPublicKey;
+		if (! equal(this.userRepoKeyPublicKey, userRepoKeyPublicKey))
+			this.userRepoKeyPublicKey = userRepoKeyPublicKey;
+
 		final UUID srid = userRepoKeyPublicKey == null ? null : userRepoKeyPublicKey.getServerRepositoryId();
-		this.serverRepositoryId = srid == null ? null : srid.toString();
+		final String sridStr = srid == null ? null : srid.toString();
+
+		if (! equal(this.serverRepositoryId, sridStr))
+			this.serverRepositoryId = sridStr;
 	}
 
 	@Override

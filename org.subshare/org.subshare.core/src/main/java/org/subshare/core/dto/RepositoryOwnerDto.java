@@ -2,6 +2,7 @@ package org.subshare.core.dto;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -17,18 +18,18 @@ import co.codewizards.cloudstore.core.dto.Uid;
 @XmlRootElement
 public class RepositoryOwnerDto implements Signable {
 
-	private String serverRepositoryId;
+	private UUID serverRepositoryId;
 
 	private Uid userRepoKeyId;
 
 	@XmlElement
 	private SignatureDto signatureDto;
 
-	public String getServerRepositoryId() {
+	public UUID getServerRepositoryId() {
 		return serverRepositoryId;
 	}
 
-	public void setServerRepositoryId(final String serverRepositoryId) {
+	public void setServerRepositoryId(final UUID serverRepositoryId) {
 		this.serverRepositoryId = serverRepositoryId;
 	}
 

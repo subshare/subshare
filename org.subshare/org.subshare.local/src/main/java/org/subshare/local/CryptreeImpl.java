@@ -5,6 +5,7 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -16,6 +17,9 @@ import org.subshare.core.dto.CryptoChangeSetDto;
 import org.subshare.core.dto.CryptoKeyDto;
 import org.subshare.core.dto.CryptoLinkDto;
 import org.subshare.core.dto.CryptoRepoFileDto;
+import org.subshare.core.dto.PermissionDto;
+import org.subshare.core.dto.PermissionSetDto;
+import org.subshare.core.dto.RepositoryOwnerDto;
 import org.subshare.core.dto.UserRepoKeyPublicKeyDto;
 import org.subshare.core.sign.Signature;
 import org.subshare.core.user.UserRepoKey;
@@ -30,6 +34,12 @@ import org.subshare.local.persistence.CryptoRepoFileDao;
 import org.subshare.local.persistence.LastCryptoKeySyncToRemoteRepo;
 import org.subshare.local.persistence.LastCryptoKeySyncToRemoteRepoDao;
 import org.subshare.local.persistence.LocalRepositoryType;
+import org.subshare.local.persistence.Permission;
+import org.subshare.local.persistence.PermissionDao;
+import org.subshare.local.persistence.PermissionSet;
+import org.subshare.local.persistence.PermissionSetDao;
+import org.subshare.local.persistence.RepositoryOwner;
+import org.subshare.local.persistence.RepositoryOwnerDao;
 import org.subshare.local.persistence.UserRepoKeyPublicKey;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyDao;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyLookupImpl;
@@ -121,6 +131,10 @@ public class CryptreeImpl extends AbstractCryptree {
 		populateChangedCryptoLinkDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 		populateChangedCryptoKeyDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 
+		populateChangedRepositoryOwnerDto(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
+		populateChangedPermissionDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
+		populateChangedPermissionSetDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
+
 		return cryptoChangeSetDto;
 	}
 
@@ -183,6 +197,16 @@ public class CryptreeImpl extends AbstractCryptree {
 				}
 			}
 		}
+
+		final RepositoryOwnerDto repositoryOwnerDto = cryptoChangeSetDto.getRepositoryOwnerDto();
+		if (repositoryOwnerDto != null)
+			putRepositoryOwnerDto(repositoryOwnerDto);
+
+		for (final PermissionSetDto permissionSetDto : cryptoChangeSetDto.getPermissionSetDtos())
+			putPermissionSetDto(permissionSetDto);
+
+		for (final PermissionDto permissionDto : cryptoChangeSetDto.getPermissionDtos())
+			putPermissionDto(permissionDto);
 
 		transaction.flush();
 	}
@@ -401,9 +425,75 @@ public class CryptreeImpl extends AbstractCryptree {
 		return cryptoLinkDao.makePersistent(cryptoLink);
 	}
 
+	private void putPermissionDto(final PermissionDto permissionDto) {
+		assertNotNull("permissionDto", permissionDto);
+		final LocalRepoTransaction transaction = getTransactionOrFail();
+		final PermissionDao permissionDao = transaction.getDao(PermissionDao.class);
+		final PermissionSetDao permissionSetDao = transaction.getDao(PermissionSetDao.class);
+		final CryptoRepoFileDao cryptoRepoFileDao = transaction.getDao(CryptoRepoFileDao.class);
+		final UserRepoKeyPublicKeyDao userRepoKeyPublicKeyDao = transaction.getDao(UserRepoKeyPublicKeyDao.class);
+
+		Permission permission = permissionDao.getPermission(permissionDto.getPermissionId());
+		if (permission == null)
+			permission = new Permission(permissionDto.getPermissionId());
+
+		final CryptoRepoFile cryptoRepoFile = cryptoRepoFileDao.getCryptoRepoFileOrFail(permissionDto.getCryptoRepoFileId());
+		final PermissionSet permissionSet = permissionSetDao.getPermissionSetOrFail(cryptoRepoFile);
+		permission.setPermissionSet(permissionSet);
+		permission.setPermissionType(permissionDto.getPermissionType());
+		permission.setRevoked(permissionDto.getRevoked());
+		permission.setSignature(permissionDto.getSignature());
+
+		final UserRepoKeyPublicKey userRepoKeyPublicKey = userRepoKeyPublicKeyDao.getUserRepoKeyPublicKeyOrFail(permissionDto.getUserRepoKeyId());
+		permission.setUserRepoKeyPublicKey(userRepoKeyPublicKey);
+
+		permission.setValidFrom(permissionDto.getValidFrom());
+		permission.setValidTo(permissionDto.getValidTo());
+		permissionDao.makePersistent(permission);
+	}
+
+	private void putPermissionSetDto(final PermissionSetDto permissionSetDto) {
+		assertNotNull("permissionSetDto", permissionSetDto);
+		final LocalRepoTransaction transaction = getTransactionOrFail();
+		final PermissionSetDao permissionSetDao = transaction.getDao(PermissionSetDao.class);
+		final CryptoRepoFileDao cryptoRepoFileDao = transaction.getDao(CryptoRepoFileDao.class);
+
+		final CryptoRepoFile cryptoRepoFile = cryptoRepoFileDao.getCryptoRepoFileOrFail(permissionSetDto.getCryptoRepoFileId());
+		PermissionSet permissionSet = permissionSetDao.getPermissionSet(cryptoRepoFile);
+		if (permissionSet == null)
+			permissionSet = new PermissionSet();
+
+		permissionSet.setCryptoRepoFile(cryptoRepoFile);
+		permissionSet.setPermissionsInherited(permissionSetDto.isPermissionsInherited());
+		permissionSet.setSignature(permissionSetDto.getSignature());
+		permissionSetDao.makePersistent(permissionSet);
+	}
+
+	private void putRepositoryOwnerDto(final RepositoryOwnerDto repositoryOwnerDto) {
+		assertNotNull("repositoryOwnerDto", repositoryOwnerDto);
+		final LocalRepoTransaction transaction = getTransactionOrFail();
+		final RepositoryOwnerDao repositoryOwnerDao = transaction.getDao(RepositoryOwnerDao.class);
+		final UserRepoKeyPublicKeyDao userRepoKeyPublicKeyDao = transaction.getDao(UserRepoKeyPublicKeyDao.class);
+
+		RepositoryOwner repositoryOwner = repositoryOwnerDao.getRepositoryOwner(repositoryOwnerDto.getServerRepositoryId());
+		if (repositoryOwner == null)
+			repositoryOwner = new RepositoryOwner();
+
+		final UserRepoKeyPublicKey userRepoKeyPublicKey = userRepoKeyPublicKeyDao.getUserRepoKeyPublicKeyOrFail(repositoryOwnerDto.getUserRepoKeyId());
+		if (! repositoryOwnerDto.getServerRepositoryId().equals(userRepoKeyPublicKey.getServerRepositoryId()))
+			throw new IllegalStateException(String.format(
+					"repositoryOwnerDto.serverRepositoryId != userRepoKeyPublicKey.serverRepositoryId :: %s != %s :: userRepoKeyId=%s",
+					repositoryOwnerDto.getServerRepositoryId(), userRepoKeyPublicKey.getServerRepositoryId(),
+					userRepoKeyPublicKey.getUserRepoKeyId()));
+
+		repositoryOwner.setUserRepoKeyPublicKey(userRepoKeyPublicKey);
+		repositoryOwner.setSignature(repositoryOwnerDto.getSignature());
+		repositoryOwnerDao.makePersistent(repositoryOwner);
+	}
+
 	protected LastCryptoKeySyncToRemoteRepo getLastCryptoKeySyncToRemoteRepo() {
 		final LocalRepoTransaction transaction = getTransactionOrFail();
-		final RemoteRepository remoteRepository = transaction.getDao(RemoteRepositoryDao.class).getRemoteRepositoryOrFail(getRemoteRepositoryIdOrFail());
+		final RemoteRepository remoteRepository = transaction.getDao(RemoteRepositoryDao.class).getRemoteRepositoryOrFail(getServerRepositoryIdOrFail());
 
 		final LastCryptoKeySyncToRemoteRepoDao lastCryptoKeySyncToRemoteRepoDao = transaction.getDao(LastCryptoKeySyncToRemoteRepoDao.class);
 		LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo = lastCryptoKeySyncToRemoteRepoDao.getLastCryptoKeySyncToRemoteRepo(remoteRepository);
@@ -554,6 +644,10 @@ public class CryptreeImpl extends AbstractCryptree {
 		populateChangedCryptoLinkDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 		populateChangedCryptoKeyDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 
+		populateChangedRepositoryOwnerDto(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
+		populateChangedPermissionDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
+		populateChangedPermissionSetDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
+
 		return cryptoChangeSetDto;
 	}
 
@@ -571,7 +665,7 @@ public class CryptreeImpl extends AbstractCryptree {
 		final CryptoRepoFileDao cryptoRepoFileDao = getTransactionOrFail().getDao(CryptoRepoFileDao.class);
 
 		final Collection<CryptoRepoFile> cryptoRepoFiles = cryptoRepoFileDao.getCryptoRepoFilesChangedAfterExclLastSyncFromRepositoryId(
-				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced(), getRemoteRepositoryIdOrFail());
+				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced(), getServerRepositoryIdOrFail());
 
 		for (final CryptoRepoFile cryptoRepoFile : cryptoRepoFiles)
 			cryptoChangeSetDto.getCryptoRepoFileDtos().add(toCryptoRepoFileDto(cryptoRepoFile));
@@ -595,6 +689,39 @@ public class CryptreeImpl extends AbstractCryptree {
 
 		for (final CryptoKey cryptoKey : cryptoKeys)
 			cryptoChangeSetDto.getCryptoKeyDtos().add(toCryptoKeyDto(cryptoKey));
+	}
+
+	private void populateChangedRepositoryOwnerDto(final CryptoChangeSetDto cryptoChangeSetDto, final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {
+		final RepositoryOwnerDao repositoryOwnerDao = getTransactionOrFail().getDao(RepositoryOwnerDao.class);
+		final RepositoryOwner repositoryOwner = repositoryOwnerDao.getRepositoryOwner(getServerRepositoryIdOrFail());
+		if (repositoryOwner != null
+				&& repositoryOwner.getLocalRevision() > lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced()) {
+			cryptoChangeSetDto.setRepositoryOwnerDto(toRepositoryOwnerDto(repositoryOwner));
+		}
+	}
+
+	private void populateChangedPermissionDtos(final CryptoChangeSetDto cryptoChangeSetDto, final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {
+		final PermissionDao permissionDao = getTransactionOrFail().getDao(PermissionDao.class);
+
+		final Collection<Permission> permissions = permissionDao.getPermissionsChangedAfter(
+				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced());
+
+		for (final Permission permission : permissions) {
+			if (permission.getRevoked() != null && permission.getValidTo() == null)
+				permission.setValidTo(new Date());
+
+			cryptoChangeSetDto.getPermissionDtos().add(toPermissionDto(permission));
+		}
+	}
+
+	private void populateChangedPermissionSetDtos(final CryptoChangeSetDto cryptoChangeSetDto, final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {
+		final PermissionSetDao permissionSetDao = getTransactionOrFail().getDao(PermissionSetDao.class);
+
+		final Collection<PermissionSet> permissionSets = permissionSetDao.getPermissionSetsChangedAfter(
+				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced());
+
+		for (final PermissionSet permissionSet : permissionSets)
+			cryptoChangeSetDto.getPermissionSetDtos().add(toPermissionSetDto(permissionSet));
 	}
 
 	private UserRepoKeyPublicKeyDto toUserRepoKeyPublicKeyDto(final UserRepoKeyPublicKey userRepoKeyPublicKey) {
@@ -663,6 +790,38 @@ public class CryptreeImpl extends AbstractCryptree {
 		assertNotNull("cryptoKey.signature.signatureData", signature.getSignatureData());
 
 		return cryptoKeyDto;
+	}
+
+	private RepositoryOwnerDto toRepositoryOwnerDto(final RepositoryOwner repositoryOwner) {
+		assertNotNull("repositoryOwner", repositoryOwner);
+		final RepositoryOwnerDto repositoryOwnerDto = new RepositoryOwnerDto();
+		repositoryOwnerDto.setServerRepositoryId(repositoryOwner.getServerRepositoryId());
+		repositoryOwnerDto.setSignature(repositoryOwner.getSignature());
+		repositoryOwnerDto.setUserRepoKeyId(repositoryOwner.getUserRepoKeyPublicKey().getUserRepoKeyId());
+		return repositoryOwnerDto;
+	}
+
+	private PermissionSetDto toPermissionSetDto(final PermissionSet permissionSet) {
+		assertNotNull("permissionSet", permissionSet);
+		final PermissionSetDto permissionSetDto = new PermissionSetDto();
+		permissionSetDto.setCryptoRepoFileId(permissionSet.getCryptoRepoFile().getCryptoRepoFileId());
+		permissionSetDto.setPermissionsInherited(permissionSet.isPermissionsInherited());
+		permissionSetDto.setSignature(permissionSet.getSignature());
+		return permissionSetDto;
+	}
+
+	private PermissionDto toPermissionDto(final Permission permission) {
+		assertNotNull("permission", permission);
+		final PermissionDto permissionDto = new PermissionDto();
+		permissionDto.setCryptoRepoFileId(permission.getPermissionSet().getCryptoRepoFile().getCryptoRepoFileId());
+		permissionDto.setPermissionId(permission.getPermissionId());
+		permissionDto.setPermissionType(permission.getPermissionType());
+		permissionDto.setRevoked(permission.getRevoked());
+		permissionDto.setSignature(permission.getSignature());
+		permissionDto.setUserRepoKeyId(permission.getUserRepoKeyPublicKey().getUserRepoKeyId());
+		permissionDto.setValidFrom(permission.getValidFrom());
+		permissionDto.setValidTo(permission.getValidTo());
+		return permissionDto;
 	}
 
 	@Override

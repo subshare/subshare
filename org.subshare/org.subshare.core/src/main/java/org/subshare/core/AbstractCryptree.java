@@ -70,7 +70,7 @@ public abstract class AbstractCryptree implements Cryptree {
 
 		this.serverRepositoryId = serverRepositoryId;
 	}
-	protected UUID getRemoteRepositoryIdOrFail() {
+	protected UUID getServerRepositoryIdOrFail() {
 		return assertNotNull("getRemoteRepositoryId()", getServerRepositoryId());
 	}
 

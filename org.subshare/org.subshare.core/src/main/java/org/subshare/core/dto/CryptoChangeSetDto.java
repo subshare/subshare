@@ -17,6 +17,12 @@ public class CryptoChangeSetDto {
 
 	private List<UserRepoKeyPublicKeyDto> userRepoKeyPublicKeyDtos;
 
+	private RepositoryOwnerDto repositoryOwnerDto;
+
+	private List<PermissionSetDto> permissionSetDtos;
+
+	private List<PermissionDto> permissionDtos;
+
 	public List<CryptoRepoFileDto> getCryptoRepoFileDtos() {
 		if (cryptoRepoFileDtos == null)
 			cryptoRepoFileDtos = new ArrayList<CryptoRepoFileDto>();
@@ -57,6 +63,33 @@ public class CryptoChangeSetDto {
 		this.userRepoKeyPublicKeyDtos = userRepoKeyPublicKeyDtos;
 	}
 
+	public RepositoryOwnerDto getRepositoryOwnerDto() {
+		return repositoryOwnerDto;
+	}
+	public void setRepositoryOwnerDto(final RepositoryOwnerDto repositoryOwnerDto) {
+		this.repositoryOwnerDto = repositoryOwnerDto;
+	}
+
+	public List<PermissionSetDto> getPermissionSetDtos() {
+		if (permissionSetDtos == null)
+			permissionSetDtos = new ArrayList<PermissionSetDto>();
+
+		return permissionSetDtos;
+	}
+	public void setPermissionSetDtos(final List<PermissionSetDto> permissionSetDtos) {
+		this.permissionSetDtos = permissionSetDtos;
+	}
+
+	public List<PermissionDto> getPermissionDtos() {
+		if (permissionDtos == null)
+			permissionDtos = new ArrayList<PermissionDto>();
+
+		return permissionDtos;
+	}
+	public void setPermissionDtos(final List<PermissionDto> permissionDtos) {
+		this.permissionDtos = permissionDtos;
+	}
+
 	@Override
 	public String toString() {
 		return "CryptoChangeSetDto[cryptoRepoFileDtos=" + cryptoRepoFileDtos
@@ -68,7 +101,10 @@ public class CryptoChangeSetDto {
 		return isEmpty(cryptoRepoFileDtos)
 				&& isEmpty(cryptoKeyDtos)
 				&& isEmpty(cryptoLinkDtos)
-				&& isEmpty(userRepoKeyPublicKeyDtos);
+				&& isEmpty(userRepoKeyPublicKeyDtos)
+				&& repositoryOwnerDto == null
+				&& isEmpty(permissionSetDtos)
+				&& isEmpty(permissionDtos);
 	}
 
 	private static boolean isEmpty(final Collection<?> c) {

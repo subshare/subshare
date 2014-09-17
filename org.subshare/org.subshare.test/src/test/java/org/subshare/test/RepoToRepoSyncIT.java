@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import co.codewizards.cloudstore.client.CloudStoreClient;
+import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.progress.LoggerProgressMonitor;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
@@ -31,7 +32,6 @@ import co.codewizards.cloudstore.core.repo.sync.RepoToRepoSync;
 import co.codewizards.cloudstore.core.util.UrlUtil;
 import co.codewizards.cloudstore.local.persistence.RepoFile;
 import co.codewizards.cloudstore.local.persistence.RepoFileDao;
-import co.codewizards.cloudstore.core.oio.File;
 
 public class RepoToRepoSyncIT extends AbstractIT {
 
@@ -48,6 +48,9 @@ public class RepoToRepoSyncIT extends AbstractIT {
 	private String remotePathPrefix2Plain;
 	private URL remoteRootURLWithPathPrefixForLocalSrc;
 	private URL remoteRootURLWithPathPrefixForLocalDest;
+
+	private UserRepoKeyRing ownerUserRepoKeyRing;
+	private UserRepoKey ownerUserRepoKey;
 
 	@Before
 	public void before() {
@@ -297,7 +300,9 @@ public class RepoToRepoSyncIT extends AbstractIT {
 
 		localRepoManagerLocal.close();
 
-		cryptreeRepoTransportFactory.setUserRepoKeyRing(createUserRepoKeyRing());
+		ownerUserRepoKeyRing = createUserRepoKeyRing();
+		ownerUserRepoKey = ownerUserRepoKeyRing.getRandomUserRepoKey(remoteRepositoryId);
+		cryptreeRepoTransportFactory.setUserRepoKeyRing(ownerUserRepoKeyRing);
 	}
 
 	private void populateLocalSourceRepo() throws Exception {
@@ -409,4 +414,6 @@ public class RepoToRepoSyncIT extends AbstractIT {
 			}
 		}
 	}
+
+
 }

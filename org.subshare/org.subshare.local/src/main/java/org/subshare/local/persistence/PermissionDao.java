@@ -128,4 +128,15 @@ public class PermissionDao extends Dao<Permission, PermissionDao> {
 			query.closeAll();
 		}
 	}
+
+	public Permission getPermission(final Uid permissionId) {
+		assertNotNull("permissionId", permissionId);
+		final Query query = pm().newNamedQuery(getEntityClass(), "getPermission_permissionId");
+		try {
+			final Permission permission = (Permission) query.execute(permissionId.toString());
+			return permission;
+		} finally {
+			query.closeAll();
+		}
+	}
 }

@@ -1,5 +1,7 @@
 package org.subshare.local.persistence;
 
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+
 import java.util.Collection;
 
 import javax.jdo.Query;
@@ -14,6 +16,7 @@ public class PermissionSetDao extends Dao<PermissionSet, PermissionSetDao> {
 	private static final Logger logger = LoggerFactory.getLogger(PermissionSetDao.class);
 
 	public PermissionSet getPermissionSet(final CryptoRepoFile cryptoRepoFile) {
+		assertNotNull("cryptoRepoFile", cryptoRepoFile);
 		final Query query = pm().newNamedQuery(getEntityClass(), "getPermissionSet_cryptoRepoFile");
 		try {
 			final PermissionSet permissionSet = (PermissionSet) query.execute(cryptoRepoFile);
@@ -21,6 +24,14 @@ public class PermissionSetDao extends Dao<PermissionSet, PermissionSetDao> {
 		} finally {
 			query.closeAll();
 		}
+	}
+
+	public PermissionSet getPermissionSetOrFail(final CryptoRepoFile cryptoRepoFile) {
+		final PermissionSet permissionSet = getPermissionSet(cryptoRepoFile);
+		if (permissionSet == null)
+			throw new IllegalArgumentException("There is no PermissionSet for this CryptoRepoFile: " + cryptoRepoFile);
+
+		return permissionSet;
 	}
 
 	/**
