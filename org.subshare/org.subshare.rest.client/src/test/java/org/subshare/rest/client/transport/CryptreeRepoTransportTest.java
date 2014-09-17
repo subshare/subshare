@@ -17,7 +17,6 @@ import org.subshare.core.user.UserRepoKeyPublicKeyLookup;
 import org.subshare.core.user.UserRepoKeyRing;
 import org.junit.Test;
 
-import co.codewizards.cloudstore.core.auth.SignatureException;
 import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.rest.client.ssl.CheckServerTrustedCertificateExceptionContext;
 import co.codewizards.cloudstore.rest.client.ssl.CheckServerTrustedCertificateExceptionResult;
@@ -35,7 +34,6 @@ public class CryptreeRepoTransportTest {
 		final UUID clientRepositoryId = UUID.randomUUID();
 		final UserRepoKeyRing userRepoKeyRing = createUserRepoKeyRing(serverRepositoryId);
 		factory.setUserRepoKeyRing(userRepoKeyRing);
-//		final CryptreeRepoTransport repoTransport = (CryptreeRepoTransport) factory.createRepoTransport(new URL("https://localhost:12345/dummy"), clientRepositoryId);
 
 		final CryptreeRepoTransport repoTransport = new CryptreeRepoTransport() {
 			@Override
@@ -57,32 +55,17 @@ public class CryptreeRepoTransportTest {
 
 			final KeyParameter keyParameter = KeyFactory.getInstance().createSymmetricKey();
 
-			for (int i = 0; i < 1024 * 1024; ++i) {
-				final int length = 1 + i; // random.nextInt(1024 * 1024);
+			for (int i = 0; i < 100; ++i) {
+				final int length = 1 + random.nextInt(1024 * 1024);
 				System.out.println("length=" + length);
 
 				final byte[] plainText = new byte[length];
-//				random.nextBytes(plainText);
+				random.nextBytes(plainText);
 
 				final byte[] encryptedAndSigned = repoTransport.encryptAndSign(plainText, keyParameter);
-				try {
-					final byte[] decrypted = repoTransport.verifyAndDecrypt(encryptedAndSigned, keyParameter, userRepoKeyPublicKeyLookup);
-					assertThat(decrypted).isEqualTo(plainText);
-				} catch (final SignatureException x) {
-					System.out.println("*** *** ***");
-					System.out.println("Trying again...");
-					x.printStackTrace();
-//					final byte[] encryptedAndSigned = repoTransport.encryptAndSign(plainText, keyParameter);
-					final byte[] decrypted = repoTransport.verifyAndDecrypt(encryptedAndSigned, keyParameter, userRepoKeyPublicKeyLookup);
-					assertThat(decrypted).isEqualTo(plainText);
-					System.out.println("*** *** ***");
-					System.out.println("*** *** ***");
-					System.out.println("*** *** ***");
-					System.out.println("The 2nd try worked without error!");
-					fail("The 2nd try worked without error!");
-				}
+				final byte[] decrypted = repoTransport.verifyAndDecrypt(encryptedAndSigned, keyParameter, userRepoKeyPublicKeyLookup);
+				assertThat(decrypted).isEqualTo(plainText);
 
-//				assertThat(decrypted).isEqualTo(plainText);
 				System.out.println();
 			}
 		} finally {

@@ -29,6 +29,7 @@ import org.subshare.core.sign.SignableSigner;
 import org.subshare.core.sign.SignerOutputStream;
 import org.subshare.core.sign.VerifierInputStream;
 import org.subshare.core.user.UserRepoKey;
+import org.subshare.core.user.UserRepoKey.PublicKey;
 import org.subshare.core.user.UserRepoKeyPublicKeyLookup;
 import org.subshare.core.user.UserRepoKeyRing;
 import org.subshare.rest.client.transport.command.SsBeginPutFile;
@@ -39,6 +40,7 @@ import org.subshare.rest.client.transport.command.PutCryptoChangeSetDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import co.codewizards.cloudstore.core.auth.SignatureException;
 import co.codewizards.cloudstore.core.dto.ChangeSetDto;
 import co.codewizards.cloudstore.core.dto.ModificationDto;
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
@@ -317,7 +319,26 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 		}
 	}
 
-	protected byte[] encryptAndSign(final byte[] plainText, final KeyParameter keyParameter) {
+	protected byte[] encryptAndSign(final byte[] plainText, final KeyParameter keyParameter) { // TODO BC-BUG: Remove this workaround after BC was upgraded
+		byte[] result = _encryptAndSign(plainText, keyParameter);
+		try {
+			verifyAndDecrypt(result, keyParameter, new UserRepoKeyPublicKeyLookup() {
+				@Override
+				public PublicKey getUserRepoKeyPublicKey(final Uid userRepoKeyId) {
+					final UserRepoKey userRepoKey = getUserRepoKey();
+					if (!userRepoKeyId.equals(userRepoKey.getUserRepoKeyId()))
+						throw new IllegalStateException(String.format("userRepoKeyId != userRepoKey.userRepoKeyId :: ", userRepoKeyId, userRepoKey.getUserRepoKeyId()));
+
+					return userRepoKey.getPublicKey();
+				}
+			});
+		} catch (final SignatureException x) {
+			result = _encryptAndSign(plainText, keyParameter);
+		}
+		return result;
+	}
+
+	protected byte[] _encryptAndSign(final byte[] plainText, final KeyParameter keyParameter) {
 		final ByteArrayOutputStream bout = new ByteArrayOutputStream();
 		try {
 			try (SignerOutputStream signerOut = new SignerOutputStream(bout, getUserRepoKey())) {
