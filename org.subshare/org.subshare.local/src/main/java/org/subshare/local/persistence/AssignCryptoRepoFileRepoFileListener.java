@@ -27,7 +27,6 @@ public class AssignCryptoRepoFileRepoFileListener extends AbstractLocalRepoTrans
 		final LocalRepoTransaction tx = getTransactionOrFail();
 		final PersistenceManager pm = ((ContextWithPersistenceManager)tx).getPersistenceManager();
 		pm.addInstanceLifecycleListener(this, RepoFile.class);
-		tx.setContextObject(this);
 	}
 
 	@Override

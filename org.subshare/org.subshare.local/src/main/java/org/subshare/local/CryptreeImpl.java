@@ -8,7 +8,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -30,7 +29,6 @@ import org.subshare.core.sign.Signature;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKeyPublicKeyLookup;
 import org.subshare.core.user.UserRepoKeyRing;
-import org.subshare.local.persistence.AssignCryptoRepoFileRepoFileListener;
 import org.subshare.local.persistence.SsLocalRepository;
 import org.subshare.local.persistence.CryptoKey;
 import org.subshare.local.persistence.CryptoKeyDao;
@@ -50,6 +48,8 @@ import org.subshare.local.persistence.RepositoryOwnerDao;
 import org.subshare.local.persistence.UserRepoKeyPublicKey;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyDao;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyLookupImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
 import co.codewizards.cloudstore.core.dto.Uid;
@@ -63,6 +63,9 @@ import co.codewizards.cloudstore.local.persistence.RepoFile;
 import co.codewizards.cloudstore.local.persistence.RepoFileDao;
 
 public class CryptreeImpl extends AbstractCryptree {
+
+	private static final Logger logger = LoggerFactory.getLogger(CryptreeImpl.class);
+
 	private final Map<String, CryptreeNode> localPath2CryptreeNode = new HashMap<>();
 	private final Map<Uid, CryptreeNode> cryptoRepoFileId2CryptreeNode = new HashMap<>();
 
@@ -195,7 +198,6 @@ public class CryptreeImpl extends AbstractCryptree {
 
 		final Map<CryptoRepoFileDto, CryptoRepoFile> cryptoRepoFileDto2CryptoRepoFile = new HashMap<>();
 		final Map<Uid, CryptoKey> cryptoKeyId2CryptoKey = new HashMap<>();
-		final Set<CryptoKey> cryptoKeysNeedingNewSignature = new HashSet<CryptoKey>();
 
 		// This order is important, because the keys must first be persisted, before links or file-meta-data can reference them.
 		for (final UserRepoKeyPublicKeyDto userRepoKeyPublicKeyDto : cryptoChangeSetDto.getUserRepoKeyPublicKeyDtos())
@@ -205,7 +207,7 @@ public class CryptreeImpl extends AbstractCryptree {
 			cryptoRepoFileDto2CryptoRepoFile.put(cryptoRepoFileDto, putCryptoRepoFileDto(cryptoRepoFileDto));
 
 		for (final CryptoKeyDto cryptoKeyDto : cryptoChangeSetDto.getCryptoKeyDtos()) {
-			final CryptoKey cryptoKey = putCryptoKeyDto(cryptoKeyDto, cryptoKeysNeedingNewSignature);
+			final CryptoKey cryptoKey = putCryptoKeyDto(cryptoKeyDto);
 			cryptoKeyId2CryptoKey.put(cryptoKey.getCryptoKeyId(), cryptoKey);
 		}
 
@@ -251,23 +253,6 @@ public class CryptreeImpl extends AbstractCryptree {
 			putPermissionDto(permissionDto);
 
 		transaction.flush();
-
-		if (! cryptoKeysNeedingNewSignature.isEmpty()) {
-			if (isOnServer())
-				throw new IllegalStateException("isOnServer() && ! cryptoKeysNeedingNewSignature.isEmpty()");
-
-			final AssignCryptoRepoFileRepoFileListener listener = transaction.getContextObject(AssignCryptoRepoFileRepoFileListener.class);
-			assertNotNull("transaction.getContextObject(AssignCryptoRepoFileRepoFileListener.class)", listener);
-			listener.assignCryptoRepoFileRepoFile();
-
-			for (final CryptoKey cryptoKey : cryptoKeysNeedingNewSignature) {
-				final RepoFile repoFile = assertNotNull("cryptoKey.cryptoRepoFile.repoFile", cryptoKey.getCryptoRepoFile().getRepoFile());
-				final UserRepoKey userRepoKey = getUserRepoKeyForGrantOrFail(repoFile.getPath());
-				getCryptreeContext().getSignableSigner(userRepoKey).sign(cryptoKey);
-			}
-
-			transaction.flush();
-		}
 	}
 
 	@Override
@@ -446,26 +431,33 @@ public class CryptreeImpl extends AbstractCryptree {
 		return userRepoKeyPublicKeyDao.makePersistent(userRepoKeyPublicKey);
 	}
 
-	private CryptoKey putCryptoKeyDto(final CryptoKeyDto cryptoKeyDto, final Set<CryptoKey> cryptoKeysNeedingNewSignature) {
+	private CryptoKey putCryptoKeyDto(final CryptoKeyDto cryptoKeyDto) {
 		assertNotNull("cryptoKeyDto", cryptoKeyDto);
 		final LocalRepoTransaction transaction = getTransactionOrFail();
 		final CryptoKeyDao cryptoKeyDao = transaction.getDao(CryptoKeyDao.class);
 		final CryptoRepoFileDao cryptoRepoFileDao = transaction.getDao(CryptoRepoFileDao.class);
 
 		final Uid cryptoKeyId = assertNotNull("cryptoKeyDto.cryptoKeyId", cryptoKeyDto.getCryptoKeyId());
-		boolean modified = false;
 		CryptoKey cryptoKey = cryptoKeyDao.getCryptoKey(cryptoKeyId);
-		if (cryptoKey == null)
+		final boolean cryptoKeyIsNew;
+		if (cryptoKey == null) {
+			cryptoKeyIsNew = true;
 			cryptoKey = new CryptoKey(cryptoKeyId);
+		}
+		else
+			cryptoKeyIsNew = false;
 
-		// Because of the signature, we cannot modify anything on the server side!
-		if (isOnServer())
-			cryptoKey.setActive(cryptoKeyDto.isActive());
-		else if (! cryptoKeyDto.isActive()) // it's a one-way change - we never re-activate a key.
-			cryptoKey.setActive(false);
+		// It is necessary to prevent a collision and ensure that the 'active' property cannot be reverted.
+		if (cryptoKeyDto.isActive() && ! cryptoKey.isActive()) {
+			logger.warn("putCryptoKeyDto: Rejecting to re-activate CryptoKey! Keeping (and re-publishing) previous state: {}", cryptoKey);
+			cryptoKey.setChanged(new Date()); // only to make it dirty => force new localRevision => force sync.
+			if (cryptoKeyIsNew)
+				throw new IllegalStateException("Cannot reject, because the CryptoKey is new! " + cryptoKey);
 
-		modified |= cryptoKeyDto.isActive() != cryptoKey.isActive();
+			return cryptoKey;
+		}
 
+		cryptoKey.setActive(cryptoKeyDto.isActive());
 		cryptoKey.setCryptoKeyRole(cryptoKeyDto.getCryptoKeyRole());
 		cryptoKey.setCryptoKeyType(cryptoKeyDto.getCryptoKeyType());
 
@@ -479,8 +471,6 @@ public class CryptreeImpl extends AbstractCryptree {
 		assertNotNull("cryptoKeyDto.signature.signatureData", cryptoKeyDto.getSignature().getSignatureData());
 
 		cryptoKey.setSignature(cryptoKeyDto.getSignature());
-		if (modified) // the signature is broken => we must re-sign, but we cannot do this now - we must do it later.
-			cryptoKeysNeedingNewSignature.add(cryptoKey);
 
 		return cryptoKeyDao.makePersistent(cryptoKey);
 	}
