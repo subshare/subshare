@@ -41,7 +41,7 @@ public class SignerVerifierStreamTest extends AbstractTest {
 	public static void beforeClass() {
 		repositoryId = UUID.randomUUID();
 		userRepoKeyRing = createUserRepoKeyRing(repositoryId);
-		userRepoKey = userRepoKeyRing.getRandomUserRepoKeyOrFail(repositoryId);
+		userRepoKey = userRepoKeyRing.getUserRepoKeys(repositoryId).get(0);
 		userRepoKeyPublicKeyLookup = new UserRepoKeyPublicKeyLookup() {
 			@Override
 			public PublicKey getUserRepoKeyPublicKey(final Uid userRepoKeyId) {
@@ -131,7 +131,7 @@ public class SignerVerifierStreamTest extends AbstractTest {
 
 	@Test
 	public void signRsaWithSha1() throws Exception {
-		for (int l = 0; l < 100; ++l) {
+		for (int l = 0; l < 5; ++l) {
 			System.out.println("signRsaWithSha1 run #" + (l + 1));
 			final Signer signer1 = CryptoRegistry.getInstance().createSigner(SignerTransformation.RSA_SHA1.getTransformation());
 			final Signer signer2 = CryptoRegistry.getInstance().createSigner(SignerTransformation.RSA_SHA1.getTransformation());
@@ -165,7 +165,7 @@ public class SignerVerifierStreamTest extends AbstractTest {
 
 	@Test
 	public void signAndVerifyRandomManySmall() throws Exception {
-		for (int i = 0; i < 1000; ++i) {
+		for (int i = 0; i < 100; ++i) {
 			System.out.println("signAndVerifyRandomManySmall run #" + (i + 1));
 			final byte[][] plainAndSigned = createRandomSignedData(1);
 			final byte[] plain = plainAndSigned[0];

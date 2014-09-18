@@ -16,7 +16,6 @@ import org.subshare.core.CryptreeFactoryRegistry;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.user.User;
 import org.subshare.core.user.UserRegistry;
-import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKeyRing;
 
 import co.codewizards.cloudstore.core.config.ConfigDir;
@@ -99,9 +98,9 @@ public abstract class AbstractTest {
 		return LocalRepoManagerFactory.Helper.getInstance().createLocalRepoManagerForExistingRepository(localRoot);
 	}
 
-	protected static Cryptree createCryptree(final LocalRepoTransaction transaction, final UUID remoteRepositoryId, final String remotePathPrefix, final UserRepoKey userRepoKey) {
+	protected static Cryptree createCryptree(final LocalRepoTransaction transaction, final UUID remoteRepositoryId, final String remotePathPrefix, final UserRepoKeyRing userRepoKeyRing) {
 		return CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail().createCryptree(
-				transaction, remoteRepositoryId, remotePathPrefix, userRepoKey);
+				transaction, remoteRepositoryId, remotePathPrefix, userRepoKeyRing);
 	}
 
 	protected void createDirectoriesAndFiles(final File localRoot, final String ... localPaths) throws IOException {

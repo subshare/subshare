@@ -60,7 +60,7 @@ import co.codewizards.cloudstore.rest.client.CloudStoreRestClient;
 public class CryptreeRepoTransport extends AbstractRepoTransport implements ContextWithLocalRepoManager {
 	private static final Logger logger = LoggerFactory.getLogger(CryptreeRepoTransport.class);
 
-	private UserRepoKey userRepoKey;
+//	private UserRepoKey userRepoKey;
 	private CryptreeFactory cryptreeFactory;
 	private RestRepoTransport restRepoTransport;
 	private LocalRepoManager localRepoManager;
@@ -185,6 +185,7 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 				final CryptoChangeSetDto cryptoChangeSetDto = cryptree.createOrUpdateCryptoRepoFile(path);
 				putCryptoChangeSetDto(cryptoChangeSetDto);
 				cryptree.updateLastCryptoKeySyncToRemoteRepo();
+				final UserRepoKey userRepoKey = cryptree.getUserRepoKeyForWriteOrFail(path);
 
 				final String serverPath = cryptree.getServerPath(path);
 
@@ -196,7 +197,7 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 				final File pf = f.getParentFile();
 				directoryDto.setParentName(pf == null ? null : pf.getName());
 
-				final SignableSigner signableSigner = new SignableSigner(getUserRepoKey());
+				final SignableSigner signableSigner = new SignableSigner(userRepoKey);
 				signableSigner.sign(directoryDto);
 
 				getClient().execute(new SsMakeDirectory(getRepositoryId().toString(), serverPath, new Date(0), directoryDto));
@@ -209,16 +210,16 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 		if (cryptreeFactory == null)
 			cryptreeFactory = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail();
 
-		return cryptreeFactory.createCryptree(transaction, getRepositoryId(), getPathPrefix(), getUserRepoKey());
+		return cryptreeFactory.createCryptree(transaction, getRepositoryId(), getPathPrefix(), getUserRepoKeyRing());
 	}
 
-	protected UserRepoKey getUserRepoKey() {
-		if (userRepoKey == null) { // we must use the same key for all operations during one sync - otherwise an attacker might find out which keys belong to the same keyring and thus same owner.
-			final UserRepoKeyRing userRepoKeyRing = getUserRepoKeyRing();
-			userRepoKey = userRepoKeyRing.getRandomUserRepoKeyOrFail(getRepositoryId());
-		}
-		return userRepoKey;
-	}
+//	protected UserRepoKey getUserRepoKey() {
+//		if (userRepoKey == null) { // we must use the same key for all operations during one sync - otherwise an attacker might find out which keys belong to the same keyring and thus same owner.
+//			final UserRepoKeyRing userRepoKeyRing = getUserRepoKeyRing();
+//			userRepoKey = userRepoKeyRing.getRandomUserRepoKeyOrFail(getRepositoryId());
+//		}
+//		return userRepoKey;
+//	}
 
 	protected UserRepoKeyRing getUserRepoKeyRing() {
 		return assertNotNull("cryptreeRepoTransportFactory.userRepoKeyRing", getRepoTransportFactory().getUserRepoKeyRing());
@@ -280,6 +281,7 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 				final CryptoChangeSetDto cryptoChangeSetDto = cryptree.createOrUpdateCryptoRepoFile(path);
 				putCryptoChangeSetDto(cryptoChangeSetDto);
 				cryptree.updateLastCryptoKeySyncToRemoteRepo();
+				final UserRepoKey userRepoKey = cryptree.getUserRepoKeyForWriteOrFail(path);
 
 				final String serverPath = cryptree.getServerPath(path);
 
@@ -291,7 +293,7 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 				final File pf = f.getParentFile();
 				normalFileDto.setParentName(pf == null ? null : pf.getName());
 
-				final SignableSigner signableSigner = new SignableSigner(getUserRepoKey());
+				final SignableSigner signableSigner = new SignableSigner(userRepoKey);
 				signableSigner.sign(normalFileDto);
 
 				getClient().execute(new SsBeginPutFile(getRepositoryId().toString(), serverPath, normalFileDto));
@@ -306,7 +308,8 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 		try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
 			try (final Cryptree cryptree = createCryptree(transaction);) {
 				final KeyParameter dataKey = cryptree.getDataKeyOrFail(path);
-				final byte[] encryptedFileData = encryptAndSign(fileData, dataKey);
+				final UserRepoKey userRepoKey = cryptree.getUserRepoKeyForWriteOrFail(path);
+				final byte[] encryptedFileData = encryptAndSign(fileData, dataKey, userRepoKey);
 				// TODO maybe we store only one IV per file and derive the chunk's IV from this combined with the offset (and all hashed)? this could save valuable entropy and should still be secure - maybe later.
 
 				// TODO we *MUST* store the file chunks server-side in separate chunk-files permanently!
@@ -319,29 +322,28 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 		}
 	}
 
-	protected byte[] encryptAndSign(final byte[] plainText, final KeyParameter keyParameter) { // TODO BC-BUG: Remove this workaround after BC was upgraded
-		byte[] result = _encryptAndSign(plainText, keyParameter);
+	protected byte[] encryptAndSign(final byte[] plainText, final KeyParameter keyParameter, final UserRepoKey signingUserRepoKey) { // TODO BC-BUG: Remove this workaround after BC was upgraded
+		byte[] result = _encryptAndSign(plainText, keyParameter, signingUserRepoKey);
 		try {
 			verifyAndDecrypt(result, keyParameter, new UserRepoKeyPublicKeyLookup() {
 				@Override
 				public PublicKey getUserRepoKeyPublicKey(final Uid userRepoKeyId) {
-					final UserRepoKey userRepoKey = getUserRepoKey();
-					if (!userRepoKeyId.equals(userRepoKey.getUserRepoKeyId()))
-						throw new IllegalStateException(String.format("userRepoKeyId != userRepoKey.userRepoKeyId :: ", userRepoKeyId, userRepoKey.getUserRepoKeyId()));
+					if (!userRepoKeyId.equals(signingUserRepoKey.getUserRepoKeyId()))
+						throw new IllegalStateException(String.format("userRepoKeyId != signingUserRepoKey.userRepoKeyId :: ", userRepoKeyId, signingUserRepoKey.getUserRepoKeyId()));
 
-					return userRepoKey.getPublicKey();
+					return signingUserRepoKey.getPublicKey();
 				}
 			});
 		} catch (final SignatureException x) {
-			result = _encryptAndSign(plainText, keyParameter);
+			result = _encryptAndSign(plainText, keyParameter, signingUserRepoKey);
 		}
 		return result;
 	}
 
-	protected byte[] _encryptAndSign(final byte[] plainText, final KeyParameter keyParameter) {
+	protected byte[] _encryptAndSign(final byte[] plainText, final KeyParameter keyParameter, final UserRepoKey signingUserRepoKey) {
 		final ByteArrayOutputStream bout = new ByteArrayOutputStream();
 		try {
-			try (SignerOutputStream signerOut = new SignerOutputStream(bout, getUserRepoKey())) {
+			try (SignerOutputStream signerOut = new SignerOutputStream(bout, signingUserRepoKey)) {
 				try (
 						final EncrypterOutputStream encrypterOut = new EncrypterOutputStream(signerOut,
 								getSymmetricCipherTransformation(),

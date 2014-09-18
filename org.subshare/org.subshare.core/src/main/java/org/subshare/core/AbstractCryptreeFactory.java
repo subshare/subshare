@@ -4,7 +4,7 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.util.UUID;
 
-import org.subshare.core.user.UserRepoKey;
+import org.subshare.core.user.UserRepoKeyRing;
 
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
 
@@ -22,17 +22,17 @@ public abstract class AbstractCryptreeFactory implements CryptreeFactory {
 		final Cryptree cryptree = _createCryptree();
 		cryptree.setCryptreeFactory(this);
 		cryptree.setTransaction(transaction);
-		cryptree.setServerRepositoryId(remoteRepositoryId);
+		cryptree.setRemoteRepositoryId(remoteRepositoryId);
 		return cryptree;
 	}
 
 	@Override
-	public Cryptree createCryptree(final LocalRepoTransaction transaction, final UUID remoteRepositoryId, final String remotePathPrefix, final UserRepoKey userRepoKey) {
+	public Cryptree createCryptree(final LocalRepoTransaction transaction, final UUID remoteRepositoryId, final String remotePathPrefix, final UserRepoKeyRing userRepoKeyRing) {
 		final Cryptree cryptree = createCryptree(transaction, remoteRepositoryId);
 		assertNotNull("remotePathPrefix", remotePathPrefix);
-		assertNotNull("userRepoKey", userRepoKey);
-		cryptree.setUserRepoKey(userRepoKey);
-		cryptree.setServerPathPrefix(remotePathPrefix);
+		assertNotNull("userRepoKeyRing", userRepoKeyRing);
+		cryptree.setUserRepoKeyRing(userRepoKeyRing);
+		cryptree.setRemotePathPrefix(remotePathPrefix);
 		return cryptree;
 	}
 

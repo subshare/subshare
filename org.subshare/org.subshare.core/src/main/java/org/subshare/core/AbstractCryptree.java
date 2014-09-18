@@ -5,7 +5,6 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.util.UUID;
 
-import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKeyRing;
 
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
@@ -14,8 +13,8 @@ public abstract class AbstractCryptree implements Cryptree {
 
 	private CryptreeFactory cryptreeFactory;
 	private LocalRepoTransaction transaction;
-	private UserRepoKey userRepoKey;
-	private UUID serverRepositoryId;
+	private UserRepoKeyRing userRepoKeyRing;
+	private UUID remoteRepositoryId;
 	private String remotePathPrefix;
 
 	@Override
@@ -46,47 +45,49 @@ public abstract class AbstractCryptree implements Cryptree {
 	}
 
 	@Override
-	public UserRepoKey getUserRepoKey() {
-		return userRepoKey;
+	public UserRepoKeyRing getUserRepoKeyRing() {
+		return userRepoKeyRing;
 	}
 	@Override
-	public void setUserRepoKey(final UserRepoKey userRepoKey) {
-		this.userRepoKey = userRepoKey;
+	public void setUserRepoKeyRing(final UserRepoKeyRing userRepoKeyRing) {
+		this.userRepoKeyRing = userRepoKeyRing;
 	}
-	protected UserRepoKey getUserRepoKeyOrFail() {
-		return assertNotNull("getUserRepoKey()", getUserRepoKey());
-	}
+//	protected UserRepoKey getUserRepoKeyOrFail() {
+//		return assertNotNull("getUserRepoKey()", getUserRepoKeyRing());
+//	}
 
 	protected UserRepoKeyRing getUserRepoKeyRingOrFail() {
-		return assertNotNull("getUserRepoKeyOrFail().getUserRepoKeyRing()", getUserRepoKeyOrFail().getUserRepoKeyRing());
-	}
-
-	public UUID getServerRepositoryId() {
-		return serverRepositoryId;
-	}
-	public void setServerRepositoryId(final UUID serverRepositoryId) {
-		if (this.serverRepositoryId != null && !this.serverRepositoryId.equals(serverRepositoryId))
-			throw new IllegalStateException("this.remoteRepositoryId already assigned! Cannot modify after initial assignment!");
-
-		this.serverRepositoryId = serverRepositoryId;
-	}
-	protected UUID getServerRepositoryIdOrFail() {
-		return assertNotNull("getRemoteRepositoryId()", getServerRepositoryId());
+		return assertNotNull("getUserRepoKeyRing()", getUserRepoKeyRing());
 	}
 
 	@Override
-	public String getServerPathPrefix() {
+	public UUID getRemoteRepositoryId() {
+		return remoteRepositoryId;
+	}
+	@Override
+	public void setRemoteRepositoryId(final UUID serverRepositoryId) {
+		if (this.remoteRepositoryId != null && !this.remoteRepositoryId.equals(serverRepositoryId))
+			throw new IllegalStateException("this.remoteRepositoryId already assigned! Cannot modify after initial assignment!");
+
+		this.remoteRepositoryId = serverRepositoryId;
+	}
+	protected UUID getRemoteRepositoryIdOrFail() {
+		return assertNotNull("getRemoteRepositoryId()", getRemoteRepositoryId());
+	}
+
+	@Override
+	public String getRemotePathPrefix() {
 		return remotePathPrefix;
 	}
 	@Override
-	public void setServerPathPrefix(final String remotePathPrefix) {
+	public void setRemotePathPrefix(final String remotePathPrefix) {
 		if (this.remotePathPrefix != null && !this.remotePathPrefix.equals(remotePathPrefix))
 			throw new IllegalStateException("this.remotePathPrefix already assigned! Cannot modify after initial assignment!");
 
 		this.remotePathPrefix = remotePathPrefix;
 	}
 	protected String getRemotePathPrefixOrFail() {
-		return assertNotNull("getRemotePathPrefix()", getServerPathPrefix());
+		return assertNotNull("getRemotePathPrefix()", getRemotePathPrefix());
 	}
 
 	@Override

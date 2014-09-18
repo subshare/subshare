@@ -11,6 +11,7 @@ import org.subshare.core.dto.CryptoRepoFileDto;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKey.PublicKey;
 import org.subshare.core.user.UserRepoKeyPublicKeyLookup;
+import org.subshare.core.user.UserRepoKeyRing;
 
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
 import co.codewizards.cloudstore.core.dto.Uid;
@@ -24,14 +25,14 @@ public interface Cryptree extends AutoCloseable {
 	LocalRepoTransaction getTransaction();
 	void setTransaction(LocalRepoTransaction transaction);
 
-	UserRepoKey getUserRepoKey();
-	void setUserRepoKey(UserRepoKey userRepoKey);
+	UserRepoKeyRing getUserRepoKeyRing();
+	void setUserRepoKeyRing(UserRepoKeyRing userRepoKeyRing);
 
-	UUID getServerRepositoryId();
-	void setServerRepositoryId(UUID serverRepositoryId);
+	UUID getRemoteRepositoryId();
+	void setRemoteRepositoryId(UUID serverRepositoryId);
 
-	String getServerPathPrefix();
-	void setServerPathPrefix(String remotePathPrefix);
+	String getRemotePathPrefix();
+	void setRemotePathPrefix(String remotePathPrefix);
 
 	@Override
 	void close();
@@ -110,4 +111,10 @@ public interface Cryptree extends AutoCloseable {
 
 	void grantWritePermission(String localPath, PublicKey userRepoKeyPublicKey);
 	void revokeWritePermission(String localPath, Set<Uid> userRepoKeyIds);
+
+	UserRepoKey getUserRepoKeyForGrant(String localPath);
+	UserRepoKey getUserRepoKeyForGrantOrFail(String localPath) throws GrantAccessDeniedException;
+
+	UserRepoKey getUserRepoKeyForWrite(String localPath);
+	UserRepoKey getUserRepoKeyForWriteOrFail(String localPath) throws WriteAccessDeniedException;
 }

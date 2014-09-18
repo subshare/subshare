@@ -1,8 +1,11 @@
 package org.subshare.local.persistence;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static co.codewizards.cloudstore.core.util.Util.*;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import javax.jdo.Query;
 
@@ -83,6 +86,16 @@ public class CryptoLinkDao extends Dao<CryptoLink, CryptoLinkDao> {
 		} finally {
 			query.closeAll();
 		}
+	}
+
+	public Collection<CryptoLink> getActiveCryptoLinks(final CryptoRepoFile toCryptoRepoFile, final CryptoKeyRole toCryptoKeyRole, final CryptoKeyPart toCryptoKeyPart, final UserRepoKeyPublicKey fromUserRepoKeyPublicKey) {
+		// TODO maybe add new DB query? even though this post-filtering should be pretty fast, too, as there are likely not many results.
+		final List<CryptoLink> result = new ArrayList<CryptoLink>();
+		for (final CryptoLink cryptoLink : getActiveCryptoLinks(toCryptoRepoFile, toCryptoKeyRole, toCryptoKeyPart)) {
+			if (equal(fromUserRepoKeyPublicKey, cryptoLink.getFromUserRepoKeyPublicKey()))
+				result.add(cryptoLink);
+		}
+		return result;
 	}
 
 //	public Collection<CryptoLink> getActiveCryptoLinks(final CryptoRepoFile toCryptoRepoFile, final CryptoKeyRole toCryptoKeyRole, final Uid fromUserRepoKeyId) {

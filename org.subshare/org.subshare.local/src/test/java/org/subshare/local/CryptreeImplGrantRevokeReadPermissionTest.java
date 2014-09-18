@@ -86,7 +86,7 @@ public class CryptreeImplGrantRevokeReadPermissionTest extends AbstractPermissio
 		try (LocalRepoManager localRepoManager = createLocalRepoManagerForExistingRepository(localRoot);) {
 			localRepoManager.localSync(new LoggerProgressMonitor(logger));
 			try (LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
-				try (Cryptree cryptree = createCryptree(transaction, remoteRepositoryId, "", userRepoKeyRing.getRandomUserRepoKeyOrFail(remoteRepositoryId));) {
+				try (Cryptree cryptree = createCryptree(transaction, remoteRepositoryId, "", userRepoKeyRing);) {
 					for (String localPath : localPaths) {
 						localPath = removeFinalSlash(localPath);
 						try {
@@ -117,7 +117,7 @@ public class CryptreeImplGrantRevokeReadPermissionTest extends AbstractPermissio
 		try (LocalRepoManager localRepoManager = createLocalRepoManagerForExistingRepository(localRoot);) {
 			localRepoManager.localSync(new LoggerProgressMonitor(logger));
 			try (LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
-				try (Cryptree cryptree = createCryptree(transaction, remoteRepositoryId, "", userRepoKeyRing.getRandomUserRepoKeyOrFail(remoteRepositoryId));) {
+				try (Cryptree cryptree = createCryptree(transaction, remoteRepositoryId, "", userRepoKeyRing);) {
 					for (String localPath : localPaths) {
 						localPath = removeFinalSlash(localPath);
 						try {
@@ -144,7 +144,7 @@ public class CryptreeImplGrantRevokeReadPermissionTest extends AbstractPermissio
 		try (LocalRepoManager localRepoManager = createLocalRepoManagerForExistingRepository(localRoot);) {
 			localRepoManager.localSync(new LoggerProgressMonitor(logger));
 			try (LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
-				try (Cryptree cryptree = createCryptree(transaction, remoteRepositoryId, "", userRepoKeyRing.getRandomUserRepoKeyOrFail(remoteRepositoryId));) {
+				try (Cryptree cryptree = createCryptree(transaction, remoteRepositoryId, "", userRepoKeyRing);) {
 					for (String localPath : localPaths) {
 						localPath = removeFinalSlash(localPath);
 						try {

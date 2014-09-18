@@ -54,6 +54,7 @@ public class CryptreeRepoTransportTest {
 			};
 
 			final KeyParameter keyParameter = KeyFactory.getInstance().createSymmetricKey();
+			final UserRepoKey signingUserRepoKey = userRepoKeyRing.getUserRepoKeys(serverRepositoryId).get(0);
 
 			for (int i = 0; i < 100; ++i) {
 				final int length = 1 + random.nextInt(1024 * 1024);
@@ -62,7 +63,7 @@ public class CryptreeRepoTransportTest {
 				final byte[] plainText = new byte[length];
 				random.nextBytes(plainText);
 
-				final byte[] encryptedAndSigned = repoTransport.encryptAndSign(plainText, keyParameter);
+				final byte[] encryptedAndSigned = repoTransport.encryptAndSign(plainText, keyParameter, signingUserRepoKey);
 				final byte[] decrypted = repoTransport.verifyAndDecrypt(encryptedAndSigned, keyParameter, userRepoKeyPublicKeyLookup);
 				assertThat(decrypted).isEqualTo(plainText);
 

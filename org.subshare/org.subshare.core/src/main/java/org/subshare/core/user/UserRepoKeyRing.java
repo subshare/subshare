@@ -2,7 +2,6 @@ package org.subshare.core.user;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -15,10 +14,7 @@ import co.codewizards.cloudstore.core.dto.Uid;
 
 public class UserRepoKeyRing {
 
-	private static SecureRandom random = new SecureRandom();
-
-//	private final List<Long> pgpKeyIds = new ArrayList<Long>();
-//	private List<Long> _pgpKeyIds;
+//	private static SecureRandom random = new SecureRandom();
 
 	private final Map<Uid, UserRepoKey> userRepoKeyId2UserRepoKey = new HashMap<>();
 	private final Map<UUID, List<UserRepoKey>> repositoryId2userRepoKeyList = new HashMap<>();
@@ -27,57 +23,45 @@ public class UserRepoKeyRing {
 		return Collections.unmodifiableCollection(userRepoKeyId2UserRepoKey.values());
 	}
 
-	public Collection<UserRepoKey> getUserRepoKeys(final UUID repositoryId) {
-		return getUserRepoKeyList(repositoryId);
+	public List<UserRepoKey> getUserRepoKeys(final UUID serverRepositoryId) {
+		return getUserRepoKeyList(serverRepositoryId);
 	}
 
-	protected synchronized List<UserRepoKey> getUserRepoKeyList(final UUID repositoryId) {
-		assertNotNull("repositoryId", repositoryId);
-		List<UserRepoKey> userRepoKeyList = repositoryId2userRepoKeyList.get(repositoryId);
+	protected synchronized List<UserRepoKey> getUserRepoKeyList(final UUID serverRepositoryId) {
+		assertNotNull("repositoryId", serverRepositoryId);
+		List<UserRepoKey> userRepoKeyList = repositoryId2userRepoKeyList.get(serverRepositoryId);
 
 		if (userRepoKeyList == null) {
-			userRepoKeyList = Collections.unmodifiableList(new ArrayList<UserRepoKey>(userRepoKeyId2UserRepoKey.values()));
-			repositoryId2userRepoKeyList.put(repositoryId, userRepoKeyList);
+			final ArrayList<UserRepoKey> l = new ArrayList<UserRepoKey>(userRepoKeyId2UserRepoKey.values());
+			Collections.shuffle(l);
+			userRepoKeyList = Collections.unmodifiableList(l);
+			repositoryId2userRepoKeyList.put(serverRepositoryId, userRepoKeyList);
 		}
 
 		return userRepoKeyList;
 	}
 
-//	public synchronized Collection<Long> getPgpKeyIds() {
-//		if (_pgpKeyIds == null)
-//			_pgpKeyIds = Collections.unmodifiableList(new ArrayList<Long>(pgpKeyIds));
-//
-//		return _pgpKeyIds;
-//	}
-//
-//	public synchronized void addPgpKeyId(final long pgpKeyId) {
-//		if (!pgpKeyIds.contains(pgpKeyId)) {
-//			pgpKeyIds.add(pgpKeyId);
-//			_pgpKeyIds = null;
-//		}
-//	}
-//
-//	public synchronized void removePgpKeyId(final long pgpKeyId) {
-//		pgpKeyIds.remove(Long.valueOf(pgpKeyId));
-//		_pgpKeyIds = null;
-//	}
-
-	public UserRepoKey getRandomUserRepoKey(final UUID repositoryId) {
-		final List<UserRepoKey> list = getUserRepoKeyList(repositoryId);
-		if (list.isEmpty())
-			return null;
-
-		final UserRepoKey userRepoKey = list.get(random.nextInt(list.size()));
-		return userRepoKey;
+	protected synchronized void shuffleUserRepoKeys(final UUID serverRepositoryId) {
+		// The entries are shuffled in getUserRepoKeyList(...) - we thus simply clear this cache here.
+		repositoryId2userRepoKeyList.remove(serverRepositoryId);
 	}
 
-	public UserRepoKey getRandomUserRepoKeyOrFail(final UUID repositoryId) {
-		final UserRepoKey userRepoKey = getRandomUserRepoKey(repositoryId);
-		if (userRepoKey == null)
-			throw new IllegalStateException(String.format("This UserRepoKeyRing does not contain any entry for repositoryId=%s!", repositoryId));
-
-		return userRepoKey;
-	}
+//	public UserRepoKey getRandomUserRepoKey(final UUID serverRepositoryId) {
+//		final List<UserRepoKey> list = getUserRepoKeyList(serverRepositoryId);
+//		if (list.isEmpty())
+//			return null;
+//
+//		final UserRepoKey userRepoKey = list.get(random.nextInt(list.size()));
+//		return userRepoKey;
+//	}
+//
+//	public UserRepoKey getRandomUserRepoKeyOrFail(final UUID serverRepositoryId) {
+//		final UserRepoKey userRepoKey = getRandomUserRepoKey(serverRepositoryId);
+//		if (userRepoKey == null)
+//			throw new IllegalStateException(String.format("This UserRepoKeyRing does not contain any entry for repositoryId=%s!", serverRepositoryId));
+//
+//		return userRepoKey;
+//	}
 
 	public synchronized void addUserRepoKey(final UserRepoKey userRepoKey) {
 		assertNotNull("userRepoKey", userRepoKey);

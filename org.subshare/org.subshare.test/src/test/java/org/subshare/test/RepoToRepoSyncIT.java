@@ -50,7 +50,6 @@ public class RepoToRepoSyncIT extends AbstractIT {
 	private URL remoteRootURLWithPathPrefixForLocalDest;
 
 	private UserRepoKeyRing ownerUserRepoKeyRing;
-	private UserRepoKey ownerUserRepoKey;
 
 	@Before
 	public void before() {
@@ -132,7 +131,7 @@ public class RepoToRepoSyncIT extends AbstractIT {
 
 			final UserRepoKeyRing otherUserRepoKeyRing = createUserRepoKeyRing();
 			grantRemotePathPrefix2EncryptedReadAccessToOtherUser(
-					otherUserRepoKeyRing.getRandomUserRepoKey(remoteRepositoryId).getPublicKey());
+					otherUserRepoKeyRing.getUserRepoKeys(remoteRepositoryId).get(0).getPublicKey());
 
 			createFileWithRandomContent(localSrcRoot, "xxxxxxx");
 
@@ -188,11 +187,11 @@ public class RepoToRepoSyncIT extends AbstractIT {
 
 		final UserRepoKeyRing otherUserRepoKeyRing1 = createUserRepoKeyRing();
 		final UserRepoKeyRing otherUserRepoKeyRing2 = createUserRepoKeyRing();
-		final PublicKey publicKey1 = otherUserRepoKeyRing1.getRandomUserRepoKey(remoteRepositoryId).getPublicKey();
+		final PublicKey publicKey1 = otherUserRepoKeyRing1.getUserRepoKeys(remoteRepositoryId).get(0).getPublicKey();
 		grantRemotePathPrefix2EncryptedReadAccessToOtherUser(
 				publicKey1);
 		grantRemotePathPrefix2EncryptedReadAccessToOtherUser(
-				otherUserRepoKeyRing2.getRandomUserRepoKey(remoteRepositoryId).getPublicKey());
+				otherUserRepoKeyRing2.getUserRepoKeys(remoteRepositoryId).get(0).getPublicKey());
 
 		syncFromLocalSrcToRemote();
 
@@ -301,7 +300,6 @@ public class RepoToRepoSyncIT extends AbstractIT {
 		localRepoManagerLocal.close();
 
 		ownerUserRepoKeyRing = createUserRepoKeyRing();
-		ownerUserRepoKey = ownerUserRepoKeyRing.getRandomUserRepoKey(remoteRepositoryId);
 		cryptreeRepoTransportFactory.setUserRepoKeyRing(ownerUserRepoKeyRing);
 	}
 
@@ -391,7 +389,7 @@ public class RepoToRepoSyncIT extends AbstractIT {
 				final Cryptree cryptree = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail().createCryptree(
 						transaction, remoteRepositoryId,
 						remotePathPrefix2Encrypted,
-						cryptreeRepoTransportFactory.getUserRepoKeyRing().getRandomUserRepoKey(remoteRepositoryId));
+						cryptreeRepoTransportFactory.getUserRepoKeyRing());
 				cryptree.grantReadPermission(remotePathPrefix2Plain, userRepoKeyPublicKey);
 				cryptree.close();
 				transaction.commit();
@@ -407,7 +405,7 @@ public class RepoToRepoSyncIT extends AbstractIT {
 				final Cryptree cryptree = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail().createCryptree(
 						transaction, remoteRepositoryId,
 						remotePathPrefix2Encrypted,
-						cryptreeRepoTransportFactory.getUserRepoKeyRing().getRandomUserRepoKey(remoteRepositoryId));
+						cryptreeRepoTransportFactory.getUserRepoKeyRing());
 				cryptree.revokeReadPermission(remotePathPrefix2Plain, Collections.singleton(userRepoKeyPublicKey.getUserRepoKeyId()));
 				cryptree.close();
 				transaction.commit();
@@ -415,5 +413,36 @@ public class RepoToRepoSyncIT extends AbstractIT {
 		}
 	}
 
+	private void grantRemotePathPrefix2EncryptedGrantPermissionToOtherUser(final UserRepoKey.PublicKey userRepoKeyPublicKey) {
+		try (final LocalRepoManager localRepoManagerLocal = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(localSrcRoot);)
+		{
+			try (final LocalRepoTransaction transaction = localRepoManagerLocal.beginWriteTransaction();)
+			{
+				final Cryptree cryptree = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail().createCryptree(
+						transaction, remoteRepositoryId,
+						remotePathPrefix2Encrypted,
+						cryptreeRepoTransportFactory.getUserRepoKeyRing());
+				cryptree.grantGrantPermission(remotePathPrefix2Plain, userRepoKeyPublicKey);
+				cryptree.close();
+				transaction.commit();
+			}
+		}
+	}
+
+	private void grantRemotePathPrefix2EncryptedWritePermissionToOtherUser(final UserRepoKey.PublicKey userRepoKeyPublicKey) {
+		try (final LocalRepoManager localRepoManagerLocal = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(localSrcRoot);)
+		{
+			try (final LocalRepoTransaction transaction = localRepoManagerLocal.beginWriteTransaction();)
+			{
+				final Cryptree cryptree = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail().createCryptree(
+						transaction, remoteRepositoryId,
+						remotePathPrefix2Encrypted,
+						cryptreeRepoTransportFactory.getUserRepoKeyRing());
+				cryptree.grantWritePermission(remotePathPrefix2Plain, userRepoKeyPublicKey);
+				cryptree.close();
+				transaction.commit();
+			}
+		}
+	}
 
 }

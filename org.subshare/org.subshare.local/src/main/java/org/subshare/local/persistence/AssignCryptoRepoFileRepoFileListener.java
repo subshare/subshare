@@ -11,6 +11,7 @@ import javax.jdo.listener.InstanceLifecycleEvent;
 import javax.jdo.listener.StoreLifecycleListener;
 
 import co.codewizards.cloudstore.core.repo.local.AbstractLocalRepoTransactionListener;
+import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
 import co.codewizards.cloudstore.local.ContextWithPersistenceManager;
 import co.codewizards.cloudstore.local.persistence.RepoFile;
 import co.codewizards.cloudstore.local.persistence.RepoFileDao;
@@ -23,8 +24,10 @@ public class AssignCryptoRepoFileRepoFileListener extends AbstractLocalRepoTrans
 
 	@Override
 	public void onBegin() {
-		final PersistenceManager pm = ((ContextWithPersistenceManager)getTransactionOrFail()).getPersistenceManager();
+		final LocalRepoTransaction tx = getTransactionOrFail();
+		final PersistenceManager pm = ((ContextWithPersistenceManager)tx).getPersistenceManager();
 		pm.addInstanceLifecycleListener(this, RepoFile.class);
+		tx.setContextObject(this);
 	}
 
 	@Override
@@ -41,7 +44,7 @@ public class AssignCryptoRepoFileRepoFileListener extends AbstractLocalRepoTrans
 		assignCryptoRepoFileRepoFile();
 	}
 
-	private void assignCryptoRepoFileRepoFile() {
+	public void assignCryptoRepoFileRepoFile() {
 		if (repoFileName2RepoFile.isEmpty())
 			return;
 
@@ -57,6 +60,8 @@ public class AssignCryptoRepoFileRepoFileListener extends AbstractLocalRepoTrans
 			if (repoFile != null)
 				cryptoRepoFile.setRepoFile(repoFile);
 		}
+
+		repoFileName2RepoFile.clear();
 	}
 
 	/**

@@ -70,7 +70,7 @@ public class CryptreeNode {
 	}
 
 	private final CryptreeContext context;
-	private final UserRepoKeyPublicKey userRepoKeyPublicKey; // never null;
+//	private final UserRepoKeyPublicKey userRepoKeyPublicKey; // never null;
 	private CryptreeNode parent; // maybe null - lazily loaded, if there is one
 	private RepoFile repoFile; // maybe null - lazily loaded
 	private CryptoRepoFile cryptoRepoFile; // maybe null - lazily loaded
@@ -112,8 +112,8 @@ public class CryptreeNode {
 		if (child != null)
 			children.add(child);
 
-		this.userRepoKeyPublicKey = parent != null ? parent.userRepoKeyPublicKey :
-			(child != null ? child.userRepoKeyPublicKey : getUserRepoKeyPublicKey(context.userRepoKey));
+//		this.userRepoKeyPublicKey = parent != null ? parent.userRepoKeyPublicKey :
+//			(child != null ? child.userRepoKeyPublicKey : getUserRepoKeyPublicKey(context.userRepoKey));
 	}
 
 	public CryptreeContext getContext() {
@@ -163,6 +163,9 @@ public class CryptreeNode {
 
 			final CryptoRepoFileDao cryptoRepoFileDao = context.transaction.getDao(CryptoRepoFileDao.class);
 			cryptoRepoFile = cryptoRepoFileDao.getCryptoRepoFile(repoFile); // may be null!
+
+//			if (cryptoRepoFile != null)
+//				grantGrantAndWritePermissionsToAllUserRepoKeysOfRepositoryOwnerIfRootNode();
 		}
 		return cryptoRepoFile;
 	}
@@ -227,21 +230,45 @@ public class CryptreeNode {
 			cryptoRepoFile.setRepoFileDtoData(assertNotNull("encrypt(...)", encrypt(out.toByteArray(), plainCryptoKey)));
 			cryptoRepoFile.setLastSyncFromRepositoryId(null);
 
-			context.signableSigner.sign(cryptoRepoFile);
+			final UserRepoKey userRepoKey = getUserRepoKeyForWriteOrFail();
+			context.getSignableSigner(userRepoKey).sign(cryptoRepoFile);
 			try {
 				assertSignatureOk(cryptoRepoFile, PermissionType.write);
 			} catch (final SignatureException x) { // TODO BC-BUG: remove this workaround after upgrading BouncyCastle!
-				context.signableSigner.sign(cryptoRepoFile);
+				context.getSignableSigner(userRepoKey).sign(cryptoRepoFile);
 				assertSignatureOk(cryptoRepoFile, PermissionType.write);
 			}
+
+//			grantGrantAndWritePermissionsToAllUserRepoKeysOfRepositoryOwnerIfRootNode();
 		}
 		return cryptoRepoFile;
 	}
 
+//	/**
+//	 * Grants {@link PermissionType#grant grant} and {@link PermissionType#write write} permissions to all
+//	 * {@link UserRepoKey}s of the current {@link UserRepoKeyRing}, if the current {@link UserRepoKeyRing}
+//	 * belongs to this repository's owner.
+//	 * <p>
+//	 * Since the {@code UserRepoKey} used is random, we must always grant access to all of them.
+//	 */
+//	private void grantGrantAndWritePermissionsToAllUserRepoKeysOfRepositoryOwnerIfRootNode() {
+//		if (getParent() != null)
+//			return; // not root node => return
+//
+//		final Uid ownerUserRepoKeyId = context.getRepositoryOwner().getUserRepoKeyPublicKey().getUserRepoKeyId();
+//		final boolean currentUserIsOwner = context.userRepoKeyRing.getUserRepoKey(ownerUserRepoKeyId) != null;
+//		if (currentUserIsOwner) {
+//			for (final UserRepoKey userRepoKey : context.userRepoKeyRing.getUserRepoKeys(context.userRepoKey.getServerRepositoryId())) {
+//				grantGrantPermission(userRepoKey.getPublicKey());
+//				grantWritePermission(userRepoKey.getPublicKey());
+//			}
+//		}
+//	}
+
 	public void grantReadPermission(final UserRepoKey.PublicKey publicKey) {
 		assertNotNull("publicKey", publicKey);
 		final PlainCryptoKey plainCryptoKey = getActivePlainCryptoKeyOrCreate(CryptoKeyRole.clearanceKey, CryptoKeyPart.privateKey);
-		createCryptoLink(getUserRepoKeyPublicKey(publicKey), plainCryptoKey, context.signableSigner);
+		createCryptoLink(getUserRepoKeyPublicKey(publicKey), plainCryptoKey, context.getSignableSigner(getUserRepoKeyForGrantOrFail()));
 	}
 
 	public void revokeReadPermission(final Set<Uid> userRepoKeyIds) {
@@ -279,14 +306,18 @@ public class CryptreeNode {
 			if (fromUserRepoKeyId == null || userRepoKeyIds.contains(fromUserRepoKeyId))
 				continue;
 
-			// The current user is already granted access when the clearing key was created above.
-			if (fromUserRepoKeyId != null && fromUserRepoKeyId.equals(context.userRepoKey.getUserRepoKeyId()))
-				continue;
-
 			if (clearanceKeyPlainCryptoKey == null)
 				clearanceKeyPlainCryptoKey = getActivePlainCryptoKeyOrCreate(CryptoKeyRole.clearanceKey, CryptoKeyPart.privateKey);
 
-			createCryptoLink(fromUserRepoKeyPublicKey, clearanceKeyPlainCryptoKey, context.signableSigner);
+			// The current user is already granted access when the clearing key was created above.
+			// We thus need to check, if the current fromUserRepoKeyPublicKey still needs a CryptoLink.
+			if (fromUserRepoKeyPublicKey != null
+					&& ! cryptoLinkDao.getActiveCryptoLinks(
+							cryptoRepoFile, CryptoKeyRole.clearanceKey, CryptoKeyPart.privateKey, fromUserRepoKeyPublicKey).isEmpty())
+				continue;
+
+			final UserRepoKey signingUserRepoKey = getUserRepoKeyForGrantOrFail();
+			createCryptoLink(fromUserRepoKeyPublicKey, clearanceKeyPlainCryptoKey, context.getSignableSigner(signingUserRepoKey));
 		}
 
 		if (clearanceKeyPlainCryptoKey != null)
@@ -531,16 +562,16 @@ public class CryptreeNode {
 		return parent;
 	}
 
-	public UserRepoKeyPublicKey getUserRepoKeyPublicKey() {
-		return userRepoKeyPublicKey;
-	}
+//	public UserRepoKeyPublicKey getUserRepoKeyPublicKey() {
+//		return userRepoKeyPublicKey;
+//	}
 
-	private UserRepoKeyPublicKey getUserRepoKeyPublicKey(final UserRepoKey userRepoKey) {
+	public UserRepoKeyPublicKey getUserRepoKeyPublicKey(final UserRepoKey userRepoKey) {
 		assertNotNull("userRepoKey", userRepoKey);
 		return getUserRepoKeyPublicKey(userRepoKey.getPublicKey());
 	}
 
-	private UserRepoKeyPublicKey getUserRepoKeyPublicKey(final UserRepoKey.PublicKey publicKey) {
+	public UserRepoKeyPublicKey getUserRepoKeyPublicKey(final UserRepoKey.PublicKey publicKey) {
 		assertNotNull("publicKey", publicKey);
 		final UserRepoKeyPublicKeyDao dao = context.transaction.getDao(UserRepoKeyPublicKeyDao.class);
 		UserRepoKeyPublicKey userRepoKeyPublicKey = dao.getUserRepoKeyPublicKey(publicKey.getUserRepoKeyId());
@@ -570,7 +601,7 @@ public class CryptreeNode {
 		assertNotNull("permissionType", permissionType);
 		assertNotNull("publicKey", publicKey);
 
-		final Uid ownerUserRepoKeyId = context.getRepositoryOwner().getUserRepoKeyPublicKey().getUserRepoKeyId();
+		final Uid ownerUserRepoKeyId = context.getRepositoryOwnerOrFail().getUserRepoKeyPublicKey().getUserRepoKeyId();
 		if (ownerUserRepoKeyId.equals(publicKey.getUserRepoKeyId()))
 			return;
 
@@ -583,7 +614,7 @@ public class CryptreeNode {
 			permission.setPermissionSet(permissionSet);
 			permission.setPermissionType(permissionType);
 			permission.setUserRepoKeyPublicKey(userRepoKeyPublicKey);
-			context.signableSigner.sign(permission);
+			context.getSignableSigner(getUserRepoKeyForGrantOrFail()).sign(permission);
 			permission = dao.makePersistent(permission);
 			assertPermissionOk(permission);
 		}
@@ -600,7 +631,7 @@ public class CryptreeNode {
 		for (final Permission permission : permissions) {
 			permissionsAlreadyCheckedOk.remove(permission);
 			permission.setRevoked(new Date());
-			context.signableSigner.sign(permission);
+			context.getSignableSigner(getUserRepoKeyForGrantOrFail()).sign(permission);
 			assertPermissionOk(permission);
 		}
 	}
@@ -616,7 +647,7 @@ public class CryptreeNode {
 		assertNotNull("userRepoKeyId", userRepoKeyId);
 		assertNotNull("timestamp", timestamp);
 
-		if (userRepoKeyId.equals(context.getRepositoryOwner().getUserRepoKeyPublicKey().getUserRepoKeyId()))
+		if (userRepoKeyId.equals(context.getRepositoryOwnerOrFail().getUserRepoKeyPublicKey().getUserRepoKeyId()))
 			return; // The owner always has all permissions.
 
 		final PermissionSet permissionSet = getPermissionSet();
@@ -650,6 +681,15 @@ public class CryptreeNode {
 				throw new WriteAccessDeniedException(exceptionMsg);
 			default:
 				throw new IllegalArgumentException("Unknown permissionType: " + permissionType);
+		}
+	}
+
+	private boolean hasPermission(final PermissionType permissionType, final Uid userRepoKeyId, final Date timestamp) {
+		try {
+			assertHasPermission(permissionType, userRepoKeyId, timestamp);
+			return true;
+		} catch (GrantAccessDeniedException | WriteAccessDeniedException x) {
+			return false;
 		}
 	}
 
@@ -692,11 +732,46 @@ public class CryptreeNode {
 		if (permissionSet == null) {
 			permissionSet = new PermissionSet();
 			permissionSet.setCryptoRepoFile(assertNotNull("getCryptoRepoFile()", getCryptoRepoFile()));
-			context.signableSigner.sign(permissionSet);
+			context.getSignableSigner(getUserRepoKeyForGrantOrFail()).sign(permissionSet);
 
 			final PermissionSetDao dao = context.transaction.getDao(PermissionSetDao.class);
 			this.permissionSet = permissionSet = dao.makePersistent(permissionSet);
 		}
 		return permissionSet;
+	}
+
+	public UserRepoKey getUserRepoKeyForGrant() {
+		return getUserRepoKeyFor(PermissionType.grant);
+	}
+
+	public UserRepoKey getUserRepoKeyForGrantOrFail() {
+		final UserRepoKey userRepoKey = getUserRepoKeyForGrant();
+		if (userRepoKey == null)
+			throw new GrantAccessDeniedException("No 'grant' permission for any UserRepoKey of the current UserRepoKeyRing for: " + (repoFile != null ? repoFile.getPath() : cryptoRepoFile));
+
+		return userRepoKey;
+	}
+
+	public UserRepoKey getUserRepoKeyForWrite() {
+		return getUserRepoKeyFor(PermissionType.write);
+	}
+
+	public UserRepoKey getUserRepoKeyForWriteOrFail() {
+		final UserRepoKey userRepoKey = getUserRepoKeyForWrite();
+		if (userRepoKey == null)
+			throw new WriteAccessDeniedException("No 'write' permission for any UserRepoKey of the current UserRepoKeyRing for: " + (repoFile != null ? repoFile.getPath() : cryptoRepoFile));
+
+		return userRepoKey;
+	}
+
+	public UserRepoKey getUserRepoKeyFor(final PermissionType permissionType) {
+		final Date now = new Date();
+		for (final UserRepoKey userRepoKey : context.userRepoKeyRing.getUserRepoKeys(context.serverRepositoryId)) {
+			if (hasPermission(permissionType, userRepoKey.getUserRepoKeyId(), now)) {
+				getUserRepoKeyPublicKey(userRepoKey); // Make sure it is persisted in the DB.
+				return userRepoKey;
+			}
+		}
+		return null;
 	}
 }

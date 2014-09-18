@@ -35,7 +35,7 @@ public class SignableTest extends AbstractTest {
 	public static void beforeClass() {
 		repositoryId = UUID.randomUUID();
 		userRepoKeyRing = createUserRepoKeyRing(repositoryId);
-		userRepoKey = userRepoKeyRing.getRandomUserRepoKeyOrFail(repositoryId);
+		userRepoKey = userRepoKeyRing.getUserRepoKeys(repositoryId).get(1);
 		userRepoKeyPublicKeyLookup = new UserRepoKeyPublicKeyLookup() {
 			@Override
 			public PublicKey getUserRepoKeyPublicKey(final Uid userRepoKeyId) {
