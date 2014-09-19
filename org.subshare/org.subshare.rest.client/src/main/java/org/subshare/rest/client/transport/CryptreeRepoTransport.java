@@ -416,7 +416,8 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 
 				// Calculating the SHA1 of the encrypted data is too complicated. We thus omit it (now optional in CloudStore).
 				final String unprefixedServerPath = unprefixPath(cryptree.getServerPath(path)); // it's automatically prefixed *again*, thus we must prefix it here (if we don't want to somehow suppress the automatic prefixing, which is probably quite a lot of work).
-				getRestRepoTransport().endPutFile(unprefixedServerPath, new Date(0), getServerOffset(length), null);
+				final long serverLength = getServerOffset(length) + 65535; // TODO remove this (both multiplication + addition) as soon as we store the chunks individually on the server!
+				getRestRepoTransport().endPutFile(unprefixedServerPath, new Date(0), serverLength, null);
 			}
 			transaction.commit();
 		}
