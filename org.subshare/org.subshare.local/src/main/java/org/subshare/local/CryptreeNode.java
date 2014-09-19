@@ -287,7 +287,7 @@ public class CryptreeNode {
 			createBacklinkKeyForFile();
 
 		createSubdirKeyAndBacklinkKeyIfNeededChildrenRecursively();
-		createBacklinkKeyIfNeededParentsRecursively();
+//		createBacklinkKeyIfNeededParentsRecursively();
 	}
 
 	private void createBacklinkKeyForFile() {
@@ -320,15 +320,15 @@ public class CryptreeNode {
 			child.createSubdirKeyAndBacklinkKeyIfNeededChildrenRecursively();
 	}
 
-	private void createBacklinkKeyIfNeededParentsRecursively() {
-		// If this is a file, the backlinkKey is optional - and created in createBacklinkKeyIfNeededFile().
-		if (isDirectory())
-			getActivePlainCryptoKeyOrCreate(CryptoKeyRole.backlinkKey, CryptoKeyPart.sharedSecret);
-
-		final CryptreeNode parent = getParent();
-		if (parent != null)
-			parent.createBacklinkKeyIfNeededParentsRecursively();
-	}
+//	private void createBacklinkKeyIfNeededParentsRecursively() {
+//		// If this is a file, the backlinkKey is optional - and created in createBacklinkKeyIfNeededFile().
+//		if (isDirectory())
+//			getActivePlainCryptoKeyOrCreate(CryptoKeyRole.backlinkKey, CryptoKeyPart.sharedSecret);
+//
+//		final CryptreeNode parent = getParent();
+//		if (parent != null)
+//			parent.createBacklinkKeyIfNeededParentsRecursively();
+//	}
 
 	private boolean containsFromUserRepoKeyId(final Collection<CryptoLink> cryptoLinks, final Set<Uid> fromUserRepoKeyIds) {
 		assertNotNull("cryptoLinks", cryptoLinks);

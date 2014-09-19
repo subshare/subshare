@@ -22,6 +22,7 @@ import org.subshare.core.crypto.RandomIvFactory;
 import org.subshare.core.dto.CryptoKeyPart;
 import org.subshare.core.dto.CryptoKeyType;
 import org.subshare.core.user.UserRepoKey;
+import org.subshare.local.persistence.CryptoKey;
 import org.subshare.local.persistence.CryptoLink;
 import org.subshare.local.persistence.UserRepoKeyPublicKey;
 import org.slf4j.Logger;
@@ -162,22 +163,22 @@ public class CryptreeNodeUtil {
 		cryptoLink.setToCryptoKeyPart(toPlainCryptoKey.getCryptoKeyPart());
 		cryptreeNode.sign(cryptoLink);
 		toPlainCryptoKey.getCryptoKey().getInCryptoLinks().add(cryptoLink);
-//		assertToCryptoKeyBelongsToThisCryptreeNode(cryptreeNode, cryptoLink);
+		assertToCryptoKeyBelongsToThisCryptreeNode(cryptreeNode, cryptoLink);
 		return cryptoLink;
 	}
 
-//	private static void assertToCryptoKeyBelongsToThisCryptreeNode(final CryptreeNode cryptreeNode, final CryptoLink cryptoLink) {
-//		assertNotNull("cryptreeNode", cryptreeNode);
-//		assertNotNull("cryptoLink", cryptoLink);
-//		final CryptoKey toCryptoKey = assertNotNull("cryptoLink.toCryptoKey", cryptoLink.getToCryptoKey());
-//		assertNotNull("cryptreeNode.cryptoRepoFile", cryptreeNode.getCryptoRepoFile());
-//		assertNotNull("toCryptoKey.cryptoRepoFile", toCryptoKey.getCryptoRepoFile());
-//		if (! toCryptoKey.getCryptoRepoFile().equals(cryptreeNode.getCryptoRepoFile()))
-//			throw new IllegalStateException(String.format("cryptoLink.toCryptoKey.cryptoRepoFile != cryptreeNode.cryptoRepoFile :: cryptoLink=%s cryptoLink.toCryptoKey.cryptoRepoFile=%s cryptreeNode.cryptoRepoFile=%s",
-//					cryptoLink,
-//					toCryptoKey.getCryptoRepoFile(),
-//					cryptreeNode.getCryptoRepoFile()));
-//	}
+	private static void assertToCryptoKeyBelongsToThisCryptreeNode(final CryptreeNode cryptreeNode, final CryptoLink cryptoLink) {
+		assertNotNull("cryptreeNode", cryptreeNode);
+		assertNotNull("cryptoLink", cryptoLink);
+		final CryptoKey toCryptoKey = assertNotNull("cryptoLink.toCryptoKey", cryptoLink.getToCryptoKey());
+		assertNotNull("cryptreeNode.cryptoRepoFile", cryptreeNode.getCryptoRepoFile());
+		assertNotNull("toCryptoKey.cryptoRepoFile", toCryptoKey.getCryptoRepoFile());
+		if (! toCryptoKey.getCryptoRepoFile().equals(cryptreeNode.getCryptoRepoFile()))
+			throw new IllegalStateException(String.format("cryptoLink.toCryptoKey.cryptoRepoFile != cryptreeNode.cryptoRepoFile :: cryptoLink=%s cryptoLink.toCryptoKey.cryptoRepoFile=%s cryptreeNode.cryptoRepoFile=%s",
+					cryptoLink,
+					toCryptoKey.getCryptoRepoFile(),
+					cryptreeNode.getCryptoRepoFile()));
+	}
 
 	public static CryptoLink createCryptoLink(final CryptreeNode cryptreeNode, final UserRepoKeyPublicKey fromUserRepoKeyPublicKey, final PlainCryptoKey toPlainCryptoKey) {
 		assertNotNull("cryptreeNode", cryptreeNode);
@@ -190,6 +191,7 @@ public class CryptreeNodeUtil {
 		cryptoLink.setToCryptoKeyPart(toPlainCryptoKey.getCryptoKeyPart());
 		cryptreeNode.sign(cryptoLink);
 		toPlainCryptoKey.getCryptoKey().getInCryptoLinks().add(cryptoLink);
+		assertToCryptoKeyBelongsToThisCryptreeNode(cryptreeNode, cryptoLink);
 		return cryptoLink;
 	}
 
@@ -206,6 +208,7 @@ public class CryptreeNodeUtil {
 		cryptoLink.setToCryptoKeyPart(toPlainCryptoKey.getCryptoKeyPart());
 		cryptreeNode.sign(cryptoLink);
 		toPlainCryptoKey.getCryptoKey().getInCryptoLinks().add(cryptoLink);
+		assertToCryptoKeyBelongsToThisCryptreeNode(cryptreeNode, cryptoLink);
 		return cryptoLink;
 	}
 
