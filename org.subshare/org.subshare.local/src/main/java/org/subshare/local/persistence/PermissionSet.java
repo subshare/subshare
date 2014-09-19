@@ -19,9 +19,9 @@ import javax.jdo.annotations.Unique;
 import javax.jdo.annotations.Uniques;
 
 import org.subshare.core.dto.PermissionSetDto;
+import org.subshare.core.dto.PermissionType;
 import org.subshare.core.io.InputStreamSource;
 import org.subshare.core.io.MultiInputStream;
-import org.subshare.core.sign.Signable;
 import org.subshare.core.sign.Signature;
 
 import co.codewizards.cloudstore.local.persistence.AutoTrackLocalRevision;
@@ -36,7 +36,7 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 	@Query(name="getPermissionSet_cryptoRepoFile", value="SELECT UNIQUE WHERE this.cryptoRepoFile == :cryptoRepoFile"),
 	@Query(name="getPermissionSetsChangedAfter_localRevision", value="SELECT WHERE this.localRevision > :localRevision")
 })
-public class PermissionSet extends Entity implements Signable, AutoTrackLocalRevision {
+public class PermissionSet extends Entity implements WriteProtectedEntity, AutoTrackLocalRevision {
 
 	@Persistent(nullValue=NullValue.EXCEPTION)
 	private CryptoRepoFile cryptoRepoFile;
@@ -142,4 +142,8 @@ public class PermissionSet extends Entity implements Signable, AutoTrackLocalRev
 	}
 // END WORKAROUND for http://www.datanucleus.org/servlet/jira/browse/NUCCORE-1247
 
+	@Override
+	public PermissionType getPermissionTypeRequiredForWrite() {
+		return PermissionType.grant;
+	}
 }

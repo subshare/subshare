@@ -15,7 +15,6 @@ import java.util.UUID;
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.subshare.core.AbstractCryptree;
 import org.subshare.core.AccessDeniedException;
-import org.subshare.core.GrantAccessDeniedException;
 import org.subshare.core.WriteAccessDeniedException;
 import org.subshare.core.dto.CryptoChangeSetDto;
 import org.subshare.core.dto.CryptoKeyDto;
@@ -23,8 +22,10 @@ import org.subshare.core.dto.CryptoLinkDto;
 import org.subshare.core.dto.CryptoRepoFileDto;
 import org.subshare.core.dto.PermissionDto;
 import org.subshare.core.dto.PermissionSetDto;
+import org.subshare.core.dto.PermissionType;
 import org.subshare.core.dto.RepositoryOwnerDto;
 import org.subshare.core.dto.UserRepoKeyPublicKeyDto;
+import org.subshare.core.sign.Signable;
 import org.subshare.core.sign.Signature;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKeyPublicKeyLookup;
@@ -51,6 +52,7 @@ import org.subshare.local.persistence.UserRepoKeyPublicKeyLookupImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import co.codewizards.cloudstore.core.auth.SignatureException;
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
 import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
@@ -256,23 +258,9 @@ public class CryptreeImpl extends AbstractCryptree {
 	}
 
 	@Override
-	public UserRepoKey getUserRepoKeyForGrant(final String localPath) {
-		final CryptreeNode cryptreeNode = getCryptreeNodeOrFail(localPath);
-		return cryptreeNode.getUserRepoKeyForGrant();
-	}
-
-	@Override
-	public UserRepoKey getUserRepoKeyForGrantOrFail(final String localPath) throws GrantAccessDeniedException {
-		final UserRepoKey userRepoKey = getUserRepoKeyForGrant(localPath);
-		if (userRepoKey == null)
-			throw new GrantAccessDeniedException(String.format("No UserRepoKey available for 'grant' at localPath='%s'!", localPath));
-		return userRepoKey;
-	}
-
-	@Override
 	public UserRepoKey getUserRepoKeyForWrite(final String localPath) {
 		final CryptreeNode cryptreeNode = getCryptreeNodeOrFail(localPath);
-		return cryptreeNode.getUserRepoKeyForWrite();
+		return cryptreeNode.getUserRepoKeyFor(PermissionType.write);
 	}
 
 	@Override
@@ -307,51 +295,39 @@ public class CryptreeImpl extends AbstractCryptree {
 	}
 
 	@Override
-	public void grantReadPermission(final String localPath, final UserRepoKey.PublicKey userRepoKeyPublicKey) {
+	public void grantPermission(final String localPath, final PermissionType permissionType, final UserRepoKey.PublicKey userRepoKeyPublicKey) {
 		assertNotNull("localPath", localPath);
+		assertNotNull("permissionType", permissionType);
 		assertNotNull("userRepoKeyPublicKey", userRepoKeyPublicKey);
 		final CryptreeNode cryptreeNode = getCryptreeNodeOrFail(localPath);
-		cryptreeNode.grantReadPermission(userRepoKeyPublicKey);
+		cryptreeNode.grantPermission(permissionType, userRepoKeyPublicKey);
 	}
 
 	@Override
-	public void revokeReadPermission(final String localPath, final Set<Uid> userRepoKeyIds) {
+	public void revokePermission(final String localPath, final PermissionType permissionType, final Set<Uid> userRepoKeyIds) {
 		assertNotNull("localPath", localPath);
+		assertNotNull("permissionType", permissionType);
 		assertNotNull("userRepoKeyIds", userRepoKeyIds);
 		final CryptreeNode cryptreeNode = getCryptreeNodeOrFail(localPath);
-		cryptreeNode.revokeReadPermission(userRepoKeyIds);
+		cryptreeNode.revokePermission(permissionType, userRepoKeyIds);
 	}
 
 	@Override
-	public void grantGrantPermission(final String localPath, final UserRepoKey.PublicKey userRepoKeyPublicKey) {
-		assertNotNull("localPath", localPath);
+	public void grantPermission(final Uid cryptoRepoFileId, final PermissionType permissionType, final UserRepoKey.PublicKey userRepoKeyPublicKey) {
+		assertNotNull("cryptoRepoFileId", cryptoRepoFileId);
+		assertNotNull("permissionType", permissionType);
 		assertNotNull("userRepoKeyPublicKey", userRepoKeyPublicKey);
-		final CryptreeNode cryptreeNode = getCryptreeNodeOrFail(localPath);
-		cryptreeNode.grantGrantPermission(userRepoKeyPublicKey);
+		final CryptreeNode cryptreeNode = getCryptreeNodeOrFail(cryptoRepoFileId);
+		cryptreeNode.grantPermission(permissionType, userRepoKeyPublicKey);
 	}
 
 	@Override
-	public void revokeGrantPermission(final String localPath, final Set<Uid> userRepoKeyIds) {
-		assertNotNull("localPath", localPath);
+	public void revokePermission(final Uid cryptoRepoFileId, final PermissionType permissionType, final Set<Uid> userRepoKeyIds) {
+		assertNotNull("cryptoRepoFileId", cryptoRepoFileId);
+		assertNotNull("permissionType", permissionType);
 		assertNotNull("userRepoKeyIds", userRepoKeyIds);
-		final CryptreeNode cryptreeNode = getCryptreeNodeOrFail(localPath);
-		cryptreeNode.revokeGrantPermission(userRepoKeyIds);
-	}
-
-	@Override
-	public void grantWritePermission(final String localPath, final UserRepoKey.PublicKey userRepoKeyPublicKey) {
-		assertNotNull("localPath", localPath);
-		assertNotNull("userRepoKeyPublicKey", userRepoKeyPublicKey);
-		final CryptreeNode cryptreeNode = getCryptreeNodeOrFail(localPath);
-		cryptreeNode.grantWritePermission(userRepoKeyPublicKey);
-	}
-
-	@Override
-	public void revokeWritePermission(final String localPath, final Set<Uid> userRepoKeyIds) {
-		assertNotNull("localPath", localPath);
-		assertNotNull("userRepoKeyIds", userRepoKeyIds);
-		final CryptreeNode cryptreeNode = getCryptreeNodeOrFail(localPath);
-		cryptreeNode.revokeWritePermission(userRepoKeyIds);
+		final CryptreeNode cryptreeNode = getCryptreeNodeOrFail(cryptoRepoFileId);
+		cryptreeNode.revokePermission(permissionType, userRepoKeyIds);
 	}
 
 	/**
@@ -963,5 +939,13 @@ public class CryptreeImpl extends AbstractCryptree {
 				repositoryOwner = roDao.makePersistent(repositoryOwner);
 			}
 		}
+	}
+
+	public void assertSignatureOk(final String localPath, final Signable signable, final PermissionType requiredPermissionType) throws SignatureException {
+		getCryptreeNodeOrFail(localPath).assertSignatureOk(signable, requiredPermissionType);
+	}
+
+	public void assertSignatureOk(final Uid cryptoRepoFileId, final Signable signable, final PermissionType requiredPermissionType) throws SignatureException {
+		getCryptreeNodeOrFail(cryptoRepoFileId).assertSignatureOk(signable, requiredPermissionType);
 	}
 }

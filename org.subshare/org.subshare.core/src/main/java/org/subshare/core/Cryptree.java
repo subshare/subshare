@@ -8,6 +8,7 @@ import org.subshare.core.dto.CryptoChangeSetDto;
 import org.subshare.core.dto.CryptoKeyDto;
 import org.subshare.core.dto.CryptoLinkDto;
 import org.subshare.core.dto.CryptoRepoFileDto;
+import org.subshare.core.dto.PermissionType;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKey.PublicKey;
 import org.subshare.core.user.UserRepoKeyPublicKeyLookup;
@@ -103,18 +104,12 @@ public interface Cryptree extends AutoCloseable {
 
 	UserRepoKeyPublicKeyLookup getUserRepoKeyPublicKeyLookup();
 
-	void grantReadPermission(String localPath, UserRepoKey.PublicKey userRepoKeyPublicKey);
-	void revokeReadPermission(String localPath, Set<Uid> userRepoKeyIds);
-
-	void grantGrantPermission(String localPath, PublicKey userRepoKeyPublicKey);
-	void revokeGrantPermission(String localPath, Set<Uid> userRepoKeyIds);
-
-	void grantWritePermission(String localPath, PublicKey userRepoKeyPublicKey);
-	void revokeWritePermission(String localPath, Set<Uid> userRepoKeyIds);
-
-	UserRepoKey getUserRepoKeyForGrant(String localPath);
-	UserRepoKey getUserRepoKeyForGrantOrFail(String localPath) throws GrantAccessDeniedException;
-
 	UserRepoKey getUserRepoKeyForWrite(String localPath);
 	UserRepoKey getUserRepoKeyForWriteOrFail(String localPath) throws WriteAccessDeniedException;
+
+	void grantPermission(String localPath, PermissionType permissionType, PublicKey userRepoKeyPublicKey);
+	void revokePermission(String localPath, PermissionType permissionType, Set<Uid> userRepoKeyIds);
+
+	void grantPermission(Uid cryptoRepoFileId, PermissionType permissionType, PublicKey userRepoKeyPublicKey);
+	void revokePermission(Uid cryptoRepoFileId, PermissionType permissionType, Set<Uid> userRepoKeyIds);
 }

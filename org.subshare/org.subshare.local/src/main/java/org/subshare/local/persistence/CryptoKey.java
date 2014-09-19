@@ -25,9 +25,9 @@ import org.subshare.core.dto.CryptoKeyDto;
 import org.subshare.core.dto.CryptoKeyPart;
 import org.subshare.core.dto.CryptoKeyRole;
 import org.subshare.core.dto.CryptoKeyType;
+import org.subshare.core.dto.PermissionType;
 import org.subshare.core.io.InputStreamSource;
 import org.subshare.core.io.MultiInputStream;
-import org.subshare.core.sign.Signable;
 import org.subshare.core.sign.Signature;
 
 import co.codewizards.cloudstore.core.dto.Uid;
@@ -64,7 +64,7 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 	@Query(name="getCryptoKey_cryptoKeyId", value="SELECT UNIQUE WHERE this.cryptoKeyId == :cryptoKeyId"),
 	@Query(name="getCryptoKeysChangedAfter_localRevision", value="SELECT WHERE this.localRevision > :localRevision")
 })
-public class CryptoKey extends Entity implements Signable, AutoTrackLocalRevision, StoreCallback {
+public class CryptoKey extends Entity implements WriteProtectedEntity, AutoTrackLocalRevision, StoreCallback {
 
 	@Persistent(nullValue=NullValue.EXCEPTION)
 	@Column(length=22)
@@ -270,6 +270,14 @@ public class CryptoKey extends Entity implements Signable, AutoTrackLocalRevisio
 		SignableEmbeddedWorkaround.setSignature(this, signature);
 	}
 // END WORKAROUND for http://www.datanucleus.org/servlet/jira/browse/NUCCORE-1247
+
+	@Override
+	public PermissionType getPermissionTypeRequiredForWrite() {
+		if (cryptoKeyRole == null)
+			throw new IllegalStateException("cryptoKeyRole == null");
+
+		return cryptoKeyRole == CryptoKeyRole.clearanceKey ? PermissionType.grant : PermissionType.write;
+	}
 
 	@Override
 	public String toString() {

@@ -30,9 +30,9 @@ import javax.jdo.listener.StoreCallback;
 
 import org.subshare.core.dto.CryptoKeyRole;
 import org.subshare.core.dto.CryptoRepoFileDto;
+import org.subshare.core.dto.PermissionType;
 import org.subshare.core.io.InputStreamSource;
 import org.subshare.core.io.MultiInputStream;
-import org.subshare.core.sign.Signable;
 import org.subshare.core.sign.Signature;
 
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
@@ -70,7 +70,7 @@ import co.codewizards.cloudstore.local.persistence.RepoFile;
 			name="getCryptoRepoFileChangedAfter_localRevision_exclLastSyncFromRepositoryId",
 			value="SELECT WHERE this.localRevision > :localRevision && (this.lastSyncFromRepositoryId == null || this.lastSyncFromRepositoryId != :lastSyncFromRepositoryId)") // TODO this necessary == null is IMHO a DN bug!
 })
-public class CryptoRepoFile extends Entity implements Signable, AutoTrackLocalRevision, StoreCallback {
+public class CryptoRepoFile extends Entity implements WriteProtectedEntity, AutoTrackLocalRevision, StoreCallback {
 
 	@Persistent(nullValue=NullValue.EXCEPTION)
 	@Column(length=22)
@@ -383,4 +383,16 @@ public class CryptoRepoFile extends Entity implements Signable, AutoTrackLocalRe
 	}
 // END WORKAROUND for http://www.datanucleus.org/servlet/jira/browse/NUCCORE-1247
 
+	@Override
+	public PermissionType getPermissionTypeRequiredForWrite() {
+		return PermissionType.write;
+	}
+
+	@Override
+	public String toString() {
+		return String.format("%s{cryptoRepoFileId=%s, localName=%s}",
+				super.toString(),
+				cryptoRepoFileId,
+				localName);
+	}
 }

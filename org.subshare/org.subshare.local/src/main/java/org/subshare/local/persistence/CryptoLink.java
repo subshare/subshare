@@ -20,10 +20,11 @@ import javax.jdo.annotations.Unique;
 import javax.jdo.listener.StoreCallback;
 
 import org.subshare.core.dto.CryptoKeyPart;
+import org.subshare.core.dto.CryptoKeyRole;
 import org.subshare.core.dto.CryptoLinkDto;
+import org.subshare.core.dto.PermissionType;
 import org.subshare.core.io.InputStreamSource;
 import org.subshare.core.io.MultiInputStream;
-import org.subshare.core.sign.Signable;
 import org.subshare.core.sign.Signature;
 import org.subshare.core.user.UserRepoKey;
 
@@ -55,7 +56,7 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 					+ "this.toCryptoKey.cryptoKeyRole == :toCryptoKeyRole && "
 					+ "this.toCryptoKeyPart == :toCryptoKeyPart")
 })
-public class CryptoLink extends Entity implements Signable, AutoTrackLocalRevision, StoreCallback {
+public class CryptoLink extends Entity implements WriteProtectedEntity, AutoTrackLocalRevision, StoreCallback {
 
 	@Persistent(nullValue=NullValue.EXCEPTION)
 	@Column(length=22)
@@ -268,6 +269,18 @@ public class CryptoLink extends Entity implements Signable, AutoTrackLocalRevisi
 		SignableEmbeddedWorkaround.setSignature(this, signature);
 	}
 // END WORKAROUND for http://www.datanucleus.org/servlet/jira/browse/NUCCORE-1247
+
+	@Override
+	public PermissionType getPermissionTypeRequiredForWrite() {
+		if (toCryptoKey == null)
+			throw new IllegalStateException("toCryptoKey == null");
+
+		final CryptoKeyRole cryptoKeyRole = toCryptoKey.getCryptoKeyRole();
+		if (cryptoKeyRole == null)
+			throw new IllegalStateException("toCryptoKey.cryptoKeyRole == null");
+
+		return cryptoKeyRole == CryptoKeyRole.clearanceKey ? PermissionType.grant : PermissionType.write;
+	}
 
 	@Override
 	public String toString() {

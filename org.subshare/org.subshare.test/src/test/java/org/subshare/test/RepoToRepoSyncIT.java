@@ -12,6 +12,7 @@ import java.util.UUID;
 import org.subshare.core.AccessDeniedException;
 import org.subshare.core.Cryptree;
 import org.subshare.core.CryptreeFactoryRegistry;
+import org.subshare.core.dto.PermissionType;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKey.PublicKey;
 import org.subshare.core.user.UserRepoKeyRing;
@@ -390,7 +391,7 @@ public class RepoToRepoSyncIT extends AbstractIT {
 						transaction, remoteRepositoryId,
 						remotePathPrefix2Encrypted,
 						cryptreeRepoTransportFactory.getUserRepoKeyRing());
-				cryptree.grantReadPermission(remotePathPrefix2Plain, userRepoKeyPublicKey);
+				cryptree.grantPermission(remotePathPrefix2Plain, PermissionType.read, userRepoKeyPublicKey);
 				cryptree.close();
 				transaction.commit();
 			}
@@ -406,7 +407,7 @@ public class RepoToRepoSyncIT extends AbstractIT {
 						transaction, remoteRepositoryId,
 						remotePathPrefix2Encrypted,
 						cryptreeRepoTransportFactory.getUserRepoKeyRing());
-				cryptree.revokeReadPermission(remotePathPrefix2Plain, Collections.singleton(userRepoKeyPublicKey.getUserRepoKeyId()));
+				cryptree.revokePermission(remotePathPrefix2Plain, PermissionType.read, Collections.singleton(userRepoKeyPublicKey.getUserRepoKeyId()));
 				cryptree.close();
 				transaction.commit();
 			}
@@ -422,7 +423,7 @@ public class RepoToRepoSyncIT extends AbstractIT {
 						transaction, remoteRepositoryId,
 						remotePathPrefix2Encrypted,
 						cryptreeRepoTransportFactory.getUserRepoKeyRing());
-				cryptree.grantGrantPermission(remotePathPrefix2Plain, userRepoKeyPublicKey);
+				cryptree.grantPermission(remotePathPrefix2Plain, PermissionType.grant, userRepoKeyPublicKey);
 				cryptree.close();
 				transaction.commit();
 			}
@@ -438,7 +439,7 @@ public class RepoToRepoSyncIT extends AbstractIT {
 						transaction, remoteRepositoryId,
 						remotePathPrefix2Encrypted,
 						cryptreeRepoTransportFactory.getUserRepoKeyRing());
-				cryptree.grantWritePermission(remotePathPrefix2Plain, userRepoKeyPublicKey);
+				cryptree.grantPermission(remotePathPrefix2Plain, PermissionType.write, userRepoKeyPublicKey);
 				cryptree.close();
 				transaction.commit();
 			}

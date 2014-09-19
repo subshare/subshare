@@ -24,7 +24,6 @@ import org.subshare.core.dto.PermissionDto;
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.io.InputStreamSource;
 import org.subshare.core.io.MultiInputStream;
-import org.subshare.core.sign.Signable;
 import org.subshare.core.sign.Signature;
 
 import co.codewizards.cloudstore.core.dto.Uid;
@@ -61,7 +60,7 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 			),
 	@Query(name="getPermissionsChangedAfter_localRevision", value="SELECT WHERE this.localRevision > :localRevision")
 })
-public class Permission extends Entity implements Signable, AutoTrackLocalRevision, StoreCallback {
+public class Permission extends Entity implements WriteProtectedEntity, AutoTrackLocalRevision, StoreCallback {
 
 	@Persistent(nullValue=NullValue.EXCEPTION)
 	@Column(length=22)
@@ -134,6 +133,15 @@ public class Permission extends Entity implements Signable, AutoTrackLocalRevisi
 		return permissionType;
 	}
 	public void setPermissionType(final PermissionType permissionType) {
+		if (permissionType != null) {
+			switch (permissionType) {
+				case grant:
+				case write:
+					break;
+				default:
+					throw new IllegalArgumentException("PermissionType unknown or not allowed here: " + permissionType);
+			}
+		}
 		this.permissionType = permissionType;
 	}
 
@@ -241,4 +249,8 @@ public class Permission extends Entity implements Signable, AutoTrackLocalRevisi
 	}
 // END WORKAROUND for http://www.datanucleus.org/servlet/jira/browse/NUCCORE-1247
 
+	@Override
+	public PermissionType getPermissionTypeRequiredForWrite() {
+		return PermissionType.grant;
+	}
 }

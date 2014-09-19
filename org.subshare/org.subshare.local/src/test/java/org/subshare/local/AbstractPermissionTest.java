@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.UUID;
 
 import org.subshare.core.Cryptree;
+import org.subshare.core.dto.PermissionType;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKeyRing;
 import org.junit.Before;
@@ -130,7 +131,7 @@ public abstract class AbstractPermissionTest extends AbstractTest {
 			try (LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
 				try (Cryptree cryptree = createCryptree(transaction, remoteRepositoryId, "", signingUserRepoKeyRing);) {
 					for (final UserRepoKey.PublicKey publicKey : publicKeys)
-						cryptree.grantReadPermission(localPath, publicKey);
+						cryptree.grantPermission(localPath, PermissionType.read, publicKey);
 				}
 				transaction.commit();
 			}
@@ -147,7 +148,7 @@ public abstract class AbstractPermissionTest extends AbstractTest {
 			try (LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
 				try (Cryptree cryptree = createCryptree(transaction, remoteRepositoryId, "", signingUserRepoKeyRing);) {
 					for (final UserRepoKey.PublicKey publicKey : publicKeys)
-						cryptree.grantGrantPermission(localPath, publicKey);
+						cryptree.grantPermission(localPath, PermissionType.grant, publicKey);
 				}
 				transaction.commit();
 			}
@@ -164,7 +165,7 @@ public abstract class AbstractPermissionTest extends AbstractTest {
 			try (LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
 				try (Cryptree cryptree = createCryptree(transaction, remoteRepositoryId, "", signingUserRepoKeyRing);) {
 					for (final UserRepoKey.PublicKey publicKey : publicKeys)
-						cryptree.grantWritePermission(localPath, publicKey);
+						cryptree.grantPermission(localPath, PermissionType.write, publicKey);
 				}
 				transaction.commit();
 			}
@@ -180,7 +181,7 @@ public abstract class AbstractPermissionTest extends AbstractTest {
 			localRepoManager.localSync(new LoggerProgressMonitor(logger));
 			try (LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
 				try (Cryptree cryptree = createCryptree(transaction, remoteRepositoryId, "", signingUserRepoKeyRing);) {
-					cryptree.revokeReadPermission(localPath, new HashSet<Uid>(Arrays.asList(userRepoKeyIds)));
+					cryptree.revokePermission(localPath, PermissionType.read, new HashSet<Uid>(Arrays.asList(userRepoKeyIds)));
 				}
 				transaction.commit();
 			}
