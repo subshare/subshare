@@ -115,7 +115,6 @@ import org.bouncycastle.crypto.paddings.ZeroBytePadding;
 import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
 import org.bouncycastle.crypto.params.RSAKeyParameters;
 import org.bouncycastle.crypto.params.RSAPrivateCrtKeyParameters;
-import org.bouncycastle.crypto.signers.GenericSigner;
 import org.bouncycastle.crypto.util.PrivateKeyFactory;
 import org.bouncycastle.crypto.util.PublicKeyFactory;
 import org.subshare.crypto.internal.asymmetric.AsymmetricBlockCipherImpl;
@@ -126,6 +125,7 @@ import org.subshare.crypto.internal.asymmetric.keypairgenerator.GOST3410KeyPairG
 import org.subshare.crypto.internal.asymmetric.keypairgenerator.NaccacheSternKeyPairGeneratorFactory;
 import org.subshare.crypto.internal.asymmetric.keypairgenerator.RSAKeyPairGeneratorFactory;
 import org.subshare.crypto.internal.mac.MACCalculatorFactoryImpl;
+import org.subshare.crypto.internal.sign.GenericSigner;
 import org.subshare.crypto.internal.symmetric.AEADBlockCipherImpl;
 import org.subshare.crypto.internal.symmetric.BufferedBlockCipherImpl;
 import org.subshare.crypto.internal.symmetric.SecretKeyGeneratorImpl;
