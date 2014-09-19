@@ -400,8 +400,8 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 	// The reason is that the chunks might be bigger (and usually are!) than the unencrypted files.
 	// Temporarily, we simply multiply the offset with a margin in order to have some reserve.
 	private static long getServerOffset(final long plainOffset) {
-		// 20 % buffer should be sufficient - for now.
-		return plainOffset * 120 / 100;
+		// 10 % buffer should be sufficient - for now.
+		return plainOffset * 110 / 100;
 	}
 
 	@Override
