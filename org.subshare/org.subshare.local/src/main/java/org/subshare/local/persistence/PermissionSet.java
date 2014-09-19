@@ -1,5 +1,6 @@
 package org.subshare.local.persistence;
 
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
 
 import java.io.IOException;
@@ -141,6 +142,11 @@ public class PermissionSet extends Entity implements WriteProtectedEntity, AutoT
 		SignableEmbeddedWorkaround.setSignature(this, signature);
 	}
 // END WORKAROUND for http://www.datanucleus.org/servlet/jira/browse/NUCCORE-1247
+
+	@Override
+	public CryptoRepoFile getCryptoRepoFileControllingPermissions() {
+		return assertNotNull("cryptoRepoFile", cryptoRepoFile);
+	}
 
 	@Override
 	public PermissionType getPermissionTypeRequiredForWrite() {

@@ -1,5 +1,6 @@
 package org.subshare.local.persistence;
 
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
 
 import java.io.IOException;
@@ -270,6 +271,19 @@ public class CryptoKey extends Entity implements WriteProtectedEntity, AutoTrack
 		SignableEmbeddedWorkaround.setSignature(this, signature);
 	}
 // END WORKAROUND for http://www.datanucleus.org/servlet/jira/browse/NUCCORE-1247
+
+	@Override
+	public CryptoRepoFile getCryptoRepoFileControllingPermissions() {
+		assertNotNull("cryptoRepoFile", cryptoRepoFile);
+
+		switch (cryptoKeyRole) {
+			case backlinkKey:
+			case dataKey:
+				return null;
+			default:
+				return cryptoRepoFile;
+		}
+	}
 
 	@Override
 	public PermissionType getPermissionTypeRequiredForWrite() {

@@ -94,7 +94,7 @@ public class CryptreeNode {
 		this(null, null, context, repoFile, cryptoRepoFile);
 	}
 
-	private CryptreeNode(final CryptreeNode parent, final CryptreeNode child, final CryptreeContext context, final RepoFile repoFile, final CryptoRepoFile cryptoRepoFile) {
+	public CryptreeNode(final CryptreeNode parent, final CryptreeNode child, final CryptreeContext context, final RepoFile repoFile, final CryptoRepoFile cryptoRepoFile) {
 		if (parent == null && child == null && context == null)
 			throw new IllegalArgumentException("parent == null && child == null && context == null");
 
@@ -128,6 +128,8 @@ public class CryptreeNode {
 				// of the parent directories.
 				// This RepoFile is therefore clearly optional!
 			}
+			else
+				context.registerCryptreeNode(repoFile, this);
 		}
 		return repoFile;
 	}
@@ -160,6 +162,9 @@ public class CryptreeNode {
 
 			final CryptoRepoFileDao cryptoRepoFileDao = context.transaction.getDao(CryptoRepoFileDao.class);
 			cryptoRepoFile = cryptoRepoFileDao.getCryptoRepoFile(repoFile); // may be null!
+
+			if (cryptoRepoFile != null)
+				context.registerCryptreeNode(cryptoRepoFile, this);
 		}
 		return cryptoRepoFile;
 	}
@@ -348,13 +353,13 @@ public class CryptreeNode {
 				final CryptoRepoFileDao dao = context.transaction.getDao(CryptoRepoFileDao.class);
 				final Collection<CryptoRepoFile> childCryptoRepoFiles = dao.getChildCryptoRepoFiles(cryptoRepoFile);
 				for (final CryptoRepoFile childCryptoRepoFile : childCryptoRepoFiles)
-					children.add(new CryptreeNode(this, null, getContext(), null, childCryptoRepoFile));
+					children.add(context.getCryptreeNodeOrCreate(this, null, null, childCryptoRepoFile));
 			}
 			else if (repoFile != null) {
 				final RepoFileDao dao = context.transaction.getDao(RepoFileDao.class);
 				final Collection<RepoFile> childRepoFiles = dao.getChildRepoFiles(repoFile);
 				for (final RepoFile childRepoFile : childRepoFiles)
-					children.add(new CryptreeNode(this, null, getContext(), childRepoFile, null));
+					children.add(context.getCryptreeNodeOrCreate(this, null, childRepoFile, null));
 			}
 			else
 				throw new IllegalStateException("repoFile == null && cryptoRepoFile == null");
@@ -521,7 +526,7 @@ public class CryptreeNode {
 			final CryptoRepoFile parentCryptoRepoFile =  cryptoRepoFile == null ? null : cryptoRepoFile.getParent();
 
 			if (parentRepoFile != null || parentCryptoRepoFile != null)
-				parent = new CryptreeNode(null, this, getContext(), parentRepoFile, parentCryptoRepoFile);
+				parent = context.getCryptreeNodeOrCreate(null, this, parentRepoFile, parentCryptoRepoFile);
 		}
 		return parent;
 	}
@@ -747,7 +752,19 @@ public class CryptreeNode {
 
 	public void sign(final WriteProtectedEntity writeProtectedEntity) {
 		assertNotNull("writeProtectedEntity", writeProtectedEntity);
-		final UserRepoKey userRepoKey = getUserRepoKeyForOrFail(writeProtectedEntity.getPermissionTypeRequiredForWrite());
+		final CryptoRepoFile cryptoRepoFileControllingPermissions = writeProtectedEntity.getCryptoRepoFileControllingPermissions();
+		final UserRepoKey userRepoKey;
+		if (cryptoRepoFileControllingPermissions == null) {
+			// TODO This is wrong, because there might be no permission for this UserRepoKey!
+			// Support this correctly! Use any UserRepoKey *with* *permission* granted *now*.
+			userRepoKey = context.userRepoKeyRing.getUserRepoKeys(context.serverRepositoryId).get(0);
+		}
+		else if (cryptoRepoFileControllingPermissions.equals(this.getCryptoRepoFile()))
+			userRepoKey = this.getUserRepoKeyForOrFail(writeProtectedEntity.getPermissionTypeRequiredForWrite());
+		else {
+			final CryptreeNode cryptreeNode = context.getCryptreeNodeOrCreate(cryptoRepoFileControllingPermissions.getCryptoRepoFileId());
+			userRepoKey = cryptreeNode.getUserRepoKeyForOrFail(writeProtectedEntity.getPermissionTypeRequiredForWrite());
+		}
 		context.getSignableSigner(userRepoKey).sign(writeProtectedEntity);
 	}
 

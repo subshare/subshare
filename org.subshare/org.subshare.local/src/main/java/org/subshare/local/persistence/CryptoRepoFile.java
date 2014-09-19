@@ -384,6 +384,11 @@ public class CryptoRepoFile extends Entity implements WriteProtectedEntity, Auto
 // END WORKAROUND for http://www.datanucleus.org/servlet/jira/browse/NUCCORE-1247
 
 	@Override
+	public CryptoRepoFile getCryptoRepoFileControllingPermissions() {
+		return this;
+	}
+
+	@Override
 	public PermissionType getPermissionTypeRequiredForWrite() {
 		return PermissionType.write;
 	}

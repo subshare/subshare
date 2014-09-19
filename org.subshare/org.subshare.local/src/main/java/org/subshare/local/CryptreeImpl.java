@@ -68,11 +68,6 @@ public class CryptreeImpl extends AbstractCryptree {
 
 	private static final Logger logger = LoggerFactory.getLogger(CryptreeImpl.class);
 
-	private final Map<String, CryptreeNode> localPath2CryptreeNode = new HashMap<>();
-	private final Map<Uid, CryptreeNode> cryptoRepoFileId2CryptreeNode = new HashMap<>();
-
-	private Uid cryptoRepoFileIdForRemotePathPrefix;
-
 	private UserRepoKeyPublicKeyLookupImpl userRepoKeyPublicKeyLookup;
 
 	private UUID localRepositoryId;
@@ -91,7 +86,7 @@ public class CryptreeImpl extends AbstractCryptree {
 	@Override
 	public CryptoChangeSetDto createOrUpdateCryptoRepoFile(final String localPath) {
 		claimRepositoryOwnershipIfUnowned();
-		final CryptreeNode cryptreeNode = getCryptreeNodeOrFail(localPath);
+		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(localPath);
 		final CryptoRepoFile cryptoRepoFile = cryptreeNode.getCryptoRepoFileOrCreate(true);
 
 		final CryptoChangeSetDto cryptoChangeSetDto = getCryptoChangeSetDto(cryptoRepoFile);
@@ -101,7 +96,7 @@ public class CryptreeImpl extends AbstractCryptree {
 	@Override
 	public CryptoChangeSetDto getCryptoChangeSetDtoOrFail(final String localPath) {
 		claimRepositoryOwnershipIfUnowned();
-		final CryptreeNode cryptreeNode = getCryptreeNodeOrFail(localPath);
+		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(localPath);
 		final CryptoRepoFile cryptoRepoFile = cryptreeNode.getCryptoRepoFile();
 		assertNotNull("cryptoRepoFile", cryptoRepoFile);
 
@@ -111,7 +106,7 @@ public class CryptreeImpl extends AbstractCryptree {
 
 	@Override
 	public String getServerPath(final String localPath) {
-		final CryptreeNode cryptreeNode = getCryptreeNodeOrFail(localPath);
+		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(localPath);
 		final CryptoRepoFile cryptoRepoFile = cryptreeNode.getCryptoRepoFile();
 		assertNotNull("cryptoRepoFile", cryptoRepoFile);
 		return cryptoRepoFile.getServerPath();
@@ -134,7 +129,8 @@ public class CryptreeImpl extends AbstractCryptree {
 		if (cryptreeContext == null)
 			cryptreeContext = new CryptreeContext(
 					getUserRepoKeyRingOrFail(), getTransactionOrFail(),
-					getLocalRepositoryIdOrFail(), getRemoteRepositoryIdOrFail(), getServerRepositoryIdOrFail());
+					getLocalRepositoryIdOrFail(), getRemoteRepositoryIdOrFail(), getServerRepositoryIdOrFail(),
+					getRemotePathPrefixOrFail(), isOnServer());
 
 		return cryptreeContext;
 	}
@@ -259,7 +255,7 @@ public class CryptreeImpl extends AbstractCryptree {
 
 	@Override
 	public UserRepoKey getUserRepoKeyForWrite(final String localPath) {
-		final CryptreeNode cryptreeNode = getCryptreeNodeOrFail(localPath);
+		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(localPath);
 		return cryptreeNode.getUserRepoKeyFor(PermissionType.write);
 	}
 
@@ -281,7 +277,7 @@ public class CryptreeImpl extends AbstractCryptree {
 	@Override
 	public RepoFileDto getDecryptedRepoFileDtoOrFail(final Uid cryptoRepoFileId) throws AccessDeniedException {
 		assertNotNull("cryptoRepoFileId", cryptoRepoFileId);
-		final CryptreeNode cryptreeNode = getCryptreeNodeOrFail(cryptoRepoFileId);
+		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(cryptoRepoFileId);
 		final RepoFileDto repoFileDto = cryptreeNode.getRepoFileDto();
 		assertNotNull("cryptreeNode.getRepoFileDto()", repoFileDto); // The cryptoRepoFile is present, thus this should never be null!
 		return repoFileDto;
@@ -290,7 +286,7 @@ public class CryptreeImpl extends AbstractCryptree {
 	@Override
 	public RepoFileDto getDecryptedRepoFileDto(final String localPath) throws AccessDeniedException {
 		assertNotNull("localPath", localPath);
-		final CryptreeNode cryptreeNode = getCryptreeNodeOrFail(localPath);
+		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(localPath);
 		return cryptreeNode.getRepoFileDto();
 	}
 
@@ -299,7 +295,7 @@ public class CryptreeImpl extends AbstractCryptree {
 		assertNotNull("localPath", localPath);
 		assertNotNull("permissionType", permissionType);
 		assertNotNull("userRepoKeyPublicKey", userRepoKeyPublicKey);
-		final CryptreeNode cryptreeNode = getCryptreeNodeOrFail(localPath);
+		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(localPath);
 		cryptreeNode.grantPermission(permissionType, userRepoKeyPublicKey);
 	}
 
@@ -308,7 +304,7 @@ public class CryptreeImpl extends AbstractCryptree {
 		assertNotNull("localPath", localPath);
 		assertNotNull("permissionType", permissionType);
 		assertNotNull("userRepoKeyIds", userRepoKeyIds);
-		final CryptreeNode cryptreeNode = getCryptreeNodeOrFail(localPath);
+		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(localPath);
 		cryptreeNode.revokePermission(permissionType, userRepoKeyIds);
 	}
 
@@ -317,7 +313,7 @@ public class CryptreeImpl extends AbstractCryptree {
 		assertNotNull("cryptoRepoFileId", cryptoRepoFileId);
 		assertNotNull("permissionType", permissionType);
 		assertNotNull("userRepoKeyPublicKey", userRepoKeyPublicKey);
-		final CryptreeNode cryptreeNode = getCryptreeNodeOrFail(cryptoRepoFileId);
+		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(cryptoRepoFileId);
 		cryptreeNode.grantPermission(permissionType, userRepoKeyPublicKey);
 	}
 
@@ -326,7 +322,7 @@ public class CryptreeImpl extends AbstractCryptree {
 		assertNotNull("cryptoRepoFileId", cryptoRepoFileId);
 		assertNotNull("permissionType", permissionType);
 		assertNotNull("userRepoKeyIds", userRepoKeyIds);
-		final CryptreeNode cryptreeNode = getCryptreeNodeOrFail(cryptoRepoFileId);
+		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(cryptoRepoFileId);
 		cryptreeNode.revokePermission(permissionType, userRepoKeyIds);
 	}
 
@@ -369,7 +365,7 @@ public class CryptreeImpl extends AbstractCryptree {
 			}
 		}
 		else {
-			final Uid id = getCryptoRepoFileIdForRemotePathPrefixOrFail();
+			final Uid id = getCryptreeContext().getCryptoRepoFileIdForRemotePathPrefixOrFail();
 			if (id.equals(cryptoRepoFile.getCryptoRepoFileId())) {
 				final LocalRepository localRepository = transaction.getDao(LocalRepositoryDao.class).getLocalRepositoryOrFail();
 				cryptoRepoFile.setRepoFile(localRepository.getRoot());
@@ -565,132 +561,6 @@ public class CryptreeImpl extends AbstractCryptree {
 			lastCryptoKeySyncToRemoteRepo = lastCryptoKeySyncToRemoteRepoDao.makePersistent(lastCryptoKeySyncToRemoteRepo);
 		}
 		return lastCryptoKeySyncToRemoteRepo;
-	}
-
-	private CryptreeNode getCryptreeNodeOrFail(final String localPath) {
-		CryptreeNode cryptreeNode = localPath2CryptreeNode.get(localPath);
-		if (cryptreeNode == null) {
-			cryptreeNode = createCryptreeNodeOrFail(localPath);
-			localPath2CryptreeNode.put(localPath, cryptreeNode);
-		}
-		return cryptreeNode;
-	}
-
-	private CryptreeNode getCryptreeNodeOrFail(final Uid cryptoRepoFileId) {
-		CryptreeNode cryptreeNode = cryptoRepoFileId2CryptreeNode.get(cryptoRepoFileId);
-		if (cryptreeNode == null) {
-			cryptreeNode = createCryptreeNodeOrFail(cryptoRepoFileId);
-			cryptoRepoFileId2CryptreeNode.put(cryptoRepoFileId, cryptreeNode);
-		}
-		return cryptreeNode;
-	}
-
-	private CryptreeNode createCryptreeNodeOrFail(final String localPath) {
-		final RepoFile repoFile = getRepoFile(localPath);
-		if (repoFile != null) {
-			final CryptreeNode cryptreeNode = new CryptreeNode(getCryptreeContext(), repoFile);
-			return cryptreeNode;
-		}
-		final CryptoRepoFile cryptoRepoFile = getCryptoRepoFileOrFail(localPath);
-		final CryptreeNode cryptreeNode = new CryptreeNode(getCryptreeContext(), cryptoRepoFile);
-		return cryptreeNode;
-	}
-
-	private CryptreeNode createCryptreeNodeOrFail(final Uid cryptoRepoFileId) {
-		final CryptoRepoFile cryptoRepoFile = getCryptoRepoFileOrFail(cryptoRepoFileId);
-		final CryptreeNode cryptreeNode = new CryptreeNode(getCryptreeContext(), cryptoRepoFile);
-		return cryptreeNode;
-	}
-
-	private CryptoRepoFile getCryptoRepoFileOrFail(final Uid cryptoRepoFileId) {
-		final LocalRepoTransaction transaction = getTransactionOrFail();
-		final CryptoRepoFileDao cryptoRepoFileDao = transaction.getDao(CryptoRepoFileDao.class);
-		final CryptoRepoFile cryptoRepoFile = cryptoRepoFileDao.getCryptoRepoFileOrFail(cryptoRepoFileId);
-		return cryptoRepoFile;
-	}
-
-	private CryptoRepoFile getCryptoRepoFileOrFail(final String localPath) {
-		final LocalRepoTransaction transaction = getTransactionOrFail();
-		final CryptoRepoFileDao cryptoRepoFileDao = transaction.getDao(CryptoRepoFileDao.class);
-		final CryptoRepoFile cryptoRepoFile = cryptoRepoFileDao.getCryptoRepoFile(prefixLocalPath(localPath));
-		assertNotNull("cryptoRepoFile", cryptoRepoFile);
-		return cryptoRepoFile;
-	}
-
-	private String prefixLocalPath(final String localPath) {
-		assertNotNull("localPath", localPath);
-
-		if (getRemotePathPrefixOrFail().isEmpty())
-			return localPath;
-
-		final CryptoRepoFile prefixCryptoRepoFile = getCryptoRepoFileForRemotePathPrefixOrFail();
-
-		if (localPath.isEmpty())
-			return prefixCryptoRepoFile.getLocalPathOrFail();
-		else {
-			if ("/".equals(localPath))
-				throw new IllegalStateException("localPath should never be '/', but instead it should be an empty String, if the real root is checked out!");
-
-			if (!localPath.startsWith("/"))
-				throw new IllegalStateException(String.format("localPath '%s' is neither empty nor does it start with '/'!", localPath));
-
-			final String prefix = prefixCryptoRepoFile.getLocalPathOrFail();
-
-			if (!prefix.isEmpty() && !prefix.startsWith("/"))
-				throw new IllegalStateException(String.format("prefixCryptoRepoFile.localPath '%s' is neither empty nor does it start with '/'!", prefix));
-
-			if (prefix.endsWith("/"))
-				throw new IllegalStateException(String.format("prefixCryptoRepoFile.localPath '%s' ends with '/'! It should not!", prefix));
-
-			return prefix + localPath;
-		}
-	}
-
-	private CryptoRepoFile getCryptoRepoFileForRemotePathPrefixOrFail() {
-		final Uid id = getCryptoRepoFileIdForRemotePathPrefixOrFail();
-		final CryptoRepoFile prefixCryptoRepoFile = getCryptoRepoFileOrFail(id);
-		return prefixCryptoRepoFile;
-	}
-
-	/**
-	 * Gets the {@link CryptoRepoFile#getCryptoRepoFileId() cryptoRepoFileId} of the {@code CryptoRepoFile}
-	 * which corresponds to the root-directory that's checked out.
-	 * <p>
-	 * This method can only be used, if the local repository is connected to a sub-directory of the server
-	 * repository. If it is connected to the server repository's root, there is no
-	 * {@link #getRemotePathPrefix() remotePathPrefix} (it is an empty string) and the ID can therefore not
-	 * be read from it.
-	 * @return the {@link CryptoRepoFile#getCryptoRepoFileId() cryptoRepoFileId} of the {@code CryptoRepoFile}
-	 * which is the connection point of the local repository to the server's repository.
-	 */
-	private Uid getCryptoRepoFileIdForRemotePathPrefixOrFail() {
-		if (cryptoRepoFileIdForRemotePathPrefix == null) {
-			if (isOnServer())
-				throw new IllegalStateException("This method cannot be used on the server!");
-
-			final String remotePathPrefix = getRemotePathPrefixOrFail();
-			if (remotePathPrefix.isEmpty())
-				throw new IllegalStateException("This method cannot be used, if there is no remotePathPrefix!");
-
-			if ("/".equals(remotePathPrefix))
-				throw new IllegalStateException("The remotePathPrefix should be an empty string, if the root is checked out!");
-
-			final int lastSlashIndex = remotePathPrefix.lastIndexOf('/');
-			if (lastSlashIndex < 0)
-				throw new IllegalStateException("encryptedPathPrefix is neither empty nor does it contain '/'! encryptedPathPrefix: " + remotePathPrefix);
-
-			final String uidStr = remotePathPrefix.substring(lastSlashIndex + 1);
-			cryptoRepoFileIdForRemotePathPrefix = new Uid(uidStr);
-		}
-		return cryptoRepoFileIdForRemotePathPrefix;
-	}
-
-	private RepoFile getRepoFile(final String localPath) {
-		final LocalRepoTransaction transaction = getTransactionOrFail();
-		final LocalRepoManager localRepoManager = transaction.getLocalRepoManager();
-		final RepoFileDao repoFileDao = transaction.getDao(RepoFileDao.class);
-		final RepoFile repoFile = repoFileDao.getRepoFile(localRepoManager.getLocalRoot(), createFile(localRepoManager.getLocalRoot(), localPath));
-		return repoFile;
 	}
 
 	protected CryptoChangeSetDto getCryptoChangeSetDto(final CryptoRepoFile cryptoRepoFile) {
@@ -942,10 +812,10 @@ public class CryptreeImpl extends AbstractCryptree {
 	}
 
 	public void assertSignatureOk(final String localPath, final Signable signable, final PermissionType requiredPermissionType) throws SignatureException {
-		getCryptreeNodeOrFail(localPath).assertSignatureOk(signable, requiredPermissionType);
+		getCryptreeContext().getCryptreeNodeOrCreate(localPath).assertSignatureOk(signable, requiredPermissionType);
 	}
 
 	public void assertSignatureOk(final Uid cryptoRepoFileId, final Signable signable, final PermissionType requiredPermissionType) throws SignatureException {
-		getCryptreeNodeOrFail(cryptoRepoFileId).assertSignatureOk(signable, requiredPermissionType);
+		getCryptreeContext().getCryptreeNodeOrCreate(cryptoRepoFileId).assertSignatureOk(signable, requiredPermissionType);
 	}
 }
