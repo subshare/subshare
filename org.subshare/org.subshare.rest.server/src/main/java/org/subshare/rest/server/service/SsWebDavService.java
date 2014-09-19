@@ -68,10 +68,7 @@ public class SsWebDavService extends WebDavService {
 					cryptoRepoFileId = cryptree.getRootCryptoRepoFileId();
 				else {
 					final int lastSlashIndex = path.lastIndexOf('/');
-					if (lastSlashIndex < 0)
-						throw new IllegalStateException("path is neither empty nor does it contain '/'! path: " + path);
-
-					final String uidStr = path.substring(lastSlashIndex + 1);
+					final String uidStr = lastSlashIndex < 0 ? path : path.substring(lastSlashIndex + 1);
 					cryptoRepoFileId = new Uid(uidStr);
 				}
 
