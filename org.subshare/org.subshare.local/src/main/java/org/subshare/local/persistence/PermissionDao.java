@@ -71,6 +71,34 @@ public class PermissionDao extends Dao<Permission, PermissionDao> {
 	}
 
 	public Collection<Permission> getValidPermissions(
+			final PermissionType permissionType, final Uid userRepoKeyId, final Date timestamp) {
+		assertNotNull("permissionType", permissionType);
+		assertNotNull("userRepoKeyId", userRepoKeyId);
+		assertNotNull("timestamp", timestamp);
+
+		final Query query = pm().newNamedQuery(getEntityClass(), "getValidPermissions_permissionType_userRepoKeyId_timestamp");
+		try {
+			final Map<String, Object> params = new HashMap<String, Object>(3);
+			params.put("permissionType", permissionType);
+			params.put("userRepoKeyId", userRepoKeyId.toString());
+			params.put("timestamp", timestamp);
+
+			long startTimestamp = System.currentTimeMillis();
+			@SuppressWarnings("unchecked")
+			Collection<Permission> permissions = (Collection<Permission>) query.executeWithMap(params);
+			logger.debug("getValidPermissions: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
+
+			startTimestamp = System.currentTimeMillis();
+			permissions = load(permissions);
+			logger.debug("getValidPermissions: Loading result-set with {} elements took {} ms.", permissions.size(), System.currentTimeMillis() - startTimestamp);
+
+			return permissions;
+		} finally {
+			query.closeAll();
+		}
+	}
+
+	public Collection<Permission> getValidPermissions(
 			final PermissionSet permissionSet, final PermissionType permissionType, final Uid userRepoKeyId, final Date timestamp) {
 		assertNotNull("permissionSet", permissionSet);
 		assertNotNull("permissionType", permissionType);

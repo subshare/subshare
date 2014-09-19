@@ -387,12 +387,12 @@ public class RepoToRepoSyncIT extends AbstractIT {
 		{
 			try (final LocalRepoTransaction transaction = localRepoManagerLocal.beginWriteTransaction();)
 			{
-				final Cryptree cryptree = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail().createCryptree(
+				final Cryptree cryptree = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail().getCryptreeOrCreate(
 						transaction, remoteRepositoryId,
 						remotePathPrefix2Encrypted,
 						cryptreeRepoTransportFactory.getUserRepoKeyRing());
 				cryptree.grantPermission(remotePathPrefix2Plain, PermissionType.read, userRepoKeyPublicKey);
-				cryptree.close();
+
 				transaction.commit();
 			}
 		}
@@ -403,12 +403,12 @@ public class RepoToRepoSyncIT extends AbstractIT {
 		{
 			try (final LocalRepoTransaction transaction = localRepoManagerLocal.beginWriteTransaction();)
 			{
-				final Cryptree cryptree = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail().createCryptree(
+				final Cryptree cryptree = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail().getCryptreeOrCreate(
 						transaction, remoteRepositoryId,
 						remotePathPrefix2Encrypted,
 						cryptreeRepoTransportFactory.getUserRepoKeyRing());
 				cryptree.revokePermission(remotePathPrefix2Plain, PermissionType.read, Collections.singleton(userRepoKeyPublicKey.getUserRepoKeyId()));
-				cryptree.close();
+
 				transaction.commit();
 			}
 		}
@@ -419,12 +419,12 @@ public class RepoToRepoSyncIT extends AbstractIT {
 		{
 			try (final LocalRepoTransaction transaction = localRepoManagerLocal.beginWriteTransaction();)
 			{
-				final Cryptree cryptree = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail().createCryptree(
+				final Cryptree cryptree = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail().getCryptreeOrCreate(
 						transaction, remoteRepositoryId,
 						remotePathPrefix2Encrypted,
 						cryptreeRepoTransportFactory.getUserRepoKeyRing());
 				cryptree.grantPermission(remotePathPrefix2Plain, PermissionType.grant, userRepoKeyPublicKey);
-				cryptree.close();
+
 				transaction.commit();
 			}
 		}
@@ -435,12 +435,12 @@ public class RepoToRepoSyncIT extends AbstractIT {
 		{
 			try (final LocalRepoTransaction transaction = localRepoManagerLocal.beginWriteTransaction();)
 			{
-				final Cryptree cryptree = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail().createCryptree(
+				final Cryptree cryptree = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail().getCryptreeOrCreate(
 						transaction, remoteRepositoryId,
 						remotePathPrefix2Encrypted,
 						cryptreeRepoTransportFactory.getUserRepoKeyRing());
 				cryptree.grantPermission(remotePathPrefix2Plain, PermissionType.write, userRepoKeyPublicKey);
-				cryptree.close();
+
 				transaction.commit();
 			}
 		}

@@ -98,8 +98,8 @@ public abstract class AbstractTest {
 		return LocalRepoManagerFactory.Helper.getInstance().createLocalRepoManagerForExistingRepository(localRoot);
 	}
 
-	protected static Cryptree createCryptree(final LocalRepoTransaction transaction, final UUID remoteRepositoryId, final String remotePathPrefix, final UserRepoKeyRing userRepoKeyRing) {
-		return CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail().createCryptree(
+	protected static Cryptree getCryptree(final LocalRepoTransaction transaction, final UUID remoteRepositoryId, final String remotePathPrefix, final UserRepoKeyRing userRepoKeyRing) {
+		return CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail().getCryptreeOrCreate(
 				transaction, remoteRepositoryId, remotePathPrefix, userRepoKeyRing);
 	}
 

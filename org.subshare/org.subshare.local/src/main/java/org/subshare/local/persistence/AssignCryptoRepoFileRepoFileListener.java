@@ -40,10 +40,6 @@ public class AssignCryptoRepoFileRepoFileListener extends AbstractLocalRepoTrans
 
 	@Override
 	public void onCommit() {
-		assignCryptoRepoFileRepoFile();
-	}
-
-	public void assignCryptoRepoFileRepoFile() {
 		if (repoFileName2RepoFile.isEmpty())
 			return;
 

@@ -1,2 +1,2 @@
 org.subshare.local.persistence.AssignCryptoRepoFileRepoFileListener
-org.subshare.local.persistence.VerifySignatureListener
+org.subshare.local.persistence.VerifySignableAndWriteProtectedEntityListener

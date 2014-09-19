@@ -15,6 +15,8 @@ import java.util.UUID;
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.subshare.core.AbstractCryptree;
 import org.subshare.core.AccessDeniedException;
+import org.subshare.core.GrantAccessDeniedException;
+import org.subshare.core.ReadAccessDeniedException;
 import org.subshare.core.WriteAccessDeniedException;
 import org.subshare.core.dto.CryptoChangeSetDto;
 import org.subshare.core.dto.CryptoKeyDto;
@@ -25,7 +27,6 @@ import org.subshare.core.dto.PermissionSetDto;
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.dto.RepositoryOwnerDto;
 import org.subshare.core.dto.UserRepoKeyPublicKeyDto;
-import org.subshare.core.sign.Signable;
 import org.subshare.core.sign.Signature;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKeyPublicKeyLookup;
@@ -49,6 +50,7 @@ import org.subshare.local.persistence.RepositoryOwnerDao;
 import org.subshare.local.persistence.UserRepoKeyPublicKey;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyDao;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyLookupImpl;
+import org.subshare.local.persistence.WriteProtectedEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -128,9 +130,9 @@ public class CryptreeImpl extends AbstractCryptree {
 	protected CryptreeContext getCryptreeContext() {
 		if (cryptreeContext == null)
 			cryptreeContext = new CryptreeContext(
-					getUserRepoKeyRingOrFail(), getTransactionOrFail(),
+					getUserRepoKeyRing(), getTransactionOrFail(),
 					getLocalRepositoryIdOrFail(), getRemoteRepositoryIdOrFail(), getServerRepositoryIdOrFail(),
-					getRemotePathPrefixOrFail(), isOnServer());
+					getRemotePathPrefix(), isOnServer());
 
 		return cryptreeContext;
 	}
@@ -254,16 +256,30 @@ public class CryptreeImpl extends AbstractCryptree {
 	}
 
 	@Override
-	public UserRepoKey getUserRepoKeyForWrite(final String localPath) {
+	public UserRepoKey getUserRepoKey(final String localPath, final PermissionType permissionType) {
+		assertNotNull("localPath", localPath);
+		assertNotNull("permissionType", permissionType);
 		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(localPath);
-		return cryptreeNode.getUserRepoKeyFor(PermissionType.write);
+		return cryptreeNode.getUserRepoKey(false, permissionType);
 	}
 
 	@Override
-	public UserRepoKey getUserRepoKeyForWriteOrFail(final String localPath) throws WriteAccessDeniedException {
-		final UserRepoKey userRepoKey = getUserRepoKeyForWrite(localPath);
-		if (userRepoKey == null)
-			throw new WriteAccessDeniedException(String.format("No UserRepoKey available for 'write' at localPath='%s'!", localPath));
+	public UserRepoKey getUserRepoKeyOrFail(final String localPath, final PermissionType permissionType) throws AccessDeniedException {
+		final UserRepoKey userRepoKey = getUserRepoKey(localPath, permissionType);
+		if (userRepoKey == null) {
+			final String message = String.format("No UserRepoKey available for '%s' at localPath='%s'!",
+					permissionType, localPath);
+			switch (permissionType) {
+				case grant:
+					throw new GrantAccessDeniedException(message);
+				case read:
+					throw new ReadAccessDeniedException(message);
+				case write:
+					throw new WriteAccessDeniedException(message);
+				default:
+					throw new IllegalArgumentException("Unknown PermissionType: " + permissionType);
+			}
+		}
 		return userRepoKey;
 	}
 
@@ -811,11 +827,35 @@ public class CryptreeImpl extends AbstractCryptree {
 		}
 	}
 
-	public void assertSignatureOk(final String localPath, final Signable signable, final PermissionType requiredPermissionType) throws SignatureException {
-		getCryptreeContext().getCryptreeNodeOrCreate(localPath).assertSignatureOk(signable, requiredPermissionType);
+	// TODO this should be exposed as public API - thus, we need to refactor the WriteProtectedEntity interface out of the persistence layer into core (similar to Signable).
+	public void assertSignatureOk(final WriteProtectedEntity entity) throws SignatureException, AccessDeniedException {
+		CryptoRepoFile cryptoRepoFile = entity.getCryptoRepoFileControllingPermissions();
+		if (cryptoRepoFile == null)
+			cryptoRepoFile = getTransactionOrFail().getDao(CryptoRepoFileDao.class).getRootCryptoRepoFile();
+
+		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(cryptoRepoFile.getCryptoRepoFileId());
+		cryptreeNode.assertSignatureOk(entity);
 	}
 
-	public void assertSignatureOk(final Uid cryptoRepoFileId, final Signable signable, final PermissionType requiredPermissionType) throws SignatureException {
-		getCryptreeContext().getCryptreeNodeOrCreate(cryptoRepoFileId).assertSignatureOk(signable, requiredPermissionType);
+	@Override
+	public void assertHasPermission(
+			final Uid cryptoRepoFileId,
+			final Uid userRepoKeyId,
+			final PermissionType permissionType, final Date timestamp
+			) throws AccessDeniedException
+	{
+		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(cryptoRepoFileId);
+		cryptreeNode.assertHasPermission(false, userRepoKeyId, permissionType, timestamp);
+	}
+
+	@Override
+	public void assertHasPermission(
+			final String localPath,
+			final Uid userRepoKeyId,
+			final PermissionType permissionType, final Date timestamp
+			) throws AccessDeniedException
+	{
+		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(localPath);
+		cryptreeNode.assertHasPermission(false, userRepoKeyId, permissionType, timestamp);
 	}
 }

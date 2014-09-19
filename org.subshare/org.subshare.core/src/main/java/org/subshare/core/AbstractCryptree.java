@@ -89,9 +89,4 @@ public abstract class AbstractCryptree implements Cryptree {
 	protected String getRemotePathPrefixOrFail() {
 		return assertNotNull("getRemotePathPrefix()", getRemotePathPrefix());
 	}
-
-	@Override
-	public void close() {
-		// nothing to close - yet.
-	}
 }

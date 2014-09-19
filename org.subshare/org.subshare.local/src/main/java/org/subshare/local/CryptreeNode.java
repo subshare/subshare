@@ -622,8 +622,20 @@ public class CryptreeNode {
 //		assertHasPermission(PermissionType.grant, userRepoKeyId, timestamp);
 //	}
 
-	private void assertHasPermission(final PermissionType permissionType, final Uid userRepoKeyId, final Date timestamp) {
-		if (hasPermission(permissionType, userRepoKeyId, timestamp))
+	/**
+	 * @param anyCryptoRepoFile <code>true</code> to indicate that the {@link Permission} does not need to be available on the
+	 * level of this node's {@link CryptoRepoFile} (it is thus independent from this context); <code>false</code> to indicate
+	 * that is must be available here on this level (i.e. granted directly or inherited from a parent).
+	 * @param userRepoKeyId
+	 * @param permissionType
+	 * @param timestamp
+	 */
+	public void assertHasPermission(
+			final boolean anyCryptoRepoFile, final Uid userRepoKeyId,
+			final PermissionType permissionType, final Date timestamp
+			) throws AccessDeniedException
+	{
+		if (hasPermission(anyCryptoRepoFile, permissionType, userRepoKeyId, timestamp))
 			return; // all is fine => silently return.
 
 		final String exceptionMsg = String.format("No '%s' permission found for userRepoKeyId=%s and timestamp=%s!", permissionType, userRepoKeyId, timestamp);
@@ -637,7 +649,16 @@ public class CryptreeNode {
 		}
 	}
 
-	private boolean hasPermission(final PermissionType permissionType, final Uid userRepoKeyId, final Date timestamp) {
+	/**
+	 * @param anyCryptoRepoFile <code>true</code> to indicate that the {@link Permission} does not need to be available on the
+	 * level of this node's {@link CryptoRepoFile} (it is thus independent from this context); <code>false</code> to indicate
+	 * that is must be available here on this level (i.e. granted directly or inherited from a parent).
+	 * @param permissionType
+	 * @param userRepoKeyId
+	 * @param timestamp
+	 * @return
+	 */
+	private boolean hasPermission(final boolean anyCryptoRepoFile, final PermissionType permissionType, final Uid userRepoKeyId, final Date timestamp) {
 		assertNotNull("permissionType", permissionType);
 		assertNotNull("userRepoKeyId", userRepoKeyId);
 		assertNotNull("timestamp", timestamp);
@@ -655,31 +676,33 @@ public class CryptreeNode {
 		if (userRepoKeyId.equals(context.getRepositoryOwnerOrFail().getUserRepoKeyPublicKey().getUserRepoKeyId()))
 			return true; // The owner always has all permissions.
 
-		final PermissionSet permissionSet = getPermissionSet();
-		if (permissionSet != null) {
+		final PermissionSet permissionSet = anyCryptoRepoFile ? null : getPermissionSet();
+		if (anyCryptoRepoFile || permissionSet != null) {
 			final PermissionDao dao = context.transaction.getDao(PermissionDao.class);
-			final Set<Permission> permissions = new HashSet<>(dao.getValidPermissions(permissionSet, permissionType, userRepoKeyId, timestamp));
+			final Set<Permission> permissions = anyCryptoRepoFile
+					? new HashSet<>(dao.getValidPermissions(permissionType, userRepoKeyId, timestamp))
+							: new HashSet<>(dao.getValidPermissions(permissionSet, permissionType, userRepoKeyId, timestamp));
 
 			permissions.removeAll(permissionsBeingCheckedNow);
 
 			if (!permissions.isEmpty()) {
 				for (final Permission permission : permissions)
-					assertPermissionOk(permission);
+					assertPermissionOk(permission); // TODO is this necessary? isn't it sufficient to check when it's written into the DB?
 
 				return true; // We found a valid permission in this directory/file level.
 			}
 		}
 
-		if (permissionSet == null || permissionSet.isPermissionsInherited()) {
+		if (! anyCryptoRepoFile && (permissionSet == null || permissionSet.isPermissionsInherited())) {
 			final CryptreeNode parent = getParent();
 			if (parent != null)
-				return parent.hasPermission(permissionType, userRepoKeyId, timestamp);
+				return parent.hasPermission(anyCryptoRepoFile, permissionType, userRepoKeyId, timestamp);
 		}
 
 		return false; // If we come here, there is no permission.
 	}
 
-	private void assertPermissionOk(final Permission permission) throws SignatureException {
+	private void assertPermissionOk(final Permission permission) throws SignatureException, AccessDeniedException {
 		assertNotNull("permission", permission);
 		if (permissionsAlreadyCheckedOk.contains(permission))
 			return;
@@ -687,19 +710,36 @@ public class CryptreeNode {
 		if (! permissionsBeingCheckedNow.add(permission))
 			throw new IllegalStateException("Circular permission check! " + permission);
 		try {
-			assertSignatureOk(permission, PermissionType.grant);
+			assertSignatureOk(permission);
 			permissionsAlreadyCheckedOk.add(permission);
 		} finally {
 			permissionsBeingCheckedNow.remove(permission);
 		}
 	}
 
-	public void assertSignatureOk(final Signable signable, final PermissionType requiredPermissionType) throws SignatureException {
+	public void assertSignatureOk(final WriteProtectedEntity entity) throws SignatureException, AccessDeniedException {
+		assertNotNull("entity", entity);
+		final CryptoRepoFile cryptoRepoFileControllingPermissions = entity.getCryptoRepoFileControllingPermissions();
+		if (cryptoRepoFileControllingPermissions == null)
+			this.assertSignatureOk(entity, true, entity.getPermissionTypeRequiredForWrite());
+		else if (cryptoRepoFileControllingPermissions.equals(this.getCryptoRepoFile()))
+			this.assertSignatureOk(entity, false, entity.getPermissionTypeRequiredForWrite());
+		else {
+			final CryptreeNode cryptreeNode = context.getCryptreeNodeOrCreate(cryptoRepoFileControllingPermissions.getCryptoRepoFileId());
+			cryptreeNode.assertSignatureOk(entity, false, entity.getPermissionTypeRequiredForWrite());
+		}
+	}
+
+	public void assertSignatureOk(
+			final Signable signable, final boolean anyCryptoRepoFile,
+			final PermissionType requiredPermissionType
+			) throws SignatureException, AccessDeniedException
+	{
 		assertNotNull("signable", signable);
 		assertNotNull("requiredPermissionType", requiredPermissionType);
 		context.signableVerifier.verify(signable);
 		final Uid signingUserRepoKeyId = signable.getSignature().getSigningUserRepoKeyId();
-		assertHasPermission(requiredPermissionType, signingUserRepoKeyId, signable.getSignature().getSignatureCreated());
+		assertHasPermission(anyCryptoRepoFile, signingUserRepoKeyId, requiredPermissionType, signable.getSignature().getSignatureCreated());
 	}
 
 	public PermissionSet getPermissionSet() {
@@ -708,7 +748,7 @@ public class CryptreeNode {
 			permissionSet = dao.getPermissionSet(getCryptoRepoFileOrCreate(false));
 
 			if (permissionSet != null)
-				assertSignatureOk(permissionSet, PermissionType.grant);
+				assertSignatureOk(permissionSet);
 		}
 		return permissionSet;
 	}
@@ -726,49 +766,29 @@ public class CryptreeNode {
 		return permissionSet;
 	}
 
-//	public UserRepoKey getUserRepoKeyForGrant() {
-//		return getUserRepoKeyFor(PermissionType.grant);
-//	}
-//
-//	public UserRepoKey getUserRepoKeyForGrantOrFail() {
-//		final UserRepoKey userRepoKey = getUserRepoKeyForGrant();
-//		if (userRepoKey == null)
-//			throw new GrantAccessDeniedException("No 'grant' permission for any UserRepoKey of the current UserRepoKeyRing for: " + (repoFile != null ? repoFile.getPath() : cryptoRepoFile));
-//
-//		return userRepoKey;
-//	}
-//
-//	public UserRepoKey getUserRepoKeyForWrite() {
-//		return getUserRepoKeyFor(PermissionType.write);
-//	}
-//
-//	public UserRepoKey getUserRepoKeyForWriteOrFail() {
-//		final UserRepoKey userRepoKey = getUserRepoKeyForWrite();
-//		if (userRepoKey == null)
-//			throw new WriteAccessDeniedException("No 'write' permission for any UserRepoKey of the current UserRepoKeyRing for: " + (repoFile != null ? repoFile.getPath() : cryptoRepoFile));
-//
-//		return userRepoKey;
-//	}
-
 	public void sign(final WriteProtectedEntity writeProtectedEntity) {
 		assertNotNull("writeProtectedEntity", writeProtectedEntity);
 		final CryptoRepoFile cryptoRepoFileControllingPermissions = writeProtectedEntity.getCryptoRepoFileControllingPermissions();
 		final UserRepoKey userRepoKey;
-		if (cryptoRepoFileControllingPermissions == null) {
-			// TODO This is wrong, because there might be no permission for this UserRepoKey!
-			// Support this correctly! Use any UserRepoKey *with* *permission* granted *now*.
-			userRepoKey = context.userRepoKeyRing.getUserRepoKeys(context.serverRepositoryId).get(0);
-		}
+		if (cryptoRepoFileControllingPermissions == null)
+			userRepoKey = this.getUserRepoKeyOrFail(true, writeProtectedEntity.getPermissionTypeRequiredForWrite());
 		else if (cryptoRepoFileControllingPermissions.equals(this.getCryptoRepoFile()))
-			userRepoKey = this.getUserRepoKeyForOrFail(writeProtectedEntity.getPermissionTypeRequiredForWrite());
+			userRepoKey = this.getUserRepoKeyOrFail(false, writeProtectedEntity.getPermissionTypeRequiredForWrite());
 		else {
 			final CryptreeNode cryptreeNode = context.getCryptreeNodeOrCreate(cryptoRepoFileControllingPermissions.getCryptoRepoFileId());
-			userRepoKey = cryptreeNode.getUserRepoKeyForOrFail(writeProtectedEntity.getPermissionTypeRequiredForWrite());
+			userRepoKey = cryptreeNode.getUserRepoKeyOrFail(false, writeProtectedEntity.getPermissionTypeRequiredForWrite());
 		}
 		context.getSignableSigner(userRepoKey).sign(writeProtectedEntity);
 	}
 
-	public UserRepoKey getUserRepoKeyFor(final PermissionType permissionType) {
+	/**
+	 * @param anyCryptoRepoFile <code>true</code> to indicate that the {@link Permission} does not need to be available on the
+	 * level of this node's {@link CryptoRepoFile} (it is thus independent from this context); <code>false</code> to indicate
+	 * that is must be available here on this level (i.e. granted directly or inherited from a parent).
+	 * @param permissionType
+	 * @return
+	 */
+	public UserRepoKey getUserRepoKey(final boolean anyCryptoRepoFile, final PermissionType permissionType) {
 		assertNotNull("permissionType", permissionType);
 
 		// There is no Permission object with *read* permission. Hence, if we ever need to check this
@@ -783,7 +803,7 @@ public class CryptreeNode {
 
 		final Date now = new Date();
 		for (final UserRepoKey userRepoKey : context.userRepoKeyRing.getUserRepoKeys(context.serverRepositoryId)) {
-			if (hasPermission(permissionType, userRepoKey.getUserRepoKeyId(), now)) {
+			if (hasPermission(anyCryptoRepoFile, permissionType, userRepoKey.getUserRepoKeyId(), now)) {
 				getUserRepoKeyPublicKey(userRepoKey); // Make sure it is persisted in the DB.
 				return userRepoKey;
 			}
@@ -791,17 +811,21 @@ public class CryptreeNode {
 		return null;
 	}
 
-	private UserRepoKey getUserRepoKeyForOrFail(final PermissionType permissionType) {
-		final UserRepoKey userRepoKey = getUserRepoKeyFor(permissionType);
+	private UserRepoKey getUserRepoKeyOrFail(final boolean anyCryptoRepoFile, final PermissionType permissionType) {
+		final UserRepoKey userRepoKey = getUserRepoKey(anyCryptoRepoFile, permissionType);
 
 		if (userRepoKey == null) {
+			final String message = String.format("No '%s' permission for any UserRepoKey of the current UserRepoKeyRing for: %s",
+					permissionType, (repoFile != null ? repoFile.getPath() : cryptoRepoFile));
 			switch (permissionType) {
 				case grant:
-					throw new GrantAccessDeniedException("No 'grant' permission for any UserRepoKey of the current UserRepoKeyRing for: " + (repoFile != null ? repoFile.getPath() : cryptoRepoFile));
+					throw new GrantAccessDeniedException(message);
+				case read:
+					throw new ReadAccessDeniedException(message);
 				case write:
-					throw new WriteAccessDeniedException("No 'write' permission for any UserRepoKey of the current UserRepoKeyRing for: " + (repoFile != null ? repoFile.getPath() : cryptoRepoFile));
+					throw new WriteAccessDeniedException(message);
 				default:
-					throw new IllegalArgumentException("PermissionType unknown or not allowed here: " + permissionType);
+					throw new IllegalArgumentException("Unknown PermissionType: " + permissionType);
 			}
 		}
 		return userRepoKey;

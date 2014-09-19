@@ -86,26 +86,25 @@ public class CryptreeImplGrantRevokeReadPermissionTest extends AbstractPermissio
 		try (LocalRepoManager localRepoManager = createLocalRepoManagerForExistingRepository(localRoot);) {
 			localRepoManager.localSync(new LoggerProgressMonitor(logger));
 			try (LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
-				try (Cryptree cryptree = createCryptree(transaction, remoteRepositoryId, "", userRepoKeyRing);) {
-					for (String localPath : localPaths) {
-						localPath = removeFinalSlash(localPath);
-						try {
-							cryptree.getDecryptedRepoFileDto(localPath);
-							if (! isChildOrEqual(localPathReadAccessGranted, localPath) && ! isParentOrEqual(localPathReadAccessGranted, localPath))
-								fail("We should not have access to this: " + localPath);
-						} catch (final ReadAccessDeniedException x) {
-							if (isChildOrEqual(localPathReadAccessGranted, localPath) || isParentOrEqual(localPathReadAccessGranted, localPath))
-								fail("We should have access to this: " + localPath, x);
-						}
+				final Cryptree cryptree = getCryptree(transaction, remoteRepositoryId, "", userRepoKeyRing);
+				for (String localPath : localPaths) {
+					localPath = removeFinalSlash(localPath);
+					try {
+						cryptree.getDecryptedRepoFileDto(localPath);
+						if (! isChildOrEqual(localPathReadAccessGranted, localPath) && ! isParentOrEqual(localPathReadAccessGranted, localPath))
+							fail("We should not have access to this: " + localPath);
+					} catch (final ReadAccessDeniedException x) {
+						if (isChildOrEqual(localPathReadAccessGranted, localPath) || isParentOrEqual(localPathReadAccessGranted, localPath))
+							fail("We should have access to this: " + localPath, x);
+					}
 
-						try {
-							cryptree.getDataKeyOrFail(localPath);
-							if (! isChildOrEqual(localPathReadAccessGranted, localPath) && ! isParentOrEqual(localPathReadAccessGranted, localPath))
-								fail("We should not have access to this: " + localPath);
-						} catch (final ReadAccessDeniedException x) {
-							if (isChildOrEqual(localPathReadAccessGranted, localPath) || isParentOrEqual(localPathReadAccessGranted, localPath))
-								fail("We should have access to this: " + localPath, x);
-						}
+					try {
+						cryptree.getDataKeyOrFail(localPath);
+						if (! isChildOrEqual(localPathReadAccessGranted, localPath) && ! isParentOrEqual(localPathReadAccessGranted, localPath))
+							fail("We should not have access to this: " + localPath);
+					} catch (final ReadAccessDeniedException x) {
+						if (isChildOrEqual(localPathReadAccessGranted, localPath) || isParentOrEqual(localPathReadAccessGranted, localPath))
+							fail("We should have access to this: " + localPath, x);
 					}
 				}
 				transaction.commit();
@@ -117,22 +116,21 @@ public class CryptreeImplGrantRevokeReadPermissionTest extends AbstractPermissio
 		try (LocalRepoManager localRepoManager = createLocalRepoManagerForExistingRepository(localRoot);) {
 			localRepoManager.localSync(new LoggerProgressMonitor(logger));
 			try (LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
-				try (Cryptree cryptree = createCryptree(transaction, remoteRepositoryId, "", userRepoKeyRing);) {
-					for (String localPath : localPaths) {
-						localPath = removeFinalSlash(localPath);
-						try {
-							cryptree.getDecryptedRepoFileDto(localPath);
-							fail("We should not have access to this: " + localPath);
-						} catch (final ReadAccessDeniedException x) {
-							doNothing(); // we expect exactly this!
-						}
+				final Cryptree cryptree = getCryptree(transaction, remoteRepositoryId, "", userRepoKeyRing);
+				for (String localPath : localPaths) {
+					localPath = removeFinalSlash(localPath);
+					try {
+						cryptree.getDecryptedRepoFileDto(localPath);
+						fail("We should not have access to this: " + localPath);
+					} catch (final ReadAccessDeniedException x) {
+						doNothing(); // we expect exactly this!
+					}
 
-						try {
-							cryptree.getDataKeyOrFail(localPath);
-							fail("We should not have access to this: " + localPath);
-						} catch (final ReadAccessDeniedException x) {
-							doNothing(); // we expect exactly this!
-						}
+					try {
+						cryptree.getDataKeyOrFail(localPath);
+						fail("We should not have access to this: " + localPath);
+					} catch (final ReadAccessDeniedException x) {
+						doNothing(); // we expect exactly this!
 					}
 				}
 				transaction.commit();
@@ -144,20 +142,19 @@ public class CryptreeImplGrantRevokeReadPermissionTest extends AbstractPermissio
 		try (LocalRepoManager localRepoManager = createLocalRepoManagerForExistingRepository(localRoot);) {
 			localRepoManager.localSync(new LoggerProgressMonitor(logger));
 			try (LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
-				try (Cryptree cryptree = createCryptree(transaction, remoteRepositoryId, "", userRepoKeyRing);) {
-					for (String localPath : localPaths) {
-						localPath = removeFinalSlash(localPath);
-						try {
-							cryptree.getDecryptedRepoFileDto(localPath);
-						} catch (final ReadAccessDeniedException x) {
-							fail("We should have access to this: " + localPath, x);
-						}
+				final Cryptree cryptree = getCryptree(transaction, remoteRepositoryId, "", userRepoKeyRing);
+				for (String localPath : localPaths) {
+					localPath = removeFinalSlash(localPath);
+					try {
+						cryptree.getDecryptedRepoFileDto(localPath);
+					} catch (final ReadAccessDeniedException x) {
+						fail("We should have access to this: " + localPath, x);
+					}
 
-						try {
-							cryptree.getDataKeyOrFail(localPath);
-						} catch (final ReadAccessDeniedException x) {
-							fail("We should have access to this: " + localPath, x);
-						}
+					try {
+						cryptree.getDataKeyOrFail(localPath);
+					} catch (final ReadAccessDeniedException x) {
+						fail("We should have access to this: " + localPath, x);
 					}
 				}
 				transaction.commit();

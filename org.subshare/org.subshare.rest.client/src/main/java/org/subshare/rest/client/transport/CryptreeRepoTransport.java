@@ -24,6 +24,7 @@ import org.subshare.core.crypto.RandomIvFactory;
 import org.subshare.core.dto.SsDirectoryDto;
 import org.subshare.core.dto.SsNormalFileDto;
 import org.subshare.core.dto.CryptoChangeSetDto;
+import org.subshare.core.dto.PermissionType;
 import org.subshare.core.io.LimitedInputStream;
 import org.subshare.core.sign.SignableSigner;
 import org.subshare.core.sign.SignerOutputStream;
@@ -95,10 +96,9 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 		final LocalRepoManager localRepoManager = getLocalRepoManager();
 
 		try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
-			try (final Cryptree cryptree = createCryptree(transaction);) {
-				cryptree.initLocalRepositoryType();
-				cryptree.putCryptoChangeSetDto(cryptoChangeSetDto);
-			}
+			final Cryptree cryptree = getCryptree(transaction);
+			cryptree.initLocalRepositoryType();
+			cryptree.putCryptoChangeSetDto(cryptoChangeSetDto);
 			transaction.commit();
 		}
 		// In case of successful commit, we notify the server in order to not receive the same changes again.
@@ -111,37 +111,36 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 
 		final LocalRepoManager localRepoManager = getLocalRepoManager();
 		try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) { // TODO read-transaction?!
-			try (final Cryptree cryptree = createCryptree(transaction);) {
+			final Cryptree cryptree = getCryptree(transaction);
 
-				decryptedChangeSetDto.setRepositoryDto(changeSetDto.getRepositoryDto());
+			decryptedChangeSetDto.setRepositoryDto(changeSetDto.getRepositoryDto());
 
-				for (final ModificationDto modificationDto : changeSetDto.getModificationDtos()) {
-					final ModificationDto decryptedModificationDto = decryptModificationDto(cryptree, modificationDto);
-					if (decryptedModificationDto != null) // if it's null, it could not be decrypted (missing access rights?!) and should be ignored.
-						decryptedChangeSetDto.getModificationDtos().add(decryptedModificationDto);
-				}
+			for (final ModificationDto modificationDto : changeSetDto.getModificationDtos()) {
+				final ModificationDto decryptedModificationDto = decryptModificationDto(cryptree, modificationDto);
+				if (decryptedModificationDto != null) // if it's null, it could not be decrypted (missing access rights?!) and should be ignored.
+					decryptedChangeSetDto.getModificationDtos().add(decryptedModificationDto);
+			}
 
-				final Set<Long> nonDecryptableRepoFileIds = new HashSet<Long>();
-				// TODO instead of building the tree here (again), we should do this *only* on the server side
-				// and guarantee this order. Or shouldn't we?!
-				final RepoFileDtoTreeNode tree = RepoFileDtoTreeNode.createTree(changeSetDto.getRepoFileDtos());
-				if (tree != null) {
-					for (final RepoFileDtoTreeNode node : tree) {
-						final RepoFileDto repoFileDto = node.getRepoFileDto();
-						if (nonDecryptableRepoFileIds.contains(repoFileDto.getParentId())) {
-							nonDecryptableRepoFileIds.add(repoFileDto.getId()); // transitive for all children and children's children
-							continue;
-						}
-
-						final RepoFileDto decryptedRepoFileDto = decryptRepoFileDto(cryptree, repoFileDto);
-						// TODO we should remove the superfluous data to make sure the result looks exactly as it would do in a normal CloudStore sync!
-
-						// if it's null, it could not be decrypted (missing access rights?!) and should be ignored.
-						if (decryptedRepoFileDto == null)
-							nonDecryptableRepoFileIds.add(repoFileDto.getId());
-						else
-							decryptedChangeSetDto.getRepoFileDtos().add(decryptedRepoFileDto);
+			final Set<Long> nonDecryptableRepoFileIds = new HashSet<Long>();
+			// TODO instead of building the tree here (again), we should do this *only* on the server side
+			// and guarantee this order. Or shouldn't we?!
+			final RepoFileDtoTreeNode tree = RepoFileDtoTreeNode.createTree(changeSetDto.getRepoFileDtos());
+			if (tree != null) {
+				for (final RepoFileDtoTreeNode node : tree) {
+					final RepoFileDto repoFileDto = node.getRepoFileDto();
+					if (nonDecryptableRepoFileIds.contains(repoFileDto.getParentId())) {
+						nonDecryptableRepoFileIds.add(repoFileDto.getId()); // transitive for all children and children's children
+						continue;
 					}
+
+					final RepoFileDto decryptedRepoFileDto = decryptRepoFileDto(cryptree, repoFileDto);
+					// TODO we should remove the superfluous data to make sure the result looks exactly as it would do in a normal CloudStore sync!
+
+					// if it's null, it could not be decrypted (missing access rights?!) and should be ignored.
+					if (decryptedRepoFileDto == null)
+						nonDecryptableRepoFileIds.add(repoFileDto.getId());
+					else
+						decryptedChangeSetDto.getRepoFileDtos().add(decryptedRepoFileDto);
 				}
 			}
 			transaction.commit();
@@ -179,36 +178,36 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 	public void makeDirectory(final String path, final Date lastModified) {
 		final LocalRepoManager localRepoManager = getLocalRepoManager();
 		try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
-			try (final Cryptree cryptree = createCryptree(transaction);) {
-				final CryptoChangeSetDto cryptoChangeSetDto = cryptree.createOrUpdateCryptoRepoFile(path);
-				putCryptoChangeSetDto(cryptoChangeSetDto);
-				cryptree.updateLastCryptoKeySyncToRemoteRepo();
-				final UserRepoKey userRepoKey = cryptree.getUserRepoKeyForWriteOrFail(path);
+			final Cryptree cryptree = getCryptree(transaction);
+			final CryptoChangeSetDto cryptoChangeSetDto = cryptree.createOrUpdateCryptoRepoFile(path);
+			putCryptoChangeSetDto(cryptoChangeSetDto);
+			cryptree.updateLastCryptoKeySyncToRemoteRepo();
+			final UserRepoKey userRepoKey = cryptree.getUserRepoKeyOrFail(path, PermissionType.write);
 
-				final String serverPath = cryptree.getServerPath(path);
+			final String serverPath = cryptree.getServerPath(path);
 
-				final SsDirectoryDto directoryDto = new SsDirectoryDto();
+			final SsDirectoryDto directoryDto = new SsDirectoryDto();
 
-				final File f = createFile(serverPath);
-				directoryDto.setName(f.getName());
+			final File f = createFile(serverPath);
+			directoryDto.setName(f.getName());
 
-				final File pf = f.getParentFile();
-				directoryDto.setParentName(pf == null ? null : pf.getName());
+			final File pf = f.getParentFile();
+			directoryDto.setParentName(pf == null ? null : pf.getName());
 
-				final SignableSigner signableSigner = new SignableSigner(userRepoKey);
-				signableSigner.sign(directoryDto);
+			final SignableSigner signableSigner = new SignableSigner(userRepoKey);
+			signableSigner.sign(directoryDto);
 
-				getClient().execute(new SsMakeDirectory(getRepositoryId().toString(), serverPath, new Date(0), directoryDto));
-			}
+			getClient().execute(new SsMakeDirectory(getRepositoryId().toString(), serverPath, new Date(0), directoryDto));
+
 			transaction.commit();
 		}
 	}
 
-	protected Cryptree createCryptree(final LocalRepoTransaction transaction) {
+	protected Cryptree getCryptree(final LocalRepoTransaction transaction) {
 		if (cryptreeFactory == null)
 			cryptreeFactory = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail();
 
-		return cryptreeFactory.createCryptree(transaction, getRepositoryId(), getPathPrefix(), getUserRepoKeyRing());
+		return cryptreeFactory.getCryptreeOrCreate(transaction, getRepositoryId(), getPathPrefix(), getUserRepoKeyRing());
 	}
 
 //	protected UserRepoKey getUserRepoKey() {
@@ -246,9 +245,9 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 		final RepoFileDto decryptedRepoFileDto;
 		final LocalRepoManager localRepoManager = getLocalRepoManager();
 		try (final LocalRepoTransaction transaction = localRepoManager.beginReadTransaction();) {
-			try (final Cryptree cryptree = createCryptree(transaction);) {
-				decryptedRepoFileDto = cryptree.getDecryptedRepoFileDto(path);
-			}
+			final Cryptree cryptree = getCryptree(transaction);
+			decryptedRepoFileDto = cryptree.getDecryptedRepoFileDto(path);
+
 			transaction.commit();
 		}
 		return decryptedRepoFileDto;
@@ -260,13 +259,13 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 		final byte[] decryptedFileData;
 		final LocalRepoManager localRepoManager = getLocalRepoManager();
 		try (final LocalRepoTransaction transaction = localRepoManager.beginReadTransaction();) {
-			try (final Cryptree cryptree = createCryptree(transaction);) {
-				final KeyParameter dataKey = cryptree.getDataKeyOrFail(path);
-				final String unprefixedServerPath = unprefixPath(cryptree.getServerPath(path)); // it's automatically prefixed *again*, thus we must prefix it here (if we don't want to somehow suppress the automatic prefixing, which is probably quite a lot of work).
-				final int serverLength = (int) getServerOffset(length) + 65535; // TODO remove this (both multiplication + addition) as soon as we store the chunks individually on the server!
-				final byte[] encryptedFileData = getRestRepoTransport().getFileData(unprefixedServerPath, getServerOffset(offset), serverLength);
-				decryptedFileData = verifyAndDecrypt(encryptedFileData, dataKey, cryptree.getUserRepoKeyPublicKeyLookup());
-			}
+			final Cryptree cryptree = getCryptree(transaction);
+			final KeyParameter dataKey = cryptree.getDataKeyOrFail(path);
+			final String unprefixedServerPath = unprefixPath(cryptree.getServerPath(path)); // it's automatically prefixed *again*, thus we must prefix it here (if we don't want to somehow suppress the automatic prefixing, which is probably quite a lot of work).
+			final int serverLength = (int) getServerOffset(length) + 65535; // TODO remove this (both multiplication + addition) as soon as we store the chunks individually on the server!
+			final byte[] encryptedFileData = getRestRepoTransport().getFileData(unprefixedServerPath, getServerOffset(offset), serverLength);
+			decryptedFileData = verifyAndDecrypt(encryptedFileData, dataKey, cryptree.getUserRepoKeyPublicKeyLookup());
+
 			transaction.commit();
 		}
 		return decryptedFileData;
@@ -276,27 +275,27 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 	public void beginPutFile(final String path) {
 		final LocalRepoManager localRepoManager = getLocalRepoManager();
 		try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
-			try (final Cryptree cryptree = createCryptree(transaction);) {
-				final CryptoChangeSetDto cryptoChangeSetDto = cryptree.createOrUpdateCryptoRepoFile(path);
-				putCryptoChangeSetDto(cryptoChangeSetDto);
-				cryptree.updateLastCryptoKeySyncToRemoteRepo();
-				final UserRepoKey userRepoKey = cryptree.getUserRepoKeyForWriteOrFail(path);
+			final Cryptree cryptree = getCryptree(transaction);
+			final CryptoChangeSetDto cryptoChangeSetDto = cryptree.createOrUpdateCryptoRepoFile(path);
+			putCryptoChangeSetDto(cryptoChangeSetDto);
+			cryptree.updateLastCryptoKeySyncToRemoteRepo();
+			final UserRepoKey userRepoKey = cryptree.getUserRepoKeyOrFail(path, PermissionType.write);
 
-				final String serverPath = cryptree.getServerPath(path);
+			final String serverPath = cryptree.getServerPath(path);
 
-				final SsNormalFileDto normalFileDto = new SsNormalFileDto();
+			final SsNormalFileDto normalFileDto = new SsNormalFileDto();
 
-				final File f = createFile(serverPath);
-				normalFileDto.setName(f.getName());
+			final File f = createFile(serverPath);
+			normalFileDto.setName(f.getName());
 
-				final File pf = f.getParentFile();
-				normalFileDto.setParentName(pf == null ? null : pf.getName());
+			final File pf = f.getParentFile();
+			normalFileDto.setParentName(pf == null ? null : pf.getName());
 
-				final SignableSigner signableSigner = new SignableSigner(userRepoKey);
-				signableSigner.sign(normalFileDto);
+			final SignableSigner signableSigner = new SignableSigner(userRepoKey);
+			signableSigner.sign(normalFileDto);
 
-				getClient().execute(new SsBeginPutFile(getRepositoryId().toString(), serverPath, normalFileDto));
-			}
+			getClient().execute(new SsBeginPutFile(getRepositoryId().toString(), serverPath, normalFileDto));
+
 			transaction.commit();
 		}
 	}
@@ -305,18 +304,18 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 	public void putFileData(final String path, final long offset, final byte[] fileData) {
 		final LocalRepoManager localRepoManager = getLocalRepoManager();
 		try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
-			try (final Cryptree cryptree = createCryptree(transaction);) {
-				final KeyParameter dataKey = cryptree.getDataKeyOrFail(path);
-				final UserRepoKey userRepoKey = cryptree.getUserRepoKeyForWriteOrFail(path);
-				final byte[] encryptedFileData = encryptAndSign(fileData, dataKey, userRepoKey);
-				// TODO maybe we store only one IV per file and derive the chunk's IV from this combined with the offset (and all hashed)? this could save valuable entropy and should still be secure - maybe later.
+			final Cryptree cryptree = getCryptree(transaction);
+			final KeyParameter dataKey = cryptree.getDataKeyOrFail(path);
+			final UserRepoKey userRepoKey = cryptree.getUserRepoKeyOrFail(path, PermissionType.write);
+			final byte[] encryptedFileData = encryptAndSign(fileData, dataKey, userRepoKey);
+			// TODO maybe we store only one IV per file and derive the chunk's IV from this combined with the offset (and all hashed)? this could save valuable entropy and should still be secure - maybe later.
 
-				// TODO we *MUST* store the file chunks server-side in separate chunk-files permanently!
-				// The reason is that the chunks might be bigger (and usually are!) than the unencrypted files.
-				// Temporarily, we simply multiply the offset with a margin in order to have some reserve.
-				final String unprefixedServerPath = unprefixPath(cryptree.getServerPath(path)); // it's automatically prefixed *again*, thus we must prefix it here (if we don't want to somehow suppress the automatic prefixing, which is probably quite a lot of work).
-				getRestRepoTransport().putFileData(unprefixedServerPath, getServerOffset(offset), encryptedFileData);
-			}
+			// TODO we *MUST* store the file chunks server-side in separate chunk-files permanently!
+			// The reason is that the chunks might be bigger (and usually are!) than the unencrypted files.
+			// Temporarily, we simply multiply the offset with a margin in order to have some reserve.
+			final String unprefixedServerPath = unprefixPath(cryptree.getServerPath(path)); // it's automatically prefixed *again*, thus we must prefix it here (if we don't want to somehow suppress the automatic prefixing, which is probably quite a lot of work).
+			getRestRepoTransport().putFileData(unprefixedServerPath, getServerOffset(offset), encryptedFileData);
+
 			transaction.commit();
 		}
 	}
@@ -410,16 +409,16 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 		// TODO handle path correctly => pathPrefix on both sides possible!!!
 		final LocalRepoManager localRepoManager = getLocalRepoManager();
 		try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
-			try (final Cryptree cryptree = createCryptree(transaction);) {
-				final CryptoChangeSetDto cryptoChangeSetDto = cryptree.getCryptoChangeSetDtoOrFail(path);
-				putCryptoChangeSetDto(cryptoChangeSetDto);
-				cryptree.updateLastCryptoKeySyncToRemoteRepo();
+			final Cryptree cryptree = getCryptree(transaction);
+			final CryptoChangeSetDto cryptoChangeSetDto = cryptree.getCryptoChangeSetDtoOrFail(path);
+			putCryptoChangeSetDto(cryptoChangeSetDto);
+			cryptree.updateLastCryptoKeySyncToRemoteRepo();
 
-				// Calculating the SHA1 of the encrypted data is too complicated. We thus omit it (now optional in CloudStore).
-				final String unprefixedServerPath = unprefixPath(cryptree.getServerPath(path)); // it's automatically prefixed *again*, thus we must prefix it here (if we don't want to somehow suppress the automatic prefixing, which is probably quite a lot of work).
-				final long serverLength = getServerOffset(length) + 65535; // TODO remove this (both multiplication + addition) as soon as we store the chunks individually on the server!
-				getRestRepoTransport().endPutFile(unprefixedServerPath, new Date(0), serverLength, null);
-			}
+			// Calculating the SHA1 of the encrypted data is too complicated. We thus omit it (now optional in CloudStore).
+			final String unprefixedServerPath = unprefixPath(cryptree.getServerPath(path)); // it's automatically prefixed *again*, thus we must prefix it here (if we don't want to somehow suppress the automatic prefixing, which is probably quite a lot of work).
+			final long serverLength = getServerOffset(length) + 65535; // TODO remove this (both multiplication + addition) as soon as we store the chunks individually on the server!
+			getRestRepoTransport().endPutFile(unprefixedServerPath, new Date(0), serverLength, null);
+
 			transaction.commit();
 		}
 	}
@@ -436,13 +435,14 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 
 		final LocalRepoManager localRepoManager = getLocalRepoManager();
 		try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
-			try (final Cryptree cryptree = createCryptree(transaction);) {
-				// We want to ensure that the root directory is readable. If it isn't this throws an AccessDeniedException.
-				// Without this, we would silently sync nothing, if the root is not readable (important: this "root" might be
-				// a sub-directory!).
-				if (! cryptree.isEmpty())
-					cryptree.getDataKeyOrFail("");
-			}
+			final Cryptree cryptree = getCryptree(transaction);
+			// We want to ensure that the root directory is readable. If it isn't this throws an AccessDeniedException.
+			// Without this, we would silently sync nothing, if the root is not readable (important: this "root" might be
+			// a sub-directory!).
+			if (! cryptree.isEmpty())
+				cryptree.getDataKeyOrFail("");
+
+			transaction.commit();
 		}
 	}
 
@@ -453,11 +453,12 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 		// sure, now, that the crypto-meta-data is uploaded.
 		final LocalRepoManager localRepoManager = getLocalRepoManager();
 		try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
-			try (final Cryptree cryptree = createCryptree(transaction);) {
-				final CryptoChangeSetDto cryptoChangeSetDto = cryptree.getCryptoChangeSetDtoWithCryptoRepoFiles();
-				putCryptoChangeSetDto(cryptoChangeSetDto);
-				cryptree.updateLastCryptoKeySyncToRemoteRepo();
-			}
+			final Cryptree cryptree = getCryptree(transaction);
+			final CryptoChangeSetDto cryptoChangeSetDto = cryptree.getCryptoChangeSetDtoWithCryptoRepoFiles();
+			putCryptoChangeSetDto(cryptoChangeSetDto);
+			cryptree.updateLastCryptoKeySyncToRemoteRepo();
+
+			transaction.commit();
 		}
 		getRestRepoTransport().endSyncToRepository(fromLocalRevision);
 	}

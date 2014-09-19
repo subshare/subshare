@@ -38,7 +38,10 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 //	@Unique(name="Permission_permissionSet_userRepoKeyPublicKey_permissionType", members={"permissionSet", "userRepoKeyPublicKey", "permissionType"})
 })
 @Indices({
-	@Index(name="Permission_localRevision", members="localRevision")
+	@Index(name="Permission_permissionType", members="permissionType"),
+	@Index(name="Permission_localRevision", members="localRevision"),
+	@Index(name="Permission_validFrom", members="validFrom"),
+	@Index(name="Permission_validTo", members="validTo")
 })
 @Queries({
 	@Query(name="getPermission_permissionId", value="SELECT UNIQUE WHERE this.permissionId == :permissionId"),
@@ -55,6 +58,14 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 			value="SELECT WHERE "
 					+ "this.permissionSet == :permissionSet "
 					+ "&& this.permissionType == :permissionType "
+					+ "&& this.userRepoKeyPublicKey.userRepoKeyId == :userRepoKeyId "
+					+ "&& this.validFrom <= :timestamp "
+					+ "&& ( this.validTo == null || this.validTo >= :timestamp )"
+			),
+	@Query(
+			name="getValidPermissions_permissionType_userRepoKeyId_timestamp",
+			value="SELECT WHERE "
+					+ "this.permissionType == :permissionType "
 					+ "&& this.userRepoKeyPublicKey.userRepoKeyId == :userRepoKeyId "
 					+ "&& this.validFrom <= :timestamp "
 					+ "&& ( this.validTo == null || this.validTo >= :timestamp )"

@@ -117,7 +117,7 @@ abstract class PlainCryptoKeyFactory {
 
 			// We use the same for write and read, because this reduces the ability of an attacker to find out which
 			// UserRepoKeys belong to the same person.
-			UserRepoKey userRepoKeyForRead = cryptreeNode.getUserRepoKeyFor(PermissionType.write);
+			UserRepoKey userRepoKeyForRead = cryptreeNode.getUserRepoKey(false, PermissionType.write);
 			if (userRepoKeyForRead == null)
 				userRepoKeyForRead = context.userRepoKeyRing.getUserRepoKeys(context.serverRepositoryId).get(0);
 

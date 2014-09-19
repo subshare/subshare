@@ -26,13 +26,13 @@ import co.codewizards.cloudstore.local.persistence.RepoFileDao;
 
 public class CryptreeContext {
 
-	public final UserRepoKeyRing userRepoKeyRing; // never null
+	public final UserRepoKeyRing userRepoKeyRing; // never null on client; always null on server
 //	public final UserRepoKey userRepoKey; // never null
 	public final LocalRepoTransaction transaction; // never null
 	public final UUID localRepositoryId; // never null
 	public final UUID remoteRepositoryId; // never null
 	public final UUID serverRepositoryId; // never null
-	public final String remotePathPrefix; // never null
+	public final String remotePathPrefix; // never null on client; always null on server
 	public final boolean isOnServer;
 	public final RepoFileDtoIo repoFileDtoIo; // never null
 	public final SignableVerifier signableVerifier; // never null
@@ -50,18 +50,23 @@ public class CryptreeContext {
 			final UserRepoKeyRing userRepoKeyRing, final LocalRepoTransaction transaction,
 			final UUID localRepositoryId, final UUID remoteRepositoryId, final UUID serverRepositoryId,
 			final String remotePathPrefix, final boolean isOnServer) {
-//		this.userRepoKey = assertNotNull("userRepoKey", userRepoKey);
-		this.userRepoKeyRing = assertNotNull("userRepoKeyRing", userRepoKeyRing);
+		if (!isOnServer) {
+			assertNotNull("userRepoKeyRing", userRepoKeyRing);
+			assertNotNull("remotePathPrefix", remotePathPrefix);
+		}
+
+		this.userRepoKeyRing = userRepoKeyRing;
+
 		this.transaction = assertNotNull("transaction", transaction);
 		this.localRepositoryId = assertNotNull("localRepositoryId", localRepositoryId);
 		this.remoteRepositoryId = assertNotNull("remoteRepositoryId", remoteRepositoryId);
 		this.serverRepositoryId = assertNotNull("serverRepositoryId", serverRepositoryId);
-		this.remotePathPrefix = assertNotNull("remotePathPrefix", remotePathPrefix);
+		this.remotePathPrefix = remotePathPrefix;
 		this.isOnServer = isOnServer;
 		this.repoFileDtoIo = new RepoFileDtoIo();
 		this.signableVerifier = new SignableVerifier(new UserRepoKeyPublicKeyLookupImpl(transaction));
 
-		if (userRepoKeyRing.getUserRepoKeys(serverRepositoryId).isEmpty())
+		if (userRepoKeyRing != null && userRepoKeyRing.getUserRepoKeys(serverRepositoryId).isEmpty())
 			throw new IllegalArgumentException(String.format(
 					"userRepoKeyRing.getUserRepoKeys(serverRepositoryId).isEmpty() :: serverRepositoryId=%s",
 					serverRepositoryId));
@@ -147,7 +152,7 @@ public class CryptreeContext {
 		return signableSigner;
 	}
 
-	public CryptreeNode createCryptreeNodeOrFail(final String localPath) {
+	private CryptreeNode createCryptreeNodeOrFail(final String localPath) {
 		final RepoFile repoFile = getRepoFile(localPath);
 		if (repoFile != null) {
 			final CryptreeNode cryptreeNode = new CryptreeNode(this, repoFile);
@@ -158,7 +163,7 @@ public class CryptreeContext {
 		return cryptreeNode;
 	}
 
-	public CryptreeNode createCryptreeNodeOrFail(final Uid cryptoRepoFileId) {
+	private CryptreeNode createCryptreeNodeOrFail(final Uid cryptoRepoFileId) {
 		final CryptoRepoFile cryptoRepoFile = getCryptoRepoFileOrFail(cryptoRepoFileId);
 		final CryptreeNode cryptreeNode = new CryptreeNode(this, cryptoRepoFile);
 		return cryptreeNode;

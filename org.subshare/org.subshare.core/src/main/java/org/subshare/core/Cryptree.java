@@ -1,5 +1,6 @@
 package org.subshare.core;
 
+import java.util.Date;
 import java.util.Set;
 import java.util.UUID;
 
@@ -18,7 +19,7 @@ import co.codewizards.cloudstore.core.dto.RepoFileDto;
 import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
 
-public interface Cryptree extends AutoCloseable {
+public interface Cryptree {
 
 	CryptreeFactory getCryptreeFactory();
 	void setCryptreeFactory(CryptreeFactory cryptreeFactory);
@@ -34,9 +35,6 @@ public interface Cryptree extends AutoCloseable {
 
 	String getRemotePathPrefix();
 	void setRemotePathPrefix(String remotePathPrefix);
-
-	@Override
-	void close();
 
 	void initLocalRepositoryType();
 
@@ -104,12 +102,15 @@ public interface Cryptree extends AutoCloseable {
 
 	UserRepoKeyPublicKeyLookup getUserRepoKeyPublicKeyLookup();
 
-	UserRepoKey getUserRepoKeyForWrite(String localPath);
-	UserRepoKey getUserRepoKeyForWriteOrFail(String localPath) throws WriteAccessDeniedException;
+	UserRepoKey getUserRepoKey(String localPath, PermissionType permissionType);
+	UserRepoKey getUserRepoKeyOrFail(String localPath, PermissionType permissionType) throws AccessDeniedException;
 
 	void grantPermission(String localPath, PermissionType permissionType, PublicKey userRepoKeyPublicKey);
 	void revokePermission(String localPath, PermissionType permissionType, Set<Uid> userRepoKeyIds);
 
 	void grantPermission(Uid cryptoRepoFileId, PermissionType permissionType, PublicKey userRepoKeyPublicKey);
 	void revokePermission(Uid cryptoRepoFileId, PermissionType permissionType, Set<Uid> userRepoKeyIds);
+
+	void assertHasPermission(Uid cryptoRepoFileId, Uid userRepoKeyId, PermissionType permissionType, Date timestamp) throws AccessDeniedException;
+	void assertHasPermission(String localPath, Uid userRepoKeyId, PermissionType permissionType, Date timestamp) throws AccessDeniedException;
 }
