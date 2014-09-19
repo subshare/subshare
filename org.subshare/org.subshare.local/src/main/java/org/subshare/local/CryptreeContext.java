@@ -240,10 +240,8 @@ public class CryptreeContext {
 				throw new IllegalStateException("The remotePathPrefix should be an empty string, if the root is checked out!");
 
 			final int lastSlashIndex = remotePathPrefix.lastIndexOf('/');
-			if (lastSlashIndex < 0)
-				throw new IllegalStateException("encryptedPathPrefix is neither empty nor does it contain '/'! encryptedPathPrefix: " + remotePathPrefix);
 
-			final String uidStr = remotePathPrefix.substring(lastSlashIndex + 1);
+			final String uidStr = lastSlashIndex < 0 ? remotePathPrefix : remotePathPrefix.substring(lastSlashIndex + 1);
 			cryptoRepoFileIdForRemotePathPrefix = new Uid(uidStr);
 		}
 		return cryptoRepoFileIdForRemotePathPrefix;
