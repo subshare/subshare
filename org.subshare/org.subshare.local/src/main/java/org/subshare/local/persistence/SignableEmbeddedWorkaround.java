@@ -9,6 +9,7 @@ import java.util.Date;
 import javax.jdo.JDOHelper;
 
 import org.subshare.core.dto.SignatureDto;
+import org.subshare.core.sign.Signable;
 import org.subshare.core.sign.Signature;
 
 import co.codewizards.cloudstore.core.dto.Uid;
@@ -22,7 +23,7 @@ public class SignableEmbeddedWorkaround {
 
 	private SignableEmbeddedWorkaround() { }
 
-	public static Signature getSignature(final Object entity) {
+	public static Signature getSignature(final Signable entity) {
 		final Date signatureCreated = (Date) getFieldValue(entity, "signatureCreated");
 		final String signingUserRepoKeyId = (String) getFieldValue(entity, "signingUserRepoKeyId");
 		final byte[] signatureData = (byte[]) getFieldValue(entity, "signatureData");
@@ -33,8 +34,8 @@ public class SignableEmbeddedWorkaround {
 		return SignatureImpl.copy(new SignatureDto(signatureCreated, new Uid(signingUserRepoKeyId), signatureData));
 	}
 
-	public static void setSignature(final Object entity, final Signature signature) {
-		if (!equal(getSignature(entity), signature)) {
+	public static void setSignature(final Signable entity, final Signature signature) {
+		if (!equal(entity.getSignature(), signature)) {
 			setFieldValue(entity, "signatureCreated", signature == null ? null : signature.getSignatureCreated());
 			final Uid signingUserRepoKeyId = signature == null ? null : signature.getSigningUserRepoKeyId();
 			setFieldValue(entity, "signingUserRepoKeyId", signingUserRepoKeyId == null ? null : signingUserRepoKeyId.toString());

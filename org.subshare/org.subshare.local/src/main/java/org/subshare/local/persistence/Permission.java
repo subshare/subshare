@@ -138,13 +138,17 @@ public class Permission extends Entity implements WriteProtectedEntity, AutoTrac
 		return userRepoKeyPublicKey;
 	}
 	public void setUserRepoKeyPublicKey(final UserRepoKeyPublicKey userRepoKeyPublicKey) {
-		this.userRepoKeyPublicKey = userRepoKeyPublicKey;
+		if (! equal(this.userRepoKeyPublicKey, userRepoKeyPublicKey))
+			this.userRepoKeyPublicKey = userRepoKeyPublicKey;
 	}
 
 	public PermissionType getPermissionType() {
 		return permissionType;
 	}
 	public void setPermissionType(final PermissionType permissionType) {
+		if (equal(this.permissionType, permissionType))
+			return;
+
 		if (permissionType != null) {
 			switch (permissionType) {
 				case grant:
@@ -177,30 +181,28 @@ public class Permission extends Entity implements WriteProtectedEntity, AutoTrac
 		return 0;
 	}
 
-	@Override
-	public Date getCreated() {
-		return super.getCreated();
-	}
-
 	public Date getRevoked() {
 		return revoked;
 	}
 	public void setRevoked(final Date revoked) {
-		this.revoked = revoked;
+		if (! equal(this.revoked, revoked))
+			this.revoked = revoked;
 	}
 
 	public Date getValidFrom() {
 		return validFrom;
 	}
 	public void setValidFrom(final Date validFrom) {
-		this.validFrom = validFrom;
+		if (! equal(this.validFrom, validFrom))
+			this.validFrom = validFrom;
 	}
 
 	public Date getValidTo() {
 		return validTo;
 	}
 	public void setValidTo(final Date validTo) {
-		this.validTo = validTo;
+		if (! equal(this.validTo, validTo))
+			this.validTo = validTo;
 	}
 
 	/**

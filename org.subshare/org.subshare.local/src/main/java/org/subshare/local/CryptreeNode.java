@@ -766,7 +766,7 @@ public class CryptreeNode {
 		return permissionSet;
 	}
 
-	public void sign(final WriteProtectedEntity writeProtectedEntity) {
+	public void sign(final WriteProtectedEntity writeProtectedEntity) throws AccessDeniedException {
 		assertNotNull("writeProtectedEntity", writeProtectedEntity);
 		final CryptoRepoFile cryptoRepoFileControllingPermissions = writeProtectedEntity.getCryptoRepoFileControllingPermissions();
 		final UserRepoKey userRepoKey;

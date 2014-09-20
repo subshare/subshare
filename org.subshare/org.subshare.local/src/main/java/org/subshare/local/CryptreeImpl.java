@@ -16,6 +16,7 @@ import org.bouncycastle.crypto.params.KeyParameter;
 import org.subshare.core.AbstractCryptree;
 import org.subshare.core.AccessDeniedException;
 import org.subshare.core.GrantAccessDeniedException;
+import org.subshare.core.PermissionCollisionException;
 import org.subshare.core.ReadAccessDeniedException;
 import org.subshare.core.WriteAccessDeniedException;
 import org.subshare.core.dto.CryptoChangeSetDto;
@@ -47,6 +48,7 @@ import org.subshare.local.persistence.PermissionSet;
 import org.subshare.local.persistence.PermissionSetDao;
 import org.subshare.local.persistence.RepositoryOwner;
 import org.subshare.local.persistence.RepositoryOwnerDao;
+import org.subshare.local.persistence.SignableDao;
 import org.subshare.local.persistence.UserRepoKeyPublicKey;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyDao;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyLookupImpl;
@@ -76,6 +78,8 @@ public class CryptreeImpl extends AbstractCryptree {
 	private UUID serverRepositoryId;
 
 	private CryptreeContext cryptreeContext;
+
+	private Uid rootCryptoRepoFileId;
 
 	@Override
 	public UserRepoKeyPublicKeyLookup getUserRepoKeyPublicKeyLookup() {
@@ -285,9 +289,12 @@ public class CryptreeImpl extends AbstractCryptree {
 
 	@Override
 	public Uid getRootCryptoRepoFileId() {
-		final CryptoRepoFileDao cryptoRepoFileDao = getTransactionOrFail().getDao(CryptoRepoFileDao.class);
-		final CryptoRepoFile rootCryptoRepoFile = cryptoRepoFileDao.getRootCryptoRepoFile();
-		return rootCryptoRepoFile == null ? null : rootCryptoRepoFile.getCryptoRepoFileId();
+		if (rootCryptoRepoFileId == null) {
+			final CryptoRepoFileDao cryptoRepoFileDao = getTransactionOrFail().getDao(CryptoRepoFileDao.class);
+			final CryptoRepoFile rootCryptoRepoFile = cryptoRepoFileDao.getRootCryptoRepoFile();
+			rootCryptoRepoFileId = rootCryptoRepoFile == null ? null : rootCryptoRepoFile.getCryptoRepoFileId();
+		}
+		return rootCryptoRepoFileId;
 	}
 
 	@Override
@@ -516,8 +523,25 @@ public class CryptreeImpl extends AbstractCryptree {
 		permission.setUserRepoKeyPublicKey(userRepoKeyPublicKey);
 
 		permission.setValidFrom(permissionDto.getValidFrom());
+		final Date oldValidTo = permission.getValidTo();
 		permission.setValidTo(permissionDto.getValidTo());
 		permissionDao.makePersistent(permission);
+
+		if (permission.getValidTo() != null && oldValidTo == null) {
+			if (isOnServer()) {
+				// We must prevent the new permission from making existing data on the server illegal.
+				// Hence, we roll back and throw an exception, if this happens.
+				//
+				// See: enactPermissionRevocationIfNeededAndPossible(...)
+
+				final SignableDao signableDao = getTransactionOrFail().getDao(SignableDao.class);
+				if (signableDao.isEntitiesSignedByAndAfter(permission.getUserRepoKeyPublicKey().getUserRepoKeyId(), permission.getValidTo()))
+					throw new PermissionCollisionException("There is already data written and signed after the Permission.validTo timestamp. Are clocks in-sync?");
+			}
+			else {
+				// TODO we should clean up this illegal state on the client, too! It's one of the many collisions we have to cope with!
+			}
+		}
 	}
 
 	private void putPermissionSetDto(final PermissionSetDto permissionSetDto) {
@@ -655,11 +679,40 @@ public class CryptreeImpl extends AbstractCryptree {
 				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced());
 
 		for (final Permission permission : permissions) {
-			if (permission.getRevoked() != null && permission.getValidTo() == null)
-				permission.setValidTo(new Date());
+			enactPermissionRevocationIfNeededAndPossible(permission);
 
 			cryptoChangeSetDto.getPermissionDtos().add(toPermissionDto(permission));
 		}
+	}
+
+	private void enactPermissionRevocationIfNeededAndPossible(final Permission permission) {
+		if (! isOnServer() && permission.getRevoked() != null && permission.getValidTo() == null) {
+			// We set Permission.validTo delayed (not immediately when revoking), but when synchronising
+			// up to the server. This means, a revocation is not active until the next sync. It also
+			// means, we can never end up with illegal data inside the server - we might only
+			// end up with illegal data in any client. This can (and should) be reverted, later.
+			//
+			// If, due to wrong clocks (time off by a few minutes), the time here causes a collision
+			// because it's earlier than data already committed into the server, the upload
+			// of the crypto-change-set is rejected by the server with an exception. This causes
+			// the local transaction to be rolled back (it is committed, after the crypto-change-set
+			// is written to the server).
+			//
+			// See: putPermissionDto(...)
+
+			permission.setValidTo(new Date());
+			try {
+				sign(permission);
+			} catch (final GrantAccessDeniedException x) {
+				permission.setValidTo(null); // revert to restore the signed state.
+				logger.warn("Cannot enact revocation because of missing permission: " + x, x);
+			}
+		}
+	}
+
+	private void sign(final WriteProtectedEntity writeProtectedEntity) throws AccessDeniedException {
+		final CryptreeNode rootCryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(getRootCryptoRepoFileId());
+		rootCryptreeNode.sign(writeProtectedEntity);
 	}
 
 	private void populateChangedPermissionSetDtos(final CryptoChangeSetDto cryptoChangeSetDto, final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {

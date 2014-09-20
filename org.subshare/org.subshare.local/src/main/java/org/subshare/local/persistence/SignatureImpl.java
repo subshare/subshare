@@ -76,7 +76,7 @@ public class SignatureImpl implements Signature {
 		final Signature other = (Signature) obj;
 
 		return equal(this.signatureCreated, other.getSignatureCreated())
-				&& equal(this.signingUserRepoKeyId, other.getSigningUserRepoKeyId())
+				&& equal(this.signingUserRepoKeyId, other.getSigningUserRepoKeyId().toString())
 				&& equal(this.signatureData, other.getSignatureData());
 	}
 
