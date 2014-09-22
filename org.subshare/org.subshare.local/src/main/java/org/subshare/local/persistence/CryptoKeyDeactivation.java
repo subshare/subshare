@@ -38,7 +38,8 @@ public class CryptoKeyDeactivation extends Entity implements WriteProtectedEntit
 		return cryptoKey;
 	}
 	public void setCryptoKey(final CryptoKey cryptoKey) {
-		this.cryptoKey = cryptoKey;
+		if (! equal(this.cryptoKey, cryptoKey))
+			this.cryptoKey = cryptoKey;
 	}
 
 	@Override
@@ -66,7 +67,7 @@ public class CryptoKeyDeactivation extends Entity implements WriteProtectedEntit
 	}
 	@Override
 	public void setSignature(final Signature signature) {
-		if (!equal(this.signature, signature))
+		if (! equal(this.signature, signature))
 			this.signature = SignatureImpl.copy(signature);
 	}
 
