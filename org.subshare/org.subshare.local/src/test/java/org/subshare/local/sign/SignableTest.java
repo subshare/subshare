@@ -1,5 +1,8 @@
 package org.subshare.local.sign;
 
+import static co.codewizards.cloudstore.core.util.Util.*;
+import static org.assertj.core.api.Assertions.*;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.Date;
@@ -11,6 +14,7 @@ import org.subshare.core.dto.CryptoKeyType;
 import org.subshare.core.dto.SignatureDto;
 import org.subshare.core.sign.SignableSigner;
 import org.subshare.core.sign.SignableVerifier;
+import org.subshare.core.sign.Signature;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKey.PublicKey;
 import org.subshare.core.user.UserRepoKeyPublicKeyLookup;
@@ -84,18 +88,34 @@ public class SignableTest extends AbstractTest {
 		signableVerifier.verify(deserialised);
 	}
 
-	@Test(expected=SignatureException.class)
+	@Test
 	public void signAndModifySignatureCreatedAndVerify() {
 		final CryptoKeyDto cryptoKeyDto = createCryptoRepoKeyDto();
 
 		final SignableSigner signableSigner = new SignableSigner(userRepoKey);
 		signableSigner.sign(cryptoKeyDto);
 
-		final SignatureDto signatureDto = (SignatureDto) cryptoKeyDto.getSignature();
-		signatureDto.setSignatureCreated(new Date(signatureDto.getSignatureCreated().getTime() + 1));
+		final Signature cleanSignature = cryptoKeyDto.getSignature();
+
+		final SignatureDto brokenSignature = new SignatureDto(
+				new Date(cleanSignature.getSignatureCreated().getTime() + 1),
+				cleanSignature.getSigningUserRepoKeyId(),
+				cleanSignature.getSignatureData()
+				);
 
 		final SignableVerifier signableVerifier = new SignableVerifier(userRepoKeyPublicKeyLookup);
-		signableVerifier.verify(cryptoKeyDto);
+		signableVerifier.verify(cryptoKeyDto); // this is expected to be fine!
+
+		cryptoKeyDto.setSignature(brokenSignature);
+		try {
+			signableVerifier.verify(cryptoKeyDto);
+			fail("Broken signature was not detected! signableVerifier.verify(...) did not fail.");
+		} catch (final SignatureException x) {
+			doNothing(); // This is expected!
+		}
+
+		cryptoKeyDto.setSignature(cleanSignature);
+		signableVerifier.verify(cryptoKeyDto); // again this should be fine!
 	}
 
 	@Test(expected=SignatureException.class)
@@ -112,13 +132,12 @@ public class SignableTest extends AbstractTest {
 	}
 
 	@Test(expected=SignatureException.class)
-	public void signAndModifyActiveAndVerify() {
+	public void signAndModifyCryptoRepoFileIdAndVerify() {
 		final CryptoKeyDto cryptoKeyDto = createCryptoRepoKeyDto();
 
 		final SignableSigner signableSigner = new SignableSigner(userRepoKey);
 		signableSigner.sign(cryptoKeyDto);
 
-//		cryptoKeyDto.setActive(false);
 		cryptoKeyDto.setCryptoRepoFileId(new Uid());
 
 		final SignableVerifier signableVerifier = new SignableVerifier(userRepoKeyPublicKeyLookup);

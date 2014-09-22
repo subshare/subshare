@@ -5,11 +5,11 @@ import static co.codewizards.cloudstore.core.util.Util.*;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
 import javax.jdo.annotations.Column;
+import javax.jdo.annotations.Embedded;
 import javax.jdo.annotations.Index;
 import javax.jdo.annotations.Indices;
 import javax.jdo.annotations.Inheritance;
@@ -90,24 +90,11 @@ public class CryptoKey extends Entity implements WriteProtectedEntity, AutoTrack
 	@Persistent(mappedBy="fromCryptoKey")
 	private Set<CryptoLink> outCryptoLinks;
 
-//	private boolean active = true;
 	private CryptoKeyDeactivation cryptoKeyDeactivation;
 
-// TODO BEGIN WORKAROUND for http://www.datanucleus.org/servlet/jira/browse/NUCCORE-1247
-//	@Persistent(nullValue=NullValue.EXCEPTION)
-//	@Embedded
-//	private SignatureImpl signature;
-
 	@Persistent(nullValue=NullValue.EXCEPTION)
-	private Date signatureCreated;
-
-	@Persistent(nullValue=NullValue.EXCEPTION)
-	@Column(length=22)
-	private String signingUserRepoKeyId;
-
-	@Persistent(nullValue=NullValue.EXCEPTION)
-	private byte[] signatureData;
-// END WORKAROUND for http://www.datanucleus.org/servlet/jira/browse/NUCCORE-1247
+	@Embedded(nullIndicatorColumn="signatureCreated")
+	private SignatureImpl signature;
 
 	public CryptoKey() { }
 
@@ -128,13 +115,6 @@ public class CryptoKey extends Entity implements WriteProtectedEntity, AutoTrack
 		return new Uid(cryptoKeyId);
 	}
 
-//	public boolean isActive() {
-//		return active;
-//	}
-//	public void setActive(final boolean active) {
-//		if (! equal(this.active, active))
-//			this.active = active;
-//	}
 	public CryptoKeyDeactivation getCryptoKeyDeactivation() {
 		return cryptoKeyDeactivation;
 	}
@@ -266,28 +246,15 @@ public class CryptoKey extends Entity implements WriteProtectedEntity, AutoTrack
 		}
 	}
 
-// TODO BEGIN WORKAROUND for http://www.datanucleus.org/servlet/jira/browse/NUCCORE-1247
-//	@Override
-//	public Signature getSignature() {
-//		return signature;
-//	}
-//	@Override
-//	public void setSignature(final Signature signature) {
-//		if (!equal(this.signature, signature))
-//			this.signature = SignatureImpl.copy(signature);
-//	}
 	@Override
 	public Signature getSignature() {
-		String.valueOf(signatureCreated);
-		String.valueOf(signingUserRepoKeyId);
-		String.valueOf(signatureData);
-		return SignableEmbeddedWorkaround.getSignature(this);
+		return signature;
 	}
 	@Override
 	public void setSignature(final Signature signature) {
-		SignableEmbeddedWorkaround.setSignature(this, signature);
+		if (!equal(this.signature, signature))
+			this.signature = SignatureImpl.copy(signature);
 	}
-// END WORKAROUND for http://www.datanucleus.org/servlet/jira/browse/NUCCORE-1247
 
 	@Override
 	public CryptoRepoFile getCryptoRepoFileControllingPermissions() {

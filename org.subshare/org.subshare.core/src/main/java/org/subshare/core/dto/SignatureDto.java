@@ -1,5 +1,6 @@
 package org.subshare.core.dto;
 
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
 
 import java.util.Arrays;
@@ -30,6 +31,9 @@ public class SignatureDto implements Signature {
 		return signatureCreated;
 	}
 	public void setSignatureCreated(final Date signatureCreated) {
+		if (this.signatureCreated != null && !this.signatureCreated.equals(signatureCreated))
+			throw new IllegalStateException("this.signatureCreated already assigned to a different value! Cannot modify!");
+
 		this.signatureCreated = signatureCreated;
 	}
 
@@ -38,6 +42,9 @@ public class SignatureDto implements Signature {
 		return signingUserRepoKeyId;
 	}
 	public void setSigningUserRepoKeyId(final Uid signingUserRepoKeyId) {
+		if (this.signingUserRepoKeyId != null && !this.signingUserRepoKeyId.equals(signingUserRepoKeyId))
+			throw new IllegalStateException("this.signingUserRepoKeyId already assigned to a different value! Cannot modify!");
+
 		this.signingUserRepoKeyId = signingUserRepoKeyId;
 	}
 
@@ -46,6 +53,9 @@ public class SignatureDto implements Signature {
 		return signatureData;
 	}
 	public void setSignatureData(final byte[] signatureData) {
+		if (this.signatureData != null && !Arrays.equals(this.signatureData, signatureData))
+			throw new IllegalStateException("this.signatureData already assigned to a different value! Cannot modify!");
+
 		this.signatureData = signatureData;
 	}
 
@@ -80,6 +90,10 @@ public class SignatureDto implements Signature {
 
 		if (signature instanceof SignatureDto)
 			return (SignatureDto) signature;
+
+		assertNotNull("signature.signatureCreated", signature.getSignatureCreated());
+		assertNotNull("signature.signingUserRepoKeyId", signature.getSigningUserRepoKeyId());
+		assertNotNull("signature.signatureData", signature.getSignatureData());
 
 		return new SignatureDto(signature.getSignatureCreated(), signature.getSigningUserRepoKeyId(), signature.getSignatureData());
 	}

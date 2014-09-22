@@ -1,5 +1,6 @@
 package org.subshare.local.persistence;
 
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
 
 import java.util.Arrays;
@@ -20,13 +21,15 @@ import co.codewizards.cloudstore.core.dto.Uid;
 public class SignatureImpl implements Signature {
 
 	@Persistent(nullValue=NullValue.EXCEPTION)
+	@Column(name="signatureCreated")
 	private Date signatureCreated;
 
 	@Persistent(nullValue=NullValue.EXCEPTION)
-	@Column(length=22)
+	@Column(name="signingUserRepoKeyId", length=22)
 	private String signingUserRepoKeyId;
 
-	@Persistent(nullValue=NullValue.EXCEPTION)
+	@Persistent(nullValue=NullValue.EXCEPTION, defaultFetchGroup="true")
+	@Column(name="signatureData")
 	private byte[] signatureData;
 
 	protected SignatureImpl() { }
@@ -36,6 +39,9 @@ public class SignatureImpl implements Signature {
 		return signatureCreated;
 	}
 	private void setSignatureCreated(final Date signatureCreated) {
+		if (this.signatureCreated != null && !this.signatureCreated.equals(signatureCreated))
+			throw new IllegalStateException("this.signatureCreated already assigned to a different value! Cannot modify!");
+
 		this.signatureCreated = signatureCreated;
 	}
 
@@ -44,6 +50,9 @@ public class SignatureImpl implements Signature {
 		return signingUserRepoKeyId == null ? null : new Uid(signingUserRepoKeyId);
 	}
 	private void setSigningUserRepoKeyId(final Uid signingUserRepoKeyId) {
+		if (this.signingUserRepoKeyId != null && !this.signingUserRepoKeyId.equals(signingUserRepoKeyId))
+			throw new IllegalStateException("this.signingUserRepoKeyId already assigned to a different value! Cannot modify!");
+
 		this.signingUserRepoKeyId = signingUserRepoKeyId == null ? null : signingUserRepoKeyId.toString();
 	}
 
@@ -52,6 +61,9 @@ public class SignatureImpl implements Signature {
 		return signatureData;
 	}
 	private void setSignatureData(final byte[] signatureData) {
+		if (this.signatureData != null && !Arrays.equals(this.signatureData, signatureData))
+			throw new IllegalStateException("this.signatureData already assigned to a different value! Cannot modify!");
+
 		this.signatureData = signatureData;
 	}
 
@@ -83,6 +95,10 @@ public class SignatureImpl implements Signature {
 	public static SignatureImpl copy(final Signature signature) {
 		if (signature == null)
 			return null;
+
+		assertNotNull("signature.signatureCreated", signature.getSignatureCreated());
+		assertNotNull("signature.signingUserRepoKeyId", signature.getSigningUserRepoKeyId());
+		assertNotNull("signature.signatureData", signature.getSignatureData());
 
 		final SignatureImpl copy = new SignatureImpl();
 		copy.setSignatureCreated(signature.getSignatureCreated());

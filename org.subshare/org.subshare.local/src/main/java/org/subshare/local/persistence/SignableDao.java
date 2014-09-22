@@ -38,7 +38,7 @@ public class SignableDao extends Dao<Entity, SignableDao> { // since Sinable is 
 	private long getEntitiesCountSignedByAndAfter(final Class<? extends Signable> signableEntityClass, final Uid signingUserRepoKeyId, final Date signatureCreatedAfter) {
 		final Query q = pm().newQuery(signableEntityClass);
 		q.setResult("count(this)");
-		q.setFilter("this.signingUserRepoKeyId == :signingUserRepoKeyId && this.signatureCreated > :signatureCreatedAfter");
+		q.setFilter("this.signature.signingUserRepoKeyId == :signingUserRepoKeyId && this.signature.signatureCreated > :signatureCreatedAfter");
 		final Long result = (Long) q.execute(signingUserRepoKeyId.toString(), signatureCreatedAfter);
 		return result;
 	}

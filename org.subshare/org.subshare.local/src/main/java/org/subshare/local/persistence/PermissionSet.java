@@ -5,10 +5,9 @@ import static co.codewizards.cloudstore.core.util.Util.*;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Date;
 import java.util.Set;
 
-import javax.jdo.annotations.Column;
+import javax.jdo.annotations.Embedded;
 import javax.jdo.annotations.Inheritance;
 import javax.jdo.annotations.InheritanceStrategy;
 import javax.jdo.annotations.NullValue;
@@ -49,21 +48,9 @@ public class PermissionSet extends Entity implements WriteProtectedEntity, AutoT
 	@Persistent(mappedBy="permissionSet")
 	private Set<Permission> permissions;
 
-// TODO BEGIN WORKAROUND for http://www.datanucleus.org/servlet/jira/browse/NUCCORE-1247
-//	@Persistent(nullValue=NullValue.EXCEPTION)
-//	@Embedded
-//	private SignatureImpl signature;
-
 	@Persistent(nullValue=NullValue.EXCEPTION)
-	private Date signatureCreated;
-
-	@Persistent(nullValue=NullValue.EXCEPTION)
-	@Column(length=22)
-	private String signingUserRepoKeyId;
-
-	@Persistent(nullValue=NullValue.EXCEPTION)
-	private byte[] signatureData;
-// END WORKAROUND for http://www.datanucleus.org/servlet/jira/browse/NUCCORE-1247
+	@Embedded(nullIndicatorColumn="signatureCreated")
+	private SignatureImpl signature;
 
 	public PermissionSet() { }
 
@@ -120,28 +107,15 @@ public class PermissionSet extends Entity implements WriteProtectedEntity, AutoT
 		}
 	}
 
-// TODO BEGIN WORKAROUND for http://www.datanucleus.org/servlet/jira/browse/NUCCORE-1247
-//		@Override
-//		public Signature getSignature() {
-//			return signature;
-//		}
-//		@Override
-//		public void setSignature(final Signature signature) {
-//			if (!equal(this.signature, signature))
-//				this.signature = SignatureImpl.copy(signature);
-//		}
 	@Override
 	public Signature getSignature() {
-		String.valueOf(signatureCreated);
-		String.valueOf(signingUserRepoKeyId);
-		String.valueOf(signatureData);
-		return SignableEmbeddedWorkaround.getSignature(this);
+		return signature;
 	}
 	@Override
 	public void setSignature(final Signature signature) {
-		SignableEmbeddedWorkaround.setSignature(this, signature);
+		if (!equal(this.signature, signature))
+			this.signature = SignatureImpl.copy(signature);
 	}
-// END WORKAROUND for http://www.datanucleus.org/servlet/jira/browse/NUCCORE-1247
 
 	@Override
 	public CryptoRepoFile getCryptoRepoFileControllingPermissions() {
