@@ -703,8 +703,11 @@ public class CryptreeNode {
 					throw new IllegalStateException("Unknown CryptoKeyType: " + activeSubdirKey.getCryptoKeyType());
 			}
 		}
+
+//		context.transaction.flush();
+
 		if (! hasAsymmetryActiveSubdirKey)
-			getActivePlainCryptoKeyOrCreate(CryptoKeyRole.subdirKey, CipherOperationMode.DECRYPT);
+			parent.getActivePlainCryptoKeyOrCreate(CryptoKeyRole.subdirKey, CipherOperationMode.DECRYPT);
 	}
 
 	public void revokePermission(final PermissionType permissionType, final Set<Uid> userRepoKeyIds) {

@@ -21,7 +21,7 @@ public class CryptreeImplGrantRevokeReadPermissionTest extends AbstractPermissio
 
 	@Test
 	public void grantAndRevokeReadPermission() throws Exception {
-		final boolean ownerIsAdmin = true; // TODO set to false (or maybe use a random value?) once read-cryptree was extended to support 'grant' functionality)!
+		final boolean ownerIsAdmin = false; // TODO set to false (or maybe use a random value?) once read-cryptree was extended to support 'grant' functionality)!
 
 		final UserRepoKeyRing adminUserRepoKeyRing = ownerIsAdmin ? ownerUserRepoKeyRing : friend0UserRepoKeyRing;
 
