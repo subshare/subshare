@@ -128,6 +128,19 @@ public class PermissionDao extends Dao<Permission, PermissionDao> {
 		}
 	}
 
+	public long getPermissionCountOfDirectChildCryptoRepoFiles(final CryptoRepoFile parentCryptoRepoFile, final PermissionType permissionType) {
+		assertNotNull("parentCryptoRepoFile", parentCryptoRepoFile);
+		assertNotNull("permissionType", permissionType);
+
+		final Query query = pm().newNamedQuery(getEntityClass(), "PermissionCountOfDirectChildCryptoRepoFiles_parentCryptoRepoFile_permissionType");
+		try {
+			final Long count = (Long) query.execute(parentCryptoRepoFile, permissionType);
+			return count;
+		} finally {
+			query.closeAll();
+		}
+	}
+
 	/**
 	 * Get those {@link Permission}s whose {@link Permission#getLocalRevision() localRevision} is greater
 	 * than the given {@code localRevision}.

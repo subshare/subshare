@@ -31,6 +31,7 @@ import org.subshare.core.dto.PermissionType;
 import org.subshare.core.dto.SignatureDto;
 import org.subshare.core.sign.Signable;
 import org.subshare.core.user.UserRepoKey;
+import org.subshare.crypto.CipherOperationMode;
 import org.subshare.local.persistence.CryptoKey;
 import org.subshare.local.persistence.CryptoKeyDao;
 import org.subshare.local.persistence.CryptoKeyDeactivation;
@@ -193,7 +194,7 @@ public class CryptreeNode {
 			// Thus we explicitly persist it already here.
 			this.cryptoRepoFile = cryptoRepoFile = cryptoRepoFileDao.makePersistent(cryptoRepoFile);
 
-			final PlainCryptoKey plainCryptoKey = getActivePlainCryptoKeyOrCreate(CryptoKeyRole.dataKey, CryptoKeyPart.sharedSecret);
+			final PlainCryptoKey plainCryptoKey = getActivePlainCryptoKeyOrCreate(CryptoKeyRole.dataKey, CipherOperationMode.ENCRYPT);
 			final CryptoKey cryptoKey = assertNotNull("plainCryptoKey", plainCryptoKey).getCryptoKey();
 			cryptoRepoFile.setCryptoKey(assertNotNull("plainCryptoKey.cryptoKey", cryptoKey));
 
@@ -245,7 +246,7 @@ public class CryptreeNode {
 		if (containsFromUserRepoKeyId(cryptoLinks, Collections.singleton(publicKey.getUserRepoKeyId())))
 			return; // There is already an active key which is accessible to the given user. Thus no need to generate a new crypto-link.
 
-		final PlainCryptoKey plainCryptoKey = getActivePlainCryptoKeyOrCreate(CryptoKeyRole.clearanceKey, CryptoKeyPart.privateKey);
+		final PlainCryptoKey plainCryptoKey = getActivePlainCryptoKeyOrCreate(CryptoKeyRole.clearanceKey, CipherOperationMode.DECRYPT);
 		createCryptoLink(this, getUserRepoKeyPublicKey(publicKey), plainCryptoKey);
 	}
 
@@ -285,7 +286,7 @@ public class CryptreeNode {
 				continue;
 
 			if (clearanceKeyPlainCryptoKey == null)
-				clearanceKeyPlainCryptoKey = getActivePlainCryptoKeyOrCreate(CryptoKeyRole.clearanceKey, CryptoKeyPart.privateKey);
+				clearanceKeyPlainCryptoKey = getActivePlainCryptoKeyOrCreate(CryptoKeyRole.clearanceKey, CipherOperationMode.DECRYPT);
 
 			// The current user is already granted access when the clearing key was created above.
 			// We thus need to check, if the current fromUserRepoKeyPublicKey still needs a CryptoLink.
@@ -306,24 +307,25 @@ public class CryptreeNode {
 
 	private void createBacklinkKeyForFile() {
 		if (! isDirectory())
-			getActivePlainCryptoKeyOrCreate(CryptoKeyRole.backlinkKey, CryptoKeyPart.sharedSecret);
+			getActivePlainCryptoKeyOrCreate(CryptoKeyRole.backlinkKey, CipherOperationMode.DECRYPT);
 	}
 
 	private void deactivateCryptoKeyAndDescendants(final CryptoKey cryptoKey, final Set<CryptoKey> processedCryptoKeys) {
 		if (! processedCryptoKeys.add(cryptoKey))
 			return;
 
-//		cryptoKey.setActive(false);
-//		sign(cryptoKey);
-		if (cryptoKey.getCryptoKeyDeactivation() == null) {
-			final CryptoKeyDeactivation cryptoKeyDeactivation = new CryptoKeyDeactivation();
-			cryptoKeyDeactivation.setCryptoKey(cryptoKey);
-			sign(cryptoKeyDeactivation);
-			cryptoKey.setCryptoKeyDeactivation(cryptoKeyDeactivation);
-		}
+		if (cryptoKey.getCryptoKeyDeactivation() == null)
+			deactivateCryptoKey(cryptoKey);
 
 		for (final CryptoLink cryptoLink : cryptoKey.getOutCryptoLinks())
 			deactivateCryptoKeyAndDescendants(cryptoLink.getToCryptoKey(), processedCryptoKeys);
+	}
+
+	private void deactivateCryptoKey(final CryptoKey cryptoKey) {
+		final CryptoKeyDeactivation cryptoKeyDeactivation = new CryptoKeyDeactivation();
+		cryptoKeyDeactivation.setCryptoKey(cryptoKey);
+		sign(cryptoKeyDeactivation);
+		cryptoKey.setCryptoKeyDeactivation(cryptoKeyDeactivation);
 	}
 
 	private void createSubdirKeyAndBacklinkKeyIfNeededChildrenRecursively() {
@@ -334,8 +336,8 @@ public class CryptreeNode {
 		if (! isDirectory())
 			return;
 
-		getActivePlainCryptoKeyOrCreate(CryptoKeyRole.subdirKey, CryptoKeyPart.sharedSecret);
-		getActivePlainCryptoKeyOrCreate(CryptoKeyRole.backlinkKey, CryptoKeyPart.sharedSecret);
+		getActivePlainCryptoKeyOrCreate(CryptoKeyRole.subdirKey, CipherOperationMode.DECRYPT);
+		getActivePlainCryptoKeyOrCreate(CryptoKeyRole.backlinkKey, CipherOperationMode.DECRYPT);
 
 		for (final CryptreeNode child : getChildren())
 			child.createSubdirKeyAndBacklinkKeyIfNeededChildrenRecursively();
@@ -392,14 +394,36 @@ public class CryptreeNode {
 		return cryptoRepoFile.isDirectory();
 	}
 
-	protected PlainCryptoKey getActivePlainCryptoKey(final CryptoKeyRole toCryptoKeyRole, final CryptoKeyPart toCryptoKeyPart) {
+//	/**
+//	 * @deprecated About to be replaced by the version with the CipherOperationMode!
+//	 */
+//	@Deprecated
+//	protected PlainCryptoKey getActivePlainCryptoKey(final CryptoKeyRole toCryptoKeyRole, final CryptoKeyPart toCryptoKeyPart) {
+//		assertNotNull("toCryptoKeyRole", toCryptoKeyRole);
+//		assertNotNull("toCryptoKeyPart", toCryptoKeyPart);
+//		logger.debug("getActivePlainCryptoKey: cryptoRepoFile={} repoFile={} toCryptoKeyRole={} toCryptoKeyPart={}",
+//				cryptoRepoFile, repoFile, toCryptoKeyRole, toCryptoKeyPart);
+//		final CryptoLinkDao cryptoLinkDao = context.transaction.getDao(CryptoLinkDao.class);
+//		final Collection<CryptoLink> cryptoLinks = cryptoLinkDao.getActiveCryptoLinks(getCryptoRepoFile(), toCryptoKeyRole, toCryptoKeyPart);
+//		return getPlainCryptoKey(cryptoLinks, toCryptoKeyPart);
+//	}
+
+	protected PlainCryptoKey getActivePlainCryptoKey(final CryptoKeyRole toCryptoKeyRole, final CipherOperationMode cipherOperationMode) {
 		assertNotNull("toCryptoKeyRole", toCryptoKeyRole);
-		assertNotNull("toCryptoKeyPart", toCryptoKeyPart);
-		logger.debug("getActivePlainCryptoKey: cryptoRepoFile={} repoFile={} toCryptoKeyRole={} toCryptoKeyPart={}",
-				cryptoRepoFile, repoFile, toCryptoKeyRole, toCryptoKeyPart);
+		assertNotNull("cipherOperationMode", cipherOperationMode);
+		logger.debug("getActivePlainCryptoKey: cryptoRepoFile={} repoFile={} toCryptoKeyRole={} cipherOperationMode={}",
+				cryptoRepoFile, repoFile, toCryptoKeyRole, cipherOperationMode);
 		final CryptoLinkDao cryptoLinkDao = context.transaction.getDao(CryptoLinkDao.class);
-		final Collection<CryptoLink> cryptoLinks = cryptoLinkDao.getActiveCryptoLinks(getCryptoRepoFile(), toCryptoKeyRole, toCryptoKeyPart);
-		return getPlainCryptoKey(cryptoLinks, toCryptoKeyPart);
+
+		final CryptoKeyPart[] toCryptoKeyParts = toCryptoKeyRole.getCryptoKeyParts(cipherOperationMode);
+
+		for (final CryptoKeyPart toCryptoKeyPart : toCryptoKeyParts) {
+			final Collection<CryptoLink> cryptoLinks = cryptoLinkDao.getActiveCryptoLinks(getCryptoRepoFile(), toCryptoKeyRole, toCryptoKeyPart);
+			final PlainCryptoKey plainCryptoKey = getPlainCryptoKey(cryptoLinks, toCryptoKeyPart);
+			if (plainCryptoKey != null)
+				return plainCryptoKey;
+		}
+		return null;
 	}
 
 	protected PlainCryptoKey getPlainCryptoKeyForDecrypting(final CryptoKey cryptoKey) {
@@ -478,10 +502,10 @@ public class CryptreeNode {
 		}
 	}
 
-	protected PlainCryptoKey getActivePlainCryptoKeyOrCreate(final CryptoKeyRole toCryptoKeyRole, final CryptoKeyPart toCryptoKeyPart) {
+	protected PlainCryptoKey getActivePlainCryptoKeyOrCreate(final CryptoKeyRole toCryptoKeyRole, final CipherOperationMode cipherOperationMode) {
 		assertNotNull("toCryptoKeyRole", toCryptoKeyRole);
-		assertNotNull("toCryptoKeyPart", toCryptoKeyPart);
-		PlainCryptoKey plainCryptoKey = getActivePlainCryptoKey(toCryptoKeyRole, toCryptoKeyPart);
+		assertNotNull("cipherOperationMode", cipherOperationMode);
+		PlainCryptoKey plainCryptoKey = getActivePlainCryptoKey(toCryptoKeyRole, cipherOperationMode);
 		if (plainCryptoKey == null) {
 			final Class<? extends PlainCryptoKeyFactory> clazz = cryptoKeyRole2PlainCryptoKeyFactory.get(toCryptoKeyRole);
 			assertNotNull(String.format("cryptoKeyRole2PlainCryptoKeyFactory[%s]", toCryptoKeyRole), clazz);
@@ -494,15 +518,15 @@ public class CryptreeNode {
 			}
 
 			factory.setCryptreeNode(this);
-			factory.setCryptoKeyPart(toCryptoKeyPart);
+			factory.setCipherOperationMode(cipherOperationMode);
 			plainCryptoKey = factory.createPlainCryptoKey();
 			assertNotNull(clazz.getName() + ".createPlainCryptoKey()", plainCryptoKey);
 
 			if (plainCryptoKey.getCryptoKey().getCryptoKeyRole() != toCryptoKeyRole)
 				throw new IllegalStateException(String.format("plainCryptoKey.cryptoKey.cryptoKeyRole != toCryptoKeyRole :: %s != %s", plainCryptoKey.getCryptoKey().getCryptoKeyRole(), toCryptoKeyRole));
 
-			if (plainCryptoKey.getCryptoKeyPart() != toCryptoKeyPart)
-				throw new IllegalStateException(String.format("plainCryptoKey.cryptoKeyPart != toCryptoKeyPart :: %s != %s", plainCryptoKey.getCryptoKeyPart(), toCryptoKeyPart));
+//			if (plainCryptoKey.getCryptoKeyPart() != toCryptoKeyPart)
+//				throw new IllegalStateException(String.format("plainCryptoKey.cryptoKeyPart != toCryptoKeyPart :: %s != %s", plainCryptoKey.getCryptoKeyPart(), toCryptoKeyPart));
 
 			final CryptoKeyDao cryptoKeyDao = context.transaction.getDao(CryptoKeyDao.class);
 			final CryptoKey cryptoKey = cryptoKeyDao.makePersistent(plainCryptoKey.getCryptoKey());
@@ -510,6 +534,43 @@ public class CryptreeNode {
 		}
 		return plainCryptoKey;
 	}
+
+//	/**
+//	 * @deprecated About to be replaced with the version having a CipherOperationMode.
+//	 */
+//	@Deprecated
+//	protected PlainCryptoKey getActivePlainCryptoKeyOrCreate(final CryptoKeyRole toCryptoKeyRole, final CryptoKeyPart toCryptoKeyPart) {
+//		assertNotNull("toCryptoKeyRole", toCryptoKeyRole);
+//		assertNotNull("toCryptoKeyPart", toCryptoKeyPart);
+//		PlainCryptoKey plainCryptoKey = getActivePlainCryptoKey(toCryptoKeyRole, toCryptoKeyPart);
+//		if (plainCryptoKey == null) {
+//			final Class<? extends PlainCryptoKeyFactory> clazz = cryptoKeyRole2PlainCryptoKeyFactory.get(toCryptoKeyRole);
+//			assertNotNull(String.format("cryptoKeyRole2PlainCryptoKeyFactory[%s]", toCryptoKeyRole), clazz);
+//
+//			final PlainCryptoKeyFactory factory;
+//			try {
+//				factory = clazz.newInstance();
+//			} catch (final Exception e) {
+//				throw new RuntimeException(String.format("Creating new instance of class %s failed: %s", clazz.getName(), e), e);
+//			}
+//
+//			factory.setCryptreeNode(this);
+//			factory.setCryptoKeyPart(toCryptoKeyPart);
+//			plainCryptoKey = factory.createPlainCryptoKey();
+//			assertNotNull(clazz.getName() + ".createPlainCryptoKey()", plainCryptoKey);
+//
+//			if (plainCryptoKey.getCryptoKey().getCryptoKeyRole() != toCryptoKeyRole)
+//				throw new IllegalStateException(String.format("plainCryptoKey.cryptoKey.cryptoKeyRole != toCryptoKeyRole :: %s != %s", plainCryptoKey.getCryptoKey().getCryptoKeyRole(), toCryptoKeyRole));
+//
+//			if (plainCryptoKey.getCryptoKeyPart() != toCryptoKeyPart)
+//				throw new IllegalStateException(String.format("plainCryptoKey.cryptoKeyPart != toCryptoKeyPart :: %s != %s", plainCryptoKey.getCryptoKeyPart(), toCryptoKeyPart));
+//
+//			final CryptoKeyDao cryptoKeyDao = context.transaction.getDao(CryptoKeyDao.class);
+//			final CryptoKey cryptoKey = cryptoKeyDao.makePersistent(plainCryptoKey.getCryptoKey());
+//			plainCryptoKey = new PlainCryptoKey(cryptoKey, plainCryptoKey.getCryptoKeyPart(), plainCryptoKey.getCipherParameters());
+//		}
+//		return plainCryptoKey;
+//	}
 
 	/**
 	 * Gets the current data key as indicated by {@link CryptoRepoFile#getCryptoKey()}.
@@ -593,19 +654,18 @@ public class CryptreeNode {
 
 		// It is technically required to have read permission, when having write or grant permission. Therefore,
 		// we simply grant it always, here.
-
 		grantReadPermission(publicKey);
 		if (PermissionType.read == permissionType)
+			return;
+
+		final Uid ownerUserRepoKeyId = context.getRepositoryOwnerOrFail().getUserRepoKeyPublicKey().getUserRepoKeyId();
+		if (ownerUserRepoKeyId.equals(publicKey.getUserRepoKeyId()))
 			return;
 
 		// It is technically required to have write permission, when having grant permission. Therefore, we
 		// grant it here, too.
 		if (PermissionType.grant == permissionType)
 			grantPermission(PermissionType.write, publicKey);
-
-		final Uid ownerUserRepoKeyId = context.getRepositoryOwnerOrFail().getUserRepoKeyPublicKey().getUserRepoKeyId();
-		if (ownerUserRepoKeyId.equals(publicKey.getUserRepoKeyId()))
-			return;
 
 		final PermissionSet permissionSet = getPermissionSetOrCreate();
 		final PermissionDao dao = context.transaction.getDao(PermissionDao.class);
@@ -620,6 +680,31 @@ public class CryptreeNode {
 			permission = dao.makePersistent(permission);
 			assertPermissionOk(permission);
 		}
+
+		if (PermissionType.grant == permissionType)
+			ensureParentHasAsymmetricActiveSubdirKey();
+	}
+
+	private void ensureParentHasAsymmetricActiveSubdirKey() {
+		final CryptreeNode parent = getParent();
+		final CryptoRepoFile parentCryptoRepoFile = parent == null ? null : parent.getCryptoRepoFileOrCreate(false);
+		final CryptoKeyDao cryptoKeyDao = context.transaction.getDao(CryptoKeyDao.class);
+		final Collection<CryptoKey> activeSubdirKeys = cryptoKeyDao.getActiveCryptoKeys(parentCryptoRepoFile, CryptoKeyRole.subdirKey);
+		boolean hasAsymmetryActiveSubdirKey = false;
+		for (final CryptoKey activeSubdirKey : activeSubdirKeys) {
+			switch (activeSubdirKey.getCryptoKeyType()) {
+				case asymmetric:
+					hasAsymmetryActiveSubdirKey = true;
+					break;
+				case symmetric:
+					deactivateCryptoKey(activeSubdirKey);
+					break;
+				default:
+					throw new IllegalStateException("Unknown CryptoKeyType: " + activeSubdirKey.getCryptoKeyType());
+			}
+		}
+		if (! hasAsymmetryActiveSubdirKey)
+			getActivePlainCryptoKeyOrCreate(CryptoKeyRole.subdirKey, CipherOperationMode.DECRYPT);
 	}
 
 	public void revokePermission(final PermissionType permissionType, final Set<Uid> userRepoKeyIds) {

@@ -32,6 +32,17 @@ public class CryptreeNodeUtil {
 
 	private static final Logger logger = LoggerFactory.getLogger(CryptreeNodeUtil.class);
 
+	/**
+	 * How many bytes can be encrypted *directly* with asymmetric encryption.
+	 * <p>
+	 * As soon as this limit is exceeded, {@link #encrypt(byte[], PlainCryptoKey)} will automatically
+	 * delegate to {@link #encryptLarge(byte[], AsymmetricKeyParameter)}, if the given {@code plainCryptoKey}
+	 * is an asymmetric key.
+	 * <p>
+	 * http://stackoverflow.com/questions/5583379/what-is-the-limit-to-the-amount-of-data-that-can-be-encrypted-with-rsa
+	 */
+	private static final int MAX_ASYMMETRIC_PLAIN_SIZE = 64;
+
 //	public static byte[] encryptLarge(final byte[] plain, final UserRepoKey userRepoKey) {
 //		assertNotNull("plain", plain);
 //		assertNotNull("userRepoKey", userRepoKey);
@@ -75,19 +86,27 @@ public class CryptreeNodeUtil {
 	public static byte[] decryptLarge(final byte[] encrypted, final UserRepoKey userRepoKey) {
 		assertNotNull("encrypted", encrypted);
 		assertNotNull("userRepoKey", userRepoKey);
-		try {
-			if (logger.isTraceEnabled())
-				logger.trace("decryptLarge: userRepoKeyId={} encrypted={}", userRepoKey.getUserRepoKeyId(), Arrays.toString(encrypted));
 
+		if (logger.isTraceEnabled())
+			logger.trace("decryptLarge: userRepoKeyId={} encrypted={}", userRepoKey.getUserRepoKeyId(), Arrays.toString(encrypted));
+
+		final AsymmetricKeyParameter privateKey = userRepoKey.getKeyPair().getPrivate();
+		return decryptLarge(encrypted, privateKey);
+	}
+
+	public static byte[] decryptLarge(final byte[] encrypted, final AsymmetricKeyParameter privateKey) {
+		assertNotNull("encrypted", encrypted);
+		assertNotNull("privateKey", privateKey);
+		try {
 			final AsymCombiDecrypterInputStream in = new AsymCombiDecrypterInputStream(
-					new ByteArrayInputStream(encrypted), userRepoKey.getKeyPair().getPrivate());
+					new ByteArrayInputStream(encrypted), privateKey);
 			final ByteArrayOutputStream out = new ByteArrayOutputStream(encrypted.length);
 			transferStreamData(in, out);
 			in.close();
 			final byte[] plain = out.toByteArray();
 
 			if (logger.isTraceEnabled())
-				logger.trace("decryptLarge: userRepoKeyId={} plain={}", userRepoKey.getUserRepoKeyId(), Arrays.toString(plain));
+				logger.trace("decryptLarge: plain={}", Arrays.toString(plain));
 
 			return plain;
 		} catch (final IOException x) {
@@ -99,8 +118,23 @@ public class CryptreeNodeUtil {
 		switch (plainCryptoKey.getCryptoKeyPart()) {
 			case privateKey:
 				throw new IllegalStateException("Cannot encrypt with private key!");
-			case publicKey:
-				return encrypt(plain, plainCryptoKey.getPublicKeyParameterOrFail());
+			case publicKey: {
+				final boolean large = plain.length > MAX_ASYMMETRIC_PLAIN_SIZE;
+				final byte[] tmp;
+
+				if (large)
+					tmp = encryptLarge(plain, plainCryptoKey.getPublicKeyParameterOrFail());
+				else
+					tmp = encrypt(plain, plainCryptoKey.getPublicKeyParameterOrFail());
+
+				final byte[] result = new byte[tmp.length + 1 /* version */ + 1 /* large */ ];
+				int idx = -1;
+				result[++idx] = 1; // version
+				result[++idx] = (byte) (large ? 1 : 0);
+				System.arraycopy(tmp, 0, result, ++idx, tmp.length);
+
+				return result;
+			}
 			case sharedSecret:
 				return encrypt(plain, plainCryptoKey.getKeyParameterOrFail());
 			default:
@@ -110,8 +144,29 @@ public class CryptreeNodeUtil {
 
 	public static byte[] decrypt(final byte[] encrypted, final PlainCryptoKey plainCryptoKey) {
 		switch (plainCryptoKey.getCryptoKeyPart()) {
-			case privateKey:
-				return decrypt(encrypted, plainCryptoKey.getPrivateKeyParameterOrFail());
+			case privateKey: {
+				int idx = -1;
+				final byte version = encrypted[++idx];
+				if (version != 1)
+					throw new IllegalArgumentException("Wrong version! Expected 1, but found: " + version);
+
+				final byte largeB = encrypted[++idx];
+				final boolean large;
+				if (largeB == 0)
+					large = false;
+				else if (largeB == 1)
+					large = true;
+				else
+					throw new IllegalArgumentException("Wrong 'large' indicator byte: " + largeB);
+
+				final byte[] tmp = new byte[encrypted.length - (1 /* version */ + 1 /* large */) ];
+				System.arraycopy(encrypted, ++idx, tmp, 0, tmp.length);
+
+				if (large)
+					return decryptLarge(tmp, plainCryptoKey.getPrivateKeyParameterOrFail());
+				else
+					return decrypt(tmp, plainCryptoKey.getPrivateKeyParameterOrFail());
+			}
 			case publicKey:
 				throw new IllegalStateException("Cannot decrypt with public key!");
 			case sharedSecret:

@@ -6,6 +6,7 @@ import java.util.Collection;
 
 import javax.jdo.Query;
 
+import org.subshare.core.dto.CryptoKeyRole;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,6 +30,26 @@ public class CryptoKeyDao extends Dao<CryptoKey, CryptoKeyDao> {
 		try {
 			final CryptoKey cryptoKey = (CryptoKey) query.execute(cryptoKeyId.toString());
 			return cryptoKey;
+		} finally {
+			query.closeAll();
+		}
+	}
+
+	public Collection<CryptoKey> getActiveCryptoKeys(final CryptoRepoFile cryptoRepoFile, final CryptoKeyRole cryptoKeyRole) {
+		assertNotNull("cryptoRepoFile", cryptoRepoFile);
+		assertNotNull("cryptoKeyRole", cryptoKeyRole);
+		final Query query = pm().newNamedQuery(getEntityClass(), "getActiveCryptoKeys_cryptoRepoFile_cryptoKeyRole");
+		try {
+			long startTimestamp = System.currentTimeMillis();
+			@SuppressWarnings("unchecked")
+			Collection<CryptoKey> cryptoKeys = (Collection<CryptoKey>) query.execute(cryptoRepoFile, cryptoKeyRole);
+			logger.debug("getCryptoKeys: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
+
+			startTimestamp = System.currentTimeMillis();
+			cryptoKeys = load(cryptoKeys);
+			logger.debug("getCryptoKeys: Loading result-set with {} elements took {} ms.", cryptoKeys.size(), System.currentTimeMillis() - startTimestamp);
+
+			return cryptoKeys;
 		} finally {
 			query.closeAll();
 		}

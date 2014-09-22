@@ -59,10 +59,11 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 @Unique(name="CryptoKey_cryptoKeyId", members="cryptoKeyId")
 @Indices({
 	@Index(name="CryptoKey_localRevision", members="localRevision"),
-	@Index(name="CryptoKey_cryptoRepoFile", members="cryptoRepoFile")
+	@Index(name="CryptoKey_cryptoKeyRole", members="cryptoKeyRole")
 })
 @Queries({
 	@Query(name="getCryptoKey_cryptoKeyId", value="SELECT UNIQUE WHERE this.cryptoKeyId == :cryptoKeyId"),
+	@Query(name="getActiveCryptoKeys_cryptoRepoFile_cryptoKeyRole", value="SELECT WHERE this.cryptoRepoFile == :cryptoRepoFile && this.cryptoKeyRole == :cryptoKeyRole && this.cryptoKeyDeactivation == null"),
 	@Query(name="getCryptoKeysChangedAfter_localRevision", value="SELECT WHERE this.localRevision > :localRevision")
 })
 public class CryptoKey extends Entity implements WriteProtectedEntity, AutoTrackLocalRevision, StoreCallback {
@@ -76,11 +77,11 @@ public class CryptoKey extends Entity implements WriteProtectedEntity, AutoTrack
 
 	@Persistent(nullValue=NullValue.EXCEPTION)
 	@Column(jdbcType="INTEGER")
-	private CryptoKeyType cryptoKeyType;
+	private CryptoKeyRole cryptoKeyRole;
 
 	@Persistent(nullValue=NullValue.EXCEPTION)
 	@Column(jdbcType="INTEGER")
-	private CryptoKeyRole cryptoKeyRole;
+	private CryptoKeyType cryptoKeyType;
 
 	private long localRevision;
 
@@ -231,10 +232,10 @@ public class CryptoKey extends Entity implements WriteProtectedEntity, AutoTrack
 					InputStreamSource.Helper.createInputStreamSource(cryptoRepoFile.getCryptoRepoFileId()),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
-					InputStreamSource.Helper.createInputStreamSource(cryptoKeyType.ordinal()),
+					InputStreamSource.Helper.createInputStreamSource(cryptoKeyRole.ordinal()),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
-					InputStreamSource.Helper.createInputStreamSource(cryptoKeyRole.ordinal())
+					InputStreamSource.Helper.createInputStreamSource(cryptoKeyType.ordinal())
 //					localRevision
 //					inCryptoLinks
 //					outCryptoLinks

@@ -71,6 +71,12 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 					+ "&& this.validFrom <= :timestamp "
 					+ "&& ( this.validTo == null || this.validTo >= :timestamp )"
 			),
+	@Query(
+			name="PermissionCountOfDirectChildCryptoRepoFiles_parentCryptoRepoFile_permissionType",
+			value="SELECT count(this) WHERE "
+					+ "this.permissionSet.cryptoRepoFile.parent == :parentCryptoRepoFile "
+					+ "&& this.permissionType == :permissionType "
+			),
 	@Query(name="getPermissionsChangedAfter_localRevision", value="SELECT WHERE this.localRevision > :localRevision")
 })
 public class Permission extends Entity implements WriteProtectedEntity, AutoTrackLocalRevision, StoreCallback {

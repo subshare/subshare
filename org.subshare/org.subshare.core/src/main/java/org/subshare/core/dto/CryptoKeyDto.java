@@ -21,8 +21,6 @@ public class CryptoKeyDto implements Signable {
 
 	private Uid cryptoRepoFileId;
 
-//	private boolean active;
-
 	private CryptoKeyType cryptoKeyType;
 
 	private CryptoKeyRole cryptoKeyRole;
@@ -47,13 +45,6 @@ public class CryptoKeyDto implements Signable {
 	public void setCryptoRepoFileId(final Uid cryptoRepoFileId) {
 		this.cryptoRepoFileId = cryptoRepoFileId;
 	}
-
-//	public boolean isActive() {
-//		return active;
-//	}
-//	public void setActive(final boolean active) {
-//		this.active = active;
-//	}
 
 	public CryptoKeyType getCryptoKeyType() {
 		return cryptoKeyType;
@@ -104,10 +95,10 @@ public class CryptoKeyDto implements Signable {
 					InputStreamSource.Helper.createInputStreamSource(cryptoRepoFileId),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
-					InputStreamSource.Helper.createInputStreamSource(cryptoKeyType.ordinal()),
+					InputStreamSource.Helper.createInputStreamSource(cryptoKeyRole.ordinal()),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
-					InputStreamSource.Helper.createInputStreamSource(cryptoKeyRole.ordinal())
+					InputStreamSource.Helper.createInputStreamSource(cryptoKeyType.ordinal())
 //					localRevision
 //					inCryptoLinks
 //					outCryptoLinks
