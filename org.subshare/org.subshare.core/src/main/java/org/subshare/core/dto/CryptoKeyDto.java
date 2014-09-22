@@ -21,7 +21,7 @@ public class CryptoKeyDto implements Signable {
 
 	private Uid cryptoRepoFileId;
 
-	private boolean active;
+//	private boolean active;
 
 	private CryptoKeyType cryptoKeyType;
 
@@ -31,6 +31,8 @@ public class CryptoKeyDto implements Signable {
 
 	@XmlElement
 	private SignatureDto signatureDto;
+
+	private CryptoKeyDeactivationDto cryptoKeyDeactivationDto;
 
 	public Uid getCryptoKeyId() {
 		return cryptoKeyId;
@@ -46,12 +48,12 @@ public class CryptoKeyDto implements Signable {
 		this.cryptoRepoFileId = cryptoRepoFileId;
 	}
 
-	public boolean isActive() {
-		return active;
-	}
-	public void setActive(final boolean active) {
-		this.active = active;
-	}
+//	public boolean isActive() {
+//		return active;
+//	}
+//	public void setActive(final boolean active) {
+//		this.active = active;
+//	}
 
 	public CryptoKeyType getCryptoKeyType() {
 		return cryptoKeyType;
@@ -72,6 +74,13 @@ public class CryptoKeyDto implements Signable {
 	}
 	public void setLocalRevision(final long localRevision) {
 		this.localRevision = localRevision;
+	}
+
+	public CryptoKeyDeactivationDto getCryptoKeyDeactivationDto() {
+		return cryptoKeyDeactivationDto;
+	}
+	public void setCryptoKeyDeactivationDto(final CryptoKeyDeactivationDto cryptoKeyDeactivationDto) {
+		this.cryptoKeyDeactivationDto = cryptoKeyDeactivationDto;
 	}
 
 	@Override
@@ -98,12 +107,12 @@ public class CryptoKeyDto implements Signable {
 					InputStreamSource.Helper.createInputStreamSource(cryptoKeyType.ordinal()),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
-					InputStreamSource.Helper.createInputStreamSource(cryptoKeyRole.ordinal()),
+					InputStreamSource.Helper.createInputStreamSource(cryptoKeyRole.ordinal())
 //					localRevision
 //					inCryptoLinks
 //					outCryptoLinks
-					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
-					InputStreamSource.Helper.createInputStreamSource(active)
+//					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
+//					InputStreamSource.Helper.createInputStreamSource(active)
 					);
 		} catch (final IOException x) {
 			throw new RuntimeException(x);
@@ -124,9 +133,8 @@ public class CryptoKeyDto implements Signable {
 	@Override
 	public String toString() {
 		return "CryptoKeyDto[cryptoKeyId=" + cryptoKeyId
-				+ ", cryptoRepoFileId=" + cryptoRepoFileId + ", active="
-				+ active + ", cryptoKeyType=" + cryptoKeyType
+				+ ", cryptoRepoFileId=" + cryptoRepoFileId + ", cryptoKeyType=" + cryptoKeyType
 				+ ", cryptoKeyRole=" + cryptoKeyRole + ", localRevision="
-				+ localRevision + "]";
+				+ localRevision + ", cryptoKeyDeactivationDto=" + cryptoKeyDeactivationDto + "]";
 	}
 }

@@ -33,6 +33,7 @@ import org.subshare.core.sign.Signable;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.local.persistence.CryptoKey;
 import org.subshare.local.persistence.CryptoKeyDao;
+import org.subshare.local.persistence.CryptoKeyDeactivation;
 import org.subshare.local.persistence.CryptoLink;
 import org.subshare.local.persistence.CryptoLinkDao;
 import org.subshare.local.persistence.CryptoRepoFile;
@@ -236,6 +237,14 @@ public class CryptreeNode {
 
 	private void grantReadPermission(final UserRepoKey.PublicKey publicKey) {
 		assertNotNull("publicKey", publicKey);
+
+		final CryptoLinkDao cryptoLinkDao = context.transaction.getDao(CryptoLinkDao.class);
+		final Collection<CryptoLink> cryptoLinks = cryptoLinkDao.getActiveCryptoLinks(
+				cryptoRepoFile, CryptoKeyRole.clearanceKey, CryptoKeyPart.privateKey);
+
+		if (containsFromUserRepoKeyId(cryptoLinks, Collections.singleton(publicKey.getUserRepoKeyId())))
+			return; // There is already an active key which is accessible to the given user. Thus no need to generate a new crypto-link.
+
 		final PlainCryptoKey plainCryptoKey = getActivePlainCryptoKeyOrCreate(CryptoKeyRole.clearanceKey, CryptoKeyPart.privateKey);
 		createCryptoLink(this, getUserRepoKeyPublicKey(publicKey), plainCryptoKey);
 	}
@@ -260,7 +269,7 @@ public class CryptreeNode {
 		// access), it might happen, that there are multiple. We therefore de-activate all we find.
 		final Set<CryptoKey> processedCryptoKeys = new HashSet<CryptoKey>();
 		for (final CryptoLink cryptoLink : cryptoLinks)
-			makeCryptoKeyAndDescendantsNonActive(cryptoLink.getToCryptoKey(), processedCryptoKeys); // likely the same CryptoKey for all cryptoLinks => deduplicate via Set
+			deactivateCryptoKeyAndDescendants(cryptoLink.getToCryptoKey(), processedCryptoKeys); // likely the same CryptoKey for all cryptoLinks => deduplicate via Set
 
 		// Make sure the changes are written to the DB, so that a new active clearance key is generated in the following.
 		context.transaction.flush();
@@ -300,14 +309,21 @@ public class CryptreeNode {
 			getActivePlainCryptoKeyOrCreate(CryptoKeyRole.backlinkKey, CryptoKeyPart.sharedSecret);
 	}
 
-	private void makeCryptoKeyAndDescendantsNonActive(final CryptoKey cryptoKey, final Set<CryptoKey> processedCryptoKeys) {
+	private void deactivateCryptoKeyAndDescendants(final CryptoKey cryptoKey, final Set<CryptoKey> processedCryptoKeys) {
 		if (! processedCryptoKeys.add(cryptoKey))
 			return;
 
-		cryptoKey.setActive(false);
-		sign(cryptoKey);
+//		cryptoKey.setActive(false);
+//		sign(cryptoKey);
+		if (cryptoKey.getCryptoKeyDeactivation() == null) {
+			final CryptoKeyDeactivation cryptoKeyDeactivation = new CryptoKeyDeactivation();
+			cryptoKeyDeactivation.setCryptoKey(cryptoKey);
+			sign(cryptoKeyDeactivation);
+			cryptoKey.setCryptoKeyDeactivation(cryptoKeyDeactivation);
+		}
+
 		for (final CryptoLink cryptoLink : cryptoKey.getOutCryptoLinks())
-			makeCryptoKeyAndDescendantsNonActive(cryptoLink.getToCryptoKey(), processedCryptoKeys);
+			deactivateCryptoKeyAndDescendants(cryptoLink.getToCryptoKey(), processedCryptoKeys);
 	}
 
 	private void createSubdirKeyAndBacklinkKeyIfNeededChildrenRecursively() {
@@ -569,10 +585,23 @@ public class CryptreeNode {
 	public void grantPermission(final PermissionType permissionType, final UserRepoKey.PublicKey publicKey) {
 		assertNotNull("permissionType", permissionType);
 		assertNotNull("publicKey", publicKey);
-		if (PermissionType.read == permissionType) {
-			grantReadPermission(publicKey);
+
+//		if (PermissionType.read == permissionType) {
+//			grantReadPermission(publicKey);
+//			return;
+//		}
+
+		// It is technically required to have read permission, when having write or grant permission. Therefore,
+		// we simply grant it always, here.
+
+		grantReadPermission(publicKey);
+		if (PermissionType.read == permissionType)
 			return;
-		}
+
+		// It is technically required to have write permission, when having grant permission. Therefore, we
+		// grant it here, too.
+		if (PermissionType.grant == permissionType)
+			grantPermission(PermissionType.write, publicKey);
 
 		final Uid ownerUserRepoKeyId = context.getRepositoryOwnerOrFail().getUserRepoKeyPublicKey().getUserRepoKeyId();
 		if (ownerUserRepoKeyId.equals(publicKey.getUserRepoKeyId()))
@@ -597,8 +626,18 @@ public class CryptreeNode {
 		assertNotNull("permissionType", permissionType);
 		assertNotNull("userRepoKeyIds", userRepoKeyIds);
 		if (PermissionType.read == permissionType) {
+			// Since it is technically required to have read permission, when having write or grant permission, we
+			// revoke grant and write permission, too.
+			revokePermission(PermissionType.write, userRepoKeyIds);
+			revokePermission(PermissionType.grant, userRepoKeyIds);
+
 			revokeReadPermission(userRepoKeyIds);
 			return;
+		}
+
+		if (PermissionType.write == permissionType) {
+			// grant requires write, hence we must revoke grant, too, if we want to revoke write.
+			revokePermission(PermissionType.grant, userRepoKeyIds);
 		}
 
 		final PermissionSet permissionSet = getPermissionSet();

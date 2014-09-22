@@ -20,6 +20,7 @@ import org.subshare.core.PermissionCollisionException;
 import org.subshare.core.ReadAccessDeniedException;
 import org.subshare.core.WriteAccessDeniedException;
 import org.subshare.core.dto.CryptoChangeSetDto;
+import org.subshare.core.dto.CryptoKeyDeactivationDto;
 import org.subshare.core.dto.CryptoKeyDto;
 import org.subshare.core.dto.CryptoLinkDto;
 import org.subshare.core.dto.CryptoRepoFileDto;
@@ -35,6 +36,7 @@ import org.subshare.core.user.UserRepoKeyRing;
 import org.subshare.local.persistence.SsLocalRepository;
 import org.subshare.local.persistence.CryptoKey;
 import org.subshare.local.persistence.CryptoKeyDao;
+import org.subshare.local.persistence.CryptoKeyDeactivation;
 import org.subshare.local.persistence.CryptoLink;
 import org.subshare.local.persistence.CryptoLinkDao;
 import org.subshare.local.persistence.CryptoRepoFile;
@@ -434,25 +436,42 @@ public class CryptreeImpl extends AbstractCryptree {
 
 		final Uid cryptoKeyId = assertNotNull("cryptoKeyDto.cryptoKeyId", cryptoKeyDto.getCryptoKeyId());
 		CryptoKey cryptoKey = cryptoKeyDao.getCryptoKey(cryptoKeyId);
-		final boolean cryptoKeyIsNew;
+//		final boolean cryptoKeyIsNew;
 		if (cryptoKey == null) {
-			cryptoKeyIsNew = true;
+//			cryptoKeyIsNew = true;
 			cryptoKey = new CryptoKey(cryptoKeyId);
 		}
-		else
-			cryptoKeyIsNew = false;
+//		else
+//			cryptoKeyIsNew = false;
 
-		// It is necessary to prevent a collision and ensure that the 'active' property cannot be reverted.
-		if (cryptoKeyDto.isActive() && ! cryptoKey.isActive()) {
-			logger.warn("putCryptoKeyDto: Rejecting to re-activate CryptoKey! Keeping (and re-publishing) previous state: {}", cryptoKey);
-			cryptoKey.setChanged(new Date()); // only to make it dirty => force new localRevision => force sync.
-			if (cryptoKeyIsNew)
-				throw new IllegalStateException("Cannot reject, because the CryptoKey is new! " + cryptoKey);
+//		// It is necessary to prevent a collision and ensure that the 'active' property cannot be reverted.
+//		if (cryptoKeyDto.isActive() && ! cryptoKey.isActive()) {
+//			logger.warn("putCryptoKeyDto: Rejecting to re-activate CryptoKey! Keeping (and re-publishing) previous state: {}", cryptoKey);
+//			cryptoKey.setChanged(new Date()); // only to make it dirty => force new localRevision => force sync.
+//			if (cryptoKeyIsNew)
+//				throw new IllegalStateException("Cannot reject, because the CryptoKey is new! " + cryptoKey);
+//
+//			return cryptoKey;
+//		}
+//
+//		cryptoKey.setActive(cryptoKeyDto.isActive());
 
-			return cryptoKey;
+		final CryptoKeyDeactivationDto cryptoKeyDeactivationDto = cryptoKeyDto.getCryptoKeyDeactivationDto();
+		if (cryptoKeyDeactivationDto != null) {
+			CryptoKeyDeactivation cryptoKeyDeactivation = cryptoKey.getCryptoKeyDeactivation();
+			if (cryptoKeyDeactivation == null)
+				cryptoKeyDeactivation = new CryptoKeyDeactivation();
+
+			assertNotNull("cryptoKeyDeactivationDto.cryptoKeyId", cryptoKeyDeactivationDto.getCryptoKeyId());
+			if (! cryptoKeyDeactivationDto.getCryptoKeyId().equals(cryptoKeyId))
+				throw new IllegalStateException(String.format("cryptoKeyDeactivationDto.cryptoKeyId != cryptoKeyDto.cryptoKeyId :: %s != %s",
+						cryptoKeyDeactivationDto.getCryptoKeyId(), cryptoKeyId));
+
+			cryptoKeyDeactivation.setCryptoKey(cryptoKey);
+			cryptoKeyDeactivation.setSignature(cryptoKeyDeactivationDto.getSignature());
+			cryptoKey.setCryptoKeyDeactivation(cryptoKeyDeactivation);
 		}
 
-		cryptoKey.setActive(cryptoKeyDto.isActive());
 		cryptoKey.setCryptoKeyRole(cryptoKeyDto.getCryptoKeyRole());
 		cryptoKey.setCryptoKeyType(cryptoKeyDto.getCryptoKeyType());
 
@@ -780,7 +799,12 @@ public class CryptreeImpl extends AbstractCryptree {
 		final CryptoKeyDto cryptoKeyDto = new CryptoKeyDto();
 		cryptoKeyDto.setCryptoKeyId(cryptoKey.getCryptoKeyId());
 		cryptoKeyDto.setCryptoRepoFileId(cryptoKey.getCryptoRepoFile().getCryptoRepoFileId());
-		cryptoKeyDto.setActive(cryptoKey.isActive());
+
+//		cryptoKeyDto.setActive(cryptoKey.isActive());
+		final CryptoKeyDeactivation cryptoKeyDeactivation = cryptoKey.getCryptoKeyDeactivation();
+		if (cryptoKeyDeactivation != null)
+			cryptoKeyDto.setCryptoKeyDeactivationDto(toCryptoKeyDeactivationDto(cryptoKeyDeactivation));
+
 		cryptoKeyDto.setCryptoKeyRole(assertNotNull("cryptoKey.cryptoKeyRole", cryptoKey.getCryptoKeyRole()));
 		cryptoKeyDto.setCryptoKeyType(assertNotNull("cryptoKey.cryptoKeyType", cryptoKey.getCryptoKeyType()));
 
@@ -791,6 +815,15 @@ public class CryptreeImpl extends AbstractCryptree {
 		assertNotNull("cryptoKey.signature.signatureData", signature.getSignatureData());
 
 		return cryptoKeyDto;
+	}
+
+	private CryptoKeyDeactivationDto toCryptoKeyDeactivationDto(final CryptoKeyDeactivation cryptoKeyDeactivation) {
+		assertNotNull("cryptoKeyDeactivation", cryptoKeyDeactivation);
+		final CryptoKeyDeactivationDto cryptoKeyDeactivationDto = new CryptoKeyDeactivationDto();
+		final CryptoKey cryptoKey = assertNotNull("cryptoKeyDeactivation.cryptoKey", cryptoKeyDeactivation.getCryptoKey());
+		cryptoKeyDeactivationDto.setCryptoKeyId(assertNotNull("cryptoKeyDeactivation.cryptoKey.cryptoKeyId", cryptoKey.getCryptoKeyId()));
+		cryptoKeyDeactivationDto.setSignature(cryptoKeyDeactivation.getSignature());
+		return cryptoKeyDeactivationDto;
 	}
 
 	private RepositoryOwnerDto toRepositoryOwnerDto(final RepositoryOwner repositoryOwner) {

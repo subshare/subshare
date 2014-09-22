@@ -4,6 +4,7 @@ import static co.codewizards.cloudstore.core.util.Util.*;
 import static org.assertj.core.api.Assertions.*;
 
 import org.subshare.core.Cryptree;
+import org.subshare.core.GrantAccessDeniedException;
 import org.subshare.core.ReadAccessDeniedException;
 import org.subshare.core.user.UserRepoKeyRing;
 import org.junit.Test;
@@ -20,12 +21,28 @@ public class CryptreeImplGrantRevokeReadPermissionTest extends AbstractPermissio
 
 	@Test
 	public void grantAndRevokeReadPermission() throws Exception {
-		grantReadPermission("/3", friend1UserRepoKey.getPublicKey(), friend2UserRepoKey.getPublicKey());
+		final boolean ownerIsAdmin = true; // TODO set to false (or maybe use a random value?) once read-cryptree was extended to support 'grant' functionality)!
+
+		final UserRepoKeyRing adminUserRepoKeyRing = ownerIsAdmin ? ownerUserRepoKeyRing : friend0UserRepoKeyRing;
+
+		if (! ownerIsAdmin) {
+			try {
+				grantReadPermission(adminUserRepoKeyRing, "/3", friend1UserRepoKey.getPublicKey(), friend2UserRepoKey.getPublicKey());
+				fail("friend0 was able to grant read permissions without having grant permissions!");
+			} catch (final GrantAccessDeniedException x) {
+				doNothing(); // this is expected!
+			}
+
+			// The following automatically grants read+write permissions, too, because this is technically required.
+			grantGrantPermission("/3", friend0UserRepoKey.getPublicKey());
+		}
+
+		grantReadPermission(adminUserRepoKeyRing, "/3", friend1UserRepoKey.getPublicKey(), friend2UserRepoKey.getPublicKey());
 
 		assertReadPermissionCorrect(friend1UserRepoKeyRing, "/3");
 		assertReadPermissionCorrect(friend2UserRepoKeyRing, "/3");
 
-		revokeReadPermission("/3", friend1UserRepoKey.getUserRepoKeyId());
+		revokeReadPermission(adminUserRepoKeyRing, "/3", friend1UserRepoKey.getUserRepoKeyId());
 
 		// Should still be readable, because we have lazy revocation and there was no modification, yet!
 		assertReadPermissionCorrect(friend1UserRepoKeyRing, "/3");

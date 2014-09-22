@@ -55,6 +55,8 @@ public abstract class AbstractPermissionTest extends AbstractTest {
 	protected UUID remoteRepositoryId;
 	protected UserRepoKeyRing ownerUserRepoKeyRing;
 	protected UserRepoKey ownerUserRepoKey;
+	protected UserRepoKeyRing friend0UserRepoKeyRing;
+	protected UserRepoKey friend0UserRepoKey;
 	protected UserRepoKeyRing friend1UserRepoKeyRing;
 	protected UserRepoKey friend1UserRepoKey;
 	protected UserRepoKeyRing friend2UserRepoKeyRing;
@@ -94,6 +96,9 @@ public abstract class AbstractPermissionTest extends AbstractTest {
 	protected void createUserRepoKeyRings() throws Exception {
 		ownerUserRepoKeyRing = createUserRepoKeyRing(remoteRepositoryId);
 		ownerUserRepoKey = ownerUserRepoKeyRing.getUserRepoKeys(remoteRepositoryId).get(1);
+
+		friend0UserRepoKeyRing = createUserRepoKeyRing(remoteRepositoryId);
+		friend0UserRepoKey = friend0UserRepoKeyRing.getUserRepoKeys(remoteRepositoryId).get(1);
 
 		friend1UserRepoKeyRing = createUserRepoKeyRing(remoteRepositoryId);
 		friend1UserRepoKey = friend1UserRepoKeyRing.getUserRepoKeys(remoteRepositoryId).get(1);

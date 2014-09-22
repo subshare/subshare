@@ -4,6 +4,7 @@ import org.subshare.core.dto.SsDirectoryDto;
 import org.subshare.core.dto.SsNormalFileDto;
 import org.subshare.core.dto.SsSymlinkDto;
 import org.subshare.core.dto.CryptoChangeSetDto;
+import org.subshare.core.dto.CryptoKeyDeactivationDto;
 import org.subshare.core.dto.CryptoKeyDto;
 import org.subshare.core.dto.CryptoLinkDto;
 import org.subshare.core.dto.CryptoRepoFileDto;
@@ -23,6 +24,7 @@ public class CloudStoreJaxbContextProviderImpl extends AbstractCloudStoreJaxbCon
 				SsSymlinkDto.class,
 				CryptoChangeSetDto.class,
 				CryptoKeyDto.class,
+				CryptoKeyDeactivationDto.class,
 				CryptoLinkDto.class,
 				CryptoRepoFileDto.class,
 				CryptoRepoFileDtoList.class,

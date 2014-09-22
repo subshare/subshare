@@ -118,7 +118,8 @@ public class SignableTest extends AbstractTest {
 		final SignableSigner signableSigner = new SignableSigner(userRepoKey);
 		signableSigner.sign(cryptoKeyDto);
 
-		cryptoKeyDto.setActive(false);
+//		cryptoKeyDto.setActive(false);
+		cryptoKeyDto.setCryptoRepoFileId(new Uid());
 
 		final SignableVerifier signableVerifier = new SignableVerifier(userRepoKeyPublicKeyLookup);
 		signableVerifier.verify(cryptoKeyDto);
@@ -140,7 +141,7 @@ public class SignableTest extends AbstractTest {
 
 	private CryptoKeyDto createCryptoRepoKeyDto() {
 		final CryptoKeyDto cryptoKeyDto = new CryptoKeyDto();
-		cryptoKeyDto.setActive(true);
+//		cryptoKeyDto.setActive(true);
 		cryptoKeyDto.setCryptoKeyId(new Uid());
 		cryptoKeyDto.setCryptoKeyRole(CryptoKeyRole.dataKey);
 		cryptoKeyDto.setCryptoKeyType(CryptoKeyType.symmetric);

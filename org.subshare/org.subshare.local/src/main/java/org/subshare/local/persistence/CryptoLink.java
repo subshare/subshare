@@ -52,7 +52,7 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 	@Query(
 			name="getActiveCryptoLinks_toCryptoRepoFile_toCryptoKeyRole_toCryptoKeyPart",
 			value="SELECT WHERE "
-					+ "this.toCryptoKey.active == true && "
+					+ "this.toCryptoKey.cryptoKeyDeactivation == null && "
 					+ "this.toCryptoKey.cryptoRepoFile == :toCryptoRepoFile && "
 					+ "this.toCryptoKey.cryptoKeyRole == :toCryptoKeyRole && "
 					+ "this.toCryptoKeyPart == :toCryptoKeyPart")

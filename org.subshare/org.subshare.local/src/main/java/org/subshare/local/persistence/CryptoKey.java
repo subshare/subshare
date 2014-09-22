@@ -90,7 +90,8 @@ public class CryptoKey extends Entity implements WriteProtectedEntity, AutoTrack
 	@Persistent(mappedBy="fromCryptoKey")
 	private Set<CryptoLink> outCryptoLinks;
 
-	private boolean active = true;
+//	private boolean active = true;
+	private CryptoKeyDeactivation cryptoKeyDeactivation;
 
 // TODO BEGIN WORKAROUND for http://www.datanucleus.org/servlet/jira/browse/NUCCORE-1247
 //	@Persistent(nullValue=NullValue.EXCEPTION)
@@ -127,12 +128,28 @@ public class CryptoKey extends Entity implements WriteProtectedEntity, AutoTrack
 		return new Uid(cryptoKeyId);
 	}
 
-	public boolean isActive() {
-		return active;
+//	public boolean isActive() {
+//		return active;
+//	}
+//	public void setActive(final boolean active) {
+//		if (! equal(this.active, active))
+//			this.active = active;
+//	}
+	public CryptoKeyDeactivation getCryptoKeyDeactivation() {
+		return cryptoKeyDeactivation;
 	}
-	public void setActive(final boolean active) {
-		if (! equal(this.active, active))
-			this.active = active;
+	public void setCryptoKeyDeactivation(final CryptoKeyDeactivation cryptoKeyDeactivation) {
+		if (equal(this.cryptoKeyDeactivation, cryptoKeyDeactivation))
+			return;
+
+		if (cryptoKeyDeactivation != null) {
+			if (cryptoKeyDeactivation.getCryptoKey() != null && !this.equals(cryptoKeyDeactivation.getCryptoKey()))
+				throw new IllegalArgumentException("cryptoKeyDeactivation is already assigned to a different CryptoKey!");
+
+			cryptoKeyDeactivation.setCryptoKey(this);
+		}
+
+		this.cryptoKeyDeactivation = cryptoKeyDeactivation;
 	}
 
 	/**
@@ -237,12 +254,12 @@ public class CryptoKey extends Entity implements WriteProtectedEntity, AutoTrack
 					InputStreamSource.Helper.createInputStreamSource(cryptoKeyType.ordinal()),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
-					InputStreamSource.Helper.createInputStreamSource(cryptoKeyRole.ordinal()),
+					InputStreamSource.Helper.createInputStreamSource(cryptoKeyRole.ordinal())
 //					localRevision
 //					inCryptoLinks
 //					outCryptoLinks
-					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
-					InputStreamSource.Helper.createInputStreamSource(active)
+//					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
+//					InputStreamSource.Helper.createInputStreamSource(active)
 					);
 		} catch (final IOException x) {
 			throw new RuntimeException(x);
@@ -274,15 +291,15 @@ public class CryptoKey extends Entity implements WriteProtectedEntity, AutoTrack
 
 	@Override
 	public CryptoRepoFile getCryptoRepoFileControllingPermissions() {
-		assertNotNull("cryptoRepoFile", cryptoRepoFile);
+		return assertNotNull("cryptoRepoFile", cryptoRepoFile);
 
-		switch (cryptoKeyRole) {
-			case backlinkKey:
-			case dataKey:
-				return null;
-			default:
-				return cryptoRepoFile;
-		}
+//		switch (cryptoKeyRole) {
+//			case backlinkKey:
+//			case dataKey:
+//				return null;
+//			default:
+//				return cryptoRepoFile;
+//		}
 	}
 
 	@Override
