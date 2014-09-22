@@ -688,6 +688,9 @@ public class CryptreeNode {
 	private void ensureParentHasAsymmetricActiveSubdirKey() {
 		final CryptreeNode parent = getParent();
 		final CryptoRepoFile parentCryptoRepoFile = parent == null ? null : parent.getCryptoRepoFileOrCreate(false);
+		if (parentCryptoRepoFile == null)
+			return;
+
 		final CryptoKeyDao cryptoKeyDao = context.transaction.getDao(CryptoKeyDao.class);
 		final Collection<CryptoKey> activeSubdirKeys = cryptoKeyDao.getActiveCryptoKeys(parentCryptoRepoFile, CryptoKeyRole.subdirKey);
 		boolean hasAsymmetryActiveSubdirKey = false;
