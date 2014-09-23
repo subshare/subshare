@@ -91,7 +91,7 @@ public interface Cryptree {
 	CryptoChangeSetDto getCryptoChangeSetDtoWithCryptoRepoFiles();
 
 	void updateLastCryptoKeySyncToRemoteRepo();
-	KeyParameter getDataKeyOrFail(String path);
+	KeyParameter getDataKeyOrFail(String localPath);
 	void putCryptoChangeSetDto(CryptoChangeSetDto cryptoChangeSetDto);
 
 	Uid getRootCryptoRepoFileId();

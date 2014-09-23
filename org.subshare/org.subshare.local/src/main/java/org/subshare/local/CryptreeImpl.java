@@ -1,6 +1,5 @@
 package org.subshare.local;
 
-import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
 
@@ -61,14 +60,11 @@ import org.slf4j.LoggerFactory;
 import co.codewizards.cloudstore.core.auth.SignatureException;
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
 import co.codewizards.cloudstore.core.dto.Uid;
-import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
 import co.codewizards.cloudstore.local.persistence.LocalRepository;
 import co.codewizards.cloudstore.local.persistence.LocalRepositoryDao;
 import co.codewizards.cloudstore.local.persistence.RemoteRepository;
 import co.codewizards.cloudstore.local.persistence.RemoteRepositoryDao;
-import co.codewizards.cloudstore.local.persistence.RepoFile;
-import co.codewizards.cloudstore.local.persistence.RepoFileDao;
 
 public class CryptreeImpl extends AbstractCryptree {
 
@@ -121,15 +117,16 @@ public class CryptreeImpl extends AbstractCryptree {
 	}
 
 	@Override
-	public KeyParameter getDataKeyOrFail(final String path) { // TODO shouldn't this be 'localPath'?
-		assertNotNull("path", path);
-		final LocalRepoTransaction transaction = getTransactionOrFail();
-		final LocalRepoManager localRepoManager = transaction.getLocalRepoManager();
-		final RepoFileDao repoFileDao = transaction.getDao(RepoFileDao.class);
-		final RepoFile repoFile = repoFileDao.getRepoFile(localRepoManager.getLocalRoot(), createFile(localRepoManager.getLocalRoot(), path));
-		assertNotNull("repoFile", repoFile);
-
-		final CryptreeNode cryptreeNode = new CryptreeNode(getCryptreeContext(), repoFile);
+	public KeyParameter getDataKeyOrFail(final String localPath) {
+//		assertNotNull("localPath", localPath);
+//		final LocalRepoTransaction transaction = getTransactionOrFail();
+//		final LocalRepoManager localRepoManager = transaction.getLocalRepoManager();
+//		final RepoFileDao repoFileDao = transaction.getDao(RepoFileDao.class);
+//		final RepoFile repoFile = repoFileDao.getRepoFile(localRepoManager.getLocalRoot(), createFile(localRepoManager.getLocalRoot(), localPath));
+//		assertNotNull("repoFile", repoFile);
+//
+//		final CryptreeNode cryptreeNode = new CryptreeNode(getCryptreeContext(), repoFile);
+		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(localPath);
 		return cryptreeNode.getDataKeyOrFail();
 	}
 

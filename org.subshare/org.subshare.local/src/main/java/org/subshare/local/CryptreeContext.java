@@ -73,7 +73,11 @@ public class CryptreeContext {
 					serverRepositoryId));
 	}
 
-	public CryptreeNode getCryptreeNodeOrCreate(final String localPath) {
+	public CryptreeNode getCryptreeNodeOrCreate(String localPath) {
+		assertNotNull("localPath", localPath);
+		if ("/".equals(localPath))
+			localPath = "";
+
 		CryptreeNode cryptreeNode = localPath2CryptreeNode.get(localPath);
 		if (cryptreeNode == null) {
 			cryptreeNode = createCryptreeNodeOrFail(localPath);

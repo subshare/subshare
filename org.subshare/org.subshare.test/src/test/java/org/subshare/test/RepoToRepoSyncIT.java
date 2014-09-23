@@ -144,7 +144,7 @@ public class RepoToRepoSyncIT extends AbstractIT {
 			determineRemotePathPrefix2Encrypted();
 
 			final UserRepoKeyRing otherUserRepoKeyRing = createUserRepoKeyRing();
-			grantRemotePathPrefix2Encrypted(PermissionType.read,
+			grantPermission("/", PermissionType.read,
 					otherUserRepoKeyRing.getUserRepoKeys(remoteRepositoryId).get(0).getPublicKey());
 
 			createFileWithRandomContent(localSrcRoot, "xxxxxxx");
@@ -176,7 +176,7 @@ public class RepoToRepoSyncIT extends AbstractIT {
 			createFileWithRandomContent(child_2, "ttttt"); // new file
 
 			createFile(child_3, "c").delete();
-			createFileWithRandomContent(child_3, "c"); // overwrite
+			createFileWithRandomContent(child_3, "cc"); // overwrite
 			createFileWithRandomContent(child_3, "kkkkk"); // new file
 
 			syncFromLocalSrcToRemote();
@@ -202,9 +202,8 @@ public class RepoToRepoSyncIT extends AbstractIT {
 		final UserRepoKeyRing otherUserRepoKeyRing1 = createUserRepoKeyRing();
 		final UserRepoKeyRing otherUserRepoKeyRing2 = createUserRepoKeyRing();
 		final PublicKey publicKey1 = otherUserRepoKeyRing1.getUserRepoKeys(remoteRepositoryId).get(0).getPublicKey();
-		grantRemotePathPrefix2Encrypted(PermissionType.read,
-				publicKey1);
-		grantRemotePathPrefix2Encrypted(PermissionType.read,
+		grantPermission(remotePathPrefix2Plain, PermissionType.read, publicKey1);
+		grantPermission(remotePathPrefix2Plain, PermissionType.read,
 				otherUserRepoKeyRing2.getUserRepoKeys(remoteRepositoryId).get(0).getPublicKey());
 
 		syncFromLocalSrcToRemote();
@@ -219,7 +218,7 @@ public class RepoToRepoSyncIT extends AbstractIT {
 			cryptreeRepoTransportFactory.setUserRepoKeyRing(ownerUserRepoKeyRing);
 		}
 
-		revokeRemotePathPrefix2Encrypted(PermissionType.read, publicKey1);
+		revokePermission(remotePathPrefix2Plain, PermissionType.read, publicKey1);
 		syncFromLocalSrcToRemote();
 
 		try {
@@ -273,10 +272,9 @@ public class RepoToRepoSyncIT extends AbstractIT {
 
 		final UserRepoKeyRing otherUserRepoKeyRing1 = createUserRepoKeyRing();
 		final PublicKey publicKey1 = otherUserRepoKeyRing1.getUserRepoKeys(remoteRepositoryId).get(0).getPublicKey();
-		grantRemotePathPrefix2Encrypted(PermissionType.read,
-				publicKey1);
+		grantPermission(remotePathPrefix2Plain, PermissionType.read, publicKey1);
 
-		grantRemotePathPrefix2Encrypted(PermissionType.write, publicKey1);
+		grantPermission(remotePathPrefix2Plain, PermissionType.write, publicKey1);
 
 		syncFromLocalSrcToRemote();
 
@@ -288,8 +286,8 @@ public class RepoToRepoSyncIT extends AbstractIT {
 			syncFromRemoteToLocalDest();
 
 			final File child_3 = createFile(localSrcRoot, remotePathPrefix2Plain);
-			createFile(child_3, "b").delete();
-			createFileWithRandomContent(child_3, "b"); // overwrite
+			createFile(child_3, "bb").delete();
+			createFileWithRandomContent(child_3, "bb"); // overwrite
 			createFileWithRandomContent(child_3, "zzzzzzz"); // new file
 
 			syncFromLocalSrcToRemote();
@@ -298,15 +296,15 @@ public class RepoToRepoSyncIT extends AbstractIT {
 			cryptreeRepoTransportFactory.setUserRepoKeyRing(ownerUserRepoKeyRing);
 		}
 
-		revokeRemotePathPrefix2Encrypted(PermissionType.write, publicKey1);
+		revokePermission(remotePathPrefix2Plain, PermissionType.write, publicKey1);
 
 		try {
 			cryptreeRepoTransportFactory.setUserRepoKeyRing(otherUserRepoKeyRing1);
 
 			// The following write should still work, because the revocation becomes active only in the next up-sync.
 			final File child_3 = createFile(localSrcRoot, remotePathPrefix2Plain);
-			createFile(child_3, "b").delete();
-			createFileWithRandomContent(child_3, "b"); // overwrite
+			createFile(child_3, "bb").delete();
+			createFileWithRandomContent(child_3, "bb"); // overwrite
 			createFileWithRandomContent(child_3, "abczzzz"); // new file
 
 			// Because the user is not allowed to enact the revocation, this does not yet have any
@@ -325,8 +323,8 @@ public class RepoToRepoSyncIT extends AbstractIT {
 
 			// And now, the next write(s) should fail, because the revocation should now be active.
 			final File child_3 = createFile(localSrcRoot, remotePathPrefix2Plain);
-			createFile(child_3, "b").delete();
-			createFileWithRandomContent(child_3, "b"); // overwrite
+			createFile(child_3, "bb").delete();
+			createFileWithRandomContent(child_3, "bb"); // overwrite
 
 			try {
 				syncFromLocalSrcToRemote();
@@ -420,10 +418,10 @@ public class RepoToRepoSyncIT extends AbstractIT {
 
 		final File child_3 = createDirectory(localSrcRoot, "3 + &#ä");
 
-		createFileWithRandomContent(child_3, "a");
-		createFileWithRandomContent(child_3, "b");
-		createFileWithRandomContent(child_3, "c");
-		createFileWithRandomContent(child_3, "d");
+		createFileWithRandomContent(child_3, "aa");
+		createFileWithRandomContent(child_3, "bb");
+		createFileWithRandomContent(child_3, "cc");
+		createFileWithRandomContent(child_3, "dd");
 
 		final File child_3_5 = createDirectory(child_3, "5");
 		createFileWithRandomContent(child_3_5, "h");
@@ -479,7 +477,7 @@ public class RepoToRepoSyncIT extends AbstractIT {
 		}
 	}
 
-	private void grantRemotePathPrefix2Encrypted(final PermissionType permissionType, final UserRepoKey.PublicKey userRepoKeyPublicKey) {
+	private void grantPermission(final String localPath, final PermissionType permissionType, final UserRepoKey.PublicKey userRepoKeyPublicKey) {
 		try (final LocalRepoManager localRepoManagerLocal = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(localSrcRoot);)
 		{
 			try (final LocalRepoTransaction transaction = localRepoManagerLocal.beginWriteTransaction();)
@@ -488,14 +486,14 @@ public class RepoToRepoSyncIT extends AbstractIT {
 						transaction, remoteRepositoryId,
 						remotePathPrefix2Encrypted,
 						cryptreeRepoTransportFactory.getUserRepoKeyRing());
-				cryptree.grantPermission(remotePathPrefix2Plain, permissionType, userRepoKeyPublicKey);
+				cryptree.grantPermission(localPath, permissionType, userRepoKeyPublicKey);
 
 				transaction.commit();
 			}
 		}
 	}
 
-	private void revokeRemotePathPrefix2Encrypted(final PermissionType permissionType, final UserRepoKey.PublicKey userRepoKeyPublicKey) {
+	private void revokePermission(final String localPath, final PermissionType permissionType, final UserRepoKey.PublicKey userRepoKeyPublicKey) {
 		try (final LocalRepoManager localRepoManagerLocal = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(localSrcRoot);)
 		{
 			try (final LocalRepoTransaction transaction = localRepoManagerLocal.beginWriteTransaction();)
@@ -504,7 +502,7 @@ public class RepoToRepoSyncIT extends AbstractIT {
 						transaction, remoteRepositoryId,
 						remotePathPrefix2Encrypted,
 						cryptreeRepoTransportFactory.getUserRepoKeyRing());
-				cryptree.revokePermission(remotePathPrefix2Plain, permissionType, Collections.singleton(userRepoKeyPublicKey.getUserRepoKeyId()));
+				cryptree.revokePermission(localPath, permissionType, Collections.singleton(userRepoKeyPublicKey.getUserRepoKeyId()));
 
 				transaction.commit();
 			}
