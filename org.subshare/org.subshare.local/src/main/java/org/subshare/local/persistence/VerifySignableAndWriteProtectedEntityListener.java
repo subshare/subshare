@@ -1,6 +1,7 @@
 package org.subshare.local.persistence;
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 import javax.jdo.PersistenceManager;
@@ -53,10 +54,12 @@ public class VerifySignableAndWriteProtectedEntityListener extends AbstractLocal
 
 	@Override
 	public void onCommit() {
-		for (final Signable signable : signables)
+		while (!signables.isEmpty()) {
+			final Iterator<Signable> iterator = signables.iterator();
+			final Signable signable = iterator.next();
+			iterator.remove();
 			assertSignableOk(signable);
-
-		signables.clear();
+		}
 	}
 
 	private void assertSignableOk(final Signable signable) {
