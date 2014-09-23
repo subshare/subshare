@@ -198,7 +198,8 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 
 		// If we're connected to a sub-directory, the server sends us a modified root-DirectoryDto, because
 		// the root is not supposed to have a name (name is empty, i.e. ""). The real name (on the server) is,
-		// however, stored in the
+		// however, stored in the property SsDirectoryDto.realName in this case. This real name was the one
+		// having been signed.
 		boolean restoreVirtualRootName = false;
 		try {
 			if (ssRepoFileDto instanceof SsDirectoryDto) {
