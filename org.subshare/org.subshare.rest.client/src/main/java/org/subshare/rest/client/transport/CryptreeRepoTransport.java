@@ -23,10 +23,12 @@ import org.subshare.core.crypto.EncrypterOutputStream;
 import org.subshare.core.crypto.RandomIvFactory;
 import org.subshare.core.dto.SsDirectoryDto;
 import org.subshare.core.dto.SsNormalFileDto;
+import org.subshare.core.dto.SsRepoFileDto;
 import org.subshare.core.dto.CryptoChangeSetDto;
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.io.LimitedInputStream;
 import org.subshare.core.sign.SignableSigner;
+import org.subshare.core.sign.SignableVerifier;
 import org.subshare.core.sign.SignerOutputStream;
 import org.subshare.core.sign.VerifierInputStream;
 import org.subshare.core.user.UserRepoKey;
@@ -59,7 +61,6 @@ import co.codewizards.cloudstore.rest.client.CloudStoreRestClient;
 public class CryptreeRepoTransport extends AbstractRepoTransport implements ContextWithLocalRepoManager {
 	private static final Logger logger = LoggerFactory.getLogger(CryptreeRepoTransport.class);
 
-//	private UserRepoKey userRepoKey;
 	private CryptreeFactory cryptreeFactory;
 	private RestRepoTransport restRepoTransport;
 	private LocalRepoManager localRepoManager;
@@ -113,12 +114,16 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 		try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) { // TODO read-transaction?!
 			final Cryptree cryptree = getCryptree(transaction);
 
+			final SignableVerifier signableVerifier = new SignableVerifier(cryptree.getUserRepoKeyPublicKeyLookup());
+
 			decryptedChangeSetDto.setRepositoryDto(changeSetDto.getRepositoryDto());
 
 			for (final ModificationDto modificationDto : changeSetDto.getModificationDtos()) {
 				final ModificationDto decryptedModificationDto = decryptModificationDto(cryptree, modificationDto);
 				if (decryptedModificationDto != null) // if it's null, it could not be decrypted (missing access rights?!) and should be ignored.
 					decryptedChangeSetDto.getModificationDtos().add(decryptedModificationDto);
+
+				// TODO verify signature of modificationDTO!
 			}
 
 			final Set<Long> nonDecryptableRepoFileIds = new HashSet<Long>();
@@ -128,6 +133,18 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 			if (tree != null) {
 				for (final RepoFileDtoTreeNode node : tree) {
 					final RepoFileDto repoFileDto = node.getRepoFileDto();
+					final SsRepoFileDto ssRepoFileDto = (SsRepoFileDto) repoFileDto;
+
+					// We silently ignore the non-signed root in the initial sync.
+					if (repoFileDto.getParentId() == null && ssRepoFileDto.getSignature() == null) {
+						if (changeSetDto.getRepoFileDtos().size() != 1) // If there's more than one single entry, it's not the initial sync, anymore.
+							throw new IllegalStateException("Even the root should be signed after an initial sync!");
+
+						continue;
+					}
+
+					signableVerifier.verify(ssRepoFileDto);
+
 					if (nonDecryptableRepoFileIds.contains(repoFileDto.getParentId())) {
 						nonDecryptableRepoFileIds.add(repoFileDto.getId()); // transitive for all children and children's children
 						continue;
@@ -209,14 +226,6 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 
 		return cryptreeFactory.getCryptreeOrCreate(transaction, getRepositoryId(), getPathPrefix(), getUserRepoKeyRing());
 	}
-
-//	protected UserRepoKey getUserRepoKey() {
-//		if (userRepoKey == null) { // we must use the same key for all operations during one sync - otherwise an attacker might find out which keys belong to the same keyring and thus same owner.
-//			final UserRepoKeyRing userRepoKeyRing = getUserRepoKeyRing();
-//			userRepoKey = userRepoKeyRing.getRandomUserRepoKeyOrFail(getRepositoryId());
-//		}
-//		return userRepoKey;
-//	}
 
 	protected UserRepoKeyRing getUserRepoKeyRing() {
 		return assertNotNull("cryptreeRepoTransportFactory.userRepoKeyRing", getRepoTransportFactory().getUserRepoKeyRing());
