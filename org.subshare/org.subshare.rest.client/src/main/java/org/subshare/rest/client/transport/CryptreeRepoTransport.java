@@ -137,8 +137,7 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 					final RepoFileDto repoFileDto = node.getRepoFileDto();
 
 					// We silently ignore those missing signatures that are allowed to be ignored silently ;-)
-					if (! verifySignatureAndTreeStructureAndPermission(cryptree, signableVerifier, node))
-						continue;
+					verifySignatureAndTreeStructureAndPermission(cryptree, signableVerifier, node);
 
 					if (nonDecryptableRepoFileIds.contains(repoFileDto.getParentId())) {
 						nonDecryptableRepoFileIds.add(repoFileDto.getId()); // transitive for all children and children's children
@@ -162,18 +161,22 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 	}
 
 	/**
-	 * Verifies the signature of the {@code SsRepoFileDto} contained in the given {@code RepoFileDtoTreeNode}.
+	 * Verifies (1) correct signature, (2) write permission and (3) correct tree structure at given node.
 	 * <p>
-	 * There are 3 possible states:
-	 * <ol>
-	 * <li>Valid signature.
-	 * <li>Allowed missing signature.
-	 * <li>Broken or non-allowed missing signature.
-	 * </ol>
+	 * <u><b>(1) Correct signature</b></u>
 	 * <p>
-	 * The states 1 and 2 are indicated via the return value (<code>true</code> for 1; <code>false</code> for 2).
-	 * The state 3, however, causes a {@link SignatureException}, because it should never happen under
-	 * normal circumstances. If it does, someone is trying or has tried to tamper with the data.
+	 * This method verifies the signature of the {@code SsRepoFileDto} contained in the given {@code node},
+	 * i.e. property {@code node.repoFileDto}. Every {@code SsRepoFileDto} must be signed. A missing
+	 * or broken signature causes a {@link SignatureException} to be thrown.
+	 * <p>
+	 * <u><b>(2) Write permission</b></u>
+	 * <p>
+	 * This method checks, if the user having signed the {@code SsRepoFileDto} had write write permissions
+	 * when the signature was made.
+	 *
+	 * and checks whether the parent-node (of the given node) matches
+	 * the value of.
+	 *
 	 *
 	 * @return <code>true</code>, if the signature is valid. <code>false</code>, if the signature is missing, but
 	 * not required. If this state is allowed, the object will still be skipped, i.e. <i>not</i> accepted. Hence, every
@@ -181,20 +184,11 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 	 * @throws SignatureException if the signature is broken or it is missing and required.
 	 * @throws WriteAccessDeniedException if the object is signed, but the user having signed it did not have the permission to do so.
 	 */
-	private boolean verifySignatureAndTreeStructureAndPermission(final Cryptree cryptree, final SignableVerifier signableVerifier, final RepoFileDtoTreeNode node)
+	private void verifySignatureAndTreeStructureAndPermission(final Cryptree cryptree, final SignableVerifier signableVerifier, final RepoFileDtoTreeNode node)
 			throws SignatureException, WriteAccessDeniedException
 	{
 		final RepoFileDto repoFileDto = node.getRepoFileDto();
 		final SsRepoFileDto ssRepoFileDto = (SsRepoFileDto) repoFileDto;
-
-		// We silently ignore the non-signed root in the initial sync.
-		final Signature signature = ssRepoFileDto.getSignature();
-		if (repoFileDto.getParentId() == null && signature == null) {
-			if (node.getRoot().size() != 1) // If there's more than one single entry, it's not the initial sync, anymore.
-				throw new IllegalStateException("Even the root should be signed after an initial sync!");
-
-			return false;
-		}
 
 		// If we're connected to a sub-directory, the server sends us a modified root-DirectoryDto, because
 		// the root is not supposed to have a name (name is empty, i.e. ""). The real name (on the server) is,
@@ -218,6 +212,7 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 						x.getMessage(), ssRepoFileDto.getName(), ssRepoFileDto.getParentName()), x);
 			}
 
+			final Signature signature = ssRepoFileDto.getSignature();
 			final Uid cryptoRepoFileId = repoFileDto.getName().isEmpty() ? cryptree.getRootCryptoRepoFileId() : new Uid(repoFileDto.getName());
 			cryptree.assertHasPermission(
 					cryptoRepoFileId, signature.getSigningUserRepoKeyId(), PermissionType.write, signature.getSignatureCreated());
@@ -230,8 +225,6 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 			assertRepoFileDtoIsCorrectRoot(cryptree, repoFileDto);
 		else
 			assertRepoFileParentNameMatchesParentRepoFileName(node);
-
-		return true;
 	}
 
 	private void assertRepoFileDtoIsCorrectRoot(final Cryptree cryptree, final RepoFileDto repoFileDto) {

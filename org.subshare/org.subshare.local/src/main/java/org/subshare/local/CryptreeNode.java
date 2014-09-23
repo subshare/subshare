@@ -627,30 +627,9 @@ public class CryptreeNode {
 		return userRepoKeyPublicKey;
 	}
 
-//	public void grantGrantPermission(final UserRepoKey.PublicKey publicKey) {
-//		grantPermission(PermissionType.grant, publicKey);
-//	}
-//
-//	public void grantWritePermission(final UserRepoKey.PublicKey publicKey) {
-//		grantPermission(PermissionType.write, publicKey);
-//	}
-//
-//	public void revokeGrantPermission(final Set<Uid> userRepoKeyIds) {
-//		revokePermission(PermissionType.grant, userRepoKeyIds);
-//	}
-//
-//	public void revokeWritePermission(final Set<Uid> userRepoKeyIds) {
-//		revokePermission(PermissionType.write, userRepoKeyIds);
-//	}
-
 	public void grantPermission(final PermissionType permissionType, final UserRepoKey.PublicKey publicKey) {
 		assertNotNull("permissionType", permissionType);
 		assertNotNull("publicKey", publicKey);
-
-//		if (PermissionType.read == permissionType) {
-//			grantReadPermission(publicKey);
-//			return;
-//		}
 
 		// It is technically required to have read permission, when having write or grant permission. Therefore,
 		// we simply grant it always, here.
@@ -706,8 +685,6 @@ public class CryptreeNode {
 					throw new IllegalStateException("Unknown CryptoKeyType: " + activeSubdirKey.getCryptoKeyType());
 			}
 		}
-
-//		context.transaction.flush();
 
 		if (! hasAsymmetryActiveSubdirKey)
 			parent.getActivePlainCryptoKeyOrCreate(CryptoKeyRole.subdirKey, CipherOperationMode.DECRYPT);

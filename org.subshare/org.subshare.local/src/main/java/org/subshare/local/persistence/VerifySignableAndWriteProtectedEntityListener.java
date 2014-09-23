@@ -22,11 +22,14 @@ import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
 import co.codewizards.cloudstore.local.ContextWithPersistenceManager;
 import co.codewizards.cloudstore.local.persistence.LocalRepository;
 import co.codewizards.cloudstore.local.persistence.LocalRepositoryDao;
+import co.codewizards.cloudstore.local.persistence.RepoFile;
+import co.codewizards.cloudstore.local.persistence.RepoFileDao;
 
 public class VerifySignableAndWriteProtectedEntityListener extends AbstractLocalRepoTransactionListener implements StoreLifecycleListener {
 
 	private final Set<Signable> signables = new HashSet<Signable>();
 	private SignableVerifier signableVerifier;
+	private LocalRepository localRepository;
 	private LocalRepositoryType localRepositoryType;
 
 	@Override
@@ -48,12 +51,15 @@ public class VerifySignableAndWriteProtectedEntityListener extends AbstractLocal
 
 	@Override
 	public void postStore(final InstanceLifecycleEvent event) {
-		final Signable signable = (Signable) event.getPersistentInstance();
+		final Object persistentInstance = event.getPersistentInstance();
+		final Signable signable = (Signable) persistentInstance;
 		signables.add(signable);
 	}
 
 	@Override
 	public void onCommit() {
+		assertAllRepoFilesAreSignedOnServer();
+
 		while (!signables.isEmpty()) {
 			final Iterator<Signable> iterator = signables.iterator();
 			final Signable signable = iterator.next();
@@ -62,11 +68,44 @@ public class VerifySignableAndWriteProtectedEntityListener extends AbstractLocal
 		}
 	}
 
+	private void assertAllRepoFilesAreSignedOnServer() {
+		if (LocalRepositoryType.SERVER != getLocalRepositoryType())
+			return;
+
+		final SsLocalRepository localRepository = (SsLocalRepository) getLocalRepository();
+		if (localRepository.isAssertedAllRepoFilesAreSigned())
+			return;
+
+		// On the server, the root-Directory (RepoFile) cannot be signed when it is initially created.
+		// That happens without a LocalRepoTransaction and therefore, this listener is not triggered for
+		// this initial directory. However, it is required to be signed, too, when the client uploads
+		// for the very first time. Therefore, as soon as we know that we are on the server and as soon
+		// as there are at least 2 RepoFile instances, we must make sure that all RepoFile instances
+		// are signed.
+
+		final LocalRepoTransaction tx = getTransactionOrFail();
+		final RepoFileDao repoFileDao = tx.getDao(RepoFileDao.class);
+		if (repoFileDao.getObjectsCount() < 2)
+			return;
+
+		for (final RepoFile rf : repoFileDao.getObjects()) {
+			final SsRepoFile ssrf = (SsRepoFile) rf;
+			if (ssrf.getSignature() == null)
+				throw new IllegalStateException("It seems, the root still has no signature! The root should be signed (i.e. uploaded *with* signature), before any other directory/file is uploaded to the server! repoFileMissingSignature: " + rf);
+		}
+
+		localRepository.setAssertedAllRepoFilesAreSigned(true);
+	}
+
 	private void assertSignableOk(final Signable signable) {
-		// Signatures are optional - e.g. a SsRepoFile does not have a signature on the client-side (only on the server-side).
-		// Whether it's required for the entity in question is decided in the entity itself - either by the annotation
-		// @Persistent(nullValue=NullValue.EXCEPTION) or by code (e.g. a store-callback).
-		// But *if* there is a signature, it *must* be correct!
+		// Signatures are not always required: SsRepoFiles do not have signatures on the client-side. Whether a
+		// signature is required for the entity in question is usually decided by the entity, i.e. by the annotation
+		// @Persistent(nullValue=NullValue.EXCEPTION).
+		//
+		// However, on the server, *every* Signable must be signed!
+		//
+		// And in all cases: *If* there is a signature, it *must* be correct!
+
 		if (signable.getSignature() == null) {
 			if (LocalRepositoryType.SERVER == getLocalRepositoryType())
 				throw new SignatureException(signable.toString() + ": Missing signature! On the server, every Signable must be signed!");
@@ -99,12 +138,18 @@ public class VerifySignableAndWriteProtectedEntityListener extends AbstractLocal
 		return signableVerifier;
 	}
 
-	public LocalRepositoryType getLocalRepositoryType() {
-		if (localRepositoryType == null) {
+	private LocalRepository getLocalRepository() {
+		if (localRepository == null) {
 			final LocalRepositoryDao localRepositoryDao = getTransactionOrFail().getDao(LocalRepositoryDao.class);
-			final LocalRepository localRepository = localRepositoryDao.getLocalRepositoryOrFail();
-			localRepositoryType = ((SsLocalRepository) localRepository).getLocalRepositoryType();
+			localRepository = localRepositoryDao.getLocalRepositoryOrFail();
 		}
+		return localRepository;
+	}
+
+	private LocalRepositoryType getLocalRepositoryType() {
+		if (localRepositoryType == null)
+			localRepositoryType = ((SsLocalRepository) getLocalRepository()).getLocalRepositoryType();
+
 		return localRepositoryType;
 	}
 }

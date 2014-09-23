@@ -20,6 +20,8 @@ public class SsLocalRepository extends LocalRepository {
 	@Column(jdbcType="INTEGER")
 	private LocalRepositoryType localRepositoryType = LocalRepositoryType.UNINITIALISED;
 
+	private boolean assertedAllRepoFilesAreSigned;
+
 	public LocalRepositoryType getLocalRepositoryType() {
 		return localRepositoryType;
 	}
@@ -27,4 +29,10 @@ public class SsLocalRepository extends LocalRepository {
 		this.localRepositoryType = localRepositoryType;
 	}
 
+	public boolean isAssertedAllRepoFilesAreSigned() {
+		return assertedAllRepoFilesAreSigned;
+	}
+	public void setAssertedAllRepoFilesAreSigned(final boolean assertedAllRepoFilesAreSigned) {
+		this.assertedAllRepoFilesAreSigned = assertedAllRepoFilesAreSigned;
+	}
 }
