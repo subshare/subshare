@@ -20,6 +20,8 @@ import co.codewizards.cloudstore.core.dto.Uid;
 
 public class VerifierInputStream extends FilterInputStream {
 
+	public static final int MAGIC_BYTE = SignerOutputStream.MAGIC_BYTE;
+
 	/**
 	 * Maximum length of the footer.
 	 * <p>
@@ -83,6 +85,10 @@ public class VerifierInputStream extends FilterInputStream {
 	}
 
 	private Header readHeader() throws IOException {
+		final int magicByte = in.read();
+		if (MAGIC_BYTE != magicByte)
+			throw new IOException(String.format("First byte from input does not match expected magic number! expected=%s found=%s", MAGIC_BYTE, magicByte));
+
 		final int version = in.read();
 		if (version != 1)
 			throw new IOException("version != 1 :: version == " + version);

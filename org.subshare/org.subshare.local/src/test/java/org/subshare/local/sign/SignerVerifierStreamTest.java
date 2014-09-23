@@ -249,7 +249,7 @@ public class SignerVerifierStreamTest extends AbstractTest {
 		final byte[] plain = plainAndSigned[0];
 		final byte[] signed = plainAndSigned[1];
 
-		final int signedHeaderOffset = 27;
+		final int signedHeaderOffset = 28;
 
 		for (int i = 0; i < plain.length; ++i)
 			assertThat(signed[signedHeaderOffset + i]).isEqualTo(plain[i]);

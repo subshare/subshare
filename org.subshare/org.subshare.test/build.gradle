@@ -2,6 +2,7 @@ dependencies {
 	compile group: 'co.codewizards.cloudstore', name: 'co.codewizards.cloudstore.test', version: cloudstoreVersion
 	compile project(':org.subshare.rest.client')
 	compile project(':org.subshare.server')
+	testCompile project(':org.subshare.local')
 }
 
 test {

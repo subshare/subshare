@@ -32,6 +32,8 @@ import co.codewizards.cloudstore.core.util.IOUtil;
  */
 public class DecrypterInputStream extends FilterInputStream {
 
+	public static final int MAGIC_BYTE = EncrypterOutputStream.MAGIC_BYTE;
+
 	private final Header header;
 	private final Cipher cipher;
 	private byte[] readBuffer;
@@ -78,6 +80,10 @@ public class DecrypterInputStream extends FilterInputStream {
 	}
 
 	private Header readHeader() throws IOException {
+		final int magicByte = in.read();
+		if (MAGIC_BYTE != magicByte)
+			throw new IOException(String.format("First byte from input does not match expected magic number! expected=%s found=%s", MAGIC_BYTE, magicByte));
+
 		final int version = in.read();
 		if (version != 1)
 			throw new IOException("version != 1 :: version == " + version);

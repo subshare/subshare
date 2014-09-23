@@ -120,20 +120,10 @@ public class CryptreeNodeUtil {
 				throw new IllegalStateException("Cannot encrypt with private key!");
 			case publicKey: {
 				final boolean large = plain.length > MAX_ASYMMETRIC_PLAIN_SIZE;
-				final byte[] tmp;
-
 				if (large)
-					tmp = encryptLarge(plain, plainCryptoKey.getPublicKeyParameterOrFail());
+					return encryptLarge(plain, plainCryptoKey.getPublicKeyParameterOrFail());
 				else
-					tmp = encrypt(plain, plainCryptoKey.getPublicKeyParameterOrFail());
-
-				final byte[] result = new byte[tmp.length + 1 /* version */ + 1 /* large */ ];
-				int idx = -1;
-				result[++idx] = 1; // version
-				result[++idx] = (byte) (large ? 1 : 0);
-				System.arraycopy(tmp, 0, result, ++idx, tmp.length);
-
-				return result;
+					return encrypt(plain, plainCryptoKey.getPublicKeyParameterOrFail());
 			}
 			case sharedSecret:
 				return encrypt(plain, plainCryptoKey.getKeyParameterOrFail());
@@ -145,27 +135,13 @@ public class CryptreeNodeUtil {
 	public static byte[] decrypt(final byte[] encrypted, final PlainCryptoKey plainCryptoKey) {
 		switch (plainCryptoKey.getCryptoKeyPart()) {
 			case privateKey: {
-				int idx = -1;
-				final byte version = encrypted[++idx];
-				if (version != 1)
-					throw new IllegalArgumentException("Wrong version! Expected 1, but found: " + version);
-
-				final byte largeB = encrypted[++idx];
-				final boolean large;
-				if (largeB == 0)
-					large = false;
-				else if (largeB == 1)
-					large = true;
+				final int magicByte = encrypted[0] & 0xff;
+				if (AsymCombiDecrypterInputStream.MAGIC_BYTE == magicByte)
+					return decryptLarge(encrypted, plainCryptoKey.getPrivateKeyParameterOrFail());
+				else if (DecrypterInputStream.MAGIC_BYTE == magicByte)
+					return decrypt(encrypted, plainCryptoKey.getPrivateKeyParameterOrFail());
 				else
-					throw new IllegalArgumentException("Wrong 'large' indicator byte: " + largeB);
-
-				final byte[] tmp = new byte[encrypted.length - (1 /* version */ + 1 /* large */) ];
-				System.arraycopy(encrypted, ++idx, tmp, 0, tmp.length);
-
-				if (large)
-					return decryptLarge(tmp, plainCryptoKey.getPrivateKeyParameterOrFail());
-				else
-					return decrypt(tmp, plainCryptoKey.getPrivateKeyParameterOrFail());
+					throw new IllegalArgumentException(String.format("First byte from input does not match any expected magic number! expected1=%s expected2=%s found=%s", AsymCombiDecrypterInputStream.MAGIC_BYTE, DecrypterInputStream.MAGIC_BYTE, magicByte));
 			}
 			case publicKey:
 				throw new IllegalStateException("Cannot decrypt with public key!");

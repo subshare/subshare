@@ -36,6 +36,14 @@ import org.subshare.core.dto.CryptoKeyType;
  */
 public class AsymCombiEncrypterOutputStream extends FilterOutputStream {
 
+	/**
+	 * The first byte in the header identifying the content to be written by the {@link AsymCombiEncrypterOutputStream}
+	 * and thus being readable by the {@link AsymCombiDecrypterInputStream}.
+	 * <p>
+	 * 195 decimal is 11000011 binary.
+	 */
+	public static final int MAGIC_BYTE = 195;
+
 	private final CipherTransformation asymmetricCipherTransformation;
 	private final AsymmetricKeyParameter publicKey;
 	private final KeyParameter symmetricKey;
@@ -108,6 +116,7 @@ public class AsymCombiEncrypterOutputStream extends FilterOutputStream {
 	}
 
 	private void writeHeader() throws IOException {
+		out.write(MAGIC_BYTE);
 		out.write(1); // version
 
 		final ByteArrayOutputStream bout = new ByteArrayOutputStream();

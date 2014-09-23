@@ -2,110 +2,24 @@ package org.subshare.test;
 
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static org.assertj.core.api.Assertions.*;
-import static org.junit.Assert.*;
-
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.Collections;
-import java.util.UUID;
 
 import org.subshare.core.AccessDeniedException;
-import org.subshare.core.Cryptree;
-import org.subshare.core.CryptreeFactoryRegistry;
 import org.subshare.core.ReadAccessDeniedException;
 import org.subshare.core.WriteAccessDeniedException;
 import org.subshare.core.dto.PermissionType;
-import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKey.PublicKey;
 import org.subshare.core.user.UserRepoKeyRing;
-import org.subshare.local.persistence.CryptoRepoFile;
-import org.subshare.local.persistence.CryptoRepoFileDao;
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import co.codewizards.cloudstore.client.CloudStoreClient;
 import co.codewizards.cloudstore.core.oio.File;
-import co.codewizards.cloudstore.core.progress.LoggerProgressMonitor;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
-import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
-import co.codewizards.cloudstore.core.repo.sync.RepoToRepoSync;
-import co.codewizards.cloudstore.core.util.UrlUtil;
-import co.codewizards.cloudstore.local.persistence.RepoFile;
-import co.codewizards.cloudstore.local.persistence.RepoFileDao;
 
-public class RepoToRepoSyncIT extends AbstractIT {
+public class RepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 
-	private static final Logger logger = LoggerFactory.getLogger(RepoToRepoSyncIT.class);
-
-	private File localSrcRoot;
-	private File localDestRoot;
-	private File remoteRoot;
-
-	private LocalRepoManager localRepoManagerLocal;
-
-	private String localPathPrefix;
-	private UUID remoteRepositoryId;
-	private String remotePathPrefix1;
-	private String remotePathPrefix2Encrypted;
-	private String remotePathPrefix2Plain;
-	private URL remoteRootURLWithPathPrefixForLocalSrc;
-	private URL remoteRootURLWithPathPrefixForLocalDest;
-
-	private UserRepoKeyRing ownerUserRepoKeyRing;
-
-	@Before
-	public void before() {
-		localPathPrefix = "";
-		remotePathPrefix1 = "";
-		remotePathPrefix2Plain = "";
-		remotePathPrefix2Encrypted = "";
-	}
-
-	@After
-	public void after() {
-		if (localRepoManagerLocal != null) {
-			localRepoManagerLocal.close();
-			localRepoManagerLocal = null;
-		}
-	}
-
-	private File getLocalRootWithPathPrefix() {
-		if (localPathPrefix.isEmpty())
-			return localSrcRoot;
-
-		return createFile(localSrcRoot, localPathPrefix);
-	}
-
-	private File getRemoteRootWithPathPrefix1() {
-		if (remotePathPrefix1.isEmpty())
-			return remoteRoot;
-
-		final File file = createFile(remoteRoot, remotePathPrefix1);
-		return file;
-	}
-
-	private File getRemoteRootWithPathPrefix2() {
-		assertNotNull("remotePathPrefix2Encrypted", remotePathPrefix2Encrypted);
-		if (remotePathPrefix2Encrypted.isEmpty())
-			return remoteRoot;
-
-		final File file = createFile(remoteRoot, remotePathPrefix2Encrypted);
-		return file;
-	}
-
-	private URL getRemoteRootURLWithPathPrefixForLocalSrc(final UUID remoteRepositoryId) throws MalformedURLException {
-		final URL remoteRootURL = UrlUtil.appendNonEncodedPath(new URL(getSecureUrl() + "/" + remoteRepositoryId),  remotePathPrefix1);
-		return remoteRootURL;
-	}
-
-	private URL getRemoteRootURLWithPathPrefixForLocalDest(final UUID remoteRepositoryId) throws MalformedURLException {
-		final URL remoteRootURL = UrlUtil.appendNonEncodedPath(new URL(getSecureUrl() + "/" + remoteRepositoryId),  remotePathPrefix2Encrypted);
-		return remoteRootURL;
-	}
+	static final Logger logger = LoggerFactory.getLogger(RepoToRepoSyncIT.class);
 
 	@Test
 	public void syncFromLocalToRemoteToLocal() throws Exception {
@@ -115,11 +29,6 @@ public class RepoToRepoSyncIT extends AbstractIT {
 		determineRemotePathPrefix2Encrypted();
 		createLocalDestinationRepo();
 		syncFromRemoteToLocalDest();
-	}
-
-	protected UserRepoKeyRing createUserRepoKeyRing() {
-		assertNotNull("remoteRepositoryId", remoteRepositoryId);
-		return createUserRepoKeyRing(remoteRepositoryId);
 	}
 
 	@Test
@@ -371,141 +280,6 @@ public class RepoToRepoSyncIT extends AbstractIT {
 			}
 		} finally {
 			cryptreeRepoTransportFactory.setUserRepoKeyRing(ownerUserRepoKeyRing);
-		}
-	}
-
-	private void createLocalSourceAndRemoteRepo() throws Exception {
-		localSrcRoot = newTestRepositoryLocalRoot("local-src");
-		assertThat(localSrcRoot.exists()).isFalse();
-		localSrcRoot.mkdirs();
-		assertThat(localSrcRoot.isDirectory()).isTrue();
-
-		remoteRoot = newTestRepositoryLocalRoot("remote");
-		assertThat(remoteRoot.exists()).isFalse();
-		remoteRoot.mkdirs();
-		assertThat(remoteRoot.isDirectory()).isTrue();
-
-		localRepoManagerLocal = localRepoManagerFactory.createLocalRepoManagerForNewRepository(localSrcRoot);
-		final LocalRepoManager localRepoManagerRemote = localRepoManagerFactory.createLocalRepoManagerForNewRepository(remoteRoot);
-
-		remoteRepositoryId = localRepoManagerRemote.getRepositoryId();
-		remoteRootURLWithPathPrefixForLocalSrc = getRemoteRootURLWithPathPrefixForLocalSrc(remoteRepositoryId);
-		localRepoManagerRemote.close();
-
-		new CloudStoreClient("requestRepoConnection", getLocalRootWithPathPrefix().getPath(), remoteRootURLWithPathPrefixForLocalSrc.toExternalForm()).execute();
-		new CloudStoreClient("acceptRepoConnection", getRemoteRootWithPathPrefix1().getPath()).execute();
-
-		ownerUserRepoKeyRing = createUserRepoKeyRing();
-		cryptreeRepoTransportFactory.setUserRepoKeyRing(ownerUserRepoKeyRing);
-	}
-
-	private void populateLocalSourceRepo() throws Exception {
-		final LocalRepoManager localRepoManagerLocal = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(localSrcRoot);
-
-		final File child_1 = createDirectory(localSrcRoot, "1 {11 11ä11} 1");
-
-		createFileWithRandomContent(child_1, "a");
-		createFileWithRandomContent(child_1, "b");
-		createFileWithRandomContent(child_1, "c");
-
-		final File child_2 = createDirectory(localSrcRoot, "2");
-
-		createFileWithRandomContent(child_2, "a");
-
-		final File child_2_1 = createDirectory(child_2, "1 {11 11ä11} 1");
-		createFileWithRandomContent(child_2_1, "a");
-		createFileWithRandomContent(child_2_1, "b");
-
-		final File child_3 = createDirectory(localSrcRoot, "3 + &#ä");
-
-		createFileWithRandomContent(child_3, "aa");
-		createFileWithRandomContent(child_3, "bb");
-		createFileWithRandomContent(child_3, "cc");
-		createFileWithRandomContent(child_3, "dd");
-
-		final File child_3_5 = createDirectory(child_3, "5");
-		createFileWithRandomContent(child_3_5, "h");
-		createFileWithRandomContent(child_3_5, "i");
-
-		localRepoManagerLocal.localSync(new LoggerProgressMonitor(logger));
-		localRepoManagerLocal.close();
-	}
-
-	private void syncFromLocalSrcToRemote() throws Exception {
-		try (final RepoToRepoSync repoToRepoSync = new RepoToRepoSync(getLocalRootWithPathPrefix(), remoteRootURLWithPathPrefixForLocalSrc);)
-		{
-			repoToRepoSync.sync(new LoggerProgressMonitor(logger));
-		}
-	}
-
-	private void syncFromRemoteToLocalDest() throws Exception {
-		final RepoToRepoSync repoToRepoSync = new RepoToRepoSync(localDestRoot, remoteRootURLWithPathPrefixForLocalDest);
-		repoToRepoSync.sync(new LoggerProgressMonitor(logger));
-		repoToRepoSync.close();
-
-		assertDirectoriesAreEqualRecursively(
-				(remotePathPrefix2Plain.isEmpty() ? getLocalRootWithPathPrefix() : createFile(getLocalRootWithPathPrefix(), remotePathPrefix2Plain)),
-				localDestRoot);
-	}
-
-	private void createLocalDestinationRepo() throws Exception {
-		localDestRoot = newTestRepositoryLocalRoot("local-dest");
-		assertThat(localDestRoot.exists()).isFalse();
-		localDestRoot.mkdirs();
-		assertThat(localDestRoot.isDirectory()).isTrue();
-
-		final LocalRepoManager localDestRepoManagerLocal = localRepoManagerFactory.createLocalRepoManagerForNewRepository(localDestRoot);
-		assertThat(localDestRepoManagerLocal).isNotNull();
-		localDestRepoManagerLocal.close();
-
-		remoteRootURLWithPathPrefixForLocalDest = getRemoteRootURLWithPathPrefixForLocalDest(remoteRepositoryId);
-		new CloudStoreClient("requestRepoConnection", localDestRoot.getPath(), remoteRootURLWithPathPrefixForLocalDest.toExternalForm()).execute();
-		new CloudStoreClient("acceptRepoConnection", getRemoteRootWithPathPrefix2().getPath()).execute();
-	}
-
-	private void determineRemotePathPrefix2Encrypted() {
-		try (final LocalRepoManager localRepoManagerLocal = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(localSrcRoot);)
-		{
-			try (final LocalRepoTransaction transaction = localRepoManagerLocal.beginReadTransaction();)
-			{
-				final RepoFileDao repoFileDao = transaction.getDao(RepoFileDao.class);
-				final RepoFile repoFile = repoFileDao.getRepoFile(getLocalRootWithPathPrefix(), createFile(getLocalRootWithPathPrefix(), remotePathPrefix2Plain));
-				final CryptoRepoFile cryptoRepoFile = transaction.getDao(CryptoRepoFileDao.class).getCryptoRepoFileOrFail(repoFile);
-				remotePathPrefix2Encrypted = cryptoRepoFile.getServerPath();
-				transaction.commit();
-			}
-		}
-	}
-
-	private void grantPermission(final String localPath, final PermissionType permissionType, final UserRepoKey.PublicKey userRepoKeyPublicKey) {
-		try (final LocalRepoManager localRepoManagerLocal = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(localSrcRoot);)
-		{
-			try (final LocalRepoTransaction transaction = localRepoManagerLocal.beginWriteTransaction();)
-			{
-				final Cryptree cryptree = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail().getCryptreeOrCreate(
-						transaction, remoteRepositoryId,
-						remotePathPrefix2Encrypted,
-						cryptreeRepoTransportFactory.getUserRepoKeyRing());
-				cryptree.grantPermission(localPath, permissionType, userRepoKeyPublicKey);
-
-				transaction.commit();
-			}
-		}
-	}
-
-	private void revokePermission(final String localPath, final PermissionType permissionType, final UserRepoKey.PublicKey userRepoKeyPublicKey) {
-		try (final LocalRepoManager localRepoManagerLocal = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(localSrcRoot);)
-		{
-			try (final LocalRepoTransaction transaction = localRepoManagerLocal.beginWriteTransaction();)
-			{
-				final Cryptree cryptree = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail().getCryptreeOrCreate(
-						transaction, remoteRepositoryId,
-						remotePathPrefix2Encrypted,
-						cryptreeRepoTransportFactory.getUserRepoKeyRing());
-				cryptree.revokePermission(localPath, permissionType, Collections.singleton(userRepoKeyPublicKey.getUserRepoKeyId()));
-
-				transaction.commit();
-			}
 		}
 	}
 

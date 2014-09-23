@@ -45,6 +45,14 @@ import org.subshare.crypto.CryptoRegistry;
  */
 public class EncrypterOutputStream extends FilterOutputStream {
 
+	/**
+	 * The first byte in the header identifying the content to be written by the {@link EncrypterOutputStream}
+	 * and thus being readable by the {@link DecrypterInputStream}.
+	 * <p>
+	 * 60 decimal is 00111100 binary.
+	 */
+	public static final int MAGIC_BYTE = 60;
+
 	private final CipherTransformation cipherTransformation;
 	private final Cipher cipher;
 	private final byte[] iv;
@@ -131,6 +139,7 @@ public class EncrypterOutputStream extends FilterOutputStream {
 	}
 
 	private void writeHeader() throws IOException {
+		out.write(MAGIC_BYTE);
 		out.write(1); // version
 
 		final int cipherTransformationNumeric = cipherTransformation.ordinal();

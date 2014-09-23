@@ -20,6 +20,14 @@ import org.subshare.crypto.CryptoRegistry;
 
 public class SignerOutputStream extends FilterOutputStream {
 
+	/**
+	 * The first byte in the header identifying the content to be written by the {@link SignerOutputStream}
+	 * and thus being readable by the {@link VerifierInputStream}.
+	 * <p>
+	 * 204 decimal is 11001100 binary.
+	 */
+	public static final int MAGIC_BYTE = 204;
+
 	private boolean closed;
 	private boolean closeUnderlyingStream = true;
 	private final UserRepoKey userRepoKey;
@@ -48,6 +56,7 @@ public class SignerOutputStream extends FilterOutputStream {
 	}
 
 	private void writeHeader() throws IOException {
+		out.write(MAGIC_BYTE);
 		out.write(1); // version
 
 		final int signerTransformationNumeric = signerTransformation.ordinal();
