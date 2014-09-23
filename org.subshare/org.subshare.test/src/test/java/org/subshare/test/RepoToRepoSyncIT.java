@@ -84,7 +84,7 @@ public class RepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 			createFileWithRandomContent(child_2, "yyyyyyyy"); // overwrite
 			createFileWithRandomContent(child_2, "ttttt"); // new file
 
-			createFile(child_3, "c").delete();
+			createFile(child_3, "cc").delete();
 			createFileWithRandomContent(child_3, "cc"); // overwrite
 			createFileWithRandomContent(child_3, "kkkkk"); // new file
 
