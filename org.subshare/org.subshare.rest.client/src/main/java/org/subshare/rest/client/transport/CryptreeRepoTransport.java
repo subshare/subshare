@@ -18,6 +18,7 @@ import org.subshare.core.AccessDeniedException;
 import org.subshare.core.Cryptree;
 import org.subshare.core.CryptreeFactory;
 import org.subshare.core.CryptreeFactoryRegistry;
+import org.subshare.core.WriteAccessDeniedException;
 import org.subshare.core.crypto.DecrypterInputStream;
 import org.subshare.core.crypto.EncrypterOutputStream;
 import org.subshare.core.crypto.RandomIvFactory;
@@ -29,6 +30,7 @@ import org.subshare.core.dto.PermissionType;
 import org.subshare.core.io.LimitedInputStream;
 import org.subshare.core.sign.SignableSigner;
 import org.subshare.core.sign.SignableVerifier;
+import org.subshare.core.sign.Signature;
 import org.subshare.core.sign.SignerOutputStream;
 import org.subshare.core.sign.VerifierInputStream;
 import org.subshare.core.user.UserRepoKey;
@@ -42,6 +44,7 @@ import org.subshare.rest.client.transport.command.PutCryptoChangeSetDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import co.codewizards.cloudstore.core.auth.SignatureException;
 import co.codewizards.cloudstore.core.dto.ChangeSetDto;
 import co.codewizards.cloudstore.core.dto.ModificationDto;
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
@@ -127,23 +130,15 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 			}
 
 			final Set<Long> nonDecryptableRepoFileIds = new HashSet<Long>();
-			// TODO instead of building the tree here (again), we should do this *only* on the server side
-			// and guarantee this order. Or shouldn't we?!
+
 			final RepoFileDtoTreeNode tree = RepoFileDtoTreeNode.createTree(changeSetDto.getRepoFileDtos());
 			if (tree != null) {
 				for (final RepoFileDtoTreeNode node : tree) {
 					final RepoFileDto repoFileDto = node.getRepoFileDto();
-					final SsRepoFileDto ssRepoFileDto = (SsRepoFileDto) repoFileDto;
 
-					// We silently ignore the non-signed root in the initial sync.
-					if (repoFileDto.getParentId() == null && ssRepoFileDto.getSignature() == null) {
-						if (changeSetDto.getRepoFileDtos().size() != 1) // If there's more than one single entry, it's not the initial sync, anymore.
-							throw new IllegalStateException("Even the root should be signed after an initial sync!");
-
+					// We silently ignore those missing signatures that are allowed to be ignored silently ;-)
+					if (! verifySignatureAndTreeStructureAndPermission(cryptree, signableVerifier, node))
 						continue;
-					}
-
-					signableVerifier.verify(ssRepoFileDto);
 
 					if (nonDecryptableRepoFileIds.contains(repoFileDto.getParentId())) {
 						nonDecryptableRepoFileIds.add(repoFileDto.getId()); // transitive for all children and children's children
@@ -166,6 +161,120 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 		return decryptedChangeSetDto;
 	}
 
+	/**
+	 * Verifies the signature of the {@code SsRepoFileDto} contained in the given {@code RepoFileDtoTreeNode}.
+	 * <p>
+	 * There are 3 possible states:
+	 * <ol>
+	 * <li>Valid signature.
+	 * <li>Allowed missing signature.
+	 * <li>Broken or non-allowed missing signature.
+	 * </ol>
+	 * <p>
+	 * The states 1 and 2 are indicated via the return value (<code>true</code> for 1; <code>false</code> for 2).
+	 * The state 3, however, causes a {@link SignatureException}, because it should never happen under
+	 * normal circumstances. If it does, someone is trying or has tried to tamper with the data.
+	 *
+	 * @return <code>true</code>, if the signature is valid. <code>false</code>, if the signature is missing, but
+	 * not required. If this state is allowed, the object will still be skipped, i.e. <i>not</i> accepted. Hence, every
+	 * object must be signed in order to be processed. Non-signed objects are never processed!
+	 * @throws SignatureException if the signature is broken or it is missing and required.
+	 * @throws WriteAccessDeniedException if the object is signed, but the user having signed it did not have the permission to do so.
+	 */
+	private boolean verifySignatureAndTreeStructureAndPermission(final Cryptree cryptree, final SignableVerifier signableVerifier, final RepoFileDtoTreeNode node)
+			throws SignatureException, WriteAccessDeniedException
+	{
+		final RepoFileDto repoFileDto = node.getRepoFileDto();
+		final SsRepoFileDto ssRepoFileDto = (SsRepoFileDto) repoFileDto;
+
+		// We silently ignore the non-signed root in the initial sync.
+		final Signature signature = ssRepoFileDto.getSignature();
+		if (repoFileDto.getParentId() == null && signature == null) {
+			if (node.getRoot().size() != 1) // If there's more than one single entry, it's not the initial sync, anymore.
+				throw new IllegalStateException("Even the root should be signed after an initial sync!");
+
+			return false;
+		}
+
+		// If we're connected to a sub-directory, the server sends us a modified root-DirectoryDto, because
+		// the root is not supposed to have a name (name is empty, i.e. ""). The real name (on the server) is,
+		// however, stored in the
+		boolean restoreVirtualRootName = false;
+		try {
+			if (ssRepoFileDto instanceof SsDirectoryDto) {
+				final SsDirectoryDto ssDirectoryDto = (SsDirectoryDto) ssRepoFileDto;
+				if (isVirtualRootWithDifferentRealName(ssDirectoryDto)) {
+					restoreVirtualRootName = true;
+					ssDirectoryDto.setName(ssDirectoryDto.getRealName());
+				}
+			}
+
+			try {
+				signableVerifier.verify(ssRepoFileDto);
+			} catch (final SignatureException x) {
+				throw new SignatureException(String.format(
+						"%s repoFileDto.name='%s' repoFileDto.parentName='%s'",
+						x.getMessage(), ssRepoFileDto.getName(), ssRepoFileDto.getParentName()), x);
+			}
+
+			final Uid cryptoRepoFileId = repoFileDto.getName().isEmpty() ? cryptree.getRootCryptoRepoFileId() : new Uid(repoFileDto.getName());
+			cryptree.assertHasPermission(
+					cryptoRepoFileId, signature.getSigningUserRepoKeyId(), PermissionType.write, signature.getSignatureCreated());
+		} finally {
+			if (restoreVirtualRootName)
+				ssRepoFileDto.setName("");
+		}
+
+		if (repoFileDto.getParentId() == null)
+			assertRepoFileDtoIsCorrectRoot(cryptree, repoFileDto);
+		else
+			assertRepoFileParentNameMatchesParentRepoFileName(node);
+
+		return true;
+	}
+
+	private void assertRepoFileDtoIsCorrectRoot(final Cryptree cryptree, final RepoFileDto repoFileDto) {
+		assertNotNull("cryptree", cryptree);
+		assertNotNull("repoFileDto", repoFileDto);
+		final SsDirectoryDto ssDirectoryDto = (SsDirectoryDto) repoFileDto;
+
+		if (! repoFileDto.getName().isEmpty())
+			throw new IllegalStateException(String.format("repoFileDto.name is not an empty String, but: '%s'", repoFileDto.getName()));
+
+		if (cryptree.getRemotePathPrefix().isEmpty()) {
+			if (ssDirectoryDto.getRealName() != null)
+				throw new IllegalStateException(String.format("ssDirectoryDto.realName is not null, but: '%s'", ssDirectoryDto.getRealName()));
+		}
+		else {
+			final Uid virtualRootCryptoRepoFileId = assertNotNull("cryptree.getCryptoRepoFileIdForRemotePathPrefixOrFail()", cryptree.getCryptoRepoFileIdForRemotePathPrefixOrFail());
+			if (! virtualRootCryptoRepoFileId.toString().equals(ssDirectoryDto.getRealName()))
+				throw new IllegalStateException(String.format("virtualRootCryptoRepoFileId != ssDirectoryDto.realName :: '%s' != '%s'",
+						virtualRootCryptoRepoFileId, ssDirectoryDto.getRealName()));
+		}
+	}
+
+	private void assertRepoFileParentNameMatchesParentRepoFileName(final RepoFileDtoTreeNode node) throws IllegalStateException {
+		assertNotNull("node", node);
+		final SsRepoFileDto ssRepoFileDto = (SsRepoFileDto) node.getRepoFileDto();
+		final String childParentName = assertNotNull("ssRepoFileDto.parentName", ssRepoFileDto.getParentName());
+		final RepoFileDtoTreeNode parent = assertNotNull("node.parent", node.getParent());
+		final RepoFileDto parentRepoFileDto = assertNotNull("node.parent.repoFileDto", parent.getRepoFileDto());
+		final SsDirectoryDto parentDirectoryDto = (SsDirectoryDto) parentRepoFileDto;
+		final String parentRealName = (isVirtualRootWithDifferentRealName(parentDirectoryDto)
+				? parentDirectoryDto.getRealName() : parentDirectoryDto.getName());
+
+		if (!childParentName.equals(parentRealName))
+			throw new IllegalStateException(String.format("RepoFileDtoTreeNode tree structure does not match signed structure! ssRepoFileDto.parentName != parentRealName :: '%s' != '%s'",
+					childParentName, parentRealName));
+	}
+
+	private boolean isVirtualRootWithDifferentRealName(final SsDirectoryDto ssDirectoryDto) {
+		assertNotNull("ssDirectoryDto", ssDirectoryDto);
+		return ssDirectoryDto.getRealName() != null
+				&& ssDirectoryDto.getName().isEmpty()
+				&& ssDirectoryDto.getParentId() == null;
+	}
+
 	private ModificationDto decryptModificationDto(final Cryptree cryptree, final ModificationDto modificationDto) {
 		// TODO implement this!
 		throw new UnsupportedOperationException("NYI");
@@ -175,8 +284,10 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 		assertNotNull("cryptree", cryptree);
 		final String name = assertNotNull("repoFileDto", repoFileDto).getName();
 
-		final Uid cryptoRepoFileId = name.isEmpty() ? cryptree.getRootCryptoRepoFileId()
-				: new Uid(assertNotNull("repoFileDto.name", name));
+		final Uid cryptoRepoFileId = (repoFileDto.getParentId() == null && name.isEmpty())
+				? cryptree.getRootCryptoRepoFileId()
+						: new Uid(assertNotNull("repoFileDto.name", name));
+
 		if (cryptoRepoFileId == null) // there is no root before the very first up-sync!
 			return null;
 

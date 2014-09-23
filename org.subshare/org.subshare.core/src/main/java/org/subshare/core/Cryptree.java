@@ -113,4 +113,19 @@ public interface Cryptree {
 
 	void assertHasPermission(Uid cryptoRepoFileId, Uid userRepoKeyId, PermissionType permissionType, Date timestamp) throws AccessDeniedException;
 	void assertHasPermission(String localPath, Uid userRepoKeyId, PermissionType permissionType, Date timestamp) throws AccessDeniedException;
+
+	/**
+	 * Gets the {@link CryptoRepoFile#getCryptoRepoFileId() cryptoRepoFileId} of the {@code CryptoRepoFile}
+	 * which corresponds to the root-directory that's checked out.
+	 * <p>
+	 * This method can only be used, if the local repository is connected to a sub-directory of the server
+	 * repository. If it is connected to the server repository's root, there is no
+	 * {@link #getRemotePathPrefix() remotePathPrefix} (it is an empty string) and the ID can therefore not
+	 * be read from it.
+	 * <p>
+	 * Additionally, this method can only be used on the client-side!
+	 * @return the {@link CryptoRepoFile#getCryptoRepoFileId() cryptoRepoFileId} of the {@code CryptoRepoFile}
+	 * which is the connection point of the local repository to the server's repository.
+	 */
+	Uid getCryptoRepoFileIdForRemotePathPrefixOrFail();
 }

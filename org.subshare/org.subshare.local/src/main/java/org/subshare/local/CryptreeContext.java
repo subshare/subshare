@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import org.subshare.core.Cryptree;
 import org.subshare.core.sign.SignableSigner;
 import org.subshare.core.sign.SignableVerifier;
 import org.subshare.core.user.UserRepoKey;
@@ -218,15 +219,7 @@ public class CryptreeContext {
 	}
 
 	/**
-	 * Gets the {@link CryptoRepoFile#getCryptoRepoFileId() cryptoRepoFileId} of the {@code CryptoRepoFile}
-	 * which corresponds to the root-directory that's checked out.
-	 * <p>
-	 * This method can only be used, if the local repository is connected to a sub-directory of the server
-	 * repository. If it is connected to the server repository's root, there is no
-	 * {@link #getRemotePathPrefix() remotePathPrefix} (it is an empty string) and the ID can therefore not
-	 * be read from it.
-	 * @return the {@link CryptoRepoFile#getCryptoRepoFileId() cryptoRepoFileId} of the {@code CryptoRepoFile}
-	 * which is the connection point of the local repository to the server's repository.
+	 * @see Cryptree#getCryptoRepoFileIdForRemotePathPrefixOrFail()
 	 */
 	public Uid getCryptoRepoFileIdForRemotePathPrefixOrFail() {
 		if (cryptoRepoFileIdForRemotePathPrefix == null) {

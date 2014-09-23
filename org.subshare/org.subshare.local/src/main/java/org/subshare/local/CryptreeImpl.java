@@ -944,4 +944,9 @@ public class CryptreeImpl extends AbstractCryptree {
 		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(localPath);
 		cryptreeNode.assertHasPermission(false, userRepoKeyId, permissionType, timestamp);
 	}
+
+	@Override
+	public Uid getCryptoRepoFileIdForRemotePathPrefixOrFail() {
+		return getCryptreeContext().getCryptoRepoFileIdForRemotePathPrefixOrFail();
+	}
 }

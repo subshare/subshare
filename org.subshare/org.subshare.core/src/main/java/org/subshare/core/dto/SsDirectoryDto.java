@@ -18,6 +18,8 @@ public class SsDirectoryDto extends DirectoryDto implements SsRepoFileDto {
 
 	private String parentName;
 
+	private String realName;
+
 	@XmlElement
 	private SignatureDto signatureDto;
 
@@ -28,6 +30,21 @@ public class SsDirectoryDto extends DirectoryDto implements SsRepoFileDto {
 	@Override
 	public void setParentName(final String parentName) {
 		this.parentName = parentName;
+	}
+
+	public String getRealName() {
+		return realName;
+	}
+	public void setRealName(final String realName) {
+		this.realName = realName;
+	}
+
+	@Override
+	public void setName(final String name) {
+		if ("".equals(name))
+			realName = getName();
+
+		super.setName(name);
 	}
 
 	@Override
