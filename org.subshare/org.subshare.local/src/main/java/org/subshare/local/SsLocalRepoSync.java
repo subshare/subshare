@@ -1,5 +1,6 @@
 package org.subshare.local;
 
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
 
 import org.subshare.core.context.RepoFileContext;
@@ -17,6 +18,8 @@ import co.codewizards.cloudstore.local.persistence.RepoFile;
 
 public class SsLocalRepoSync extends LocalRepoSync {
 
+	private boolean repoFileContextWasApplied;
+
 	protected SsLocalRepoSync(final LocalRepoTransaction transaction) {
 		super(transaction);
 	}
@@ -29,7 +32,13 @@ public class SsLocalRepoSync extends LocalRepoSync {
 			if (localRepository.getLocalRepositoryType() == LocalRepositoryType.SERVER)
 				resursiveChildren = false;
 		}
-		return super.sync(parentRepoFile, file, monitor, resursiveChildren);
+
+		repoFileContextWasApplied = false;
+		final RepoFile repoFile = super.sync(parentRepoFile, file, monitor, resursiveChildren);
+		if (!repoFileContextWasApplied && repoFile != null)
+			applyRepoFileContextIfExists(repoFile);
+
+		return repoFile;
 	}
 
 	@Override
@@ -46,6 +55,8 @@ public class SsLocalRepoSync extends LocalRepoSync {
 	}
 
 	protected void applyRepoFileContextIfExists(final RepoFile repoFile) {
+		assertNotNull("repoFile", repoFile);
+		repoFileContextWasApplied = true;
 		final RepoFileContext repoFileContext = RepoFileContext.getContext();
 		if (repoFileContext != null) {
 			final SsRepoFile ccRepoFile = (SsRepoFile) repoFile;

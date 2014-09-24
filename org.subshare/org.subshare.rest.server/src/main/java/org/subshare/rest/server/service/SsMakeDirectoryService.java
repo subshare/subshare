@@ -32,8 +32,6 @@ public class SsMakeDirectoryService extends MakeDirectoryService {
 		assertNotNull("path", path);
 		assertNotNull("directoryDto", directoryDto);
 
-		// TODO verify signature!
-
 		RepoFileContext.setContext(new RepoFileContext(path, directoryDto));
 		try {
 			super.makeDirectory(path);
