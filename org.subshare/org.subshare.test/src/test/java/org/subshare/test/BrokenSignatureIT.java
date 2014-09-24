@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.*;
 
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import javax.jdo.PersistenceManager;
@@ -177,11 +176,12 @@ public class BrokenSignatureIT extends AbstractRepoToRepoSyncIT {
 		final Signable signable1 = (Signable) element1;
 		final Signable signable2 = (Signable) element2;
 
-//		signable1.setSignature(SignatureDto.copyIfNeeded(signable2.getSignature()));
+		signable1.setSignature(SignatureDto.copyIfNeeded(signable2.getSignature()));
 
-		final SignatureDto signatureDto = SignatureDto.copyIfNeeded(signable2.getSignature());
-		Arrays.fill(signatureDto.getSignatureData(), (byte) 0);
-		signable1.setSignature(signatureDto);
+//		final SignatureDto signatureDto = SignatureDto.copyIfNeeded(signable2.getSignature());
+//		Arrays.fill(signatureDto.getSignatureData(), (byte) 0);
+//		signable1.setSignature(signatureDto);
+
 		((AutoTrackLocalRevision)signable1).setLocalRevision(Long.MAX_VALUE);
 		if (signable1 instanceof RepoFile)
 			((RepoFile) signable1).setLastSyncFromRepositoryId(null);
