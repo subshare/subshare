@@ -11,7 +11,6 @@ import java.util.List;
 
 import javax.jdo.JDOHelper;
 import javax.jdo.PersistenceManager;
-import javax.jdo.PersistenceManagerFactory;
 
 import mockit.Invocation;
 import mockit.Mock;
@@ -38,9 +37,7 @@ import co.codewizards.cloudstore.core.auth.SignatureException;
 import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
-import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
 import co.codewizards.cloudstore.core.util.ExceptionUtil;
-import co.codewizards.cloudstore.local.LocalRepoTransactionImpl;
 import co.codewizards.cloudstore.local.persistence.AutoTrackLocalRevision;
 import co.codewizards.cloudstore.local.persistence.Dao;
 import co.codewizards.cloudstore.local.persistence.DirectoryDao;
@@ -407,19 +404,5 @@ public class BrokenSignatureIT extends AbstractRepoToRepoSyncIT {
 			if (pm.currentTransaction().isActive())
 				pm.currentTransaction().rollback();
 		}
-	}
-
-	private PersistenceManager getTransactionalPersistenceManager(final File localRoot) {
-		final PersistenceManagerFactory pmf;
-		try (final LocalRepoManager localRepoManagerLocal = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(localRoot);)
-		{
-			try (final LocalRepoTransaction transaction = localRepoManagerLocal.beginWriteTransaction();)
-			{
-				pmf = ((LocalRepoTransactionImpl)transaction).getPersistenceManager().getPersistenceManagerFactory();
-			}
-		}
-		final PersistenceManager pm = pmf.getPersistenceManager();
-		pm.currentTransaction().begin();
-		return pm;
 	}
 }

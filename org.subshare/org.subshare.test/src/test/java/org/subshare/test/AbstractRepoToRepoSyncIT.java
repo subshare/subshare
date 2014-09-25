@@ -9,6 +9,9 @@ import java.net.URL;
 import java.util.Collections;
 import java.util.UUID;
 
+import javax.jdo.PersistenceManager;
+import javax.jdo.PersistenceManagerFactory;
+
 import org.subshare.core.Cryptree;
 import org.subshare.core.CryptreeFactoryRegistry;
 import org.subshare.core.dto.PermissionType;
@@ -28,6 +31,7 @@ import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
 import co.codewizards.cloudstore.core.repo.sync.RepoToRepoSync;
 import co.codewizards.cloudstore.core.util.UrlUtil;
+import co.codewizards.cloudstore.local.LocalRepoTransactionImpl;
 import co.codewizards.cloudstore.local.persistence.RepoFile;
 import co.codewizards.cloudstore.local.persistence.RepoFileDao;
 
@@ -172,13 +176,19 @@ public abstract class AbstractRepoToRepoSyncIT extends AbstractIT {
 	}
 
 	protected void syncFromRemoteToLocalDest() throws Exception {
+		syncFromRemoteToLocalDest(true);
+	}
+
+	protected void syncFromRemoteToLocalDest(final boolean assertLocalSrcAndDestDirectoriesAreEqual) throws Exception {
 		final RepoToRepoSync repoToRepoSync = new RepoToRepoSync(localDestRoot, remoteRootURLWithPathPrefixForLocalDest);
 		repoToRepoSync.sync(new LoggerProgressMonitor(logger));
 		repoToRepoSync.close();
 
-		assertDirectoriesAreEqualRecursively(
-				(remotePathPrefix2Plain.isEmpty() ? getLocalRootWithPathPrefix() : createFile(getLocalRootWithPathPrefix(), remotePathPrefix2Plain)),
-				localDestRoot);
+		if (assertLocalSrcAndDestDirectoriesAreEqual) {
+			assertDirectoriesAreEqualRecursively(
+					(remotePathPrefix2Plain.isEmpty() ? getLocalRootWithPathPrefix() : createFile(getLocalRootWithPathPrefix(), remotePathPrefix2Plain)),
+					localDestRoot);
+		}
 	}
 
 	protected void createLocalDestinationRepo() throws Exception {
@@ -205,13 +215,18 @@ public abstract class AbstractRepoToRepoSyncIT extends AbstractIT {
 				final RepoFile repoFile = repoFileDao.getRepoFile(getLocalRootWithPathPrefix(), createFile(getLocalRootWithPathPrefix(), remotePathPrefix2Plain));
 				final CryptoRepoFile cryptoRepoFile = transaction.getDao(CryptoRepoFileDao.class).getCryptoRepoFileOrFail(repoFile);
 				remotePathPrefix2Encrypted = cryptoRepoFile.getServerPath();
+				logger.info("determineRemotePathPrefix2Encrypted: remotePathPrefix2Encrypted={}", remotePathPrefix2Encrypted);
 				transaction.commit();
 			}
 		}
 	}
 
 	protected void grantPermission(final String localPath, final PermissionType permissionType, final UserRepoKey.PublicKey userRepoKeyPublicKey) {
-		try (final LocalRepoManager localRepoManagerLocal = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(localSrcRoot);)
+		grantPermission(localSrcRoot, localPath, permissionType, userRepoKeyPublicKey);
+	}
+
+	protected void grantPermission(final File localRoot, final String localPath, final PermissionType permissionType, final UserRepoKey.PublicKey userRepoKeyPublicKey) {
+		try (final LocalRepoManager localRepoManagerLocal = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(localRoot);)
 		{
 			try (final LocalRepoTransaction transaction = localRepoManagerLocal.beginWriteTransaction();)
 			{
@@ -227,7 +242,11 @@ public abstract class AbstractRepoToRepoSyncIT extends AbstractIT {
 	}
 
 	protected void revokePermission(final String localPath, final PermissionType permissionType, final UserRepoKey.PublicKey userRepoKeyPublicKey) {
-		try (final LocalRepoManager localRepoManagerLocal = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(localSrcRoot);)
+		revokePermission(localSrcRoot, localPath, permissionType, userRepoKeyPublicKey);
+	}
+
+	protected void revokePermission(final File localRoot, final String localPath, final PermissionType permissionType, final UserRepoKey.PublicKey userRepoKeyPublicKey) {
+		try (final LocalRepoManager localRepoManagerLocal = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(localRoot);)
 		{
 			try (final LocalRepoTransaction transaction = localRepoManagerLocal.beginWriteTransaction();)
 			{
@@ -240,6 +259,20 @@ public abstract class AbstractRepoToRepoSyncIT extends AbstractIT {
 				transaction.commit();
 			}
 		}
+	}
+
+	protected PersistenceManager getTransactionalPersistenceManager(final File localRoot) {
+		final PersistenceManagerFactory pmf;
+		try (final LocalRepoManager localRepoManagerLocal = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(localRoot);)
+		{
+			try (final LocalRepoTransaction transaction = localRepoManagerLocal.beginWriteTransaction();)
+			{
+				pmf = ((LocalRepoTransactionImpl)transaction).getPersistenceManager().getPersistenceManagerFactory();
+			}
+		}
+		final PersistenceManager pm = pmf.getPersistenceManager();
+		pm.currentTransaction().begin();
+		return pm;
 	}
 
 

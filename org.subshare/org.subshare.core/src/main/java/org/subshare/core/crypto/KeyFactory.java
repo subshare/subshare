@@ -2,6 +2,7 @@ package org.subshare.core.crypto;
 
 import static org.subshare.core.crypto.CryptoConfigUtil.*;
 
+import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 
@@ -49,10 +50,13 @@ public class KeyFactory {
 		return key;
 	}
 
-	public AsymmetricCipherKeyPair createAsymmetricKeyPair(final KeyGenerationParameters keyGenerationParameters) {
+	public AsymmetricCipherKeyPair createAsymmetricKeyPair(KeyGenerationParameters keyGenerationParameters) {
 		final long startTimestamp = System.currentTimeMillis();
 		final CipherTransformation asymmetricCipherTransformation = getAsymmetricCipherTransformation();
 		final String engine = CryptoRegistry.splitTransformation(asymmetricCipherTransformation.getTransformation())[0];
+
+		if (Boolean.parseBoolean(System.getProperty("testEnvironment")))
+			keyGenerationParameters = new RSAKeyGenerationParameters(BigInteger.valueOf(0x10001), secureRandom, 1024, 12);
 
 		final AsymmetricCipherKeyPairGenerator keyPairGenerator;
 		try {

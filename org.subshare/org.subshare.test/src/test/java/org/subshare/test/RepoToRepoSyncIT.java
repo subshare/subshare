@@ -181,7 +181,7 @@ public class RepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 
 		final UserRepoKeyRing otherUserRepoKeyRing1 = createUserRepoKeyRing();
 		final PublicKey publicKey1 = otherUserRepoKeyRing1.getUserRepoKeys(remoteRepositoryId).get(0).getPublicKey();
-		grantPermission(remotePathPrefix2Plain, PermissionType.read, publicKey1);
+//		grantPermission(remotePathPrefix2Plain, PermissionType.read, publicKey1); // write includes read => this line is not needed
 
 		grantPermission(remotePathPrefix2Plain, PermissionType.write, publicKey1);
 
