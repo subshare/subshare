@@ -842,7 +842,8 @@ public class CryptreeNode {
 
 				if (permission.getValidTo() != null) {
 					if (backdatingOldestPermissionValidTo == null) {
-						final File file = getRepoFile().getFile(getContext().transaction.getLocalRepoManager().getLocalRoot());
+						// We make it configurable per repository - not (yet) per subdir/file.
+						final File file = getContext().transaction.getLocalRepoManager().getLocalRoot();
 						backdatingOldestPermissionValidTo = new Date(System.currentTimeMillis() - CryptoConfigUtil.getBackdatingMaxPermissionValidToAge(file));
 					}
 
