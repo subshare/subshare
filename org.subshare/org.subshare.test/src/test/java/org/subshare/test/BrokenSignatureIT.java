@@ -1,12 +1,15 @@
 package org.subshare.test;
 
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static mockit.Deencapsulation.*;
 import static org.assertj.core.api.Assertions.*;
 
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.jdo.JDOHelper;
 import javax.jdo.PersistenceManager;
 import javax.jdo.PersistenceManagerFactory;
 
@@ -23,13 +26,16 @@ import org.subshare.core.sign.Signature;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.local.persistence.CryptoKeyDao;
 import org.subshare.local.persistence.CryptoLinkDao;
+import org.subshare.local.persistence.CryptoRepoFile;
 import org.subshare.local.persistence.CryptoRepoFileDao;
 import org.subshare.rest.client.transport.CryptreeRepoTransport;
+import org.subshare.rest.server.service.SsWebDavService;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import co.codewizards.cloudstore.core.auth.SignatureException;
+import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
@@ -39,6 +45,8 @@ import co.codewizards.cloudstore.local.persistence.AutoTrackLocalRevision;
 import co.codewizards.cloudstore.local.persistence.Dao;
 import co.codewizards.cloudstore.local.persistence.DirectoryDao;
 import co.codewizards.cloudstore.local.persistence.Entity;
+import co.codewizards.cloudstore.local.persistence.FileChunk;
+import co.codewizards.cloudstore.local.persistence.NormalFile;
 import co.codewizards.cloudstore.local.persistence.NormalFileDao;
 import co.codewizards.cloudstore.local.persistence.RepoFile;
 import co.codewizards.cloudstore.rest.client.RemoteException;
@@ -50,6 +58,7 @@ public class BrokenSignatureIT extends AbstractRepoToRepoSyncIT {
 	private boolean jmockitShouldBeUsed;
 	private boolean jmockitWasUsed;
 	private boolean cryptreeRepoTransport_encryptAndSign_breakSignature = false;
+	private boolean ssWebDavService_getFileData_breakSignature = false;
 
 	@Override
 	public void before() {
@@ -66,6 +75,9 @@ public class BrokenSignatureIT extends AbstractRepoToRepoSyncIT {
 			fail("jmockit should have been used but was not used! missing agent?");
 	}
 
+	private final int headerAreaLengthCausingDifferentException = 5 + 4;
+	private final int footerAreaLengthCausingDifferentException = 2;
+
 	@Test
 	public void uploadBrokenSignature() throws Exception {
 		jmockitShouldBeUsed = true;
@@ -80,8 +92,6 @@ public class BrokenSignatureIT extends AbstractRepoToRepoSyncIT {
 				if (cryptreeRepoTransport_encryptAndSign_breakSignature) {
 					// If we modify anything in this part of the header, we cause a different exception - not a SignatureException!
 					// The same goes for the last few bytes of the footer.
-					final int headerAreaLengthCausingDifferentException = 5 + 4;
-					final int footerAreaLengthCausingDifferentException = 2;
 					final int index =
 							headerAreaLengthCausingDifferentException +
 							random.nextInt(result.length - headerAreaLengthCausingDifferentException - footerAreaLengthCausingDifferentException);
@@ -130,6 +140,32 @@ public class BrokenSignatureIT extends AbstractRepoToRepoSyncIT {
 
 	@Test
 	public void downloadBrokenSignature() throws Exception {
+		jmockitShouldBeUsed = true;
+
+		new MockUp<SsWebDavService>() {
+			@Mock
+			public byte[] getFileData(
+					final Invocation invocation,
+					final String path,
+					final long offset,
+					final int length) {
+				jmockitWasUsed = true;
+
+				logger.info("getFileData: about to call invocation.proceed(...). ssWebDavService_getFileData_breakSignature={}", ssWebDavService_getFileData_breakSignature);
+				final byte[] result = invocation.proceed(path, offset, length);
+				if (ssWebDavService_getFileData_breakSignature) {
+					// If we modify anything in this part of the header, we cause a different exception - not a SignatureException!
+					// The same goes for the last few bytes of the footer.
+					final int index =
+							headerAreaLengthCausingDifferentException +
+							random.nextInt(result.length - headerAreaLengthCausingDifferentException - footerAreaLengthCausingDifferentException);
+					result[index] += 1;
+					logger.info("getFileData: modified result[{}] => signature should be broken!", index);
+				}
+				return result;
+			}
+		};
+
 		createLocalSourceAndRemoteRepo();
 		populateLocalSourceRepo();
 		syncFromLocalSrcToRemote();
@@ -138,7 +174,7 @@ public class BrokenSignatureIT extends AbstractRepoToRepoSyncIT {
 		// Most signature verifications happen generically, anyway (=> VerifySignableAndWriteProtectedEntityListener).
 		// Instead, we pick one random scenario and break only exactly one signature.
 
-		final int caseRandom = random.nextInt(350);
+		final int caseRandom = random.nextInt(450);
 
 		if (caseRandom < 50)
 			breakRandomEntitySignature(remoteRoot, new CryptoKeyDao());
@@ -151,7 +187,7 @@ public class BrokenSignatureIT extends AbstractRepoToRepoSyncIT {
 		else if (caseRandom < 350)
 			breakRandomEntitySignature(remoteRoot, new DirectoryDao());
 		else
-			breakRandomFileDataForDownload(); // TODO enable this test!
+			breakRandomFileDataForDownload();
 
 		try {
 			syncFromLocalSrcToRemote();
@@ -178,10 +214,6 @@ public class BrokenSignatureIT extends AbstractRepoToRepoSyncIT {
 
 		signable1.setSignature(SignatureDto.copyIfNeeded(signable2.getSignature()));
 
-//		final SignatureDto signatureDto = SignatureDto.copyIfNeeded(signable2.getSignature());
-//		Arrays.fill(signatureDto.getSignatureData(), (byte) 0);
-//		signable1.setSignature(signatureDto);
-
 		((AutoTrackLocalRevision)signable1).setLocalRevision(Long.MAX_VALUE);
 		if (signable1 instanceof RepoFile)
 			((RepoFile) signable1).setLastSyncFromRepositoryId(null);
@@ -202,18 +234,104 @@ public class BrokenSignatureIT extends AbstractRepoToRepoSyncIT {
 		return result;
 	}
 
-	private void breakRandomFileDataForDownload() {
-		throw new UnsupportedOperationException("NYI"); // TODO implement and enable this test!
+	private void breakRandomFileDataForDownload() throws Exception {
+		ssWebDavService_getFileData_breakSignature = true;
+
+		Uid cryptoRepoFileId;
+
+		// We change a chunk on the client-side, because the server has the chunks encrypted only.
+		// It's thus easier to fake on the client side and only make sure the system believes, the change
+		// originates from the server.
+		PersistenceManager pm = getTransactionalPersistenceManager(localSrcRoot);
+		try {
+			final CryptoRepoFileDao cryptoRepoFileDao = new CryptoRepoFileDao().persistenceManager(pm);
+			final NormalFileDao normalFileDao = new NormalFileDao().persistenceManager(pm);
+
+			final List<NormalFile> normalFiles = (List<NormalFile>) normalFileDao.getObjects();
+			final NormalFile normalFile = normalFiles.get(random.nextInt(normalFiles.size()));
+
+			normalFile.setSha1(modifySha1(normalFile.getSha1()));
+
+			final CryptoRepoFile cryptoRepoFile = cryptoRepoFileDao.getCryptoRepoFileOrFail(normalFile);
+			cryptoRepoFileId = cryptoRepoFile.getCryptoRepoFileId();
+
+			final FileChunk fileChunk = normalFile.getFileChunks().iterator().next();
+			final String sha1 = fileChunk.getSha1();
+
+			final String fieldName = "sha1";
+			setField(fileChunk, fieldName, modifySha1(sha1));
+			JDOHelper.makeDirty(fileChunk, fieldName);
+
+			pm.currentTransaction().commit();
+		} finally {
+			if (pm.currentTransaction().isActive())
+				pm.currentTransaction().rollback();
+		}
+
+		pm = getTransactionalPersistenceManager(remoteRoot);
+		try {
+			final CryptoRepoFileDao cryptoRepoFileDao = new CryptoRepoFileDao().persistenceManager(pm);
+			final CryptoRepoFile cryptoRepoFile = cryptoRepoFileDao.getCryptoRepoFileOrFail(cryptoRepoFileId);
+			final RepoFile repoFile = assertNotNull("cryptoRepoFile.repoFile", cryptoRepoFile.getRepoFile());
+
+			repoFile.setLocalRevision(Long.MAX_VALUE);
+			repoFile.setLastSyncFromRepositoryId(null);
+
+			pm.currentTransaction().commit();
+		} finally {
+			if (pm.currentTransaction().isActive())
+				pm.currentTransaction().rollback();
+		}
+	}
+
+	private String modifySha1(final String sha1) {
+		char sha1FirstChar = sha1.charAt(0);
+		final String sha1Suffix = sha1.substring(1);
+
+		if (++sha1FirstChar > 'f')
+			sha1FirstChar = '0';
+
+		return sha1FirstChar + sha1Suffix;
 	}
 
 	private void breakRandomFileDataForUpload() throws Exception {
 		cryptreeRepoTransport_encryptAndSign_breakSignature = true;
 
-		final File child_2 = createFile(localSrcRoot, "2");
-		final File child_2_a = createFile(child_2, "a");
-		final OutputStream out = child_2_a.createOutputStream(true);
+		final File file = pickRandomFile(localSrcRoot, false);
+		logger.info("breakRandomFileDataForUpload: file='{}'", file.getAbsolutePath());
+		final OutputStream out = file.createOutputStream(true);
 		out.write(200);
 		out.close();
+		file.setLastModified(System.currentTimeMillis() + 1500); // making absolutely sure, the timestamp is different
+	}
+
+	private File pickRandomFile(final File localRoot, final boolean directory) {
+		File file = null;
+		final List<File> files = listRecursively(localRoot);
+		while (file == null) {
+			file = files.get(random.nextInt(files.size()));
+			if (file.isDirectory() && !directory)
+				file = null;
+		}
+		return file;
+	}
+
+	private List<File> listRecursively(final File dir) {
+		final List<File> files = new ArrayList<File>();
+		populateListRecursively(files, dir);
+		return files;
+	}
+
+	private void populateListRecursively(final List<File> files, final File file) {
+		if (LocalRepoManager.META_DIR_NAME.equals(file.getName()))
+			return;
+
+		files.add(file);
+		final File[] children = file.listFiles();
+		if (children != null) {
+			for (final File child : children)
+				populateListRecursively(files, child);
+		}
 	}
 
 	private void breakRandomNormalFileDtoSignatureForUpload() throws Exception {
