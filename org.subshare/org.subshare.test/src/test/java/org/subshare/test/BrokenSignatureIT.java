@@ -140,7 +140,6 @@ public class BrokenSignatureIT extends AbstractRepoToRepoSyncIT {
 
 	@Test
 	public void downloadBrokenSignature() throws Exception {
-		jmockitShouldBeUsed = true;
 
 		new MockUp<SsWebDavService>() {
 			@Mock
@@ -235,6 +234,7 @@ public class BrokenSignatureIT extends AbstractRepoToRepoSyncIT {
 	}
 
 	private void breakRandomFileDataForDownload() throws Exception {
+		jmockitShouldBeUsed = true;
 		ssWebDavService_getFileData_breakSignature = true;
 
 		Uid cryptoRepoFileId;
