@@ -13,11 +13,14 @@ allprojects {
         mavenLocal()
         mavenCentral()
         maven {
-            url "http://cloudstore.codewizards.co/maven/snapshot"
+            url 'http://cloudstore.codewizards.co/maven/snapshot'
         }
         maven {
-            url "http://cloudstore.codewizards.co/maven/release"
+            url 'http://cloudstore.codewizards.co/maven/release'
         }
+		maven {
+			url 'http://www.datanucleus.org/downloads/maven2-nightly'
+		}
     }
 
 	project.ext.subshareVersion = version
