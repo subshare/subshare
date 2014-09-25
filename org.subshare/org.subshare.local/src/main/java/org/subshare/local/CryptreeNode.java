@@ -241,7 +241,7 @@ public class CryptreeNode {
 
 		final CryptoLinkDao cryptoLinkDao = context.transaction.getDao(CryptoLinkDao.class);
 		final Collection<CryptoLink> cryptoLinks = cryptoLinkDao.getActiveCryptoLinks(
-				cryptoRepoFile, CryptoKeyRole.clearanceKey, CryptoKeyPart.privateKey);
+				getCryptoRepoFileOrCreate(false), CryptoKeyRole.clearanceKey, CryptoKeyPart.privateKey);
 
 		if (containsFromUserRepoKeyId(cryptoLinks, Collections.singleton(publicKey.getUserRepoKeyId())))
 			return; // There is already an active key which is accessible to the given user. Thus no need to generate a new crypto-link.
