@@ -13,6 +13,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -24,6 +25,7 @@ import org.subshare.core.AccessDeniedException;
 import org.subshare.core.GrantAccessDeniedException;
 import org.subshare.core.ReadAccessDeniedException;
 import org.subshare.core.WriteAccessDeniedException;
+import org.subshare.core.crypto.CryptoConfigUtil;
 import org.subshare.core.dto.SsRepoFileDto;
 import org.subshare.core.dto.CryptoKeyPart;
 import org.subshare.core.dto.CryptoKeyRole;
@@ -52,6 +54,7 @@ import org.slf4j.LoggerFactory;
 import co.codewizards.cloudstore.core.auth.SignatureException;
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
 import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.local.dto.RepoFileDtoConverter;
 import co.codewizards.cloudstore.local.persistence.Directory;
 import co.codewizards.cloudstore.local.persistence.RepoFile;
@@ -742,8 +745,27 @@ public class CryptreeNode {
 			final PermissionType permissionType, final Date timestamp
 			) throws AccessDeniedException
 	{
-		if (hasPermission(anyCryptoRepoFile, permissionType, userRepoKeyId, timestamp))
+		if (isOwner(userRepoKeyId))
+			return; // The owner always has all permissions.
+
+		final Set<Permission> permissions = new HashSet<Permission>();
+		collectPermissions(permissions, anyCryptoRepoFile, permissionType, userRepoKeyId, timestamp);
+		final Set<Permission> permissionsIndicatingBackdatedSignature = extractPermissionsIndicatingBackdatedSignature(permissions);
+
+		if (!permissions.isEmpty())
 			return; // all is fine => silently return.
+
+		if (! permissionsIndicatingBackdatedSignature.isEmpty()) {
+			final String exceptionMsg = String.format("Found '%s' permission(s) for userRepoKeyId=%s and timestamp=%s, but it (or they) indicates backdating outside of allowed range!", permissionType, userRepoKeyId, timestamp);
+			switch (permissionType) {
+				case grant:
+					throw new GrantAccessDeniedException(exceptionMsg);
+				case write:
+					throw new WriteAccessDeniedException(exceptionMsg);
+				default:
+					throw new IllegalArgumentException("Unknown permissionType: " + permissionType);
+			}
+		}
 
 		final String exceptionMsg = String.format("No '%s' permission found for userRepoKeyId=%s and timestamp=%s!", permissionType, userRepoKeyId, timestamp);
 		switch (permissionType) {
@@ -756,6 +778,11 @@ public class CryptreeNode {
 		}
 	}
 
+	private boolean isOwner(final Uid userRepoKeyId) {
+		assertNotNull("userRepoKeyId", userRepoKeyId);
+		return userRepoKeyId.equals(context.getRepositoryOwnerOrFail().getUserRepoKeyPublicKey().getUserRepoKeyId());
+	}
+
 	/**
 	 * @param anyCryptoRepoFile <code>true</code> to indicate that the {@link Permission} does not need to be available on the
 	 * level of this node's {@link CryptoRepoFile} (it is thus independent from this context); <code>false</code> to indicate
@@ -765,7 +792,7 @@ public class CryptreeNode {
 	 * @param timestamp
 	 * @return
 	 */
-	private boolean hasPermission(final boolean anyCryptoRepoFile, final PermissionType permissionType, final Uid userRepoKeyId, final Date timestamp) {
+	private void collectPermissions(final Set<Permission> permissions, final boolean anyCryptoRepoFile, final PermissionType permissionType, final Uid userRepoKeyId, final Date timestamp) {
 		assertNotNull("permissionType", permissionType);
 		assertNotNull("userRepoKeyId", userRepoKeyId);
 		assertNotNull("timestamp", timestamp);
@@ -780,37 +807,58 @@ public class CryptreeNode {
 				throw new IllegalArgumentException("PermissionType unknown or not allowed here: " + permissionType);
 		}
 
-		if (userRepoKeyId.equals(context.getRepositoryOwnerOrFail().getUserRepoKeyPublicKey().getUserRepoKeyId()))
-			return true; // The owner always has all permissions.
-
 		final PermissionSet permissionSet = anyCryptoRepoFile ? null : getPermissionSet();
 		if (anyCryptoRepoFile || permissionSet != null) {
 			final PermissionDao dao = context.transaction.getDao(PermissionDao.class);
-			final Set<Permission> permissions = anyCryptoRepoFile
+			final Set<Permission> ps = anyCryptoRepoFile
 					? new HashSet<>(dao.getValidPermissions(permissionType, userRepoKeyId, timestamp))
 							: new HashSet<>(dao.getValidPermissions(permissionSet, permissionType, userRepoKeyId, timestamp));
 
-			permissions.removeAll(permissionsBeingCheckedNow);
+			ps.removeAll(permissionsBeingCheckedNow);
 
-			if (!permissions.isEmpty()) {
-				for (final Permission permission : permissions)
+			if (!ps.isEmpty()) {
+				for (final Permission permission : ps)
 					assertPermissionOk(permission); // TODO is this necessary? isn't it sufficient to check when it's written into the DB?
-
-				return true; // We found a valid permission in this directory/file level.
 			}
+
+			permissions.addAll(ps);
 		}
 
 		if (! anyCryptoRepoFile && (permissionSet == null || permissionSet.isPermissionsInherited())) {
 			final CryptreeNode parent = getParent();
 			if (parent != null)
-				return parent.hasPermission(anyCryptoRepoFile, permissionType, userRepoKeyId, timestamp);
+				parent.collectPermissions(permissions, anyCryptoRepoFile, permissionType, userRepoKeyId, timestamp);
 		}
+	}
 
-		return false; // If we come here, there is no permission.
+	private Set<Permission> extractPermissionsIndicatingBackdatedSignature(final Set<Permission> permissions) {
+		final Set<Permission> result = new HashSet<Permission>(permissions);
+		Date backdatingOldestPermissionValidTo = null;
+
+		if (getContext().isOnServer) { // We prevent backdating only on the server, because it is likely that a client didn't sync for ages
+			// TODO not sure, if this is the best location for this test. but I think this code here is only called, if a new thingy is *written* on the server (never on read).
+			for (final Iterator<Permission> it = permissions.iterator(); it.hasNext(); ) {
+				final Permission permission = it.next();
+
+				if (permission.getValidTo() != null) {
+					if (backdatingOldestPermissionValidTo == null) {
+						final File file = getRepoFile().getFile(getContext().transaction.getLocalRepoManager().getLocalRoot());
+						backdatingOldestPermissionValidTo = new Date(System.currentTimeMillis() - CryptoConfigUtil.getBackdatingMaxPermissionValidToAge(file));
+					}
+
+					if (permission.getValidTo().before(backdatingOldestPermissionValidTo)) {
+						result.add(permission);
+						it.remove();
+					}
+				}
+			}
+		}
+		return result;
 	}
 
 	private void assertPermissionOk(final Permission permission) throws SignatureException, AccessDeniedException {
 		assertNotNull("permission", permission);
+
 		if (permissionsAlreadyCheckedOk.contains(permission))
 			return;
 
@@ -908,9 +956,15 @@ public class CryptreeNode {
 				throw new IllegalArgumentException("PermissionType unknown or not allowed here: " + permissionType);
 		}
 
+
 		final Date now = new Date();
 		for (final UserRepoKey userRepoKey : context.userRepoKeyRing.getUserRepoKeys(context.serverRepositoryId)) {
-			if (hasPermission(anyCryptoRepoFile, permissionType, userRepoKey.getUserRepoKeyId(), now)) {
+			final boolean owner = isOwner(userRepoKey.getUserRepoKeyId());
+			final Set<Permission> permissions = new HashSet<Permission>();
+			if (! owner)
+				collectPermissions(permissions, anyCryptoRepoFile, permissionType, userRepoKey.getUserRepoKeyId(), now);
+
+			if (owner || ! permissions.isEmpty()) {
 				getUserRepoKeyPublicKey(userRepoKey); // Make sure it is persisted in the DB.
 				return userRepoKey;
 			}

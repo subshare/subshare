@@ -41,7 +41,7 @@ public class SignerOutputStream extends FilterOutputStream {
 
 	public SignerOutputStream(final OutputStream out, final UserRepoKey signingUserRepoKey, final Date signatureCreated) throws IOException {
 		super(out);
-		this.userRepoKey = assertNotNull("userRepoKey", signingUserRepoKey);
+		this.userRepoKey = assertNotNull("signingUserRepoKey", signingUserRepoKey);
 		this.signerTransformation = getSignerTransformation();
 		this.signatureCreated = signatureCreated;
 

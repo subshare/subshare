@@ -3,8 +3,12 @@ package org.subshare.core.crypto;
 import org.subshare.core.sign.SignerTransformation;
 
 import co.codewizards.cloudstore.core.config.Config;
+import co.codewizards.cloudstore.core.oio.File;
 
 public class CryptoConfigUtil {
+
+	public static final String CONFIG_KEY_BACKDATING_MAX_PERMISSION_VALID_TO_AGE = "backdatingMaxPermissionValidToAge";
+	public static final long CONFIG_DEFAULT_VALUE_BACKDATING_MAX_PERMISSION_VALID_TO_AGE = 3 * 24 * 3600 * 1000; // 3 days
 
 	private CryptoConfigUtil() { }
 
@@ -37,5 +41,11 @@ public class CryptoConfigUtil {
 	public static SignerTransformation getSignerTransformation() {
 		return Config.getInstance().getPropertyAsEnum(
 				SignerTransformation.CONFIG_KEY, SignerTransformation.CONFIG_DEFAULT_VALUE);
+	}
+
+	public static long getBackdatingMaxPermissionValidToAge(final File file) {
+		final Config config = file.isDirectory() ? Config.getInstanceForDirectory(file) : Config.getInstanceForFile(file);
+		return config.getPropertyAsLong(
+				CONFIG_KEY_BACKDATING_MAX_PERMISSION_VALID_TO_AGE, CONFIG_DEFAULT_VALUE_BACKDATING_MAX_PERMISSION_VALID_TO_AGE);
 	}
 }
