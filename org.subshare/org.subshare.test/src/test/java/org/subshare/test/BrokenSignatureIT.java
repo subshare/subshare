@@ -19,10 +19,13 @@ import mockit.MockUp;
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.subshare.core.dto.SsDirectoryDto;
 import org.subshare.core.dto.SsNormalFileDto;
+import org.subshare.core.dto.PermissionType;
 import org.subshare.core.dto.SignatureDto;
 import org.subshare.core.sign.Signable;
 import org.subshare.core.sign.Signature;
 import org.subshare.core.user.UserRepoKey;
+import org.subshare.core.user.UserRepoKey.PublicKey;
+import org.subshare.core.user.UserRepoKeyRing;
 import org.subshare.local.persistence.CryptoKeyDao;
 import org.subshare.local.persistence.CryptoLinkDao;
 import org.subshare.local.persistence.CryptoRepoFile;
@@ -106,6 +109,12 @@ public class BrokenSignatureIT extends AbstractRepoToRepoSyncIT {
 		populateLocalSourceRepo();
 		syncFromLocalSrcToRemote();
 
+		final UserRepoKeyRing otherUserRepoKeyRing1 = createUserRepoKeyRing();
+		final PublicKey publicKey1 = otherUserRepoKeyRing1.getUserRepoKeys(remoteRepositoryId).get(0).getPublicKey();
+
+		grantPermission("/", PermissionType.grant, publicKey1);
+		syncFromLocalSrcToRemote();
+
 		// Because a test runs *very* long, we do not test every possible broken signature scenario in every test run.
 		// Most signature verifications happen generically, anyway (=> VerifySignableAndWriteProtectedEntityListener).
 		// Instead, we pick one random scenario and break only exactly one signature.
@@ -175,6 +184,12 @@ public class BrokenSignatureIT extends AbstractRepoToRepoSyncIT {
 		populateLocalSourceRepo();
 		syncFromLocalSrcToRemote();
 
+		final UserRepoKeyRing otherUserRepoKeyRing1 = createUserRepoKeyRing();
+		final PublicKey publicKey1 = otherUserRepoKeyRing1.getUserRepoKeys(remoteRepositoryId).get(0).getPublicKey();
+
+		grantPermission("/", PermissionType.grant, publicKey1);
+		syncFromLocalSrcToRemote();
+
 		// Because a test runs *very* long, we do not test every possible broken signature scenario in every test run.
 		// Most signature verifications happen generically, anyway (=> VerifySignableAndWriteProtectedEntityListener).
 		// Instead, we pick one random scenario and break only exactly one signature.
@@ -227,13 +242,7 @@ public class BrokenSignatureIT extends AbstractRepoToRepoSyncIT {
 		final Signable signable2 = (Signable) element2;
 
 		signable1.setSignature(SignatureDto.copyIfNeeded(signable2.getSignature()));
-
-		((AutoTrackLocalRevision)signable1).setLocalRevision(Long.MAX_VALUE);
-		if (signable1 instanceof RepoFile)
-			((RepoFile) signable1).setLastSyncFromRepositoryId(null);
-
-		if (signable1 instanceof CryptoRepoFile)
-			((CryptoRepoFile) signable1).setLastSyncFromRepositoryId(null);
+		touchEntity(signable1);
 	}
 
 	private <T> List<T> getTwoRandomElements(final List<T> list) {
@@ -418,12 +427,36 @@ public class BrokenSignatureIT extends AbstractRepoToRepoSyncIT {
 		try {
 			dao.persistenceManager(pm);
 			final List<E> entities = (List<E>) dao.getObjects(); // we know that it is a list ;-)
-			copySignatureFromOneRandomElementToAnotherRandomElement(entities);
+
+			if (entities.isEmpty())
+				throw new IllegalStateException("entities.isEmpty()! entityClass=" + dao.getEntityClass().getName());
+
+			if (entities.size() >= 2)
+				copySignatureFromOneRandomElementToAnotherRandomElement(entities);
+			else {
+				final E e = entities.get(0);
+				final Signable signable = (Signable) e;
+				final SignatureDto signature = SignatureDto.copyIfNeeded(signable.getSignature());
+				final int b = (signature.getSignatureData()[0] & 0xff) + 1;
+				signature.getSignatureData()[0] = (byte) b;
+				signable.setSignature(signature);
+				touchEntity(e);
+			}
 
 			pm.currentTransaction().commit();
 		} finally {
 			if (pm.currentTransaction().isActive())
 				pm.currentTransaction().rollback();
 		}
+	}
+
+	private void touchEntity(final Object entity) {
+		((AutoTrackLocalRevision)entity).setLocalRevision(Long.MAX_VALUE);
+
+		if (entity instanceof RepoFile)
+			((RepoFile) entity).setLastSyncFromRepositoryId(null);
+
+		if (entity instanceof CryptoRepoFile)
+			((CryptoRepoFile) entity).setLastSyncFromRepositoryId(null);
 	}
 }
