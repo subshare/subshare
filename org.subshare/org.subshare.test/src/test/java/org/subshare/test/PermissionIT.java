@@ -201,7 +201,7 @@ public class PermissionIT extends AbstractRepoToRepoSyncIT {
 		return true;
 	}
 
-	@Test
+	@Test // TODO we check currently only for backdating relative to Permission.validTo - not yet to PermissionSetInheritance.validTo
 	public void uploadBackdatedSignature() throws Exception {
 		new MockUp<Date>() {
 			@Mock
@@ -280,6 +280,55 @@ public class PermissionIT extends AbstractRepoToRepoSyncIT {
 				logger.debug("Detected ", x);
 				doNothing();
 			}
+		} finally {
+			cryptreeRepoTransportFactory.setUserRepoKeyRing(ownerUserRepoKeyRing);
+		}
+	}
+
+	@Test
+	public void interruptPermissionSetInheritance() throws Exception {
+		createLocalSourceAndRemoteRepo();
+		populateLocalSourceRepo();
+		syncFromLocalSrcToRemote();
+		determineRemotePathPrefix2Encrypted();
+
+		final UserRepoKeyRing otherUserRepoKeyRing1 = createUserRepoKeyRing();
+		final PublicKey publicKey1 = otherUserRepoKeyRing1.getUserRepoKeys(remoteRepositoryId).get(0).getPublicKey();
+
+		final UserRepoKeyRing otherUserRepoKeyRing2 = createUserRepoKeyRing();
+		final PublicKey publicKey2 = otherUserRepoKeyRing2.getUserRepoKeys(remoteRepositoryId).get(0).getPublicKey();
+
+		grantPermission("/", PermissionType.write, publicKey1);
+		grantPermission("/", PermissionType.read, publicKey2);
+
+		final String testSubdirPath = "/3 + &#ä/5";
+		setPermissionsInherited(testSubdirPath, false);
+		grantPermission(testSubdirPath, PermissionType.read, publicKey1);
+
+		syncFromLocalSrcToRemote();
+
+		// Due to the lazy revocation, we must modify the path before our permissions-inherited-change has an effect.
+		createFile(localSrcRoot, testSubdirPath).setLastModified(System.currentTimeMillis() + 2000);
+
+		syncFromLocalSrcToRemote();
+
+		final UserRepoKeyRing ownerUserRepoKeyRing = cryptreeRepoTransportFactory.getUserRepoKeyRing();
+		assertThat(ownerUserRepoKeyRing).isNotNull();
+		try {
+			cryptreeRepoTransportFactory.setUserRepoKeyRing(otherUserRepoKeyRing1);
+			createLocalDestinationRepo();
+			syncFromRemoteToLocalDest();
+		} finally {
+			cryptreeRepoTransportFactory.setUserRepoKeyRing(ownerUserRepoKeyRing);
+		}
+
+		try {
+			cryptreeRepoTransportFactory.setUserRepoKeyRing(otherUserRepoKeyRing2);
+			createLocalDestinationRepo();
+			syncFromRemoteToLocalDest(false);
+
+			final File dir = createFile(localDestRoot, testSubdirPath);
+			assertThat(dir.exists()).isFalse();
 		} finally {
 			cryptreeRepoTransportFactory.setUserRepoKeyRing(ownerUserRepoKeyRing);
 		}

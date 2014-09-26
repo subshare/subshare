@@ -128,4 +128,8 @@ public interface Cryptree {
 	 * which is the connection point of the local repository to the server's repository.
 	 */
 	Uid getCryptoRepoFileIdForRemotePathPrefixOrFail();
+	void setPermissionsInherited(String localPath, boolean inherited);
+	boolean isPermissionsInherited(String localPath);
+	void setPermissionsInherited(Uid cryptoRepoFileId, boolean inherited);
+	boolean isPermissionsInherited(Uid cryptoRepoFileId);
 }

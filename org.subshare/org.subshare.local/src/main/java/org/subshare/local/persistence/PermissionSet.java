@@ -5,6 +5,8 @@ import static co.codewizards.cloudstore.core.util.Util.*;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Date;
+import java.util.HashSet;
 import java.util.Set;
 
 import javax.jdo.annotations.Embedded;
@@ -21,7 +23,6 @@ import javax.jdo.annotations.Uniques;
 import org.subshare.core.dto.PermissionSetDto;
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.io.InputStreamSource;
-import org.subshare.core.io.MultiInputStream;
 import org.subshare.core.sign.Signature;
 
 import co.codewizards.cloudstore.local.persistence.AutoTrackLocalRevision;
@@ -41,12 +42,13 @@ public class PermissionSet extends Entity implements WriteProtectedEntity, AutoT
 	@Persistent(nullValue=NullValue.EXCEPTION)
 	private CryptoRepoFile cryptoRepoFile;
 
-	private boolean permissionsInherited = true;
-
 	private long localRevision;
 
 	@Persistent(mappedBy="permissionSet")
 	private Set<Permission> permissions;
+
+	@Persistent(mappedBy="permissionSet")
+	private Set<PermissionSetInheritance> permissionSetInheritances;
 
 	@Persistent(nullValue=NullValue.EXCEPTION)
 	@Embedded(nullIndicatorColumn="signatureCreated")
@@ -62,13 +64,30 @@ public class PermissionSet extends Entity implements WriteProtectedEntity, AutoT
 			this.cryptoRepoFile = cryptoRepoFile;
 	}
 
-	public boolean isPermissionsInherited() {
-		return permissionsInherited;
+	public Set<Permission> getPermissions() {
+		if (permissions == null)
+			permissions = new HashSet<Permission>();
+
+		return permissions;
 	}
 
-	public void setPermissionsInherited(final boolean permissionsInherited) {
-		if (!equal(this.permissionsInherited, permissionsInherited))
-			this.permissionsInherited = permissionsInherited;
+	public boolean isPermissionsInherited(final Date timestamp) {
+		assertNotNull("timestamp", timestamp);
+		for (final PermissionSetInheritance permissionSetInheritance : getPermissionSetInheritances()) {
+			if (permissionSetInheritance.getValidFrom().after(timestamp))
+				continue;
+
+			if (permissionSetInheritance.getValidTo() == null || permissionSetInheritance.getValidTo().compareTo(timestamp) >= 0)
+				return true;
+		}
+		return false;
+	}
+
+	public Set<PermissionSetInheritance> getPermissionSetInheritances() {
+		if (permissionSetInheritances == null)
+			permissionSetInheritances = new HashSet<PermissionSetInheritance>();
+
+		return permissionSetInheritances;
 	}
 
 	@Override
@@ -80,7 +99,6 @@ public class PermissionSet extends Entity implements WriteProtectedEntity, AutoT
 		if (! equal(this.localRevision, localRevision))
 			this.localRevision = localRevision;
 	}
-
 
 	@Override
 	public int getSignedDataVersion() {
@@ -95,13 +113,7 @@ public class PermissionSet extends Entity implements WriteProtectedEntity, AutoT
 	@Override
 	public InputStream getSignedData(final int signedDataVersion) {
 		try {
-			byte separatorIndex = 0;
-			return new MultiInputStream(
-					InputStreamSource.Helper.createInputStreamSource(cryptoRepoFile.getCryptoRepoFileId()),
-//					localRevision
-					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
-					InputStreamSource.Helper.createInputStreamSource(permissionsInherited)
-					);
+			return InputStreamSource.Helper.createInputStreamSource(cryptoRepoFile.getCryptoRepoFileId()).createInputStream();
 		} catch (final IOException x) {
 			throw new RuntimeException(x);
 		}

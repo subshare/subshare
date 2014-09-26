@@ -33,6 +33,7 @@ import org.subshare.core.dto.PermissionType;
 import org.subshare.core.dto.SignatureDto;
 import org.subshare.core.sign.Signable;
 import org.subshare.core.user.UserRepoKey;
+import org.subshare.core.user.UserRepoKey.PublicKey;
 import org.subshare.crypto.CipherOperationMode;
 import org.subshare.local.persistence.CryptoKey;
 import org.subshare.local.persistence.CryptoKeyDao;
@@ -45,6 +46,8 @@ import org.subshare.local.persistence.Permission;
 import org.subshare.local.persistence.PermissionDao;
 import org.subshare.local.persistence.PermissionSet;
 import org.subshare.local.persistence.PermissionSetDao;
+import org.subshare.local.persistence.PermissionSetInheritance;
+import org.subshare.local.persistence.RepositoryOwner;
 import org.subshare.local.persistence.UserRepoKeyPublicKey;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyDao;
 import org.subshare.local.persistence.WriteProtectedEntity;
@@ -242,6 +245,11 @@ public class CryptreeNode {
 	private void grantReadPermission(final UserRepoKey.PublicKey publicKey) {
 		assertNotNull("publicKey", publicKey);
 
+		// TODO Make sure previously invisible sub-directories & files pop up in the client repositories!
+		// If we grant access to a sub-directory later (either by (re)enabling the inheritance here or by
+		// explicitly granting read access), the sub-directory (and all files) are not modified and therefore
+		// are normally not synced (again). We somehow need to make sure that they indeed are re-synced.
+
 		final CryptoLinkDao cryptoLinkDao = context.transaction.getDao(CryptoLinkDao.class);
 		final Collection<CryptoLink> cryptoLinks = cryptoLinkDao.getActiveCryptoLinks(
 				getCryptoRepoFileOrCreate(false), CryptoKeyRole.clearanceKey, CryptoKeyPart.privateKey);
@@ -397,20 +405,6 @@ public class CryptreeNode {
 		return cryptoRepoFile.isDirectory();
 	}
 
-//	/**
-//	 * @deprecated About to be replaced by the version with the CipherOperationMode!
-//	 */
-//	@Deprecated
-//	protected PlainCryptoKey getActivePlainCryptoKey(final CryptoKeyRole toCryptoKeyRole, final CryptoKeyPart toCryptoKeyPart) {
-//		assertNotNull("toCryptoKeyRole", toCryptoKeyRole);
-//		assertNotNull("toCryptoKeyPart", toCryptoKeyPart);
-//		logger.debug("getActivePlainCryptoKey: cryptoRepoFile={} repoFile={} toCryptoKeyRole={} toCryptoKeyPart={}",
-//				cryptoRepoFile, repoFile, toCryptoKeyRole, toCryptoKeyPart);
-//		final CryptoLinkDao cryptoLinkDao = context.transaction.getDao(CryptoLinkDao.class);
-//		final Collection<CryptoLink> cryptoLinks = cryptoLinkDao.getActiveCryptoLinks(getCryptoRepoFile(), toCryptoKeyRole, toCryptoKeyPart);
-//		return getPlainCryptoKey(cryptoLinks, toCryptoKeyPart);
-//	}
-
 	protected PlainCryptoKey getActivePlainCryptoKey(final CryptoKeyRole toCryptoKeyRole, final CipherOperationMode cipherOperationMode) {
 		assertNotNull("toCryptoKeyRole", toCryptoKeyRole);
 		assertNotNull("cipherOperationMode", cipherOperationMode);
@@ -528,52 +522,12 @@ public class CryptreeNode {
 			if (plainCryptoKey.getCryptoKey().getCryptoKeyRole() != toCryptoKeyRole)
 				throw new IllegalStateException(String.format("plainCryptoKey.cryptoKey.cryptoKeyRole != toCryptoKeyRole :: %s != %s", plainCryptoKey.getCryptoKey().getCryptoKeyRole(), toCryptoKeyRole));
 
-//			if (plainCryptoKey.getCryptoKeyPart() != toCryptoKeyPart)
-//				throw new IllegalStateException(String.format("plainCryptoKey.cryptoKeyPart != toCryptoKeyPart :: %s != %s", plainCryptoKey.getCryptoKeyPart(), toCryptoKeyPart));
-
 			final CryptoKeyDao cryptoKeyDao = context.transaction.getDao(CryptoKeyDao.class);
 			final CryptoKey cryptoKey = cryptoKeyDao.makePersistent(plainCryptoKey.getCryptoKey());
 			plainCryptoKey = new PlainCryptoKey(cryptoKey, plainCryptoKey.getCryptoKeyPart(), plainCryptoKey.getCipherParameters());
 		}
 		return plainCryptoKey;
 	}
-
-//	/**
-//	 * @deprecated About to be replaced with the version having a CipherOperationMode.
-//	 */
-//	@Deprecated
-//	protected PlainCryptoKey getActivePlainCryptoKeyOrCreate(final CryptoKeyRole toCryptoKeyRole, final CryptoKeyPart toCryptoKeyPart) {
-//		assertNotNull("toCryptoKeyRole", toCryptoKeyRole);
-//		assertNotNull("toCryptoKeyPart", toCryptoKeyPart);
-//		PlainCryptoKey plainCryptoKey = getActivePlainCryptoKey(toCryptoKeyRole, toCryptoKeyPart);
-//		if (plainCryptoKey == null) {
-//			final Class<? extends PlainCryptoKeyFactory> clazz = cryptoKeyRole2PlainCryptoKeyFactory.get(toCryptoKeyRole);
-//			assertNotNull(String.format("cryptoKeyRole2PlainCryptoKeyFactory[%s]", toCryptoKeyRole), clazz);
-//
-//			final PlainCryptoKeyFactory factory;
-//			try {
-//				factory = clazz.newInstance();
-//			} catch (final Exception e) {
-//				throw new RuntimeException(String.format("Creating new instance of class %s failed: %s", clazz.getName(), e), e);
-//			}
-//
-//			factory.setCryptreeNode(this);
-//			factory.setCryptoKeyPart(toCryptoKeyPart);
-//			plainCryptoKey = factory.createPlainCryptoKey();
-//			assertNotNull(clazz.getName() + ".createPlainCryptoKey()", plainCryptoKey);
-//
-//			if (plainCryptoKey.getCryptoKey().getCryptoKeyRole() != toCryptoKeyRole)
-//				throw new IllegalStateException(String.format("plainCryptoKey.cryptoKey.cryptoKeyRole != toCryptoKeyRole :: %s != %s", plainCryptoKey.getCryptoKey().getCryptoKeyRole(), toCryptoKeyRole));
-//
-//			if (plainCryptoKey.getCryptoKeyPart() != toCryptoKeyPart)
-//				throw new IllegalStateException(String.format("plainCryptoKey.cryptoKeyPart != toCryptoKeyPart :: %s != %s", plainCryptoKey.getCryptoKeyPart(), toCryptoKeyPart));
-//
-//			final CryptoKeyDao cryptoKeyDao = context.transaction.getDao(CryptoKeyDao.class);
-//			final CryptoKey cryptoKey = cryptoKeyDao.makePersistent(plainCryptoKey.getCryptoKey());
-//			plainCryptoKey = new PlainCryptoKey(cryptoKey, plainCryptoKey.getCryptoKeyPart(), plainCryptoKey.getCipherParameters());
-//		}
-//		return plainCryptoKey;
-//	}
 
 	/**
 	 * Gets the current data key as indicated by {@link CryptoRepoFile#getCryptoKey()}.
@@ -610,10 +564,6 @@ public class CryptreeNode {
 		}
 		return parent;
 	}
-
-//	public UserRepoKeyPublicKey getUserRepoKeyPublicKey() {
-//		return userRepoKeyPublicKey;
-//	}
 
 	public UserRepoKeyPublicKey getUserRepoKeyPublicKey(final UserRepoKey userRepoKey) {
 		assertNotNull("userRepoKey", userRepoKey);
@@ -665,6 +615,67 @@ public class CryptreeNode {
 
 		if (PermissionType.grant == permissionType)
 			ensureParentHasAsymmetricActiveSubdirKey();
+	}
+
+	public void setPermissionsInherited(final boolean inherited) {
+		if (inherited == isPermissionsInherited())
+			return;
+
+		final PermissionSet permissionSet = getPermissionSetOrCreate();
+		if (inherited) {
+			// TODO Make sure previously invisible sub-directories & files pop up in the client repositories!
+			// If we grant access to a sub-directory later (either by (re)enabling the inheritance here or by
+			// explicitly granting read access), the sub-directory (and all files) are not modified and therefore
+			// are normally not synced (again). We somehow need to make sure that they indeed are re-synced.
+			final PermissionSetInheritance permissionSetInheritance = new PermissionSetInheritance();
+			permissionSetInheritance.setPermissionSet(permissionSet);
+			sign(permissionSetInheritance);
+
+			permissionSet.getPermissionSetInheritances().add(permissionSetInheritance);
+		}
+		else {
+			final RepositoryOwner repositoryOwner = context.getRepositoryOwnerOrFail();
+			final PublicKey ownerPublicKey = repositoryOwner.getUserRepoKeyPublicKey().getPublicKey();
+			grantReadPermission(ownerPublicKey);
+
+			final boolean currentUserIsOwner = context.userRepoKeyRing.getUserRepoKey(ownerPublicKey.getUserRepoKeyId()) != null;
+			if (! currentUserIsOwner) {
+				// TODO since the inheritance is interrupted, the current user does not have grant access anymore.
+				// We need to either extend the grant access chain (better) or make this operation only available to the owner.
+				logger.warn("This is not yet cleanly implemented and likely causes an error.", new UnsupportedOperationException("NYI"));
+			}
+
+			for (final PermissionSetInheritance permissionSetInheritance : permissionSet.getPermissionSetInheritances()) {
+				if (permissionSetInheritance.getRevoked() == null) {
+					permissionSetInheritance.setRevoked(new Date());
+					sign(permissionSetInheritance);
+				}
+			}
+
+			// There should be only one single *active* key, but due to collisions (multiple repos grant the same user
+			// access), it might happen, that there are multiple. We therefore de-activate all we find.
+			final Set<CryptoKey> processedCryptoKeys = new HashSet<CryptoKey>();
+			final Collection<CryptoKey> subdirKeys = context.transaction.getDao(CryptoKeyDao.class).getActiveCryptoKeys(getCryptoRepoFileOrCreate(false), CryptoKeyRole.subdirKey);
+			for (final CryptoKey subdirKey : subdirKeys)
+				deactivateCryptoKeyAndDescendants(subdirKey, processedCryptoKeys);
+
+//			createBacklinkKeyForFile(); // TODO do we need this - especially for the children?
+
+			createSubdirKeyAndBacklinkKeyIfNeededChildrenRecursively();
+		}
+	}
+
+	public boolean isPermissionsInherited() {
+		final PermissionSet permissionSet = getPermissionSet();
+		if (permissionSet == null)
+			return true;
+
+		// This method is for the UI, hence we use the revoked state - not the validTo.
+		for (final PermissionSetInheritance permissionSetInheritance : permissionSet.getPermissionSetInheritances()) {
+			if (permissionSetInheritance.getRevoked() == null)
+				return true;
+		}
+		return false;
 	}
 
 	private void ensureParentHasAsymmetricActiveSubdirKey() {
@@ -725,12 +736,6 @@ public class CryptreeNode {
 			assertPermissionOk(permission);
 		}
 	}
-
-//	public void assertHasGrantPermission(final Uid userRepoKeyId, final Date timestamp) {
-//		assertNotNull("userRepoKeyId", userRepoKeyId);
-//		assertNotNull("timestamp", timestamp);
-//		assertHasPermission(PermissionType.grant, userRepoKeyId, timestamp);
-//	}
 
 	/**
 	 * @param anyCryptoRepoFile <code>true</code> to indicate that the {@link Permission} does not need to be available on the
@@ -824,7 +829,7 @@ public class CryptreeNode {
 			permissions.addAll(ps);
 		}
 
-		if (! anyCryptoRepoFile && (permissionSet == null || permissionSet.isPermissionsInherited())) {
+		if (! anyCryptoRepoFile && (permissionSet == null || permissionSet.isPermissionsInherited(timestamp))) {
 			final CryptreeNode parent = getParent();
 			if (parent != null)
 				parent.collectPermissions(permissions, anyCryptoRepoFile, permissionType, userRepoKeyId, timestamp);
@@ -918,6 +923,8 @@ public class CryptreeNode {
 
 			final PermissionSetDao dao = context.transaction.getDao(PermissionSetDao.class);
 			this.permissionSet = permissionSet = dao.makePersistent(permissionSet);
+
+			setPermissionsInherited(true); // this should be the default for a new PermissionSet
 		}
 		return permissionSet;
 	}

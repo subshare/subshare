@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -25,6 +26,7 @@ import org.subshare.core.dto.CryptoLinkDto;
 import org.subshare.core.dto.CryptoRepoFileDto;
 import org.subshare.core.dto.PermissionDto;
 import org.subshare.core.dto.PermissionSetDto;
+import org.subshare.core.dto.PermissionSetInheritanceDto;
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.dto.RepositoryOwnerDto;
 import org.subshare.core.dto.UserRepoKeyPublicKeyDto;
@@ -47,6 +49,8 @@ import org.subshare.local.persistence.Permission;
 import org.subshare.local.persistence.PermissionDao;
 import org.subshare.local.persistence.PermissionSet;
 import org.subshare.local.persistence.PermissionSetDao;
+import org.subshare.local.persistence.PermissionSetInheritance;
+import org.subshare.local.persistence.PermissionSetInheritanceDao;
 import org.subshare.local.persistence.RepositoryOwner;
 import org.subshare.local.persistence.RepositoryOwnerDao;
 import org.subshare.local.persistence.SignableDao;
@@ -177,6 +181,7 @@ public class CryptreeImpl extends AbstractCryptree {
 		populateChangedCryptoKeyDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 
 		populateChangedRepositoryOwnerDto(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
+		populateChangedPermissionSetInheritanceDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 		populateChangedPermissionDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 		populateChangedPermissionSetDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 
@@ -254,6 +259,12 @@ public class CryptreeImpl extends AbstractCryptree {
 
 		for (final PermissionDto permissionDto : cryptoChangeSetDto.getPermissionDtos())
 			putPermissionDto(permissionDto);
+
+		// putPermissionSetInheritanceDto(...) must be called *after* all PermissionSet and Permission objects are written to the DB!
+		// This is because it searches for conflicts, i.e. data already signed on the server conflicting with a revoked inheritance.
+		transaction.flush();
+		for (final PermissionSetInheritanceDto permissionSetInheritanceDto : cryptoChangeSetDto.getPermissionSetInheritanceDtos())
+			putPermissionSetInheritanceDto(permissionSetInheritanceDto);
 
 		transaction.flush();
 	}
@@ -346,6 +357,34 @@ public class CryptreeImpl extends AbstractCryptree {
 		assertNotNull("userRepoKeyIds", userRepoKeyIds);
 		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(cryptoRepoFileId);
 		cryptreeNode.revokePermission(permissionType, userRepoKeyIds);
+	}
+
+	@Override
+	public void setPermissionsInherited(final String localPath, final boolean inherited) {
+		assertNotNull("localPath", localPath);
+		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(localPath);
+		cryptreeNode.setPermissionsInherited(inherited);
+	}
+
+	@Override
+	public boolean isPermissionsInherited(final String localPath) {
+		assertNotNull("localPath", localPath);
+		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(localPath);
+		return cryptreeNode.isPermissionsInherited();
+	}
+
+	@Override
+	public void setPermissionsInherited(final Uid cryptoRepoFileId, final boolean inherited) {
+		assertNotNull("cryptoRepoFileId", cryptoRepoFileId);
+		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(cryptoRepoFileId);
+		cryptreeNode.setPermissionsInherited(inherited);
+	}
+
+	@Override
+	public boolean isPermissionsInherited(final Uid cryptoRepoFileId) {
+		assertNotNull("cryptoRepoFileId", cryptoRepoFileId);
+		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(cryptoRepoFileId);
+		return cryptreeNode.isPermissionsInherited();
 	}
 
 	/**
@@ -572,9 +611,79 @@ public class CryptreeImpl extends AbstractCryptree {
 			permissionSet = new PermissionSet();
 
 		permissionSet.setCryptoRepoFile(cryptoRepoFile);
-		permissionSet.setPermissionsInherited(permissionSetDto.isPermissionsInherited());
 		permissionSet.setSignature(permissionSetDto.getSignature());
 		permissionSetDao.makePersistent(permissionSet);
+	}
+
+	private void putPermissionSetInheritanceDto(final PermissionSetInheritanceDto psInheritanceDto) {
+		assertNotNull("psInheritanceDto", psInheritanceDto);
+		final LocalRepoTransaction transaction = getTransactionOrFail();
+		final PermissionSetInheritanceDao psInheritanceDao = transaction.getDao(PermissionSetInheritanceDao.class);
+		final PermissionSetDao permissionSetDao = transaction.getDao(PermissionSetDao.class);
+		final CryptoRepoFileDao cryptoRepoFileDao = transaction.getDao(CryptoRepoFileDao.class);
+
+		PermissionSetInheritance psInheritance = psInheritanceDao.getPermissionSetInheritance(psInheritanceDto.getPermissionSetInheritanceId());
+		if (psInheritance == null)
+			psInheritance = new PermissionSetInheritance(psInheritanceDto.getPermissionSetInheritanceId());
+
+		final CryptoRepoFile cryptoRepoFile = cryptoRepoFileDao.getCryptoRepoFileOrFail(psInheritanceDto.getCryptoRepoFileId());
+		final PermissionSet permissionSet = permissionSetDao.getPermissionSetOrFail(cryptoRepoFile);
+		psInheritance.setPermissionSet(permissionSet);
+		psInheritance.setRevoked(psInheritanceDto.getRevoked());
+		psInheritance.setSignature(psInheritanceDto.getSignature());
+		psInheritance.setValidFrom(psInheritanceDto.getValidFrom());
+
+		final Date oldValidTo = psInheritance.getValidTo();
+		psInheritance.setValidTo(psInheritanceDto.getValidTo());
+		psInheritanceDao.makePersistent(psInheritance);
+
+		if (psInheritance.getValidTo() != null && oldValidTo == null) {
+			if (isOnServer()) {
+				// We must prevent the new permissionSetInheritance from making existing data on the server illegal.
+				// Hence, we roll back and throw an exception, if this happens.
+				//
+				// See: enactPermissionSetInheritanceRevocationIfNeededAndPossible(...)
+
+				final Set<UserRepoKeyPublicKey> userRepoKeyPublicKeys = new HashSet<UserRepoKeyPublicKey>();
+				collectUserRepoKeyPublicKeysOfThisAndParentPermissionSets(userRepoKeyPublicKeys, permissionSet);
+				for (final UserRepoKeyPublicKey userRepoKeyPublicKey : userRepoKeyPublicKeys) {
+					final SignableDao signableDao = getTransactionOrFail().getDao(SignableDao.class);
+					if (signableDao.isEntitiesSignedByAndAfter(userRepoKeyPublicKey.getUserRepoKeyId(), psInheritance.getValidTo()))
+						throw new PermissionCollisionException("There is already data written and signed after the Permission.validTo timestamp. Are clocks in-sync?");
+				}
+
+				// We are currently too restrictive and do not take into account that the inheritance chain might be interrupted
+				// already in a parent. Thus these permissions above would not be affected. But since this is a corner case, anyway,
+				// we don't need to be 100% exact here and better too restrictive than too lax (we must make 100% sure no illegal
+				// data ends up in the database!).
+			}
+			else {
+				// TODO we should clean up this illegal state on the client, too! It's one of the many collisions we have to cope with!
+			}
+		}
+	}
+
+	private void collectUserRepoKeyPublicKeysOfThisAndParentPermissionSets(final Set<UserRepoKeyPublicKey> userRepoKeyPublicKeys, final PermissionSet permissionSet) {
+		assertNotNull("userRepoKeyPublicKeys", userRepoKeyPublicKeys);
+		assertNotNull("permissionSet", permissionSet);
+
+		for (final Permission permission : permissionSet.getPermissions())
+			userRepoKeyPublicKeys.add(permission.getUserRepoKeyPublicKey());
+
+		final PermissionSet parentPermissionSet = getParentPermissionSet(permissionSet);
+		if (parentPermissionSet != null)
+			collectUserRepoKeyPublicKeysOfThisAndParentPermissionSets(userRepoKeyPublicKeys, parentPermissionSet);
+	}
+
+	private PermissionSet getParentPermissionSet(final PermissionSet permissionSet) {
+		final PermissionSetDao permissionSetDao = getTransactionOrFail().getDao(PermissionSetDao.class);
+		CryptoRepoFile parentCryptoRepoFile = permissionSet.getCryptoRepoFile();
+		while (null != (parentCryptoRepoFile = parentCryptoRepoFile.getParent())) {
+			final PermissionSet parentPermissionSet = permissionSetDao.getPermissionSet(parentCryptoRepoFile);
+			if (parentPermissionSet != null)
+				return parentPermissionSet;
+		}
+		return null;
 	}
 
 	private void putRepositoryOwnerDto(final RepositoryOwnerDto repositoryOwnerDto) {
@@ -633,6 +742,7 @@ public class CryptreeImpl extends AbstractCryptree {
 		populateChangedCryptoKeyDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 
 		populateChangedRepositoryOwnerDto(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
+		populateChangedPermissionSetInheritanceDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 		populateChangedPermissionDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 		populateChangedPermissionSetDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 
@@ -701,6 +811,19 @@ public class CryptreeImpl extends AbstractCryptree {
 		}
 	}
 
+	private void populateChangedPermissionSetInheritanceDtos(final CryptoChangeSetDto cryptoChangeSetDto, final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {
+		final PermissionSetInheritanceDao psInheritanceDao = getTransactionOrFail().getDao(PermissionSetInheritanceDao.class);
+
+		final Collection<PermissionSetInheritance> psInheritances = psInheritanceDao.getPermissionSetInheritancesChangedAfter(
+				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced());
+
+		for (final PermissionSetInheritance psInheritance : psInheritances) {
+			enactPermissionSetInheritanceRevocationIfNeededAndPossible(psInheritance);
+
+			cryptoChangeSetDto.getPermissionSetInheritanceDtos().add(toPermissionSetInheritanceDto(psInheritance));
+		}
+	}
+
 	private void enactPermissionRevocationIfNeededAndPossible(final Permission permission) {
 		if (! isOnServer() && permission.getRevoked() != null && permission.getValidTo() == null) {
 			// We set Permission.validTo delayed (not immediately when revoking), but when synchronising
@@ -721,7 +844,32 @@ public class CryptreeImpl extends AbstractCryptree {
 				sign(permission);
 			} catch (final GrantAccessDeniedException x) {
 				permission.setValidTo(null); // revert to restore the signed state.
-				logger.warn("Cannot enact revocation because of missing permission: " + x, x);
+				logger.warn("Cannot enact revocation of Permission because of missing permission: " + x, x);
+			}
+		}
+	}
+
+	private void enactPermissionSetInheritanceRevocationIfNeededAndPossible(final PermissionSetInheritance psInheritance) {
+		if (! isOnServer() && psInheritance.getRevoked() != null && psInheritance.getValidTo() == null) {
+			// We set Permission.validTo delayed (not immediately when revoking), but when synchronising
+			// up to the server. This means, a revocation is not active until the next sync. It also
+			// means, we can never end up with illegal data inside the server - we might only
+			// end up with illegal data in any client. This can (and should) be reverted, later.
+			//
+			// If, due to wrong clocks (time off by a few minutes), the time here causes a collision
+			// because it's earlier than data already committed into the server, the upload
+			// of the crypto-change-set is rejected by the server with an exception. This causes
+			// the local transaction to be rolled back (it is committed, after the crypto-change-set
+			// is written to the server).
+			//
+			// See: putPermissionDto(...)
+
+			psInheritance.setValidTo(new Date());
+			try {
+				sign(psInheritance);
+			} catch (final GrantAccessDeniedException x) {
+				psInheritance.setValidTo(null); // revert to restore the signed state.
+				logger.warn("Cannot enact revocation of PermissionSetInheritance because of missing permission: " + x, x);
 			}
 		}
 	}
@@ -836,7 +984,6 @@ public class CryptreeImpl extends AbstractCryptree {
 		assertNotNull("permissionSet", permissionSet);
 		final PermissionSetDto permissionSetDto = new PermissionSetDto();
 		permissionSetDto.setCryptoRepoFileId(permissionSet.getCryptoRepoFile().getCryptoRepoFileId());
-		permissionSetDto.setPermissionsInherited(permissionSet.isPermissionsInherited());
 		permissionSetDto.setSignature(permissionSet.getSignature());
 		return permissionSetDto;
 	}
@@ -853,6 +1000,18 @@ public class CryptreeImpl extends AbstractCryptree {
 		permissionDto.setValidFrom(permission.getValidFrom());
 		permissionDto.setValidTo(permission.getValidTo());
 		return permissionDto;
+	}
+
+	private PermissionSetInheritanceDto toPermissionSetInheritanceDto(final PermissionSetInheritance psInheritance) {
+		assertNotNull("psInheritance", psInheritance);
+		final PermissionSetInheritanceDto psInheritanceDto = new PermissionSetInheritanceDto();
+		psInheritanceDto.setPermissionSetInheritanceId(psInheritance.getPermissionSetInheritanceId());
+		psInheritanceDto.setCryptoRepoFileId(psInheritance.getPermissionSet().getCryptoRepoFile().getCryptoRepoFileId());
+		psInheritanceDto.setRevoked(psInheritance.getRevoked());
+		psInheritanceDto.setSignature(psInheritance.getSignature());
+		psInheritanceDto.setValidFrom(psInheritance.getValidFrom());
+		psInheritanceDto.setValidTo(psInheritance.getValidTo());
+		return psInheritanceDto;
 	}
 
 	@Override

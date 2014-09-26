@@ -241,6 +241,26 @@ public abstract class AbstractRepoToRepoSyncIT extends AbstractIT {
 		}
 	}
 
+	protected void setPermissionsInherited(final String localPath, final boolean inherited) {
+		setPermissionsInherited(localSrcRoot, localPath, inherited);
+	}
+
+	protected void setPermissionsInherited(final File localRoot, final String localPath, final boolean inherited) {
+		try (final LocalRepoManager localRepoManagerLocal = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(localRoot);)
+		{
+			try (final LocalRepoTransaction transaction = localRepoManagerLocal.beginWriteTransaction();)
+			{
+				final Cryptree cryptree = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail().getCryptreeOrCreate(
+						transaction, remoteRepositoryId,
+						remotePathPrefix2Encrypted,
+						cryptreeRepoTransportFactory.getUserRepoKeyRing());
+				cryptree.setPermissionsInherited(localPath, inherited);
+
+				transaction.commit();
+			}
+		}
+	}
+
 	protected void revokePermission(final String localPath, final PermissionType permissionType, final UserRepoKey.PublicKey userRepoKeyPublicKey) {
 		revokePermission(localSrcRoot, localPath, permissionType, userRepoKeyPublicKey);
 	}

@@ -8,7 +8,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 import org.subshare.core.io.InputStreamSource;
-import org.subshare.core.io.MultiInputStream;
 import org.subshare.core.sign.Signable;
 import org.subshare.core.sign.Signature;
 
@@ -18,8 +17,6 @@ import co.codewizards.cloudstore.core.dto.Uid;
 public class PermissionSetDto implements Signable {
 
 	private Uid cryptoRepoFileId;
-
-	private boolean permissionsInherited;
 
 	@XmlElement
 	private SignatureDto signatureDto;
@@ -32,14 +29,6 @@ public class PermissionSetDto implements Signable {
 		this.cryptoRepoFileId = cryptoRepoFileId;
 	}
 
-	public boolean isPermissionsInherited() {
-		return permissionsInherited;
-	}
-
-	public void setPermissionsInherited(final boolean permissionsInherited) {
-		this.permissionsInherited = permissionsInherited;
-	}
-
 	@Override
 	public int getSignedDataVersion() {
 		return 0;
@@ -48,18 +37,12 @@ public class PermissionSetDto implements Signable {
 	/**
 	 * {@inheritDoc}
 	 * <p>
-	 * <b>Important:</b> The implementation in {@code PermissionSet} must exactly match the one in {@link PermissionSetDto}!
+	 * <b>Important:</b> The implementation in {@code PermissionSet} must exactly match the one in {@code PermissionSetDto}!
 	 */
 	@Override
 	public InputStream getSignedData(final int signedDataVersion) {
 		try {
-			byte separatorIndex = 0;
-			return new MultiInputStream(
-					InputStreamSource.Helper.createInputStreamSource(cryptoRepoFileId),
-//					localRevision
-					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
-					InputStreamSource.Helper.createInputStreamSource(permissionsInherited)
-					);
+			return InputStreamSource.Helper.createInputStreamSource(cryptoRepoFileId).createInputStream();
 		} catch (final IOException x) {
 			throw new RuntimeException(x);
 		}

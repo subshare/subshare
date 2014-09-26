@@ -15,6 +15,8 @@ import org.subshare.crypto.CipherOperationMode;
 import org.subshare.local.persistence.CryptoKey;
 import org.subshare.local.persistence.CryptoRepoFile;
 import org.subshare.local.persistence.PermissionDao;
+import org.subshare.local.persistence.PermissionSet;
+import org.subshare.local.persistence.PermissionSetInheritance;
 import org.subshare.local.persistence.UserRepoKeyPublicKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -214,9 +216,15 @@ abstract class PlainCryptoKeyFactory {
 			if (! saved)
 				throw new IllegalStateException("Cannot create subdirKey because nobody has a clearance key leading directly or indirectly to it!");
 
-			for (final CryptreeNode child : cryptreeNode.getChildren()) {
-				createCryptoLinkToChildSubdirKey(plainCryptoKey_publicOrShared, child);
-				createCryptoLinkToChildDataKey(plainCryptoKey_publicOrShared, child);
+			createCryptoLinkToFileKey(plainCryptoKey_publicOrShared);
+
+			final PermissionSet permissionSet = cryptreeNode.getPermissionSet();
+			if (permissionSet == null || containsNonRevokedPermissionSetInheritance(permissionSet)) {
+				for (final CryptreeNode child : cryptreeNode.getChildren()) {
+					createCryptoLinkToChildSubdirKey(plainCryptoKey_publicOrShared, child);
+//					createCryptoLinkToChildDataKey(plainCryptoKey_publicOrShared, child);
+					createCryptoLinkToChildBacklinkKey(plainCryptoKey_publicOrShared, child);
+				}
 			}
 
 			logger.debug("createPlainCryptoKey: <<< cryptoRepoFile={} repoFile={}",
@@ -246,18 +254,39 @@ abstract class PlainCryptoKeyFactory {
 				createCryptoLink(toChild, fromPlainCryptoKey, childSubdirKeyPlainCryptoKey);
 		}
 
-		private void createCryptoLinkToChildDataKey(final PlainCryptoKey fromPlainCryptoKey, final CryptreeNode toChild) {
+//		private void createCryptoLinkToChildDataKey(final PlainCryptoKey fromPlainCryptoKey, final CryptreeNode toChild) {
+//			assertNotNull("fromPlainCryptoKey", fromPlainCryptoKey);
+//			assertNotNull("toChild", toChild);
+//
+//			if (toChild.isDirectory())
+//				return;
+//
+//			// The key on the *to*-side of the CryptoLink *must* exist! But to easily avoid endless recursions
+//			// (without further code), we don't create the key when following the link forward.
+//			final PlainCryptoKey childDataKeyPlainCryptoKey = toChild.getActivePlainCryptoKey(CryptoKeyRole.dataKey, CipherOperationMode.DECRYPT);
+//			if (childDataKeyPlainCryptoKey != null)
+//				createCryptoLink(toChild, fromPlainCryptoKey, childDataKeyPlainCryptoKey);
+//		}
+
+		private void createCryptoLinkToFileKey(final PlainCryptoKey fromPlainCryptoKey) {
+			assertNotNull("fromPlainCryptoKey", fromPlainCryptoKey);
+			final CryptreeNode cryptreeNode = getCryptreeNodeOrFail();
+
+			final PlainCryptoKey fileKeyPlainCryptoKey = cryptreeNode.getActivePlainCryptoKey(CryptoKeyRole.fileKey, CipherOperationMode.DECRYPT);
+			if (fileKeyPlainCryptoKey != null)
+				createCryptoLink(cryptreeNode, fromPlainCryptoKey, fileKeyPlainCryptoKey);
+		}
+
+		private void createCryptoLinkToChildBacklinkKey(final PlainCryptoKey fromPlainCryptoKey, final CryptreeNode toChild) {
 			assertNotNull("fromPlainCryptoKey", fromPlainCryptoKey);
 			assertNotNull("toChild", toChild);
 
 			if (toChild.isDirectory())
 				return;
 
-			// The key on the *to*-side of the CryptoLink *must* exist! But to easily avoid endless recursions
-			// (without further code), we don't create the key when following the link forward.
-			final PlainCryptoKey childDataKeyPlainCryptoKey = toChild.getActivePlainCryptoKey(CryptoKeyRole.dataKey, CipherOperationMode.DECRYPT);
-			if (childDataKeyPlainCryptoKey != null)
-				createCryptoLink(toChild, fromPlainCryptoKey, childDataKeyPlainCryptoKey);
+			final PlainCryptoKey childBacklinkKeyPlainCryptoKey = toChild.getActivePlainCryptoKey(CryptoKeyRole.backlinkKey, CipherOperationMode.DECRYPT);
+			if (childBacklinkKeyPlainCryptoKey != null)
+				createCryptoLink(toChild, fromPlainCryptoKey, childBacklinkKeyPlainCryptoKey);
 		}
 
 		private boolean createCryptoLinkFromParentSubdirKey(final PlainCryptoKey toPlainCryptoKey) {
@@ -265,9 +294,21 @@ abstract class PlainCryptoKeyFactory {
 			final CryptreeNode cryptreeNode = getCryptreeNodeOrFail();
 			final CryptreeNode parent = cryptreeNode.getParent();
 			if (parent != null) {
-				final PlainCryptoKey subdirKeyPlainCryptoKey = parent.getActivePlainCryptoKeyOrCreate(CryptoKeyRole.subdirKey, CipherOperationMode.ENCRYPT);
-				createCryptoLink(getCryptreeNodeOrFail(), subdirKeyPlainCryptoKey, toPlainCryptoKey);
-				return true;
+				final PermissionSet parentPermissionSet = cryptreeNode.getPermissionSet();
+				if (parentPermissionSet == null || containsNonRevokedPermissionSetInheritance(parentPermissionSet)) {
+					final PlainCryptoKey subdirKeyPlainCryptoKey = parent.getActivePlainCryptoKeyOrCreate(CryptoKeyRole.subdirKey, CipherOperationMode.ENCRYPT);
+					createCryptoLink(cryptreeNode, subdirKeyPlainCryptoKey, toPlainCryptoKey);
+					return true;
+				}
+			}
+			return false;
+		}
+
+		private boolean containsNonRevokedPermissionSetInheritance(final PermissionSet permissionSet) {
+			assertNotNull("permissionSet", permissionSet);
+			for (final PermissionSetInheritance permissionSetInheritance : permissionSet.getPermissionSetInheritances()) {
+				if (permissionSetInheritance.getRevoked() == null)
+					return true;
 			}
 			return false;
 		}
@@ -283,7 +324,7 @@ abstract class PlainCryptoKeyFactory {
 				clearanceKeyPlainCryptoKey_public = cryptreeNode.getActivePlainCryptoKey(CryptoKeyRole.clearanceKey, CipherOperationMode.ENCRYPT);
 
 			if (clearanceKeyPlainCryptoKey_public != null) {
-				createCryptoLink(getCryptreeNodeOrFail(), clearanceKeyPlainCryptoKey_public, toPlainCryptoKey);
+				createCryptoLink(cryptreeNode, clearanceKeyPlainCryptoKey_public, toPlainCryptoKey);
 				return true;
 			}
 			return false;
@@ -307,7 +348,7 @@ abstract class PlainCryptoKeyFactory {
 
 			createCryptoLinkFromSubdirKey(plainCryptoKey);
 
-			for (final CryptreeNode child : getCryptreeNodeOrFail().getChildren())
+			for (final CryptreeNode child : cryptreeNode.getChildren())
 				createCryptoLinkToChildDataKey(plainCryptoKey, child);
 
 			logger.debug("createPlainCryptoKey: <<< cryptoRepoFile={} repoFile={}",
@@ -320,7 +361,7 @@ abstract class PlainCryptoKeyFactory {
 			assertNotNull("toPlainCryptoKey", toPlainCryptoKey);
 			final CryptreeNode cryptreeNode = getCryptreeNodeOrFail();
 			final PlainCryptoKey subdirKeyPlainCryptoKey = cryptreeNode.getActivePlainCryptoKeyOrCreate(CryptoKeyRole.subdirKey, CipherOperationMode.ENCRYPT);
-			createCryptoLink(getCryptreeNodeOrFail(), subdirKeyPlainCryptoKey, toPlainCryptoKey);
+			createCryptoLink(cryptreeNode, subdirKeyPlainCryptoKey, toPlainCryptoKey);
 		}
 
 		private void createCryptoLinkToChildDataKey(final PlainCryptoKey fromPlainCryptoKey, final CryptreeNode toChild) {
@@ -348,7 +389,7 @@ abstract class PlainCryptoKeyFactory {
 			final PlainCryptoKey plainCryptoKey = createSymmetricPlainCryptoKey(CryptoKeyRole.backlinkKey);
 			createCryptoLinkFromSubdirKey(plainCryptoKey);
 
-			for (final CryptreeNode child : getCryptreeNodeOrFail().getChildren())
+			for (final CryptreeNode child : cryptreeNode.getChildren())
 				createCryptoLinkFromChildBacklinkKey(child, plainCryptoKey);
 
 			createCryptoLinkToParentBacklinkKey(plainCryptoKey);
@@ -378,7 +419,7 @@ abstract class PlainCryptoKeyFactory {
 				return;
 
 			final PlainCryptoKey subdirKeyPlainCryptoKey = cryptreeNode.getActivePlainCryptoKeyOrCreate(CryptoKeyRole.subdirKey, CipherOperationMode.ENCRYPT);
-			createCryptoLink(getCryptreeNodeOrFail(), subdirKeyPlainCryptoKey, toPlainCryptoKey);
+			createCryptoLink(cryptreeNode, subdirKeyPlainCryptoKey, toPlainCryptoKey);
 		}
 
 		private void createCryptoLinkFromChildBacklinkKey(final CryptreeNode fromChild, final PlainCryptoKey toPlainCryptoKey) {
@@ -420,7 +461,7 @@ abstract class PlainCryptoKeyFactory {
 				backlinkKeyPlainCryptoKey = cryptreeNode.getActivePlainCryptoKey(CryptoKeyRole.backlinkKey, CipherOperationMode.ENCRYPT);
 
 			if (backlinkKeyPlainCryptoKey != null)
-				createCryptoLink(getCryptreeNodeOrFail(), backlinkKeyPlainCryptoKey, toPlainCryptoKey);
+				createCryptoLink(cryptreeNode, backlinkKeyPlainCryptoKey, toPlainCryptoKey);
 		}
 
 		private void createCryptoLinkFromParentFileKey(final PlainCryptoKey toPlainCryptoKey) {
@@ -435,7 +476,7 @@ abstract class PlainCryptoKeyFactory {
 				throw new IllegalStateException("cryptreeNode is *not* a directory, but parent == null !!!");
 
 			final PlainCryptoKey fileKeyPlainCryptoKey = parent.getActivePlainCryptoKeyOrCreate(CryptoKeyRole.fileKey, CipherOperationMode.ENCRYPT);
-			createCryptoLink(getCryptreeNodeOrFail(), fileKeyPlainCryptoKey, toPlainCryptoKey);
+			createCryptoLink(cryptreeNode, fileKeyPlainCryptoKey, toPlainCryptoKey);
 		}
 	}
 

@@ -19,7 +19,6 @@ import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.Queries;
 import javax.jdo.annotations.Query;
 import javax.jdo.annotations.Unique;
-import javax.jdo.annotations.Uniques;
 import javax.jdo.listener.StoreCallback;
 
 import org.subshare.core.dto.PermissionDto;
@@ -34,10 +33,7 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 
 @PersistenceCapable
 @Inheritance(strategy=InheritanceStrategy.NEW_TABLE)
-@Uniques({
-	@Unique(name="Permission_permissionId", members="permissionId")
-//	@Unique(name="Permission_permissionSet_userRepoKeyPublicKey_permissionType", members={"permissionSet", "userRepoKeyPublicKey", "permissionType"})
-})
+@Unique(name="Permission_permissionId", members="permissionId")
 @Indices({
 	@Index(name="Permission_permissionType", members="permissionType"),
 	@Index(name="Permission_localRevision", members="localRevision"),
@@ -176,20 +172,20 @@ public class Permission extends Entity implements WriteProtectedEntity, AutoTrac
 		return 0;
 	}
 
-	public Date getRevoked() {
-		return revoked;
-	}
-	public void setRevoked(final Date revoked) {
-		if (! equal(this.revoked, revoked))
-			this.revoked = revoked;
-	}
-
 	public Date getValidFrom() {
 		return validFrom;
 	}
 	public void setValidFrom(final Date validFrom) {
 		if (! equal(this.validFrom, validFrom))
 			this.validFrom = validFrom;
+	}
+
+	public Date getRevoked() {
+		return revoked;
+	}
+	public void setRevoked(final Date revoked) {
+		if (! equal(this.revoked, revoked))
+			this.revoked = revoked;
 	}
 
 	public Date getValidTo() {
@@ -222,10 +218,10 @@ public class Permission extends Entity implements WriteProtectedEntity, AutoTrac
 					InputStreamSource.Helper.createInputStreamSource(permissionType.ordinal()),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
-					InputStreamSource.Helper.createInputStreamSource(revoked),
+					InputStreamSource.Helper.createInputStreamSource(validFrom),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
-					InputStreamSource.Helper.createInputStreamSource(validFrom),
+					InputStreamSource.Helper.createInputStreamSource(revoked),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(validTo)

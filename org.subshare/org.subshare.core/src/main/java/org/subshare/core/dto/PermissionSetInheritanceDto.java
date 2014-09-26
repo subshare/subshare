@@ -16,15 +16,11 @@ import org.subshare.core.sign.Signature;
 import co.codewizards.cloudstore.core.dto.Uid;
 
 @XmlRootElement
-public class PermissionDto implements Signable {
+public class PermissionSetInheritanceDto implements Signable {
 
-	private Uid permissionId;
+	private Uid permissionSetInheritanceId;
 
 	private Uid cryptoRepoFileId;
-
-	private Uid userRepoKeyId;
-
-	private PermissionType permissionType;
 
 	private Date validFrom;
 
@@ -35,42 +31,23 @@ public class PermissionDto implements Signable {
 	@XmlElement
 	private SignatureDto signatureDto;
 
-	public Uid getPermissionId() {
-		return permissionId;
+	public Uid getPermissionSetInheritanceId() {
+		return permissionSetInheritanceId;
 	}
-
-	public void setPermissionId(final Uid permissionId) {
-		this.permissionId = permissionId;
+	public void setPermissionSetInheritanceId(final Uid permissionSetInheritanceId) {
+		this.permissionSetInheritanceId = permissionSetInheritanceId;
 	}
 
 	public Uid getCryptoRepoFileId() {
 		return cryptoRepoFileId;
 	}
-
 	public void setCryptoRepoFileId(final Uid cryptoRepoFileId) {
 		this.cryptoRepoFileId = cryptoRepoFileId;
-	}
-
-	public Uid getUserRepoKeyId() {
-		return userRepoKeyId;
-	}
-
-	public void setUserRepoKeyId(final Uid userRepoKeyId) {
-		this.userRepoKeyId = userRepoKeyId;
-	}
-
-	public PermissionType getPermissionType() {
-		return permissionType;
-	}
-
-	public void setPermissionType(final PermissionType permissionType) {
-		this.permissionType = permissionType;
 	}
 
 	public Date getValidFrom() {
 		return validFrom;
 	}
-
 	public void setValidFrom(final Date validFrom) {
 		this.validFrom = validFrom;
 	}
@@ -78,7 +55,6 @@ public class PermissionDto implements Signable {
 	public Date getRevoked() {
 		return revoked;
 	}
-
 	public void setRevoked(final Date revoked) {
 		this.revoked = revoked;
 	}
@@ -86,7 +62,6 @@ public class PermissionDto implements Signable {
 	public Date getValidTo() {
 		return validTo;
 	}
-
 	public void setValidTo(final Date validTo) {
 		this.validTo = validTo;
 	}
@@ -95,22 +70,20 @@ public class PermissionDto implements Signable {
 	public int getSignedDataVersion() {
 		return 0;
 	}
-
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * <b>Important:</b> The implementation in {@code PermissionSetInheritance} must exactly match the one in {code PermissionSetInheritanceDto}!
+	 */
 	@Override
 	public InputStream getSignedData(final int signedDataVersion) {
 		try {
 			byte separatorIndex = 0;
 			return new MultiInputStream(
-					InputStreamSource.Helper.createInputStreamSource(getPermissionId()),
+					InputStreamSource.Helper.createInputStreamSource(permissionSetInheritanceId),
 //					localRevision
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(cryptoRepoFileId),
-
-					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
-					InputStreamSource.Helper.createInputStreamSource(userRepoKeyId),
-
-					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
-					InputStreamSource.Helper.createInputStreamSource(permissionType.ordinal()),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(validFrom),
@@ -125,7 +98,6 @@ public class PermissionDto implements Signable {
 			throw new RuntimeException(x);
 		}
 	}
-
 	@XmlTransient
 	@Override
 	public Signature getSignature() {

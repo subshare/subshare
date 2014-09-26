@@ -27,6 +27,9 @@ import org.subshare.local.persistence.CryptoKeyDao;
 import org.subshare.local.persistence.CryptoLinkDao;
 import org.subshare.local.persistence.CryptoRepoFile;
 import org.subshare.local.persistence.CryptoRepoFileDao;
+import org.subshare.local.persistence.PermissionDao;
+import org.subshare.local.persistence.PermissionSetDao;
+import org.subshare.local.persistence.PermissionSetInheritanceDao;
 import org.subshare.rest.client.transport.CryptreeRepoTransport;
 import org.subshare.rest.server.service.SsWebDavService;
 import org.junit.Test;
@@ -109,12 +112,18 @@ public class BrokenSignatureIT extends AbstractRepoToRepoSyncIT {
 
 		final int caseRandom = random.nextInt(450);
 
-		if (caseRandom < 50) // generic, same as all Crypto* entities => lower probability
+		if (caseRandom < 25) // generic, same as all Crypto* entities => lower probability
 			breakRandomEntitySignature(localSrcRoot, new CryptoKeyDao());
-		else if (caseRandom < 100) // generic, same as all Crypto* entities => lower probability
+		else if (caseRandom < 50) // generic, same as all Crypto* entities => lower probability
 			breakRandomEntitySignature(localSrcRoot, new CryptoLinkDao());
-		else if (caseRandom < 150) // generic, same as all Crypto* entities => lower probability
+		else if (caseRandom < 75) // generic, same as all Crypto* entities => lower probability
 			breakRandomEntitySignature(localSrcRoot, new CryptoRepoFileDao());
+		else if (caseRandom < 100) // generic, same as all Crypto* entities => lower probability
+			breakRandomEntitySignature(localSrcRoot, new PermissionDao());
+		else if (caseRandom < 125) // generic, same as all Crypto* entities => lower probability
+			breakRandomEntitySignature(localSrcRoot, new PermissionSetDao());
+		else if (caseRandom < 150) // generic, same as all Crypto* entities => lower probability
+			breakRandomEntitySignature(localSrcRoot, new PermissionSetInheritanceDao());
 		else if (caseRandom < 250) // generic, but signature generated on the fly directly before web-service-invocation
 			breakRandomNormalFileDtoSignatureForUpload();
 		else if (caseRandom < 350) // generic, but signature generated on the fly directly before web-service-invocation
@@ -126,7 +135,7 @@ public class BrokenSignatureIT extends AbstractRepoToRepoSyncIT {
 
 		try {
 			syncFromLocalSrcToRemote();
-			fail("The broken signature was not detected by the server!");
+			fail("The broken signature was not detected by the server! caseRandom=" + caseRandom);
 		} catch (final SignatureException x) {
 			logger.info("Caught expected SignatureException: " + x, x);
 			final RemoteException remoteException = ExceptionUtil.getCause(x, RemoteException.class);
@@ -172,12 +181,18 @@ public class BrokenSignatureIT extends AbstractRepoToRepoSyncIT {
 
 		final int caseRandom = random.nextInt(450);
 
-		if (caseRandom < 50)
+		if (caseRandom < 25)
 			breakRandomEntitySignature(remoteRoot, new CryptoKeyDao());
-		else if (caseRandom < 100)
+		else if (caseRandom < 50)
 			breakRandomEntitySignature(remoteRoot, new CryptoLinkDao());
-		else if (caseRandom < 150)
+		else if (caseRandom < 75)
 			breakRandomEntitySignature(remoteRoot, new CryptoRepoFileDao());
+		else if (caseRandom < 100)
+			breakRandomEntitySignature(remoteRoot, new PermissionDao());
+		else if (caseRandom < 125)
+			breakRandomEntitySignature(remoteRoot, new PermissionSetDao());
+		else if (caseRandom < 150)
+			breakRandomEntitySignature(remoteRoot, new PermissionSetInheritanceDao());
 		else if (caseRandom < 250)
 			breakRandomEntitySignature(remoteRoot, new NormalFileDao());
 		else if (caseRandom < 350)
@@ -187,7 +202,7 @@ public class BrokenSignatureIT extends AbstractRepoToRepoSyncIT {
 
 		try {
 			syncFromLocalSrcToRemote();
-			fail("The broken signature was not detected by the client!");
+			fail("The broken signature was not detected by the client! caseRandom=" + caseRandom);
 		} catch (final SignatureException x) {
 			logger.info("Caught expected SignatureException: " + x, x);
 			final RemoteException remoteException = ExceptionUtil.getCause(x, RemoteException.class);
@@ -202,6 +217,9 @@ public class BrokenSignatureIT extends AbstractRepoToRepoSyncIT {
 		final T element1 = twoRandomElements.get(0);
 		final T element2 = twoRandomElements.get(1);
 
+		logger.info("copySignatureFromOneRandomElementToAnotherRandomElement: element1={}", element1);
+		logger.info("copySignatureFromOneRandomElementToAnotherRandomElement: element2={}", element2);
+
 		assertThat(element2).isNotSameAs(element1);
 		assertThat(element2).isNotEqualTo(element1);
 
@@ -213,6 +231,9 @@ public class BrokenSignatureIT extends AbstractRepoToRepoSyncIT {
 		((AutoTrackLocalRevision)signable1).setLocalRevision(Long.MAX_VALUE);
 		if (signable1 instanceof RepoFile)
 			((RepoFile) signable1).setLastSyncFromRepositoryId(null);
+
+		if (signable1 instanceof CryptoRepoFile)
+			((CryptoRepoFile) signable1).setLastSyncFromRepositoryId(null);
 	}
 
 	private <T> List<T> getTwoRandomElements(final List<T> list) {

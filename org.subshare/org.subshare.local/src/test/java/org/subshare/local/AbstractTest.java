@@ -28,6 +28,7 @@ public abstract class AbstractTest {
 	static {
 		System.setProperty(ConfigDir.SYSTEM_PROPERTY_CONFIG_DIR, "build/.cloudstore");
 		System.setProperty(LocalRepoManager.SYSTEM_PROPERTY_KEY_SIZE, "1024");
+		System.setProperty("testEnvironment", Boolean.TRUE.toString());
 	}
 
 	protected static final SecureRandom random = new SecureRandom();
