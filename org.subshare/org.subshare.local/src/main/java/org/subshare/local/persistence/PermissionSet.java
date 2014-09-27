@@ -131,7 +131,15 @@ public class PermissionSet extends Entity implements WriteProtectedEntity, AutoT
 
 	@Override
 	public CryptoRepoFile getCryptoRepoFileControllingPermissions() {
-		return assertNotNull("cryptoRepoFile", cryptoRepoFile);
+		// We *must* use the parent, whenever there is one, because we are otherwise not able to interrupt
+		// the inheritance of permissions by another party. If we wouldn't take the parent for PermissionSetInheritance
+		// (and for consistency, here in PermissionSet, too), we would interrupt the chain of trust in the moment
+		// we interrupt the inheritance. Of course, this could be circumvented using the validTo time or using
+		// some other complicated algorithm, but choosing the parent-CryptoRepoFile as the one controlling permissions
+		// instead, is the easiest and most elegant solution.
+		final CryptoRepoFile cryptoRepoFile = assertNotNull("this.cryptoRepoFile", this.cryptoRepoFile);
+		final CryptoRepoFile parentCryptoRepoFile = cryptoRepoFile.getParent();
+		return parentCryptoRepoFile == null ? cryptoRepoFile : parentCryptoRepoFile;
 	}
 
 	@Override
