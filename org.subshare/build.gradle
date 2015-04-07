@@ -12,12 +12,14 @@ allprojects {
     repositories {
         mavenLocal()
         mavenCentral()
+/*
         maven {
             url 'http://cloudstore.codewizards.co/maven/snapshot'
         }
         maven {
             url 'http://cloudstore.codewizards.co/maven/release'
         }
+*/
 		maven {
 			url 'http://www.datanucleus.org/downloads/maven2-nightly'
 		}
@@ -25,9 +27,10 @@ allprojects {
 
 	project.ext.subshareVersion = version
 
-   	project.ext.bouncycastleVersion = '1.50'
-   	project.ext.cloudstoreVersion = '0.9.6-SNAPSHOT'
-   	project.ext.slf4jVersion = '1.7.7'
+	project.ext.bouncycastleVersion = '1.50'
+//	project.ext.cloudstoreVersion = '0.9.6-SNAPSHOT'
+	project.ext.cloudstoreVersion = '0.9.6'
+	project.ext.slf4jVersion = '1.7.7'
 	project.ext.logbackVersion = '1.0.13'
 }
 
