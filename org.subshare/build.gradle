@@ -12,14 +12,12 @@ allprojects {
     repositories {
         mavenLocal()
         mavenCentral()
-/*
         maven {
             url 'http://cloudstore.codewizards.co/maven/snapshot'
         }
         maven {
             url 'http://cloudstore.codewizards.co/maven/release'
         }
-*/
 		maven {
 			url 'http://www.datanucleus.org/downloads/maven2-nightly'
 		}
