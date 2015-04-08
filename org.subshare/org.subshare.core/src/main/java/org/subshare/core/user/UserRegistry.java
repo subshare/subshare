@@ -1,8 +1,8 @@
 package org.subshare.core.user;
 
-import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
-import static co.codewizards.cloudstore.core.util.StringUtil.*;
+import static co.codewizards.cloudstore.core.oio.OioFileFactory.createFile;
+import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
+import static co.codewizards.cloudstore.core.util.StringUtil.isEmpty;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -53,12 +53,18 @@ public class UserRegistry {
 	}
 
 	protected void readUserListFile() {
+		final UserDtoConverter userDtoConverter = new UserDtoConverter();
 		try (LockFile lockFile = acquireLockFile();) {
 			lockFile.getLock().lock();
 			try {
 				if (userListFile.exists()) {
 					final UserListDto userListDto = userListDtoIo.deserializeWithGz(userListFile);
-
+					for (final UserDto userDto : userListDto.getUserDtos()) {
+						final User user = userDtoConverter.fromUserDto(userDto);
+						users.add(user);
+						for (final Long pgpKeyId : user.getPgpKeyIds())
+							pgpKeyId2User.put(pgpKeyId, user);
+					}
 				}
 			} finally {
 				lockFile.getLock().unlock();
@@ -66,7 +72,7 @@ public class UserRegistry {
 		}
 	}
 
-	protected void readPgpUsers() {
+	protected synchronized void readPgpUsers() {
 		for (final PgpKey pgpKey : PgpRegistry.getInstance().getPgpOrFail().getMasterKeys()) {
 			User user = pgpKeyId2User.get(pgpKey.getPgpKeyId());
 			if (user == null) {

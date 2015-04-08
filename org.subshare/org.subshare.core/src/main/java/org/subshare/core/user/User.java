@@ -1,8 +1,5 @@
 package org.subshare.core.user;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -27,7 +24,7 @@ public class User {
 
 	private List<Long> pgpKeyIds;
 
-	private Collection<UserRepoKey.PublicKey> userRepoKeyPublicKeys;
+	private List<UserRepoKey.PublicKeyWithSignature> userRepoKeyPublicKeys;
 
 	public synchronized String getFirstName() {
 		return firstName;
@@ -47,14 +44,14 @@ public class User {
 
 	public synchronized List<String> getEmails() {
 		if (emails == null)
-			emails = new CopyOnWriteArrayList<String>();
+			emails = new CopyOnWriteArrayList<>();
 
 		return emails;
 	}
 
 	public synchronized List<Long> getPgpKeyIds() {
 		if (pgpKeyIds == null)
-			pgpKeyIds = new CopyOnWriteArrayList<Long>();
+			pgpKeyIds = new CopyOnWriteArrayList<>();
 
 		return pgpKeyIds;
 	}
@@ -97,17 +94,15 @@ public class User {
 		final UserRepoKeyRing userRepoKeyRing = getUserRepoKeyRingOrCreate();
 		final AsymmetricCipherKeyPair keyPair = KeyFactory.getInstance().createAsymmetricKeyPair();
 
-
 		final UserRepoKey userRepoKey = new UserRepoKey(userRepoKeyRing, repositoryId, keyPair, pgpKey);
 		userRepoKeyRing.addUserRepoKey(userRepoKey);
 		return userRepoKey;
 	}
 
-	public Collection<UserRepoKey.PublicKey> getUserRepoKeyPublicKeys() {
+	public List<UserRepoKey.PublicKeyWithSignature> getUserRepoKeyPublicKeys() {
 		if (userRepoKeyPublicKeys == null)
-			userRepoKeyPublicKeys = new ArrayList<UserRepoKey.PublicKey>();
+			userRepoKeyPublicKeys = new CopyOnWriteArrayList<>();
 
-		return Collections.unmodifiableCollection(userRepoKeyPublicKeys);
+		return userRepoKeyPublicKeys;
 	}
-
 }

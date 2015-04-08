@@ -1,6 +1,6 @@
 package org.subshare.core.user;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -24,6 +24,10 @@ import co.codewizards.cloudstore.core.dto.Uid;
  * In order to prevent the provider from knowing who has written what and who has access to what, every
  * user might indeed have multiple such keys per repository. The provider will only know the public keys,
  * but he does not know who owns them - not even how many users there really are.
+ * <p>
+ * Since the {@link #getSignedPublicKeyData() signedPublicKeyData} reveals the identity of the owner,
+ * the {@link PublicKey} does not contain it, but only non-signed public-key-data!
+ *
  * @author Marco หงุ่ยตระกูล-Schulze - marco at codewizards dot co
  */
 public class UserRepoKey {
@@ -32,27 +36,29 @@ public class UserRepoKey {
 	private final Uid userRepoKeyId;
 	private final UUID serverRepositoryId;
 	private final AsymmetricCipherKeyPair keyPair;
-	private PublicKey publicKey;
+	private PublicKeyWithSignature publicKey;
 
 	private final byte[] encryptedSignedPrivateKeyData;
 	private final byte[] signedPublicKeyData;
 
-	public UserRepoKey(final UserRepoKeyRing userRepoKeyRing, final UUID repositoryId, final AsymmetricCipherKeyPair keyPair, final PgpKey pgpKey) {
+	public UserRepoKey(final UserRepoKeyRing userRepoKeyRing, final UUID serverRepositoryId, final AsymmetricCipherKeyPair keyPair, final PgpKey pgpKey) {
 		this.userRepoKeyRing = assertNotNull("userRepoKeyRing", userRepoKeyRing);
 		this.userRepoKeyId = new Uid();
-		this.serverRepositoryId = assertNotNull("serverRepositoryId", repositoryId);
+		this.serverRepositoryId = assertNotNull("serverRepositoryId", serverRepositoryId);
 		this.keyPair = assertNotNull("keyPair", keyPair);
 		assertNotNull("pgpKey", pgpKey);
 		this.encryptedSignedPrivateKeyData = encryptSignPrivateKeyData(pgpKey);
 		this.signedPublicKeyData = signPublicKeyData(pgpKey);
 	}
 
-	public UserRepoKey(final UserRepoKeyRing userRepoKeyRing, final Uid userRepoKeyId, final UUID repositoryId, final byte[] encryptedSignedPrivateKeyData, final byte[] signedPublicKeyData) {
+	public UserRepoKey(final UserRepoKeyRing userRepoKeyRing, final Uid userRepoKeyId, final UUID serverRepositoryId, final byte[] encryptedSignedPrivateKeyData, final byte[] signedPublicKeyData) {
 		this.userRepoKeyRing = assertNotNull("userRepoKeyRing", userRepoKeyRing);
 		this.userRepoKeyId = assertNotNull("userRepoKeyId", userRepoKeyId);
-		this.serverRepositoryId = assertNotNull("serverRepositoryId", repositoryId);
+		this.serverRepositoryId = assertNotNull("serverRepositoryId", serverRepositoryId);
 		this.encryptedSignedPrivateKeyData = assertNotNull("encryptedSignedPrivateKeyData", encryptedSignedPrivateKeyData);
 		this.signedPublicKeyData = assertNotNull("signedPublicKeyData", signedPublicKeyData);
+
+		// TODO should we maybe defer the decryption until later, when the key is actually used?!
 		this.keyPair = new AsymmetricCipherKeyPair(verifyPublicKeyData(), decryptVerifyPrivateKeyData());
 	}
 
@@ -72,17 +78,17 @@ public class UserRepoKey {
 		return keyPair;
 	}
 
-	public PublicKey getPublicKey() {
+	public PublicKeyWithSignature getPublicKey() {
 		if (publicKey == null)
-			publicKey = new PublicKey(
-					getUserRepoKeyId(), getServerRepositoryId(), getKeyPair().getPublic());
+			publicKey = new PublicKeyWithSignature(
+					getUserRepoKeyId(), getServerRepositoryId(), getKeyPair().getPublic(), signedPublicKeyData);
 
 		return publicKey;
 	}
 
 	private byte[] encryptSignPrivateKeyData(final PgpKey pgpKey) {
 		if (PgpKey.TEST_DUMMY_PGP_KEY == pgpKey)
-			return null;
+			return new byte[0]; // for consistency with signPublicKeyData(...) we return an empty array here, too.
 
 		assertNotNull("pgpKey", pgpKey);
 		final byte[] encodedPrivateKey = CryptoRegistry.getInstance().encodePrivateKey(keyPair.getPrivate());
@@ -113,7 +119,7 @@ public class UserRepoKey {
 
 	private byte[] signPublicKeyData(final PgpKey pgpKey) {
 		if (PgpKey.TEST_DUMMY_PGP_KEY == pgpKey)
-			return null;
+			return new byte[0]; // null causes an IllegalArgumentException => empty array.
 
 		assertNotNull("pgpKey", pgpKey);
 		final byte[] encodedPublicKey = CryptoRegistry.getInstance().encodePublicKey(keyPair.getPublic());
@@ -129,6 +135,11 @@ public class UserRepoKey {
 	}
 
 	private AsymmetricKeyParameter verifyPublicKeyData() throws SignatureException {
+		return verifyPublicKeyData(signedPublicKeyData);
+	}
+
+	private static AsymmetricKeyParameter verifyPublicKeyData(final byte[] signedPublicKeyData) throws SignatureException {
+		assertNotNull("signedPublicKeyData", signedPublicKeyData);
 		final ByteArrayOutputStream out = new ByteArrayOutputStream();
 		final PgpDecoder decoder = PgpRegistry.getInstance().getPgpOrFail().createDecoder(new ByteArrayInputStream(signedPublicKeyData), out);
 		try {
@@ -153,9 +164,9 @@ public class UserRepoKey {
 		private final UUID serverRepositoryId;
 		private final AsymmetricKeyParameter publicKey;
 
-		public PublicKey(final Uid userRepoKeyId, final UUID repositoryId, final AsymmetricKeyParameter publicKey) {
+		public PublicKey(final Uid userRepoKeyId, final UUID serverRepositoryId, final AsymmetricKeyParameter publicKey) {
 			this.userRepoKeyId = assertNotNull("userRepoKeyId", userRepoKeyId);
-			this.serverRepositoryId = assertNotNull("serverRepositoryId", repositoryId);
+			this.serverRepositoryId = assertNotNull("serverRepositoryId", serverRepositoryId);
 			this.publicKey = assertNotNull("publicKey", publicKey);
 		}
 
@@ -169,6 +180,24 @@ public class UserRepoKey {
 
 		public AsymmetricKeyParameter getPublicKey() {
 			return publicKey;
+		}
+	}
+
+	public static class PublicKeyWithSignature extends PublicKey {
+		private final byte[] signedPublicKeyData;
+
+		protected PublicKeyWithSignature(Uid userRepoKeyId, UUID serverRepositoryId, AsymmetricKeyParameter publicKey, final byte[] signedPublicKeyData) {
+			super(userRepoKeyId, serverRepositoryId, publicKey);
+			this.signedPublicKeyData = assertNotNull("signedPublicKeyData", signedPublicKeyData);
+		}
+
+		public PublicKeyWithSignature(Uid userRepoKeyId, UUID repositoryId, final byte[] signedPublicKeyData) {
+			super(userRepoKeyId, repositoryId, verifyPublicKeyData(signedPublicKeyData));
+			this.signedPublicKeyData = assertNotNull("signedPublicKeyData", signedPublicKeyData);
+		}
+
+		public byte[] getSignedPublicKeyData() {
+			return signedPublicKeyData;
 		}
 	}
 }

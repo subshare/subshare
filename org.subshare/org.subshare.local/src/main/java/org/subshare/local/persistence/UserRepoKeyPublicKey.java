@@ -1,7 +1,7 @@
 package org.subshare.local.persistence;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
-import static co.codewizards.cloudstore.core.util.Util.*;
+import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
+import static co.codewizards.cloudstore.core.util.Util.equal;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -34,6 +34,9 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 	@Query(name="getUserRepoKeyPublicKeysChangedAfter_localRevision", value="SELECT WHERE this.localRevision > :localRevision")
 })
 public class UserRepoKeyPublicKey extends Entity implements AutoTrackLocalRevision {
+
+	// TODO 2015-04-08 - I think this should be signed by whoever (another UserRepoKeyPublicKey) causes this entity to be written into the DB.
+	// Or does this reveal too much data? How can we prevent this from being corrupted otherwise?
 
 	@Persistent(nullValue=NullValue.EXCEPTION)
 	@Column(length=22)

@@ -12,6 +12,7 @@ public class UserRepoKeyPublicKeyDto {
 	private Uid userRepoKeyId;
 	private UUID repositoryId;
 	private byte[] publicKeyData;
+	private byte[] signedPublicKeyData;
 	private long localRevision;
 
 	public Uid getUserRepoKeyId() {
@@ -33,6 +34,13 @@ public class UserRepoKeyPublicKeyDto {
 	}
 	public void setPublicKeyData(final byte[] publicKeyData) {
 		this.publicKeyData = publicKeyData;
+	}
+
+	public byte[] getSignedPublicKeyData() {
+		return signedPublicKeyData;
+	}
+	public void setSignedPublicKeyData(byte[] signedPublicKeyData) {
+		this.signedPublicKeyData = signedPublicKeyData;
 	}
 
 	public long getLocalRevision() {
