@@ -4,11 +4,14 @@ import static co.codewizards.cloudstore.core.oio.OioFileFactory.createFile;
 import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
 import static co.codewizards.cloudstore.core.util.StringUtil.isEmpty;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -22,6 +25,7 @@ import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpRegistry;
 
 import co.codewizards.cloudstore.core.config.ConfigDir;
+import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.io.LockFile;
 import co.codewizards.cloudstore.core.io.LockFileFactory;
 import co.codewizards.cloudstore.core.oio.File;
@@ -32,11 +36,12 @@ public class UserRegistry {
 	public static final String USER_LIST_LOCK = USER_LIST_FILE_NAME + ".lock";
 
 	private final Map<Long, User> pgpKeyId2User = new HashMap<Long, User>();
-	private final List<User> users = new ArrayList<User>();
+	private final Map<Uid, User> userId2User = new LinkedHashMap<Uid, User>();
 	private List<User> cache_users;
 	private Map<String, Set<User>> cache_email2Users;
 	private final File userListFile;
 	private final UserListDtoIo userListDtoIo = new UserListDtoIo();
+	private boolean dirty;
 
 	private static final class Holder {
 		public static final UserRegistry instance = new UserRegistry();
@@ -50,6 +55,7 @@ public class UserRegistry {
 		userListFile = createFile(ConfigDir.getInstance().getFile(), USER_LIST_FILE_NAME);
 		readUserListFile();
 		readPgpUsers();
+		writeIfNeeded();
 	}
 
 	protected void readUserListFile() {
@@ -61,15 +67,14 @@ public class UserRegistry {
 					final UserListDto userListDto = userListDtoIo.deserializeWithGz(userListFile);
 					for (final UserDto userDto : userListDto.getUserDtos()) {
 						final User user = userDtoConverter.fromUserDto(userDto);
-						users.add(user);
-						for (final Long pgpKeyId : user.getPgpKeyIds())
-							pgpKeyId2User.put(pgpKeyId, user);
+						addUser(user);
 					}
 				}
 			} finally {
 				lockFile.getLock().unlock();
 			}
 		}
+		dirty = false;
 	}
 
 	protected synchronized void readPgpUsers() {
@@ -78,6 +83,7 @@ public class UserRegistry {
 			if (user == null) {
 				boolean newUser = true;
 				user = new User();
+				user.setUserId(new Uid());
 				for (final String userId : pgpKey.getUserIds())
 					populateUserFromPgpUserId(user, userId);
 
@@ -93,15 +99,14 @@ public class UserRegistry {
 					}
 				}
 
-				if (newUser) {
-					pgpKeyId2User.put(pgpKey.getPgpKeyId(), user);
-					users.add(user);
-					cleanCache();
-				}
+				if (newUser)
+					addUser(user);
 			}
 
 			if (! user.getPgpKeyIds().contains(pgpKey.getPgpKeyId()))
 				user.getPgpKeyIds().add(pgpKey.getPgpKeyId());
+
+			pgpKeyId2User.put(pgpKey.getPgpKeyId(), user);
 		}
 	}
 
@@ -160,7 +165,7 @@ public class UserRegistry {
 
 	public synchronized Collection<User> getUsers() {
 		if (cache_users == null)
-			cache_users = Collections.unmodifiableList(new ArrayList<User>(users));
+			cache_users = Collections.unmodifiableList(new ArrayList<User>(userId2User.values()));
 
 		return cache_users;
 	}
@@ -171,6 +176,7 @@ public class UserRegistry {
 	}
 
 	public synchronized Collection<User> getUsersByEmail(final String email) {
+		assertNotNull("email", email);
 		if (cache_email2Users == null) {
 			final Map<String, Set<User>> cache_email2Users = new HashMap<String, Set<User>>();
 			for (final User user : getUsers()) {
@@ -195,12 +201,40 @@ public class UserRegistry {
 		return users != null ? users : Collections.unmodifiableList(new LinkedList<User>());
 	}
 
+	public synchronized void addUser(final User user) {
+		assertNotNull("user", user);
+		assertNotNull("user.userId", user.getUserId());
+		userId2User.put(user.getUserId(), user);
+		// TODO we either need to hook listeners into user and get notified about all changes to update this registry!
+		// OR we need to provide a public write/save/store (or similarly named) method.
+
+		for (final Long pgpKeyId : user.getPgpKeyIds())
+			pgpKeyId2User.put(pgpKeyId, user); // TODO what about collisions? remove pgpKeyId from the other user?!
+
+		user.addPropertyChangeListener(userPropertyChangeListener);
+
+		cleanCache();
+		dirty = true;
+	}
+
+	private final PropertyChangeListener userPropertyChangeListener = new PropertyChangeListener() {
+		@Override
+		public void propertyChange(PropertyChangeEvent evt) {
+			dirty = true;
+		}
+	};
+
 	private LockFile acquireLockFile() {
 		final File dir = ConfigDir.getInstance().getFile();
 		return LockFileFactory.getInstance().acquire(createFile(dir, USER_LIST_LOCK), 30000);
 	}
 
-	private void writeUserListFile() {
+	public synchronized void writeIfNeeded() {
+		if (dirty)
+			writeUserListFile();
+	}
+
+	private synchronized void writeUserListFile() {
 		final UserListDto userListDto = createUserListDto();
 
 		try (LockFile lockFile = acquireLockFile();) {
@@ -214,12 +248,13 @@ public class UserRegistry {
 				lockFile.getLock().unlock();
 			}
 		}
+		dirty = false;
 	}
 
 	private synchronized UserListDto createUserListDto() {
 		final UserDtoConverter userDtoConverter = new UserDtoConverter();
 		final UserListDto userListDto = new UserListDto();
-		for (final User user : users) {
+		for (final User user : userId2User.values()) {
 			final UserDto userDto = userDtoConverter.toUserDto(user);
 			userListDto.getUserDtos().add(userDto);
 		}

@@ -1,7 +1,7 @@
 package org.subshare.core.user;
 
-import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
-import static org.assertj.core.api.Assertions.*;
+import static co.codewizards.cloudstore.core.oio.OioFileFactory.createFile;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,23 +18,31 @@ import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpKeyTrustLevel;
 import org.subshare.core.pgp.PgpRegistry;
 import org.subshare.core.pgp.gnupg.GnuPgDir;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import co.codewizards.cloudstore.core.config.Config;
+import co.codewizards.cloudstore.core.config.ConfigDir;
+import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.util.IOUtil;
 
 public class UserRegistryTest {
 
 	@BeforeClass
 	public static void beforeClass() {
+		System.setProperty(ConfigDir.SYSTEM_PROPERTY_CONFIG_DIR, "build/cloudstore");
 		System.setProperty(Config.SYSTEM_PROPERTY_PREFIX + GnuPgDir.CONFIG_KEY_GNU_PG_DIR, "build/.gnupg");
+	}
+
+	@Before
+	public void before() throws Exception {
+		createFile(ConfigDir.getInstance().getFile(), UserRegistry.USER_LIST_FILE_NAME).delete();
+		initPgp();
 	}
 
 	@Test
 	public void initUserRegistryFromGpgKeys() throws Exception {
-		initPgp();
-
 		final UserRegistry userRegistry = new UserRegistry();
 		final Collection<User> users = userRegistry.getUsers();
 		assertThat(users).isNotEmpty();
@@ -57,8 +65,6 @@ public class UserRegistryTest {
 
 	@Test
 	public void testGpgKeyTrustLevels() throws Exception {
-		initPgp();
-
 		final UserRegistry userRegistry = new UserRegistry();
 		final Pgp pgp = PgpRegistry.getInstance().getPgpOrFail();
 
@@ -90,6 +96,32 @@ public class UserRegistryTest {
 			assertThat(highestKeyTrustLevel).isNotNull();
 			assertThat(highestKeyTrustLevel).isEqualTo(expectedPgpKeyTrustLevel);
 		}
+	}
+
+	@Test
+	public void addUser() throws Exception {
+		final UserRegistry userRegistry1 = new UserRegistry();
+
+		User user1 = new User();
+		user1.setUserId(new Uid());
+		user1.setFirstName("Anton");
+		user1.setLastName("Müller");
+		String email1 = "anton.mueller@test.org";
+		user1.getEmails().add(email1);
+
+		userRegistry1.addUser(user1);
+
+		Collection<User> users1 = userRegistry1.getUsersByEmail(email1);
+		assertThat(users1).containsExactly(user1);
+
+		userRegistry1.writeIfNeeded();
+
+		final UserRegistry userRegistry2 = new UserRegistry();
+
+		Collection<User> users2 = userRegistry2.getUsersByEmail(email1);
+		assertThat(users2).hasSize(1);
+		final User user2 = users2.iterator().next();
+		assertThat(user2).isEqualToComparingFieldByField(user1);
 	}
 
 	private void initPgp() throws IOException {

@@ -1,7 +1,7 @@
 package org.subshare.local;
 
-import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
-import static org.assertj.core.api.Assertions.*;
+import static co.codewizards.cloudstore.core.oio.OioFileFactory.createFile;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -19,6 +19,7 @@ import org.subshare.core.user.UserRegistry;
 import org.subshare.core.user.UserRepoKeyRing;
 
 import co.codewizards.cloudstore.core.config.ConfigDir;
+import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManagerFactory;
@@ -47,6 +48,7 @@ public abstract class AbstractTest {
 
 		public TestUserRegistry() {
 			user = new User();
+			user.setUserId(new Uid());
 			user.getPgpKeyIds().add(PgpKey.TEST_DUMMY_PGP_KEY_ID);
 			user.getEmails().add("user@domain.tld");
 			user.setFirstName("Hans");

@@ -1,6 +1,6 @@
 package org.subshare.rest.client.transport;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.net.URL;
 import java.util.Collection;
@@ -97,6 +97,7 @@ public class CryptreeRepoTransportTest {
 
 		public TestUserRegistry() {
 			user = new User();
+			user.setUserId(new Uid());
 			user.getPgpKeyIds().add(0L);
 			user.getEmails().add("user@domain.tld");
 			user.setFirstName("Hans");

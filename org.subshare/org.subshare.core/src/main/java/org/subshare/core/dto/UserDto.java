@@ -5,8 +5,12 @@ import java.util.List;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
+import co.codewizards.cloudstore.core.dto.Uid;
+
 @XmlRootElement
 public class UserDto {
+
+	private Uid userId;
 
 	private String firstName;
 
@@ -19,6 +23,13 @@ public class UserDto {
 	private List<Long> pgpKeyIds;
 
 	private List<UserRepoKeyPublicKeyDto> userRepoKeyPublicKeyDtos;
+
+	public Uid getUserId() {
+		return userId;
+	}
+	public void setUserId(Uid userId) {
+		this.userId = userId;
+	}
 
 	public String getFirstName() {
 		return firstName;

@@ -10,6 +10,8 @@ import org.subshare.core.dto.CryptoLinkDto;
 import org.subshare.core.dto.CryptoRepoFileDto;
 import org.subshare.core.dto.CryptoRepoFileDtoList;
 import org.subshare.core.dto.SignatureDto;
+import org.subshare.core.dto.UserDto;
+import org.subshare.core.dto.UserListDto;
 import org.subshare.core.dto.UserRepoKeyPublicKeyDto;
 
 import co.codewizards.cloudstore.core.dto.jaxb.AbstractCloudStoreJaxbContextProvider;
@@ -29,6 +31,8 @@ public class CloudStoreJaxbContextProviderImpl extends AbstractCloudStoreJaxbCon
 				CryptoRepoFileDto.class,
 				CryptoRepoFileDtoList.class,
 				SignatureDto.class,
+				UserDto.class,
+				UserListDto.class,
 				UserRepoKeyPublicKeyDto.class
 		};
 	}

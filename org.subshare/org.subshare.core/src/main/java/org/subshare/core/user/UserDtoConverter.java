@@ -16,6 +16,7 @@ public class UserDtoConverter {
 		assertNotNull("user", user);
 
 		final UserDto userDto = new UserDto();
+		userDto.setUserId(user.getUserId());
 		userDto.setFirstName(user.getFirstName());
 		userDto.setLastName(user.getLastName());
 		userDto.setPgpKeyIds(new ArrayList<Long>(user.getPgpKeyIds()));
@@ -35,6 +36,7 @@ public class UserDtoConverter {
 		assertNotNull("userDto", userDto);
 
 		final User user = new User();
+		user.setUserId(userDto.getUserId());
 		user.setFirstName(userDto.getFirstName());
 		user.setLastName(userDto.getLastName());
 		user.getPgpKeyIds().addAll(userDto.getPgpKeyIds());
