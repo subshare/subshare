@@ -1,5 +1,6 @@
 package org.subshare.core.dto;
 
+import java.util.Date;
 import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlRootElement;
@@ -11,6 +12,7 @@ public class UserRepoKeyDto {
 
 	private Uid userRepoKeyId;
 	private UUID serverRepositoryId;
+	private Date validTo;
 	private byte[] encryptedSignedPrivateKeyData;
 	private byte[] signedPublicKeyData;
 
@@ -20,18 +22,28 @@ public class UserRepoKeyDto {
 	public void setUserRepoKeyId(Uid userRepoKeyId) {
 		this.userRepoKeyId = userRepoKeyId;
 	}
+
 	public UUID getServerRepositoryId() {
 		return serverRepositoryId;
 	}
 	public void setServerRepositoryId(UUID serverRepositoryId) {
 		this.serverRepositoryId = serverRepositoryId;
 	}
+
+	public Date getValidTo() {
+		return validTo;
+	}
+	public void setValidTo(Date validTo) {
+		this.validTo = validTo;
+	}
+
 	public byte[] getEncryptedSignedPrivateKeyData() {
 		return encryptedSignedPrivateKeyData;
 	}
 	public void setEncryptedSignedPrivateKeyData(byte[] encryptedSignedPrivateKeyData) {
 		this.encryptedSignedPrivateKeyData = encryptedSignedPrivateKeyData;
 	}
+
 	public byte[] getSignedPublicKeyData() {
 		return signedPublicKeyData;
 	}

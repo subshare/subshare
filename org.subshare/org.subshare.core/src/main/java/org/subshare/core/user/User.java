@@ -4,6 +4,7 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -132,7 +133,48 @@ public class User {
 		return userRepoKeyRing;
 	}
 
-	public UserRepoKey createUserRepoKey(final UUID repositoryId) {
+	public UserRepoKey createUserRepoKey(final UUID serverRepositoryId) {
+		assertNotNull("serverRepositoryId", serverRepositoryId);
+
+		final PgpKey pgpKey = getPgpKeyContainingPrivateKeyOrFail();
+
+		final AsymmetricCipherKeyPair keyPair = KeyFactory.getInstance().createAsymmetricKeyPair();
+		final UserRepoKey userRepoKey = new UserRepoKey(serverRepositoryId, keyPair, pgpKey, pgpKey, null);
+
+		final UserRepoKeyRing userRepoKeyRing = getUserRepoKeyRingOrCreate();
+		userRepoKeyRing.addUserRepoKey(userRepoKey);
+		return userRepoKey;
+	}
+
+	public UserRepoKey createInvitationUserRepoKey(final User invitedUser, final UUID serverRepositoryId, final long validityDurationMillis) {
+		assertNotNull("invitedUser", invitedUser);
+		assertNotNull("serverRepositoryId", serverRepositoryId);
+
+		final PgpKey ownPgpKey = getPgpKeyContainingPrivateKeyOrFail();
+
+		if (invitedUser.getPgpKeyIds().isEmpty())
+			throw new IllegalStateException("There is no PGP key associated with the invitedUser!");
+
+		final Pgp pgp = PgpRegistry.getInstance().getPgpOrFail();
+		PgpKey invitedUserPgpKey = null;
+		for (final Long pgpKeyId : invitedUser.getPgpKeyIds()) {
+			PgpKey k = pgp.getPgpKey(pgpKeyId);
+			// TODO we should exclude disabled/expired keys here (or already earlier and make sure they're not in User.pgpKeyIds).
+			if (k != null) {
+				invitedUserPgpKey = k;
+				break;
+			}
+		}
+
+		if (invitedUserPgpKey == null)
+			throw new IllegalStateException("None of the PGP keys associated with the invitedUser is available in our PGP key ring!");
+
+		final AsymmetricCipherKeyPair keyPair = KeyFactory.getInstance().createAsymmetricKeyPair();
+		final UserRepoKey userRepoKey = new UserRepoKey(serverRepositoryId, keyPair, invitedUserPgpKey, ownPgpKey, new Date(System.currentTimeMillis() + validityDurationMillis));
+		return userRepoKey;
+	}
+
+	private PgpKey getPgpKeyContainingPrivateKeyOrFail() {
 		final List<Long> pgpKeyIds = getPgpKeyIds();
 
 		if (pgpKeyIds.isEmpty())
@@ -151,12 +193,7 @@ public class User {
 		if (pgpKey == null)
 			throw new IllegalStateException("None of the PGP keys associated with this user has a private key available!");
 
-		final UserRepoKeyRing userRepoKeyRing = getUserRepoKeyRingOrCreate();
-		final AsymmetricCipherKeyPair keyPair = KeyFactory.getInstance().createAsymmetricKeyPair();
-
-		final UserRepoKey userRepoKey = new UserRepoKey(userRepoKeyRing, repositoryId, keyPair, pgpKey);
-		userRepoKeyRing.addUserRepoKey(userRepoKey);
-		return userRepoKey;
+		return pgpKey;
 	}
 
 	public List<UserRepoKey.PublicKeyWithSignature> getUserRepoKeyPublicKeys() {
@@ -185,5 +222,10 @@ public class User {
 
 	protected void firePropertyChange(Property property, Object oldValue, Object newValue) {
 		propertyChangeSupport.firePropertyChange(property.name(), oldValue, newValue);
+	}
+
+	@Override
+	public String toString() {
+		return String.format("%s[%s, %s, %s, %s]", getClass().getSimpleName(), userId, firstName, lastName, emails);
 	}
 }

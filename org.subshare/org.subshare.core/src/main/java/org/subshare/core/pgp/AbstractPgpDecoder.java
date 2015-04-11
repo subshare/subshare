@@ -8,6 +8,7 @@ public abstract class AbstractPgpDecoder implements PgpDecoder {
 
 	private InputStream inputStream;
 	private OutputStream outputStream;
+	private PgpKey decryptPgpKey;
 	private PgpKey signPgpKey;
 
 	@Override
@@ -53,6 +54,14 @@ public abstract class AbstractPgpDecoder implements PgpDecoder {
 			throw new IllegalStateException("There is no PgpAuthenticationCallback assigned!");
 
 		return pgpAuthenticationCallback;
+	}
+
+	@Override
+	public PgpKey getDecryptPgpKey() {
+		return decryptPgpKey;
+	}
+	protected void setDecryptPgpKey(PgpKey decryptPgpKey) {
+		this.decryptPgpKey = decryptPgpKey;
 	}
 
 	@Override

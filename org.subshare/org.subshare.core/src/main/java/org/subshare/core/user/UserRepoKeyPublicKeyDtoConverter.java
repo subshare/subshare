@@ -12,6 +12,7 @@ public class UserRepoKeyPublicKeyDtoConverter {
 		userRepoKeyPublicKeyDto.setUserRepoKeyId(publicKey.getUserRepoKeyId());
 		userRepoKeyPublicKeyDto.setRepositoryId(publicKey.getServerRepositoryId());
 		userRepoKeyPublicKeyDto.setSignedPublicKeyData(publicKey.getSignedPublicKeyData());
+		userRepoKeyPublicKeyDto.setValidTo(publicKey.getValidTo());
 		return userRepoKeyPublicKeyDto;
 	}
 
@@ -19,7 +20,8 @@ public class UserRepoKeyPublicKeyDtoConverter {
 		assertNotNull("publicKeyDto", publicKeyDto);
 		assertNotNull("publicKeyDto.signedPublicKeyData", publicKeyDto.getSignedPublicKeyData());
 		final UserRepoKey.PublicKeyWithSignature publicKey = new UserRepoKey.PublicKeyWithSignature(
-				publicKeyDto.getUserRepoKeyId(), publicKeyDto.getRepositoryId(), publicKeyDto.getSignedPublicKeyData());
+				publicKeyDto.getUserRepoKeyId(), publicKeyDto.getRepositoryId(), publicKeyDto.getSignedPublicKeyData(),
+				publicKeyDto.getValidTo());
 		return publicKey;
 	}
 }

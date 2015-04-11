@@ -31,7 +31,7 @@ public class UserRegistryTest {
 
 	@BeforeClass
 	public static void beforeClass() {
-		System.setProperty(ConfigDir.SYSTEM_PROPERTY_CONFIG_DIR, "build/cloudstore");
+		System.setProperty(ConfigDir.SYSTEM_PROPERTY_CONFIG_DIR, "build/.cloudstore");
 		System.setProperty(Config.SYSTEM_PROPERTY_PREFIX + GnuPgDir.CONFIG_KEY_GNU_PG_DIR, "build/.gnupg");
 	}
 

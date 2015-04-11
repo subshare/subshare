@@ -17,6 +17,14 @@ public class PgpRegistry {
 		return Holder.instance;
 	}
 
+	/**
+	 * @deprecated Should normally only be used by tests.
+	 */
+	@Deprecated
+	public void clearCache() {
+		pgp = null;
+	}
+
 	public Pgp getPgpOrFail() {
 		Pgp pgp = this.pgp;
 		if (pgp == null) {

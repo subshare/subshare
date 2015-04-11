@@ -1,7 +1,7 @@
 package org.subshare.local;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
-import static co.codewizards.cloudstore.core.util.Util.*;
+import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
+import static co.codewizards.cloudstore.core.util.Util.doNothing;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -896,6 +896,7 @@ public class CryptreeImpl extends AbstractCryptree {
 		userRepoKeyPublicKeyDto.setPublicKeyData(userRepoKeyPublicKey.getPublicKeyData());
 		userRepoKeyPublicKeyDto.setRepositoryId(userRepoKeyPublicKey.getServerRepositoryId());
 		userRepoKeyPublicKeyDto.setUserRepoKeyId(userRepoKeyPublicKey.getUserRepoKeyId());
+		userRepoKeyPublicKeyDto.setValidTo(userRepoKeyPublicKey.getValidTo());
 		return userRepoKeyPublicKeyDto;
 	}
 

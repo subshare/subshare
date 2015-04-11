@@ -1,9 +1,10 @@
 package org.subshare.test;
 
-import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
-import static mockit.Deencapsulation.*;
-import static org.assertj.core.api.Assertions.*;
+import static co.codewizards.cloudstore.core.oio.OioFileFactory.createFile;
+import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
+import static mockit.Deencapsulation.setField;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -64,7 +65,7 @@ public class BrokenSignatureIT extends AbstractRepoToRepoSyncIT {
 	private boolean ssWebDavService_getFileData_breakSignature = false;
 
 	@Override
-	public void before() {
+	public void before() throws Exception {
 		super.before();
 		jmockitShouldBeUsed = false;
 		jmockitWasUsed = false;
@@ -72,7 +73,7 @@ public class BrokenSignatureIT extends AbstractRepoToRepoSyncIT {
 	}
 
 	@Override
-	public void after() {
+	public void after() throws Exception {
 		super.after();
 		if (jmockitShouldBeUsed && ! jmockitWasUsed)
 			fail("jmockit should have been used but was not used! missing agent?");

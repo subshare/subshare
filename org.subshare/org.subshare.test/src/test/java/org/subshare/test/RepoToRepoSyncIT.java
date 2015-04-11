@@ -1,7 +1,7 @@
 package org.subshare.test;
 
-import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
-import static org.assertj.core.api.Assertions.*;
+import static co.codewizards.cloudstore.core.oio.OioFileFactory.createFile;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import org.subshare.core.AccessDeniedException;
 import org.subshare.core.ReadAccessDeniedException;
@@ -19,7 +19,7 @@ import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 
 public class RepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 
-	static final Logger logger = LoggerFactory.getLogger(RepoToRepoSyncIT.class);
+	private static final Logger logger = LoggerFactory.getLogger(RepoToRepoSyncIT.class);
 
 	@Test
 	public void syncFromLocalToRemoteToLocal() throws Exception {

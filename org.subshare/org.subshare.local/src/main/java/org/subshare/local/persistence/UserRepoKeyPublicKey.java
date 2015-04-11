@@ -4,6 +4,7 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
 import static co.codewizards.cloudstore.core.util.Util.equal;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.UUID;
 
 import javax.jdo.annotations.Column;
@@ -46,6 +47,8 @@ public class UserRepoKeyPublicKey extends Entity implements AutoTrackLocalRevisi
 	@Column(length=36)
 	private String serverRepositoryId;
 
+	private Date validTo;
+
 	@Persistent(nullValue=NullValue.EXCEPTION)
 	private byte[] publicKeyData;
 
@@ -63,6 +66,7 @@ public class UserRepoKeyPublicKey extends Entity implements AutoTrackLocalRevisi
 	public UserRepoKeyPublicKey(final UserRepoKey.PublicKey publicKey) {
 		assertNotNull("publicKey", publicKey);
 		this.publicKey = publicKey;
+		setValidTo(publicKey.getValidTo());
 		setUserRepoKeyId(publicKey.getUserRepoKeyId());
 		setServerRepositoryId(publicKey.getServerRepositoryId());
 		setPublicKeyData(CryptoRegistry.getInstance().encodePublicKey(publicKey.getPublicKey()));
@@ -83,6 +87,14 @@ public class UserRepoKeyPublicKey extends Entity implements AutoTrackLocalRevisi
 		if (! equal(this.getServerRepositoryId(), serverRepositoryId))
 			this.serverRepositoryId = serverRepositoryId == null ? null : serverRepositoryId.toString();
 	}
+
+	public Date getValidTo() {
+		return validTo;
+	}
+	public void setValidTo(Date validTo) {
+		this.validTo = validTo;
+	}
+
 	public byte[] getPublicKeyData() {
 		return publicKeyData;
 	}
@@ -106,7 +118,8 @@ public class UserRepoKeyPublicKey extends Entity implements AutoTrackLocalRevisi
 			try {
 				publicKey = new UserRepoKey.PublicKey(
 						getUserRepoKeyId(), getServerRepositoryId(),
-						CryptoRegistry.getInstance().decodePublicKey(getPublicKeyData()));
+						CryptoRegistry.getInstance().decodePublicKey(getPublicKeyData()),
+						getValidTo());
 			} catch (final IOException e) {
 				throw new RuntimeException(e);
 			}

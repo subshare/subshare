@@ -1,8 +1,8 @@
 package org.subshare.test;
 
-import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
-import static org.assertj.core.api.Assertions.*;
+import static co.codewizards.cloudstore.core.oio.OioFileFactory.createFile;
+import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -53,7 +53,7 @@ public abstract class AbstractRepoToRepoSyncIT extends AbstractIT {
 	protected UserRepoKeyRing ownerUserRepoKeyRing;
 
 	@Before
-	public void before() {
+	public void before() throws Exception {
 		localPathPrefix = "";
 		remotePathPrefix1Plain = "";
 		remotePathPrefix1Encrypted = "";
@@ -62,7 +62,7 @@ public abstract class AbstractRepoToRepoSyncIT extends AbstractIT {
 	}
 
 	@After
-	public void after() {
+	public void after() throws Exception {
 		if (localRepoManagerLocal != null) {
 			localRepoManagerLocal.close();
 			localRepoManagerLocal = null;

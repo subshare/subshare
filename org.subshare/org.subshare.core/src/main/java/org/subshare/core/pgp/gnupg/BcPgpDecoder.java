@@ -1,6 +1,6 @@
 package org.subshare.core.pgp.gnupg;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -30,6 +30,7 @@ import org.bouncycastle.openpgp.operator.bc.BcPGPDigestCalculatorProvider;
 import org.bouncycastle.openpgp.operator.bc.BcPublicKeyDataDecryptorFactory;
 import org.bouncycastle.util.io.Streams;
 import org.subshare.core.pgp.AbstractPgpDecoder;
+import org.subshare.core.pgp.PgpKey;
 
 import co.codewizards.cloudstore.core.auth.SignatureException;
 
@@ -43,6 +44,7 @@ public class BcPgpDecoder extends AbstractPgpDecoder {
 
 	@Override
 	public void decode() throws SignatureException, IOException {
+		setDecryptPgpKey(null);
 		setSignPgpKey(null);
 		try {
 			final InputStream in = PGPUtil.getDecoderStream(getInputStreamOrFail());
@@ -65,6 +67,7 @@ public class BcPgpDecoder extends AbstractPgpDecoder {
 			// find the secret key
 			//
 			final Iterator<?> it = enc.getEncryptedDataObjects();
+			PgpKey decryptPgpKey = null;
 			PGPPrivateKey sKey = null;
 			PGPPublicKeyEncryptedData pbe = null;
 
@@ -83,16 +86,20 @@ public class BcPgpDecoder extends AbstractPgpDecoder {
 						else
 							passphrase = null;
 
-						if (secretKey != null)
+						if (secretKey != null) {
 							sKey = secretKey.extractPrivateKey(
 									new BcPBESecretKeyDecryptorBuilder(new BcPGPDigestCalculatorProvider()).build(passphrase));
+
+							decryptPgpKey = assertNotNull("bcPgpKey.pgpKey", bcPgpKey.getPgpKey());
+						}
 					}
 				}
 			}
 
-			if (sKey == null) {
+			if (sKey == null)
 				throw new IllegalArgumentException("secret key for message not found.");
-			}
+
+			setDecryptPgpKey(decryptPgpKey);
 
 			final PublicKeyDataDecryptorFactory dataDecryptorFactory = new BcPublicKeyDataDecryptorFactory(sKey);
 

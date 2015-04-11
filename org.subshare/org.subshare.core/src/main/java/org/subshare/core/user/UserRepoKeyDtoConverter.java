@@ -21,22 +21,22 @@ public class UserRepoKeyDtoConverter {
 		userRepoKeyDto.setServerRepositoryId(userRepoKey.getServerRepositoryId());
 		userRepoKeyDto.setEncryptedSignedPrivateKeyData(userRepoKey.getEncryptedSignedPrivateKeyData());
 		userRepoKeyDto.setSignedPublicKeyData(userRepoKey.getSignedPublicKeyData());
+		userRepoKeyDto.setValidTo(userRepoKey.getValidTo());
 		return userRepoKeyDto;
 	}
 
-	public UserRepoKey fromUserRepoKeyDto(final UserRepoKeyDto userRepoKeyDto, UserRepoKeyRing userRepoKeyRing) {
+	public UserRepoKey fromUserRepoKeyDto(final UserRepoKeyDto userRepoKeyDto) {
 		assertNotNull("userRepoKeyDto", userRepoKeyDto);
-		assertNotNull("userRepoKeyRing", userRepoKeyRing);
 
 //		final UserRepoKeyPrivateKeyDto privateKeyDto = assertNotNull("userRepoKeyDto.privateKeyDto", userRepoKeyDto.getPrivateKeyDto());
 //		final UserRepoKeyPublicKeyDto publicKeyDto = assertNotNull("userRepoKeyDto.publicKeyDto", userRepoKeyDto.getPublicKeyDto());
 
 		final UserRepoKey userRepoKey = new UserRepoKey(
-				userRepoKeyRing,
 				userRepoKeyDto.getUserRepoKeyId(),
 				userRepoKeyDto.getServerRepositoryId(),
 				userRepoKeyDto.getEncryptedSignedPrivateKeyData(),
-				userRepoKeyDto.getSignedPublicKeyData());
+				userRepoKeyDto.getSignedPublicKeyData(),
+				userRepoKeyDto.getValidTo());
 
 //		if (!privateKeyDto.getUserRepoKeyId().equals(publicKeyDto.getUserRepoKeyId()))
 //			throw new IllegalArgumentException(String.format("privateKeyDto.userRepoKeyId != publicKeyDto.userRepoKeyId :: %s != %s",

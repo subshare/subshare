@@ -13,6 +13,7 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
 
+import org.subshare.core.pgp.gnupg.GnuPgDir;
 import org.subshare.core.user.User;
 import org.subshare.core.user.UserRegistry;
 import org.subshare.core.user.UserRepoKeyRing;
@@ -20,6 +21,7 @@ import org.subshare.rest.client.transport.CryptreeRepoTransportFactory;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
+import co.codewizards.cloudstore.core.config.Config;
 import co.codewizards.cloudstore.core.config.ConfigDir;
 import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.oio.File;
@@ -35,6 +37,7 @@ import co.codewizards.cloudstore.rest.client.ssl.DynamicX509TrustManagerCallback
 public abstract class AbstractIT {
 	static {
 		System.setProperty(ConfigDir.SYSTEM_PROPERTY_CONFIG_DIR, "build/.cloudstore");
+		System.setProperty(Config.SYSTEM_PROPERTY_PREFIX + GnuPgDir.CONFIG_KEY_GNU_PG_DIR, "build/.gnupg");
 		System.setProperty(LocalRepoManager.SYSTEM_PROPERTY_KEY_SIZE, "1024");
 		System.setProperty("testEnvironment", Boolean.TRUE.toString());
 	}
@@ -72,12 +75,12 @@ public abstract class AbstractIT {
 		}
 	}
 
-	protected static UserRepoKeyRing createUserRepoKeyRing(final UUID repositoryId) {
+	protected UserRepoKeyRing createUserRepoKeyRing(final UUID serverRepositoryId) {
 		final UserRegistry userRegistry = new TestUserRegistry();
 		final User user = userRegistry.getUsers().iterator().next();
 		final UserRepoKeyRing userRepoKeyRing = user.getUserRepoKeyRingOrCreate();
-		user.createUserRepoKey(repositoryId);
-		user.createUserRepoKey(repositoryId);
+		user.createUserRepoKey(serverRepositoryId);
+		user.createUserRepoKey(serverRepositoryId);
 		return userRepoKeyRing;
 	}
 

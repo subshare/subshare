@@ -231,10 +231,10 @@ public class UserRegistry {
 
 	public synchronized void writeIfNeeded() {
 		if (dirty)
-			writeUserListFile();
+			write();
 	}
 
-	private synchronized void writeUserListFile() {
+	public synchronized void write() {
 		final UserListDto userListDto = createUserListDto();
 
 		try (LockFile lockFile = acquireLockFile();) {
@@ -260,5 +260,4 @@ public class UserRegistry {
 		}
 		return userListDto;
 	}
-
 }
