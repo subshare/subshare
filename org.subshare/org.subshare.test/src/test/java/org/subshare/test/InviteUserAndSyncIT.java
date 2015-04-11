@@ -72,7 +72,7 @@ public class InviteUserAndSyncIT extends AbstractRepoToRepoSyncIT {
 		createLocalDestinationRepo();
 
 //		createUserRepoKeyRing(remoteRepositoryId);
-		importUserRepoInvitation(userRepoInvitation);
+		importUserRepoInvitation(userRepoInvitation); // TODO this should cause the temporary invitation-UserRepoKey to be somehow replaced by a permanent one.
 
 		syncFromRemoteToLocalDest();
 	}
