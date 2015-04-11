@@ -6,6 +6,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Date;
+import java.util.Set;
 import java.util.UUID;
 
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
@@ -42,14 +43,14 @@ public class UserRepoKey {
 	private final byte[] encryptedSignedPrivateKeyData;
 	private final byte[] signedPublicKeyData;
 
-	public UserRepoKey(final UUID serverRepositoryId, final AsymmetricCipherKeyPair keyPair, final PgpKey pgpKeyForEncryption, final PgpKey pgpKeyForSignature, final Date validTo) {
+	public UserRepoKey(final UUID serverRepositoryId, final AsymmetricCipherKeyPair keyPair, final Set<PgpKey> pgpKeysForEncryption, final PgpKey pgpKeyForSignature, final Date validTo) {
 		this.userRepoKeyId = new Uid();
 		this.serverRepositoryId = assertNotNull("serverRepositoryId", serverRepositoryId);
 		this.keyPair = assertNotNull("keyPair", keyPair);
 		this.validTo = validTo;
-		assertNotNull("pgpKeyForEncryption", pgpKeyForEncryption);
+		assertNotNull("pgpKeysForEncryption", pgpKeysForEncryption);
 		assertNotNull("pgpKeyForSignature", pgpKeyForSignature);
-		this.encryptedSignedPrivateKeyData = encryptSignPrivateKeyData(pgpKeyForEncryption, pgpKeyForSignature);
+		this.encryptedSignedPrivateKeyData = encryptSignPrivateKeyData(pgpKeysForEncryption, pgpKeyForSignature);
 		this.signedPublicKeyData = signPublicKeyData(pgpKeyForSignature);
 	}
 
@@ -94,16 +95,16 @@ public class UserRepoKey {
 		return validTo;
 	}
 
-	private byte[] encryptSignPrivateKeyData(final PgpKey pgpKeyForEncryption, final PgpKey pgpKeyForSignature) {
-		if (PgpKey.TEST_DUMMY_PGP_KEY == pgpKeyForEncryption)
+	private byte[] encryptSignPrivateKeyData(final Set<PgpKey> pgpKeysForEncryption, final PgpKey pgpKeyForSignature) {
+		if (pgpKeysForEncryption.size() == 1 && PgpKey.TEST_DUMMY_PGP_KEY == pgpKeysForEncryption.iterator().next())
 			return new byte[0]; // for consistency with signPublicKeyData(...) we return an empty array here, too.
 
-		assertNotNull("pgpKeyForEncryption", pgpKeyForEncryption);
+		assertNotNull("pgpKeysForEncryption", pgpKeysForEncryption);
 		assertNotNull("pgpKeyForSignature", pgpKeyForSignature);
 		final byte[] encodedPrivateKey = CryptoRegistry.getInstance().encodePrivateKey(keyPair.getPrivate());
 		final ByteArrayOutputStream out = new ByteArrayOutputStream();
 		final PgpEncoder encoder = PgpRegistry.getInstance().getPgpOrFail().createEncoder(new ByteArrayInputStream(encodedPrivateKey), out);
-		encoder.getEncryptPgpKeys().add(pgpKeyForEncryption);
+		encoder.getEncryptPgpKeys().addAll(pgpKeysForEncryption);
 		encoder.setSignPgpKey(pgpKeyForSignature);
 		try {
 			encoder.encode();
@@ -122,7 +123,7 @@ public class UserRepoKey {
 			final AsymmetricKeyParameter privateKey = CryptoRegistry.getInstance().decodePrivateKey(privateKeyData);
 			return privateKey;
 		} catch (final IOException e) {
-			throw new RuntimeException();
+			throw new RuntimeException(e);
 		}
 	}
 
@@ -157,7 +158,7 @@ public class UserRepoKey {
 			final AsymmetricKeyParameter publicKey = CryptoRegistry.getInstance().decodePublicKey(publicKeyData);
 			return publicKey;
 		} catch (final IOException e) {
-			throw new RuntimeException();
+			throw new RuntimeException(e);
 		}
 	}
 

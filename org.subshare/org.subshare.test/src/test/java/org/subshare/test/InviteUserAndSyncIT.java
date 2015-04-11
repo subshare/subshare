@@ -15,8 +15,8 @@ import org.subshare.core.pgp.PgpRegistry;
 import org.subshare.core.pgp.gnupg.GnuPgDir;
 import org.subshare.core.user.User;
 import org.subshare.core.user.UserRegistry;
-import org.subshare.core.user.UserRepoInvitation;
 import org.subshare.core.user.UserRepoInvitationManager;
+import org.subshare.core.user.UserRepoInvitationToken;
 import org.subshare.core.user.UserRepoKeyRing;
 import org.junit.Test;
 
@@ -58,7 +58,7 @@ public class InviteUserAndSyncIT extends AbstractRepoToRepoSyncIT {
 		syncFromLocalSrcToRemote();
 		determineRemotePathPrefix2Encrypted();
 
-		UserRepoInvitation userRepoInvitation = createUserRepoInvitation();
+		UserRepoInvitationToken userRepoInvitationToken = createUserRepoInvitationToken();
 
 		// We *must* sync again, otherwise the invitation is meaningless: The invitation-UserRepoKey is not yet in the remote DB,
 		// thus neither in the local destination and thus it cannot be used to decrypt the crypto-links.
@@ -72,7 +72,7 @@ public class InviteUserAndSyncIT extends AbstractRepoToRepoSyncIT {
 		createLocalDestinationRepo();
 
 //		createUserRepoKeyRing(remoteRepositoryId);
-		importUserRepoInvitation(userRepoInvitation); // TODO this should cause the temporary invitation-UserRepoKey to be somehow replaced by a permanent one.
+		importUserRepoInvitationToken(userRepoInvitationToken); // TODO this should cause the temporary invitation-UserRepoKey to be somehow replaced by a permanent one.
 
 		syncFromRemoteToLocalDest();
 	}
@@ -89,8 +89,8 @@ public class InviteUserAndSyncIT extends AbstractRepoToRepoSyncIT {
 		cryptreeRepoTransportFactory.setUserRepoKeyRing(friend.getUserRepoKeyRingOrCreate());
 	}
 
-	protected UserRepoInvitation createUserRepoInvitation() {
-		final UserRepoInvitation userRepoInvitation;
+	protected UserRepoInvitationToken createUserRepoInvitationToken() {
+		final UserRepoInvitationToken userRepoInvitationToken;
 		try (final LocalRepoManager localRepoManagerLocal = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(localSrcRoot);)
 		{
 			try (final LocalRepoTransaction transaction = localRepoManagerLocal.beginWriteTransaction();)
@@ -101,15 +101,15 @@ public class InviteUserAndSyncIT extends AbstractRepoToRepoSyncIT {
 						cryptreeRepoTransportFactory.getUserRepoKeyRing());
 
 				final UserRepoInvitationManager userRepoInvitationManager = UserRepoInvitationManager.Helper.getInstance(ownerUserRegistry, cryptree);
-				userRepoInvitation = userRepoInvitationManager.createUserRepoInvitation("", friend, 24 * 3600 * 1000);
+				userRepoInvitationToken = userRepoInvitationManager.createUserRepoInvitationToken("", friend, 24 * 3600 * 1000);
 
 				transaction.commit();
 			}
 		}
-		return userRepoInvitation;
+		return userRepoInvitationToken;
 	}
 
-	protected void importUserRepoInvitation(UserRepoInvitation userRepoInvitation) {
+	protected void importUserRepoInvitationToken(UserRepoInvitationToken userRepoInvitationToken) {
 		try (final LocalRepoManager localRepoManagerLocal = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(localDestRoot);)
 		{
 			try (final LocalRepoTransaction transaction = localRepoManagerLocal.beginWriteTransaction();)
@@ -120,7 +120,7 @@ public class InviteUserAndSyncIT extends AbstractRepoToRepoSyncIT {
 						cryptreeRepoTransportFactory.getUserRepoKeyRing());
 
 				final UserRepoInvitationManager userRepoInvitationManager = UserRepoInvitationManager.Helper.getInstance(friendUserRegistry, cryptree);
-				userRepoInvitationManager.importUserRepoInvitation(userRepoInvitation);
+				userRepoInvitationManager.importUserRepoInvitationToken(userRepoInvitationToken);
 
 				transaction.commit();
 			}

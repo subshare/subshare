@@ -36,8 +36,8 @@ public interface UserRepoInvitationManager {
 	Cryptree getCryptree();
 	void setCryptree(Cryptree cryptree);
 
-	UserRepoInvitation createUserRepoInvitation(final String localPath, final User user, final long validityDurationMillis);
+	UserRepoInvitationToken createUserRepoInvitationToken(final String localPath, final User user, final long validityDurationMillis);
 
-	void importUserRepoInvitation(UserRepoInvitation userRepoInvitation);
+	void importUserRepoInvitationToken(UserRepoInvitationToken userRepoInvitationToken);
 
 }
