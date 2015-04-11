@@ -180,9 +180,9 @@ public abstract class AbstractRepoToRepoSyncIT extends AbstractIT {
 	}
 
 	protected void syncFromRemoteToLocalDest(final boolean assertLocalSrcAndDestDirectoriesAreEqual) throws Exception {
-		final RepoToRepoSync repoToRepoSync = new RepoToRepoSync(localDestRoot, remoteRootURLWithPathPrefixForLocalDest);
-		repoToRepoSync.sync(new LoggerProgressMonitor(logger));
-		repoToRepoSync.close();
+		try (final RepoToRepoSync repoToRepoSync = new RepoToRepoSync(localDestRoot, remoteRootURLWithPathPrefixForLocalDest);) {
+			repoToRepoSync.sync(new LoggerProgressMonitor(logger));
+		}
 
 		if (assertLocalSrcAndDestDirectoriesAreEqual) {
 			assertDirectoriesAreEqualRecursively(

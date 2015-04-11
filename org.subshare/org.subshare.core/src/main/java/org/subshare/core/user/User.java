@@ -178,7 +178,7 @@ public class User {
 		final List<Long> pgpKeyIds = getPgpKeyIds();
 
 		if (pgpKeyIds.isEmpty())
-			throw new IllegalStateException("There is no PGP key associated with this user!");
+			throw new IllegalStateException(String.format("There is no PGP key associated with %s!", this));
 
 		final Pgp pgp = PgpRegistry.getInstance().getPgpOrFail();
 		PgpKey pgpKey = null;
@@ -191,7 +191,7 @@ public class User {
 		}
 
 		if (pgpKey == null)
-			throw new IllegalStateException("None of the PGP keys associated with this user has a private key available!");
+			throw new IllegalStateException(String.format("None of the PGP keys associated with %s has a private key available!", this));
 
 		return pgpKey;
 	}
