@@ -190,7 +190,6 @@ public class InviteUserAndSyncIT extends AbstractRepoToRepoSyncIT {
 		copyResource(gpgDir + '/' + SECRING_FILE_NAME, createFile(gnuPgDir, SECRING_FILE_NAME));
 
 		final PgpRegistry pgpRegistry = PgpRegistry.getInstance();
-		pgpRegistry.clearCache();
 
 		pgpRegistry.setPgpAuthenticationCallback(new PgpAuthenticationCallback() {
 			@Override
@@ -198,6 +197,8 @@ public class InviteUserAndSyncIT extends AbstractRepoToRepoSyncIT {
 				return passphrase.toCharArray();
 			}
 		});
+
+		pgpRegistry.clearCache();
 	}
 
 	private static void copyResource(final String sourceResName, final File destinationFile) throws IOException {
