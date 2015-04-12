@@ -15,7 +15,10 @@
 	</logger>
 -->
 
+	<logger name="org.subshare.core.pgp" level="DEBUG"/>
+<!--
 	<logger name="org.subshare.local" level="DEBUG"/>
+-->
 
 	<root level="INFO">
 		<appender-ref ref="STDOUT" />
