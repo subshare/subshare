@@ -1,7 +1,7 @@
 package org.subshare.core.pgp.gnupg;
 
-import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static co.codewizards.cloudstore.core.oio.OioFileFactory.createFile;
+import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -32,10 +32,13 @@ import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpKeyTrustLevel;
 import org.subshare.core.pgp.PgpSignature;
 import org.subshare.core.pgp.PgpSignatureType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import co.codewizards.cloudstore.core.oio.File;
 
 public class BcWithLocalGnuPgPgp extends AbstractPgp {
+	private static final Logger logger = LoggerFactory.getLogger(BcWithLocalGnuPgPgp.class);
 
 	private File pubringFile;
 	private File secringFile;
@@ -128,8 +131,12 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 	protected synchronized void loadIfNeeded() {
 		if (pgpKeyId2bcPgpKey == null
 				|| getPubringFile().lastModified() != pubringFileLastModified
-				|| getSecringFile().lastModified() != secringFileLastModified)
+				|| getSecringFile().lastModified() != secringFileLastModified) {
+			logger.debug("loadIfNeeded: invoking load().");
 			load();
+		}
+		else
+			logger.debug("loadIfNeeded: *not* invoking load().");
 	}
 
 	protected synchronized void load() {
@@ -140,6 +147,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 		final long secringFileLastModified;
 		try {
 			final File secringFile = getSecringFile();
+			logger.debug("load: secringFile='{}'", secringFile);
 			secringFileLastModified = secringFile.lastModified();
 			if (secringFile.isFile()) {
 				PGPSecretKeyRingCollection pgpSecretKeyRingCollection;
@@ -163,11 +171,13 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 							throw new IllegalStateException("Secret key does not have corresponding public key in secret key ring! pgpKeyId=" + Long.toHexString(pgpKeyId));
 
 						bcPgpKey.setSecretKey(secretKey);
+						logger.debug("load: read secretKey with pgpKeyId={}", Long.toHexString(pgpKeyId));
 					}
 				}
 			}
 
 			final File pubringFile = getPubringFile();
+			logger.debug("load: pubringFile='{}'", pubringFile);
 			pubringFileLastModified = pubringFile.lastModified();
 			if (pubringFile.isFile()) {
 				PGPPublicKeyRingCollection pgpPublicKeyRingCollection;

@@ -2,7 +2,11 @@ package org.subshare.core.pgp;
 
 import java.util.ServiceLoader;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class PgpRegistry {
+	private static final Logger logger = LoggerFactory.getLogger(PgpRegistry.class);
 
 	private Pgp pgp;
 	private PgpAuthenticationCallback pgpAuthenticationCallback;
@@ -22,6 +26,7 @@ public class PgpRegistry {
 	 */
 	@Deprecated
 	public void clearCache() {
+		logger.info("clearCache: entered.");
 		pgp = null;
 	}
 
@@ -37,6 +42,9 @@ public class PgpRegistry {
 			}
 			this.pgp = pgp;
 		}
+		else
+			logger.debug("getPgpOrFail: returning existing Pgp instance.");
+
 		return pgp;
 	}
 

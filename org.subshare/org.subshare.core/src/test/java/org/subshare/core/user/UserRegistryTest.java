@@ -4,8 +4,6 @@ import static co.codewizards.cloudstore.core.oio.OioFileFactory.createFile;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -25,6 +23,7 @@ import org.junit.Test;
 import co.codewizards.cloudstore.core.config.Config;
 import co.codewizards.cloudstore.core.config.ConfigDir;
 import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.util.IOUtil;
 
 public class UserRegistryTest {
@@ -125,19 +124,11 @@ public class UserRegistryTest {
 	}
 
 	private void initPgp() throws IOException {
-		GnuPgDir.getInstance().getFile().mkdir();
-		try (
-				OutputStream out = createFile(GnuPgDir.getInstance().getFile(), GnuPgTest.PUBRING_FILE_NAME).createOutputStream();
-				InputStream in = GnuPgTest.createPubringInputStream();
-				) {
-			IOUtil.transferStreamData(in, out);
-		}
-		try (
-				OutputStream out = createFile(GnuPgDir.getInstance().getFile(), GnuPgTest.SECRING_FILE_NAME).createOutputStream();
-				InputStream in = GnuPgTest.createSecringInputStream();
-				) {
-			IOUtil.transferStreamData(in, out);
-		}
+		final File gnuPgDir = GnuPgDir.getInstance().getFile();
+
+		gnuPgDir.mkdir();
+		IOUtil.copyResource(GnuPgTest.class, GnuPgTest.PUBRING_FILE_NAME, createFile(gnuPgDir, GnuPgTest.PUBRING_FILE_NAME));
+		IOUtil.copyResource(GnuPgTest.class, GnuPgTest.SECRING_FILE_NAME, createFile(gnuPgDir, GnuPgTest.SECRING_FILE_NAME));
 
 		PgpRegistry.getInstance().setPgpAuthenticationCallback(new PgpAuthenticationCallback() {
 			@Override
@@ -146,5 +137,4 @@ public class UserRegistryTest {
 			}
 		});
 	}
-
 }

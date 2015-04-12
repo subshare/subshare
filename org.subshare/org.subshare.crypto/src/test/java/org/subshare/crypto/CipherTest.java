@@ -17,7 +17,7 @@
  */
 package org.subshare.crypto;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -209,7 +209,7 @@ public class CipherTest
 		final long start = System.currentTimeMillis();
 		final Set<String> transformations = CryptoRegistry.getInstance().getSupportedCipherTransformations(null);
 		for (final String transformation : transformations) {
-			logger.info("testLookupAllSupportedCiphers: Creating cipher for transformation \"{}\".", transformation);
+			logger.debug("testLookupAllSupportedCiphers: Creating cipher for transformation \"{}\".", transformation);
 			CryptoRegistry.getInstance().createCipher(transformation);
 		}
 		logger.info(
