@@ -158,10 +158,8 @@ public class InviteUserAndSyncIT extends AbstractRepoToRepoSyncIT {
 		return user.getUserRepoKeyRing();
 	}
 
-	@SuppressWarnings("deprecation")
 	protected User getFirstUserHavingPrivateKey(UserRegistry userRegistry) {
 		final PgpRegistry pgpRegistry = PgpRegistry.getInstance();
-		pgpRegistry.clearCache();
 		final Pgp pgp = pgpRegistry.getPgpOrFail();
 		for (final User user : userRegistry.getUsers()) {
 			for (final Long pgpKeyId : user.getPgpKeyIds()) {
@@ -191,7 +189,10 @@ public class InviteUserAndSyncIT extends AbstractRepoToRepoSyncIT {
 		copyResource(gpgDir + '/' + PUBRING_FILE_NAME, createFile(gnuPgDir, PUBRING_FILE_NAME));
 		copyResource(gpgDir + '/' + SECRING_FILE_NAME, createFile(gnuPgDir, SECRING_FILE_NAME));
 
-		PgpRegistry.getInstance().setPgpAuthenticationCallback(new PgpAuthenticationCallback() {
+		final PgpRegistry pgpRegistry = PgpRegistry.getInstance();
+		pgpRegistry.clearCache();
+
+		pgpRegistry.setPgpAuthenticationCallback(new PgpAuthenticationCallback() {
 			@Override
 			public char[] getPassphrase(final PgpKey pgpKey) {
 				return passphrase.toCharArray();
