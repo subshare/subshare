@@ -132,4 +132,8 @@ public interface Cryptree {
 	boolean isPermissionsInherited(String localPath);
 	void setPermissionsInherited(Uid cryptoRepoFileId, boolean inherited);
 	boolean isPermissionsInherited(Uid cryptoRepoFileId);
+
+	void requestReplaceInvitationUserRepoKey(UserRepoKey invitationUserRepoKey, UserRepoKey.PublicKey publicKey);
+//	void replaceInvitationUserRepoKey(UserRepoKey invitationUserRepoKey, UserRepoKey userRepoKey);
+	void registerRemotePathPrefix(String pathPrefix);
 }

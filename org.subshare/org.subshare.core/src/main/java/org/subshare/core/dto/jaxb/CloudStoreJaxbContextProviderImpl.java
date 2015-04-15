@@ -14,6 +14,8 @@ import org.subshare.core.dto.UserDto;
 import org.subshare.core.dto.UserListDto;
 import org.subshare.core.dto.UserRepoInvitationDto;
 import org.subshare.core.dto.UserRepoKeyPublicKeyDto;
+import org.subshare.core.dto.UserRepoKeyPublicKeyReplacementRequestDeletionDto;
+import org.subshare.core.dto.UserRepoKeyPublicKeyReplacementRequestDto;
 
 import co.codewizards.cloudstore.core.dto.jaxb.AbstractCloudStoreJaxbContextProvider;
 
@@ -35,7 +37,9 @@ public class CloudStoreJaxbContextProviderImpl extends AbstractCloudStoreJaxbCon
 				UserDto.class,
 				UserListDto.class,
 				UserRepoInvitationDto.class,
-				UserRepoKeyPublicKeyDto.class
+				UserRepoKeyPublicKeyDto.class,
+				UserRepoKeyPublicKeyReplacementRequestDto.class,
+				UserRepoKeyPublicKeyReplacementRequestDeletionDto.class
 		};
 	}
 

@@ -1,7 +1,10 @@
 package org.subshare.local;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
-import static org.subshare.local.CryptreeNodeUtil.*;
+import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
+import static org.subshare.local.CryptreeNodeUtil.createCryptoLink;
+import static org.subshare.local.CryptreeNodeUtil.decrypt;
+import static org.subshare.local.CryptreeNodeUtil.decryptLarge;
+import static org.subshare.local.CryptreeNodeUtil.encrypt;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -258,7 +261,7 @@ public class CryptreeNode {
 			return; // There is already an active key which is accessible to the given user. Thus no need to generate a new crypto-link.
 
 		final PlainCryptoKey plainCryptoKey = getActivePlainCryptoKeyOrCreate(CryptoKeyRole.clearanceKey, CipherOperationMode.DECRYPT);
-		createCryptoLink(this, getUserRepoKeyPublicKey(publicKey), plainCryptoKey);
+		createCryptoLink(this, getUserRepoKeyPublicKeyOrCreate(publicKey), plainCryptoKey);
 	}
 
 	private void revokeReadPermission(final Set<Uid> userRepoKeyIds) {
@@ -565,18 +568,15 @@ public class CryptreeNode {
 		return parent;
 	}
 
-	public UserRepoKeyPublicKey getUserRepoKeyPublicKey(final UserRepoKey userRepoKey) {
+	public UserRepoKeyPublicKey getUserRepoKeyPublicKeyOrCreate(final UserRepoKey userRepoKey) {
 		assertNotNull("userRepoKey", userRepoKey);
-		return getUserRepoKeyPublicKey(userRepoKey.getPublicKey());
+		return getUserRepoKeyPublicKeyOrCreate(userRepoKey.getPublicKey());
 	}
 
-	public UserRepoKeyPublicKey getUserRepoKeyPublicKey(final UserRepoKey.PublicKey publicKey) {
+	public UserRepoKeyPublicKey getUserRepoKeyPublicKeyOrCreate(final UserRepoKey.PublicKey publicKey) {
 		assertNotNull("publicKey", publicKey);
 		final UserRepoKeyPublicKeyDao dao = context.transaction.getDao(UserRepoKeyPublicKeyDao.class);
-		UserRepoKeyPublicKey userRepoKeyPublicKey = dao.getUserRepoKeyPublicKey(publicKey.getUserRepoKeyId());
-		if (userRepoKeyPublicKey == null)
-			userRepoKeyPublicKey = dao.makePersistent(new UserRepoKeyPublicKey(publicKey));
-
+		final UserRepoKeyPublicKey userRepoKeyPublicKey = dao.getUserRepoKeyPublicKeyOrCreate(publicKey);
 		return userRepoKeyPublicKey;
 	}
 
@@ -601,7 +601,7 @@ public class CryptreeNode {
 
 		final PermissionSet permissionSet = getPermissionSetOrCreate();
 		final PermissionDao dao = context.transaction.getDao(PermissionDao.class);
-		final UserRepoKeyPublicKey userRepoKeyPublicKey = getUserRepoKeyPublicKey(publicKey);
+		final UserRepoKeyPublicKey userRepoKeyPublicKey = getUserRepoKeyPublicKeyOrCreate(publicKey);
 		final Collection<Permission> permissions = dao.getNonRevokedPermissions(permissionSet, permissionType, userRepoKeyPublicKey);
 		if (permissions.isEmpty()) {
 			Permission permission = new Permission();
@@ -966,14 +966,14 @@ public class CryptreeNode {
 
 
 		final Date now = new Date();
-		for (final UserRepoKey userRepoKey : context.userRepoKeyRing.getUserRepoKeys(context.serverRepositoryId)) {
+		for (final UserRepoKey userRepoKey : context.userRepoKeyRing.getPermanentUserRepoKeys(context.serverRepositoryId)) {
 			final boolean owner = isOwner(userRepoKey.getUserRepoKeyId());
 			final Set<Permission> permissions = new HashSet<Permission>();
 			if (! owner)
 				collectPermissions(permissions, anyCryptoRepoFile, permissionType, userRepoKey.getUserRepoKeyId(), now);
 
 			if (owner || ! permissions.isEmpty()) {
-				getUserRepoKeyPublicKey(userRepoKey); // Make sure it is persisted in the DB.
+				getUserRepoKeyPublicKeyOrCreate(userRepoKey); // Make sure it is persisted in the DB.
 				return userRepoKey;
 			}
 		}

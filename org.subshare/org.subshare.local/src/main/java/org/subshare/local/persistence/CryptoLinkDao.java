@@ -1,7 +1,7 @@
 package org.subshare.local.persistence;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
-import static co.codewizards.cloudstore.core.util.Util.*;
+import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
+import static co.codewizards.cloudstore.core.util.Util.equal;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -96,6 +96,24 @@ public class CryptoLinkDao extends Dao<CryptoLink, CryptoLinkDao> {
 				result.add(cryptoLink);
 		}
 		return result;
+	}
+
+	public Collection<CryptoLink> getCryptoLinks(final UserRepoKeyPublicKey fromUserRepoKeyPublicKey) {
+		final Query query = pm().newNamedQuery(getEntityClass(), "getCryptoLinks_fromUserRepoKeyPublicKey");
+		try {
+			long startTimestamp = System.currentTimeMillis();
+			@SuppressWarnings("unchecked")
+			Collection<CryptoLink> cryptoLinks = (Collection<CryptoLink>) query.execute(fromUserRepoKeyPublicKey);
+			logger.debug("getActiveCryptoLinks: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
+
+			startTimestamp = System.currentTimeMillis();
+			cryptoLinks = load(cryptoLinks);
+			logger.debug("getActiveCryptoLinks: Loading result-set with {} elements took {} ms.", cryptoLinks.size(), System.currentTimeMillis() - startTimestamp);
+
+			return cryptoLinks;
+		} finally {
+			query.closeAll();
+		}
 	}
 
 //	public Collection<CryptoLink> getActiveCryptoLinks(final CryptoRepoFile toCryptoRepoFile, final CryptoKeyRole toCryptoKeyRole, final Uid fromUserRepoKeyId) {

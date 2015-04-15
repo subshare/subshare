@@ -95,16 +95,16 @@ public abstract class AbstractPermissionTest extends AbstractTest {
 
 	protected void createUserRepoKeyRings() throws Exception {
 		ownerUserRepoKeyRing = createUserRepoKeyRing(remoteRepositoryId);
-		ownerUserRepoKey = ownerUserRepoKeyRing.getUserRepoKeys(remoteRepositoryId).get(1);
+		ownerUserRepoKey = ownerUserRepoKeyRing.getPermanentUserRepoKeys(remoteRepositoryId).get(1);
 
 		friend0UserRepoKeyRing = createUserRepoKeyRing(remoteRepositoryId);
-		friend0UserRepoKey = friend0UserRepoKeyRing.getUserRepoKeys(remoteRepositoryId).get(1);
+		friend0UserRepoKey = friend0UserRepoKeyRing.getPermanentUserRepoKeys(remoteRepositoryId).get(1);
 
 		friend1UserRepoKeyRing = createUserRepoKeyRing(remoteRepositoryId);
-		friend1UserRepoKey = friend1UserRepoKeyRing.getUserRepoKeys(remoteRepositoryId).get(1);
+		friend1UserRepoKey = friend1UserRepoKeyRing.getPermanentUserRepoKeys(remoteRepositoryId).get(1);
 
 		friend2UserRepoKeyRing = createUserRepoKeyRing(remoteRepositoryId);
-		friend2UserRepoKey = friend2UserRepoKeyRing.getUserRepoKeys(remoteRepositoryId).get(1);
+		friend2UserRepoKey = friend2UserRepoKeyRing.getPermanentUserRepoKeys(remoteRepositoryId).get(1);
 	}
 
 	protected void createOrUpdateCryptoRepoFiles(final String ... localPaths) {

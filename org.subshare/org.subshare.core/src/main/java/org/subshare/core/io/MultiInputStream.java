@@ -1,14 +1,29 @@
 package org.subshare.core.io;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * {@link InputStream} implementation combining multiple other {@code InputStream}s.
+ * <p>
+ * To avoid multiple {@code InputStream}s from being open at the same time, if possible, this {@code InputStream}
+ * takes multiple {@link InputStreamSource}s as input, instead. It then opens only one stream at a time.
+ *
+ * @author Marco หงุ่ยตระกูล-Schulze - marco at codewizards dot co
+ */
 public class MultiInputStream extends InputStream {
+
+	private static final Logger logger = LoggerFactory.getLogger(MultiInputStream.class);
 
 	private final Iterator<? extends InputStreamSource> inputStreamSourcesIterator;
 
@@ -83,9 +98,28 @@ public class MultiInputStream extends InputStream {
 
 	@Override
 	public void close() throws IOException {
+		final List<Throwable> errors = new ArrayList<>(1);
 		if (inputStream != null) {
-			inputStream.close();
+			try {
+				inputStream.close();
+			} catch (final Exception x) {
+				errors.add(x);
+				logger.warn("close: Closing underlying InputStream failed: " + x, x);
+			}
 			inputStream = null;
 		}
+
+		while (inputStreamSourcesIterator.hasNext()) {
+			final InputStreamSource inputStreamSource = inputStreamSourcesIterator.next();
+			try {
+				inputStreamSource.discard();
+			} catch (final Exception x) {
+				errors.add(x);
+				logger.warn("close: Discarding underlying InputStreamSource failed: " + x, x);
+			}
+		}
+
+		if (!errors.isEmpty()) // TODO would be nice to have a MultiException (or named similarly) and pass all causes...
+			throw new IOException(errors.get(0));
 	}
 }

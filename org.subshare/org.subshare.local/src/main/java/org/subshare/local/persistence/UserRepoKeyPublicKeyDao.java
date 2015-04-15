@@ -1,11 +1,12 @@
 package org.subshare.local.persistence;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
 
 import java.util.Collection;
 
 import javax.jdo.Query;
 
+import org.subshare.core.user.UserRepoKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,6 +66,12 @@ public class UserRepoKeyPublicKeyDao extends Dao<UserRepoKeyPublicKey, UserRepoK
 		}
 	}
 
+	public UserRepoKeyPublicKey getUserRepoKeyPublicKeyOrCreate(final UserRepoKey.PublicKey publicKey) {
+		assertNotNull("publicKey", publicKey);
+		UserRepoKeyPublicKey userRepoKeyPublicKey = getUserRepoKeyPublicKey(publicKey.getUserRepoKeyId());
+		if (userRepoKeyPublicKey == null)
+			userRepoKeyPublicKey = makePersistent(new UserRepoKeyPublicKey(publicKey));
 
-
+		return userRepoKeyPublicKey;
+	}
 }

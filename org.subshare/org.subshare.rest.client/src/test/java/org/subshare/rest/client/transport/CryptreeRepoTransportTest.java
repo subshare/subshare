@@ -54,7 +54,7 @@ public class CryptreeRepoTransportTest {
 			};
 
 			final KeyParameter keyParameter = KeyFactory.getInstance().createSymmetricKey();
-			final UserRepoKey signingUserRepoKey = userRepoKeyRing.getUserRepoKeys(serverRepositoryId).get(0);
+			final UserRepoKey signingUserRepoKey = userRepoKeyRing.getPermanentUserRepoKeys(serverRepositoryId).get(0);
 
 			for (int i = 0; i < 100; ++i) {
 				final int length = 1 + random.nextInt(1024 * 1024);

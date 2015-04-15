@@ -4,6 +4,7 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
 import static co.codewizards.cloudstore.core.util.Util.equal;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Date;
 import java.util.UUID;
 
@@ -19,6 +20,8 @@ import javax.jdo.annotations.Queries;
 import javax.jdo.annotations.Query;
 import javax.jdo.annotations.Unique;
 
+import org.subshare.core.io.InputStreamSource;
+import org.subshare.core.io.MultiInputStream;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.crypto.CryptoRegistry;
 
@@ -111,6 +114,30 @@ public class UserRepoKeyPublicKey extends Entity implements AutoTrackLocalRevisi
 	public void setLocalRevision(final long localRevision) {
 		if (! equal(this.localRevision, localRevision))
 			this.localRevision = localRevision;
+	}
+
+	public int getSignedDataVersion() {
+		return 0;
+	}
+
+	public InputStream getSignedData(int signedDataVersion) {
+		try {
+			byte separatorIndex = 0;
+			return new MultiInputStream(
+					InputStreamSource.Helper.createInputStreamSource(getUserRepoKeyId()),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
+					InputStreamSource.Helper.createInputStreamSource(getPublicKeyData()),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
+					InputStreamSource.Helper.createInputStreamSource(getServerRepositoryId()),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
+					InputStreamSource.Helper.createInputStreamSource(getValidTo())
+			);
+		} catch (final IOException x) {
+			throw new RuntimeException(x);
+		}
 	}
 
 	public UserRepoKey.PublicKey getPublicKey() {

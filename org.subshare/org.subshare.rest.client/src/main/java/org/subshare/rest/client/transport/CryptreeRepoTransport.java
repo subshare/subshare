@@ -1,8 +1,8 @@
 package org.subshare.rest.client.transport;
 
-import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
-import static org.subshare.core.crypto.CryptoConfigUtil.*;
+import static co.codewizards.cloudstore.core.oio.OioFileFactory.createFile;
+import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
+import static org.subshare.core.crypto.CryptoConfigUtil.getSymmetricCipherTransformation;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -93,6 +93,20 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 		final ChangeSetDto changeSetDto = getRestRepoTransport().getChangeSetDto(localSync);
 		syncCryptoKeysFromRemoteRepo();
 		return decryptChangeSetDto(changeSetDto);
+	}
+
+	@Override
+	protected String determinePathPrefix() {
+		final String pathPrefix = super.determinePathPrefix();
+
+		final LocalRepoManager localRepoManager = getLocalRepoManager();
+
+		try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
+			final Cryptree cryptree = getCryptreeFactory().getCryptreeOrCreate(transaction, getRepositoryId(), pathPrefix, getUserRepoKeyRing());
+			cryptree.registerRemotePathPrefix(pathPrefix);
+			transaction.commit();
+		}
+		return pathPrefix;
 	}
 
 	private void syncCryptoKeysFromRemoteRepo() {
@@ -325,11 +339,15 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 		}
 	}
 
-	protected Cryptree getCryptree(final LocalRepoTransaction transaction) {
+	protected CryptreeFactory getCryptreeFactory() {
 		if (cryptreeFactory == null)
 			cryptreeFactory = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail();
 
-		return cryptreeFactory.getCryptreeOrCreate(transaction, getRepositoryId(), getPathPrefix(), getUserRepoKeyRing());
+		return cryptreeFactory;
+	}
+
+	protected Cryptree getCryptree(final LocalRepoTransaction transaction) {
+		return getCryptreeFactory().getCryptreeOrCreate(transaction, getRepositoryId(), getPathPrefix(), getUserRepoKeyRing());
 	}
 
 	protected UserRepoKeyRing getUserRepoKeyRing() {

@@ -41,7 +41,7 @@ public class SignerVerifierStreamTest extends AbstractTest {
 	public static void beforeClass() {
 		repositoryId = UUID.randomUUID();
 		userRepoKeyRing = createUserRepoKeyRing(repositoryId);
-		userRepoKey = userRepoKeyRing.getUserRepoKeys(repositoryId).get(0);
+		userRepoKey = userRepoKeyRing.getPermanentUserRepoKeys(repositoryId).get(0);
 		userRepoKeyPublicKeyLookup = new UserRepoKeyPublicKeyLookup() {
 			@Override
 			public PublicKey getUserRepoKeyPublicKey(final Uid userRepoKeyId) {

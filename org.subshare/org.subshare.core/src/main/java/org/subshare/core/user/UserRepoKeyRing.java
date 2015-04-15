@@ -1,6 +1,6 @@
 package org.subshare.core.user;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -23,22 +23,43 @@ public class UserRepoKeyRing {
 		return Collections.unmodifiableCollection(userRepoKeyId2UserRepoKey.values());
 	}
 
-	public List<UserRepoKey> getUserRepoKeys(final UUID serverRepositoryId) {
-		return getUserRepoKeyList(serverRepositoryId);
+	public List<UserRepoKey> getPermanentUserRepoKeys(final UUID serverRepositoryId) {
+		return getPermanentUserRepoKeyList(serverRepositoryId);
 	}
 
-	protected synchronized List<UserRepoKey> getUserRepoKeyList(final UUID serverRepositoryId) {
+	protected synchronized List<UserRepoKey> getPermanentUserRepoKeyList(final UUID serverRepositoryId) {
 		assertNotNull("repositoryId", serverRepositoryId);
 		List<UserRepoKey> userRepoKeyList = repositoryId2userRepoKeyList.get(serverRepositoryId);
 
 		if (userRepoKeyList == null) {
-			final ArrayList<UserRepoKey> l = new ArrayList<UserRepoKey>(userRepoKeyId2UserRepoKey.values());
+			List<UserRepoKey> l = filterByServerRepositoryId(userRepoKeyId2UserRepoKey.values(), serverRepositoryId);
+			l = removeTemporaryUserRepoKeys(l);
 			Collections.shuffle(l);
 			userRepoKeyList = Collections.unmodifiableList(l);
 			repositoryId2userRepoKeyList.put(serverRepositoryId, userRepoKeyList);
 		}
 
 		return userRepoKeyList;
+	}
+
+	protected List<UserRepoKey> filterByServerRepositoryId(Collection<UserRepoKey> userRepoKeys, final UUID serverRepositoryId) {
+		final ArrayList<UserRepoKey> result = new ArrayList<UserRepoKey>(userRepoKeys.size());
+		for (final UserRepoKey userRepoKey : userRepoKeys) {
+			if (serverRepositoryId.equals(userRepoKey.getServerRepositoryId()))
+				result.add(userRepoKey);
+		}
+//		result.trimToSize(); // filtered again, anyway => no need for this ;-)
+		return result;
+	}
+
+	protected List<UserRepoKey> removeTemporaryUserRepoKeys(Collection<UserRepoKey> userRepoKeys) {
+		final ArrayList<UserRepoKey> result = new ArrayList<UserRepoKey>(userRepoKeys.size());
+		for (final UserRepoKey userRepoKey : userRepoKeys) {
+			if (userRepoKey.getValidTo() == null)
+				result.add(userRepoKey);
+		}
+		result.trimToSize();
+		return result;
 	}
 
 	protected synchronized void shuffleUserRepoKeys(final UUID serverRepositoryId) {

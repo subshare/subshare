@@ -25,9 +25,11 @@ public class CryptoChangeSetDto {
 
 	private List<PermissionSetInheritanceDto> permissionSetInheritanceDtos;
 
+	private List<UserRepoKeyPublicKeyReplacementRequestDto> userRepoKeyPublicKeyReplacementRequestDtos;
+
 	public List<CryptoRepoFileDto> getCryptoRepoFileDtos() {
 		if (cryptoRepoFileDtos == null)
-			cryptoRepoFileDtos = new ArrayList<CryptoRepoFileDto>();
+			cryptoRepoFileDtos = new ArrayList<>();
 
 		return cryptoRepoFileDtos;
 	}
@@ -37,7 +39,7 @@ public class CryptoChangeSetDto {
 
 	public List<CryptoKeyDto> getCryptoKeyDtos() {
 		if (cryptoKeyDtos == null)
-			cryptoKeyDtos = new ArrayList<CryptoKeyDto>();
+			cryptoKeyDtos = new ArrayList<>();
 
 		return cryptoKeyDtos;
 	}
@@ -47,7 +49,7 @@ public class CryptoChangeSetDto {
 
 	public List<CryptoLinkDto> getCryptoLinkDtos() {
 		if (cryptoLinkDtos == null)
-			cryptoLinkDtos = new ArrayList<CryptoLinkDto>();
+			cryptoLinkDtos = new ArrayList<>();
 
 		return cryptoLinkDtos;
 	}
@@ -57,7 +59,7 @@ public class CryptoChangeSetDto {
 
 	public List<UserRepoKeyPublicKeyDto> getUserRepoKeyPublicKeyDtos() {
 		if (userRepoKeyPublicKeyDtos == null)
-			userRepoKeyPublicKeyDtos = new ArrayList<UserRepoKeyPublicKeyDto>();
+			userRepoKeyPublicKeyDtos = new ArrayList<>();
 
 		return userRepoKeyPublicKeyDtos;
 	}
@@ -74,7 +76,7 @@ public class CryptoChangeSetDto {
 
 	public List<PermissionSetDto> getPermissionSetDtos() {
 		if (permissionSetDtos == null)
-			permissionSetDtos = new ArrayList<PermissionSetDto>();
+			permissionSetDtos = new ArrayList<>();
 
 		return permissionSetDtos;
 	}
@@ -84,7 +86,7 @@ public class CryptoChangeSetDto {
 
 	public List<PermissionDto> getPermissionDtos() {
 		if (permissionDtos == null)
-			permissionDtos = new ArrayList<PermissionDto>();
+			permissionDtos = new ArrayList<>();
 
 		return permissionDtos;
 	}
@@ -94,7 +96,7 @@ public class CryptoChangeSetDto {
 
 	public List<PermissionSetInheritanceDto> getPermissionSetInheritanceDtos() {
 		if (permissionSetInheritanceDtos == null)
-			permissionSetInheritanceDtos = new ArrayList<PermissionSetInheritanceDto>();
+			permissionSetInheritanceDtos = new ArrayList<>();
 
 		return permissionSetInheritanceDtos;
 	}
@@ -102,11 +104,23 @@ public class CryptoChangeSetDto {
 		this.permissionSetInheritanceDtos = permissionSetInheritanceDtos;
 	}
 
+	public List<UserRepoKeyPublicKeyReplacementRequestDto> getUserRepoKeyPublicKeyReplacementRequestDtos() {
+		if (userRepoKeyPublicKeyReplacementRequestDtos == null)
+			userRepoKeyPublicKeyReplacementRequestDtos = new ArrayList<>();
+
+		return userRepoKeyPublicKeyReplacementRequestDtos;
+	}
+
+	public void setUserRepoKeyPublicKeyReplacementRequestDtos(List<UserRepoKeyPublicKeyReplacementRequestDto> userRepoKeyPublicKeyReplacementRequestDtos) {
+		this.userRepoKeyPublicKeyReplacementRequestDtos = userRepoKeyPublicKeyReplacementRequestDtos;
+	}
+
 	@Override
 	public String toString() {
 		return "CryptoChangeSetDto[cryptoRepoFileDtos=" + cryptoRepoFileDtos
 				+ ", cryptoKeyDtos=" + cryptoKeyDtos + ", cryptoLinkDtos="
-				+ cryptoLinkDtos + ", userRepoKeyPublicKeyDtos=" + userRepoKeyPublicKeyDtos + "]";
+				+ cryptoLinkDtos + ", userRepoKeyPublicKeyDtos=" + userRepoKeyPublicKeyDtos
+				+ ", userRepoKeyPublicKeyReplacementRequestDtos=" + userRepoKeyPublicKeyReplacementRequestDtos + "]";
 	}
 
 	public boolean isEmpty() {
@@ -117,7 +131,8 @@ public class CryptoChangeSetDto {
 				&& repositoryOwnerDto == null
 				&& isEmpty(permissionSetDtos)
 				&& isEmpty(permissionDtos)
-				&& isEmpty(permissionSetInheritanceDtos);
+				&& isEmpty(permissionSetInheritanceDtos)
+				&& isEmpty(userRepoKeyPublicKeyReplacementRequestDtos);
 	}
 
 	private static boolean isEmpty(final Collection<?> c) {

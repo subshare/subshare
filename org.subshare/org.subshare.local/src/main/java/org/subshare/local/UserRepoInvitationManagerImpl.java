@@ -17,6 +17,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.UUID;
 import java.util.zip.CRC32;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -27,6 +28,7 @@ import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
 import org.subshare.core.Cryptree;
+import org.subshare.core.CryptreeFactoryRegistry;
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.dto.UserRepoInvitationDto;
 import org.subshare.core.pgp.Pgp;
@@ -42,12 +44,14 @@ import org.subshare.core.user.UserRepoInvitationManager;
 import org.subshare.core.user.UserRepoInvitationToken;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKeyRing;
+import org.subshare.local.persistence.SsRemoteRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import co.codewizards.cloudstore.core.auth.SignatureException;
-import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.dto.jaxb.CloudStoreJaxbContext;
+import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
+import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
 import co.codewizards.cloudstore.local.persistence.RemoteRepository;
 import co.codewizards.cloudstore.local.persistence.RemoteRepositoryDao;
 
@@ -65,7 +69,11 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 	private final UserRepoInvitationDtoConverter userRepoInvitationDtoConverter = new UserRepoInvitationDtoConverter();
 
 	private UserRegistry userRegistry;
+	private LocalRepoManager localRepoManager;
+
+	private LocalRepoTransaction transaction;
 	private Cryptree cryptree;
+	private User grantingUser;
 
 	@Override
 	public int getPriority() {
@@ -82,12 +90,12 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 	}
 
 	@Override
-	public Cryptree getCryptree() {
-		return cryptree;
+	public LocalRepoManager getLocalRepoManager() {
+		return localRepoManager;
 	}
 	@Override
-	public void setCryptree(Cryptree cryptree) {
-		this.cryptree = cryptree;
+	public void setLocalRepoManager(LocalRepoManager localRepoManager) {
+		this.localRepoManager = localRepoManager;
 	}
 
 	@Override
@@ -96,6 +104,8 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 		assertNotNull("user", user);
 
 		final UserRepoInvitation userRepoInvitation = createUserRepoInvitation(localPath, user, validityDurationMillis);
+		final User grantingUser = assertNotNull("grantingUser", this.grantingUser);
+
 		final byte[] userRepoInvitationData = toUserRepoInvitationData(userRepoInvitation);
 
 		try {
@@ -106,7 +116,6 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 			e.printStackTrace();
 		}
 
-		final User grantingUser = determineGrantingUser(localPath);
 		final PgpKey signPgpKey = grantingUser.getPgpKeyContainingPrivateKeyOrFail();
 
 		final ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -134,8 +143,7 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 			throw new RuntimeException(e);
 		}
 
-		final byte[] userRepoInvitationData = out.toByteArray();
-		final UserRepoInvitation userRepoInvitation = fromUserRepoInvitationData(userRepoInvitationData);
+		final UserRepoInvitation userRepoInvitation = fromUserRepoInvitationData(out.toByteArray());
 		importUserRepoInvitation(userRepoInvitation);
 	}
 
@@ -286,35 +294,110 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 		assertNotNull("user", user);
 		final PermissionType permissionType = PermissionType.read; // currently the only permission we allow to grant during invitation. maybe we'll change this later.
 
-		final User grantingUser = determineGrantingUser(localPath);
+		final UserRepoInvitation userRepoInvitation;
+		try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();)
+		{
+			this.transaction = transaction;
 
-		final UserRepoKey invitationUserRepoKey = grantingUser.createInvitationUserRepoKey(user, cryptree.getRemoteRepositoryId(), validityDurationMillis);
-		cryptree.grantPermission(localPath, permissionType, invitationUserRepoKey.getPublicKey());
+			grantingUser = createCryptreeAndDetermineGrantingUser(localPath);
 
-		final RemoteRepositoryDao remoteRepositoryDao = cryptree.getTransaction().getDao(RemoteRepositoryDao.class);
-		final RemoteRepository remoteRepository = remoteRepositoryDao.getRemoteRepositoryOrFail(cryptree.getRemoteRepositoryId());
-		final URL remoteRoot = remoteRepository.getRemoteRoot();
-		if (remoteRoot == null)
-			throw new IllegalStateException("Could not determine the remoteRoot for the remoteRepositoryId " + cryptree.getRemoteRepositoryId());
+			final UserRepoKey invitationUserRepoKey = grantingUser.createInvitationUserRepoKey(user, cryptree.getRemoteRepositoryId(), validityDurationMillis);
+			cryptree.grantPermission(localPath, permissionType, invitationUserRepoKey.getPublicKey());
 
-		final String serverPath = cryptree.getServerPath(localPath);
-		final URL completeUrl = appendNonEncodedPath(remoteRoot, serverPath);
-		final UserRepoInvitation userRepoInvitation = new UserRepoInvitation(completeUrl, invitationUserRepoKey);
+			final RemoteRepositoryDao remoteRepositoryDao = cryptree.getTransaction().getDao(RemoteRepositoryDao.class);
+			final RemoteRepository remoteRepository = remoteRepositoryDao.getRemoteRepositoryOrFail(cryptree.getRemoteRepositoryId());
+			final URL remoteRoot = remoteRepository.getRemoteRoot();
+			if (remoteRoot == null)
+				throw new IllegalStateException("Could not determine the remoteRoot for the remoteRepositoryId " + cryptree.getRemoteRepositoryId());
+
+			final String serverPath = cryptree.getServerPath(localPath);
+			final URL completeUrl = appendNonEncodedPath(remoteRoot, serverPath);
+			userRepoInvitation = new UserRepoInvitation(completeUrl, invitationUserRepoKey);
+
+			transaction.commit();
+		} finally {
+			this.cryptree = null;
+			this.transaction = null;
+		}
 		return userRepoInvitation;
 	}
 
-	private User determineGrantingUser(final String localPath) {
-		final UserRepoKey grantingUserRepoKey = cryptree.getUserRepoKeyOrFail(localPath, PermissionType.grant);
-		final User grantingUser = findUserWithUserRepoKeyRingOrFail(grantingUserRepoKey);
-		return grantingUser;
+	private User createCryptreeAndDetermineGrantingUser(final String localPath) {
+		final RemoteRepositoryDao remoteRepositoryDao = transaction.getDao(RemoteRepositoryDao.class);
+		final Map<UUID, URL> remoteRepositoryId2RemoteRootMap = remoteRepositoryDao.getRemoteRepositoryId2RemoteRootMap();
+		if (remoteRepositoryId2RemoteRootMap.size() > 1)
+			throw new UnsupportedOperationException("Currently, only exactly one remote-repository is allowed per local repository!");
+
+		if (remoteRepositoryId2RemoteRootMap.isEmpty())
+			throw new IllegalStateException("There is no remote-repository connected with this local repository!");
+
+		final UUID remoteRepositoryId = remoteRepositoryId2RemoteRootMap.keySet().iterator().next();
+		final SsRemoteRepository remoteRepository = (SsRemoteRepository) remoteRepositoryDao.getRemoteRepositoryOrFail(remoteRepositoryId);
+
+		for (final User user : userRegistry.getUsers()) {
+			final UserRepoKeyRing userRepoKeyRing = user.getUserRepoKeyRing();
+			if (userRepoKeyRing == null || user.getPgpKeyContainingPrivateKey() == null)
+				continue;
+
+			cryptree = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail().getCryptreeOrCreate(
+					transaction, remoteRepositoryId,
+					remoteRepository.getRemotePathPrefix(),
+					userRepoKeyRing);
+
+			final UserRepoKey grantingUserRepoKey = cryptree.getUserRepoKey(localPath, PermissionType.grant);
+			if (grantingUserRepoKey != null)
+				return user;
+
+			transaction.removeContextObject(cryptree);
+		}
+
+		throw new IllegalArgumentException("No User found having a local UserRepoKey allowed to grant access as desired!");
 	}
 
 	protected void importUserRepoInvitation(final UserRepoInvitation userRepoInvitation) {
 		assertNotNull("userRepoInvitation", userRepoInvitation);
 		final PgpKey decryptPgpKey = determineDecryptPgpKey(userRepoInvitation);
 		final User user = findUserWithPgpKeyOrFail(decryptPgpKey);
-		user.getUserRepoKeyRingOrCreate().addUserRepoKey(userRepoInvitation.getInvitationUserRepoKey()); // TODO convert into real UserRepoKey!
+
+//		final UUID localRepositoryId = cryptree.getTransaction().getLocalRepoManager().getRepositoryId();
+//		final URL serverUrl = userRepoInvitation.getServerUrl();
+//		try (final RepoTransport repoTransport = RepoTransportFactoryRegistry.getInstance().getRepoTransportFactory(serverUrl).createRepoTransport(serverUrl, localRepositoryId);)
+//		{
+//			CryptreeRep
+//		}
+
+		// We throw the temporary key away *LATER*. We keep it in our local key ring for a while to be able to decrypt
+		// CryptoLinks that were encrypted with it, after the initial invitation. This allows the granting user to grant
+		// further (read) permissions after sending the invitation.
+		// Additionally, it makes the initial sync easier, because we can initially sync using the temporary key directly.
+		// This is important, because right now, we don't have any CryptoLink, yet (this method is invoked *before* the
+		// very first sync). Hence we cannot immediately replace the CryptoLink.fromUserRepoKeyPublicKey - we can do it
+		// only after first syncing the keys down.
+		user.getUserRepoKeyRingOrCreate().addUserRepoKey(userRepoInvitation.getInvitationUserRepoKey());
+
+		// But we create our permanent key, already immediately.
+		UserRepoKey userRepoKey = user.createUserRepoKey(userRepoInvitation.getInvitationUserRepoKey().getServerRepositoryId());
+
+		try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();)
+		{
+			this.transaction = transaction;
+
+			cryptree = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail().getCryptreeOrCreate(
+					transaction, userRepoInvitation.getInvitationUserRepoKey().getServerRepositoryId(),
+					"NOT_NEEDED_FOR_THIS_OPERATION", // not nice, but a sufficient workaround ;-)
+					user.getUserRepoKeyRingOrCreate());
+
+//			cryptree.replaceInvitationUserRepoKey(userRepoInvitation.getInvitationUserRepoKey(), userRepoKey);
+			cryptree.requestReplaceInvitationUserRepoKey(userRepoInvitation.getInvitationUserRepoKey(), userRepoKey.getPublicKey());
+
+			transaction.commit();
+		} finally {
+			this.cryptree = null;
+			this.transaction = null;
+		}
+
 		userRegistry.write(); // TODO writeIfNeeded() and maybe make write() protected?!
+
 	}
 
 	private PgpKey determineDecryptPgpKey(final UserRepoInvitation userRepoInvitation) {
@@ -333,15 +416,15 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 		return PgpRegistry.getInstance().getPgpOrFail();
 	}
 
-	private User findUserWithUserRepoKeyRingOrFail(UserRepoKey userRepoKey) {
-		final Uid userRepoKeyId = userRepoKey.getUserRepoKeyId();
-		for (final User user : userRegistry.getUsers()) {
-			final UserRepoKeyRing userRepoKeyRing = user.getUserRepoKeyRing();
-			if (userRepoKeyRing != null && userRepoKeyRing.getUserRepoKey(userRepoKeyId) != null)
-				return user;
-		}
-		throw new IllegalArgumentException("No User found owning the UserRepoKey with id=" + userRepoKeyId);
-	}
+//	private User findUserWithUserRepoKeyRingOrFail(UserRepoKey userRepoKey) {
+//		final Uid userRepoKeyId = userRepoKey.getUserRepoKeyId();
+//		for (final User user : userRegistry.getUsers()) {
+//			final UserRepoKeyRing userRepoKeyRing = user.getUserRepoKeyRing();
+//			if (userRepoKeyRing != null && userRepoKeyRing.getUserRepoKey(userRepoKeyId) != null)
+//				return user;
+//		}
+//		throw new IllegalArgumentException("No User found owning the UserRepoKey with id=" + userRepoKeyId);
+//	}
 
 	private User findUserWithPgpKeyOrFail(PgpKey pgpKey) {
 		final Long pgpKeyId = pgpKey.getPgpKeyId();

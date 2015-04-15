@@ -59,7 +59,7 @@ public class PermissionIT extends AbstractRepoToRepoSyncIT {
 		determineRemotePathPrefix2Encrypted();
 
 		final UserRepoKeyRing otherUserRepoKeyRing1 = createUserRepoKeyRing();
-		final PublicKey publicKey1 = otherUserRepoKeyRing1.getUserRepoKeys(remoteRepositoryId).get(0).getPublicKey();
+		final PublicKey publicKey1 = otherUserRepoKeyRing1.getPermanentUserRepoKeys(remoteRepositoryId).get(0).getPublicKey();
 
 		final long cryptoKeyCountTotalBeforeGrant = getCryptoKeyCount(localSrcRoot, null, null);
 		final long cryptoKeyCountClearanceKeyBeforeGrant = getCryptoKeyCount(localSrcRoot, CryptoKeyRole.clearanceKey, null);
@@ -116,7 +116,7 @@ public class PermissionIT extends AbstractRepoToRepoSyncIT {
 			syncFromRemoteToLocalDest();
 
 			otherUserRepoKeyRing2 = createUserRepoKeyRing();
-			publicKey2 = otherUserRepoKeyRing2.getUserRepoKeys(remoteRepositoryId).get(0).getPublicKey();
+			publicKey2 = otherUserRepoKeyRing2.getPermanentUserRepoKeys(remoteRepositoryId).get(0).getPublicKey();
 
 			grantPermission(localDestRoot, "/", PermissionType.read, publicKey2);
 
@@ -222,7 +222,7 @@ public class PermissionIT extends AbstractRepoToRepoSyncIT {
 		determineRemotePathPrefix2Encrypted();
 
 		final UserRepoKeyRing otherUserRepoKeyRing1 = createUserRepoKeyRing();
-		final PublicKey publicKey1 = otherUserRepoKeyRing1.getUserRepoKeys(remoteRepositoryId).get(0).getPublicKey();
+		final PublicKey publicKey1 = otherUserRepoKeyRing1.getPermanentUserRepoKeys(remoteRepositoryId).get(0).getPublicKey();
 
 		grantPermission("/", PermissionType.write, publicKey1);
 		syncFromLocalSrcToRemote();
@@ -294,10 +294,10 @@ public class PermissionIT extends AbstractRepoToRepoSyncIT {
 		determineRemotePathPrefix2Encrypted();
 
 		final UserRepoKeyRing otherUserRepoKeyRing1 = createUserRepoKeyRing();
-		final PublicKey publicKey1 = otherUserRepoKeyRing1.getUserRepoKeys(remoteRepositoryId).get(0).getPublicKey();
+		final PublicKey publicKey1 = otherUserRepoKeyRing1.getPermanentUserRepoKeys(remoteRepositoryId).get(0).getPublicKey();
 
 		final UserRepoKeyRing otherUserRepoKeyRing2 = createUserRepoKeyRing();
-		final PublicKey publicKey2 = otherUserRepoKeyRing2.getUserRepoKeys(remoteRepositoryId).get(0).getPublicKey();
+		final PublicKey publicKey2 = otherUserRepoKeyRing2.getPermanentUserRepoKeys(remoteRepositoryId).get(0).getPublicKey();
 
 		grantPermission("/", PermissionType.write, publicKey1);
 		grantPermission("/", PermissionType.read, publicKey2);

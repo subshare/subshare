@@ -67,7 +67,7 @@ public class CryptreeContext {
 		this.repoFileDtoIo = new RepoFileDtoIo();
 		this.signableVerifier = new SignableVerifier(new UserRepoKeyPublicKeyLookupImpl(transaction));
 
-		if (userRepoKeyRing != null && userRepoKeyRing.getUserRepoKeys(serverRepositoryId).isEmpty())
+		if (userRepoKeyRing != null && userRepoKeyRing.getPermanentUserRepoKeys(serverRepositoryId).isEmpty())
 			throw new IllegalArgumentException(String.format(
 					"userRepoKeyRing.getUserRepoKeys(serverRepositoryId).isEmpty() :: serverRepositoryId=%s",
 					serverRepositoryId));

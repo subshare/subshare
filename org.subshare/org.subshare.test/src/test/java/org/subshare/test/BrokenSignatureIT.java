@@ -111,7 +111,7 @@ public class BrokenSignatureIT extends AbstractRepoToRepoSyncIT {
 		syncFromLocalSrcToRemote();
 
 		final UserRepoKeyRing otherUserRepoKeyRing1 = createUserRepoKeyRing();
-		final PublicKey publicKey1 = otherUserRepoKeyRing1.getUserRepoKeys(remoteRepositoryId).get(0).getPublicKey();
+		final PublicKey publicKey1 = otherUserRepoKeyRing1.getPermanentUserRepoKeys(remoteRepositoryId).get(0).getPublicKey();
 
 		grantPermission("/", PermissionType.grant, publicKey1);
 		syncFromLocalSrcToRemote();
@@ -186,7 +186,7 @@ public class BrokenSignatureIT extends AbstractRepoToRepoSyncIT {
 		syncFromLocalSrcToRemote();
 
 		final UserRepoKeyRing otherUserRepoKeyRing1 = createUserRepoKeyRing();
-		final PublicKey publicKey1 = otherUserRepoKeyRing1.getUserRepoKeys(remoteRepositoryId).get(0).getPublicKey();
+		final PublicKey publicKey1 = otherUserRepoKeyRing1.getPermanentUserRepoKeys(remoteRepositoryId).get(0).getPublicKey();
 
 		grantPermission("/", PermissionType.grant, publicKey1);
 		syncFromLocalSrcToRemote();

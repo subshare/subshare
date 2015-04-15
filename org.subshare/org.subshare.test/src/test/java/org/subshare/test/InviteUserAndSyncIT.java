@@ -1,12 +1,11 @@
 package org.subshare.test;
 
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.createFile;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 import java.util.UUID;
 
-import org.subshare.core.Cryptree;
-import org.subshare.core.CryptreeFactoryRegistry;
 import org.subshare.core.pgp.Pgp;
 import org.subshare.core.pgp.PgpAuthenticationCallback;
 import org.subshare.core.pgp.PgpKey;
@@ -17,6 +16,7 @@ import org.subshare.core.user.UserRegistry;
 import org.subshare.core.user.UserRepoInvitationManager;
 import org.subshare.core.user.UserRepoInvitationToken;
 import org.subshare.core.user.UserRepoKeyRing;
+import org.subshare.local.persistence.UserRepoKeyPublicKeyReplacementRequestDao;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,9 +85,30 @@ public class InviteUserAndSyncIT extends AbstractRepoToRepoSyncIT {
 		createLocalDestinationRepo();
 
 //		createUserRepoKeyRing(remoteRepositoryId);
-		importUserRepoInvitationToken(userRepoInvitationToken); // TODO this should cause the temporary invitation-UserRepoKey to be somehow replaced by a permanent one.
+		// Importing the invitation with the temporary key causes a permanent key to be generated and a request
+		// to replace the temporary key by the permanent one.
+		assertReplacementRequestInRepoIs(localDestRoot, 0);
+		importUserRepoInvitationToken(userRepoInvitationToken);
+		assertReplacementRequestInRepoIs(localDestRoot, 1);
 
+		assertReplacementRequestInRepoIs(remoteRoot, 0);
+
+		// The next sync is done with the temporary key (from the invitation). It downloads the repository and
+		// uploads the permanent key with the replacement-request.
 		syncFromRemoteToLocalDest();
+
+		// Make sure, our replacement request really arrived on the server.
+		assertReplacementRequestInRepoIs(remoteRoot, 1);
+
+		// *** OWNER machine with owner's repository ***
+		switchLocationToOwner();
+
+		// ...but is not yet in source repo.
+		assertReplacementRequestInRepoIs(localSrcRoot, 0);
+
+		syncFromLocalSrcToRemote();
+
+		assertReplacementRequestInRepoIs(localSrcRoot, 1);
 
 		logger.info("*** <<< inviteUserAndSync <<< ***");
 		logger.info("*** <<<<<<<<<<<<<<<<<<<<<<<<< ***");
@@ -107,36 +128,55 @@ public class InviteUserAndSyncIT extends AbstractRepoToRepoSyncIT {
 
 	protected UserRepoInvitationToken createUserRepoInvitationToken() {
 		final UserRepoInvitationToken userRepoInvitationToken;
-		try (final LocalRepoManager localRepoManagerLocal = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(localSrcRoot);)
+		try (final LocalRepoManager localRepoManager = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(localSrcRoot);)
 		{
-			try (final LocalRepoTransaction transaction = localRepoManagerLocal.beginWriteTransaction();)
-			{
-				final Cryptree cryptree = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail().getCryptreeOrCreate(
-						transaction, remoteRepositoryId,
-						remotePathPrefix2Encrypted,
-						cryptreeRepoTransportFactory.getUserRepoKeyRing());
+			final UserRepoInvitationManager userRepoInvitationManager = UserRepoInvitationManager.Helper.getInstance(ownerUserRegistry, localRepoManager);
+			userRepoInvitationToken = userRepoInvitationManager.createUserRepoInvitationToken("", friend, 24 * 3600 * 1000);
 
-				final UserRepoInvitationManager userRepoInvitationManager = UserRepoInvitationManager.Helper.getInstance(ownerUserRegistry, cryptree);
-				userRepoInvitationToken = userRepoInvitationManager.createUserRepoInvitationToken("", friend, 24 * 3600 * 1000);
-
-				transaction.commit();
-			}
+//			try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();)
+//			{
+//				final Cryptree cryptree = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail().getCryptreeOrCreate(
+//						transaction, remoteRepositoryId,
+//						remotePathPrefix2Encrypted,
+//						cryptreeRepoTransportFactory.getUserRepoKeyRing());
+//
+//				final UserRepoInvitationManager userRepoInvitationManager = UserRepoInvitationManager.Helper.getInstance(ownerUserRegistry, cryptree);
+//				userRepoInvitationToken = userRepoInvitationManager.createUserRepoInvitationToken("", friend, 24 * 3600 * 1000);
+//
+//				transaction.commit();
+//			}
 		}
 		return userRepoInvitationToken;
 	}
 
 	protected void importUserRepoInvitationToken(UserRepoInvitationToken userRepoInvitationToken) {
-		try (final LocalRepoManager localRepoManagerLocal = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(localDestRoot);)
+		try (final LocalRepoManager localRepoManager = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(localDestRoot);)
 		{
-			try (final LocalRepoTransaction transaction = localRepoManagerLocal.beginWriteTransaction();)
-			{
-				final Cryptree cryptree = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail().getCryptreeOrCreate(
-						transaction, remoteRepositoryId,
-						remotePathPrefix2Encrypted,
-						cryptreeRepoTransportFactory.getUserRepoKeyRing());
+			final UserRepoInvitationManager userRepoInvitationManager = UserRepoInvitationManager.Helper.getInstance(friendUserRegistry, localRepoManager);
+			userRepoInvitationManager.importUserRepoInvitationToken(userRepoInvitationToken);
 
-				final UserRepoInvitationManager userRepoInvitationManager = UserRepoInvitationManager.Helper.getInstance(friendUserRegistry, cryptree);
-				userRepoInvitationManager.importUserRepoInvitationToken(userRepoInvitationToken);
+//			try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();)
+//			{
+//				final Cryptree cryptree = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail().getCryptreeOrCreate(
+//						transaction, remoteRepositoryId,
+//						remotePathPrefix2Encrypted,
+//						cryptreeRepoTransportFactory.getUserRepoKeyRing());
+//
+//				final UserRepoInvitationManager userRepoInvitationManager = UserRepoInvitationManager.Helper.getInstance(friendUserRegistry, cryptree);
+//				userRepoInvitationManager.importUserRepoInvitationToken(userRepoInvitationToken);
+//
+//				transaction.commit();
+//			}
+		}
+	}
+
+	protected void assertReplacementRequestInRepoIs(File repoRoot, long expectedCount) {
+		try (final LocalRepoManager localRepoManager = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(repoRoot);)
+		{
+			try (final LocalRepoTransaction transaction = localRepoManager.beginReadTransaction();)
+			{
+				UserRepoKeyPublicKeyReplacementRequestDao dao = transaction.getDao(UserRepoKeyPublicKeyReplacementRequestDao.class);
+				assertThat(dao.getObjectsCount()).isEqualTo(expectedCount);
 
 				transaction.commit();
 			}

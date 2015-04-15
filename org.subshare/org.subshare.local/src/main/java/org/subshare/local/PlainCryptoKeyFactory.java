@@ -126,9 +126,9 @@ abstract class PlainCryptoKeyFactory {
 			// UserRepoKeys belong to the same person.
 			UserRepoKey userRepoKeyForRead = cryptreeNode.getUserRepoKey(false, PermissionType.write);
 			if (userRepoKeyForRead == null)
-				userRepoKeyForRead = context.userRepoKeyRing.getUserRepoKeys(context.serverRepositoryId).get(0);
+				userRepoKeyForRead = context.userRepoKeyRing.getPermanentUserRepoKeys(context.serverRepositoryId).get(0);
 
-			final UserRepoKeyPublicKey userRepoKeyPublicKey = cryptreeNode.getUserRepoKeyPublicKey(userRepoKeyForRead);
+			final UserRepoKeyPublicKey userRepoKeyPublicKey = cryptreeNode.getUserRepoKeyPublicKeyOrCreate(userRepoKeyForRead);
 			createCryptoLink(getCryptreeNodeOrFail(), userRepoKeyPublicKey, clearanceKeyPlainCryptoKey_private);
 
 			// TODO maybe we should give the clearance key other users, too?! not only the current user?! NO, this happens outside. At least right now and I think this is good.

@@ -54,7 +54,7 @@ public class RepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 
 			final UserRepoKeyRing otherUserRepoKeyRing = createUserRepoKeyRing();
 			grantPermission("/", PermissionType.read,
-					otherUserRepoKeyRing.getUserRepoKeys(remoteRepositoryId).get(0).getPublicKey());
+					otherUserRepoKeyRing.getPermanentUserRepoKeys(remoteRepositoryId).get(0).getPublicKey());
 
 			createFileWithRandomContent(localSrcRoot, "xxxxxxx");
 
@@ -110,10 +110,10 @@ public class RepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 
 		final UserRepoKeyRing otherUserRepoKeyRing1 = createUserRepoKeyRing();
 		final UserRepoKeyRing otherUserRepoKeyRing2 = createUserRepoKeyRing();
-		final PublicKey publicKey1 = otherUserRepoKeyRing1.getUserRepoKeys(remoteRepositoryId).get(0).getPublicKey();
+		final PublicKey publicKey1 = otherUserRepoKeyRing1.getPermanentUserRepoKeys(remoteRepositoryId).get(0).getPublicKey();
 		grantPermission(remotePathPrefix2Plain, PermissionType.read, publicKey1);
 		grantPermission(remotePathPrefix2Plain, PermissionType.read,
-				otherUserRepoKeyRing2.getUserRepoKeys(remoteRepositoryId).get(0).getPublicKey());
+				otherUserRepoKeyRing2.getPermanentUserRepoKeys(remoteRepositoryId).get(0).getPublicKey());
 
 		syncFromLocalSrcToRemote();
 
@@ -180,7 +180,7 @@ public class RepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 		determineRemotePathPrefix2Encrypted();
 
 		final UserRepoKeyRing otherUserRepoKeyRing1 = createUserRepoKeyRing();
-		final PublicKey publicKey1 = otherUserRepoKeyRing1.getUserRepoKeys(remoteRepositoryId).get(0).getPublicKey();
+		final PublicKey publicKey1 = otherUserRepoKeyRing1.getPermanentUserRepoKeys(remoteRepositoryId).get(0).getPublicKey();
 //		grantPermission(remotePathPrefix2Plain, PermissionType.read, publicKey1); // write includes read => this line is not needed
 
 		grantPermission(remotePathPrefix2Plain, PermissionType.write, publicKey1);

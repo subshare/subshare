@@ -180,6 +180,15 @@ public class User {
 	}
 
 	public PgpKey getPgpKeyContainingPrivateKeyOrFail() {
+		final PgpKey pgpKey = getPgpKeyContainingPrivateKey();
+
+		if (pgpKey == null)
+			throw new IllegalStateException(String.format("None of the PGP keys associated with %s has a private key available!", this));
+
+		return pgpKey;
+	}
+
+	public PgpKey getPgpKeyContainingPrivateKey() {
 		final List<Long> pgpKeyIds = getPgpKeyIds();
 
 		if (pgpKeyIds.isEmpty())
@@ -194,9 +203,6 @@ public class User {
 				break;
 			}
 		}
-
-		if (pgpKey == null)
-			throw new IllegalStateException(String.format("None of the PGP keys associated with %s has a private key available!", this));
 
 		return pgpKey;
 	}
