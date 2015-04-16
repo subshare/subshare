@@ -181,19 +181,15 @@ public class CryptreeImpl extends AbstractCryptree {
 		// Thus, we might find newer keys when querying them after the links. Since the links reference the keys
 		// (collection is mapped-by) and we currently don't delete anything, this guarantees that all references can
 		// be fulfilled on the remote side. Extremely unlikely, but still better ;-)
+		// Currently, this does not matter at all, because we use exclusive transactions (a write-transaction locks
+		// the entire DB), but this might matter later, when we make this more efficient => leaving this comment.
 		final CryptoChangeSetDto cryptoChangeSetDto = new CryptoChangeSetDto();
 		populateChangedUserRepoKeyPublicKeyDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 		populateChangedCryptoRepoFileDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 		populateChangedCryptoLinkDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 		populateChangedCryptoKeyDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 
-		populateChangedRepositoryOwnerDto(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
-		populateChangedPermissionSetInheritanceDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
-		populateChangedPermissionDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
-		populateChangedPermissionSetDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
-		populateChangedUserRepoKeyPublicKeyReplacementRequestDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
-		populateChangedUserRepoKeyPublicKeyReplacementRequestDeletionDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
-
+		populateCryptoChangeSetDtoWithAllButCryptoRepoFiles(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 		return cryptoChangeSetDto;
 	}
 
@@ -935,14 +931,17 @@ public class CryptreeImpl extends AbstractCryptree {
 		populateChangedCryptoLinkDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 		populateChangedCryptoKeyDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 
+		populateCryptoChangeSetDtoWithAllButCryptoRepoFiles(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
+		return cryptoChangeSetDto;
+	}
+
+	private void populateCryptoChangeSetDtoWithAllButCryptoRepoFiles(final CryptoChangeSetDto cryptoChangeSetDto, final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {
 		populateChangedRepositoryOwnerDto(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 		populateChangedPermissionSetInheritanceDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 		populateChangedPermissionDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 		populateChangedPermissionSetDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 		populateChangedUserRepoKeyPublicKeyReplacementRequestDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 		populateChangedUserRepoKeyPublicKeyReplacementRequestDeletionDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
-
-		return cryptoChangeSetDto;
 	}
 
 	private void populateChangedUserRepoKeyPublicKeyDtos(final CryptoChangeSetDto cryptoChangeSetDto, final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {
