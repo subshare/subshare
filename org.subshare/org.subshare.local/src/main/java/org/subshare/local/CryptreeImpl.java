@@ -33,12 +33,14 @@ import org.subshare.core.dto.PermissionSetInheritanceDto;
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.dto.RepositoryOwnerDto;
 import org.subshare.core.dto.UserRepoKeyPublicKeyDto;
+import org.subshare.core.dto.UserRepoKeyPublicKeyReplacementRequestDeletionDto;
 import org.subshare.core.dto.UserRepoKeyPublicKeyReplacementRequestDto;
 import org.subshare.core.sign.Signature;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKeyPublicKeyLookup;
 import org.subshare.core.user.UserRepoKeyRing;
 import org.subshare.local.dto.UserRepoKeyPublicKeyDtoConverter;
+import org.subshare.local.dto.UserRepoKeyPublicKeyReplacementRequestDeletionDtoConverter;
 import org.subshare.local.dto.UserRepoKeyPublicKeyReplacementRequestDtoConverter;
 import org.subshare.local.persistence.SsLocalRepository;
 import org.subshare.local.persistence.SsRemoteRepository;
@@ -134,14 +136,6 @@ public class CryptreeImpl extends AbstractCryptree {
 
 	@Override
 	public KeyParameter getDataKeyOrFail(final String localPath) {
-//		assertNotNull("localPath", localPath);
-//		final LocalRepoTransaction transaction = getTransactionOrFail();
-//		final LocalRepoManager localRepoManager = transaction.getLocalRepoManager();
-//		final RepoFileDao repoFileDao = transaction.getDao(RepoFileDao.class);
-//		final RepoFile repoFile = repoFileDao.getRepoFile(localRepoManager.getLocalRoot(), createFile(localRepoManager.getLocalRoot(), localPath));
-//		assertNotNull("repoFile", repoFile);
-//
-//		final CryptreeNode cryptreeNode = new CryptreeNode(getCryptreeContext(), repoFile);
 		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(localPath);
 		return cryptreeNode.getDataKeyOrFail();
 	}
@@ -198,6 +192,7 @@ public class CryptreeImpl extends AbstractCryptree {
 		populateChangedPermissionDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 		populateChangedPermissionSetDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 		populateChangedUserRepoKeyPublicKeyReplacementRequestDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
+		populateChangedUserRepoKeyPublicKeyReplacementRequestDeletionDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 
 		return cryptoChangeSetDto;
 	}
@@ -286,6 +281,9 @@ public class CryptreeImpl extends AbstractCryptree {
 		transaction.flush();
 
 		processUserRepoKeyPublicKeyReplacementRequests();
+
+		for (UserRepoKeyPublicKeyReplacementRequestDeletionDto requestDeletionDto : cryptoChangeSetDto.getUserRepoKeyPublicKeyReplacementRequestDeletionDtos())
+			putUserRepoKeyPublicKeyReplacementRequestDeletionDto(requestDeletionDto);
 	}
 
 	private void processUserRepoKeyPublicKeyReplacementRequests() {
@@ -296,6 +294,12 @@ public class CryptreeImpl extends AbstractCryptree {
 		final UserRepoKeyPublicKeyReplacementRequestDao requestDao = transaction.getDao(UserRepoKeyPublicKeyReplacementRequestDao.class);
 
 		for (final UserRepoKeyPublicKeyReplacementRequest request : requestDao.getObjects()) {
+			// The requests are deleted before the tx is committed and thus they're never checked by the tx-listener. We thus
+			// check them now, here.
+			getCryptreeContext().signableVerifier.verify(request);
+			if (!request.getOldKey().getUserRepoKeyId().equals(request.getSignature().getSigningUserRepoKeyId()))
+				throw new IllegalStateException("request.oldKey.userRepoKeyId != request.signature.signingUserRepoKeyId");
+
 			final UserRepoKey newUserRepoKey = getCryptreeContext().userRepoKeyRing.getUserRepoKey(request.getNewKey().getUserRepoKeyId());
 			if (newUserRepoKey != null)
 				processUserRepoKeyPublicKeyReplacementRequestAsInvitedUser(request);
@@ -335,7 +339,6 @@ public class CryptreeImpl extends AbstractCryptree {
 				request.getOldKey().getSignature().getSigningUserRepoKeyId());
 
 		final LocalRepoTransaction transaction = getTransactionOrFail();
-		final UserRepoKeyPublicKeyReplacementRequestDao requestDao = transaction.getDao(UserRepoKeyPublicKeyReplacementRequestDao.class);
 		final UserRepoKeyPublicKeyReplacementRequestDeletionDao requestDeletionDao = transaction.getDao(UserRepoKeyPublicKeyReplacementRequestDeletionDao.class);
 		final CryptoLinkDao cryptoLinkDao = transaction.getDao(CryptoLinkDao.class);
 
@@ -349,13 +352,39 @@ public class CryptreeImpl extends AbstractCryptree {
 			getCryptreeContext().getSignableSigner(oldKeySigningUserRepoKey).sign(cryptoLink);
 		}
 
-		final UserRepoKeyPublicKeyReplacementRequestDeletion requestDeletion = new UserRepoKeyPublicKeyReplacementRequestDeletion(request);
+		// TODO process permissions, too!
+
+		UserRepoKeyPublicKeyReplacementRequestDeletion requestDeletion = new UserRepoKeyPublicKeyReplacementRequestDeletion(request);
 
 		// We use the same key that we used to sign the old key, because this prevents an attacker from knowing that 2 of our keys belong together.
 		getCryptreeContext().getSignableSigner(oldKeySigningUserRepoKey).sign(requestDeletion);
 
-		requestDeletionDao.makePersistent(requestDeletion);
-		requestDao.deletePersistent(request);
+		requestDeletion = requestDeletionDao.makePersistent(requestDeletion);
+		deleteUserRepoKeyPublicKeyReplacementRequestWithOldKey(request);
+	}
+
+	private void putUserRepoKeyPublicKeyReplacementRequestDeletionDto(final UserRepoKeyPublicKeyReplacementRequestDeletionDto requestDeletionDto) {
+		final LocalRepoTransaction transaction = getTransactionOrFail();
+		final UserRepoKeyPublicKeyReplacementRequestDao requestDao = transaction.getDao(UserRepoKeyPublicKeyReplacementRequestDao.class);
+		final UserRepoKeyPublicKeyReplacementRequestDeletionDao requestDeletionDao = transaction.getDao(UserRepoKeyPublicKeyReplacementRequestDeletionDao.class);
+
+		UserRepoKeyPublicKeyReplacementRequestDeletion requestDeletion = requestDeletionDao.getUserRepoKeyPublicKeyReplacementRequestDeletion(requestDeletionDto.getRequestId());
+		if (requestDeletion == null)
+			requestDeletion = new UserRepoKeyPublicKeyReplacementRequestDeletion(requestDeletionDto.getRequestId());
+
+		requestDeletion.setSignature(requestDeletionDto.getSignature());
+		requestDeletion = requestDeletionDao.makePersistent(requestDeletion);
+
+		final UserRepoKeyPublicKeyReplacementRequest request = requestDao.getUserRepoKeyPublicKeyReplacementRequest(requestDeletion.getRequestId());
+		if (request != null)
+			deleteUserRepoKeyPublicKeyReplacementRequestWithOldKey(request);
+	}
+
+	private void deleteUserRepoKeyPublicKeyReplacementRequestWithOldKey(final UserRepoKeyPublicKeyReplacementRequest request) {
+		final LocalRepoTransaction transaction = getTransactionOrFail();
+		final InvitationUserRepoKeyPublicKey oldKey = request.getOldKey();
+		transaction.getDao(UserRepoKeyPublicKeyReplacementRequestDao.class).deletePersistent(request);
+		transaction.getDao(UserRepoKeyPublicKeyDao.class).deletePersistent(oldKey);
 	}
 
 	@Override
@@ -446,51 +475,17 @@ public class CryptreeImpl extends AbstractCryptree {
 		request.setNewKey(userRepoKeyPublicKey);
 		cryptreeContext.getSignableSigner(invitationUserRepoKey).sign(request);
 		userRepoKeyPublicKeyReplacementRequestDao.makePersistent(request);
-	}
 
-//	@Override
-//	public void replaceInvitationUserRepoKey(UserRepoKey invitationUserRepoKey, UserRepoKey userRepoKey) {
-//		assertNotNull("invitationUserRepoKey", invitationUserRepoKey);
-//		assertNotNull("userRepoKey", userRepoKey);
-//
-//		if (invitationUserRepoKey.getValidTo() == null)
-//			throw new IllegalArgumentException("invitationUserRepoKey is not a temporary UserRepoKey :: invitationUserRepoKey.getValidTo() == null");
-//
-//		final LocalRepoTransaction tx = getCryptreeContext().transaction;
-//		final UserRepoKeyPublicKeyDao userRepoKeyPublicKeyDao = tx.getDao(UserRepoKeyPublicKeyDao.class);
-//		final UserRepoKeyPublicKeyReplacementRequestDao userRepoKeyPublicKeyReplacementRequestDao = tx.getDao(UserRepoKeyPublicKeyReplacementRequestDao.class);
-//
-//		// old key
-//		final UserRepoKeyPublicKey invitationUserRepoKeyPublicKey = userRepoKeyPublicKeyDao.getUserRepoKeyPublicKeyOrCreate(invitationUserRepoKey.getPublicKey());
-//
-//		// new key
-//		final UserRepoKeyPublicKey userRepoKeyPublicKey = userRepoKeyPublicKeyDao.getUserRepoKeyPublicKeyOrCreate(userRepoKey.getPublicKey());
-//
-//		// create + sign + persist replacement request
-//		final UserRepoKeyPublicKeyReplacementRequest request = new UserRepoKeyPublicKeyReplacementRequest();
-//		request.setOldKey(invitationUserRepoKeyPublicKey);
-//		request.setNewKey(userRepoKeyPublicKey);
-//		cryptreeContext.getSignableSigner(invitationUserRepoKey).sign(request);
-//		userRepoKeyPublicKeyReplacementRequestDao.makePersistent(request);
-//
-//		// The invited user replaces the temporary key by his new permanent key himself immediately!
-//		// The chain of trust is established through the temporary key.
-//		final CryptoLinkDao cryptoLinkDao = tx.getDao(CryptoLinkDao.class);
-//		final Collection<CryptoLink> cryptoLinks = cryptoLinkDao.getCryptoLinks(request.getOldKey());
-//		for (CryptoLink cryptoLink : cryptoLinks) {
-//			cryptoLink.setSignature(null);
-//			cryptoLink.setFromUserRepoKeyPublicKey(userRepoKeyPublicKey); // TODO need to decrypt + re-encrypt the actual payload, too!
-//			cryptreeContext.getSignableSigner(userRepoKey).sign(cryptoLink);
-//		}
-//	}
+		// The actual replacement is done by the new user himself, but not now, yet, as there is nothing to
+		// replace at this moment. We have to first sync down from the server. Hence the replacement is done
+		// by processUserRepoKeyPublicKeyReplacementRequests(), after the down-sync of all the crypto-meta-data.
+	}
 
 	@Override
 	public void registerRemotePathPrefix(final String pathPrefix) {
 		assertNotNull("pathPrefix", pathPrefix);
-		final RemoteRepository remoteRepository = getTransactionOrFail().getDao(RemoteRepositoryDao.class).getRemoteRepositoryOrFail(getServerRepositoryIdOrFail());
-//		if (remoteRepository == null) // initial handshake not yet done.
-//			return;
-
+		final RemoteRepositoryDao remoteRepositoryDao = getTransactionOrFail().getDao(RemoteRepositoryDao.class);
+		final RemoteRepository remoteRepository = remoteRepositoryDao.getRemoteRepositoryOrFail(getServerRepositoryIdOrFail());
 		final SsRemoteRepository rr = (SsRemoteRepository)remoteRepository;
 		rr.setRemotePathPrefix(pathPrefix);
 	}
@@ -944,6 +939,8 @@ public class CryptreeImpl extends AbstractCryptree {
 		populateChangedPermissionSetInheritanceDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 		populateChangedPermissionDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 		populateChangedPermissionSetDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
+		populateChangedUserRepoKeyPublicKeyReplacementRequestDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
+		populateChangedUserRepoKeyPublicKeyReplacementRequestDeletionDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 
 		return cryptoChangeSetDto;
 	}
@@ -1101,6 +1098,17 @@ public class CryptreeImpl extends AbstractCryptree {
 			cryptoChangeSetDto.getUserRepoKeyPublicKeyReplacementRequestDtos().add(converter.toUserRepoKeyPublicKeyReplacementRequestDto(request));
 	}
 
+	private void populateChangedUserRepoKeyPublicKeyReplacementRequestDeletionDtos(final CryptoChangeSetDto cryptoChangeSetDto, final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo)
+	{
+		final UserRepoKeyPublicKeyReplacementRequestDeletionDtoConverter converter = new UserRepoKeyPublicKeyReplacementRequestDeletionDtoConverter();
+		final UserRepoKeyPublicKeyReplacementRequestDeletionDao dao = getTransactionOrFail().getDao(UserRepoKeyPublicKeyReplacementRequestDeletionDao.class);
+
+		final Collection<UserRepoKeyPublicKeyReplacementRequestDeletion> requestDeletions = dao.getUserRepoKeyPublicKeyReplacementRequestDeletionsChangedAfter(
+				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced());
+
+		for (UserRepoKeyPublicKeyReplacementRequestDeletion requestDeletion : requestDeletions)
+			cryptoChangeSetDto.getUserRepoKeyPublicKeyReplacementRequestDeletionDtos().add(converter.toUserRepoKeyPublicKeyReplacementRequestDeletionDto(requestDeletion));
+	}
 
 	private CryptoRepoFileDto toCryptoRepoFileDto(final CryptoRepoFile cryptoRepoFile) {
 		assertNotNull("cryptoRepoFile", cryptoRepoFile);

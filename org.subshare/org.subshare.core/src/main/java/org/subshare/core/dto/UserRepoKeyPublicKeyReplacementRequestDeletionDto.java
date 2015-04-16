@@ -13,8 +13,6 @@ public class UserRepoKeyPublicKeyReplacementRequestDeletionDto {
 
 	private Uid requestId;
 
-	private long localRevision;
-
 	@XmlElement
 	private SignatureDto signatureDto;
 
@@ -34,12 +32,5 @@ public class UserRepoKeyPublicKeyReplacementRequestDeletionDto {
 	}
 	public void setSignature(final Signature signature) {
 		this.signatureDto = SignatureDto.copyIfNeeded(signature);
-	}
-
-	public long getLocalRevision() {
-		return localRevision;
-	}
-	public void setLocalRevision(long localRevision) {
-		this.localRevision = localRevision;
 	}
 }

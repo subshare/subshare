@@ -27,6 +27,8 @@ public class CryptoChangeSetDto {
 
 	private List<UserRepoKeyPublicKeyReplacementRequestDto> userRepoKeyPublicKeyReplacementRequestDtos;
 
+	private List<UserRepoKeyPublicKeyReplacementRequestDeletionDto> userRepoKeyPublicKeyReplacementRequestDeletionDtos;
+
 	public List<CryptoRepoFileDto> getCryptoRepoFileDtos() {
 		if (cryptoRepoFileDtos == null)
 			cryptoRepoFileDtos = new ArrayList<>();
@@ -113,6 +115,16 @@ public class CryptoChangeSetDto {
 
 	public void setUserRepoKeyPublicKeyReplacementRequestDtos(List<UserRepoKeyPublicKeyReplacementRequestDto> userRepoKeyPublicKeyReplacementRequestDtos) {
 		this.userRepoKeyPublicKeyReplacementRequestDtos = userRepoKeyPublicKeyReplacementRequestDtos;
+	}
+
+	public List<UserRepoKeyPublicKeyReplacementRequestDeletionDto> getUserRepoKeyPublicKeyReplacementRequestDeletionDtos() {
+		if (userRepoKeyPublicKeyReplacementRequestDeletionDtos == null)
+			userRepoKeyPublicKeyReplacementRequestDeletionDtos = new ArrayList<>();
+
+		return userRepoKeyPublicKeyReplacementRequestDeletionDtos;
+	}
+	public void setUserRepoKeyPublicKeyReplacementRequestDeletionDtos(List<UserRepoKeyPublicKeyReplacementRequestDeletionDto> userRepoKeyPublicKeyReplacementRequestDeletionDtos) {
+		this.userRepoKeyPublicKeyReplacementRequestDeletionDtos = userRepoKeyPublicKeyReplacementRequestDeletionDtos;
 	}
 
 	@Override

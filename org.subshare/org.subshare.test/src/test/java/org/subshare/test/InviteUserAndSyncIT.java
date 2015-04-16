@@ -16,6 +16,9 @@ import org.subshare.core.user.UserRegistry;
 import org.subshare.core.user.UserRepoInvitationManager;
 import org.subshare.core.user.UserRepoInvitationToken;
 import org.subshare.core.user.UserRepoKeyRing;
+import org.subshare.local.persistence.InvitationUserRepoKeyPublicKey;
+import org.subshare.local.persistence.UserRepoKeyPublicKey;
+import org.subshare.local.persistence.UserRepoKeyPublicKeyDao;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyReplacementRequestDao;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyReplacementRequestDeletionDao;
 import org.junit.Test;
@@ -72,13 +75,16 @@ public class InviteUserAndSyncIT extends AbstractRepoToRepoSyncIT {
 		syncFromLocalSrcToRemote();
 		determineRemotePathPrefix2Encrypted();
 
+		assertInvitationUserRepoKeyPublicKeyIs(localSrcRoot, 0);
+
 		UserRepoInvitationToken userRepoInvitationToken = createUserRepoInvitationToken();
+
+		assertInvitationUserRepoKeyPublicKeyIs(localSrcRoot, 1);
 
 		// We *must* sync again, otherwise the invitation is meaningless: The invitation-UserRepoKey is not yet in the remote DB,
 		// thus neither in the local destination and thus it cannot be used to decrypt the crypto-links.
 		syncFromLocalSrcToRemote();
 
-		// TODO this should be a serialized and encrypted token!
 
 		// *** FRIEND machine with friend's repository ***
 		switchLocationToFriend();
@@ -88,8 +94,12 @@ public class InviteUserAndSyncIT extends AbstractRepoToRepoSyncIT {
 //		createUserRepoKeyRing(remoteRepositoryId);
 		// Importing the invitation with the temporary key causes a permanent key to be generated and a request
 		// to replace the temporary key by the permanent one.
+		assertInvitationUserRepoKeyPublicKeyIs(localDestRoot, 0);
 		assertReplacementRequestInRepoIs(localDestRoot, 0);
+
 		importUserRepoInvitationToken(userRepoInvitationToken);
+
+		assertInvitationUserRepoKeyPublicKeyIs(localDestRoot, 1);
 		assertReplacementRequestInRepoIs(localDestRoot, 1);
 		assertReplacementRequestDeletionInRepoIs(localDestRoot, 0);
 
@@ -101,26 +111,54 @@ public class InviteUserAndSyncIT extends AbstractRepoToRepoSyncIT {
 		syncFromRemoteToLocalDest();
 
 		// Make sure, our replacement request really arrived on the server.
+		assertInvitationUserRepoKeyPublicKeyIs(remoteRoot, 1);
 		assertReplacementRequestInRepoIs(remoteRoot, 1);
 		assertReplacementRequestDeletionInRepoIs(remoteRoot, 0);
+
 
 		// *** OWNER machine with owner's repository ***
 		switchLocationToOwner();
 
 		// ...but is not yet in source repo.
+		assertInvitationUserRepoKeyPublicKeyIs(localSrcRoot, 1);
 		assertReplacementRequestInRepoIs(localSrcRoot, 0);
 		assertReplacementRequestDeletionInRepoIs(localSrcRoot, 0);
+
+		// It takes a different path, depending on whether there file modifications  or not (i.e. only meta-data changed).
+		// This is not a nice way to test all possible paths, but the tests are already too slow ;-)
+		File srcFile2ccc = random.nextInt(100) < 50 ? null : createFileWithRandomContent(localSrcRoot, "2/ccc");
 
 		syncFromLocalSrcToRemote();
 
 		// ...and now it is already deleted and replaced by an appropriate deletion object.
+		assertInvitationUserRepoKeyPublicKeyIs(localSrcRoot, 0);
 		assertReplacementRequestInRepoIs(localSrcRoot, 0);
 		assertReplacementRequestDeletionInRepoIs(localSrcRoot, 1);
 
+
 		// the deletion should already be synced to the server
-		// TODO continue this!
-//		assertReplacementRequestInRepoIs(remoteRoot, 0);
-//		assertReplacementRequestDeletionInRepoIs(remoteRoot, 1);
+		assertInvitationUserRepoKeyPublicKeyIs(remoteRoot, 0);
+		assertReplacementRequestInRepoIs(remoteRoot, 0);
+		assertReplacementRequestDeletionInRepoIs(remoteRoot, 1);
+
+
+		// *** FRIEND machine with friend's repository ***
+		switchLocationToFriend();
+
+		File destFile2ccc = srcFile2ccc == null ? null : createFile(localDestRoot, "2/ccc");
+		if (destFile2ccc != null)
+			assertThat(destFile2ccc.exists()).isFalse();
+
+		syncFromRemoteToLocalDest();
+
+		assertInvitationUserRepoKeyPublicKeyIs(localDestRoot, 0);
+		assertReplacementRequestInRepoIs(localDestRoot, 0);
+		assertReplacementRequestDeletionInRepoIs(localDestRoot, 1);
+
+		if (destFile2ccc != null) {
+			assertThat(destFile2ccc.exists()).isTrue();
+			assertThat(IOUtil.compareFiles(srcFile2ccc, destFile2ccc)).isTrue();
+		}
 
 		logger.info("*** <<< inviteUserAndSync <<< ***");
 		logger.info("*** <<<<<<<<<<<<<<<<<<<<<<<<< ***");
@@ -144,19 +182,6 @@ public class InviteUserAndSyncIT extends AbstractRepoToRepoSyncIT {
 		{
 			final UserRepoInvitationManager userRepoInvitationManager = UserRepoInvitationManager.Helper.getInstance(ownerUserRegistry, localRepoManager);
 			userRepoInvitationToken = userRepoInvitationManager.createUserRepoInvitationToken("", friend, 24 * 3600 * 1000);
-
-//			try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();)
-//			{
-//				final Cryptree cryptree = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail().getCryptreeOrCreate(
-//						transaction, remoteRepositoryId,
-//						remotePathPrefix2Encrypted,
-//						cryptreeRepoTransportFactory.getUserRepoKeyRing());
-//
-//				final UserRepoInvitationManager userRepoInvitationManager = UserRepoInvitationManager.Helper.getInstance(ownerUserRegistry, cryptree);
-//				userRepoInvitationToken = userRepoInvitationManager.createUserRepoInvitationToken("", friend, 24 * 3600 * 1000);
-//
-//				transaction.commit();
-//			}
 		}
 		return userRepoInvitationToken;
 	}
@@ -166,19 +191,6 @@ public class InviteUserAndSyncIT extends AbstractRepoToRepoSyncIT {
 		{
 			final UserRepoInvitationManager userRepoInvitationManager = UserRepoInvitationManager.Helper.getInstance(friendUserRegistry, localRepoManager);
 			userRepoInvitationManager.importUserRepoInvitationToken(userRepoInvitationToken);
-
-//			try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();)
-//			{
-//				final Cryptree cryptree = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail().getCryptreeOrCreate(
-//						transaction, remoteRepositoryId,
-//						remotePathPrefix2Encrypted,
-//						cryptreeRepoTransportFactory.getUserRepoKeyRing());
-//
-//				final UserRepoInvitationManager userRepoInvitationManager = UserRepoInvitationManager.Helper.getInstance(friendUserRegistry, cryptree);
-//				userRepoInvitationManager.importUserRepoInvitationToken(userRepoInvitationToken);
-//
-//				transaction.commit();
-//			}
 		}
 	}
 
@@ -202,6 +214,25 @@ public class InviteUserAndSyncIT extends AbstractRepoToRepoSyncIT {
 			{
 				UserRepoKeyPublicKeyReplacementRequestDeletionDao dao = transaction.getDao(UserRepoKeyPublicKeyReplacementRequestDeletionDao.class);
 				assertThat(dao.getObjectsCount()).isEqualTo(expectedCount);
+
+				transaction.commit();
+			}
+		}
+	}
+
+	protected void assertInvitationUserRepoKeyPublicKeyIs(File repoRoot, long expectedCount) {
+		try (final LocalRepoManager localRepoManager = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(repoRoot);)
+		{
+			try (final LocalRepoTransaction transaction = localRepoManager.beginReadTransaction();)
+			{
+				long count = 0;
+				UserRepoKeyPublicKeyDao dao = transaction.getDao(UserRepoKeyPublicKeyDao.class);
+				for (UserRepoKeyPublicKey k : dao.getObjects()) {
+					if (k instanceof InvitationUserRepoKeyPublicKey)
+						++count;
+				}
+
+				assertThat(count).isEqualTo(expectedCount);
 
 				transaction.commit();
 			}
