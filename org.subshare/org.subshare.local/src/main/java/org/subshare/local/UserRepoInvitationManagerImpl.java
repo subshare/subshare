@@ -45,6 +45,9 @@ import org.subshare.core.user.UserRepoInvitationToken;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKeyRing;
 import org.subshare.local.persistence.SsRemoteRepository;
+import org.subshare.local.persistence.InvitationUserRepoKeyPublicKey;
+import org.subshare.local.persistence.UserRepoKeyPublicKeyDao;
+import org.subshare.local.persistence.VerifySignableAndWriteProtectedEntityListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -108,13 +111,13 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 
 		final byte[] userRepoInvitationData = toUserRepoInvitationData(userRepoInvitation);
 
-		try {
-			FileOutputStream fout = new FileOutputStream(File.createTempFile("xxx-", ".zip"));
-			fout.write(userRepoInvitationData);
-			fout.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+//		try {
+//			FileOutputStream fout = new FileOutputStream(File.createTempFile("xxx-", ".zip"));
+//			fout.write(userRepoInvitationData);
+//			fout.close();
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
 
 		final PgpKey signPgpKey = grantingUser.getPgpKeyContainingPrivateKeyOrFail();
 
@@ -304,7 +307,7 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 			final UserRepoKey invitationUserRepoKey = grantingUser.createInvitationUserRepoKey(user, cryptree.getRemoteRepositoryId(), validityDurationMillis);
 			cryptree.grantPermission(localPath, permissionType, invitationUserRepoKey.getPublicKey());
 
-			final RemoteRepositoryDao remoteRepositoryDao = cryptree.getTransaction().getDao(RemoteRepositoryDao.class);
+			final RemoteRepositoryDao remoteRepositoryDao = transaction.getDao(RemoteRepositoryDao.class);
 			final RemoteRepository remoteRepository = remoteRepositoryDao.getRemoteRepositoryOrFail(cryptree.getRemoteRepositoryId());
 			final URL remoteRoot = remoteRepository.getRemoteRoot();
 			if (remoteRoot == null)
@@ -312,7 +315,12 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 
 			final String serverPath = cryptree.getServerPath(localPath);
 			final URL completeUrl = appendNonEncodedPath(remoteRoot, serverPath);
-			userRepoInvitation = new UserRepoInvitation(completeUrl, invitationUserRepoKey);
+
+//			final UserRepoKeyPublicKeyDao userRepoKeyPublicKeyDao = transaction.getDao(UserRepoKeyPublicKeyDao.class);
+//			final UserRepoKeyPublicKey signingUserRepoKeyPublicKey = userRepoKeyPublicKeyDao.getUserRepoKeyPublicKeyOrFail(
+//					invitationUserRepoKey.getPublicKey().getSignature().getSigningUserRepoKeyId());
+
+			userRepoInvitation = new UserRepoInvitation(completeUrl, invitationUserRepoKey); // signingUserRepoKeyPublicKey.getPublicKey());
 
 			transaction.commit();
 		} finally {
@@ -387,8 +395,18 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 					"NOT_NEEDED_FOR_THIS_OPERATION", // not nice, but a sufficient workaround ;-)
 					user.getUserRepoKeyRingOrCreate());
 
+			final UserRepoKeyPublicKeyDao userRepoKeyPublicKeyDao = transaction.getDao(UserRepoKeyPublicKeyDao.class);
+//			userRepoKeyPublicKeyDao.getUserRepoKeyPublicKeyOrCreate(userRepoInvitation.getSigningUserRepoKeyPublicKey());
+
 //			cryptree.replaceInvitationUserRepoKey(userRepoInvitation.getInvitationUserRepoKey(), userRepoKey);
 			cryptree.requestReplaceInvitationUserRepoKey(userRepoInvitation.getInvitationUserRepoKey(), userRepoKey.getPublicKey());
+
+			final InvitationUserRepoKeyPublicKey invitationUserRepoKeyPublicKey =
+					(InvitationUserRepoKeyPublicKey) userRepoKeyPublicKeyDao.getUserRepoKeyPublicKeyOrFail(userRepoInvitation.getInvitationUserRepoKey().getUserRepoKeyId());
+
+			final VerifySignableAndWriteProtectedEntityListener verifySignableAndWriteProtectedEntityListener = transaction.getContextObject(VerifySignableAndWriteProtectedEntityListener.class);
+			assertNotNull("verifySignableAndWriteProtectedEntityListener", verifySignableAndWriteProtectedEntityListener);
+			verifySignableAndWriteProtectedEntityListener.removeSignable(invitationUserRepoKeyPublicKey);
 
 			transaction.commit();
 		} finally {

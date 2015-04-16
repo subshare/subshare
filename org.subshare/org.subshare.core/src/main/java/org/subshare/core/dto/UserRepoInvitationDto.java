@@ -11,11 +11,13 @@ public class UserRepoInvitationDto {
 
 	private UserRepoKeyDto invitationUserRepoKeyDto;
 
+//	private UserRepoKeyPublicKeyDto signingUserRepoKeyPublicKeyDto;
+
 	public URL getServerUrl() {
 		return serverUrl;
 	}
 
-	public void setServerUrl(URL serverUrl) {
+	public void setServerUrl(final URL serverUrl) {
 		this.serverUrl = serverUrl;
 	}
 
@@ -23,7 +25,14 @@ public class UserRepoInvitationDto {
 		return invitationUserRepoKeyDto;
 	}
 
-	public void setInvitationUserRepoKeyDto(UserRepoKeyDto invitationUserRepoKey) {
+	public void setInvitationUserRepoKeyDto(final UserRepoKeyDto invitationUserRepoKey) {
 		this.invitationUserRepoKeyDto = invitationUserRepoKey;
 	}
+
+//	public UserRepoKeyPublicKeyDto getSigningUserRepoKeyPublicKeyDto() {
+//		return signingUserRepoKeyPublicKeyDto;
+//	}
+//	public void setSigningUserRepoKeyPublicKeyDto(final UserRepoKeyPublicKeyDto signingUserRepoKeyPublicKeyDto) {
+//		this.signingUserRepoKeyPublicKeyDto = signingUserRepoKeyPublicKeyDto;
+//	}
 }

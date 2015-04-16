@@ -20,6 +20,7 @@ import org.subshare.core.observable.standard.StandardPostModificationListener;
 import org.subshare.core.pgp.Pgp;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpRegistry;
+import org.subshare.core.sign.SignableSigner;
 
 import co.codewizards.cloudstore.core.bean.PropertyBase;
 import co.codewizards.cloudstore.core.dto.Uid;
@@ -164,6 +165,8 @@ public class User {
 
 		final AsymmetricCipherKeyPair keyPair = KeyFactory.getInstance().createAsymmetricKeyPair();
 		final UserRepoKey userRepoKey = new UserRepoKey(serverRepositoryId, keyPair, invitedUserPgpKeys, ownPgpKey, new Date(System.currentTimeMillis() + validityDurationMillis));
+		UserRepoKey signingUserRepoKey = getUserRepoKeyRing().getPermanentUserRepoKeys(serverRepositoryId).get(0);
+		new SignableSigner(signingUserRepoKey).sign(userRepoKey.getPublicKey());
 		return userRepoKey;
 	}
 

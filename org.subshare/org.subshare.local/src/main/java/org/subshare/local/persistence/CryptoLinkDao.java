@@ -99,16 +99,36 @@ public class CryptoLinkDao extends Dao<CryptoLink, CryptoLinkDao> {
 	}
 
 	public Collection<CryptoLink> getCryptoLinks(final UserRepoKeyPublicKey fromUserRepoKeyPublicKey) {
+		assertNotNull("fromUserRepoKeyPublicKey", fromUserRepoKeyPublicKey);
 		final Query query = pm().newNamedQuery(getEntityClass(), "getCryptoLinks_fromUserRepoKeyPublicKey");
 		try {
 			long startTimestamp = System.currentTimeMillis();
 			@SuppressWarnings("unchecked")
 			Collection<CryptoLink> cryptoLinks = (Collection<CryptoLink>) query.execute(fromUserRepoKeyPublicKey);
-			logger.debug("getActiveCryptoLinks: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
+			logger.debug("getCryptoLinks: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
 
 			startTimestamp = System.currentTimeMillis();
 			cryptoLinks = load(cryptoLinks);
-			logger.debug("getActiveCryptoLinks: Loading result-set with {} elements took {} ms.", cryptoLinks.size(), System.currentTimeMillis() - startTimestamp);
+			logger.debug("getCryptoLinks: Loading result-set with {} elements took {} ms.", cryptoLinks.size(), System.currentTimeMillis() - startTimestamp);
+
+			return cryptoLinks;
+		} finally {
+			query.closeAll();
+		}
+	}
+
+	public Collection<CryptoLink> getCryptoLinksSignedBy(final Uid signingUserRepoKeyId) {
+		assertNotNull("signingUserRepoKeyId", signingUserRepoKeyId);
+		final Query query = pm().newNamedQuery(getEntityClass(), "getCryptoLinks_signingUserRepoKeyId");
+		try {
+			long startTimestamp = System.currentTimeMillis();
+			@SuppressWarnings("unchecked")
+			Collection<CryptoLink> cryptoLinks = (Collection<CryptoLink>) query.execute(signingUserRepoKeyId.toString());
+			logger.debug("getCryptoLinksSignedBy: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
+
+			startTimestamp = System.currentTimeMillis();
+			cryptoLinks = load(cryptoLinks);
+			logger.debug("getCryptoLinksSignedBy: Loading result-set with {} elements took {} ms.", cryptoLinks.size(), System.currentTimeMillis() - startTimestamp);
 
 			return cryptoLinks;
 		} finally {

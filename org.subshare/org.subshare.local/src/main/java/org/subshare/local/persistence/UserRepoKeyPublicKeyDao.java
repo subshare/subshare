@@ -69,8 +69,14 @@ public class UserRepoKeyPublicKeyDao extends Dao<UserRepoKeyPublicKey, UserRepoK
 	public UserRepoKeyPublicKey getUserRepoKeyPublicKeyOrCreate(final UserRepoKey.PublicKey publicKey) {
 		assertNotNull("publicKey", publicKey);
 		UserRepoKeyPublicKey userRepoKeyPublicKey = getUserRepoKeyPublicKey(publicKey.getUserRepoKeyId());
-		if (userRepoKeyPublicKey == null)
-			userRepoKeyPublicKey = makePersistent(new UserRepoKeyPublicKey(publicKey));
+		if (userRepoKeyPublicKey == null) {
+			if (publicKey.isInvitation()) {
+				final UserRepoKey.PublicKeyWithSignature publicKeyWithSignature = (UserRepoKey.PublicKeyWithSignature) publicKey;
+				userRepoKeyPublicKey = makePersistent(new InvitationUserRepoKeyPublicKey(publicKeyWithSignature));
+			}
+			else
+				userRepoKeyPublicKey = makePersistent(new UserRepoKeyPublicKey(publicKey));
+		}
 
 		return userRepoKeyPublicKey;
 	}

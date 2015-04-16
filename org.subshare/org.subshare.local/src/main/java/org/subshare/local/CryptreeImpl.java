@@ -2,6 +2,8 @@ package org.subshare.local;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
 import static co.codewizards.cloudstore.core.util.Util.doNothing;
+import static org.subshare.local.CryptreeNodeUtil.decrypt;
+import static org.subshare.local.CryptreeNodeUtil.encrypt;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -24,6 +26,7 @@ import org.subshare.core.dto.CryptoKeyDeactivationDto;
 import org.subshare.core.dto.CryptoKeyDto;
 import org.subshare.core.dto.CryptoLinkDto;
 import org.subshare.core.dto.CryptoRepoFileDto;
+import org.subshare.core.dto.InvitationUserRepoKeyPublicKeyDto;
 import org.subshare.core.dto.PermissionDto;
 import org.subshare.core.dto.PermissionSetDto;
 import org.subshare.core.dto.PermissionSetInheritanceDto;
@@ -46,6 +49,7 @@ import org.subshare.local.persistence.CryptoLink;
 import org.subshare.local.persistence.CryptoLinkDao;
 import org.subshare.local.persistence.CryptoRepoFile;
 import org.subshare.local.persistence.CryptoRepoFileDao;
+import org.subshare.local.persistence.InvitationUserRepoKeyPublicKey;
 import org.subshare.local.persistence.LastCryptoKeySyncToRemoteRepo;
 import org.subshare.local.persistence.LastCryptoKeySyncToRemoteRepoDao;
 import org.subshare.local.persistence.LocalRepositoryType;
@@ -63,6 +67,7 @@ import org.subshare.local.persistence.UserRepoKeyPublicKeyDao;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyLookupImpl;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyReplacementRequest;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyReplacementRequestDao;
+import org.subshare.local.persistence.UserRepoKeyPublicKeyReplacementRequestDeletion;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyReplacementRequestDeletionDao;
 import org.subshare.local.persistence.WriteProtectedEntity;
 import org.slf4j.Logger;
@@ -173,6 +178,7 @@ public class CryptreeImpl extends AbstractCryptree {
 	@Override
 	public CryptoChangeSetDto getCryptoChangeSetDtoWithCryptoRepoFiles() {
 		claimRepositoryOwnershipIfUnowned();
+		processUserRepoKeyPublicKeyReplacementRequests();
 		final LocalRepository localRepository = getTransactionOrFail().getDao(LocalRepositoryDao.class).getLocalRepositoryOrFail();
 		final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo = getLastCryptoKeySyncToRemoteRepo();
 		lastCryptoKeySyncToRemoteRepo.setLocalRepositoryRevisionInProgress(localRepository.getRevision());
@@ -280,28 +286,76 @@ public class CryptreeImpl extends AbstractCryptree {
 		transaction.flush();
 
 		processUserRepoKeyPublicKeyReplacementRequests();
-		transaction.flush();
 	}
 
 	private void processUserRepoKeyPublicKeyReplacementRequests() {
+		if (isOnServer())
+			return;
+
+		final LocalRepoTransaction transaction = getTransactionOrFail();
+		final UserRepoKeyPublicKeyReplacementRequestDao requestDao = transaction.getDao(UserRepoKeyPublicKeyReplacementRequestDao.class);
+
+		for (final UserRepoKeyPublicKeyReplacementRequest request : requestDao.getObjects()) {
+			final UserRepoKey newUserRepoKey = getCryptreeContext().userRepoKeyRing.getUserRepoKey(request.getNewKey().getUserRepoKeyId());
+			if (newUserRepoKey != null)
+				processUserRepoKeyPublicKeyReplacementRequestAsInvitedUser(request);
+			else {
+				final UserRepoKey oldKeySigningUserRepoKey = getCryptreeContext().userRepoKeyRing.getUserRepoKey(
+						request.getOldKey().getSignature().getSigningUserRepoKeyId());
+
+				if (oldKeySigningUserRepoKey != null)
+					processUserRepoKeyPublicKeyReplacementRequestAsInvitingUser(request);
+			}
+		}
+		transaction.flush();
+	}
+
+	private void processUserRepoKeyPublicKeyReplacementRequestAsInvitedUser(final UserRepoKeyPublicKeyReplacementRequest request) {
+		final LocalRepoTransaction transaction = getTransactionOrFail();
+		final UserRepoKey newUserRepoKey = getCryptreeContext().userRepoKeyRing.getUserRepoKeyOrFail(request.getNewKey().getUserRepoKeyId());
+		final UserRepoKey oldUserRepoKey = getCryptreeContext().userRepoKeyRing.getUserRepoKeyOrFail(request.getOldKey().getUserRepoKeyId());
+		final CryptoLinkDao cryptoLinkDao = transaction.getDao(CryptoLinkDao.class);
+
+		final Collection<CryptoLink> cryptoLinks = cryptoLinkDao.getCryptoLinks(request.getOldKey());
+		for (CryptoLink cryptoLink : cryptoLinks) {
+			final byte[] plainToCryptoKeyData = decrypt(cryptoLink.getToCryptoKeyData(), oldUserRepoKey.getKeyPair().getPrivate());
+			final byte[] newToCryptoKeyData = encrypt(plainToCryptoKeyData, newUserRepoKey.getKeyPair().getPublic());
+
+			cryptoLink.setSignature(null);
+			cryptoLink.setToCryptoKeyData(newToCryptoKeyData);
+			cryptoLink.setFromUserRepoKeyPublicKey(request.getNewKey());
+			getCryptreeContext().getSignableSigner(oldUserRepoKey).sign(cryptoLink);
+		}
+
+		// TODO process permissions, too!
+	}
+
+	private void processUserRepoKeyPublicKeyReplacementRequestAsInvitingUser(final UserRepoKeyPublicKeyReplacementRequest request) {
+		final UserRepoKey oldKeySigningUserRepoKey = getCryptreeContext().userRepoKeyRing.getUserRepoKeyOrFail(
+				request.getOldKey().getSignature().getSigningUserRepoKeyId());
+
 		final LocalRepoTransaction transaction = getTransactionOrFail();
 		final UserRepoKeyPublicKeyReplacementRequestDao requestDao = transaction.getDao(UserRepoKeyPublicKeyReplacementRequestDao.class);
 		final UserRepoKeyPublicKeyReplacementRequestDeletionDao requestDeletionDao = transaction.getDao(UserRepoKeyPublicKeyReplacementRequestDeletionDao.class);
 		final CryptoLinkDao cryptoLinkDao = transaction.getDao(CryptoLinkDao.class);
 
-		// TODO implement this!
-//		for (final UserRepoKeyPublicKeyReplacementRequest request : requestDao.getObjects()) {
-//			final Collection<CryptoLink> oldCryptoLinks = cryptoLinkDao.getCryptoLinks(request.getOldKey());
-//			for (CryptoLink oldCryptoLink : oldCryptoLinks) {
-//
-//			}
-//
-//			request.getOldKey();
-//			request.getNewKey();
-//
-//			requestDeletionDao.makePersistent(new UserRepoKeyPublicKeyReplacementRequestDeletion(request));
-//			requestDao.deletePersistent(request);
-//		}
+		final Collection<CryptoLink> cryptoLinks = cryptoLinkDao.getCryptoLinksSignedBy(request.getOldKey().getUserRepoKeyId());
+		for (CryptoLink cryptoLink : cryptoLinks) {
+			// TODO what if we lost the permission to do this by now?! how do we handle this??? Simply keep things as they are
+			// and somehow make the user know with a warning - we need persistent warning messages.
+			cryptoLink.setSignature(null);
+
+			// We use the same key that we used to sign the old key, because this prevents an attacker from knowing that 2 of our keys belong together.
+			getCryptreeContext().getSignableSigner(oldKeySigningUserRepoKey).sign(cryptoLink);
+		}
+
+		final UserRepoKeyPublicKeyReplacementRequestDeletion requestDeletion = new UserRepoKeyPublicKeyReplacementRequestDeletion(request);
+
+		// We use the same key that we used to sign the old key, because this prevents an attacker from knowing that 2 of our keys belong together.
+		getCryptreeContext().getSignableSigner(oldKeySigningUserRepoKey).sign(requestDeletion);
+
+		requestDeletionDao.makePersistent(requestDeletion);
+		requestDao.deletePersistent(request);
 	}
 
 	@Override
@@ -380,7 +434,8 @@ public class CryptreeImpl extends AbstractCryptree {
 		final UserRepoKeyPublicKeyReplacementRequestDao userRepoKeyPublicKeyReplacementRequestDao = tx.getDao(UserRepoKeyPublicKeyReplacementRequestDao.class);
 
 		// old key
-		final UserRepoKeyPublicKey invitationUserRepoKeyPublicKey = userRepoKeyPublicKeyDao.getUserRepoKeyPublicKeyOrCreate(invitationUserRepoKey.getPublicKey());
+		final InvitationUserRepoKeyPublicKey invitationUserRepoKeyPublicKey =
+				(InvitationUserRepoKeyPublicKey) userRepoKeyPublicKeyDao.getUserRepoKeyPublicKeyOrCreate(invitationUserRepoKey.getPublicKey());
 
 		// new key
 		final UserRepoKeyPublicKey userRepoKeyPublicKey = userRepoKeyPublicKeyDao.getUserRepoKeyPublicKeyOrCreate(publicKey);
@@ -557,10 +612,13 @@ public class CryptreeImpl extends AbstractCryptree {
 		final LocalRepoTransaction transaction = getTransactionOrFail();
 		final UserRepoKeyPublicKeyDao userRepoKeyPublicKeyDao = transaction.getDao(UserRepoKeyPublicKeyDao.class);
 
+		final InvitationUserRepoKeyPublicKeyDto invUserRepoKeyPublicKeyDto = (InvitationUserRepoKeyPublicKeyDto)
+				(userRepoKeyPublicKeyDto instanceof InvitationUserRepoKeyPublicKeyDto ? userRepoKeyPublicKeyDto : null);
+
 		final Uid userRepoKeyId = assertNotNull("userRepoKeyPublicKeyDto.userRepoKeyId", userRepoKeyPublicKeyDto.getUserRepoKeyId());
 		UserRepoKeyPublicKey userRepoKeyPublicKey = userRepoKeyPublicKeyDao.getUserRepoKeyPublicKey(userRepoKeyId);
 		if (userRepoKeyPublicKey == null)
-			userRepoKeyPublicKey = new UserRepoKeyPublicKey(userRepoKeyId);
+			userRepoKeyPublicKey = invUserRepoKeyPublicKeyDto != null ? new InvitationUserRepoKeyPublicKey(userRepoKeyId) : new UserRepoKeyPublicKey(userRepoKeyId);
 
 		userRepoKeyPublicKey.setServerRepositoryId(userRepoKeyPublicKeyDto.getRepositoryId());
 
@@ -569,7 +627,12 @@ public class CryptreeImpl extends AbstractCryptree {
 		else if (! Arrays.equals(userRepoKeyPublicKey.getPublicKeyData(), userRepoKeyPublicKeyDto.getPublicKeyData()))
 			throw new IllegalStateException("Cannot re-assign UserRepoKeyPublicKey.publicKeyData! Attack?!");
 
-		userRepoKeyPublicKey.setValidTo(userRepoKeyPublicKeyDto.getValidTo());
+
+		if (invUserRepoKeyPublicKeyDto != null) {
+			final InvitationUserRepoKeyPublicKey invUserRepoKeyPublicKey = (InvitationUserRepoKeyPublicKey) userRepoKeyPublicKey;
+			invUserRepoKeyPublicKey.setValidTo(invUserRepoKeyPublicKeyDto.getValidTo());
+			invUserRepoKeyPublicKey.setSignature(invUserRepoKeyPublicKeyDto.getSignature());
+		}
 
 		return userRepoKeyPublicKeyDao.makePersistent(userRepoKeyPublicKey);
 	}
@@ -584,7 +647,7 @@ public class CryptreeImpl extends AbstractCryptree {
 		if (request == null)
 			request = new UserRepoKeyPublicKeyReplacementRequest(requestDto.getRequestId());
 
-		final UserRepoKeyPublicKey oldKey = keyDao.getUserRepoKeyPublicKeyOrFail(requestDto.getOldKeyId());
+		final InvitationUserRepoKeyPublicKey oldKey = (InvitationUserRepoKeyPublicKey) keyDao.getUserRepoKeyPublicKeyOrFail(requestDto.getOldKeyId());
 		request.setOldKey(oldKey);
 
 		final UserRepoKeyPublicKey newKey = keyDao.getUserRepoKeyPublicKeyOrFail(requestDto.getNewKeyId());

@@ -7,12 +7,15 @@ import org.subshare.core.dto.UserRepoInvitationDto;
 public class UserRepoInvitationDtoConverter {
 
 	private final UserRepoKeyDtoConverter userRepoKeyDtoConverter = new UserRepoKeyDtoConverter();
+//	private final UserRepoKeyPublicKeyDtoConverter userRepoKeyPublicKeyDtoConverter = new UserRepoKeyPublicKeyDtoConverter();
 
 	public UserRepoInvitationDto toUserRepoInvitationDto(final UserRepoInvitation userRepoInvitation) {
 		assertNotNull("userRepoInvitation", userRepoInvitation);
 		final UserRepoInvitationDto result = new UserRepoInvitationDto();
 		result.setInvitationUserRepoKeyDto(userRepoKeyDtoConverter.toUserRepoKeyDto(userRepoInvitation.getInvitationUserRepoKey()));
 		result.setServerUrl(userRepoInvitation.getServerUrl());
+//		result.setSigningUserRepoKeyPublicKeyDto(
+//				userRepoKeyPublicKeyDtoConverter.toUserRepoKeyPublicKeyDto(userRepoInvitation.getSigningUserRepoKeyPublicKey()));
 		return result;
 	}
 
@@ -22,6 +25,9 @@ public class UserRepoInvitationDtoConverter {
 		final UserRepoKey invitationUserRepoKey = userRepoKeyDtoConverter.fromUserRepoKeyDto(
 				userRepoInvitationDto.getInvitationUserRepoKeyDto());
 
-		return new UserRepoInvitation(userRepoInvitationDto.getServerUrl(), invitationUserRepoKey);
+//		final UserRepoKey.PublicKey signingUserRepoKeyPublicKey = userRepoKeyPublicKeyDtoConverter.fromUserRepoKeyPublicKeyDto(
+//				userRepoInvitationDto.getSigningUserRepoKeyPublicKeyDto());
+
+		return new UserRepoInvitation(userRepoInvitationDto.getServerUrl(), invitationUserRepoKey); // , signingUserRepoKeyPublicKey);
 	}
 }

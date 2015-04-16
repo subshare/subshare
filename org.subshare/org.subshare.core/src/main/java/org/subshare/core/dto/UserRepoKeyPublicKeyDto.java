@@ -1,7 +1,6 @@
 package org.subshare.core.dto;
 
 import java.util.Arrays;
-import java.util.Date;
 import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlRootElement;
@@ -12,9 +11,8 @@ import co.codewizards.cloudstore.core.dto.Uid;
 public class UserRepoKeyPublicKeyDto {
 	private Uid userRepoKeyId;
 	private UUID repositoryId;
-	private Date validTo;
-	private byte[] publicKeyData;
-	private byte[] signedPublicKeyData;
+	private byte[] publicKeyData; // for storage in repo DB
+	private byte[] signedPublicKeyData; // for storage in UserRegistry - signed with OpenPGP
 	private long localRevision;
 
 	public Uid getUserRepoKeyId() {
@@ -29,13 +27,6 @@ public class UserRepoKeyPublicKeyDto {
 	}
 	public void setRepositoryId(final UUID repositoryId) {
 		this.repositoryId = repositoryId;
-	}
-
-	public Date getValidTo() {
-		return validTo;
-	}
-	public void setValidTo(Date validTo) {
-		this.validTo = validTo;
 	}
 
 	public byte[] getPublicKeyData() {
@@ -58,6 +49,7 @@ public class UserRepoKeyPublicKeyDto {
 	public void setLocalRevision(final long localRevision) {
 		this.localRevision = localRevision;
 	}
+
 	@Override
 	public String toString() {
 		return "UserRepoKeyPublicKeyDto[userRepoKeyId=" + userRepoKeyId

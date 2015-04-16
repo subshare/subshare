@@ -3,7 +3,11 @@ package org.subshare.core.dto;
 import java.util.Date;
 import java.util.UUID;
 
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
+
+import org.subshare.core.sign.Signature;
 
 import co.codewizards.cloudstore.core.dto.Uid;
 
@@ -15,6 +19,10 @@ public class UserRepoKeyDto {
 	private Date validTo;
 	private byte[] encryptedSignedPrivateKeyData;
 	private byte[] signedPublicKeyData;
+	private boolean invitation;
+
+	@XmlElement
+	private SignatureDto publicKeySignature;
 
 	public Uid getUserRepoKeyId() {
 		return userRepoKeyId;
@@ -37,6 +45,13 @@ public class UserRepoKeyDto {
 		this.validTo = validTo;
 	}
 
+	public boolean isInvitation() {
+		return invitation;
+	}
+	public void setInvitation(boolean invitation) {
+		this.invitation = invitation;
+	}
+
 	public byte[] getEncryptedSignedPrivateKeyData() {
 		return encryptedSignedPrivateKeyData;
 	}
@@ -51,21 +66,11 @@ public class UserRepoKeyDto {
 		this.signedPublicKeyData = signedPublicKeyData;
 	}
 
-//	private UserRepoKeyPrivateKeyDto privateKeyDto;
-//
-//	private UserRepoKeyPublicKeyDto publicKeyDto;
-//
-//	public UserRepoKeyPrivateKeyDto getPrivateKeyDto() {
-//		return privateKeyDto;
-//	}
-//	public void setPrivateKeyDto(final UserRepoKeyPrivateKeyDto privateKeyDto) {
-//		this.privateKeyDto = privateKeyDto;
-//	}
-//
-//	public UserRepoKeyPublicKeyDto getPublicKeyDto() {
-//		return publicKeyDto;
-//	}
-//	public void setPublicKeyDto(final UserRepoKeyPublicKeyDto publicKeyDto) {
-//		this.publicKeyDto = publicKeyDto;
-//	}
+	@XmlTransient
+	public Signature getPublicKeySignature() {
+		return publicKeySignature;
+	}
+	public void setPublicKeySignature(Signature publicKeySignature) {
+		this.publicKeySignature = SignatureDto.copyIfNeeded(publicKeySignature);
+	}
 }

@@ -17,6 +17,7 @@ import org.subshare.core.user.UserRepoInvitationManager;
 import org.subshare.core.user.UserRepoInvitationToken;
 import org.subshare.core.user.UserRepoKeyRing;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyReplacementRequestDao;
+import org.subshare.local.persistence.UserRepoKeyPublicKeyReplacementRequestDeletionDao;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -90,25 +91,36 @@ public class InviteUserAndSyncIT extends AbstractRepoToRepoSyncIT {
 		assertReplacementRequestInRepoIs(localDestRoot, 0);
 		importUserRepoInvitationToken(userRepoInvitationToken);
 		assertReplacementRequestInRepoIs(localDestRoot, 1);
+		assertReplacementRequestDeletionInRepoIs(localDestRoot, 0);
 
 		assertReplacementRequestInRepoIs(remoteRoot, 0);
 
 		// The next sync is done with the temporary key (from the invitation). It downloads the repository and
-		// uploads the permanent key with the replacement-request.
+		// uploads the permanent key with the replacement-request. It also already replaces the temporary key
+		// by the permanent key.
 		syncFromRemoteToLocalDest();
 
 		// Make sure, our replacement request really arrived on the server.
 		assertReplacementRequestInRepoIs(remoteRoot, 1);
+		assertReplacementRequestDeletionInRepoIs(remoteRoot, 0);
 
 		// *** OWNER machine with owner's repository ***
 		switchLocationToOwner();
 
 		// ...but is not yet in source repo.
 		assertReplacementRequestInRepoIs(localSrcRoot, 0);
+		assertReplacementRequestDeletionInRepoIs(localSrcRoot, 0);
 
 		syncFromLocalSrcToRemote();
 
-		assertReplacementRequestInRepoIs(localSrcRoot, 1);
+		// ...and now it is already deleted and replaced by an appropriate deletion object.
+		assertReplacementRequestInRepoIs(localSrcRoot, 0);
+		assertReplacementRequestDeletionInRepoIs(localSrcRoot, 1);
+
+		// the deletion should already be synced to the server
+		// TODO continue this!
+//		assertReplacementRequestInRepoIs(remoteRoot, 0);
+//		assertReplacementRequestDeletionInRepoIs(remoteRoot, 1);
 
 		logger.info("*** <<< inviteUserAndSync <<< ***");
 		logger.info("*** <<<<<<<<<<<<<<<<<<<<<<<<< ***");
@@ -176,6 +188,19 @@ public class InviteUserAndSyncIT extends AbstractRepoToRepoSyncIT {
 			try (final LocalRepoTransaction transaction = localRepoManager.beginReadTransaction();)
 			{
 				UserRepoKeyPublicKeyReplacementRequestDao dao = transaction.getDao(UserRepoKeyPublicKeyReplacementRequestDao.class);
+				assertThat(dao.getObjectsCount()).isEqualTo(expectedCount);
+
+				transaction.commit();
+			}
+		}
+	}
+
+	protected void assertReplacementRequestDeletionInRepoIs(File repoRoot, long expectedCount) {
+		try (final LocalRepoManager localRepoManager = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(repoRoot);)
+		{
+			try (final LocalRepoTransaction transaction = localRepoManager.beginReadTransaction();)
+			{
+				UserRepoKeyPublicKeyReplacementRequestDeletionDao dao = transaction.getDao(UserRepoKeyPublicKeyReplacementRequestDeletionDao.class);
 				assertThat(dao.getObjectsCount()).isEqualTo(expectedCount);
 
 				transaction.commit();

@@ -49,15 +49,19 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 @Queries({
 	@Query(name="getCryptoLink_cryptoLinkId", value="SELECT UNIQUE WHERE this.cryptoLinkId == :cryptoLinkId"),
 	@Query(name="getCryptoLinksChangedAfter_localRevision", value="SELECT WHERE this.localRevision > :localRevision"),
+
 	@Query(name="getCryptoLinks_fromUserRepoKeyPublicKey",
 			value="SELECT WHERE this.fromUserRepoKeyPublicKey == :fromUserRepoKeyPublicKey"),
-	@Query(
-			name="getActiveCryptoLinks_toCryptoRepoFile_toCryptoKeyRole_toCryptoKeyPart",
+
+	@Query(name="getActiveCryptoLinks_toCryptoRepoFile_toCryptoKeyRole_toCryptoKeyPart",
 			value="SELECT WHERE "
 					+ "this.toCryptoKey.cryptoKeyDeactivation == null && "
 					+ "this.toCryptoKey.cryptoRepoFile == :toCryptoRepoFile && "
 					+ "this.toCryptoKey.cryptoKeyRole == :toCryptoKeyRole && "
-					+ "this.toCryptoKeyPart == :toCryptoKeyPart")
+					+ "this.toCryptoKeyPart == :toCryptoKeyPart"),
+
+	@Query(name="getCryptoLinks_signingUserRepoKeyId",
+			value="SELECT WHERE this.signature.signingUserRepoKeyId == :signingUserRepoKeyId")
 })
 public class CryptoLink extends Entity implements WriteProtectedEntity, AutoTrackLocalRevision, StoreCallback {
 

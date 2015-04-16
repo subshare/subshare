@@ -1,20 +1,28 @@
 package org.subshare.core.user;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
+import static co.codewizards.cloudstore.core.util.Util.equal;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Date;
 import java.util.Set;
 import java.util.UUID;
 
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
+import org.subshare.core.dto.InvitationUserRepoKeyPublicKeyDto;
+import org.subshare.core.dto.SignatureDto;
+import org.subshare.core.io.InputStreamSource;
+import org.subshare.core.io.MultiInputStream;
 import org.subshare.core.pgp.PgpDecoder;
 import org.subshare.core.pgp.PgpEncoder;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpRegistry;
+import org.subshare.core.sign.Signable;
+import org.subshare.core.sign.Signature;
 import org.subshare.crypto.CryptoRegistry;
 
 import co.codewizards.cloudstore.core.auth.SignatureException;
@@ -38,6 +46,7 @@ public class UserRepoKey {
 	private final UUID serverRepositoryId;
 	private final AsymmetricCipherKeyPair keyPair;
 	private final Date validTo; // TODO this - at least - should be signed!
+	private final boolean invitation;
 	private PublicKeyWithSignature publicKey;
 
 	private final byte[] encryptedSignedPrivateKeyData;
@@ -52,14 +61,18 @@ public class UserRepoKey {
 		assertNotNull("pgpKeyForSignature", pgpKeyForSignature);
 		this.encryptedSignedPrivateKeyData = encryptSignPrivateKeyData(pgpKeysForEncryption, pgpKeyForSignature);
 		this.signedPublicKeyData = signPublicKeyData(pgpKeyForSignature);
+
+		// It is an invitation, if the user didn't encrypt+sign it for himself.
+		this.invitation = pgpKeysForEncryption.size() != 1 || pgpKeysForEncryption.iterator().next() != pgpKeyForSignature;
 	}
 
-	public UserRepoKey(final Uid userRepoKeyId, final UUID serverRepositoryId, final byte[] encryptedSignedPrivateKeyData, final byte[] signedPublicKeyData, final Date validTo) {
+	public UserRepoKey(final Uid userRepoKeyId, final UUID serverRepositoryId, final byte[] encryptedSignedPrivateKeyData, final byte[] signedPublicKeyData, final Date validTo, final boolean invitation) {
 		this.userRepoKeyId = assertNotNull("userRepoKeyId", userRepoKeyId);
 		this.serverRepositoryId = assertNotNull("serverRepositoryId", serverRepositoryId);
 		this.encryptedSignedPrivateKeyData = assertNotNull("encryptedSignedPrivateKeyData", encryptedSignedPrivateKeyData);
 		this.signedPublicKeyData = assertNotNull("signedPublicKeyData", signedPublicKeyData);
 		this.validTo = validTo;
+		this.invitation = invitation;
 
 		// TODO should we maybe defer the decryption until later, when the key is actually used?!
 		this.keyPair = new AsymmetricCipherKeyPair(verifyPublicKeyData(), decryptVerifyPrivateKeyData());
@@ -81,9 +94,13 @@ public class UserRepoKey {
 		if (publicKey == null)
 			publicKey = new PublicKeyWithSignature(
 					getUserRepoKeyId(), getServerRepositoryId(), getKeyPair().getPublic(),
-					getSignedPublicKeyData(), getValidTo());
+					getSignedPublicKeyData(), getValidTo(), isInvitation());
 
 		return publicKey;
+	}
+
+	public boolean isInvitation() {
+		return invitation;
 	}
 
 	/**
@@ -174,12 +191,14 @@ public class UserRepoKey {
 		private final UUID serverRepositoryId;
 		private final AsymmetricKeyParameter publicKey;
 		private final Date validTo;
+		private final boolean invitation;
 
-		public PublicKey(final Uid userRepoKeyId, final UUID serverRepositoryId, final AsymmetricKeyParameter publicKey, final Date validTo) {
+		public PublicKey(final Uid userRepoKeyId, final UUID serverRepositoryId, final AsymmetricKeyParameter publicKey, final Date validTo, final boolean invitation) {
 			this.userRepoKeyId = assertNotNull("userRepoKeyId", userRepoKeyId);
 			this.serverRepositoryId = assertNotNull("serverRepositoryId", serverRepositoryId);
 			this.publicKey = assertNotNull("publicKey", publicKey);
 			this.validTo = validTo;
+			this.invitation = invitation;
 		}
 
 		public Uid getUserRepoKeyId() {
@@ -197,23 +216,78 @@ public class UserRepoKey {
 		public Date getValidTo() {
 			return validTo;
 		}
+
+		public boolean isInvitation() {
+			return invitation;
+		}
 	}
 
-	public static class PublicKeyWithSignature extends PublicKey {
-		private final byte[] signedPublicKeyData;
+	public static class PublicKeyWithSignature extends PublicKey implements Signable {
+		private final byte[] signedPublicKeyData; // OpenPGP-signed!!! Has nothing to do with Signable!
 
-		protected PublicKeyWithSignature(Uid userRepoKeyId, UUID serverRepositoryId, AsymmetricKeyParameter publicKey, final byte[] signedPublicKeyData, final Date validTo) {
-			super(userRepoKeyId, serverRepositoryId, publicKey, validTo);
+		// BEGIN Signable stuff - has nothing to do with OpenPGP-signature!
+		private byte[] publicKeyData;
+		private Signature signature;
+		// END Signable stuff
+
+		protected PublicKeyWithSignature(Uid userRepoKeyId, UUID serverRepositoryId, AsymmetricKeyParameter publicKey, final byte[] signedPublicKeyData, final Date validTo, final boolean invitation) {
+			super(userRepoKeyId, serverRepositoryId, publicKey, validTo, invitation);
 			this.signedPublicKeyData = assertNotNull("signedPublicKeyData", signedPublicKeyData);
 		}
 
-		public PublicKeyWithSignature(Uid userRepoKeyId, UUID repositoryId, final byte[] signedPublicKeyData, final Date validTo) {
-			super(userRepoKeyId, repositoryId, verifyPublicKeyData(signedPublicKeyData), validTo);
+		public PublicKeyWithSignature(Uid userRepoKeyId, UUID repositoryId, final byte[] signedPublicKeyData, final Date validTo, final boolean invitation) {
+			super(userRepoKeyId, repositoryId, verifyPublicKeyData(signedPublicKeyData), validTo, invitation);
 			this.signedPublicKeyData = assertNotNull("signedPublicKeyData", signedPublicKeyData);
 		}
 
 		public byte[] getSignedPublicKeyData() {
 			return signedPublicKeyData;
+		}
+		public byte[] getPublicKeyData() {
+			// publicKeyData is of course the same publicKey-data as the one in signedPublicKeyData, but it is not PGP-signed.
+			if (publicKeyData == null)
+				publicKeyData = CryptoRegistry.getInstance().encodePublicKey(getPublicKey());
+
+			return publicKeyData;
+		}
+
+		@Override
+		public int getSignedDataVersion() {
+			return 0;
+		}
+
+		/**
+		 * {@inheritDoc}
+		 * <p>
+		 * <b>Important:</b> The implementation in {@code InvitationUserRepoKeyPublicKey} must exactly match the one
+		 * in {@code UserRepoKey.PublicKeyWithSignature} and the one in {@link InvitationUserRepoKeyPublicKeyDto}!
+		 */
+		@Override
+		public InputStream getSignedData(final int signedDataVersion) {
+			try {
+				byte separatorIndex = 0;
+				return new MultiInputStream(
+						InputStreamSource.Helper.createInputStreamSource(getUserRepoKeyId()),
+
+						InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
+						InputStreamSource.Helper.createInputStreamSource(getServerRepositoryId()),
+
+						InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
+						InputStreamSource.Helper.createInputStreamSource(getPublicKeyData())
+				);
+			} catch (final IOException x) {
+				throw new RuntimeException(x);
+			}
+		}
+
+		@Override
+		public Signature getSignature() {
+			return signature;
+		}
+		@Override
+		public void setSignature(final Signature signature) {
+			if (!equal(this.signature, signature))
+				this.signature = SignatureDto.copyIfNeeded(signature);
 		}
 	}
 }

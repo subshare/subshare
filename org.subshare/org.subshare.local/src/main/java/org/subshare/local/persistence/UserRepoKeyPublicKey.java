@@ -5,10 +5,11 @@ import static co.codewizards.cloudstore.core.util.Util.equal;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Date;
 import java.util.UUID;
 
 import javax.jdo.annotations.Column;
+import javax.jdo.annotations.Discriminator;
+import javax.jdo.annotations.DiscriminatorStrategy;
 import javax.jdo.annotations.Index;
 import javax.jdo.annotations.Inheritance;
 import javax.jdo.annotations.InheritanceStrategy;
@@ -30,6 +31,7 @@ import co.codewizards.cloudstore.local.persistence.AutoTrackLocalRevision;
 import co.codewizards.cloudstore.local.persistence.Entity;
 
 @PersistenceCapable
+@Discriminator(strategy=DiscriminatorStrategy.VALUE_MAP, value="UserRepoKeyPublicKey")
 @Inheritance(strategy=InheritanceStrategy.NEW_TABLE)
 @Unique(name="UserRepoKeyPublicKey_userRepoKeyId", members="userRepoKeyId")
 @Index(name="UserRepoKeyPublicKey_localRevision", members="localRevision")
@@ -50,8 +52,6 @@ public class UserRepoKeyPublicKey extends Entity implements AutoTrackLocalRevisi
 	@Column(length=36)
 	private String serverRepositoryId;
 
-	private Date validTo;
-
 	@Persistent(nullValue=NullValue.EXCEPTION)
 	private byte[] publicKeyData;
 
@@ -69,7 +69,6 @@ public class UserRepoKeyPublicKey extends Entity implements AutoTrackLocalRevisi
 	public UserRepoKeyPublicKey(final UserRepoKey.PublicKey publicKey) {
 		assertNotNull("publicKey", publicKey);
 		this.publicKey = publicKey;
-		setValidTo(publicKey.getValidTo());
 		setUserRepoKeyId(publicKey.getUserRepoKeyId());
 		setServerRepositoryId(publicKey.getServerRepositoryId());
 		setPublicKeyData(CryptoRegistry.getInstance().encodePublicKey(publicKey.getPublicKey()));
@@ -89,13 +88,6 @@ public class UserRepoKeyPublicKey extends Entity implements AutoTrackLocalRevisi
 	public void setServerRepositoryId(final UUID serverRepositoryId) {
 		if (! equal(this.getServerRepositoryId(), serverRepositoryId))
 			this.serverRepositoryId = serverRepositoryId == null ? null : serverRepositoryId.toString();
-	}
-
-	public Date getValidTo() {
-		return validTo;
-	}
-	public void setValidTo(Date validTo) {
-		this.validTo = validTo;
 	}
 
 	public byte[] getPublicKeyData() {
@@ -130,10 +122,7 @@ public class UserRepoKeyPublicKey extends Entity implements AutoTrackLocalRevisi
 					InputStreamSource.Helper.createInputStreamSource(getPublicKeyData()),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
-					InputStreamSource.Helper.createInputStreamSource(getServerRepositoryId()),
-
-					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
-					InputStreamSource.Helper.createInputStreamSource(getValidTo())
+					InputStreamSource.Helper.createInputStreamSource(getServerRepositoryId())
 			);
 		} catch (final IOException x) {
 			throw new RuntimeException(x);
@@ -142,16 +131,20 @@ public class UserRepoKeyPublicKey extends Entity implements AutoTrackLocalRevisi
 
 	public UserRepoKey.PublicKey getPublicKey() {
 		if (publicKey == null)
-			try {
-				publicKey = new UserRepoKey.PublicKey(
-						getUserRepoKeyId(), getServerRepositoryId(),
-						CryptoRegistry.getInstance().decodePublicKey(getPublicKeyData()),
-						getValidTo());
-			} catch (final IOException e) {
-				throw new RuntimeException(e);
-			}
+			publicKey = createPublicKey();
 
 		return publicKey;
+	}
+
+	protected UserRepoKey.PublicKey createPublicKey() {
+		try {
+			return new UserRepoKey.PublicKey(
+					getUserRepoKeyId(), getServerRepositoryId(),
+					CryptoRegistry.getInstance().decodePublicKey(getPublicKeyData()),
+					null, false);
+		} catch (final IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	@Override

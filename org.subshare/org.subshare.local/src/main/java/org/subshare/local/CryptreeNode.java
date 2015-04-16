@@ -45,6 +45,7 @@ import org.subshare.local.persistence.CryptoLink;
 import org.subshare.local.persistence.CryptoLinkDao;
 import org.subshare.local.persistence.CryptoRepoFile;
 import org.subshare.local.persistence.CryptoRepoFileDao;
+import org.subshare.local.persistence.InvitationUserRepoKeyPublicKey;
 import org.subshare.local.persistence.Permission;
 import org.subshare.local.persistence.PermissionDao;
 import org.subshare.local.persistence.PermissionSet;
@@ -426,7 +427,7 @@ public class CryptreeNode {
 		return null;
 	}
 
-	protected PlainCryptoKey getPlainCryptoKeyForDecrypting(final CryptoKey cryptoKey) {
+	public PlainCryptoKey getPlainCryptoKeyForDecrypting(final CryptoKey cryptoKey) {
 		assertNotNull("cryptoKey", cryptoKey);
 		logger.debug("getPlainCryptoKeyForDecrypting: cryptoRepoFile={} repoFile={} cryptoKey={}",
 				cryptoRepoFile, repoFile, cryptoKey);
@@ -753,6 +754,19 @@ public class CryptreeNode {
 		if (isOwner(userRepoKeyId))
 			return; // The owner always has all permissions.
 
+		final UserRepoKeyPublicKey userRepoKeyPublicKey = context.transaction.getDao(UserRepoKeyPublicKeyDao.class).getUserRepoKeyPublicKeyOrFail(userRepoKeyId);
+		if (userRepoKeyPublicKey instanceof InvitationUserRepoKeyPublicKey) {
+			final InvitationUserRepoKeyPublicKey invUserRepoKeyPublicKey = (InvitationUserRepoKeyPublicKey) userRepoKeyPublicKey;
+			if (timestamp.compareTo(invUserRepoKeyPublicKey.getValidTo()) <= 0) {
+				final Uid signingUserRepoKeyId = invUserRepoKeyPublicKey.getSignature().getSigningUserRepoKeyId();
+				assertHasPermission(anyCryptoRepoFile, signingUserRepoKeyId, permissionType, invUserRepoKeyPublicKey.getSignature().getSignatureCreated());
+				// Using 'timestamp' here means the signing user must still have permissions, when the invitation was consumed.
+				// This is maybe not perfect, but maybe it's exactly what we want... at least it should be OK. Or should be better
+				// to use the timestamp of the invitation? This is what we do now.
+				return;
+			}
+		}
+
 		final Set<Permission> permissions = new HashSet<Permission>();
 		collectPermissions(permissions, anyCryptoRepoFile, permissionType, userRepoKeyId, timestamp);
 		final Set<Permission> permissionsIndicatingBackdatedSignature = extractPermissionsIndicatingBackdatedSignature(permissions);
@@ -811,6 +825,18 @@ public class CryptreeNode {
 			default:
 				throw new IllegalArgumentException("PermissionType unknown or not allowed here: " + permissionType);
 		}
+
+//		final UserRepoKeyPublicKey userRepoKeyPublicKey = context.transaction.getDao(UserRepoKeyPublicKeyDao.class).getUserRepoKeyPublicKeyOrFail(userRepoKeyId);
+//		if (userRepoKeyPublicKey instanceof InvitationUserRepoKeyPublicKey) {
+//			final InvitationUserRepoKeyPublicKey invUserRepoKeyPublicKey = (InvitationUserRepoKeyPublicKey) userRepoKeyPublicKey;
+//			if (timestamp.compareTo(invUserRepoKeyPublicKey.getValidTo()) <= 0) {
+//				final Uid signingUserRepoKeyId = invUserRepoKeyPublicKey.getSignature().getSigningUserRepoKeyId();
+//				collectPermissions(permissions, anyCryptoRepoFile, permissionType, signingUserRepoKeyId, invUserRepoKeyPublicKey.getSignature().getSignatureCreated());
+//				// Using 'timestamp' here means the signing user must still have permissions, when the invitation was consumed.
+//				// This is maybe not perfect, but maybe it's exactly what we want... at least it should be OK. Or should be better
+//				// use the timestamp of the invitation?
+//			}
+//		}
 
 		final PermissionSet permissionSet = anyCryptoRepoFile ? null : getPermissionSet();
 		if (anyCryptoRepoFile || permissionSet != null) {

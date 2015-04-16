@@ -45,7 +45,7 @@ public class UserRepoKeyPublicKeyReplacementRequest extends Entity implements Si
 	private String requestId;
 
 	@Persistent(nullValue=NullValue.EXCEPTION)
-	private UserRepoKeyPublicKey oldKey; // NOT unique to avoid problems with sync collisions (unlikely, but possible)
+	private InvitationUserRepoKeyPublicKey oldKey; // NOT unique to avoid problems with sync collisions (unlikely, but possible)
 
 	@Persistent(nullValue=NullValue.EXCEPTION)
 	private UserRepoKeyPublicKey newKey; // NOT unique to avoid problems with sync collisions (unlikely, but possible)
@@ -70,10 +70,10 @@ public class UserRepoKeyPublicKeyReplacementRequest extends Entity implements Si
 		return new Uid(requestId);
 	}
 
-	public UserRepoKeyPublicKey getOldKey() {
+	public InvitationUserRepoKeyPublicKey getOldKey() {
 		return oldKey;
 	}
-	public void setOldKey(UserRepoKeyPublicKey oldKey) {
+	public void setOldKey(InvitationUserRepoKeyPublicKey oldKey) {
 		if (this.oldKey != null && !this.oldKey.equals(oldKey))
 			throw new IllegalArgumentException("oldKey already assigned! Cannot modify!");
 
@@ -120,8 +120,6 @@ public class UserRepoKeyPublicKeyReplacementRequest extends Entity implements Si
 	public InputStream getSignedData(int signedDataVersion) {
 		assertNotNull("oldKey", oldKey);
 		assertNotNull("newKey", newKey);
-
-		debugDump(oldKey.getSignedData(signedDataVersion));
 
 		try {
 			byte separatorIndex = 0;

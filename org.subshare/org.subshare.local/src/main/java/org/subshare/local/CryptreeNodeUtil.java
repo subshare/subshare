@@ -1,8 +1,9 @@
 package org.subshare.local;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
-import static co.codewizards.cloudstore.core.util.IOUtil.*;
-import static org.subshare.core.crypto.CryptoConfigUtil.*;
+import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
+import static co.codewizards.cloudstore.core.util.IOUtil.transferStreamData;
+import static org.subshare.core.crypto.CryptoConfigUtil.getAsymmetricCipherTransformation;
+import static org.subshare.core.crypto.CryptoConfigUtil.getSymmetricCipherTransformation;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -118,13 +119,8 @@ public class CryptreeNodeUtil {
 		switch (plainCryptoKey.getCryptoKeyPart()) {
 			case privateKey:
 				throw new IllegalStateException("Cannot encrypt with private key!");
-			case publicKey: {
-				final boolean large = plain.length > MAX_ASYMMETRIC_PLAIN_SIZE;
-				if (large)
-					return encryptLarge(plain, plainCryptoKey.getPublicKeyParameterOrFail());
-				else
-					return encrypt(plain, plainCryptoKey.getPublicKeyParameterOrFail());
-			}
+			case publicKey:
+				return encrypt(plain, plainCryptoKey.getPublicKeyParameterOrFail());
 			case sharedSecret:
 				return encrypt(plain, plainCryptoKey.getKeyParameterOrFail());
 			default:
@@ -134,15 +130,8 @@ public class CryptreeNodeUtil {
 
 	public static byte[] decrypt(final byte[] encrypted, final PlainCryptoKey plainCryptoKey) {
 		switch (plainCryptoKey.getCryptoKeyPart()) {
-			case privateKey: {
-				final int magicByte = encrypted[0] & 0xff;
-				if (AsymCombiDecrypterInputStream.MAGIC_BYTE == magicByte)
-					return decryptLarge(encrypted, plainCryptoKey.getPrivateKeyParameterOrFail());
-				else if (DecrypterInputStream.MAGIC_BYTE == magicByte)
-					return decrypt(encrypted, plainCryptoKey.getPrivateKeyParameterOrFail());
-				else
-					throw new IllegalArgumentException(String.format("First byte from input does not match any expected magic number! expected1=%s expected2=%s found=%s", AsymCombiDecrypterInputStream.MAGIC_BYTE, DecrypterInputStream.MAGIC_BYTE, magicByte));
-			}
+			case privateKey:
+				return decrypt(encrypted, plainCryptoKey.getPrivateKeyParameterOrFail());
 			case publicKey:
 				throw new IllegalStateException("Cannot decrypt with public key!");
 			case sharedSecret:
@@ -155,6 +144,14 @@ public class CryptreeNodeUtil {
 	public static byte[] encrypt(final byte[] plain, final CipherParameters key) {
 		assertNotNull("plain", plain);
 		assertNotNull("key", key);
+
+		if (key instanceof AsymmetricKeyParameter) {
+			final boolean large = plain.length > MAX_ASYMMETRIC_PLAIN_SIZE;
+			if (large)
+				return encryptLarge(plain, (AsymmetricKeyParameter) key);
+			// *not* large => fall through - process below
+		}
+
 		try {
 			final ByteArrayOutputStream bout = new ByteArrayOutputStream(plain.length + 10240); // don't know exactly, but I guess 10 KiB should be sufficient
 			final CipherTransformation cipherTransformation = getCipherTransformation(key);
@@ -172,6 +169,17 @@ public class CryptreeNodeUtil {
 	public static byte[] decrypt(final byte[] encrypted, final CipherParameters key) {
 		assertNotNull("encrypted", encrypted);
 		assertNotNull("key", key);
+
+		if (key instanceof AsymmetricKeyParameter) {
+			final int magicByte = encrypted[0] & 0xff;
+			if (AsymCombiDecrypterInputStream.MAGIC_BYTE == magicByte)
+				return decryptLarge(encrypted, (AsymmetricKeyParameter) key);
+			else if (DecrypterInputStream.MAGIC_BYTE == magicByte)
+				; // fall through - process below
+			else
+				throw new IllegalArgumentException(String.format("First byte from input does not match any expected magic number! expected1=%s expected2=%s found=%s", AsymCombiDecrypterInputStream.MAGIC_BYTE, DecrypterInputStream.MAGIC_BYTE, magicByte));
+		}
+
 		try {
 			final DecrypterInputStream in = new DecrypterInputStream(new ByteArrayInputStream(encrypted), key);
 			final ByteArrayOutputStream out = new ByteArrayOutputStream(encrypted.length);

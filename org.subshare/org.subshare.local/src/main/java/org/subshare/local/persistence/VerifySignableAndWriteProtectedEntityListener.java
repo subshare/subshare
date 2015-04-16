@@ -1,9 +1,12 @@
 package org.subshare.local.persistence;
 
+import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
+
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import javax.jdo.JDOHelper;
 import javax.jdo.PersistenceManager;
 import javax.jdo.listener.InstanceLifecycleEvent;
 import javax.jdo.listener.StoreLifecycleListener;
@@ -56,6 +59,19 @@ public class VerifySignableAndWriteProtectedEntityListener extends AbstractLocal
 		signables.add(signable);
 	}
 
+	/**
+	 * Remove the given {@code signable} from the entities that are about to be checked.
+	 * <p>
+	 * <b>Important:</b> There is a good reason why this check is done generically: It must usually always be done!
+	 * Only during bootstrapping a new repository, i.e. more precisely when inviting a new user, we need to skip
+	 * this check, because our data is initially incomplete and we thus simply cannot verify.
+	 * @param signable the entity that was written in the current transaction, but should <b>not</b> be verified.
+	 */
+	public void removeSignable(Signable signable) {
+		assertNotNull("signable", signable);
+		signables.remove(signable);
+	}
+
 	@Override
 	public void onCommit() {
 		assertAllRepoFilesAreSignedOnServer();
@@ -105,6 +121,9 @@ public class VerifySignableAndWriteProtectedEntityListener extends AbstractLocal
 		// However, on the server, *every* Signable must be signed!
 		//
 		// And in all cases: *If* there is a signature, it *must* be correct!
+
+		if (JDOHelper.isDeleted(signable))
+			return; // skip deleted objects!
 
 		if (signable.getSignature() == null) {
 			if (LocalRepositoryType.SERVER == getLocalRepositoryType())
