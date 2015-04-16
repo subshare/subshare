@@ -62,5 +62,11 @@ subprojects {
 // We don't use separate processes but separate threads in the same JVM, because this is faster.
 //		maxParallelForks = Runtime.runtime.availableProcessors() * 2
 // ...actually we don't do this, yet - and we may very well need multiple JVMs, because quite a few things are configured gobally per JVM!
+
+// Well, now, we do run them in parallel (separate processes)! On my machine (having 8 cores) the entire build process is now
+// significantly faster:
+//    * before (1 process): 6 mins 17.48 sec
+//    * after (8 processes): 4 mins 28.276 secs
+		maxParallelForks = Runtime.runtime.availableProcessors();
 	}
 }
