@@ -52,14 +52,43 @@ public class UserRepoKeyPublicKeyReplacementRequestDao extends Dao<UserRepoKeyPu
 		try {
 			long startTimestamp = System.currentTimeMillis();
 			@SuppressWarnings("unchecked")
-			Collection<UserRepoKeyPublicKeyReplacementRequest> keys = (Collection<UserRepoKeyPublicKeyReplacementRequest>) query.execute(localRevision);
+			Collection<UserRepoKeyPublicKeyReplacementRequest> requests = (Collection<UserRepoKeyPublicKeyReplacementRequest>) query.execute(localRevision);
 			logger.debug("getUserRepoKeyPublicKeyReplacementRequestsChangedAfter: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
 
 			startTimestamp = System.currentTimeMillis();
-			keys = load(keys);
-			logger.debug("getUserRepoKeyPublicKeyReplacementRequestsChangedAfter: Loading result-set with {} elements took {} ms.", keys.size(), System.currentTimeMillis() - startTimestamp);
+			requests = load(requests);
+			logger.debug("getUserRepoKeyPublicKeyReplacementRequestsChangedAfter: Loading result-set with {} elements took {} ms.", requests.size(), System.currentTimeMillis() - startTimestamp);
 
-			return keys;
+			return requests;
+		} finally {
+			query.closeAll();
+		}
+	}
+
+	/**
+	 * Gets those {@link UserRepoKeyPublicKeyReplacementRequest}s whose {@link UserRepoKeyPublicKeyReplacementRequest#getOldKey() oldKey}
+	 * matches the given {@code oldKey}.
+	 * <p>
+	 * There is usually exactly 0 or 1. Only in case of collisions (invitation key is imported by invited user on 2 of his machines),
+	 * there might be more than 1 - and we might even disallow this, later.
+	 * @param oldKey {@link UserRepoKeyPublicKeyReplacementRequest#getOldKey() oldKey} for which to search related replacement-requests.
+	 * Must not be <code>null</code>.
+	 * @return the replacement-requests found matching the given criteria - never <code>null</code>, but maybe empty.
+	 */
+	public Collection<UserRepoKeyPublicKeyReplacementRequest> getUserRepoKeyPublicKeyReplacementRequestsForOldKey(InvitationUserRepoKeyPublicKey oldKey) {
+		assertNotNull("oldKey", oldKey);
+		final Query query = pm().newNamedQuery(getEntityClass(), "getUserRepoKeyPublicKeyReplacementRequests_oldKey");
+		try {
+			long startTimestamp = System.currentTimeMillis();
+			@SuppressWarnings("unchecked")
+			Collection<UserRepoKeyPublicKeyReplacementRequest> requests = (Collection<UserRepoKeyPublicKeyReplacementRequest>) query.execute(oldKey);
+			logger.debug("getUserRepoKeyPublicKeyReplacementRequestsForOldKey: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
+
+			startTimestamp = System.currentTimeMillis();
+			requests = load(requests);
+			logger.debug("getUserRepoKeyPublicKeyReplacementRequestsForOldKey: Loading result-set with {} elements took {} ms.", requests.size(), System.currentTimeMillis() - startTimestamp);
+
+			return requests;
 		} finally {
 			query.closeAll();
 		}

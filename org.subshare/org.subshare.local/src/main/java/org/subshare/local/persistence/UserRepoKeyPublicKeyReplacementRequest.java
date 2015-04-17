@@ -8,6 +8,7 @@ import java.io.InputStream;
 
 import javax.jdo.annotations.Embedded;
 import javax.jdo.annotations.Index;
+import javax.jdo.annotations.Indices;
 import javax.jdo.annotations.Inheritance;
 import javax.jdo.annotations.InheritanceStrategy;
 import javax.jdo.annotations.NullValue;
@@ -34,9 +35,13 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 @Uniques({
 	@Unique(name="UserRepoKeyPublicKeyReplacementRequest_requestId", members="requestId")
 })
-@Index(name="UserRepoPublicKeyReplacementRequest_localRevision", members="localRevision")
+@Indices({
+	@Index(name="UserRepoPublicKeyReplacementRequest_localRevision", members="localRevision"),
+	@Index(name="UserRepoPublicKeyReplacementRequest_oldKey", members="oldKey")
+})
 @Queries({
 	@Query(name="getUserRepoKeyPublicKeyReplacementRequest_requestId", value="SELECT UNIQUE WHERE this.requestId == :requestId"),
+	@Query(name="getUserRepoKeyPublicKeyReplacementRequests_oldKey", value="SELECT WHERE this.oldKey == :oldKey"),
 	@Query(name="getUserRepoKeyPublicKeyReplacementRequestsChangedAfter_localRevision", value="SELECT WHERE this.localRevision > :localRevision")
 })
 public class UserRepoKeyPublicKeyReplacementRequest extends Entity implements Signable, AutoTrackLocalRevision, StoreCallback {

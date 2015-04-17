@@ -73,6 +73,13 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 					+ "this.permissionSet.cryptoRepoFile.parent == :parentCryptoRepoFile "
 					+ "&& this.permissionType == :permissionType "
 			),
+	@Query(
+			name="getPermissions_userRepoKeyPublicKey",
+			value="SELECT WHERE this.userRepoKeyPublicKey == :userRepoKeyPublicKey "
+			),
+	@Query(name="getPermissions_signingUserRepoKeyId",
+			value="SELECT WHERE this.signature.signingUserRepoKeyId == :signingUserRepoKeyId"
+			),
 	@Query(name="getPermissionsChangedAfter_localRevision", value="SELECT WHERE this.localRevision > :localRevision")
 })
 public class Permission extends Entity implements WriteProtectedEntity, AutoTrackLocalRevision, StoreCallback {

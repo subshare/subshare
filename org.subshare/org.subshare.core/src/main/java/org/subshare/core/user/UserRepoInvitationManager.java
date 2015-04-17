@@ -3,6 +3,8 @@ package org.subshare.core.user;
 import java.util.Iterator;
 import java.util.ServiceLoader;
 
+import org.subshare.core.dto.PermissionType;
+
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 
 public interface UserRepoInvitationManager {
@@ -39,7 +41,7 @@ public interface UserRepoInvitationManager {
 	LocalRepoManager getLocalRepoManager();
 	void setLocalRepoManager(LocalRepoManager localRepoManager);
 
-	UserRepoInvitationToken createUserRepoInvitationToken(final String localPath, final User user, final long validityDurationMillis);
+	UserRepoInvitationToken createUserRepoInvitationToken(final String localPath, final User user, PermissionType permissionType, final long validityDurationMillis);
 
 	void importUserRepoInvitationToken(UserRepoInvitationToken userRepoInvitationToken);
 

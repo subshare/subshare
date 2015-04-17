@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.IOException;
 import java.util.UUID;
 
+import org.subshare.core.dto.PermissionType;
 import org.subshare.core.pgp.Pgp;
 import org.subshare.core.pgp.PgpAuthenticationCallback;
 import org.subshare.core.pgp.PgpKey;
@@ -25,6 +26,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import co.codewizards.cloudstore.core.config.ConfigDir;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
@@ -62,10 +64,18 @@ public class InviteUserAndSyncIT extends AbstractRepoToRepoSyncIT {
 		logger.info("*** <<<<<<<<<<<<<< ***");
 	}
 
+	@Override
+	public void after() throws Exception {
+		super.after();
+		final File configDir = ConfigDir.getInstance().getFile();
+		configDir.deleteRecursively();
+		configDir.mkdir();
+	}
+
 	@Test
-	public void inviteUserAndSync() throws Exception {
+	public void inviteUserAndSync_singleWritePermissionOnRoot() throws Exception {
 		logger.info("*** >>>>>>>>>>>>>>>>>>>>>>>>> ***");
-		logger.info("*** >>> inviteUserAndSync >>> ***");
+		logger.info("*** >>> inviteUserAndSync_singleWritePermissionOnRoot >>> ***");
 
 		// *** OWNER machine with owner's repository ***
 		switchLocationToOwner();
@@ -77,7 +87,7 @@ public class InviteUserAndSyncIT extends AbstractRepoToRepoSyncIT {
 
 		assertInvitationUserRepoKeyPublicKeyIs(localSrcRoot, 0);
 
-		UserRepoInvitationToken userRepoInvitationToken = createUserRepoInvitationToken();
+		UserRepoInvitationToken userRepoInvitationToken = createUserRepoInvitationToken("", PermissionType.write);
 
 		assertInvitationUserRepoKeyPublicKeyIs(localSrcRoot, 1);
 
@@ -88,7 +98,121 @@ public class InviteUserAndSyncIT extends AbstractRepoToRepoSyncIT {
 
 		// *** FRIEND machine with friend's repository ***
 		switchLocationToFriend();
-		// TODO create local repo, connect to server-repo using invitation-token and sync down!
+		// create local repo, then connect to server-repo using invitation-token and sync down!
+		createLocalDestinationRepo();
+
+//		createUserRepoKeyRing(remoteRepositoryId);
+		// Importing the invitation with the temporary key causes a permanent key to be generated and a request
+		// to replace the temporary key by the permanent one.
+		assertInvitationUserRepoKeyPublicKeyIs(localDestRoot, 0);
+		assertReplacementRequestInRepoIs(localDestRoot, 0);
+
+		importUserRepoInvitationToken(userRepoInvitationToken);
+
+		assertInvitationUserRepoKeyPublicKeyIs(localDestRoot, 1);
+		assertReplacementRequestInRepoIs(localDestRoot, 1);
+		assertReplacementRequestDeletionInRepoIs(localDestRoot, 0);
+
+		assertReplacementRequestInRepoIs(remoteRoot, 0);
+
+		// The next sync is done with the temporary key (from the invitation). It downloads the repository and
+		// uploads the permanent key with the replacement-request. It also already replaces the temporary key
+		// by the permanent key.
+		syncFromRemoteToLocalDest();
+
+		// We create a file in the destination repository which we should be able to sync back to the source repo.
+		File destFile2xxxreverse = createFileWithRandomContent(localDestRoot, "2/xxxreverse");
+
+		// Make sure, our replacement request really arrived on the server.
+		assertInvitationUserRepoKeyPublicKeyIs(remoteRoot, 1);
+		assertReplacementRequestInRepoIs(remoteRoot, 1);
+		assertReplacementRequestDeletionInRepoIs(remoteRoot, 0);
+
+		// Now we sync 'destFile2xxxreverse' up to the server.
+		syncFromRemoteToLocalDest(false);
+
+
+		// *** OWNER machine with owner's repository ***
+		switchLocationToOwner();
+
+		// ...but is not yet in source repo.
+		assertInvitationUserRepoKeyPublicKeyIs(localSrcRoot, 1);
+		assertReplacementRequestInRepoIs(localSrcRoot, 0);
+		assertReplacementRequestDeletionInRepoIs(localSrcRoot, 0);
+
+		File srcFile2xxxreverse = createFile(localSrcRoot, "2/xxxreverse");
+		assertThat(srcFile2xxxreverse.exists()).isFalse(); // should not yet exist
+
+		// It takes a different path, depending on whether there are file modifications or not (i.e. only meta-data changed).
+		// This is not a nice way to test all possible paths, but the tests are already too slow ;-)
+		File srcFile2ccc = random.nextInt(100) < 50 ? null : createFileWithRandomContent(localSrcRoot, "2/ccc");
+
+		syncFromLocalSrcToRemote();
+
+		assertThat(srcFile2xxxreverse.exists()).isTrue(); // now it should exist!
+		assertThat(IOUtil.compareFiles(srcFile2xxxreverse, destFile2xxxreverse)).isTrue();
+
+		// ...and now it is already deleted and replaced by an appropriate deletion object.
+		assertInvitationUserRepoKeyPublicKeyIs(localSrcRoot, 0);
+		assertReplacementRequestInRepoIs(localSrcRoot, 0);
+		assertReplacementRequestDeletionInRepoIs(localSrcRoot, 1);
+
+
+		// the deletion should already be synced to the server
+		assertInvitationUserRepoKeyPublicKeyIs(remoteRoot, 0);
+		assertReplacementRequestInRepoIs(remoteRoot, 0);
+		assertReplacementRequestDeletionInRepoIs(remoteRoot, 1);
+
+
+		// *** FRIEND machine with friend's repository ***
+		switchLocationToFriend();
+
+		File destFile2ccc = srcFile2ccc == null ? null : createFile(localDestRoot, "2/ccc");
+		if (destFile2ccc != null)
+			assertThat(destFile2ccc.exists()).isFalse();
+
+		syncFromRemoteToLocalDest();
+
+		assertInvitationUserRepoKeyPublicKeyIs(localDestRoot, 0);
+		assertReplacementRequestInRepoIs(localDestRoot, 0);
+		assertReplacementRequestDeletionInRepoIs(localDestRoot, 1);
+
+		if (destFile2ccc != null) {
+			assertThat(destFile2ccc.exists()).isTrue();
+			assertThat(IOUtil.compareFiles(srcFile2ccc, destFile2ccc)).isTrue();
+		}
+
+		logger.info("*** <<< inviteUserAndSync_singleWritePermissionOnRoot <<< ***");
+		logger.info("*** <<<<<<<<<<<<<<<<<<<<<<<<< ***");
+	}
+
+	@Test
+	public void inviteUserAndSync_singleReadPermissionOnRoot() throws Exception {
+		logger.info("*** >>>>>>>>>>>>>>>>>>>>>>>>> ***");
+		logger.info("*** >>> inviteUserAndSync_singleReadPermissionOnRoot >>> ***");
+
+		// *** OWNER machine with owner's repository ***
+		switchLocationToOwner();
+
+		createLocalSourceAndRemoteRepo();
+		populateLocalSourceRepo();
+		syncFromLocalSrcToRemote();
+		determineRemotePathPrefix2Encrypted();
+
+		assertInvitationUserRepoKeyPublicKeyIs(localSrcRoot, 0);
+
+		UserRepoInvitationToken userRepoInvitationToken = createUserRepoInvitationToken("", PermissionType.read);
+
+		assertInvitationUserRepoKeyPublicKeyIs(localSrcRoot, 1);
+
+		// We *must* sync again, otherwise the invitation is meaningless: The invitation-UserRepoKey is not yet in the remote DB,
+		// thus neither in the local destination and thus it cannot be used to decrypt the crypto-links.
+		syncFromLocalSrcToRemote();
+
+
+		// *** FRIEND machine with friend's repository ***
+		switchLocationToFriend();
+		// create local repo, then connect to server-repo using invitation-token and sync down!
 		createLocalDestinationRepo();
 
 //		createUserRepoKeyRing(remoteRepositoryId);
@@ -124,7 +248,7 @@ public class InviteUserAndSyncIT extends AbstractRepoToRepoSyncIT {
 		assertReplacementRequestInRepoIs(localSrcRoot, 0);
 		assertReplacementRequestDeletionInRepoIs(localSrcRoot, 0);
 
-		// It takes a different path, depending on whether there file modifications  or not (i.e. only meta-data changed).
+		// It takes a different path, depending on whether there are file modifications or not (i.e. only meta-data changed).
 		// This is not a nice way to test all possible paths, but the tests are already too slow ;-)
 		File srcFile2ccc = random.nextInt(100) < 50 ? null : createFileWithRandomContent(localSrcRoot, "2/ccc");
 
@@ -160,9 +284,115 @@ public class InviteUserAndSyncIT extends AbstractRepoToRepoSyncIT {
 			assertThat(IOUtil.compareFiles(srcFile2ccc, destFile2ccc)).isTrue();
 		}
 
-		logger.info("*** <<< inviteUserAndSync <<< ***");
+		logger.info("*** <<< inviteUserAndSync_singleReadPermissionOnRoot <<< ***");
 		logger.info("*** <<<<<<<<<<<<<<<<<<<<<<<<< ***");
 	}
+
+// TODO For this test, I first have to refactor the way the repo-connection is established: (1) It should connect
+// to the URL from the invitation-token. (2) The request-accept-connection-handling from CloudStore should be replaced
+// by a CSX-specific handshake mechanism that allows everyone having read access (=> use UserRepoKeyPublicKey-based signature/encryption)
+// to connect.
+//	@Test
+//	public void inviteUserAndSync_twoReadPermissionsOnSubdirs() throws Exception {
+//		logger.info("*** >>>>>>>>>>>>>>>>>>>>>>>>> ***");
+//		logger.info("*** >>> inviteUserAndSync_twoReadPermissionsOnSubdirs >>> ***");
+//
+//		// *** OWNER machine with owner's repository ***
+//		switchLocationToOwner();
+//
+//		createLocalSourceAndRemoteRepo();
+//		populateLocalSourceRepo();
+//		syncFromLocalSrcToRemote();
+//		determineRemotePathPrefix2Encrypted();
+//
+//		assertInvitationUserRepoKeyPublicKeyIs(localSrcRoot, 0);
+//
+//		UserRepoInvitationToken userRepoInvitationToken = createUserRepoInvitationToken("1 {11 11ä11} 1");
+//
+//		assertInvitationUserRepoKeyPublicKeyIs(localSrcRoot, 1);
+//
+//		// We *must* sync again, otherwise the invitation is meaningless: The invitation-UserRepoKey is not yet in the remote DB,
+//		// thus neither in the local destination and thus it cannot be used to decrypt the crypto-links.
+//		syncFromLocalSrcToRemote();
+//
+//
+//		// *** FRIEND machine with friend's repository ***
+//		switchLocationToFriend();
+//		// TODO create local repo, connect to server-repo using invitation-token and sync down!
+//		createLocalDestinationRepo();
+//
+////		createUserRepoKeyRing(remoteRepositoryId);
+//		// Importing the invitation with the temporary key causes a permanent key to be generated and a request
+//		// to replace the temporary key by the permanent one.
+//		assertInvitationUserRepoKeyPublicKeyIs(localDestRoot, 0);
+//		assertReplacementRequestInRepoIs(localDestRoot, 0);
+//
+//		importUserRepoInvitationToken(userRepoInvitationToken);
+//
+//		assertInvitationUserRepoKeyPublicKeyIs(localDestRoot, 1);
+//		assertReplacementRequestInRepoIs(localDestRoot, 1);
+//		assertReplacementRequestDeletionInRepoIs(localDestRoot, 0);
+//
+//		assertReplacementRequestInRepoIs(remoteRoot, 0);
+//
+//		// The next sync is done with the temporary key (from the invitation). It downloads the repository and
+//		// uploads the permanent key with the replacement-request. It also already replaces the temporary key
+//		// by the permanent key.
+//		syncFromRemoteToLocalDest();
+//
+//		// Make sure, our replacement request really arrived on the server.
+//		assertInvitationUserRepoKeyPublicKeyIs(remoteRoot, 1);
+//		assertReplacementRequestInRepoIs(remoteRoot, 1);
+//		assertReplacementRequestDeletionInRepoIs(remoteRoot, 0);
+//
+//
+//		// *** OWNER machine with owner's repository ***
+//		switchLocationToOwner();
+//
+//		// ...but is not yet in source repo.
+//		assertInvitationUserRepoKeyPublicKeyIs(localSrcRoot, 1);
+//		assertReplacementRequestInRepoIs(localSrcRoot, 0);
+//		assertReplacementRequestDeletionInRepoIs(localSrcRoot, 0);
+//
+////		// It takes a different path, depending on whether there are file modifications or not (i.e. only meta-data changed).
+////		// This is not a nice way to test all possible paths, but the tests are already too slow ;-)
+////		File srcFile2ccc = random.nextInt(100) < 50 ? null : createFileWithRandomContent(localSrcRoot, "2/ccc");
+//
+//		syncFromLocalSrcToRemote();
+//
+//		// ...and now it is already deleted and replaced by an appropriate deletion object.
+//		assertInvitationUserRepoKeyPublicKeyIs(localSrcRoot, 0);
+//		assertReplacementRequestInRepoIs(localSrcRoot, 0);
+//		assertReplacementRequestDeletionInRepoIs(localSrcRoot, 1);
+//
+//
+//		// the deletion should already be synced to the server
+//		assertInvitationUserRepoKeyPublicKeyIs(remoteRoot, 0);
+//		assertReplacementRequestInRepoIs(remoteRoot, 0);
+//		assertReplacementRequestDeletionInRepoIs(remoteRoot, 1);
+//
+//
+//		// *** FRIEND machine with friend's repository ***
+//		switchLocationToFriend();
+//
+////		File destFile2ccc = srcFile2ccc == null ? null : createFile(localDestRoot, "2/ccc");
+////		if (destFile2ccc != null)
+////			assertThat(destFile2ccc.exists()).isFalse();
+//
+//		syncFromRemoteToLocalDest();
+//
+//		assertInvitationUserRepoKeyPublicKeyIs(localDestRoot, 0);
+//		assertReplacementRequestInRepoIs(localDestRoot, 0);
+//		assertReplacementRequestDeletionInRepoIs(localDestRoot, 1);
+//
+////		if (destFile2ccc != null) {
+////			assertThat(destFile2ccc.exists()).isTrue();
+////			assertThat(IOUtil.compareFiles(srcFile2ccc, destFile2ccc)).isTrue();
+////		}
+//
+//		logger.info("*** <<< inviteUserAndSync_twoReadPermissionsOnSubdirs <<< ***");
+//		logger.info("*** <<<<<<<<<<<<<<<<<<<<<<<<< ***");
+//	}
 
 	protected void switchLocationToOwner() throws Exception {
 		userRegistry = ownerUserRegistry;
@@ -176,12 +406,12 @@ public class InviteUserAndSyncIT extends AbstractRepoToRepoSyncIT {
 		cryptreeRepoTransportFactory.setUserRepoKeyRing(friend.getUserRepoKeyRingOrCreate());
 	}
 
-	protected UserRepoInvitationToken createUserRepoInvitationToken() {
+	protected UserRepoInvitationToken createUserRepoInvitationToken(final String localPath, PermissionType permissionType) {
 		final UserRepoInvitationToken userRepoInvitationToken;
 		try (final LocalRepoManager localRepoManager = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(localSrcRoot);)
 		{
 			final UserRepoInvitationManager userRepoInvitationManager = UserRepoInvitationManager.Helper.getInstance(ownerUserRegistry, localRepoManager);
-			userRepoInvitationToken = userRepoInvitationManager.createUserRepoInvitationToken("", friend, 24 * 3600 * 1000);
+			userRepoInvitationToken = userRepoInvitationManager.createUserRepoInvitationToken(localPath, friend, permissionType, 24 * 3600 * 1000);
 		}
 		return userRepoInvitationToken;
 	}

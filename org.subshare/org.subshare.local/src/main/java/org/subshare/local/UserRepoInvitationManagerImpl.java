@@ -5,8 +5,6 @@ import static co.codewizards.cloudstore.core.util.UrlUtil.appendNonEncodedPath;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -102,11 +100,12 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 	}
 
 	@Override
-	public UserRepoInvitationToken createUserRepoInvitationToken(final String localPath, final User user, final long validityDurationMillis) {
+	public UserRepoInvitationToken createUserRepoInvitationToken(final String localPath, final User user, final PermissionType permissionType, final long validityDurationMillis) {
 		assertNotNull("localPath", localPath);
 		assertNotNull("user", user);
+		assertNotNull("permissionType", permissionType);
 
-		final UserRepoInvitation userRepoInvitation = createUserRepoInvitation(localPath, user, validityDurationMillis);
+		final UserRepoInvitation userRepoInvitation = createUserRepoInvitation(localPath, user, permissionType, validityDurationMillis);
 		final User grantingUser = assertNotNull("grantingUser", this.grantingUser);
 
 		final byte[] userRepoInvitationData = toUserRepoInvitationData(userRepoInvitation);
@@ -292,10 +291,10 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 		w.write('\n');
 	}
 
-	protected UserRepoInvitation createUserRepoInvitation(final String localPath, final User user, final long validityDurationMillis) {
+	protected UserRepoInvitation createUserRepoInvitation(final String localPath, final User user, PermissionType permissionType, final long validityDurationMillis) {
 		assertNotNull("localPath", localPath);
 		assertNotNull("user", user);
-		final PermissionType permissionType = PermissionType.read; // currently the only permission we allow to grant during invitation. maybe we'll change this later.
+		assertNotNull("permissionType", permissionType);
 
 		final UserRepoInvitation userRepoInvitation;
 		try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();)

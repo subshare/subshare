@@ -1,6 +1,6 @@
 package org.subshare.local.persistence;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -128,6 +128,29 @@ public class PermissionDao extends Dao<Permission, PermissionDao> {
 		}
 	}
 
+	public Collection<Permission> getPermissions(final UserRepoKeyPublicKey userRepoKeyPublicKey) {
+		assertNotNull("userRepoKeyPublicKey", userRepoKeyPublicKey);
+
+		final Query query = pm().newNamedQuery(getEntityClass(), "getPermissions_userRepoKeyPublicKey");
+		try {
+			final Map<String, Object> params = new HashMap<String, Object>(3);
+			params.put("userRepoKeyPublicKey", userRepoKeyPublicKey);
+
+			long startTimestamp = System.currentTimeMillis();
+			@SuppressWarnings("unchecked")
+			Collection<Permission> permissions = (Collection<Permission>) query.executeWithMap(params);
+			logger.debug("getPermissions: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
+
+			startTimestamp = System.currentTimeMillis();
+			permissions = load(permissions);
+			logger.debug("getPermissions: Loading result-set with {} elements took {} ms.", permissions.size(), System.currentTimeMillis() - startTimestamp);
+
+			return permissions;
+		} finally {
+			query.closeAll();
+		}
+	}
+
 	public long getPermissionCountOfDirectChildCryptoRepoFiles(final CryptoRepoFile parentCryptoRepoFile, final PermissionType permissionType) {
 		assertNotNull("parentCryptoRepoFile", parentCryptoRepoFile);
 		assertNotNull("permissionType", permissionType);
@@ -176,6 +199,25 @@ public class PermissionDao extends Dao<Permission, PermissionDao> {
 		try {
 			final Permission permission = (Permission) query.execute(permissionId.toString());
 			return permission;
+		} finally {
+			query.closeAll();
+		}
+	}
+
+	public Collection<Permission> getPermissionsSignedBy(final Uid signingUserRepoKeyId) {
+		assertNotNull("signingUserRepoKeyId", signingUserRepoKeyId);
+		final Query query = pm().newNamedQuery(getEntityClass(), "getPermissions_signingUserRepoKeyId");
+		try {
+			long startTimestamp = System.currentTimeMillis();
+			@SuppressWarnings("unchecked")
+			Collection<Permission> permissions = (Collection<Permission>) query.execute(signingUserRepoKeyId.toString());
+			logger.debug("getPermissionsSignedBy: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
+
+			startTimestamp = System.currentTimeMillis();
+			permissions = load(permissions);
+			logger.debug("getPermissionsSignedBy: Loading result-set with {} elements took {} ms.", permissions.size(), System.currentTimeMillis() - startTimestamp);
+
+			return permissions;
 		} finally {
 			query.closeAll();
 		}

@@ -54,6 +54,7 @@ import org.subshare.local.persistence.PermissionSetInheritance;
 import org.subshare.local.persistence.RepositoryOwner;
 import org.subshare.local.persistence.UserRepoKeyPublicKey;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyDao;
+import org.subshare.local.persistence.UserRepoKeyPublicKeyReplacementRequestDao;
 import org.subshare.local.persistence.WriteProtectedEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -758,6 +759,12 @@ public class CryptreeNode {
 		if (userRepoKeyPublicKey instanceof InvitationUserRepoKeyPublicKey) {
 			final InvitationUserRepoKeyPublicKey invUserRepoKeyPublicKey = (InvitationUserRepoKeyPublicKey) userRepoKeyPublicKey;
 			if (timestamp.compareTo(invUserRepoKeyPublicKey.getValidTo()) <= 0) {
+				// Using a delegation via the invitiation-key is only allowed, if there is a corresponding replacement-request!
+				// This reduces the potential to abuse this possibility (to grant access to other people).
+				final UserRepoKeyPublicKeyReplacementRequestDao dao = context.transaction.getDao(UserRepoKeyPublicKeyReplacementRequestDao.class);
+				if (dao.getUserRepoKeyPublicKeyReplacementRequestsForOldKey(invUserRepoKeyPublicKey).isEmpty())
+					throw new IllegalStateException("There is no UserRepoKeyPublicKeyReplacementRequest for " + invUserRepoKeyPublicKey);
+
 				final Uid signingUserRepoKeyId = invUserRepoKeyPublicKey.getSignature().getSigningUserRepoKeyId();
 				assertHasPermission(anyCryptoRepoFile, signingUserRepoKeyId, permissionType, invUserRepoKeyPublicKey.getSignature().getSignatureCreated());
 				// Using 'timestamp' here means the signing user must still have permissions, when the invitation was consumed.
@@ -771,7 +778,7 @@ public class CryptreeNode {
 		collectPermissions(permissions, anyCryptoRepoFile, permissionType, userRepoKeyId, timestamp);
 		final Set<Permission> permissionsIndicatingBackdatedSignature = extractPermissionsIndicatingBackdatedSignature(permissions);
 
-		if (!permissions.isEmpty())
+		if (! permissions.isEmpty())
 			return; // all is fine => silently return.
 
 		if (! permissionsIndicatingBackdatedSignature.isEmpty()) {

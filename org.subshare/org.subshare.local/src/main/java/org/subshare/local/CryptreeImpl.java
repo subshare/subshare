@@ -315,19 +315,25 @@ public class CryptreeImpl extends AbstractCryptree {
 		final UserRepoKey newUserRepoKey = getCryptreeContext().userRepoKeyRing.getUserRepoKeyOrFail(request.getNewKey().getUserRepoKeyId());
 		final UserRepoKey oldUserRepoKey = getCryptreeContext().userRepoKeyRing.getUserRepoKeyOrFail(request.getOldKey().getUserRepoKeyId());
 		final CryptoLinkDao cryptoLinkDao = transaction.getDao(CryptoLinkDao.class);
+		final PermissionDao permissionDao = transaction.getDao(PermissionDao.class);
 
+		// *** read permissions = CryptoLink instances ***
 		final Collection<CryptoLink> cryptoLinks = cryptoLinkDao.getCryptoLinks(request.getOldKey());
-		for (CryptoLink cryptoLink : cryptoLinks) {
+		for (final CryptoLink cryptoLink : cryptoLinks) {
 			final byte[] plainToCryptoKeyData = decrypt(cryptoLink.getToCryptoKeyData(), oldUserRepoKey.getKeyPair().getPrivate());
 			final byte[] newToCryptoKeyData = encrypt(plainToCryptoKeyData, newUserRepoKey.getKeyPair().getPublic());
 
-			cryptoLink.setSignature(null);
 			cryptoLink.setToCryptoKeyData(newToCryptoKeyData);
 			cryptoLink.setFromUserRepoKeyPublicKey(request.getNewKey());
 			getCryptreeContext().getSignableSigner(oldUserRepoKey).sign(cryptoLink);
 		}
 
-		// TODO process permissions, too!
+		// *** other permissions = Permission instances ***
+		final Collection<Permission> permissions = permissionDao.getPermissions(request.getOldKey());
+		for (final Permission permission : permissions) {
+			permission.setUserRepoKeyPublicKey(request.getNewKey());
+			getCryptreeContext().getSignableSigner(oldUserRepoKey).sign(permission);
+		}
 	}
 
 	private void processUserRepoKeyPublicKeyReplacementRequestAsInvitingUser(final UserRepoKeyPublicKeyReplacementRequest request) {
@@ -337,19 +343,56 @@ public class CryptreeImpl extends AbstractCryptree {
 		final LocalRepoTransaction transaction = getTransactionOrFail();
 		final UserRepoKeyPublicKeyReplacementRequestDeletionDao requestDeletionDao = transaction.getDao(UserRepoKeyPublicKeyReplacementRequestDeletionDao.class);
 		final CryptoLinkDao cryptoLinkDao = transaction.getDao(CryptoLinkDao.class);
+		final PermissionDao permissionDao = transaction.getDao(PermissionDao.class);
 
-		final Collection<CryptoLink> cryptoLinks = cryptoLinkDao.getCryptoLinksSignedBy(request.getOldKey().getUserRepoKeyId());
-		for (CryptoLink cryptoLink : cryptoLinks) {
-			// TODO what if we lost the permission to do this by now?! how do we handle this??? Simply keep things as they are
-			// and somehow make the user know with a warning - we need persistent warning messages.
-			cryptoLink.setSignature(null);
 
-			// We use the same key that we used to sign the old key, because this prevents an attacker from knowing that 2 of our keys belong together.
+		// *** read permissions = CryptoLink instances ***
+
+		// TODO what if we lost the permission to do this by now?! how do we handle this??? Simply keep things as they are
+		// and somehow make the user know with a warning - we need persistent warning messages. Or do we revoke? Right now
+		// there would be an exception - unhandled. This needs to be addressed!!! Later, though ;-)
+
+		// Just in case, there are *new* CryptRepoLinks encrypted with the old invitation-user-repo-key (i.e. the read-permission
+		// was granted *after* the invited user replaced them), we re-encrypt them now, too.
+		// TODO we must test this! I just tested it by temporarily skipping processUserRepoKeyPublicKeyReplacementRequestAsInvitedUser(...)
+		// but we need a real test scenario! => inviteUserAndSync_twoReadPermissionsOnSubdirs
+		Collection<CryptoLink> cryptoLinks = cryptoLinkDao.getCryptoLinks(request.getOldKey());
+		for (final CryptoLink cryptoLink : cryptoLinks) {
+			final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(
+					cryptoLink.getToCryptoKey().getCryptoRepoFile().getCryptoRepoFileId());
+
+			final PlainCryptoKey plainCryptoKey = cryptreeNode.getPlainCryptoKeyForDecrypting(cryptoLink.getToCryptoKey());
+			assertNotNull("plainCryptoKey[cryptoKeyId=" + cryptoLink.getToCryptoKey().getCryptoKeyId() + "]", plainCryptoKey);
+
+			final byte[] newToCryptoKeyData = encrypt(plainCryptoKey.getEncodedKey(), request.getNewKey().getPublicKey().getPublicKey());
+
+			cryptoLink.setToCryptoKeyData(newToCryptoKeyData);
+			cryptoLink.setFromUserRepoKeyPublicKey(request.getNewKey());
 			getCryptreeContext().getSignableSigner(oldKeySigningUserRepoKey).sign(cryptoLink);
 		}
 
-		// TODO process permissions, too!
+		// Re-sign the CryptoLinks that are currently signed with the invitation-user-repo-key.
+		// We use the same key that we used to sign the old key, because this prevents an attacker from knowing that 2 of our keys belong together.
+		cryptoLinks = cryptoLinkDao.getCryptoLinksSignedBy(request.getOldKey().getUserRepoKeyId());
+		for (final CryptoLink cryptoLink : cryptoLinks)
+			getCryptreeContext().getSignableSigner(oldKeySigningUserRepoKey).sign(cryptoLink);
 
+
+		// *** other permissions = Permission instances ***
+
+		// Just in case, there are new permissions for the old key, we process them first, too (just like CryptoLinks above).
+		Collection<Permission> permissions = permissionDao.getPermissions(request.getOldKey());
+		for (final Permission permission : permissions) {
+			permission.setUserRepoKeyPublicKey(request.getNewKey());
+			getCryptreeContext().getSignableSigner(oldKeySigningUserRepoKey).sign(permission);
+		}
+
+		permissions = permissionDao.getPermissionsSignedBy(request.getOldKey().getUserRepoKeyId());
+		for (final Permission permission : permissions)
+			getCryptreeContext().getSignableSigner(oldKeySigningUserRepoKey).sign(permission);
+
+
+		// *** delete the old (invitation) key and its corresponding replacement-request ***
 		UserRepoKeyPublicKeyReplacementRequestDeletion requestDeletion = new UserRepoKeyPublicKeyReplacementRequestDeletion(request);
 
 		// We use the same key that we used to sign the old key, because this prevents an attacker from knowing that 2 of our keys belong together.
@@ -378,9 +421,11 @@ public class CryptreeImpl extends AbstractCryptree {
 
 	private void deleteUserRepoKeyPublicKeyReplacementRequestWithOldKey(final UserRepoKeyPublicKeyReplacementRequest request) {
 		final LocalRepoTransaction transaction = getTransactionOrFail();
+		transaction.flush();
 		final InvitationUserRepoKeyPublicKey oldKey = request.getOldKey();
 		transaction.getDao(UserRepoKeyPublicKeyReplacementRequestDao.class).deletePersistent(request);
 		transaction.getDao(UserRepoKeyPublicKeyDao.class).deletePersistent(oldKey);
+		transaction.flush();
 	}
 
 	@Override
