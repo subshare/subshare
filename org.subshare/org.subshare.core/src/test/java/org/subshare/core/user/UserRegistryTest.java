@@ -33,6 +33,7 @@ public class UserRegistryTest {
 		final Uid jvmInstanceId = new Uid(); // for parallel test execution ;-)
 		System.setProperty(ConfigDir.SYSTEM_PROPERTY_CONFIG_DIR, "build/" + jvmInstanceId + "/.cloudstore");
 		System.setProperty(Config.SYSTEM_PROPERTY_PREFIX + GnuPgDir.CONFIG_KEY_GNU_PG_DIR, "build/" + jvmInstanceId + "/.gnupg");
+		createFile("build/" + jvmInstanceId).mkdir();
 	}
 
 	@Before

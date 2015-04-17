@@ -42,6 +42,7 @@ public abstract class AbstractIT {
 		System.setProperty(Config.SYSTEM_PROPERTY_PREFIX + GnuPgDir.CONFIG_KEY_GNU_PG_DIR, "build/" + jvmInstanceId + "/.gnupg");
 		System.setProperty(LocalRepoManager.SYSTEM_PROPERTY_KEY_SIZE, "1024");
 		System.setProperty("testEnvironment", Boolean.TRUE.toString());
+		createFile("build/" + jvmInstanceId).mkdir();
 	}
 
 	protected static final SecureRandom random = new SecureRandom();
