@@ -27,7 +27,8 @@ import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
 
 public abstract class AbstractTest {
 	static {
-		System.setProperty(ConfigDir.SYSTEM_PROPERTY_CONFIG_DIR, "build/.cloudstore");
+		final Uid jvmInstanceId = new Uid(); // for parallel test execution ;-)
+		System.setProperty(ConfigDir.SYSTEM_PROPERTY_CONFIG_DIR, "build/" + jvmInstanceId + "/.cloudstore");
 		System.setProperty(LocalRepoManager.SYSTEM_PROPERTY_KEY_SIZE, "1024");
 		System.setProperty("testEnvironment", Boolean.TRUE.toString());
 	}
