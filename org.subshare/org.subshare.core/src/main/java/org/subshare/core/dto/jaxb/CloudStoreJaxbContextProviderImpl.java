@@ -2,6 +2,7 @@ package org.subshare.core.dto.jaxb;
 
 import org.subshare.core.dto.SsDirectoryDto;
 import org.subshare.core.dto.SsNormalFileDto;
+import org.subshare.core.dto.SsRequestRepoConnectionRepositoryDto;
 import org.subshare.core.dto.SsSymlinkDto;
 import org.subshare.core.dto.CryptoChangeSetDto;
 import org.subshare.core.dto.CryptoKeyDeactivationDto;
@@ -27,6 +28,7 @@ public class CloudStoreJaxbContextProviderImpl extends AbstractCloudStoreJaxbCon
 		return new Class<?>[] {
 				SsDirectoryDto.class,
 				SsNormalFileDto.class,
+				SsRequestRepoConnectionRepositoryDto.class,
 				SsSymlinkDto.class,
 				CryptoChangeSetDto.class,
 				CryptoKeyDto.class,

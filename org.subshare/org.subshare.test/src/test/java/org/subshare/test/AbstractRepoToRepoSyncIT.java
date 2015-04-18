@@ -129,11 +129,11 @@ public abstract class AbstractRepoToRepoSyncIT extends AbstractIT {
 		remoteRootURLWithPathPrefixForLocalSrc = getRemoteRootURLWithPathPrefixForLocalSrc(remoteRepositoryId);
 		localRepoManagerRemote.close();
 
-		new CloudStoreClient("requestRepoConnection", getLocalRootWithPathPrefix().getPath(), remoteRootURLWithPathPrefixForLocalSrc.toExternalForm()).execute();
-		new CloudStoreClient("acceptRepoConnection", getRemoteRootWithPathPrefix1().getPath()).execute();
-
 		ownerUserRepoKeyRing = createUserRepoKeyRing();
 		cryptreeRepoTransportFactory.setUserRepoKeyRing(ownerUserRepoKeyRing);
+
+		new CloudStoreClient("requestRepoConnection", getLocalRootWithPathPrefix().getPath(), remoteRootURLWithPathPrefixForLocalSrc.toExternalForm()).execute();
+		//	acceptRepoConnection is not needed, because already accepted implicitly by *signed* request
 	}
 
 	protected void populateLocalSourceRepo() throws Exception {
@@ -202,8 +202,11 @@ public abstract class AbstractRepoToRepoSyncIT extends AbstractIT {
 		localDestRepoManagerLocal.close();
 
 		remoteRootURLWithPathPrefixForLocalDest = getRemoteRootURLWithPathPrefixForLocalDest(remoteRepositoryId);
-		new CloudStoreClient("requestRepoConnection", localDestRoot.getPath(), remoteRootURLWithPathPrefixForLocalDest.toExternalForm()).execute();
-		new CloudStoreClient("acceptRepoConnection", getRemoteRootWithPathPrefix2().getPath()).execute();
+
+		if (! cryptreeRepoTransportFactory.getUserRepoKeyRing().getAllUserRepoKeys(remoteRepositoryId).isEmpty()) {
+			new CloudStoreClient("requestRepoConnection", localDestRoot.getPath(), remoteRootURLWithPathPrefixForLocalDest.toExternalForm()).execute();
+			//	acceptRepoConnection is not needed, because already accepted implicitly by *signed* request
+		}
 	}
 
 	protected void determineRemotePathPrefix2Encrypted() {

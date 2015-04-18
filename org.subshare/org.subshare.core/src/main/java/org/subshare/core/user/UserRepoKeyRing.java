@@ -17,26 +17,39 @@ public class UserRepoKeyRing {
 //	private static SecureRandom random = new SecureRandom();
 
 	private final Map<Uid, UserRepoKey> userRepoKeyId2UserRepoKey = new HashMap<>();
-	private final Map<UUID, List<UserRepoKey>> repositoryId2userRepoKeyList = new HashMap<>();
+	private final Map<UUID, List<UserRepoKey>> repositoryId2InvitationUserRepoKeyList = new HashMap<>();
+	private final Map<UUID, List<UserRepoKey>> repositoryId2PermanentUserRepoKeyList = new HashMap<>();
 
 	public Collection<UserRepoKey> getUserRepoKeys() {
 		return Collections.unmodifiableCollection(userRepoKeyId2UserRepoKey.values());
 	}
 
-	public List<UserRepoKey> getPermanentUserRepoKeys(final UUID serverRepositoryId) {
-		return getPermanentUserRepoKeyList(serverRepositoryId);
+	public List<UserRepoKey> getInvitationUserRepoKeys(final UUID serverRepositoryId) {
+		return getUserRepoKeyList(repositoryId2InvitationUserRepoKeyList, serverRepositoryId);
 	}
 
-	protected synchronized List<UserRepoKey> getPermanentUserRepoKeyList(final UUID serverRepositoryId) {
+	public List<UserRepoKey> getPermanentUserRepoKeys(final UUID serverRepositoryId) {
+		return getUserRepoKeyList(repositoryId2PermanentUserRepoKeyList, serverRepositoryId);
+	}
+
+	protected synchronized List<UserRepoKey> getUserRepoKeyList(final Map<UUID, List<UserRepoKey>> repositoryId2UserRepoKeyList, final UUID serverRepositoryId) {
 		assertNotNull("repositoryId", serverRepositoryId);
-		List<UserRepoKey> userRepoKeyList = repositoryId2userRepoKeyList.get(serverRepositoryId);
+		List<UserRepoKey> userRepoKeyList = repositoryId2UserRepoKeyList.get(serverRepositoryId);
 
 		if (userRepoKeyList == null) {
+			final boolean invitation;
+			if (repositoryId2PermanentUserRepoKeyList == repositoryId2UserRepoKeyList)
+				invitation = false;
+			else if (repositoryId2InvitationUserRepoKeyList == repositoryId2UserRepoKeyList)
+				invitation = true;
+			else
+				throw new IllegalArgumentException("repositoryId2UserRepoKeyList unexpected!");
+
 			List<UserRepoKey> l = filterByServerRepositoryId(userRepoKeyId2UserRepoKey.values(), serverRepositoryId);
-			l = removeTemporaryUserRepoKeys(l);
+			l = filterInvitationUserRepoKeys(l, invitation);
 			Collections.shuffle(l);
 			userRepoKeyList = Collections.unmodifiableList(l);
-			repositoryId2userRepoKeyList.put(serverRepositoryId, userRepoKeyList);
+			repositoryId2UserRepoKeyList.put(serverRepositoryId, userRepoKeyList);
 		}
 
 		return userRepoKeyList;
@@ -52,20 +65,20 @@ public class UserRepoKeyRing {
 		return result;
 	}
 
-	protected List<UserRepoKey> removeTemporaryUserRepoKeys(Collection<UserRepoKey> userRepoKeys) {
+	protected List<UserRepoKey> filterInvitationUserRepoKeys(Collection<UserRepoKey> userRepoKeys, boolean invitation) {
 		final ArrayList<UserRepoKey> result = new ArrayList<UserRepoKey>(userRepoKeys.size());
 		for (final UserRepoKey userRepoKey : userRepoKeys) {
-			if (userRepoKey.getValidTo() == null)
+			if (invitation == userRepoKey.isInvitation())
 				result.add(userRepoKey);
 		}
 		result.trimToSize();
 		return result;
 	}
 
-	protected synchronized void shuffleUserRepoKeys(final UUID serverRepositoryId) {
-		// The entries are shuffled in getUserRepoKeyList(...) - we thus simply clear this cache here.
-		repositoryId2userRepoKeyList.remove(serverRepositoryId);
-	}
+//	protected synchronized void shuffleUserRepoKeys(final UUID serverRepositoryId) {
+//		// The entries are shuffled in getUserRepoKeyList(...) - we thus simply clear this cache here.
+//		repositoryId2PermanentUserRepoKeyList.remove(serverRepositoryId);
+//	}
 
 //	public UserRepoKey getRandomUserRepoKey(final UUID serverRepositoryId) {
 //		final List<UserRepoKey> list = getUserRepoKeyList(serverRepositoryId);
@@ -87,7 +100,7 @@ public class UserRepoKeyRing {
 	public synchronized void addUserRepoKey(final UserRepoKey userRepoKey) {
 		assertNotNull("userRepoKey", userRepoKey);
 		userRepoKeyId2UserRepoKey.put(userRepoKey.getUserRepoKeyId(), userRepoKey);
-		repositoryId2userRepoKeyList.remove(userRepoKey.getServerRepositoryId());
+		clearCache(userRepoKey.getServerRepositoryId());
 	}
 
 	public void removeUserRepoKey(final UserRepoKey userRepoKey) {
@@ -97,7 +110,13 @@ public class UserRepoKeyRing {
 	public synchronized void removeUserRepoKey(final Uid userRepoKeyId) {
 		final UserRepoKey userRepoKey = userRepoKeyId2UserRepoKey.remove(assertNotNull("userRepoKeyId", userRepoKeyId));
 		if (userRepoKey != null)
-			repositoryId2userRepoKeyList.remove(userRepoKey.getServerRepositoryId());
+			clearCache(userRepoKey.getServerRepositoryId());
+	}
+
+	private void clearCache(final UUID serverRepositoryId) {
+		assertNotNull("serverRepositoryId", serverRepositoryId);
+		repositoryId2PermanentUserRepoKeyList.remove(serverRepositoryId);
+		repositoryId2InvitationUserRepoKeyList.remove(serverRepositoryId);
 	}
 
 	public synchronized UserRepoKey getUserRepoKey(final Uid userRepoKeyId) {
@@ -110,5 +129,12 @@ public class UserRepoKeyRing {
 			throw new IllegalStateException(String.format("There is no UserRepoKey with userRepoKeyId='%s'!", userRepoKeyId));
 
 		return userRepoKey;
+	}
+
+	public synchronized List<UserRepoKey> getAllUserRepoKeys(UUID serverRepositoryId) {
+		// no need to cache - very rarely used (currently only in tests AFAIK)
+		final List<UserRepoKey> l = filterByServerRepositoryId(userRepoKeyId2UserRepoKey.values(), serverRepositoryId);
+		Collections.shuffle(l);
+		return Collections.unmodifiableList(l);
 	}
 }

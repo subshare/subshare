@@ -26,6 +26,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import co.codewizards.cloudstore.client.CloudStoreClient;
 import co.codewizards.cloudstore.core.config.ConfigDir;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
@@ -416,12 +417,15 @@ public class InviteUserAndSyncIT extends AbstractRepoToRepoSyncIT {
 		return userRepoInvitationToken;
 	}
 
-	protected void importUserRepoInvitationToken(UserRepoInvitationToken userRepoInvitationToken) {
+	protected void importUserRepoInvitationToken(UserRepoInvitationToken userRepoInvitationToken) throws Exception {
 		try (final LocalRepoManager localRepoManager = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(localDestRoot);)
 		{
 			final UserRepoInvitationManager userRepoInvitationManager = UserRepoInvitationManager.Helper.getInstance(friendUserRegistry, localRepoManager);
 			userRepoInvitationManager.importUserRepoInvitationToken(userRepoInvitationToken);
 		}
+
+		// TODO should the UserRepoInvitationManager already do this? implicitly? or explicitly?
+		new CloudStoreClient("requestRepoConnection", localDestRoot.getPath(), remoteRootURLWithPathPrefixForLocalDest.toExternalForm()).execute();
 	}
 
 	protected void assertReplacementRequestInRepoIs(File repoRoot, long expectedCount) {

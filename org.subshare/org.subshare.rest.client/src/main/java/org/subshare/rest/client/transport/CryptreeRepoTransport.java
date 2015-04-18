@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -25,6 +26,7 @@ import org.subshare.core.crypto.RandomIvFactory;
 import org.subshare.core.dto.SsDirectoryDto;
 import org.subshare.core.dto.SsNormalFileDto;
 import org.subshare.core.dto.SsRepoFileDto;
+import org.subshare.core.dto.SsRequestRepoConnectionRepositoryDto;
 import org.subshare.core.dto.CryptoChangeSetDto;
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.io.LimitedInputStream;
@@ -60,6 +62,7 @@ import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
 import co.codewizards.cloudstore.core.repo.transport.AbstractRepoTransport;
 import co.codewizards.cloudstore.core.util.IOUtil;
 import co.codewizards.cloudstore.rest.client.CloudStoreRestClient;
+import co.codewizards.cloudstore.rest.client.request.RequestRepoConnection;
 
 public class CryptreeRepoTransport extends AbstractRepoTransport implements ContextWithLocalRepoManager {
 	private static final Logger logger = LoggerFactory.getLogger(CryptreeRepoTransport.class);
@@ -85,7 +88,29 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 
 	@Override
 	public void requestRepoConnection(final byte[] publicKey) {
-		getRestRepoTransport().requestRepoConnection(publicKey);
+		final UUID serverRepositoryId = getRepositoryId();
+		final String repositoryName = getRestRepoTransport().getRepositoryName();
+		final SsRequestRepoConnectionRepositoryDto repositoryDto = new SsRequestRepoConnectionRepositoryDto();
+		repositoryDto.setRepositoryId(getClientRepositoryIdOrFail());
+		repositoryDto.setPublicKey(publicKey);
+
+		// First check the invitation keys, because if there is a new invitation, the corresponding new permanent
+		// key is not yet known to the server. The invitation key is, though.
+		final List<UserRepoKey> invitationUserRepoKeys = getUserRepoKeyRing().getInvitationUserRepoKeys(serverRepositoryId);
+
+		UserRepoKey signingUserRepoKey = invitationUserRepoKeys.isEmpty() ? null : invitationUserRepoKeys.get(0);
+
+		if (signingUserRepoKey == null) {
+			final List<UserRepoKey> permanentUserRepoKeys = getUserRepoKeyRing().getPermanentUserRepoKeys(serverRepositoryId);
+			if (permanentUserRepoKeys.isEmpty())
+				throw new IllegalStateException("There is no UserRepoKey for serverRepositoryId=" + serverRepositoryId);
+
+			signingUserRepoKey = permanentUserRepoKeys.get(0);
+		}
+
+		new SignableSigner(signingUserRepoKey).sign(repositoryDto);
+
+		getClient().execute(new RequestRepoConnection(repositoryName, getPathPrefix(), repositoryDto));
 	}
 
 	@Override

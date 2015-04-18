@@ -9,6 +9,7 @@ import javax.ws.rs.ApplicationPath;
 import org.subshare.rest.server.service.SsBeginPutFileService;
 import org.subshare.rest.server.service.SsChangeSetDtoService;
 import org.subshare.rest.server.service.SsMakeDirectoryService;
+import org.subshare.rest.server.service.SsRequestRepoConnectionService;
 import org.subshare.rest.server.service.SsWebDavService;
 import org.subshare.rest.server.service.CryptoChangeSetDtoService;
 import org.subshare.rest.server.service.TestSubShareService;
@@ -20,6 +21,7 @@ import co.codewizards.cloudstore.rest.server.CloudStoreRest;
 import co.codewizards.cloudstore.rest.server.service.BeginPutFileService;
 import co.codewizards.cloudstore.rest.server.service.ChangeSetDtoService;
 import co.codewizards.cloudstore.rest.server.service.MakeDirectoryService;
+import co.codewizards.cloudstore.rest.server.service.RequestRepoConnectionService;
 import co.codewizards.cloudstore.rest.server.service.WebDavService;
 
 @ApplicationPath("SubShareRest")
@@ -36,6 +38,7 @@ public class SubShareRest extends CloudStoreRest {
 		m.put(BeginPutFileService.class, SsBeginPutFileService.class);
 		m.put(ChangeSetDtoService.class, SsChangeSetDtoService.class);
 		m.put(MakeDirectoryService.class, SsMakeDirectoryService.class);
+		m.put(RequestRepoConnectionService.class, SsRequestRepoConnectionService.class);
 		m.put(WebDavService.class, SsWebDavService.class);
 
 		componentClass2ReplacementComponentClass = Collections.unmodifiableMap(m);

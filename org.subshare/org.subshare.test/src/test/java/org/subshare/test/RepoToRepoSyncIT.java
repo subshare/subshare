@@ -3,12 +3,16 @@ package org.subshare.test;
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.createFile;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.List;
+
 import org.subshare.core.AccessDeniedException;
 import org.subshare.core.ReadAccessDeniedException;
 import org.subshare.core.WriteAccessDeniedException;
 import org.subshare.core.dto.PermissionType;
+import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKey.PublicKey;
 import org.subshare.core.user.UserRepoKeyRing;
+import org.subshare.local.persistence.UserRepoKeyPublicKeyDao;
 import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -16,6 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
+import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
 
 public class RepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 
@@ -265,9 +270,15 @@ public class RepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 		determineRemotePathPrefix2Encrypted();
 
 		final UserRepoKeyRing otherUserRepoKeyRing = createUserRepoKeyRing();
+
 		final UserRepoKeyRing ownerUserRepoKeyRing = cryptreeRepoTransportFactory.getUserRepoKeyRing();
-		// Do *not* grant read access to the sub-dir! It must fail.
 		assertThat(ownerUserRepoKeyRing).isNotNull();
+
+		// Do *not* grant read access to the sub-dir! It must fail.
+		// However, we must persist the public keys to the server repository for the server to allow
+		// the repository-connection (it is now implicitly done immediately during the request).
+		persistPublicKeysToRemoteRepository(otherUserRepoKeyRing);
+
 		try {
 			cryptreeRepoTransportFactory.setUserRepoKeyRing(otherUserRepoKeyRing);
 			createLocalDestinationRepo();
@@ -283,5 +294,17 @@ public class RepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 		}
 	}
 
+	private void persistPublicKeysToRemoteRepository(UserRepoKeyRing userRepoKeyRing) {
+		try (final LocalRepoManager localRepoManager = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(remoteRoot);) {
+			final List<UserRepoKey> allUserRepoKeys = userRepoKeyRing.getAllUserRepoKeys(localRepoManager.getRepositoryId());
 
+			try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
+				final UserRepoKeyPublicKeyDao userRepoKeyPublicKeyDao = transaction.getDao(UserRepoKeyPublicKeyDao.class);
+				for (final UserRepoKey userRepoKey : allUserRepoKeys) {
+					userRepoKeyPublicKeyDao.getUserRepoKeyPublicKeyOrCreate(userRepoKey.getPublicKey());
+				}
+				transaction.commit();
+			}
+		}
+	}
 }
