@@ -41,13 +41,8 @@ public class SsRequestRepoConnectionService extends RequestRepoConnectionService
 		if (! clientRepositoryId.equals(clientRepositoryDto.getRepositoryId()))
 			throw new IllegalArgumentException("repoTransport.clientRepositoryId != clientRepositoryDto.clientRepositoryId");
 
-		if (! (clientRepositoryDto instanceof SsRequestRepoConnectionRepositoryDto)) {
-			// For compatibility with our many tests, we allow plain old RepositoryDto instances - but *not* productively!
-			if (Boolean.parseBoolean(System.getProperty("testEnvironment")))
-				return;
-
+		if (! (clientRepositoryDto instanceof SsRequestRepoConnectionRepositoryDto))
 			throw new WebApplicationException(Response.status(Status.FORBIDDEN).type(MediaType.TEXT_PLAIN_TYPE).entity("clientRepositoryDto is not an instance of SsRequestRepoConnectionRepositoryDto!").build());
-		}
 
 		final LocalRepoManager localRepoManager = ((ContextWithLocalRepoManager) repoTransport).getLocalRepoManager();
 		try (final LocalRepoTransaction transaction = localRepoManager.beginReadTransaction();) {
@@ -71,12 +66,6 @@ public class SsRequestRepoConnectionService extends RequestRepoConnectionService
 		assertNotNull("repoTransport", repoTransport);
 		assertNotNull("clientRepositoryDto", clientRepositoryDto);
 		final UUID clientRepositoryId = assertNotNull("clientRepositoryId", repoTransport.getClientRepositoryId());
-
-		if (! (clientRepositoryDto instanceof SsRequestRepoConnectionRepositoryDto)) {
-			// For compatibility with our many tests, we allow plain old RepositoryDto instances and behave like CloudStore.
-			return;
-		}
-
 		final LocalRepoManager localRepoManager = ((ContextWithLocalRepoManager) repoTransport).getLocalRepoManager();
 		final byte[] remotePublicKey = clientRepositoryDto.getPublicKey();
 		final String localPathPrefix = pathPrefix;
