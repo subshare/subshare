@@ -53,8 +53,6 @@ public class SsRequestRepoConnectionService extends RequestRepoConnectionService
 			final Cryptree cryptree = cryptreeFactory.getCryptreeOrCreate(transaction, clientRepositoryId);
 
 			// This (the server-side) might be a virgin repository! Hence, we perform this check only, if it's not empty.
-			// TODO is this the right way to check for its virginity?!
-
 			if (! cryptree.isEmpty()) {
 				final SignableVerifier signableVerifier = new SignableVerifier(cryptree.getUserRepoKeyPublicKeyLookup());
 				signableVerifier.verify(rrcRepositoryDto);
