@@ -6,7 +6,6 @@ import java.util.Collection;
 
 import javax.jdo.Query;
 
-import org.subshare.core.user.UserRepoKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,18 +65,18 @@ public class UserRepoKeyPublicKeyDao extends Dao<UserRepoKeyPublicKey, UserRepoK
 		}
 	}
 
-	public UserRepoKeyPublicKey getUserRepoKeyPublicKeyOrCreate(final UserRepoKey.PublicKey publicKey) {
-		assertNotNull("publicKey", publicKey);
-		UserRepoKeyPublicKey userRepoKeyPublicKey = getUserRepoKeyPublicKey(publicKey.getUserRepoKeyId());
-		if (userRepoKeyPublicKey == null) {
-			if (publicKey.isInvitation()) {
-				final UserRepoKey.PublicKeyWithSignature publicKeyWithSignature = (UserRepoKey.PublicKeyWithSignature) publicKey;
-				userRepoKeyPublicKey = makePersistent(new InvitationUserRepoKeyPublicKey(publicKeyWithSignature));
-			}
-			else
-				userRepoKeyPublicKey = makePersistent(new UserRepoKeyPublicKey(publicKey));
-		}
-
-		return userRepoKeyPublicKey;
-	}
+//	public UserRepoKeyPublicKey getUserRepoKeyPublicKeyOrCreate(final UserRepoKey.PublicKey publicKey) {
+//		assertNotNull("publicKey", publicKey);
+//		UserRepoKeyPublicKey userRepoKeyPublicKey = getUserRepoKeyPublicKey(publicKey.getUserRepoKeyId());
+//		if (userRepoKeyPublicKey == null) {
+//			if (publicKey.isInvitation()) {
+//				final UserRepoKey.PublicKeyWithSignature publicKeyWithSignature = (UserRepoKey.PublicKeyWithSignature) publicKey;
+//				userRepoKeyPublicKey = makePersistent(new InvitationUserRepoKeyPublicKey(publicKeyWithSignature));
+//			}
+//			else
+//				userRepoKeyPublicKey = makePersistent(new UserRepoKeyPublicKey(publicKey));
+//		}
+//
+//		return userRepoKeyPublicKey;
+//	}
 }

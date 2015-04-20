@@ -500,15 +500,25 @@ public class CryptreeImpl extends AbstractCryptree {
 			throw new IllegalArgumentException("invitationUserRepoKey is not a temporary UserRepoKey :: invitationUserRepoKey.getValidTo() == null");
 
 		final LocalRepoTransaction tx = getCryptreeContext().transaction;
-		final UserRepoKeyPublicKeyDao userRepoKeyPublicKeyDao = tx.getDao(UserRepoKeyPublicKeyDao.class);
+//		final UserRepoKeyPublicKeyDao userRepoKeyPublicKeyDao = tx.getDao(UserRepoKeyPublicKeyDao.class);
 		final UserRepoKeyPublicKeyReplacementRequestDao userRepoKeyPublicKeyReplacementRequestDao = tx.getDao(UserRepoKeyPublicKeyReplacementRequestDao.class);
+
+//		// old key
+//		final InvitationUserRepoKeyPublicKey invitationUserRepoKeyPublicKey =
+//				(InvitationUserRepoKeyPublicKey) userRepoKeyPublicKeyDao.getUserRepoKeyPublicKeyOrCreate(invitationUserRepoKey.getPublicKey());
+//
+//		// new key
+//		final UserRepoKeyPublicKey userRepoKeyPublicKey = userRepoKeyPublicKeyDao.getUserRepoKeyPublicKeyOrCreate(publicKey);
+
+		final UserRepoKeyPublicKeyHelper userRepoKeyPublicKeyHelper = new UserRepoKeyPublicKeyHelper(getCryptreeContext());
 
 		// old key
 		final InvitationUserRepoKeyPublicKey invitationUserRepoKeyPublicKey =
-				(InvitationUserRepoKeyPublicKey) userRepoKeyPublicKeyDao.getUserRepoKeyPublicKeyOrCreate(invitationUserRepoKey.getPublicKey());
+				(InvitationUserRepoKeyPublicKey) userRepoKeyPublicKeyHelper.getUserRepoKeyPublicKeyOrCreate(invitationUserRepoKey.getPublicKey());
 
 		// new key
-		final UserRepoKeyPublicKey userRepoKeyPublicKey = userRepoKeyPublicKeyDao.getUserRepoKeyPublicKeyOrCreate(publicKey);
+		final UserRepoKeyPublicKey userRepoKeyPublicKey = userRepoKeyPublicKeyHelper.getUserRepoKeyPublicKeyOrCreate(publicKey);
+
 
 		// create + sign + persist replacement request
 		final UserRepoKeyPublicKeyReplacementRequest request = new UserRepoKeyPublicKeyReplacementRequest();

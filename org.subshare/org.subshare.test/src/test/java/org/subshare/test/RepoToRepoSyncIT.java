@@ -12,6 +12,8 @@ import org.subshare.core.dto.PermissionType;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKey.PublicKey;
 import org.subshare.core.user.UserRepoKeyRing;
+import org.subshare.local.persistence.InvitationUserRepoKeyPublicKey;
+import org.subshare.local.persistence.UserRepoKeyPublicKey;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyDao;
 import org.junit.Assert;
 import org.junit.Test;
@@ -301,7 +303,14 @@ public class RepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 			try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
 				final UserRepoKeyPublicKeyDao userRepoKeyPublicKeyDao = transaction.getDao(UserRepoKeyPublicKeyDao.class);
 				for (final UserRepoKey userRepoKey : allUserRepoKeys) {
-					userRepoKeyPublicKeyDao.getUserRepoKeyPublicKeyOrCreate(userRepoKey.getPublicKey());
+//					userRepoKeyPublicKeyDao.getUserRepoKeyPublicKeyOrCreate(userRepoKey.getPublicKey());
+
+					if (userRepoKey.isInvitation()) {
+						final UserRepoKey.PublicKeyWithSignature publicKeyWithSignature = userRepoKey.getPublicKey();
+						userRepoKeyPublicKeyDao.makePersistent(new InvitationUserRepoKeyPublicKey(publicKeyWithSignature));
+					}
+					else
+						userRepoKeyPublicKeyDao.makePersistent(new UserRepoKeyPublicKey(userRepoKey.getPublicKey()));
 				}
 				transaction.commit();
 			}

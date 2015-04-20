@@ -577,18 +577,26 @@ public class CryptreeNode {
 
 	public UserRepoKeyPublicKey getUserRepoKeyPublicKeyOrCreate(final UserRepoKey.PublicKey publicKey) {
 		assertNotNull("publicKey", publicKey);
-		final UserRepoKeyPublicKeyDao dao = context.transaction.getDao(UserRepoKeyPublicKeyDao.class);
-		final UserRepoKeyPublicKey userRepoKeyPublicKey = dao.getUserRepoKeyPublicKeyOrCreate(publicKey);
-		return userRepoKeyPublicKey;
+		return new UserRepoKeyPublicKeyHelper(getContext()).getUserRepoKeyPublicKeyOrCreate(publicKey);
 	}
 
 	public void grantPermission(final PermissionType permissionType, final UserRepoKey.PublicKey publicKey) {
 		assertNotNull("permissionType", permissionType);
 		assertNotNull("publicKey", publicKey);
 
+		if (PermissionType.seeUserIdentity == permissionType) {
+			final CryptreeNode parent = getParent();
+			if (parent != null) {
+				parent.grantPermission(permissionType, publicKey);
+				return;
+			}
+		}
+
 		// It is technically required to have read permission, when having write or grant permission. Therefore,
-		// we simply grant it always, here.
-		grantReadPermission(publicKey);
+		// we simply grant it here.
+		if (permissionType == PermissionType.read || permissionType == PermissionType.write || permissionType == PermissionType.grant)
+			grantReadPermission(publicKey);
+
 		if (PermissionType.read == permissionType)
 			return;
 
@@ -597,9 +605,12 @@ public class CryptreeNode {
 			return;
 
 		// It is technically required to have write permission, when having grant permission. Therefore, we
-		// grant it here, too.
-		if (PermissionType.grant == permissionType)
+		// grant it here, too. Additionally, we grant seeUserIdentity permission, as it makes no sense to manage
+		// users, i.e. grant access to them, without seeing them ;-)
+		if (PermissionType.grant == permissionType) {
 			grantPermission(PermissionType.write, publicKey);
+			grantPermission(PermissionType.seeUserIdentity, publicKey);
+		}
 
 		final PermissionSet permissionSet = getPermissionSetOrCreate();
 		final PermissionDao dao = context.transaction.getDao(PermissionDao.class);
@@ -617,6 +628,9 @@ public class CryptreeNode {
 
 		if (PermissionType.grant == permissionType)
 			ensureParentHasAsymmetricActiveSubdirKey();
+
+		if (PermissionType.seeUserIdentity == permissionType)
+			createUserIdentitiesVisibleFor(userRepoKeyPublicKey);
 	}
 
 	public void setPermissionsInherited(final boolean inherited) {
@@ -709,6 +723,20 @@ public class CryptreeNode {
 	public void revokePermission(final PermissionType permissionType, final Set<Uid> userRepoKeyIds) {
 		assertNotNull("permissionType", permissionType);
 		assertNotNull("userRepoKeyIds", userRepoKeyIds);
+
+		if (PermissionType.seeUserIdentity == permissionType) {
+			final CryptreeNode parent = getParent();
+			if (parent != null) {
+				parent.revokePermission(permissionType, userRepoKeyIds);
+				return;
+			}
+
+			// Revoke grant permission - technically not really needed but it makes no sense to manage invisible/unknown users.
+			revokeGrantPermissionOfAllCryptoRepoFiles(userRepoKeyIds);
+			for (Uid userRepoKeyId : userRepoKeyIds)
+				removeUserIdentitiesVisibleFor(userRepoKeyId);
+		}
+
 		if (PermissionType.read == permissionType) {
 			// Since it is technically required to have read permission, when having write or grant permission, we
 			// revoke grant and write permission, too.
@@ -739,6 +767,27 @@ public class CryptreeNode {
 		}
 	}
 
+	private void createUserIdentitiesVisibleFor(final UserRepoKeyPublicKey userRepoKeyPublicKey) {
+
+	}
+
+	private void removeUserIdentitiesVisibleFor(Uid userRepoKeyId) {
+
+	}
+
+	private void revokeGrantPermissionOfAllCryptoRepoFiles(final Set<Uid> userRepoKeyIds) {
+		assertNotNull("userRepoKeyIds", userRepoKeyIds);
+		final PermissionDao dao = context.transaction.getDao(PermissionDao.class);
+
+		final Set<CryptoRepoFile> cryptoRepoFiles = new HashSet<>();
+		final Collection<Permission> permissions = dao.getNonRevokedPermissions(PermissionType.grant, userRepoKeyIds);
+		for (final Permission permission : permissions)
+			cryptoRepoFiles.add(permission.getPermissionSet().getCryptoRepoFile());
+
+		for (final CryptoRepoFile cryptoRepoFile : cryptoRepoFiles)
+			getContext().getCryptreeNodeOrCreate(cryptoRepoFile.getCryptoRepoFileId()).revokePermission(PermissionType.grant, userRepoKeyIds);
+	}
+
 	/**
 	 * @param anyCryptoRepoFile <code>true</code> to indicate that the {@link Permission} does not need to be available on the
 	 * level of this node's {@link CryptoRepoFile} (it is thus independent from this context); <code>false</code> to indicate
@@ -752,6 +801,10 @@ public class CryptreeNode {
 			final PermissionType permissionType, final Date timestamp
 			) throws AccessDeniedException
 	{
+		assertNotNull("userRepoKeyId", userRepoKeyId);
+		assertNotNull("permissionType", permissionType);
+		assertNotNull("timestamp", timestamp);
+
 		if (isOwner(userRepoKeyId))
 			return; // The owner always has all permissions.
 
@@ -930,7 +983,7 @@ public class CryptreeNode {
 			) throws SignatureException, AccessDeniedException
 	{
 		assertNotNull("signable", signable);
-		assertNotNull("requiredPermissionType", requiredPermissionType);
+		assertNotNull("requiredPermissionType", requiredPermissionType); // TODO we must support write-protected entities not requiring any permission-type, but only behaving like an ordinary Signable. Maybe do this, if this parameter is null?!
 		context.signableVerifier.verify(signable);
 		final Uid signingUserRepoKeyId = signable.getSignature().getSigningUserRepoKeyId();
 		assertHasPermission(anyCryptoRepoFile, signingUserRepoKeyId, requiredPermissionType, signable.getSignature().getSignatureCreated());

@@ -23,6 +23,65 @@ public class PermissionDao extends Dao<Permission, PermissionDao> {
 
 	private static final Logger logger = LoggerFactory.getLogger(PermissionDao.class);
 
+	public Collection<Permission> getNonRevokedPermissions(final PermissionType permissionType, final Set<Uid> userRepoKeyIds) {
+		assertNotNull("permissionType", permissionType);
+		assertNotNull("userRepoKeyIds", userRepoKeyIds);
+		final List<Permission> permissions = new ArrayList<Permission>();
+		for (final Uid userRepoKeyId : userRepoKeyIds) {
+			final Collection<Permission> c = getNonRevokedPermissions( permissionType, userRepoKeyId);
+			permissions.addAll(c);
+		}
+		return permissions;
+	}
+
+	public Collection<Permission> getNonRevokedPermissions(final PermissionType permissionType, final Uid userRepoKeyId) {
+		assertNotNull("permissionType", permissionType);
+		assertNotNull("userRepoKeyId", userRepoKeyId);
+
+		final Query query = pm().newNamedQuery(getEntityClass(), "getNonRevokedPermissions_permissionType_userRepoKeyId");
+		try {
+			final Map<String, Object> params = new HashMap<String, Object>(2);
+			params.put("permissionType", permissionType);
+			params.put("userRepoKeyId", userRepoKeyId.toString());
+
+			long startTimestamp = System.currentTimeMillis();
+			@SuppressWarnings("unchecked")
+			Collection<Permission> permissions = (Collection<Permission>) query.executeWithMap(params);
+			logger.debug("getNonRevokedPermissions: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
+
+			startTimestamp = System.currentTimeMillis();
+			permissions = load(permissions);
+			logger.debug("getNonRevokedPermissions: Loading result-set with {} elements took {} ms.", permissions.size(), System.currentTimeMillis() - startTimestamp);
+
+			return permissions;
+		} finally {
+			query.closeAll();
+		}
+	}
+
+	public Collection<Permission> getNonRevokedPermissions(PermissionType permissionType) {
+		assertNotNull("permissionType", permissionType);
+
+		final Query query = pm().newNamedQuery(getEntityClass(), "getNonRevokedPermissions_permissionType");
+		try {
+			final Map<String, Object> params = new HashMap<String, Object>(1);
+			params.put("permissionType", permissionType);
+
+			long startTimestamp = System.currentTimeMillis();
+			@SuppressWarnings("unchecked")
+			Collection<Permission> permissions = (Collection<Permission>) query.executeWithMap(params);
+			logger.debug("getNonRevokedPermissions: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
+
+			startTimestamp = System.currentTimeMillis();
+			permissions = load(permissions);
+			logger.debug("getNonRevokedPermissions: Loading result-set with {} elements took {} ms.", permissions.size(), System.currentTimeMillis() - startTimestamp);
+
+			return permissions;
+		} finally {
+			query.closeAll();
+		}
+	}
+
 	public Collection<Permission> getNonRevokedPermissions(final PermissionSet permissionSet, final PermissionType permissionType, final UserRepoKeyPublicKey userRepoKeyPublicKey) {
 		assertNotNull("permissionSet", permissionSet);
 		assertNotNull("permissionType", permissionType);

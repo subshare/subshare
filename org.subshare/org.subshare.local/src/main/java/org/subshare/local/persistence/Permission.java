@@ -51,6 +51,19 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 					+ "&& this.revoked == null"
 			),
 	@Query(
+			name="getNonRevokedPermissions_permissionType_userRepoKeyId",
+			value="SELECT WHERE "
+					+ "this.permissionType == :permissionType "
+					+ "&& this.userRepoKeyPublicKey.userRepoKeyId == :userRepoKeyId "
+					+ "&& this.revoked == null"
+			),
+	@Query(
+			name="getNonRevokedPermissions_permissionType",
+			value="SELECT WHERE "
+					+ "this.permissionType == :permissionType "
+					+ "&& this.revoked == null"
+			),
+	@Query(
 			name="getValidPermissions_permissionSet_permissionType_userRepoKeyId_timestamp",
 			value="SELECT WHERE "
 					+ "this.permissionSet == :permissionSet "
@@ -151,6 +164,7 @@ public class Permission extends Entity implements WriteProtectedEntity, AutoTrac
 			switch (permissionType) {
 				case grant:
 				case write:
+				case seeUserIdentity:
 					break;
 				default:
 					throw new IllegalArgumentException("PermissionType unknown or not allowed here: " + permissionType);

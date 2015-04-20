@@ -25,8 +25,10 @@ import org.subshare.core.dto.CryptoKeyType;
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.user.UserRepoKey.PublicKey;
 import org.subshare.core.user.UserRepoKeyRing;
+import org.subshare.local.UserRepoKeyPublicKeyHelper;
 import org.subshare.local.persistence.CryptoKey;
 import org.subshare.local.persistence.CryptoLink;
+import org.subshare.local.persistence.UserRepoKeyPublicKey;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,6 +53,13 @@ public class PermissionIT extends AbstractRepoToRepoSyncIT {
 
 	@Test
 	public void nonOwnerAdminGrantsWritePermission() throws Exception {
+		new MockUp<UserRepoKeyPublicKeyHelper>() {
+			@Mock
+			private void createUserIdentities(final UserRepoKeyPublicKey userRepoKeyPublicKey) {
+				// Our mock should do nothing, because we don't have a real UserRegistry here.
+			}
+		};
+
 		remotePathPrefix2Plain = "/3 + &#ä";
 
 		createLocalSourceAndRemoteRepo();

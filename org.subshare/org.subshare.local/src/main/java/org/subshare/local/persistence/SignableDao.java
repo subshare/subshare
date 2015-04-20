@@ -13,7 +13,7 @@ import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.local.persistence.Dao;
 import co.codewizards.cloudstore.local.persistence.Entity;
 
-public class SignableDao extends Dao<Entity, SignableDao> { // since Sinable is an interface implemented by many Entity-classes, we cannot type this correctly ;-)
+public class SignableDao extends Dao<Entity, SignableDao> { // since Signable is an interface implemented by many Entity-classes, we cannot type this correctly ;-)
 
 	public boolean isEntitiesSignedByAndAfter(final Uid signingUserRepoKeyId, final Date signatureCreatedAfter) {
 		assertNotNull("signingUserRepoKeyId", signingUserRepoKeyId);
