@@ -14,9 +14,7 @@ import org.subshare.core.dto.PermissionType;
 import org.subshare.core.dto.UserIdentityPayloadDto;
 import org.subshare.core.dto.jaxb.UserIdentityPayloadDtoIo;
 import org.subshare.core.user.User;
-import org.subshare.core.user.UserRegistry;
 import org.subshare.core.user.UserRepoKey;
-import org.subshare.core.user.UserRepoKeyRing;
 import org.subshare.local.persistence.InvitationUserRepoKeyPublicKey;
 import org.subshare.local.persistence.Permission;
 import org.subshare.local.persistence.PermissionDao;
@@ -153,39 +151,12 @@ public class UserRepoKeyPublicKeyHelper {
 	}
 
 	private UserIdentityPayloadDto createUserIdentityPayloadDto(final UserRepoKeyPublicKey ofUserRepoKeyPublicKey) {
-		final User user = getUserOrFail(ofUserRepoKeyPublicKey.getUserRepoKeyId());
+		final User user = context.getUserRegistry().getUserOrFail(ofUserRepoKeyPublicKey.getUserRepoKeyId());
 		final UserIdentityPayloadDto result = new UserIdentityPayloadDto();
+		result.setFirstName(user.getFirstName());
+		result.setLastName(user.getLastName());
+		result.getEmails().addAll(user.getEmails());
 		result.getPgpKeyIds().addAll(user.getPgpKeyIds());
 		return result;
-	}
-
-	private User getUserOrFail(final Uid userRepoKeyId) {
-		final User user = getUser(userRepoKeyId);
-		if (user == null)
-			throw new IllegalArgumentException("No User found for userRepoKeyId=" + userRepoKeyId);
-
-		return user;
-	}
-
-	private User getUser(final Uid userRepoKeyId) {
-		assertNotNull("userRepoKeyId", userRepoKeyId);
-		for (final User user : getUserRegistry().getUsers()) {
-			final UserRepoKeyRing userRepoKeyRing = user.getUserRepoKeyRing();
-			if (userRepoKeyRing != null) {
-				if (userRepoKeyRing.getUserRepoKey(userRepoKeyId) != null)
-					return user;
-			}
-			else {
-				for (final UserRepoKey.PublicKey publicKey : user.getUserRepoKeyPublicKeys()) {
-					if (userRepoKeyId.equals(publicKey.getUserRepoKeyId()))
-						return user;
-				}
-			}
-		}
-		return null;
-	}
-
-	private UserRegistry getUserRegistry() {
-		return context.getUserRegistry();
 	}
 }

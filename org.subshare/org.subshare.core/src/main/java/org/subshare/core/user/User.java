@@ -2,6 +2,7 @@ package org.subshare.core.user;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
 
+import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.util.Collections;
@@ -58,6 +59,8 @@ public class User {
 
 	private ObservableList<UserRepoKey.PublicKeyWithSignature> userRepoKeyPublicKeys;
 
+	private final UserRepoKeyRingChangeListener userRepoKeyRingChangeListener = new UserRepoKeyRingChangeListener();
+
 	private class PostModificationListener implements StandardPostModificationListener {
 		private final Property property;
 
@@ -70,6 +73,13 @@ public class User {
 			firePropertyChange(property, null, event.getObservedCollection());
 		}
 	};
+
+	private class UserRepoKeyRingChangeListener implements PropertyChangeListener {
+		@Override
+		public void propertyChange(PropertyChangeEvent evt) {
+			firePropertyChange(PropertyEnum.userRepoKeyRing, null, userRepoKeyRing);
+		}
+	}
 
 	public synchronized Uid getUserId() {
 		return userId;
@@ -123,6 +133,13 @@ public class User {
 	public synchronized void setUserRepoKeyRing(final UserRepoKeyRing userRepoKeyRing) {
 		final UserRepoKeyRing old = this.userRepoKeyRing;
 		this.userRepoKeyRing = userRepoKeyRing;
+
+		if (old != null)
+			old.removePropertyChangeListener(userRepoKeyRingChangeListener);
+
+		if (userRepoKeyRing != null)
+			userRepoKeyRing.addPropertyChangeListener(userRepoKeyRingChangeListener);
+
 		firePropertyChange(PropertyEnum.userRepoKeyRing, old, userRepoKeyRing);
 	}
 	public synchronized UserRepoKeyRing getUserRepoKeyRingOrCreate() {

@@ -203,7 +203,7 @@ public abstract class AbstractRepoToRepoSyncIT extends AbstractIT {
 
 		remoteRootURLWithPathPrefixForLocalDest = getRemoteRootURLWithPathPrefixForLocalDest(remoteRepositoryId);
 
-		if (! cryptreeRepoTransportFactory.getUserRepoKeyRing().getAllUserRepoKeys(remoteRepositoryId).isEmpty()) {
+		if (! cryptreeRepoTransportFactory.getUserRepoKeyRing().getUserRepoKeys(remoteRepositoryId).isEmpty()) {
 			new CloudStoreClient("requestRepoConnection", localDestRoot.getPath(), remoteRootURLWithPathPrefixForLocalDest.toExternalForm()).execute();
 			//	acceptRepoConnection is not needed, because already accepted implicitly by *signed* request
 		}

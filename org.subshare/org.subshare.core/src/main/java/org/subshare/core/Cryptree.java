@@ -10,6 +10,7 @@ import org.subshare.core.dto.CryptoKeyDto;
 import org.subshare.core.dto.CryptoLinkDto;
 import org.subshare.core.dto.CryptoRepoFileDto;
 import org.subshare.core.dto.PermissionType;
+import org.subshare.core.dto.UserIdentityPayloadDto;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKey.PublicKey;
 import org.subshare.core.user.UserRepoKeyPublicKeyLookup;
@@ -135,4 +136,7 @@ public interface Cryptree {
 
 	void requestReplaceInvitationUserRepoKey(UserRepoKey invitationUserRepoKey, UserRepoKey.PublicKey publicKey);
 	void registerRemotePathPrefix(String pathPrefix);
+
+	UserIdentityPayloadDto getUserIdentityPayloadDtoOrFail(Uid userRepoKeyId)
+			throws SeeUserIdentityAccessDeniedException;
 }

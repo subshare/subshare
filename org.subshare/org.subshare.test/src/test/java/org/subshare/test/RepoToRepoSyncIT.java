@@ -314,7 +314,7 @@ public class RepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 
 	private void persistPublicKeysToRemoteRepository(UserRepoKeyRing userRepoKeyRing) {
 		try (final LocalRepoManager localRepoManager = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(remoteRoot);) {
-			final List<UserRepoKey> allUserRepoKeys = userRepoKeyRing.getAllUserRepoKeys(localRepoManager.getRepositoryId());
+			final List<UserRepoKey> allUserRepoKeys = userRepoKeyRing.getUserRepoKeys(localRepoManager.getRepositoryId());
 
 			try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
 				final UserRepoKeyPublicKeyDao userRepoKeyPublicKeyDao = transaction.getDao(UserRepoKeyPublicKeyDao.class);

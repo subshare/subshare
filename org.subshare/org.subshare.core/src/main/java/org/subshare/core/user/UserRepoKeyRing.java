@@ -2,6 +2,8 @@ package org.subshare.core.user;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
 
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -10,11 +12,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import co.codewizards.cloudstore.core.bean.PropertyBase;
 import co.codewizards.cloudstore.core.dto.Uid;
 
 public class UserRepoKeyRing {
 
-//	private static SecureRandom random = new SecureRandom();
+	private final PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
+
+	public static interface Property extends PropertyBase {
+	}
+
+	public static enum PropertyEnum implements Property {
+		userRepoKeys
+	}
 
 	private final Map<Uid, UserRepoKey> userRepoKeyId2UserRepoKey = new HashMap<>();
 	private final Map<UUID, List<UserRepoKey>> repositoryId2InvitationUserRepoKeyList = new HashMap<>();
@@ -101,6 +111,7 @@ public class UserRepoKeyRing {
 		assertNotNull("userRepoKey", userRepoKey);
 		userRepoKeyId2UserRepoKey.put(userRepoKey.getUserRepoKeyId(), userRepoKey);
 		clearCache(userRepoKey.getServerRepositoryId());
+		firePropertyChange(PropertyEnum.userRepoKeys, null, getUserRepoKeys());
 	}
 
 	public void removeUserRepoKey(final UserRepoKey userRepoKey) {
@@ -109,8 +120,10 @@ public class UserRepoKeyRing {
 
 	public synchronized void removeUserRepoKey(final Uid userRepoKeyId) {
 		final UserRepoKey userRepoKey = userRepoKeyId2UserRepoKey.remove(assertNotNull("userRepoKeyId", userRepoKeyId));
-		if (userRepoKey != null)
+		if (userRepoKey != null) {
 			clearCache(userRepoKey.getServerRepositoryId());
+			firePropertyChange(PropertyEnum.userRepoKeys, null, getUserRepoKeys());
+		}
 	}
 
 	private void clearCache(final UUID serverRepositoryId) {
@@ -131,10 +144,30 @@ public class UserRepoKeyRing {
 		return userRepoKey;
 	}
 
-	public synchronized List<UserRepoKey> getAllUserRepoKeys(UUID serverRepositoryId) {
+	public synchronized List<UserRepoKey> getUserRepoKeys(UUID serverRepositoryId) {
 		// no need to cache - very rarely used (currently only in tests AFAIK)
 		final List<UserRepoKey> l = filterByServerRepositoryId(userRepoKeyId2UserRepoKey.values(), serverRepositoryId);
 		Collections.shuffle(l);
 		return Collections.unmodifiableList(l);
+	}
+
+	public void addPropertyChangeListener(PropertyChangeListener listener) {
+		propertyChangeSupport.addPropertyChangeListener(listener);
+	}
+
+	public void addPropertyChangeListener(Property property, PropertyChangeListener listener) {
+		propertyChangeSupport.addPropertyChangeListener(property.name(), listener);
+	}
+
+	public void removePropertyChangeListener(PropertyChangeListener listener) {
+		propertyChangeSupport.removePropertyChangeListener(listener);
+	}
+
+	public void removePropertyChangeListener(Property property, PropertyChangeListener listener) {
+		propertyChangeSupport.removePropertyChangeListener(property.name(), listener);
+	}
+
+	protected void firePropertyChange(Property property, Object oldValue, Object newValue) {
+		propertyChangeSupport.firePropertyChange(property.name(), oldValue, newValue);
 	}
 }

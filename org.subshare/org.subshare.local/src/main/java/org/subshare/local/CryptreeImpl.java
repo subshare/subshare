@@ -5,6 +5,7 @@ import static co.codewizards.cloudstore.core.util.Util.doNothing;
 import static org.subshare.local.CryptreeNodeUtil.decrypt;
 import static org.subshare.local.CryptreeNodeUtil.encrypt;
 
+import java.io.ByteArrayInputStream;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
@@ -20,6 +21,7 @@ import org.subshare.core.AccessDeniedException;
 import org.subshare.core.GrantAccessDeniedException;
 import org.subshare.core.PermissionCollisionException;
 import org.subshare.core.ReadAccessDeniedException;
+import org.subshare.core.SeeUserIdentityAccessDeniedException;
 import org.subshare.core.WriteAccessDeniedException;
 import org.subshare.core.dto.CryptoChangeSetDto;
 import org.subshare.core.dto.CryptoKeyDeactivationDto;
@@ -33,9 +35,11 @@ import org.subshare.core.dto.PermissionSetInheritanceDto;
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.dto.RepositoryOwnerDto;
 import org.subshare.core.dto.UserIdentityDto;
+import org.subshare.core.dto.UserIdentityPayloadDto;
 import org.subshare.core.dto.UserRepoKeyPublicKeyDto;
 import org.subshare.core.dto.UserRepoKeyPublicKeyReplacementRequestDeletionDto;
 import org.subshare.core.dto.UserRepoKeyPublicKeyReplacementRequestDto;
+import org.subshare.core.dto.jaxb.UserIdentityPayloadDtoIo;
 import org.subshare.core.sign.Signature;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKeyPublicKeyLookup;
@@ -461,6 +465,36 @@ public class CryptreeImpl extends AbstractCryptree {
 		transaction.getDao(UserRepoKeyPublicKeyReplacementRequestDao.class).deletePersistent(request);
 		transaction.getDao(UserRepoKeyPublicKeyDao.class).deletePersistent(oldKey);
 		transaction.flush();
+	}
+
+	@Override
+	public UserIdentityPayloadDto getUserIdentityPayloadDtoOrFail(final Uid userRepoKeyId) throws SeeUserIdentityAccessDeniedException {
+		assertNotNull("userRepoKeyId", userRepoKeyId);
+		final UserRepoKeyPublicKeyDao userRepoKeyPublicKeyDao = getCryptreeContext().transaction.getDao(UserRepoKeyPublicKeyDao.class);
+		final UserRepoKeyPublicKey ofUserRepoKeyPublicKey = userRepoKeyPublicKeyDao.getUserRepoKeyPublicKey(userRepoKeyId);
+		if (ofUserRepoKeyPublicKey == null)
+			throw new IllegalArgumentException("There is no UserRepoKeyPublicKey with userRepoKeyId=" + userRepoKeyId);
+
+		final UserIdentityDao userIdentityDao = getCryptreeContext().transaction.getDao(UserIdentityDao.class);
+
+		final UserRepoKeyRing userRepoKeyRing = getUserRepoKeyRing();
+		for (final UserRepoKey userRepoKey : userRepoKeyRing.getUserRepoKeys(getServerRepositoryIdOrFail())) {
+			final UserRepoKeyPublicKey forUserRepoKeyPublicKey = userRepoKeyPublicKeyDao.getUserRepoKeyPublicKey(userRepoKey.getUserRepoKeyId());
+			if (forUserRepoKeyPublicKey == null)
+				continue;
+
+			final Collection<UserIdentity> userIdentities = userIdentityDao.getUserIdentities(ofUserRepoKeyPublicKey, forUserRepoKeyPublicKey);
+			if (userIdentities.isEmpty())
+				continue;
+
+			final UserIdentity userIdentity = userIdentities.iterator().next();
+			final byte[] decrypted = decrypt(userIdentity.getEncryptedUserIdentityPayloadDtoData(), userRepoKey.getKeyPair().getPrivate());
+			final UserIdentityPayloadDtoIo userIdentityPayloadDtoIo = new UserIdentityPayloadDtoIo();
+			final UserIdentityPayloadDto userIdentityPayloadDto = userIdentityPayloadDtoIo.deserialize(new ByteArrayInputStream(decrypted));
+			return userIdentityPayloadDto;
+		}
+
+		throw new SeeUserIdentityAccessDeniedException();
 	}
 
 	@Override

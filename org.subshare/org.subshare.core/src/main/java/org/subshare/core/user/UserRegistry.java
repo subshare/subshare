@@ -37,8 +37,11 @@ public class UserRegistry {
 
 	private final Map<Long, User> pgpKeyId2User = new HashMap<Long, User>();
 	private final Map<Uid, User> userId2User = new LinkedHashMap<Uid, User>();
+
 	private List<User> cache_users;
 	private Map<String, Set<User>> cache_email2Users;
+	private Map<Uid, User> cache_userRepoKeyId2User;
+
 	private final File userListFile;
 	private final UserListDtoIo userListDtoIo = new UserListDtoIo();
 	private boolean dirty;
@@ -173,6 +176,7 @@ public class UserRegistry {
 	private void cleanCache() {
 		cache_users = null;
 		cache_email2Users = null;
+		cache_userRepoKeyId2User = null;
 	}
 
 	public synchronized Collection<User> getUsersByEmail(final String email) {
@@ -217,10 +221,44 @@ public class UserRegistry {
 		dirty = true;
 	}
 
+	public User getUserOrFail(final Uid userRepoKeyId) {
+		final User user = getUser(userRepoKeyId);
+		if (user == null)
+			throw new IllegalArgumentException("No User found for userRepoKeyId=" + userRepoKeyId);
+
+		return user;
+	}
+
+	public synchronized User getUser(final Uid userRepoKeyId) {
+		assertNotNull("userRepoKeyId", userRepoKeyId);
+		if (cache_userRepoKeyId2User == null) {
+			final Map<Uid, User> m = new HashMap<>();
+
+			for (final User user : getUsers()) {
+				final UserRepoKeyRing userRepoKeyRing = user.getUserRepoKeyRing();
+				if (userRepoKeyRing != null) {
+					for (final UserRepoKey userRepoKey : userRepoKeyRing.getUserRepoKeys())
+						if (m.put(userRepoKey.getUserRepoKeyId(), user) != null)
+							throw new IllegalStateException("Duplicate userRepoKeyId!!! WTF?! " + userRepoKey.getUserRepoKeyId());
+				}
+				else {
+					for (final UserRepoKey.PublicKey publicKey : user.getUserRepoKeyPublicKeys()) {
+						if (m.put(publicKey.getUserRepoKeyId(), user) != null)
+							throw new IllegalStateException("Duplicate userRepoKeyId!!! WTF?! " + publicKey.getUserRepoKeyId());
+					}
+				}
+			}
+
+			cache_userRepoKeyId2User = m;
+		}
+		return cache_userRepoKeyId2User.get(userRepoKeyId);
+	}
+
 	private final PropertyChangeListener userPropertyChangeListener = new PropertyChangeListener() {
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
 			dirty = true;
+			cleanCache();
 		}
 	};
 
