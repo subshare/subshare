@@ -5,7 +5,7 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
 import org.subshare.core.dto.InvitationUserRepoKeyPublicKeyDto;
 import org.subshare.core.dto.UserRepoKeyPublicKeyDto;
 
-public class UserRepoKeyPublicKeyDtoConverter {
+public class UserRepoKeyPublicKeyDtoWithSignatureConverter {
 
 //	public UserRepoKeyPublicKeyDto toUserRepoKeyPublicKeyDto(final UserRepoKey.PublicKey publicKey) {
 //		if (publicKey instanceof UserRepoKey.PublicKeyWithSignature)

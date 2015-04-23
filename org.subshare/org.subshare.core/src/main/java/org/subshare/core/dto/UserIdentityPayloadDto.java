@@ -16,6 +16,8 @@ public class UserIdentityPayloadDto {
 
 	private List<Long> pgpKeyIds;
 
+	private UserRepoKeyPublicKeyDto userRepoKeyPublicKeyDto;
+
 	public String getFirstName() {
 		return firstName;
 	}
@@ -48,6 +50,17 @@ public class UserIdentityPayloadDto {
 	}
 	public void setPgpKeyIds(List<Long> pgpKeyIds) {
 		this.pgpKeyIds = pgpKeyIds;
+	}
+
+	/**
+	 * Gets the public-key-DTO with signature.
+	 * @return the public-key-DTO with signature.
+	 */
+	public UserRepoKeyPublicKeyDto getUserRepoKeyPublicKeyDto() {
+		return userRepoKeyPublicKeyDto;
+	}
+	public void setUserRepoKeyPublicKeyDto(UserRepoKeyPublicKeyDto userRepoKeyPublicKeyDto) {
+		this.userRepoKeyPublicKeyDto = userRepoKeyPublicKeyDto;
 	}
 
 	@Override

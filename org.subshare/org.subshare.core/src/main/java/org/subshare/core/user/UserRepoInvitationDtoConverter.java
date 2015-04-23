@@ -7,7 +7,7 @@ import org.subshare.core.dto.UserRepoInvitationDto;
 public class UserRepoInvitationDtoConverter {
 
 	private final UserRepoKeyDtoConverter userRepoKeyDtoConverter = new UserRepoKeyDtoConverter();
-//	private final UserRepoKeyPublicKeyDtoConverter userRepoKeyPublicKeyDtoConverter = new UserRepoKeyPublicKeyDtoConverter();
+//	private final UserRepoKeyPublicKeyDtoWithSignatureConverter userRepoKeyPublicKeyDtoConverter = new UserRepoKeyPublicKeyDtoWithSignatureConverter();
 
 	public UserRepoInvitationDto toUserRepoInvitationDto(final UserRepoInvitation userRepoInvitation) {
 		assertNotNull("userRepoInvitation", userRepoInvitation);

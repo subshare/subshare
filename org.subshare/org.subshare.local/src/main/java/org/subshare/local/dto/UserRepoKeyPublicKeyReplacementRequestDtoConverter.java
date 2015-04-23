@@ -5,7 +5,7 @@ import org.subshare.local.persistence.UserRepoKeyPublicKeyReplacementRequest;
 
 public class UserRepoKeyPublicKeyReplacementRequestDtoConverter {
 
-//	private final UserRepoKeyPublicKeyDtoConverter userRepoKeyPublicKeyDtoConverter = new UserRepoKeyPublicKeyDtoConverter();
+//	private final UserRepoKeyPublicKeyDtoWithSignatureConverter userRepoKeyPublicKeyDtoConverter = new UserRepoKeyPublicKeyDtoWithSignatureConverter();
 
 	public UserRepoKeyPublicKeyReplacementRequestDto toUserRepoKeyPublicKeyReplacementRequestDto(UserRepoKeyPublicKeyReplacementRequest request) {
 		final UserRepoKeyPublicKeyReplacementRequestDto requestDto = new UserRepoKeyPublicKeyReplacementRequestDto();

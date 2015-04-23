@@ -9,7 +9,7 @@ import org.subshare.core.dto.UserRepoKeyPublicKeyDto;
 import org.subshare.core.dto.UserRepoKeyRingDto;
 
 public class UserDtoConverter {
-	private final UserRepoKeyPublicKeyDtoConverter userRepoKeyPublicKeyDtoConverter = new UserRepoKeyPublicKeyDtoConverter();
+	private final UserRepoKeyPublicKeyDtoWithSignatureConverter userRepoKeyPublicKeyDtoWithSignatureConverter = new UserRepoKeyPublicKeyDtoWithSignatureConverter();
 	private final UserRepoKeyRingDtoConverter userRepoKeyRingDtoConverter = new UserRepoKeyRingDtoConverter();
 
 	public UserDto toUserDto(final User user) {
@@ -27,7 +27,7 @@ public class UserDtoConverter {
 			userDto.setUserRepoKeyRingDto(userRepoKeyRingDtoConverter.toUserRepoKeyRingDto(userRepoKeyRing));
 		else {
 			for (final UserRepoKey.PublicKeyWithSignature publicKey : user.getUserRepoKeyPublicKeys())
-				userDto.getUserRepoKeyPublicKeyDtos().add(userRepoKeyPublicKeyDtoConverter.toUserRepoKeyPublicKeyDto(publicKey));
+				userDto.getUserRepoKeyPublicKeyDtos().add(userRepoKeyPublicKeyDtoWithSignatureConverter.toUserRepoKeyPublicKeyDto(publicKey));
 		}
 		return userDto;
 	}
@@ -47,7 +47,7 @@ public class UserDtoConverter {
 			user.setUserRepoKeyRing(userRepoKeyRingDtoConverter.fromUserRepoKeyRingDto(userRepoKeyRingDto));
 		else {
 			for (final UserRepoKeyPublicKeyDto userRepoKeyPublicKeyDto : userDto.getUserRepoKeyPublicKeyDtos())
-				user.getUserRepoKeyPublicKeys().add(userRepoKeyPublicKeyDtoConverter.fromUserRepoKeyPublicKeyDto(userRepoKeyPublicKeyDto));
+				user.getUserRepoKeyPublicKeys().add(userRepoKeyPublicKeyDtoWithSignatureConverter.fromUserRepoKeyPublicKeyDto(userRepoKeyPublicKeyDto));
 		}
 		return user;
 	}

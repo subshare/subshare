@@ -14,9 +14,12 @@ import java.util.Set;
 import org.subshare.core.GrantAccessDeniedException;
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.dto.UserIdentityPayloadDto;
+import org.subshare.core.dto.UserRepoKeyPublicKeyDto;
 import org.subshare.core.dto.jaxb.UserIdentityPayloadDtoIo;
 import org.subshare.core.user.User;
 import org.subshare.core.user.UserRepoKey;
+import org.subshare.core.user.UserRepoKeyPublicKeyDtoWithSignatureConverter;
+import org.subshare.core.user.UserRepoKeyRing;
 import org.subshare.local.persistence.InvitationUserRepoKeyPublicKey;
 import org.subshare.local.persistence.Permission;
 import org.subshare.local.persistence.PermissionDao;
@@ -156,7 +159,7 @@ public class UserRepoKeyPublicKeyHelper {
 			dto = createUserIdentityPayloadDto(ofUserRepoKeyPublicKey);
 
 		final ByteArrayOutputStream out = new ByteArrayOutputStream();
-		new UserIdentityPayloadDtoIo().serialize(dto, out);
+		new UserIdentityPayloadDtoIo().serializeWithGz(dto, out);
 		return out.toByteArray();
 	}
 
@@ -177,7 +180,7 @@ public class UserRepoKeyPublicKeyHelper {
 			final UserIdentity userIdentity = userIdentities.iterator().next();
 			final byte[] decrypted = decrypt(userIdentity.getEncryptedUserIdentityPayloadDtoData(), userRepoKey.getKeyPair().getPrivate());
 			final UserIdentityPayloadDtoIo userIdentityPayloadDtoIo = new UserIdentityPayloadDtoIo();
-			final UserIdentityPayloadDto userIdentityPayloadDto = userIdentityPayloadDtoIo.deserialize(new ByteArrayInputStream(decrypted));
+			final UserIdentityPayloadDto userIdentityPayloadDto = userIdentityPayloadDtoIo.deserializeWithGz(new ByteArrayInputStream(decrypted));
 			return userIdentityPayloadDto;
 		}
 
@@ -191,6 +194,29 @@ public class UserRepoKeyPublicKeyHelper {
 		result.setLastName(user.getLastName());
 		result.getEmails().addAll(user.getEmails());
 		result.getPgpKeyIds().addAll(user.getPgpKeyIds());
+
+		final UserRepoKeyRing userRepoKeyRing = user.getUserRepoKeyRing();
+		UserRepoKey.PublicKeyWithSignature publicKey = null;
+		if (userRepoKeyRing != null) {
+			final UserRepoKey userRepoKey = userRepoKeyRing.getUserRepoKeyOrFail(ofUserRepoKeyPublicKey.getUserRepoKeyId());
+			publicKey = userRepoKey.getPublicKey();
+		}
+		else {
+			for (UserRepoKey.PublicKeyWithSignature pk : user.getUserRepoKeyPublicKeys()) {
+				if (ofUserRepoKeyPublicKey.getUserRepoKeyId().equals(pk.getUserRepoKeyId())) {
+					publicKey = pk;
+					break;
+				}
+			}
+		}
+
+		if (publicKey == null)
+			throw new IllegalStateException("publicKey == null");
+
+		final UserRepoKeyPublicKeyDtoWithSignatureConverter converter = new UserRepoKeyPublicKeyDtoWithSignatureConverter();
+		final UserRepoKeyPublicKeyDto userRepoKeyPublicKeyDto = converter.toUserRepoKeyPublicKeyDto(publicKey);
+		result.setUserRepoKeyPublicKeyDto(userRepoKeyPublicKeyDto);
+
 		return result;
 	}
 }
