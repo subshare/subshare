@@ -83,7 +83,8 @@ public class UserRepoKeyPublicKeyReplacementRequest extends Entity implements Si
 		if (this.oldKey != null && !this.oldKey.equals(oldKey))
 			throw new IllegalArgumentException("oldKey already assigned! Cannot modify!");
 
-		this.oldKey = oldKey;
+		if (!equal(this.oldKey, oldKey))
+			this.oldKey = oldKey;
 	}
 
 	public UserRepoKeyPublicKey getNewKey() {
@@ -93,7 +94,8 @@ public class UserRepoKeyPublicKeyReplacementRequest extends Entity implements Si
 		if (this.newKey != null && !this.newKey.equals(newKey))
 			throw new IllegalArgumentException("newKey already assigned! Cannot modify!");
 
-		this.newKey = newKey;
+		if (!equal(this.newKey, newKey))
+			this.newKey = newKey;
 	}
 
 	@Override
@@ -140,19 +142,6 @@ public class UserRepoKeyPublicKeyReplacementRequest extends Entity implements Si
 			);
 		} catch (final IOException x) {
 			throw new RuntimeException(x);
-		}
-	}
-
-	private void debugDump(InputStream in) {
-		try {
-			StringBuilder sb = new StringBuilder();
-			int b;
-			while ((b = in.read()) >= 0) {
-				sb.append(Integer.toHexString(b)).append(' ');
-			}
-			System.out.println(sb);
-		} catch (Exception x) {
-			x.printStackTrace();
 		}
 	}
 

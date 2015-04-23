@@ -1,8 +1,10 @@
 package org.subshare.local;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
+import static org.subshare.local.CryptreeNodeUtil.decrypt;
 import static org.subshare.local.CryptreeNodeUtil.encrypt;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.Collection;
 import java.util.Date;
@@ -88,11 +90,7 @@ public class UserRepoKeyPublicKeyHelper {
 	private void createUserIdentities(final UserRepoKeyPublicKey userRepoKeyPublicKey) {
 		assertNotNull("userRepoKeyPublicKey", userRepoKeyPublicKey);
 
-		final UserIdentityDao uiDao = context.transaction.getDao(UserIdentityDao.class);
 		final PermissionDao pDao = context.transaction.getDao(PermissionDao.class);
-
-		final UserRepoKey userRepoKey = getContext().userRepoKeyRing.getUserRepoKey(userRepoKeyPublicKey.getUserRepoKeyId());
-		final UserRepoKey signingUserRepoKey = userRepoKey != null ? userRepoKey : getUserRepoKeyWithGrantPermissionOrFail();
 
 		final Set<UserRepoKeyPublicKey> forUserRepoKeyPublicKeys = new HashSet<>();
 		for (final Permission permission : pDao.getNonRevokedPermissions(PermissionType.seeUserIdentity))
@@ -104,18 +102,26 @@ public class UserRepoKeyPublicKeyHelper {
 		if (repositoryOwner != null)
 			forUserRepoKeyPublicKeys.add(repositoryOwner.getUserRepoKeyPublicKey());
 
-		for (final UserRepoKeyPublicKey forUserRepoKeyPublicKey : forUserRepoKeyPublicKeys) {
-			final Collection<UserIdentity> userIdentities = uiDao.getUserIdentities(userRepoKeyPublicKey, forUserRepoKeyPublicKey);
-			if (!userIdentities.isEmpty())
-				continue;
+		for (final UserRepoKeyPublicKey forUserRepoKeyPublicKey : forUserRepoKeyPublicKeys)
+			getUserIdentityOrCreate(userRepoKeyPublicKey, forUserRepoKeyPublicKey);
+	}
 
-			final UserIdentity userIdentity = new UserIdentity();
-			userIdentity.setOfUserRepoKeyPublicKey(userRepoKeyPublicKey);
-			userIdentity.setForUserRepoKeyPublicKey(forUserRepoKeyPublicKey);
-			userIdentity.setEncryptedUserIdentityPayloadDtoData(createEncryptedUserIdentityPayloadDtoData(userRepoKeyPublicKey, forUserRepoKeyPublicKey));
-			context.getSignableSigner(signingUserRepoKey).sign(userIdentity);
-			uiDao.makePersistent(userIdentity);
-		}
+	public UserIdentity getUserIdentityOrCreate(final UserRepoKeyPublicKey ofUserRepoKeyPublicKey, UserRepoKeyPublicKey forUserRepoKeyPublicKey) {
+		final UserIdentityDao uiDao = context.transaction.getDao(UserIdentityDao.class);
+		final Collection<UserIdentity> userIdentities = uiDao.getUserIdentities(ofUserRepoKeyPublicKey, forUserRepoKeyPublicKey);
+		if (!userIdentities.isEmpty())
+			return userIdentities.iterator().next();
+
+		final UserRepoKey userRepoKey = getContext().userRepoKeyRing.getUserRepoKey(ofUserRepoKeyPublicKey.getUserRepoKeyId());
+		final UserRepoKey signingUserRepoKey = userRepoKey != null ? userRepoKey : getUserRepoKeyWithGrantPermissionOrFail();
+
+		final UserIdentity userIdentity = new UserIdentity();
+		userIdentity.setOfUserRepoKeyPublicKey(ofUserRepoKeyPublicKey);
+		userIdentity.setForUserRepoKeyPublicKey(forUserRepoKeyPublicKey);
+		userIdentity.setEncryptedUserIdentityPayloadDtoData(createEncryptedUserIdentityPayloadDtoData(ofUserRepoKeyPublicKey, forUserRepoKeyPublicKey));
+		context.getSignableSigner(signingUserRepoKey).sign(userIdentity);
+
+		return uiDao.makePersistent(userIdentity);
 	}
 
 	private UserRepoKey getUserRepoKeyWithGrantPermissionOrFail() {
@@ -144,13 +150,41 @@ public class UserRepoKeyPublicKeyHelper {
 	}
 
 	private byte[] createUserIdentityPayloadDtoData(final UserRepoKeyPublicKey ofUserRepoKeyPublicKey) {
-		final UserIdentityPayloadDto dto = createUserIdentityPayloadDto(ofUserRepoKeyPublicKey);
+		UserIdentityPayloadDto dto = getUserIdentityPayloadDto(ofUserRepoKeyPublicKey);
+
+		if (dto == null)
+			dto = createUserIdentityPayloadDto(ofUserRepoKeyPublicKey);
+
 		final ByteArrayOutputStream out = new ByteArrayOutputStream();
 		new UserIdentityPayloadDtoIo().serialize(dto, out);
 		return out.toByteArray();
 	}
 
-	private UserIdentityPayloadDto createUserIdentityPayloadDto(final UserRepoKeyPublicKey ofUserRepoKeyPublicKey) {
+	public UserIdentityPayloadDto getUserIdentityPayloadDto(final UserRepoKeyPublicKey ofUserRepoKeyPublicKey) {
+		assertNotNull("ofUserRepoKeyPublicKey", ofUserRepoKeyPublicKey);
+		final UserRepoKeyPublicKeyDao userRepoKeyPublicKeyDao = context.transaction.getDao(UserRepoKeyPublicKeyDao.class);
+		final UserIdentityDao userIdentityDao = context.transaction.getDao(UserIdentityDao.class);
+
+		for (final UserRepoKey userRepoKey : context.userRepoKeyRing.getUserRepoKeys(context.serverRepositoryId)) {
+			final UserRepoKeyPublicKey forUserRepoKeyPublicKey = userRepoKeyPublicKeyDao.getUserRepoKeyPublicKey(userRepoKey.getUserRepoKeyId());
+			if (forUserRepoKeyPublicKey == null)
+				continue;
+
+			final Collection<UserIdentity> userIdentities = userIdentityDao.getUserIdentities(ofUserRepoKeyPublicKey, forUserRepoKeyPublicKey);
+			if (userIdentities.isEmpty())
+				continue;
+
+			final UserIdentity userIdentity = userIdentities.iterator().next();
+			final byte[] decrypted = decrypt(userIdentity.getEncryptedUserIdentityPayloadDtoData(), userRepoKey.getKeyPair().getPrivate());
+			final UserIdentityPayloadDtoIo userIdentityPayloadDtoIo = new UserIdentityPayloadDtoIo();
+			final UserIdentityPayloadDto userIdentityPayloadDto = userIdentityPayloadDtoIo.deserialize(new ByteArrayInputStream(decrypted));
+			return userIdentityPayloadDto;
+		}
+
+		return null;
+	}
+
+	protected UserIdentityPayloadDto createUserIdentityPayloadDto(final UserRepoKeyPublicKey ofUserRepoKeyPublicKey) {
 		final User user = context.getUserRegistry().getUserOrFail(ofUserRepoKeyPublicKey.getUserRepoKeyId());
 		final UserIdentityPayloadDto result = new UserIdentityPayloadDto();
 		result.setFirstName(user.getFirstName());

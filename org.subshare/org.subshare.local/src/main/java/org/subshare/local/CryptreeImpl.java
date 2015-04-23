@@ -5,7 +5,6 @@ import static co.codewizards.cloudstore.core.util.Util.doNothing;
 import static org.subshare.local.CryptreeNodeUtil.decrypt;
 import static org.subshare.local.CryptreeNodeUtil.encrypt;
 
-import java.io.ByteArrayInputStream;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
@@ -39,7 +38,6 @@ import org.subshare.core.dto.UserIdentityPayloadDto;
 import org.subshare.core.dto.UserRepoKeyPublicKeyDto;
 import org.subshare.core.dto.UserRepoKeyPublicKeyReplacementRequestDeletionDto;
 import org.subshare.core.dto.UserRepoKeyPublicKeyReplacementRequestDto;
-import org.subshare.core.dto.jaxb.UserIdentityPayloadDtoIo;
 import org.subshare.core.sign.Signature;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKeyPublicKeyLookup;
@@ -402,15 +400,24 @@ public class CryptreeImpl extends AbstractCryptree {
 
 		// Just in case, there are new permissions for the old key, we process them first, too (just like CryptoLinks above).
 		Collection<Permission> permissions = permissionDao.getPermissions(request.getOldKey());
+//		boolean hasSeeUserIdentity = false;
 		for (final Permission permission : permissions) {
 			permission.setUserRepoKeyPublicKey(request.getNewKey());
 			getCryptreeContext().getSignableSigner(oldKeySigningUserRepoKey).sign(permission);
+//			if (PermissionType.seeUserIdentity == permission.getPermissionType())
+//				hasSeeUserIdentity = true;
 		}
 
 		permissions = permissionDao.getPermissionsSignedBy(request.getOldKey().getUserRepoKeyId());
 		for (final Permission permission : permissions)
 			getCryptreeContext().getSignableSigner(oldKeySigningUserRepoKey).sign(permission);
 
+//		final User user = getCryptreeContext().getUserRegistry().getUserOrFail(request.getOldKey().getUserRepoKeyId());
+//		request.getNewKey().getPublicKey()
+//		user.getUserRepoKeyPublicKeys().add(e)
+
+//		if (hasSeeUserIdentity)
+//			transferUserIdentities(request);
 
 		// *** delete the old (invitation) key and its corresponding replacement-request ***
 		UserRepoKeyPublicKeyReplacementRequestDeletion requestDeletion = new UserRepoKeyPublicKeyReplacementRequestDeletion(request);
@@ -421,6 +428,24 @@ public class CryptreeImpl extends AbstractCryptree {
 		requestDeletion = requestDeletionDao.makePersistent(requestDeletion);
 		deleteUserRepoKeyPublicKeyReplacementRequestWithOldKey(request);
 	}
+
+//	private void transferUserIdentities(final UserRepoKeyPublicKeyReplacementRequest request) {
+//		final UserIdentityDao uiDao = getCryptreeContext().transaction.getDao(UserIdentityDao.class);
+//		final Collection<UserIdentity> userIdentities = uiDao.getUserIdentitiesFor(request.getOldKey());
+//		for (final UserIdentity userIdentity : userIdentities) {
+//			final UserIdentityPayloadDto dto = getUserIdentityPayloadDtoOrFail(userIdentity.getOfUserRepoKeyPublicKey().getUserRepoKeyId());
+//			final UserRepoKeyPublicKeyHelper userRepoKeyPublicKeyHelper = new UserRepoKeyPublicKeyHelper(getCryptreeContext()) {
+//				@Override
+//				protected UserIdentityPayloadDto createUserIdentityPayloadDto(final UserRepoKeyPublicKey ofUserRepoKeyPublicKey) {
+//					if (! ofUserRepoKeyPublicKey.equals(userIdentity.getOfUserRepoKeyPublicKey()))
+//						throw new IllegalArgumentException("ofUserRepoKeyPublicKey != userIdentity.ofUserRepoKeyPublicKey");
+//
+//					return dto;
+//				}
+//			};
+//			userRepoKeyPublicKeyHelper.getUserIdentityOrCreate(userIdentity.getOfUserRepoKeyPublicKey(), request.getNewKey());
+//		}
+//	}
 
 	private void putUserRepoKeyPublicKeyReplacementRequestDeletionDto(final UserRepoKeyPublicKeyReplacementRequestDeletionDto requestDeletionDto) {
 		assertNotNull("requestDeletionDto", requestDeletionDto);
@@ -475,26 +500,12 @@ public class CryptreeImpl extends AbstractCryptree {
 		if (ofUserRepoKeyPublicKey == null)
 			throw new IllegalArgumentException("There is no UserRepoKeyPublicKey with userRepoKeyId=" + userRepoKeyId);
 
-		final UserIdentityDao userIdentityDao = getCryptreeContext().transaction.getDao(UserIdentityDao.class);
-
-		final UserRepoKeyRing userRepoKeyRing = getUserRepoKeyRing();
-		for (final UserRepoKey userRepoKey : userRepoKeyRing.getUserRepoKeys(getServerRepositoryIdOrFail())) {
-			final UserRepoKeyPublicKey forUserRepoKeyPublicKey = userRepoKeyPublicKeyDao.getUserRepoKeyPublicKey(userRepoKey.getUserRepoKeyId());
-			if (forUserRepoKeyPublicKey == null)
-				continue;
-
-			final Collection<UserIdentity> userIdentities = userIdentityDao.getUserIdentities(ofUserRepoKeyPublicKey, forUserRepoKeyPublicKey);
-			if (userIdentities.isEmpty())
-				continue;
-
-			final UserIdentity userIdentity = userIdentities.iterator().next();
-			final byte[] decrypted = decrypt(userIdentity.getEncryptedUserIdentityPayloadDtoData(), userRepoKey.getKeyPair().getPrivate());
-			final UserIdentityPayloadDtoIo userIdentityPayloadDtoIo = new UserIdentityPayloadDtoIo();
-			final UserIdentityPayloadDto userIdentityPayloadDto = userIdentityPayloadDtoIo.deserialize(new ByteArrayInputStream(decrypted));
+		final UserRepoKeyPublicKeyHelper helper = new UserRepoKeyPublicKeyHelper(getCryptreeContext());
+		final UserIdentityPayloadDto userIdentityPayloadDto = helper.getUserIdentityPayloadDto(ofUserRepoKeyPublicKey);
+		if (userIdentityPayloadDto != null)
 			return userIdentityPayloadDto;
-		}
-
-		throw new SeeUserIdentityAccessDeniedException();
+		else
+			throw new SeeUserIdentityAccessDeniedException();
 	}
 
 	@Override

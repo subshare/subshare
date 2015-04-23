@@ -83,7 +83,8 @@ public class UserIdentity extends Entity implements WriteProtectedEntity, AutoTr
 		return ofUserRepoKeyPublicKey;
 	}
 	public void setOfUserRepoKeyPublicKey(final UserRepoKeyPublicKey ofUserRepoKeyPublicKey) {
-		this.ofUserRepoKeyPublicKey = ofUserRepoKeyPublicKey;
+		if (!equal(this.ofUserRepoKeyPublicKey, ofUserRepoKeyPublicKey))
+			this.ofUserRepoKeyPublicKey = ofUserRepoKeyPublicKey;
 	}
 
 	/**
@@ -96,14 +97,16 @@ public class UserIdentity extends Entity implements WriteProtectedEntity, AutoTr
 		return forUserRepoKeyPublicKey;
 	}
 	public void setForUserRepoKeyPublicKey(UserRepoKeyPublicKey forUserRepoKeyPublicKey) {
-		this.forUserRepoKeyPublicKey = forUserRepoKeyPublicKey;
+		if (!equal(this.forUserRepoKeyPublicKey, forUserRepoKeyPublicKey))
+			this.forUserRepoKeyPublicKey = forUserRepoKeyPublicKey;
 	}
 
 	public byte[] getEncryptedUserIdentityPayloadDtoData() {
 		return encryptedUserIdentityPayloadDtoData;
 	}
-	public void setEncryptedUserIdentityPayloadDtoData(byte[] encryptedUserIdentityPayloadDto) {
-		this.encryptedUserIdentityPayloadDtoData = encryptedUserIdentityPayloadDto;
+	public void setEncryptedUserIdentityPayloadDtoData(byte[] encryptedUserIdentityPayloadDtoData) {
+		if (!equal(this.encryptedUserIdentityPayloadDtoData, encryptedUserIdentityPayloadDtoData))
+			this.encryptedUserIdentityPayloadDtoData = encryptedUserIdentityPayloadDtoData;
 	}
 
 	@Override
@@ -139,7 +142,8 @@ public class UserIdentity extends Entity implements WriteProtectedEntity, AutoTr
 
 	@Override
 	public void setSignature(Signature signature) {
-		this.signature = SignatureImpl.copy(signature);
+		if (!equal(this.signature, signature))
+			this.signature = SignatureImpl.copy(signature);
 	}
 
 	@Override

@@ -1,6 +1,7 @@
 package org.subshare.local.persistence;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
+import static co.codewizards.cloudstore.core.util.Util.equal;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -80,7 +81,8 @@ public class UserRepoKeyPublicKeyReplacementRequestDeletion extends Entity imple
 
 	@Override
 	public void setSignature(Signature signature) {
-		this.signature = SignatureImpl.copy(signature);
+		if (!equal(this.signature, signature))
+			this.signature = SignatureImpl.copy(signature);
 	}
 
 	@Override
@@ -89,7 +91,8 @@ public class UserRepoKeyPublicKeyReplacementRequestDeletion extends Entity imple
 	}
 	@Override
 	public void setLocalRevision(long localRevision) {
-		this.localRevision = localRevision;
+		if (!equal(this.localRevision, localRevision))
+			this.localRevision = localRevision;
 	}
 
 	@Override

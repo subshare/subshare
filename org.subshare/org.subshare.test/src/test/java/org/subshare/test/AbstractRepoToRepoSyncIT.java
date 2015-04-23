@@ -38,6 +38,7 @@ import co.codewizards.cloudstore.local.persistence.RepoFileDao;
 public abstract class AbstractRepoToRepoSyncIT extends AbstractIT {
 
 	private static final Logger logger = LoggerFactory.getLogger(AbstractRepoToRepoSyncIT.class);
+
 	protected File localSrcRoot;
 	protected File localDestRoot;
 	protected File remoteRoot;
