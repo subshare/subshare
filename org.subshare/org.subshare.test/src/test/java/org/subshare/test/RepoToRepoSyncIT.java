@@ -5,6 +5,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 
+import mockit.Mock;
+import mockit.MockUp;
+
 import org.subshare.core.AccessDeniedException;
 import org.subshare.core.ReadAccessDeniedException;
 import org.subshare.core.WriteAccessDeniedException;
@@ -12,6 +15,7 @@ import org.subshare.core.dto.PermissionType;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKey.PublicKey;
 import org.subshare.core.user.UserRepoKeyRing;
+import org.subshare.local.UserRepoKeyPublicKeyHelper;
 import org.subshare.local.persistence.InvitationUserRepoKeyPublicKey;
 import org.subshare.local.persistence.UserRepoKeyPublicKey;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyDao;
@@ -27,6 +31,18 @@ import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
 public class RepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 
 	private static final Logger logger = LoggerFactory.getLogger(RepoToRepoSyncIT.class);
+
+	@Override
+	public void before() throws Exception {
+		super.before();
+
+		new MockUp<UserRepoKeyPublicKeyHelper>() {
+			@Mock
+			private void createUserIdentities(final UserRepoKeyPublicKey userRepoKeyPublicKey) {
+				// Our mock should do nothing, because we don't have a real UserRegistry here.
+			}
+		};
+	}
 
 	@Test
 	public void syncFromLocalToRemoteToLocal() throws Exception {

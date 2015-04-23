@@ -93,4 +93,23 @@ public class UserRepoKeyPublicKeyReplacementRequestDao extends Dao<UserRepoKeyPu
 			query.closeAll();
 		}
 	}
+
+//	public Collection<UserRepoKeyPublicKeyReplacementRequest> getUserRepoKeyPublicKeyReplacementRequestsForNewKey(UserRepoKeyPublicKey newKey) {
+//		assertNotNull("newKey", newKey);
+//		final Query query = pm().newNamedQuery(getEntityClass(), "getUserRepoKeyPublicKeyReplacementRequests_newKey");
+//		try {
+//			long startTimestamp = System.currentTimeMillis();
+//			@SuppressWarnings("unchecked")
+//			Collection<UserRepoKeyPublicKeyReplacementRequest> requests = (Collection<UserRepoKeyPublicKeyReplacementRequest>) query.execute(newKey);
+//			logger.debug("getUserRepoKeyPublicKeyReplacementRequestsForNewKey: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
+//
+//			startTimestamp = System.currentTimeMillis();
+//			requests = load(requests);
+//			logger.debug("getUserRepoKeyPublicKeyReplacementRequestsForNewKey: Loading result-set with {} elements took {} ms.", requests.size(), System.currentTimeMillis() - startTimestamp);
+//
+//			return requests;
+//		} finally {
+//			query.closeAll();
+//		}
+//	}
 }

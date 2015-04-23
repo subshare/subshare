@@ -43,6 +43,13 @@ public class PermissionIT extends AbstractRepoToRepoSyncIT {
 	public void before() throws Exception {
 		super.before();
 		System.setProperty(Config.SYSTEM_PROPERTY_PREFIX + CryptoConfigUtil.CONFIG_KEY_BACKDATING_MAX_PERMISSION_VALID_TO_AGE, "15000");
+
+		new MockUp<UserRepoKeyPublicKeyHelper>() {
+			@Mock
+			private void createUserIdentities(final UserRepoKeyPublicKey userRepoKeyPublicKey) {
+				// Our mock should do nothing, because we don't have a real UserRegistry here.
+			}
+		};
 	}
 
 	@Override
@@ -53,13 +60,6 @@ public class PermissionIT extends AbstractRepoToRepoSyncIT {
 
 	@Test
 	public void nonOwnerAdminGrantsWritePermission() throws Exception {
-		new MockUp<UserRepoKeyPublicKeyHelper>() {
-			@Mock
-			private void createUserIdentities(final UserRepoKeyPublicKey userRepoKeyPublicKey) {
-				// Our mock should do nothing, because we don't have a real UserRegistry here.
-			}
-		};
-
 		remotePathPrefix2Plain = "/3 + &#ä";
 
 		createLocalSourceAndRemoteRepo();

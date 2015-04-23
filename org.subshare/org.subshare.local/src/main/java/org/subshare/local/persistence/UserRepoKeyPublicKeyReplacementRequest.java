@@ -42,6 +42,7 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 @Queries({
 	@Query(name="getUserRepoKeyPublicKeyReplacementRequest_requestId", value="SELECT UNIQUE WHERE this.requestId == :requestId"),
 	@Query(name="getUserRepoKeyPublicKeyReplacementRequests_oldKey", value="SELECT WHERE this.oldKey == :oldKey"),
+//	@Query(name="getUserRepoKeyPublicKeyReplacementRequests_newKey", value="SELECT WHERE this.newKey == :newKey"),
 	@Query(name="getUserRepoKeyPublicKeyReplacementRequestsChangedAfter_localRevision", value="SELECT WHERE this.localRevision > :localRevision")
 })
 public class UserRepoKeyPublicKeyReplacementRequest extends Entity implements Signable, AutoTrackLocalRevision, StoreCallback {

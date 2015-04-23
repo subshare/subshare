@@ -983,10 +983,15 @@ public class CryptreeNode {
 			) throws SignatureException, AccessDeniedException
 	{
 		assertNotNull("signable", signable);
-		assertNotNull("requiredPermissionType", requiredPermissionType); // TODO we must support write-protected entities not requiring any permission-type, but only behaving like an ordinary Signable. Maybe do this, if this parameter is null?!
+		// requiredPermissionType may be null, because a write-protected entity may not require any permission-type, but only behave like an ordinary Signable.
+
+		// *always* verify signature!
 		context.signableVerifier.verify(signable);
-		final Uid signingUserRepoKeyId = signable.getSignature().getSigningUserRepoKeyId();
-		assertHasPermission(anyCryptoRepoFile, signingUserRepoKeyId, requiredPermissionType, signable.getSignature().getSignatureCreated());
+
+		if (requiredPermissionType != null) { // only check, if a requiredPermissionType was given.
+			final Uid signingUserRepoKeyId = signable.getSignature().getSigningUserRepoKeyId();
+			assertHasPermission(anyCryptoRepoFile, signingUserRepoKeyId, requiredPermissionType, signable.getSignature().getSignatureCreated());
+		}
 	}
 
 	public PermissionSet getPermissionSet() {

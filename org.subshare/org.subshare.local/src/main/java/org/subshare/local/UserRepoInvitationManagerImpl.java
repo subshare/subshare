@@ -304,6 +304,7 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 			grantingUser = createCryptreeAndDetermineGrantingUser(localPath);
 
 			final UserRepoKey invitationUserRepoKey = grantingUser.createInvitationUserRepoKey(user, cryptree.getRemoteRepositoryId(), validityDurationMillis);
+			user.getUserRepoKeyPublicKeys().add(invitationUserRepoKey.getPublicKey());
 			cryptree.grantPermission(localPath, permissionType, invitationUserRepoKey.getPublicKey());
 
 			final RemoteRepositoryDao remoteRepositoryDao = transaction.getDao(RemoteRepositoryDao.class);

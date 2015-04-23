@@ -62,8 +62,11 @@ public abstract class AbstractPermissionTest extends AbstractTest {
 	protected UserRepoKeyRing friend2UserRepoKeyRing;
 	protected UserRepoKey friend2UserRepoKey;
 
+	@Override
 	@Before
 	public void before() throws Exception {
+		super.before();
+
 		createLocalRoot();
 		createRemoteRoot();
 		connectLocalWithRemoteRepository();

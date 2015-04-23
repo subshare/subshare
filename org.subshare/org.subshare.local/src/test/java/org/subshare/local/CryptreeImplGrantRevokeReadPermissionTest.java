@@ -2,14 +2,11 @@ package org.subshare.local;
 
 import static co.codewizards.cloudstore.core.util.Util.doNothing;
 import static org.assertj.core.api.Assertions.fail;
-import mockit.Mock;
-import mockit.MockUp;
 
 import org.subshare.core.Cryptree;
 import org.subshare.core.GrantAccessDeniedException;
 import org.subshare.core.ReadAccessDeniedException;
 import org.subshare.core.user.UserRepoKeyRing;
-import org.subshare.local.persistence.UserRepoKeyPublicKey;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,13 +21,6 @@ public class CryptreeImplGrantRevokeReadPermissionTest extends AbstractPermissio
 
 	@Test
 	public void grantAndRevokeReadPermission() throws Exception {
-		new MockUp<UserRepoKeyPublicKeyHelper>() {
-			@Mock
-			private void createUserIdentities(final UserRepoKeyPublicKey userRepoKeyPublicKey) {
-				// Our mock should do nothing, because we don't have a real UserRegistry here.
-			}
-		};
-
 		final boolean ownerIsAdmin = false; // TODO set to false (or maybe use a random value?) once read-cryptree was extended to support 'grant' functionality)!
 
 		final UserRepoKeyRing adminUserRepoKeyRing = ownerIsAdmin ? ownerUserRepoKeyRing : friend0UserRepoKeyRing;

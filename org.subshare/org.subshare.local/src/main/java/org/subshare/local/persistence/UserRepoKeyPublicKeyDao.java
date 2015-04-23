@@ -65,6 +65,30 @@ public class UserRepoKeyPublicKeyDao extends Dao<UserRepoKeyPublicKey, UserRepoK
 		}
 	}
 
+	@Override
+	public void deletePersistent(final UserRepoKeyPublicKey entity) {
+		deleteDependentObjects(entity);
+		pm().flush();
+		super.deletePersistent(entity);
+	}
+
+	@Override
+	public void deletePersistentAll(final Collection<? extends UserRepoKeyPublicKey> entities) {
+		for (UserRepoKeyPublicKey userRepoKeyPublicKey : entities)
+			deleteDependentObjects(userRepoKeyPublicKey);
+
+		pm().flush();
+		super.deletePersistentAll(entities);
+	}
+
+	protected void deleteDependentObjects(final UserRepoKeyPublicKey userRepoKeyPublicKey) {
+		assertNotNull("userRepoKeyPublicKey", userRepoKeyPublicKey);
+
+		final UserIdentityDao userIdentityDao = getDao(UserIdentityDao.class);
+		userIdentityDao.deletePersistentAll(userIdentityDao.getUserIdentitiesOf(userRepoKeyPublicKey));
+		userIdentityDao.deletePersistentAll(userIdentityDao.getUserIdentitiesFor(userRepoKeyPublicKey));
+	}
+
 //	public UserRepoKeyPublicKey getUserRepoKeyPublicKeyOrCreate(final UserRepoKey.PublicKey publicKey) {
 //		assertNotNull("publicKey", publicKey);
 //		UserRepoKeyPublicKey userRepoKeyPublicKey = getUserRepoKeyPublicKey(publicKey.getUserRepoKeyId());

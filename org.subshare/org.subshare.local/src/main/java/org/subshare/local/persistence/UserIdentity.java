@@ -59,6 +59,12 @@ public class UserIdentity extends Entity implements WriteProtectedEntity, AutoTr
 	@Embedded(nullIndicatorColumn="signatureCreated")
 	private SignatureImpl signature;
 
+	public UserIdentity() { }
+
+	public UserIdentity(final Uid userIdentityId) {
+		this.userIdentityId = userIdentityId == null ? null : userIdentityId.toString();
+	}
+
 	public Uid getUserIdentityId() {
 		if (userIdentityId == null)
 			userIdentityId = new Uid().toString();

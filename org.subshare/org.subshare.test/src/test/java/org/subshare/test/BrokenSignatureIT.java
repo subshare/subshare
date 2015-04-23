@@ -27,6 +27,7 @@ import org.subshare.core.sign.Signature;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKey.PublicKey;
 import org.subshare.core.user.UserRepoKeyRing;
+import org.subshare.local.UserRepoKeyPublicKeyHelper;
 import org.subshare.local.persistence.CryptoKeyDao;
 import org.subshare.local.persistence.CryptoLinkDao;
 import org.subshare.local.persistence.CryptoRepoFile;
@@ -34,6 +35,7 @@ import org.subshare.local.persistence.CryptoRepoFileDao;
 import org.subshare.local.persistence.PermissionDao;
 import org.subshare.local.persistence.PermissionSetDao;
 import org.subshare.local.persistence.PermissionSetInheritanceDao;
+import org.subshare.local.persistence.UserRepoKeyPublicKey;
 import org.subshare.rest.client.transport.CryptreeRepoTransport;
 import org.subshare.rest.server.service.SsWebDavService;
 import org.junit.Test;
@@ -70,6 +72,13 @@ public class BrokenSignatureIT extends AbstractRepoToRepoSyncIT {
 		jmockitShouldBeUsed = false;
 		jmockitWasUsed = false;
 		cryptreeRepoTransport_encryptAndSign_breakSignature = false;
+
+		new MockUp<UserRepoKeyPublicKeyHelper>() {
+			@Mock
+			private void createUserIdentities(final UserRepoKeyPublicKey userRepoKeyPublicKey) {
+				// Our mock should do nothing, because we don't have a real UserRegistry here.
+			}
+		};
 	}
 
 	@Override

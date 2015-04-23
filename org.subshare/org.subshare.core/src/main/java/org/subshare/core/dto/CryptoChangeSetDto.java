@@ -29,6 +29,8 @@ public class CryptoChangeSetDto {
 
 	private List<UserRepoKeyPublicKeyReplacementRequestDeletionDto> userRepoKeyPublicKeyReplacementRequestDeletionDtos;
 
+	private List<UserIdentityDto> userIdentityDtos;
+
 	public List<CryptoRepoFileDto> getCryptoRepoFileDtos() {
 		if (cryptoRepoFileDtos == null)
 			cryptoRepoFileDtos = new ArrayList<>();
@@ -127,6 +129,16 @@ public class CryptoChangeSetDto {
 		this.userRepoKeyPublicKeyReplacementRequestDeletionDtos = userRepoKeyPublicKeyReplacementRequestDeletionDtos;
 	}
 
+	public List<UserIdentityDto> getUserIdentityDtos() {
+		if (userIdentityDtos == null)
+			userIdentityDtos = new ArrayList<>();
+
+		return userIdentityDtos;
+	}
+	public void setUserIdentityDtos(List<UserIdentityDto> userIdentityDtos) {
+		this.userIdentityDtos = userIdentityDtos;
+	}
+
 	@Override
 	public String toString() {
 		return "CryptoChangeSetDto[cryptoRepoFileDtos=" + cryptoRepoFileDtos
@@ -144,7 +156,9 @@ public class CryptoChangeSetDto {
 				&& isEmpty(permissionSetDtos)
 				&& isEmpty(permissionDtos)
 				&& isEmpty(permissionSetInheritanceDtos)
-				&& isEmpty(userRepoKeyPublicKeyReplacementRequestDtos);
+				&& isEmpty(userRepoKeyPublicKeyReplacementRequestDtos)
+				&& isEmpty(userRepoKeyPublicKeyReplacementRequestDeletionDtos)
+				&& isEmpty(userIdentityDtos);
 	}
 
 	private static boolean isEmpty(final Collection<?> c) {

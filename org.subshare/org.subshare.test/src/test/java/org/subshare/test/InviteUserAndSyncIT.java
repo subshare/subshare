@@ -4,7 +4,11 @@ import static co.codewizards.cloudstore.core.oio.OioFileFactory.createFile;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.UUID;
+
+import mockit.Mock;
+import mockit.MockUp;
 
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.pgp.Pgp;
@@ -40,6 +44,9 @@ public class InviteUserAndSyncIT extends AbstractRepoToRepoSyncIT {
 	public static final String PUBRING_FILE_NAME = "pubring.gpg";
 	public static final String SECRING_FILE_NAME = "secring.gpg";
 
+//	@Mocked
+//	private CryptreeContext cryptreeContext;
+
 	private UserRegistry ownerUserRegistry;
 	private User owner;
 	private UserRegistry friendUserRegistry;
@@ -52,6 +59,46 @@ public class InviteUserAndSyncIT extends AbstractRepoToRepoSyncIT {
 	public void before() throws Exception {
 		logger.info("*** >>>>>>>>>>>>>> ***");
 		logger.info("*** >>> before >>> ***");
+
+		new MockUp<UserRegistry>() {
+		    @Mock
+		    UserRegistry getInstance() {
+		    	UserRegistry ur = userRegistry;
+
+		    	String userRegistryName = null;
+
+		    	if (ownerUserRegistry == ur)
+		    		userRegistryName = "ownerUserRegistry";
+
+		    	if (friendUserRegistry == ur)
+		    		userRegistryName = "friendUserRegistry";
+
+		    	logger.warn("Mocked UserRegistry returning userRegistry: {} (={})", ur, userRegistryName);
+		        return ur;
+		    }
+		};
+
+//		new MockUp<CryptreeContext>() {  // TODO WHY THE HELL IS THIS IGNORED?!?!??!!
+//		    @Mock
+//		    UserRegistry getUserRegistry() {
+//		    	logger.warn("mocked CryptreeContext returning userRegistry: " + userRegistry);
+//		        return userRegistry;
+//		    }
+//		};
+
+//		new MockUp<UserRepoKeyPublicKeyHelper>() { // workaround for the above ignorance ... does not work either :-(
+//			@Mock
+//			private UserRegistry getUserRegistry() {
+//				return userRegistry;
+//			}
+//		};
+
+//		new MockUp<UserRepoKeyPublicKeyHelper>() {
+//			@Mock
+//			private void createUserIdentities(final UserRepoKeyPublicKey userRepoKeyPublicKey) {
+//				// TEMPORARY work-around, because the above does not work :-(
+//			}
+//		};
 
 		super.before();
 
@@ -397,14 +444,26 @@ public class InviteUserAndSyncIT extends AbstractRepoToRepoSyncIT {
 
 	protected void switchLocationToOwner() throws Exception {
 		userRegistry = ownerUserRegistry;
+		assignOwnerAndFriendFromCurrentUserRegistry();
 		setupPgp("marco", "test12345");
 		cryptreeRepoTransportFactory.setUserRepoKeyRing(owner.getUserRepoKeyRingOrCreate());
 	}
 
 	protected void switchLocationToFriend() throws Exception {
 		userRegistry = friendUserRegistry;
+		assignOwnerAndFriendFromCurrentUserRegistry();
 		setupPgp("khaled", "test678");
 		cryptreeRepoTransportFactory.setUserRepoKeyRing(friend.getUserRepoKeyRingOrCreate());
+	}
+
+	private void assignOwnerAndFriendFromCurrentUserRegistry() {
+		Collection<User> users = userRegistry.getUsersByEmail(owner.getEmails().get(0));
+		assertThat(users).hasSize(1);
+		owner = users.iterator().next();
+
+		users = userRegistry.getUsersByEmail(friend.getEmails().get(0));
+		assertThat(users).hasSize(1);
+		friend = users.iterator().next();
 	}
 
 	protected UserRepoInvitationToken createUserRepoInvitationToken(final String localPath, PermissionType permissionType) {

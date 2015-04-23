@@ -11,12 +11,17 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.UUID;
 
+import mockit.Mock;
+import mockit.MockUp;
+
 import org.subshare.core.Cryptree;
 import org.subshare.core.CryptreeFactoryRegistry;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.user.User;
 import org.subshare.core.user.UserRegistry;
 import org.subshare.core.user.UserRepoKeyRing;
+import org.subshare.local.persistence.UserRepoKeyPublicKey;
+import org.junit.Before;
 
 import co.codewizards.cloudstore.core.config.ConfigDir;
 import co.codewizards.cloudstore.core.dto.Uid;
@@ -71,6 +76,16 @@ public abstract class AbstractTest {
 		public synchronized Collection<User> getUsers() {
 			return Collections.singleton(user);
 		}
+	}
+
+	@Before
+	public void before() throws Exception {
+		new MockUp<UserRepoKeyPublicKeyHelper>() {
+			@Mock
+			private void createUserIdentities(final UserRepoKeyPublicKey userRepoKeyPublicKey) {
+				// Our mock should do nothing, because we don't have a real UserRegistry here.
+			}
+		};
 	}
 
 //	protected static UserRepoKey createUserRepoKey(final UserRepoKeyRing userRepoKeyRing, final UUID repositoryId) {

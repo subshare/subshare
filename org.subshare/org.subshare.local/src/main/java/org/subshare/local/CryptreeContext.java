@@ -1,7 +1,7 @@
 package org.subshare.local;
 
-import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static co.codewizards.cloudstore.core.oio.OioFileFactory.createFile;
+import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -10,6 +10,7 @@ import java.util.UUID;
 import org.subshare.core.Cryptree;
 import org.subshare.core.sign.SignableSigner;
 import org.subshare.core.sign.SignableVerifier;
+import org.subshare.core.user.UserRegistry;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKeyRing;
 import org.subshare.local.persistence.CryptoRepoFile;
@@ -71,6 +72,10 @@ public class CryptreeContext {
 			throw new IllegalArgumentException(String.format(
 					"userRepoKeyRing.getUserRepoKeys(serverRepositoryId).isEmpty() :: serverRepositoryId=%s",
 					serverRepositoryId));
+	}
+
+	public UserRegistry getUserRegistry() {
+		return UserRegistry.getInstance();
 	}
 
 	public CryptreeNode getCryptreeNodeOrCreate(String localPath) {
@@ -143,6 +148,14 @@ public class CryptreeContext {
 		if (repositoryOwner == null) {
 			final RepositoryOwnerDao roDao = transaction.getDao(RepositoryOwnerDao.class);
 			repositoryOwner = roDao.getRepositoryOwnerOrFail(serverRepositoryId);
+		}
+		return repositoryOwner;
+	}
+
+	public RepositoryOwner getRepositoryOwner() {
+		if (repositoryOwner == null) {
+			final RepositoryOwnerDao roDao = transaction.getDao(RepositoryOwnerDao.class);
+			repositoryOwner = roDao.getRepositoryOwner(serverRepositoryId);
 		}
 		return repositoryOwner;
 	}
@@ -250,5 +263,4 @@ public class CryptreeContext {
 		final RepoFile repoFile = repoFileDao.getRepoFile(localRepoManager.getLocalRoot(), createFile(localRepoManager.getLocalRoot(), localPath));
 		return repoFile;
 	}
-
 }

@@ -20,6 +20,7 @@ import org.subshare.core.user.UserRepoKeyRing;
 import org.subshare.local.persistence.InvitationUserRepoKeyPublicKey;
 import org.subshare.local.persistence.Permission;
 import org.subshare.local.persistence.PermissionDao;
+import org.subshare.local.persistence.RepositoryOwner;
 import org.subshare.local.persistence.UserIdentity;
 import org.subshare.local.persistence.UserIdentityDao;
 import org.subshare.local.persistence.UserRepoKeyPublicKey;
@@ -66,6 +67,26 @@ public class UserRepoKeyPublicKeyHelper {
 		return userRepoKeyPublicKey;
 	}
 
+	public void createMissingUserIdentities() {
+		boolean hasGrantPermission;
+		try {
+			getUserRepoKeyWithGrantPermissionOrFail();
+			hasGrantPermission = true;
+		} catch (GrantAccessDeniedException x) {
+			hasGrantPermission = false;
+		}
+
+		final UserRepoKeyPublicKeyDao urkpkDao = context.transaction.getDao(UserRepoKeyPublicKeyDao.class);
+		for (UserRepoKeyPublicKey userRepoKeyPublicKey : urkpkDao.getObjects()) {
+			if (! hasGrantPermission) {
+				final UserRepoKey userRepoKey = getContext().userRepoKeyRing.getUserRepoKey(userRepoKeyPublicKey.getUserRepoKeyId());
+				if (userRepoKey == null)
+					continue;
+			}
+			createUserIdentities(userRepoKeyPublicKey);
+		}
+	}
+
 	private void createUserIdentities(final UserRepoKeyPublicKey userRepoKeyPublicKey) {
 		assertNotNull("userRepoKeyPublicKey", userRepoKeyPublicKey);
 
@@ -79,7 +100,17 @@ public class UserRepoKeyPublicKeyHelper {
 		for (final Permission permission : pDao.getNonRevokedPermissions(PermissionType.seeUserIdentity))
 			forUserRepoKeyPublicKeys.add(permission.getUserRepoKeyPublicKey());
 
+		// During the invitation hand-shake of a new user, the new user's repository does not have a repository-owner, yet.
+		// Thus, the creation of the corresponding UserIdentity must be postponed.
+		final RepositoryOwner repositoryOwner = context.getRepositoryOwner();
+		if (repositoryOwner != null)
+			forUserRepoKeyPublicKeys.add(repositoryOwner.getUserRepoKeyPublicKey());
+
 		for (final UserRepoKeyPublicKey forUserRepoKeyPublicKey : forUserRepoKeyPublicKeys) {
+			final Collection<UserIdentity> userIdentities = uiDao.getUserIdentities(userRepoKeyPublicKey, forUserRepoKeyPublicKey);
+			if (!userIdentities.isEmpty())
+				continue;
+
 			final UserIdentity userIdentity = new UserIdentity();
 			userIdentity.setOfUserRepoKeyPublicKey(userRepoKeyPublicKey);
 			userIdentity.setForUserRepoKeyPublicKey(forUserRepoKeyPublicKey);
@@ -87,7 +118,6 @@ public class UserRepoKeyPublicKeyHelper {
 			context.getSignableSigner(signingUserRepoKey).sign(userIdentity);
 			uiDao.makePersistent(userIdentity);
 		}
-
 	}
 
 	private UserRepoKey getUserRepoKeyWithGrantPermissionOrFail() {
@@ -139,7 +169,7 @@ public class UserRepoKeyPublicKeyHelper {
 
 	private User getUser(final Uid userRepoKeyId) {
 		assertNotNull("userRepoKeyId", userRepoKeyId);
-		for (final User user : UserRegistry.getInstance().getUsers()) {
+		for (final User user : getUserRegistry().getUsers()) {
 			final UserRepoKeyRing userRepoKeyRing = user.getUserRepoKeyRing();
 			if (userRepoKeyRing != null) {
 				if (userRepoKeyRing.getUserRepoKey(userRepoKeyId) != null)
@@ -155,4 +185,7 @@ public class UserRepoKeyPublicKeyHelper {
 		return null;
 	}
 
+	private UserRegistry getUserRegistry() {
+		return context.getUserRegistry();
+	}
 }
