@@ -22,6 +22,7 @@ import org.subshare.core.user.UserRepoInvitationManager;
 import org.subshare.core.user.UserRepoInvitationToken;
 import org.subshare.core.user.UserRepoKeyRing;
 import org.subshare.local.persistence.InvitationUserRepoKeyPublicKey;
+import org.subshare.local.persistence.UserIdentityDao;
 import org.subshare.local.persistence.UserRepoKeyPublicKey;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyDao;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyReplacementRequestDao;
@@ -133,16 +134,21 @@ public class InviteUserAndSyncIT extends AbstractRepoToRepoSyncIT {
 		syncFromLocalSrcToRemote();
 		determineRemotePathPrefix2Encrypted();
 
-		assertInvitationUserRepoKeyPublicKeyIs(localSrcRoot, 0);
+		assertInvitationUserRepoKeyPublicKeyInRepoIs(localSrcRoot, 0);
+		assertUserIdentityInRepoIs(localSrcRoot, 1);
+
+		assertUserIdentityInRepoIs(remoteRoot, 1);
 
 		UserRepoInvitationToken userRepoInvitationToken = createUserRepoInvitationToken("", PermissionType.write);
 
-		assertInvitationUserRepoKeyPublicKeyIs(localSrcRoot, 1);
+		assertInvitationUserRepoKeyPublicKeyInRepoIs(localSrcRoot, 1);
+		assertUserIdentityInRepoIs(localSrcRoot, 2);
 
 		// We *must* sync again, otherwise the invitation is meaningless: The invitation-UserRepoKey is not yet in the remote DB,
 		// thus neither in the local destination and thus it cannot be used to decrypt the crypto-links.
 		syncFromLocalSrcToRemote();
 
+		assertUserIdentityInRepoIs(remoteRoot, 2);
 
 		// *** FRIEND machine with friend's repository ***
 		switchLocationToFriend();
@@ -152,14 +158,16 @@ public class InviteUserAndSyncIT extends AbstractRepoToRepoSyncIT {
 //		createUserRepoKeyRing(remoteRepositoryId);
 		// Importing the invitation with the temporary key causes a permanent key to be generated and a request
 		// to replace the temporary key by the permanent one.
-		assertInvitationUserRepoKeyPublicKeyIs(localDestRoot, 0);
+		assertInvitationUserRepoKeyPublicKeyInRepoIs(localDestRoot, 0);
 		assertReplacementRequestInRepoIs(localDestRoot, 0);
+		assertUserIdentityInRepoIs(localDestRoot, 0);
 
 		importUserRepoInvitationToken(userRepoInvitationToken);
 
-		assertInvitationUserRepoKeyPublicKeyIs(localDestRoot, 1);
+		assertInvitationUserRepoKeyPublicKeyInRepoIs(localDestRoot, 1);
 		assertReplacementRequestInRepoIs(localDestRoot, 1);
 		assertReplacementRequestDeletionInRepoIs(localDestRoot, 0);
+		assertUserIdentityInRepoIs(localDestRoot, 0);
 
 		assertReplacementRequestInRepoIs(remoteRoot, 0);
 
@@ -172,9 +180,12 @@ public class InviteUserAndSyncIT extends AbstractRepoToRepoSyncIT {
 		File destFile2xxxreverse = createFileWithRandomContent(localDestRoot, "2/xxxreverse");
 
 		// Make sure, our replacement request really arrived on the server.
-		assertInvitationUserRepoKeyPublicKeyIs(remoteRoot, 1);
+		assertInvitationUserRepoKeyPublicKeyInRepoIs(remoteRoot, 1);
 		assertReplacementRequestInRepoIs(remoteRoot, 1);
 		assertReplacementRequestDeletionInRepoIs(remoteRoot, 0);
+
+		assertUserIdentityInRepoIs(localDestRoot, 3);
+		assertUserIdentityInRepoIs(remoteRoot, 3);
 
 		// Now we sync 'destFile2xxxreverse' up to the server.
 		syncFromRemoteToLocalDest(false);
@@ -184,9 +195,10 @@ public class InviteUserAndSyncIT extends AbstractRepoToRepoSyncIT {
 		switchLocationToOwner();
 
 		// ...but is not yet in source repo.
-		assertInvitationUserRepoKeyPublicKeyIs(localSrcRoot, 1);
+		assertInvitationUserRepoKeyPublicKeyInRepoIs(localSrcRoot, 1);
 		assertReplacementRequestInRepoIs(localSrcRoot, 0);
 		assertReplacementRequestDeletionInRepoIs(localSrcRoot, 0);
+		assertUserIdentityInRepoIs(localSrcRoot, 2);
 
 		File srcFile2xxxreverse = createFile(localSrcRoot, "2/xxxreverse");
 		assertThat(srcFile2xxxreverse.exists()).isFalse(); // should not yet exist
@@ -201,15 +213,17 @@ public class InviteUserAndSyncIT extends AbstractRepoToRepoSyncIT {
 		assertThat(IOUtil.compareFiles(srcFile2xxxreverse, destFile2xxxreverse)).isTrue();
 
 		// ...and now it is already deleted and replaced by an appropriate deletion object.
-		assertInvitationUserRepoKeyPublicKeyIs(localSrcRoot, 0);
+		assertInvitationUserRepoKeyPublicKeyInRepoIs(localSrcRoot, 0);
 		assertReplacementRequestInRepoIs(localSrcRoot, 0);
 		assertReplacementRequestDeletionInRepoIs(localSrcRoot, 1);
+		assertUserIdentityInRepoIs(localSrcRoot, 2); // the one from the invitation should be deleted => 2 instead of 3
 
 
 		// the deletion should already be synced to the server
-		assertInvitationUserRepoKeyPublicKeyIs(remoteRoot, 0);
+		assertInvitationUserRepoKeyPublicKeyInRepoIs(remoteRoot, 0);
 		assertReplacementRequestInRepoIs(remoteRoot, 0);
 		assertReplacementRequestDeletionInRepoIs(remoteRoot, 1);
+		assertUserIdentityInRepoIs(remoteRoot, 2); // the one from the invitation should be deleted => 2 instead of 3
 
 
 		// *** FRIEND machine with friend's repository ***
@@ -221,9 +235,10 @@ public class InviteUserAndSyncIT extends AbstractRepoToRepoSyncIT {
 
 		syncFromRemoteToLocalDest();
 
-		assertInvitationUserRepoKeyPublicKeyIs(localDestRoot, 0);
+		assertInvitationUserRepoKeyPublicKeyInRepoIs(localDestRoot, 0);
 		assertReplacementRequestInRepoIs(localDestRoot, 0);
 		assertReplacementRequestDeletionInRepoIs(localDestRoot, 1);
+		assertUserIdentityInRepoIs(localDestRoot, 2); // the one from the invitation should be deleted => 2 instead of 3
 
 		if (destFile2ccc != null) {
 			assertThat(destFile2ccc.exists()).isTrue();
@@ -247,11 +262,11 @@ public class InviteUserAndSyncIT extends AbstractRepoToRepoSyncIT {
 		syncFromLocalSrcToRemote();
 		determineRemotePathPrefix2Encrypted();
 
-		assertInvitationUserRepoKeyPublicKeyIs(localSrcRoot, 0);
+		assertInvitationUserRepoKeyPublicKeyInRepoIs(localSrcRoot, 0);
 
 		UserRepoInvitationToken userRepoInvitationToken = createUserRepoInvitationToken("", PermissionType.read);
 
-		assertInvitationUserRepoKeyPublicKeyIs(localSrcRoot, 1);
+		assertInvitationUserRepoKeyPublicKeyInRepoIs(localSrcRoot, 1);
 
 		// We *must* sync again, otherwise the invitation is meaningless: The invitation-UserRepoKey is not yet in the remote DB,
 		// thus neither in the local destination and thus it cannot be used to decrypt the crypto-links.
@@ -266,12 +281,12 @@ public class InviteUserAndSyncIT extends AbstractRepoToRepoSyncIT {
 //		createUserRepoKeyRing(remoteRepositoryId);
 		// Importing the invitation with the temporary key causes a permanent key to be generated and a request
 		// to replace the temporary key by the permanent one.
-		assertInvitationUserRepoKeyPublicKeyIs(localDestRoot, 0);
+		assertInvitationUserRepoKeyPublicKeyInRepoIs(localDestRoot, 0);
 		assertReplacementRequestInRepoIs(localDestRoot, 0);
 
 		importUserRepoInvitationToken(userRepoInvitationToken);
 
-		assertInvitationUserRepoKeyPublicKeyIs(localDestRoot, 1);
+		assertInvitationUserRepoKeyPublicKeyInRepoIs(localDestRoot, 1);
 		assertReplacementRequestInRepoIs(localDestRoot, 1);
 		assertReplacementRequestDeletionInRepoIs(localDestRoot, 0);
 
@@ -283,7 +298,7 @@ public class InviteUserAndSyncIT extends AbstractRepoToRepoSyncIT {
 		syncFromRemoteToLocalDest();
 
 		// Make sure, our replacement request really arrived on the server.
-		assertInvitationUserRepoKeyPublicKeyIs(remoteRoot, 1);
+		assertInvitationUserRepoKeyPublicKeyInRepoIs(remoteRoot, 1);
 		assertReplacementRequestInRepoIs(remoteRoot, 1);
 		assertReplacementRequestDeletionInRepoIs(remoteRoot, 0);
 
@@ -292,7 +307,7 @@ public class InviteUserAndSyncIT extends AbstractRepoToRepoSyncIT {
 		switchLocationToOwner();
 
 		// ...but is not yet in source repo.
-		assertInvitationUserRepoKeyPublicKeyIs(localSrcRoot, 1);
+		assertInvitationUserRepoKeyPublicKeyInRepoIs(localSrcRoot, 1);
 		assertReplacementRequestInRepoIs(localSrcRoot, 0);
 		assertReplacementRequestDeletionInRepoIs(localSrcRoot, 0);
 
@@ -303,13 +318,13 @@ public class InviteUserAndSyncIT extends AbstractRepoToRepoSyncIT {
 		syncFromLocalSrcToRemote();
 
 		// ...and now it is already deleted and replaced by an appropriate deletion object.
-		assertInvitationUserRepoKeyPublicKeyIs(localSrcRoot, 0);
+		assertInvitationUserRepoKeyPublicKeyInRepoIs(localSrcRoot, 0);
 		assertReplacementRequestInRepoIs(localSrcRoot, 0);
 		assertReplacementRequestDeletionInRepoIs(localSrcRoot, 1);
 
 
 		// the deletion should already be synced to the server
-		assertInvitationUserRepoKeyPublicKeyIs(remoteRoot, 0);
+		assertInvitationUserRepoKeyPublicKeyInRepoIs(remoteRoot, 0);
 		assertReplacementRequestInRepoIs(remoteRoot, 0);
 		assertReplacementRequestDeletionInRepoIs(remoteRoot, 1);
 
@@ -323,7 +338,7 @@ public class InviteUserAndSyncIT extends AbstractRepoToRepoSyncIT {
 
 		syncFromRemoteToLocalDest();
 
-		assertInvitationUserRepoKeyPublicKeyIs(localDestRoot, 0);
+		assertInvitationUserRepoKeyPublicKeyInRepoIs(localDestRoot, 0);
 		assertReplacementRequestInRepoIs(localDestRoot, 0);
 		assertReplacementRequestDeletionInRepoIs(localDestRoot, 1);
 
@@ -513,7 +528,7 @@ public class InviteUserAndSyncIT extends AbstractRepoToRepoSyncIT {
 		}
 	}
 
-	protected void assertInvitationUserRepoKeyPublicKeyIs(File repoRoot, long expectedCount) {
+	protected void assertInvitationUserRepoKeyPublicKeyInRepoIs(File repoRoot, long expectedCount) {
 		try (final LocalRepoManager localRepoManager = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(repoRoot);)
 		{
 			try (final LocalRepoTransaction transaction = localRepoManager.beginReadTransaction();)
@@ -526,6 +541,19 @@ public class InviteUserAndSyncIT extends AbstractRepoToRepoSyncIT {
 				}
 
 				assertThat(count).isEqualTo(expectedCount);
+
+				transaction.commit();
+			}
+		}
+	}
+
+	protected void assertUserIdentityInRepoIs(File repoRoot, long expectedCount) {
+		try (final LocalRepoManager localRepoManager = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(repoRoot);)
+		{
+			try (final LocalRepoTransaction transaction = localRepoManager.beginReadTransaction();)
+			{
+				UserIdentityDao dao = transaction.getDao(UserIdentityDao.class);
+				assertThat(dao.getObjectsCount()).isEqualTo(expectedCount);
 
 				transaction.commit();
 			}
