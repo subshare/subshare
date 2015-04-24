@@ -77,4 +77,27 @@ public class UserIdentityDao extends Dao<UserIdentity, UserIdentityDao> {
 			query.closeAll();
 		}
 	}
+
+	@Override
+	public void deletePersistent(UserIdentity entity) {
+		deleteDependentObjects(entity);
+		pm().flush();
+		super.deletePersistent(entity);
+	}
+
+	@Override
+	public void deletePersistentAll(Collection<? extends UserIdentity> entities) {
+		for (UserIdentity userIdentity : entities)
+			deleteDependentObjects(userIdentity);
+
+		pm().flush();
+		super.deletePersistentAll(entities);
+	}
+
+	protected void deleteDependentObjects(final UserIdentity userIdentity) {
+		assertNotNull("userIdentity", userIdentity);
+
+		final UserIdentityLinkDao userIdentityLinkDao = getDao(UserIdentityLinkDao.class);
+		userIdentityLinkDao.deletePersistentAll(userIdentityLinkDao.getUserIdentityLinksOf(userIdentity));
+	}
 }

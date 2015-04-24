@@ -5,11 +5,13 @@ import static co.codewizards.cloudstore.core.util.Util.doNothing;
 import static org.subshare.local.CryptreeNodeUtil.decrypt;
 import static org.subshare.local.CryptreeNodeUtil.encrypt;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -40,7 +42,9 @@ import org.subshare.core.dto.UserRepoKeyPublicKeyDto;
 import org.subshare.core.dto.UserRepoKeyPublicKeyReplacementRequestDeletionDto;
 import org.subshare.core.dto.UserRepoKeyPublicKeyReplacementRequestDto;
 import org.subshare.core.sign.Signature;
+import org.subshare.core.user.User;
 import org.subshare.core.user.UserRepoKey;
+import org.subshare.core.user.UserRepoKeyPublicKeyDtoWithSignatureConverter;
 import org.subshare.core.user.UserRepoKeyPublicKeyLookup;
 import org.subshare.core.user.UserRepoKeyRing;
 import org.subshare.local.dto.UserIdentityDtoConverter;
@@ -305,6 +309,8 @@ public class CryptreeImpl extends AbstractCryptree {
 
 		for (UserRepoKeyPublicKeyReplacementRequestDeletionDto requestDeletionDto : cryptoChangeSetDto.getUserRepoKeyPublicKeyReplacementRequestDeletionDtos())
 			putUserRepoKeyPublicKeyReplacementRequestDeletionDto(requestDeletionDto);
+
+		getCryptreeContext().getUserRegistry().writeIfNeeded();
 	}
 
 	private void processUserRepoKeyPublicKeyReplacementRequests() {
@@ -419,9 +425,19 @@ public class CryptreeImpl extends AbstractCryptree {
 		for (final Permission permission : permissions)
 			getCryptreeContext().getSignableSigner(oldKeySigningUserRepoKey).sign(permission);
 
-//		final User user = getCryptreeContext().getUserRegistry().getUserOrFail(request.getOldKey().getUserRepoKeyId());
-//		request.getNewKey().getPublicKey()
-//		user.getUserRepoKeyPublicKeys().add(e)
+		// TODO extract this into a separate method (and maybe not only this!)
+		final User user = getCryptreeContext().getUserRegistry().getUserOrFail(request.getOldKey().getUserRepoKeyId());
+		final UserIdentityPayloadDto userIdentityPayloadDto = getUserIdentityPayloadDtoOrFail(request.getNewKey().getUserRepoKeyId());
+		UserRepoKeyPublicKeyDtoWithSignatureConverter urkpkConverter = new UserRepoKeyPublicKeyDtoWithSignatureConverter();
+		UserRepoKey.PublicKeyWithSignature newPublicKey = urkpkConverter.fromUserRepoKeyPublicKeyDto(userIdentityPayloadDto.getUserRepoKeyPublicKeyDto());
+		assertNotNull("newPublicKey", newPublicKey);
+		final List<UserRepoKey.PublicKeyWithSignature> oldPublicKeys = new ArrayList<>();
+		for (final UserRepoKey.PublicKeyWithSignature pk : user.getUserRepoKeyPublicKeys()) {
+			if (pk.getUserRepoKeyId().equals(request.getOldKey().getUserRepoKeyId()))
+				oldPublicKeys.add(pk);
+		}
+		user.getUserRepoKeyPublicKeys().removeAll(oldPublicKeys);
+		user.getUserRepoKeyPublicKeys().add(newPublicKey);
 
 //		if (hasSeeUserIdentity)
 //			transferUserIdentities(request);
@@ -487,6 +503,22 @@ public class CryptreeImpl extends AbstractCryptree {
 		userIdentity.setSignature(userIdentityDto.getSignature());
 
 		userIdentity = uiDao.makePersistent(userIdentity);
+
+		deleteOtherUserIdentitiesOfSameUserRepoKeyPublicKey(userIdentity);
+	}
+
+	private void deleteOtherUserIdentitiesOfSameUserRepoKeyPublicKey(final UserIdentity userIdentity) {
+		assertNotNull("userIdentity", userIdentity);
+		final LocalRepoTransaction transaction = getTransactionOrFail();
+		final UserIdentityDao uiDao = transaction.getDao(UserIdentityDao.class);
+//		final UserIdentityLinkDao uilDao = transaction.getDao(UserIdentityLinkDao.class);
+		final Collection<UserIdentity> userIdentities = uiDao.getUserIdentitiesOf(userIdentity.getOfUserRepoKeyPublicKey());
+		for (final UserIdentity ui : userIdentities) {
+			if (! ui.equals(userIdentity))
+				uiDao.deletePersistent(ui);
+//				uilDao.deletePersistentAll(uilDao.getUserIdentityLinksOf(ui));
+
+		}
 	}
 
 	private void putUserIdentityLinkDto(UserIdentityLinkDto userIdentityLinkDto) {
@@ -506,6 +538,13 @@ public class CryptreeImpl extends AbstractCryptree {
 		userIdentityLink.setSignature(userIdentityLinkDto.getSignature());
 
 		userIdentityLink = uilDao.makePersistent(userIdentityLink);
+
+		// TODO automatically update user in userRegistry?!
+//		final UserRepoKey userRepoKey = cryptreeContext.userRepoKeyRing.getUserRepoKey(userIdentityLink.getForUserRepoKeyPublicKey().getUserRepoKeyId());
+//		if (userRepoKey != null) {
+//			final UserIdentityPayloadDto userIdentityPayloadDto = getUserIdentityPayloadDtoOrFail(userIdentityLink.getUserIdentity().getOfUserRepoKeyPublicKey().getUserRepoKeyId());
+//			cryptreeContext.getUserRegistry().getUser
+//		}
 	}
 
 	private void deleteUserRepoKeyPublicKeyReplacementRequestWithOldKey(final UserRepoKeyPublicKeyReplacementRequest request) {

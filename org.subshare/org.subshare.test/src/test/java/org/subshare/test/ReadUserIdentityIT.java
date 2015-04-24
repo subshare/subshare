@@ -7,7 +7,7 @@ import org.subshare.core.user.UserRepoInvitationToken;
 import org.subshare.core.user.UserRepoKey;
 import org.junit.Test;
 
-public class SeeUserIdentityIT extends AbstractUserRegistryIT {
+public class ReadUserIdentityIT extends AbstractUserRegistryIT {
 
 	@Test
 	public void inviteWithReadInvitationAndGrantSeeUserIdentityPermissionLater() throws Exception {
@@ -64,10 +64,10 @@ public class SeeUserIdentityIT extends AbstractUserRegistryIT {
 		// sync down after granting - the permission granted to the invitation-key should be transferred to the new, permanent key.
 		syncFromLocalSrcToRemote();
 
-//		// We expect the sync to have replaced the key in our user-registry. // TODO really?! maybe this is not such a good idea as it would require a PublicKey*WithSignature* which we don't have right now. or maybe it is a good idea?! so that we are able to add users from the repo alone, without a key-server, as long as we have their OpenPGP key?!
-//		assertThat(friend.getUserRepoKeyPublicKeys()).hasSize(1);
-//		UserRepoKey.PublicKeyWithSignature friendPublicKeyPermanent = friend.getUserRepoKeyPublicKeys().get(0);
-//		assertThat(friendPublicKeyPermanent.isInvitation()).isFalse();
+		// We expect the sync to have replaced the key in our user-registry.
+		assertThat(friend.getUserRepoKeyPublicKeys()).hasSize(1);
+		UserRepoKey.PublicKeyWithSignature friendPublicKeyPermanent = friend.getUserRepoKeyPublicKeys().get(0);
+		assertThat(friendPublicKeyPermanent.isInvitation()).isFalse();
 
 
 		// *** FRIEND machine with friend's repository ***
@@ -78,20 +78,20 @@ public class SeeUserIdentityIT extends AbstractUserRegistryIT {
 		assertUserIdentitiesReadable(localDestRoot);
 
 
-//		// *** OWNER machine with owner's repository ***
-//		switchLocationToOwner();
-//
-//		revokePermission("", PermissionType.readUserIdentity, friendPublicKeyPermanent);
-//
-//		syncFromLocalSrcToRemote();
-//
-//
-//		// *** FRIEND machine with friend's repository ***
-//		switchLocationToFriend();
-//
-//		syncFromRemoteToLocalDest();
-//
-//		assertUserIdentitiesNotReadable(localDestRoot);
+		// *** OWNER machine with owner's repository ***
+		switchLocationToOwner();
+
+		revokePermission("", PermissionType.readUserIdentity, friendPublicKeyPermanent);
+
+		syncFromLocalSrcToRemote();
+
+
+		// *** FRIEND machine with friend's repository ***
+		switchLocationToFriend();
+
+		syncFromRemoteToLocalDest();
+
+		assertUserIdentitiesNotReadable(localDestRoot);
 	}
 
 }

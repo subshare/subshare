@@ -52,6 +52,8 @@ import org.subshare.local.persistence.PermissionSet;
 import org.subshare.local.persistence.PermissionSetDao;
 import org.subshare.local.persistence.PermissionSetInheritance;
 import org.subshare.local.persistence.RepositoryOwner;
+import org.subshare.local.persistence.UserIdentityLink;
+import org.subshare.local.persistence.UserIdentityLinkDao;
 import org.subshare.local.persistence.UserRepoKeyPublicKey;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyDao;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyReplacementRequestDao;
@@ -630,7 +632,7 @@ public class CryptreeNode {
 			ensureParentHasAsymmetricActiveSubdirKey();
 
 		if (PermissionType.readUserIdentity == permissionType)
-			createUserIdentitiesVisibleFor(userRepoKeyPublicKey);
+			createUserIdentityLinksVisibleFor(userRepoKeyPublicKey);
 	}
 
 	public void setPermissionsInherited(final boolean inherited) {
@@ -733,8 +735,6 @@ public class CryptreeNode {
 
 			// Revoke grant permission - technically not really needed but it makes no sense to manage invisible/unknown users.
 			revokeGrantPermissionOfAllCryptoRepoFiles(userRepoKeyIds);
-			for (Uid userRepoKeyId : userRepoKeyIds)
-				removeUserIdentitiesVisibleFor(userRepoKeyId);
 		}
 
 		if (PermissionType.read == permissionType) {
@@ -765,14 +765,31 @@ public class CryptreeNode {
 			sign(permission);
 			assertPermissionOk(permission);
 		}
+
+		if (PermissionType.readUserIdentity == permissionType) {
+			if (existsAtLeastOneUserIdentityLinkFor(userRepoKeyIds))
+				new UserRepoKeyPublicKeyHelper(getContext()).removeUserIdentityLinksAfterRevokingReadUserIdentityPermission();
+		}
 	}
 
-	private void createUserIdentitiesVisibleFor(final UserRepoKeyPublicKey userRepoKeyPublicKey) {
-
+	private void createUserIdentityLinksVisibleFor(final UserRepoKeyPublicKey userRepoKeyPublicKey) {
+		// Not necessary, because UserRepoKeyPublicKeyHelper.createMissingUserIdentities() is invoked in every sync.
 	}
 
-	private void removeUserIdentitiesVisibleFor(Uid userRepoKeyId) {
+	private boolean existsAtLeastOneUserIdentityLinkFor(final Set<Uid> userRepoKeyIds) {
+		assertNotNull("userRepoKeyIds", userRepoKeyIds);
 
+		final UserRepoKeyPublicKeyDao urkpkDao = getContext().transaction.getDao(UserRepoKeyPublicKeyDao.class);
+		final UserIdentityLinkDao uilDao = getContext().transaction.getDao(UserIdentityLinkDao.class);
+
+		for (Uid userRepoKeyId : userRepoKeyIds) {
+			final UserRepoKeyPublicKey forUserRepoKeyPublicKey = urkpkDao.getUserRepoKeyPublicKeyOrFail(userRepoKeyId);
+			final Collection<UserIdentityLink> userIdentityLinks = uilDao.getUserIdentityLinksFor(forUserRepoKeyPublicKey);
+			if (! userIdentityLinks.isEmpty())
+				return true;
+		}
+
+		return false;
 	}
 
 	private void revokeGrantPermissionOfAllCryptoRepoFiles(final Set<Uid> userRepoKeyIds) {

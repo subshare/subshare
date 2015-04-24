@@ -16,9 +16,6 @@ public class UserRepoKeyPublicKeyReplacementRequestDeletionDto {
 	@XmlElement
 	private SignatureDto signatureDto;
 
-	public UserRepoKeyPublicKeyReplacementRequestDeletionDto() {
-	}
-
 	public Uid getRequestId() {
 		return requestId;
 	}
