@@ -31,6 +31,8 @@ public class CryptoChangeSetDto {
 
 	private List<UserIdentityDto> userIdentityDtos;
 
+	private List<UserIdentityLinkDto> userIdentityLinkDtos;
+
 	public List<CryptoRepoFileDto> getCryptoRepoFileDtos() {
 		if (cryptoRepoFileDtos == null)
 			cryptoRepoFileDtos = new ArrayList<>();
@@ -139,12 +141,25 @@ public class CryptoChangeSetDto {
 		this.userIdentityDtos = userIdentityDtos;
 	}
 
+	public List<UserIdentityLinkDto> getUserIdentityLinkDtos() {
+		if (userIdentityLinkDtos == null)
+			userIdentityLinkDtos = new ArrayList<>();
+
+		return userIdentityLinkDtos;
+	}
+	public void setUserIdentityLinkDtos(final List<UserIdentityLinkDto> userIdentityLinkDtos) {
+		this.userIdentityLinkDtos = userIdentityLinkDtos;
+	}
+
 	@Override
 	public String toString() {
 		return "CryptoChangeSetDto[cryptoRepoFileDtos=" + cryptoRepoFileDtos
-				+ ", cryptoKeyDtos=" + cryptoKeyDtos + ", cryptoLinkDtos="
-				+ cryptoLinkDtos + ", userRepoKeyPublicKeyDtos=" + userRepoKeyPublicKeyDtos
-				+ ", userRepoKeyPublicKeyReplacementRequestDtos=" + userRepoKeyPublicKeyReplacementRequestDtos + "]";
+				+ ", cryptoKeyDtos=" + cryptoKeyDtos + ", cryptoLinkDtos=" + cryptoLinkDtos
+				+ ", userRepoKeyPublicKeyDtos=" + userRepoKeyPublicKeyDtos
+				+ ", userRepoKeyPublicKeyReplacementRequestDtos=" + userRepoKeyPublicKeyReplacementRequestDtos
+				+ ", userIdentityDtos=" + userIdentityDtos
+				+ ", userIdentityLinkDtos=" + userIdentityLinkDtos
+				+ "]";
 	}
 
 	public boolean isEmpty() {
@@ -158,7 +173,8 @@ public class CryptoChangeSetDto {
 				&& isEmpty(permissionSetInheritanceDtos)
 				&& isEmpty(userRepoKeyPublicKeyReplacementRequestDtos)
 				&& isEmpty(userRepoKeyPublicKeyReplacementRequestDeletionDtos)
-				&& isEmpty(userIdentityDtos);
+				&& isEmpty(userIdentityDtos)
+				&& isEmpty(userIdentityLinkDtos);
 	}
 
 	private static boolean isEmpty(final Collection<?> c) {

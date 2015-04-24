@@ -12,7 +12,6 @@ public class UserIdentityDtoConverter {
 		final UserIdentityDto userIdentityDto = new UserIdentityDto();
 		userIdentityDto.setUserIdentityId(userIdentity.getUserIdentityId());
 		userIdentityDto.setOfUserRepoKeyId(userIdentity.getOfUserRepoKeyPublicKey().getUserRepoKeyId());
-		userIdentityDto.setForUserRepoKeyId(userIdentity.getForUserRepoKeyPublicKey().getUserRepoKeyId());
 		userIdentityDto.setEncryptedUserIdentityPayloadDto(userIdentity.getEncryptedUserIdentityPayloadDtoData());
 		userIdentityDto.setSignature(userIdentity.getSignature());
 		return userIdentityDto;

@@ -3,6 +3,8 @@ package org.subshare.local.persistence;
 import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
 
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.jdo.Query;
 
@@ -84,9 +86,17 @@ public class UserRepoKeyPublicKeyDao extends Dao<UserRepoKeyPublicKey, UserRepoK
 	protected void deleteDependentObjects(final UserRepoKeyPublicKey userRepoKeyPublicKey) {
 		assertNotNull("userRepoKeyPublicKey", userRepoKeyPublicKey);
 
-		final UserIdentityDao userIdentityDao = getDao(UserIdentityDao.class);
-		userIdentityDao.deletePersistentAll(userIdentityDao.getUserIdentitiesOf(userRepoKeyPublicKey));
-		userIdentityDao.deletePersistentAll(userIdentityDao.getUserIdentitiesFor(userRepoKeyPublicKey));
+		final UserIdentityLinkDao userIdentityLinkDao = getDao(UserIdentityLinkDao.class);
+
+		final Set<UserIdentityLink> userIdentityLinks = new HashSet<>();
+		userIdentityLinks.addAll(userIdentityLinkDao.getUserIdentityLinksOf(userRepoKeyPublicKey));
+		userIdentityLinks.addAll(userIdentityLinkDao.getUserIdentityLinksFor(userRepoKeyPublicKey));
+
+		userIdentityLinkDao.deletePersistentAll(userIdentityLinks);
+
+		// UserIdentity.ofUserRepoKeyPublicKey might reference the deleted userRepoKeyPublicKey, but
+		// a UserIdentity is automatically deleted, if the last UserIdentityLink to it is deleted
+		// (preventing orphans to stay forever). Thus, we do not need to handle UserIdentity here.
 	}
 
 //	public UserRepoKeyPublicKey getUserRepoKeyPublicKeyOrCreate(final UserRepoKey.PublicKey publicKey) {

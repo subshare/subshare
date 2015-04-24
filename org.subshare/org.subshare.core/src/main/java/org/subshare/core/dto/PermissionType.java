@@ -41,13 +41,13 @@ public enum PermissionType {
 	grant,
 
 	/**
-	 * A <i>seeUserIdentity</i> permission allows a user to see all other users of the current repository.
+	 * A <i>readUserIdentity</i> permission allows a user to see all other users of the current repository.
 	 * <p>
-	 * A <i>seeUserIdentity</i> permission is global, i.e. applicable to the entire repository and not
+	 * A <i>readUserIdentity</i> permission is global, i.e. applicable to the entire repository and not
 	 * to individual directories or files. Because a {@code PermissionSet} always belongs to a file/directory,
 	 * i.e. we cannot easily technically manage them globally without an (unnecessary) refactoring, we simply
 	 * manage all permissions of this type in the repository's root directory.
 	 */
-	seeUserIdentity
+	readUserIdentity
 
 }

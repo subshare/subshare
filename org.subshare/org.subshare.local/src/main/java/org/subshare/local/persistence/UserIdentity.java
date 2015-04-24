@@ -34,9 +34,7 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 @Queries({
 	@Query(name="getUserIdentity_userIdentityId", value="SELECT UNIQUE WHERE this.userIdentityId == :userIdentityId"),
 	@Query(name="getUserIdentitiesChangedAfter_localRevision", value="SELECT WHERE this.localRevision > :localRevision"),
-	@Query(name="getUserIdentities_ofUserRepoKeyPublicKey", value="SELECT WHERE this.ofUserRepoKeyPublicKey == :ofUserRepoKeyPublicKey"),
-	@Query(name="getUserIdentities_forUserRepoKeyPublicKey", value="SELECT WHERE this.forUserRepoKeyPublicKey == :forUserRepoKeyPublicKey"),
-	@Query(name="getUserIdentities_ofUserRepoKeyPublicKey_forUserRepoKeyPublicKey", value="SELECT WHERE this.ofUserRepoKeyPublicKey == :ofUserRepoKeyPublicKey && this.forUserRepoKeyPublicKey == :forUserRepoKeyPublicKey")
+	@Query(name="getUserIdentities_ofUserRepoKeyPublicKey", value="SELECT WHERE this.ofUserRepoKeyPublicKey == :ofUserRepoKeyPublicKey")
 })
 public class UserIdentity extends Entity implements WriteProtectedEntity, AutoTrackLocalRevision, StoreCallback {
 
@@ -46,9 +44,6 @@ public class UserIdentity extends Entity implements WriteProtectedEntity, AutoTr
 
 	@Persistent(nullValue=NullValue.EXCEPTION)
 	private UserRepoKeyPublicKey ofUserRepoKeyPublicKey;
-
-	@Persistent(nullValue=NullValue.EXCEPTION)
-	private UserRepoKeyPublicKey forUserRepoKeyPublicKey;
 
 	@Persistent(nullValue=NullValue.EXCEPTION)
 	private byte[] encryptedUserIdentityPayloadDtoData;
@@ -73,10 +68,10 @@ public class UserIdentity extends Entity implements WriteProtectedEntity, AutoTr
 	}
 
 	/**
-	 * Gets the {@link UserRepoKeyPublicKey} which is described by this {@code UserIdentity}.
+	 * Gets the {@link UserRepoKeyPublicKey} which is described by this {@code UserIdentityLink}.
 	 * <p>
-	 * In other words, {@code this} is the {@code UserIdentity} <b>of</b> this {@link UserRepoKeyPublicKey}.
-	 * @return the {@link UserRepoKeyPublicKey} which is described by this {@code UserIdentity}. Never <code>null</code>
+	 * In other words, {@code this} is the {@code UserIdentityLink} <b>of</b> this {@link UserRepoKeyPublicKey}.
+	 * @return the {@link UserRepoKeyPublicKey} which is described by this {@code UserIdentityLink}. Never <code>null</code>
 	 * in persistent storage.
 	 */
 	public UserRepoKeyPublicKey getOfUserRepoKeyPublicKey() {
@@ -85,20 +80,6 @@ public class UserIdentity extends Entity implements WriteProtectedEntity, AutoTr
 	public void setOfUserRepoKeyPublicKey(final UserRepoKeyPublicKey ofUserRepoKeyPublicKey) {
 		if (!equal(this.ofUserRepoKeyPublicKey, ofUserRepoKeyPublicKey))
 			this.ofUserRepoKeyPublicKey = ofUserRepoKeyPublicKey;
-	}
-
-	/**
-	 * Gets the {@link UserRepoKeyPublicKey} <b>for</b> whom this {@code UserIdentity} is encrypted.
-	 * <p>
-	 * The user having the corresponding private key is able to decrypt the {@linkplain #getEncryptedUserIdentityPayloadDtoData() payload}.
-	 * @return the {@link UserRepoKeyPublicKey} <b>for</b> whom this {@code UserIdentity} is encrypted.
-	 */
-	public UserRepoKeyPublicKey getForUserRepoKeyPublicKey() {
-		return forUserRepoKeyPublicKey;
-	}
-	public void setForUserRepoKeyPublicKey(UserRepoKeyPublicKey forUserRepoKeyPublicKey) {
-		if (!equal(this.forUserRepoKeyPublicKey, forUserRepoKeyPublicKey))
-			this.forUserRepoKeyPublicKey = forUserRepoKeyPublicKey;
 	}
 
 	public byte[] getEncryptedUserIdentityPayloadDtoData() {
@@ -123,9 +104,6 @@ public class UserIdentity extends Entity implements WriteProtectedEntity, AutoTr
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(ofUserRepoKeyPublicKey.getUserRepoKeyId()),
-
-					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
-					InputStreamSource.Helper.createInputStreamSource(forUserRepoKeyPublicKey.getUserRepoKeyId()),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(encryptedUserIdentityPayloadDtoData)
@@ -172,9 +150,9 @@ public class UserIdentity extends Entity implements WriteProtectedEntity, AutoTr
 		final Signature signature = getSignature();
 
 		// It may be signed by either the owner of this identity, i.e. ofUserRepoKeyPublicKey, or
-		// by any user having grant access.
+		// by any user having 'readUserIdentity' access. Maybe we introduce a 'writeUserIdentity' later, though.
 		if (signature == null || !signature.getSigningUserRepoKeyId().equals(ofUserRepoKeyPublicKey.getUserRepoKeyId()))
-			return PermissionType.grant;
+			return PermissionType.readUserIdentity;
 		else
 			return null; // no permission needed at all, if it's self-signed (everyone can and must give information about himself)
 	}

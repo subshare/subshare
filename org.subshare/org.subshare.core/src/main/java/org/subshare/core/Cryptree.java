@@ -138,5 +138,5 @@ public interface Cryptree {
 	void registerRemotePathPrefix(String pathPrefix);
 
 	UserIdentityPayloadDto getUserIdentityPayloadDtoOrFail(Uid userRepoKeyId)
-			throws SeeUserIdentityAccessDeniedException;
+			throws ReadUserIdentityAccessDeniedException;
 }

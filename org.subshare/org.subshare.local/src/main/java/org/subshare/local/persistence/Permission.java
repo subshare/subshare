@@ -164,7 +164,7 @@ public class Permission extends Entity implements WriteProtectedEntity, AutoTrac
 			switch (permissionType) {
 				case grant:
 				case write:
-				case seeUserIdentity:
+				case readUserIdentity:
 					break;
 				default:
 					throw new IllegalArgumentException("PermissionType unknown or not allowed here: " + permissionType);

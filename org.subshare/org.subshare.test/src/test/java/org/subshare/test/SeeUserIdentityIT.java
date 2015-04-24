@@ -59,7 +59,7 @@ public class SeeUserIdentityIT extends AbstractUserRegistryIT {
 		UserRepoKey.PublicKeyWithSignature friendPublicKeyForInvitation = friend.getUserRepoKeyPublicKeys().get(0);
 		assertThat(friendPublicKeyForInvitation.isInvitation()).isTrue();
 
-		grantPermission("", PermissionType.seeUserIdentity, friendPublicKeyForInvitation);
+		grantPermission("", PermissionType.readUserIdentity, friendPublicKeyForInvitation);
 
 		// sync down after granting - the permission granted to the invitation-key should be transferred to the new, permanent key.
 		syncFromLocalSrcToRemote();
@@ -81,7 +81,7 @@ public class SeeUserIdentityIT extends AbstractUserRegistryIT {
 //		// *** OWNER machine with owner's repository ***
 //		switchLocationToOwner();
 //
-//		revokePermission("", PermissionType.seeUserIdentity, friendPublicKeyPermanent);
+//		revokePermission("", PermissionType.readUserIdentity, friendPublicKeyPermanent);
 //
 //		syncFromLocalSrcToRemote();
 //

@@ -584,7 +584,7 @@ public class CryptreeNode {
 		assertNotNull("permissionType", permissionType);
 		assertNotNull("publicKey", publicKey);
 
-		if (PermissionType.seeUserIdentity == permissionType) {
+		if (PermissionType.readUserIdentity == permissionType) {
 			final CryptreeNode parent = getParent();
 			if (parent != null) {
 				parent.grantPermission(permissionType, publicKey);
@@ -605,11 +605,11 @@ public class CryptreeNode {
 			return;
 
 		// It is technically required to have write permission, when having grant permission. Therefore, we
-		// grant it here, too. Additionally, we grant seeUserIdentity permission, as it makes no sense to manage
+		// grant it here, too. Additionally, we grant readUserIdentity permission, as it makes no sense to manage
 		// users, i.e. grant access to them, without seeing them ;-)
 		if (PermissionType.grant == permissionType) {
 			grantPermission(PermissionType.write, publicKey);
-			grantPermission(PermissionType.seeUserIdentity, publicKey);
+			grantPermission(PermissionType.readUserIdentity, publicKey);
 		}
 
 		final PermissionSet permissionSet = getPermissionSetOrCreate();
@@ -629,7 +629,7 @@ public class CryptreeNode {
 		if (PermissionType.grant == permissionType)
 			ensureParentHasAsymmetricActiveSubdirKey();
 
-		if (PermissionType.seeUserIdentity == permissionType)
+		if (PermissionType.readUserIdentity == permissionType)
 			createUserIdentitiesVisibleFor(userRepoKeyPublicKey);
 	}
 
@@ -724,7 +724,7 @@ public class CryptreeNode {
 		assertNotNull("permissionType", permissionType);
 		assertNotNull("userRepoKeyIds", userRepoKeyIds);
 
-		if (PermissionType.seeUserIdentity == permissionType) {
+		if (PermissionType.readUserIdentity == permissionType) {
 			final CryptreeNode parent = getParent();
 			if (parent != null) {
 				parent.revokePermission(permissionType, userRepoKeyIds);

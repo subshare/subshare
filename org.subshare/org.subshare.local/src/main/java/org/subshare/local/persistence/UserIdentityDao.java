@@ -60,54 +60,6 @@ public class UserIdentityDao extends Dao<UserIdentity, UserIdentityDao> {
 		}
 	}
 
-	public Collection<UserIdentity> getUserIdentitiesFor(final UserRepoKeyPublicKey forUserRepoKeyPublicKey) {
-		assertNotNull("forUserRepoKeyPublicKey", forUserRepoKeyPublicKey);
-
-		final Query query = pm().newNamedQuery(getEntityClass(), "getUserIdentities_forUserRepoKeyPublicKey");
-		try {
-			final Map<String, Object> params = new HashMap<String, Object>(1);
-			params.put("forUserRepoKeyPublicKey", forUserRepoKeyPublicKey);
-
-			long startTimestamp = System.currentTimeMillis();
-			@SuppressWarnings("unchecked")
-			Collection<UserIdentity> result = (Collection<UserIdentity>) query.executeWithMap(params);
-			logger.debug("getUserIdentitiesFor: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
-
-			startTimestamp = System.currentTimeMillis();
-			result = load(result);
-			logger.debug("getUserIdentitiesFor: Loading result-set with {} elements took {} ms.", result.size(), System.currentTimeMillis() - startTimestamp);
-
-			return result;
-		} finally {
-			query.closeAll();
-		}
-	}
-
-	public Collection<UserIdentity> getUserIdentities(final UserRepoKeyPublicKey ofUserRepoKeyPublicKey, final UserRepoKeyPublicKey forUserRepoKeyPublicKey) {
-		assertNotNull("ofUserRepoKeyPublicKey", ofUserRepoKeyPublicKey);
-		assertNotNull("forUserRepoKeyPublicKey", forUserRepoKeyPublicKey);
-
-		final Query query = pm().newNamedQuery(getEntityClass(), "getUserIdentities_ofUserRepoKeyPublicKey_forUserRepoKeyPublicKey");
-		try {
-			final Map<String, Object> params = new HashMap<String, Object>(2);
-			params.put("ofUserRepoKeyPublicKey", ofUserRepoKeyPublicKey);
-			params.put("forUserRepoKeyPublicKey", forUserRepoKeyPublicKey);
-
-			long startTimestamp = System.currentTimeMillis();
-			@SuppressWarnings("unchecked")
-			Collection<UserIdentity> result = (Collection<UserIdentity>) query.executeWithMap(params);
-			logger.debug("getUserIdentities: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
-
-			startTimestamp = System.currentTimeMillis();
-			result = load(result);
-			logger.debug("getUserIdentities: Loading result-set with {} elements took {} ms.", result.size(), System.currentTimeMillis() - startTimestamp);
-
-			return result;
-		} finally {
-			query.closeAll();
-		}
-	}
-
 	public Collection<UserIdentity> getUserIdentitiesChangedAfter(final long localRevision) {
 		final Query query = pm().newNamedQuery(getEntityClass(), "getUserIdentitiesChangedAfter_localRevision");
 		try {

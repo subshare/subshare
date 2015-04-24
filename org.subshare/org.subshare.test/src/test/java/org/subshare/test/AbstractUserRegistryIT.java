@@ -14,7 +14,7 @@ import mockit.MockUp;
 
 import org.subshare.core.Cryptree;
 import org.subshare.core.CryptreeFactoryRegistry;
-import org.subshare.core.SeeUserIdentityAccessDeniedException;
+import org.subshare.core.ReadUserIdentityAccessDeniedException;
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.dto.UserIdentityPayloadDto;
 import org.subshare.core.pgp.Pgp;
@@ -28,7 +28,7 @@ import org.subshare.core.user.UserRepoInvitationManager;
 import org.subshare.core.user.UserRepoInvitationToken;
 import org.subshare.core.user.UserRepoKeyRing;
 import org.subshare.local.persistence.SsRemoteRepository;
-import org.subshare.local.persistence.UserIdentityDao;
+import org.subshare.local.persistence.UserIdentityLinkDao;
 import org.subshare.local.persistence.UserRepoKeyPublicKey;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyDao;
 import org.slf4j.Logger;
@@ -153,7 +153,7 @@ public class AbstractUserRegistryIT extends AbstractRepoToRepoSyncIT {
 					try {
 						UserIdentityPayloadDto userIdentityPayloadDto = cryptree.getUserIdentityPayloadDtoOrFail(publicKey.getUserRepoKeyId());
 						fail(String.format("Succeeded to decrypt %s for userRepoKeyId=%s! The current user should not be able to do so!", userIdentityPayloadDto, publicKey.getUserRepoKeyId()));
-					} catch (SeeUserIdentityAccessDeniedException x) {
+					} catch (ReadUserIdentityAccessDeniedException x) {
 						doNothing(); // this is exactly, what we expect ;-)
 					}
 				}
@@ -267,7 +267,7 @@ public class AbstractUserRegistryIT extends AbstractRepoToRepoSyncIT {
 		{
 			try (final LocalRepoTransaction transaction = localRepoManager.beginReadTransaction();)
 			{
-				UserIdentityDao dao = transaction.getDao(UserIdentityDao.class);
+				UserIdentityLinkDao dao = transaction.getDao(UserIdentityLinkDao.class);
 				assertThat(dao.getObjectsCount()).isEqualTo(expectedCount);
 	
 				transaction.commit();

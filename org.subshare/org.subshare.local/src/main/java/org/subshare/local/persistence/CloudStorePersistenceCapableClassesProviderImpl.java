@@ -7,10 +7,21 @@ public class CloudStorePersistenceCapableClassesProviderImpl extends AbstractClo
 	@Override
 	public Class<?>[] getPersistenceCapableClasses() {
 		return new Class<?>[] {
+				// The various sub-classes of CloudStore-entities do not need to be enlisted here, because they are
+				// already resolved using the ClassExtension mechanism. We thus only need CC-specific classes here.
 				CryptoKey.class,
 				CryptoLink.class,
 				InvitationUserRepoKeyPublicKey.class,
-				UserRepoKeyPublicKey.class
+				LastCryptoKeySyncToRemoteRepo.class,
+				Permission.class,
+				PermissionSet.class,
+				PermissionSetInheritance.class,
+				RepositoryOwner.class,
+				UserIdentity.class,
+				UserIdentityLink.class,
+				UserRepoKeyPublicKey.class,
+				UserRepoKeyPublicKeyReplacementRequest.class,
+				UserRepoKeyPublicKeyReplacementRequestDeletion.class
 		};
 	}
 

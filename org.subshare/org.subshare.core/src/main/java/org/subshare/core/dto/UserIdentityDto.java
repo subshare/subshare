@@ -14,8 +14,6 @@ public class UserIdentityDto {
 
 	private Uid ofUserRepoKeyId;
 
-	private Uid forUserRepoKeyId;
-
 	private byte[] encryptedUserIdentityPayloadDto;
 
 	@XmlElement
@@ -37,20 +35,11 @@ public class UserIdentityDto {
 		this.ofUserRepoKeyId = ofUserRepoKeyId;
 	}
 
-	public Uid getForUserRepoKeyId() {
-		return forUserRepoKeyId;
-	}
-
-	public void setForUserRepoKeyId(Uid forUserRepoKeyId) {
-		this.forUserRepoKeyId = forUserRepoKeyId;
-	}
-
 	public byte[] getEncryptedUserIdentityPayloadDto() {
 		return encryptedUserIdentityPayloadDto;
 	}
 
-	public void setEncryptedUserIdentityPayloadDto(
-			byte[] encryptedUserIdentityPayloadDto) {
+	public void setEncryptedUserIdentityPayloadDto(byte[] encryptedUserIdentityPayloadDto) {
 		this.encryptedUserIdentityPayloadDto = encryptedUserIdentityPayloadDto;
 	}
 
