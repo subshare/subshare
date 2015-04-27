@@ -43,6 +43,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import co.codewizards.cloudstore.core.auth.SignatureException;
+import co.codewizards.cloudstore.core.dto.RemoteException;
 import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
@@ -55,7 +56,6 @@ import co.codewizards.cloudstore.local.persistence.FileChunk;
 import co.codewizards.cloudstore.local.persistence.NormalFile;
 import co.codewizards.cloudstore.local.persistence.NormalFileDao;
 import co.codewizards.cloudstore.local.persistence.RepoFile;
-import co.codewizards.cloudstore.rest.client.RemoteException;
 
 public class BrokenSignatureIT extends AbstractRepoToRepoSyncIT {
 
