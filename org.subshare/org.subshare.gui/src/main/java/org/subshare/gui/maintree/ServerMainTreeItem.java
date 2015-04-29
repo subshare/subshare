@@ -1,26 +1,28 @@
 package org.subshare.gui.maintree;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
 import javafx.scene.Parent;
 
+import org.subshare.core.server.Server;
 import org.subshare.gui.server.ServerPane;
 
-public class ServerMainTreeItem extends MainTreeItem {
-	private String name;
-	private final List<RepositoryMainTreeItem> repositoryMainTreeItems = new ArrayList<RepositoryMainTreeItem>();
+public class ServerMainTreeItem extends MainTreeItem<Server> {
 
-	public String getName() {
-		return name;
+	public ServerMainTreeItem(final Server server) {
+		super(server);
+		assertNotNull("server", server);
 	}
-	public void setName(final String name) {
-		this.name = name;
+
+//	private final List<RepositoryMainTreeItem> repositoryMainTreeItems = new ArrayList<RepositoryMainTreeItem>();
+
+	@Override
+	protected String getValueString(Server valueObject) {
+		return valueObject.getName();
 	}
 
 	@Override
 	public String toString() {
-		return name;
+		return getValueObject().getName();
 	}
 
 	@Override
@@ -28,7 +30,7 @@ public class ServerMainTreeItem extends MainTreeItem {
 		return new ServerPane();
 	}
 
-	public List<RepositoryMainTreeItem> getRepositoryMainTreeItems() {
-		return repositoryMainTreeItems;
-	}
+//	public List<RepositoryMainTreeItem> getRepositoryMainTreeItems() {
+//		return repositoryMainTreeItems;
+//	}
 }

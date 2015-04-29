@@ -4,16 +4,14 @@ import javafx.scene.Parent;
 
 import org.subshare.gui.userlist.UserListPane;
 
-public class UserListMainTreeItem extends MainTreeItem {
+public class UserListMainTreeItem extends MainTreeItem<String> {
 
-	@Override
-	public String toString() {
-		return "Users";
+	public UserListMainTreeItem() {
+		super("Users");
 	}
 
 	@Override
 	protected Parent createMainDetailContent() {
 		return new UserListPane();
 	}
-
 }

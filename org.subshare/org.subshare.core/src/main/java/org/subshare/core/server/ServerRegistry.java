@@ -6,6 +6,7 @@ import static co.codewizards.cloudstore.core.util.UrlUtil.canonicalizeURL;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collection;
@@ -23,6 +24,7 @@ import org.subshare.core.observable.standard.StandardPostModificationListener;
 import org.subshare.core.observable.standard.StandardPreModificationEvent;
 import org.subshare.core.observable.standard.StandardPreModificationListener;
 
+import co.codewizards.cloudstore.core.bean.PropertyBase;
 import co.codewizards.cloudstore.core.config.ConfigDir;
 import co.codewizards.cloudstore.core.io.LockFile;
 import co.codewizards.cloudstore.core.io.LockFileFactory;
@@ -35,8 +37,18 @@ import co.codewizards.cloudstore.core.repo.transport.RepoTransportFactoryRegistr
 
 public class ServerRegistry {
 
+	private final PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
+
 	public static final String SERVER_LIST_FILE_NAME = "serverList.xml.gz";
 	public static final String SERVER_LIST_LOCK = SERVER_LIST_FILE_NAME + ".lock";
+
+	public static interface Property extends PropertyBase {
+	}
+
+	public static enum PropertyEnum implements Property {
+		servers,
+		servers_server
+	}
 
 	private final ObservableList<Server> servers;
 	private final PreModificationListener preModificationListener = new PreModificationListener();
@@ -45,6 +57,8 @@ public class ServerRegistry {
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
 			dirty = true;
+			final Server server = (Server) evt.getSource();
+			firePropertyChange(PropertyEnum.servers_server, null, server);
 		}
 	};
 	private boolean dirty;
@@ -85,6 +99,7 @@ public class ServerRegistry {
 		@Override
 		public void modificationOccurred(StandardPostModificationEvent event) {
 			dirty = true;
+			firePropertyChange(PropertyEnum.servers, null, getServers());
 		}
 	};
 
@@ -225,7 +240,7 @@ public class ServerRegistry {
 			try {
 				final File newServerListFile = createFile(serverListFile.getParentFile(), serverListFile.getName() + ".new");
 				serverListDtoIo.serializeWithGz(serverListDto, newServerListFile);
-				newServerListFile.delete();
+				serverListFile.delete();
 				newServerListFile.renameTo(serverListFile);
 			} finally {
 				lockFile.getLock().unlock();
@@ -242,5 +257,25 @@ public class ServerRegistry {
 			result.getServerDtos().add(serverDto);
 		}
 		return result;
+	}
+
+	public void addPropertyChangeListener(PropertyChangeListener listener) {
+		propertyChangeSupport.addPropertyChangeListener(listener);
+	}
+
+	public void addPropertyChangeListener(Property property, PropertyChangeListener listener) {
+		propertyChangeSupport.addPropertyChangeListener(property.name(), listener);
+	}
+
+	public void removePropertyChangeListener(PropertyChangeListener listener) {
+		propertyChangeSupport.removePropertyChangeListener(listener);
+	}
+
+	public void removePropertyChangeListener(Property property, PropertyChangeListener listener) {
+		propertyChangeSupport.removePropertyChangeListener(property.name(), listener);
+	}
+
+	protected void firePropertyChange(Property property, Object oldValue, Object newValue) {
+		propertyChangeSupport.firePropertyChange(property.name(), oldValue, newValue);
 	}
 }

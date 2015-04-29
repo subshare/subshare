@@ -31,18 +31,6 @@
 					<Tooltip text="Add a new server."/> 
 				</tooltip>
 			</Button>
-			<Button fx:id="editButton" onAction="#editButtonClicked"> 
-				<graphic>
-					<ImageView> 
-						<image>
-							<Image url="@edit-24x24.png"/> 
-						</image>
-					</ImageView>
-				</graphic>
-				<tooltip>
-					<Tooltip text="Edit the selected server."/> 
-				</tooltip>
-			</Button>
 			<Button fx:id="deleteButton" onAction="#deleteButtonClicked"> 
 				<graphic>
 					<ImageView> 
@@ -58,14 +46,14 @@
 		</FlowPane>
 	</top>
 	<center>
-		<TableView fx:id="tableView"> 
+		<TableView fx:id="tableView" editable="true"> 
 			<columns>
 				<TableColumn fx:id="nameColumn" text="Name" prefWidth="150"> 
 					<cellValueFactory>
 						<PropertyValueFactory property="name"/> 
 					</cellValueFactory>
 				</TableColumn>
-				<TableColumn fx:id="lastNameColumn" text="URL" prefWidth="350"> 
+				<TableColumn fx:id="urlColumn" text="URL" prefWidth="350"> 
 					<cellValueFactory>
 						<PropertyValueFactory property="url"/> 
 					</cellValueFactory>

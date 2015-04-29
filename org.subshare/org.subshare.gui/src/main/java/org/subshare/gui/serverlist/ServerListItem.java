@@ -26,8 +26,14 @@ public class ServerListItem {
 	public String getName() {
 		return assertNotNull("server", server).getName();
 	}
+	public void setName(String name) {
+		assertNotNull("server", server).setName(name);
+	}
 
 	public URL getUrl() {
 		return assertNotNull("server", server).getUrl();
+	}
+	public void setUrl(URL url) {
+		assertNotNull("server", server).setUrl(url);
 	}
 }

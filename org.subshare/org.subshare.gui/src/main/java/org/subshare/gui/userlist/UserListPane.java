@@ -65,14 +65,14 @@ public class UserListPane extends BorderPane {
 					protected void succeeded() {
 						final Collection<User> users;
 						try { users = get(); } catch (InterruptedException | ExecutionException e) { throw new RuntimeException(e); }
-						populateTableViewCallback(users);
+						addTableItemsViewCallback(users);
 					}
 				};
 			}
 		}.start();
 	}
 
-	private void populateTableViewCallback(final Collection<User> users) {
+	private void addTableItemsViewCallback(final Collection<User> users) {
 		for (final User user : users)
 			tableView.getItems().add(new UserListItem(user));
 
