@@ -26,9 +26,9 @@ import org.subshare.core.sign.SignableSigner;
 import co.codewizards.cloudstore.core.bean.PropertyBase;
 import co.codewizards.cloudstore.core.dto.Uid;
 
-public class User {
+public class User implements Cloneable {
 
-	private final PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
+	private /*final*cloned*/ PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
 
 	public static interface Property extends PropertyBase {
 	}
@@ -258,5 +258,35 @@ public class User {
 	@Override
 	public String toString() {
 		return String.format("%s[%s, %s, %s, %s]", getClass().getSimpleName(), userId, firstName, lastName, emails);
+	}
+
+	@Override
+	public User clone() {
+		final User clone;
+		try {
+			clone = (User) super.clone();
+		} catch (CloneNotSupportedException e) {
+			throw new RuntimeException(e);
+		}
+		clone.propertyChangeSupport = new PropertyChangeSupport(clone);
+
+		if (clone.emails != null) {
+			clone.emails = null;
+			clone.getEmails().addAll(this.getEmails());
+		}
+
+		if (clone.userRepoKeyRing != null)
+			clone.userRepoKeyRing = this.userRepoKeyRing.clone();
+
+		if (clone.pgpKeyIds != null) {
+			clone.pgpKeyIds = null;
+			clone.getPgpKeyIds().addAll(this.getPgpKeyIds());
+		}
+
+		if (clone.userRepoKeyPublicKeys != null) {
+			clone.userRepoKeyPublicKeys = null;
+			clone.getUserRepoKeyPublicKeys().addAll(this.getUserRepoKeyPublicKeys());
+		}
+		return clone;
 	}
 }

@@ -43,7 +43,6 @@ public class UserRegistry {
 	private Map<Uid, User> cache_userRepoKeyId2User;
 
 	private final File userListFile;
-	private final UserListDtoIo userListDtoIo = new UserListDtoIo();
 	private boolean dirty;
 
 	private static final class Holder {
@@ -67,6 +66,7 @@ public class UserRegistry {
 			lockFile.getLock().lock();
 			try {
 				if (userListFile.exists()) {
+					final UserListDtoIo userListDtoIo = new UserListDtoIo();
 					final UserListDto userListDto = userListDtoIo.deserializeWithGz(userListFile);
 					for (final UserDto userDto : userListDto.getUserDtos()) {
 						final User user = userDtoConverter.fromUserDto(userDto);
@@ -273,6 +273,7 @@ public class UserRegistry {
 	}
 
 	public synchronized void write() {
+		final UserListDtoIo userListDtoIo = new UserListDtoIo();
 		final UserListDto userListDto = createUserListDto();
 
 		try (LockFile lockFile = acquireLockFile();) {

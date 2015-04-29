@@ -15,9 +15,9 @@ import java.util.UUID;
 import co.codewizards.cloudstore.core.bean.PropertyBase;
 import co.codewizards.cloudstore.core.dto.Uid;
 
-public class UserRepoKeyRing {
+public class UserRepoKeyRing implements Cloneable {
 
-	private final PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
+	private /*final*cloned*/ PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
 
 	public static interface Property extends PropertyBase {
 	}
@@ -26,9 +26,9 @@ public class UserRepoKeyRing {
 		userRepoKeys
 	}
 
-	private final Map<Uid, UserRepoKey> userRepoKeyId2UserRepoKey = new HashMap<>();
-	private final Map<UUID, List<UserRepoKey>> repositoryId2InvitationUserRepoKeyList = new HashMap<>();
-	private final Map<UUID, List<UserRepoKey>> repositoryId2PermanentUserRepoKeyList = new HashMap<>();
+	private /*final*cloned*/ Map<Uid, UserRepoKey> userRepoKeyId2UserRepoKey = new HashMap<>();
+	private /*final*cloned*/ Map<UUID, List<UserRepoKey>> repositoryId2InvitationUserRepoKeyList = new HashMap<>();
+	private /*final*cloned*/ Map<UUID, List<UserRepoKey>> repositoryId2PermanentUserRepoKeyList = new HashMap<>();
 
 	public Collection<UserRepoKey> getUserRepoKeys() {
 		return Collections.unmodifiableCollection(userRepoKeyId2UserRepoKey.values());
@@ -169,5 +169,23 @@ public class UserRepoKeyRing {
 
 	protected void firePropertyChange(Property property, Object oldValue, Object newValue) {
 		propertyChangeSupport.firePropertyChange(property.name(), oldValue, newValue);
+	}
+
+	@Override
+	public UserRepoKeyRing clone() {
+		final UserRepoKeyRing clone;
+		try {
+			clone = (UserRepoKeyRing) super.clone();
+		} catch (CloneNotSupportedException e) {
+			throw new RuntimeException(e);
+		}
+		clone.propertyChangeSupport = new PropertyChangeSupport(clone);
+
+		clone.userRepoKeyId2UserRepoKey = new HashMap<>();
+		clone.userRepoKeyId2UserRepoKey.putAll(this.userRepoKeyId2UserRepoKey); // content is immutable => no need to clone even deeper
+
+		clone.repositoryId2InvitationUserRepoKeyList = new HashMap<>(); // only a cache
+		clone.repositoryId2PermanentUserRepoKeyList = new HashMap<>(); // only a cache
+		return clone;
 	}
 }

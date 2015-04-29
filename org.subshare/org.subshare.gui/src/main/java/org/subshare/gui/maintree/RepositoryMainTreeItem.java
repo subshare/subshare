@@ -1,10 +1,14 @@
 package org.subshare.gui.maintree;
 
+import co.codewizards.cloudstore.core.oio.File;
+
 public class RepositoryMainTreeItem extends MainTreeItem {
 
 	private final ServerMainTreeItem serverMainTreeItem;
 
 	private String name;
+
+	private File localRoot;
 
 	public RepositoryMainTreeItem(final ServerMainTreeItem serverMainTreeItem) {
 		this.serverMainTreeItem = serverMainTreeItem;
@@ -21,9 +25,16 @@ public class RepositoryMainTreeItem extends MainTreeItem {
 		this.name = name;
 	}
 
+	public File getLocalRoot() {
+		return localRoot;
+	}
+
+	public void setLocalRoot(File localRoot) {
+		this.localRoot = localRoot;
+	}
+
 	@Override
 	public String toString() {
 		return name;
 	}
-
 }

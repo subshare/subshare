@@ -24,7 +24,10 @@ sourceSets {
 }
 
 dependencies {
-//	compile project(':org.subshare.local')
 	compile project(':org.subshare.ls.server')
 	compile project(':org.subshare.ls.rest.client')
+
+	// runtime-dependencies (needed when starting the app - not for compilation)
+	runtime project(':org.subshare.local')
+	runtime project(':org.subshare.rest.client')
 }
