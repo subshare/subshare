@@ -5,9 +5,7 @@ import static co.codewizards.cloudstore.core.util.UrlUtil.appendNonEncodedPath;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.FilterInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.net.URL;
@@ -51,6 +49,7 @@ import org.slf4j.LoggerFactory;
 
 import co.codewizards.cloudstore.core.auth.SignatureException;
 import co.codewizards.cloudstore.core.dto.jaxb.CloudStoreJaxbContext;
+import co.codewizards.cloudstore.core.io.NoCloseInputStream;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
 import co.codewizards.cloudstore.local.persistence.RemoteRepository;
@@ -214,21 +213,10 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 				continue;
 			}
 
-			final Object dto = unmarshaller.unmarshal(new NonClosableInputStream(zin));
+			final Object dto = unmarshaller.unmarshal(new NoCloseInputStream(zin));
 			name2Dto.put(ze.getName(), dto);
 		}
 		return name2Dto;
-	}
-
-	private static class NonClosableInputStream extends FilterInputStream {
-		public NonClosableInputStream(InputStream in) {
-			super(in);
-		}
-
-		@Override
-		public void close() {
-			// do nothing
-		}
 	}
 
 	private Properties readManifest(final ZipInputStream zin) throws IOException {

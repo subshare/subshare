@@ -15,8 +15,8 @@ import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.subshare.core.dto.ServerDto;
-import org.subshare.core.dto.ServerListDto;
-import org.subshare.core.dto.jaxb.ServerListDtoIo;
+import org.subshare.core.dto.ServerRegistryDto;
+import org.subshare.core.dto.jaxb.ServerRegistryDtoIo;
 import org.subshare.core.observable.ModificationEventType;
 import org.subshare.core.observable.ObservableList;
 import org.subshare.core.observable.standard.StandardPostModificationEvent;
@@ -120,9 +120,9 @@ public class ServerRegistry {
 			lockFile.getLock().lock();
 			try {
 				if (serverListFile.exists()) {
-					final ServerListDtoIo serverListDtoIo = new ServerListDtoIo();
-					final ServerListDto serverListDto = serverListDtoIo.deserializeWithGz(serverListFile);
-					for (final ServerDto serverDto : serverListDto.getServerDtos()) {
+					final ServerRegistryDtoIo serverRegistryDtoIo = new ServerRegistryDtoIo();
+					final ServerRegistryDto serverRegistryDto = serverRegistryDtoIo.deserializeWithGz(serverListFile);
+					for (final ServerDto serverDto : serverRegistryDto.getServerDtos()) {
 						final Server server = serverDtoConverter.fromServerDto(serverDto);
 						getServers().add(server);
 					}
@@ -232,14 +232,14 @@ public class ServerRegistry {
 	}
 
 	public synchronized void write() {
-		final ServerListDtoIo serverListDtoIo = new ServerListDtoIo();
-		final ServerListDto serverListDto = createServerListDto();
+		final ServerRegistryDtoIo serverRegistryDtoIo = new ServerRegistryDtoIo();
+		final ServerRegistryDto serverRegistryDto = createServerListDto();
 
 		try (LockFile lockFile = acquireLockFile();) {
 			lockFile.getLock().lock();
 			try {
 				final File newServerListFile = createFile(serverListFile.getParentFile(), serverListFile.getName() + ".new");
-				serverListDtoIo.serializeWithGz(serverListDto, newServerListFile);
+				serverRegistryDtoIo.serializeWithGz(serverRegistryDto, newServerListFile);
 				serverListFile.delete();
 				newServerListFile.renameTo(serverListFile);
 			} finally {
@@ -249,9 +249,9 @@ public class ServerRegistry {
 		dirty = false;
 	}
 
-	private ServerListDto createServerListDto() {
+	private ServerRegistryDto createServerListDto() {
 		final ServerDtoConverter converter = new ServerDtoConverter();
-		final ServerListDto result = new ServerListDto();
+		final ServerRegistryDto result = new ServerRegistryDto();
 		for (Server server : servers) {
 			final ServerDto serverDto = converter.toServerDto(server);
 			result.getServerDtos().add(serverDto);

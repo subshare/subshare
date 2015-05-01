@@ -19,8 +19,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.subshare.core.dto.UserDto;
-import org.subshare.core.dto.UserListDto;
-import org.subshare.core.dto.jaxb.UserListDtoIo;
+import org.subshare.core.dto.UserRegistryDto;
+import org.subshare.core.dto.jaxb.UserRegistryDtoIo;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpRegistry;
 
@@ -66,9 +66,9 @@ public class UserRegistry {
 			lockFile.getLock().lock();
 			try {
 				if (userListFile.exists()) {
-					final UserListDtoIo userListDtoIo = new UserListDtoIo();
-					final UserListDto userListDto = userListDtoIo.deserializeWithGz(userListFile);
-					for (final UserDto userDto : userListDto.getUserDtos()) {
+					final UserRegistryDtoIo userRegistryDtoIo = new UserRegistryDtoIo();
+					final UserRegistryDto userRegistryDto = userRegistryDtoIo.deserializeWithGz(userListFile);
+					for (final UserDto userDto : userRegistryDto.getUserDtos()) {
 						final User user = userDtoConverter.fromUserDto(userDto);
 						addUser(user);
 					}
@@ -273,14 +273,14 @@ public class UserRegistry {
 	}
 
 	public synchronized void write() {
-		final UserListDtoIo userListDtoIo = new UserListDtoIo();
-		final UserListDto userListDto = createUserListDto();
+		final UserRegistryDtoIo userRegistryDtoIo = new UserRegistryDtoIo();
+		final UserRegistryDto userRegistryDto = createUserListDto();
 
 		try (LockFile lockFile = acquireLockFile();) {
 			lockFile.getLock().lock();
 			try {
 				final File newUserListFile = createFile(userListFile.getParentFile(), userListFile.getName() + ".new");
-				userListDtoIo.serializeWithGz(userListDto, newUserListFile);
+				userRegistryDtoIo.serializeWithGz(userRegistryDto, newUserListFile);
 				userListFile.delete();
 				newUserListFile.renameTo(userListFile);
 			} finally {
@@ -290,13 +290,13 @@ public class UserRegistry {
 		dirty = false;
 	}
 
-	private synchronized UserListDto createUserListDto() {
+	private synchronized UserRegistryDto createUserListDto() {
 		final UserDtoConverter userDtoConverter = new UserDtoConverter();
-		final UserListDto userListDto = new UserListDto();
+		final UserRegistryDto userRegistryDto = new UserRegistryDto();
 		for (final User user : userId2User.values()) {
 			final UserDto userDto = userDtoConverter.toUserDto(user);
-			userListDto.getUserDtos().add(userDto);
+			userRegistryDto.getUserDtos().add(userDto);
 		}
-		return userListDto;
+		return userRegistryDto;
 	}
 }

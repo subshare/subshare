@@ -58,6 +58,7 @@ public class MainPaneController {
 		mainTree.setRoot(root);
 		mainTree.getSelectionModel().getSelectedItems().addListener(mainTreeSelectionListener);
 		// TODO we should save and restore the selection!
+		mainTree.getSelectionModel().select(0);
 
 		// TODO we should save and restore the divider position!
 		Platform.runLater(new Runnable() {

@@ -6,9 +6,11 @@ import java.util.List;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
-public class ServerListDto {
+public class ServerRegistryDto {
 
 	private List<ServerDto> serverDtos;
+
+	private List<DeletedUid> deletedServerIds;
 
 	public List<ServerDto> getServerDtos() {
 		if (serverDtos == null)
@@ -18,5 +20,15 @@ public class ServerListDto {
 	}
 	public void setServerDtos(List<ServerDto> serverDtos) {
 		this.serverDtos = serverDtos;
+	}
+
+	public List<DeletedUid> getDeletedServerIds() {
+		if (deletedServerIds == null)
+			deletedServerIds = new ArrayList<>();
+
+		return deletedServerIds;
+	}
+	public void setDeletedServerIds(List<DeletedUid> deletedServerIds) {
+		this.deletedServerIds = deletedServerIds;
 	}
 }

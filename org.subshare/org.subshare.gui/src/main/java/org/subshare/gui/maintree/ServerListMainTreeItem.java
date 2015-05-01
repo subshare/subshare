@@ -15,12 +15,19 @@ import javafx.concurrent.Task;
 import javafx.scene.Parent;
 import javafx.scene.control.TreeItem;
 
+import org.subshare.core.dto.ServerDto;
 import org.subshare.core.server.Server;
 import org.subshare.core.server.ServerRegistry;
 import org.subshare.gui.serverlist.ServerListPane;
+import org.subshare.ls.rest.client.request.GetServerDtos;
+
+import co.codewizards.cloudstore.ls.rest.client.LocalServerRestClient;
 
 public class ServerListMainTreeItem extends MainTreeItem<String> {
 
+	// TODO we should use the LocalServer somehow! Maybe use proxies? Or switch to ServerDto? What about notifications, then?
+	// Or is this not necessary for the Server[Registry], because it's not needed by the real JVM, anyway?
+	// Or do we only notify the separate JVM whenever we changed the file and make it reload it?
 	private ServerRegistry serverRegistry;
 
 	private PropertyChangeListener serversPropertyChangeListener = new PropertyChangeListener() {
@@ -41,6 +48,12 @@ public class ServerListMainTreeItem extends MainTreeItem<String> {
 				return new Task<List<Server>>() {
 					@Override
 					protected List<Server> call() throws Exception {
+
+						// TODO remove this - it's for testing the service only - or switch completely to
+						// using the LocalServer (see comment on top of this class).
+						List<ServerDto> serverDtos = LocalServerRestClient.getInstance().execute(new GetServerDtos());
+						System.out.println(serverDtos);
+
 						return getServerRegistry().getServers();
 					}
 
