@@ -20,7 +20,7 @@ public class ServerDtoConverter {
 
 	public Server fromServerDto(final ServerDto serverDto) {
 		assertNotNull("serverDto", serverDto);
-		final Server server = new Server(serverDto.getServerId());
+		final Server server = new ServerImpl(serverDto.getServerId());
 		server.setName(serverDto.getName());
 		try {
 			server.setUrl(serverDto.getUrl() == null ? null : new URL(serverDto.getUrl()));

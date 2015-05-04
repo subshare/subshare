@@ -12,10 +12,8 @@ import javafx.event.EventType;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.TreeItem;
-
-import co.codewizards.cloudstore.core.util.ReflectionUtil;
-
 import co.codewizards.cloudstore.core.util.ExceptionUtil;
+import co.codewizards.cloudstore.core.util.ReflectionUtil;
 
 public class MainTreeItem<T> extends TreeItem<String> {
 

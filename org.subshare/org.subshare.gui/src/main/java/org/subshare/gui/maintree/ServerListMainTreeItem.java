@@ -15,13 +15,12 @@ import javafx.concurrent.Task;
 import javafx.scene.Parent;
 import javafx.scene.control.TreeItem;
 
-import org.subshare.core.dto.ServerDto;
 import org.subshare.core.server.Server;
 import org.subshare.core.server.ServerRegistry;
+import org.subshare.core.server.ServerRegistryImpl;
 import org.subshare.gui.serverlist.ServerListPane;
-import org.subshare.ls.rest.client.request.GetServerDtos;
 
-import co.codewizards.cloudstore.ls.rest.client.LocalServerRestClient;
+import co.codewizards.cloudstore.ls.client.LocalServerClient;
 
 public class ServerListMainTreeItem extends MainTreeItem<String> {
 
@@ -48,12 +47,6 @@ public class ServerListMainTreeItem extends MainTreeItem<String> {
 				return new Task<List<Server>>() {
 					@Override
 					protected List<Server> call() throws Exception {
-
-						// TODO remove this - it's for testing the service only - or switch completely to
-						// using the LocalServer (see comment on top of this class).
-						List<ServerDto> serverDtos = LocalServerRestClient.getInstance().execute(new GetServerDtos());
-						System.out.println(serverDtos);
-
 						return getServerRegistry().getServers();
 					}
 
@@ -69,9 +62,13 @@ public class ServerListMainTreeItem extends MainTreeItem<String> {
 		}.start();
 	}
 
+	protected LocalServerClient getLocalServerClient() {
+		return LocalServerClient.getInstance();
+	}
+
 	protected ServerRegistry getServerRegistry() {
 		if (serverRegistry == null) {
-			serverRegistry = ServerRegistry.getInstance();
+			serverRegistry = getLocalServerClient().invokeStatic(ServerRegistryImpl.class, "getInstance");
 			serverRegistry.addPropertyChangeListener(ServerRegistry.PropertyEnum.servers, serversPropertyChangeListener);
 		}
 		return serverRegistry;

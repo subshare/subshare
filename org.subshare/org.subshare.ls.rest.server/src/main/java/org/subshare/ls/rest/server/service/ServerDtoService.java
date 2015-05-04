@@ -9,7 +9,7 @@ import javax.ws.rs.core.MediaType;
 import org.subshare.core.dto.ServerDto;
 import org.subshare.core.server.Server;
 import org.subshare.core.server.ServerDtoConverter;
-import org.subshare.core.server.ServerRegistry;
+import org.subshare.core.server.ServerRegistryImpl;
 
 import co.codewizards.cloudstore.core.dto.ListDto;
 
@@ -27,7 +27,7 @@ public class ServerDtoService {
 		final ListDto<ServerDto> result = new ListDto<ServerDto>();
 		final ServerDtoConverter converter = new ServerDtoConverter();
 
-		for (Server server : ServerRegistry.getInstance().getServers())
+		for (Server server : ServerRegistryImpl.getInstance().getServers())
 			result.getElements().add(converter.toServerDto(server));
 
 		return result;

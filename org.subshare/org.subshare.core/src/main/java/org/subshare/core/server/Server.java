@@ -1,15 +1,12 @@
 package org.subshare.core.server;
 
 import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
 import java.net.URL;
 
 import co.codewizards.cloudstore.core.bean.PropertyBase;
 import co.codewizards.cloudstore.core.dto.Uid;
 
-public class Server implements Cloneable {
-
-	private PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
+public interface Server {
 
 	public static interface Property extends PropertyBase {
 	}
@@ -20,71 +17,28 @@ public class Server implements Cloneable {
 		url
 	}
 
-	public Server() {
-		this(null);
-	}
+	public abstract Uid getServerId();
 
-	public Server(final Uid serverId) {
-		this.serverId = serverId == null ? new Uid() : serverId;
-	}
+	public abstract String getName();
 
-	private Uid serverId;
+	public abstract void setName(String name);
 
-	private String name;
+	public abstract URL getUrl();
 
-	private URL url;
+	public abstract void setUrl(URL url);
 
-	public Uid getServerId() {
-		return serverId;
-	}
+	public abstract void addPropertyChangeListener(
+			PropertyChangeListener listener);
 
-	public String getName() {
-		return name;
-	}
-	public void setName(final String name) {
-		final String old = this.name;
-		this.name = name;
-		firePropertyChange(PropertyEnum.name, old, name);
-	}
+	public abstract void addPropertyChangeListener(Property property,
+			PropertyChangeListener listener);
 
-	public URL getUrl() {
-		return url;
-	}
-	public void setUrl(final URL url) {
-		final URL old = this.url;
-		this.url = url;
-		firePropertyChange(PropertyEnum.url, old, url);
-	}
+	public abstract void removePropertyChangeListener(
+			PropertyChangeListener listener);
 
-	public void addPropertyChangeListener(PropertyChangeListener listener) {
-		propertyChangeSupport.addPropertyChangeListener(listener);
-	}
+	public abstract void removePropertyChangeListener(Property property,
+			PropertyChangeListener listener);
 
-	public void addPropertyChangeListener(Property property, PropertyChangeListener listener) {
-		propertyChangeSupport.addPropertyChangeListener(property.name(), listener);
-	}
+	public abstract Server clone();
 
-	public void removePropertyChangeListener(PropertyChangeListener listener) {
-		propertyChangeSupport.removePropertyChangeListener(listener);
-	}
-
-	public void removePropertyChangeListener(Property property, PropertyChangeListener listener) {
-		propertyChangeSupport.removePropertyChangeListener(property.name(), listener);
-	}
-
-	protected void firePropertyChange(Property property, Object oldValue, Object newValue) {
-		propertyChangeSupport.firePropertyChange(property.name(), oldValue, newValue);
-	}
-
-	@Override
-	public Server clone() {
-		final Server clone;
-		try {
-			clone = (Server) super.clone();
-		} catch (CloneNotSupportedException e) {
-			throw new RuntimeException(e);
-		}
-		clone.propertyChangeSupport = new PropertyChangeSupport(clone);
-		return clone;
-	}
 }

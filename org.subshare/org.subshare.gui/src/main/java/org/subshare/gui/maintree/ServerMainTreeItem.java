@@ -4,6 +4,7 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
 import javafx.scene.Parent;
 
 import org.subshare.core.server.Server;
+import org.subshare.core.server.Server;
 import org.subshare.gui.server.ServerPane;
 
 public class ServerMainTreeItem extends MainTreeItem<Server> {

@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
+import javafx.application.Platform;
 import javafx.collections.ListChangeListener;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
@@ -32,10 +33,13 @@ import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.BorderPane;
 
 import org.subshare.core.server.Server;
+import org.subshare.core.server.ServerImpl;
 import org.subshare.core.server.ServerRegistry;
+import org.subshare.core.server.ServerRegistryImpl;
 import org.subshare.gui.util.UrlStringConverter;
 
 import co.codewizards.cloudstore.core.dto.DateTime;
+import co.codewizards.cloudstore.ls.client.LocalServerClient;
 
 public class ServerListPane extends BorderPane {
 
@@ -67,12 +71,17 @@ public class ServerListPane extends BorderPane {
 
 	private PropertyChangeListener serverPropertyChangeListener = new PropertyChangeListener() {
 		@Override
-		public void propertyChange(PropertyChangeEvent evt) {
-//			final Server server = (Server) evt.getSource();
-			// workaround for refresh bug
-			List<TableColumn<ServerListItem, ?>> columns = new ArrayList<>(tableView.getColumns());
-			tableView.getColumns().clear();
-			tableView.getColumns().addAll(columns);
+		public void propertyChange(final PropertyChangeEvent evt) {
+			Platform.runLater(new Runnable() {
+				@Override
+				public void run() {
+//					final Server server = (Server) evt.getSource();
+					// workaround for refresh bug
+					List<TableColumn<ServerListItem, ?>> columns = new ArrayList<>(tableView.getColumns());
+					tableView.getColumns().clear();
+					tableView.getColumns().addAll(columns);
+				}
+			});
 		}
 	};
 
@@ -135,9 +144,13 @@ public class ServerListPane extends BorderPane {
 		}.start();
 	}
 
+	protected LocalServerClient getLocalServerClient() {
+		return LocalServerClient.getInstance();
+	}
+
 	protected ServerRegistry getServerRegistry() {
 		if (serverRegistry == null) {
-			serverRegistry = ServerRegistry.getInstance();
+			serverRegistry = getLocalServerClient().invokeStatic(ServerRegistryImpl.class, "getInstance");
 			serverRegistry.addPropertyChangeListener(ServerRegistry.PropertyEnum.servers, serversPropertyChangeListener);
 			serverRegistry.addPropertyChangeListener(ServerRegistry.PropertyEnum.servers_server, serverPropertyChangeListener);
 		}
@@ -187,7 +200,7 @@ public class ServerListPane extends BorderPane {
 	@FXML
 	private void addButtonClicked(final ActionEvent event) {
 		System.out.println("addButtonClicked: " + event);
-		Server server = new Server();
+		Server server = getLocalServerClient().invokeConstructor(ServerImpl.class);
 		server.setName("Server " + new DateTime(new Date()));
 		try {
 			server.setUrl(new URL("https://host.domain.tld:1234"));
