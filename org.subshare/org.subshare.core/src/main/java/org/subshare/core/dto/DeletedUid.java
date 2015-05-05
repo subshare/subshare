@@ -7,7 +7,7 @@ import co.codewizards.cloudstore.core.dto.Uid;
 /**
  * Reference to a deleted object, holding its ID and the deletion timestamp.
  * <p>
- * Instances of this class are used during sync-merges to find out, whethere a new object
+ * Instances of this class are used during sync-merges to find out, whether a new object
  * was added at one location and must be replicated or an object was deleted and must be deleted in
  * the 2nd location, too. The {@link #getDeleted() deleted} timestamp is solely kept to be able to
  * clean up and evict old entries after a while - maybe in the future (currently - 2015-04-30 - not yet implemented).

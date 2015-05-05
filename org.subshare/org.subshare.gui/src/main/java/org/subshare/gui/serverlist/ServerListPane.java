@@ -33,13 +33,11 @@ import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.BorderPane;
 
 import org.subshare.core.server.Server;
-import org.subshare.core.server.ServerImpl;
 import org.subshare.core.server.ServerRegistry;
-import org.subshare.core.server.ServerRegistryImpl;
+import org.subshare.gui.ls.ServerRegistryLs;
 import org.subshare.gui.util.UrlStringConverter;
 
 import co.codewizards.cloudstore.core.dto.DateTime;
-import co.codewizards.cloudstore.ls.client.LocalServerClient;
 
 public class ServerListPane extends BorderPane {
 
@@ -112,7 +110,6 @@ public class ServerListPane extends BorderPane {
 					}
 				});
 			}
-
 		}
 		populateTableViewAsync();
 		updateEnabled();
@@ -144,13 +141,9 @@ public class ServerListPane extends BorderPane {
 		}.start();
 	}
 
-	protected LocalServerClient getLocalServerClient() {
-		return LocalServerClient.getInstance();
-	}
-
 	protected ServerRegistry getServerRegistry() {
 		if (serverRegistry == null) {
-			serverRegistry = getLocalServerClient().invokeStatic(ServerRegistryImpl.class, "getInstance");
+			serverRegistry = ServerRegistryLs.getServerRegistry();
 			serverRegistry.addPropertyChangeListener(ServerRegistry.PropertyEnum.servers, serversPropertyChangeListener);
 			serverRegistry.addPropertyChangeListener(ServerRegistry.PropertyEnum.servers_server, serverPropertyChangeListener);
 		}
@@ -200,7 +193,7 @@ public class ServerListPane extends BorderPane {
 	@FXML
 	private void addButtonClicked(final ActionEvent event) {
 		System.out.println("addButtonClicked: " + event);
-		Server server = getLocalServerClient().invokeConstructor(ServerImpl.class);
+		Server server = getServerRegistry().createServer();
 		server.setName("Server " + new DateTime(new Date()));
 		try {
 			server.setUrl(new URL("https://host.domain.tld:1234"));

@@ -17,10 +17,8 @@ import javafx.scene.control.TreeItem;
 
 import org.subshare.core.server.Server;
 import org.subshare.core.server.ServerRegistry;
-import org.subshare.core.server.ServerRegistryImpl;
+import org.subshare.gui.ls.ServerRegistryLs;
 import org.subshare.gui.serverlist.ServerListPane;
-
-import co.codewizards.cloudstore.ls.client.LocalServerClient;
 
 public class ServerListMainTreeItem extends MainTreeItem<String> {
 
@@ -62,13 +60,9 @@ public class ServerListMainTreeItem extends MainTreeItem<String> {
 		}.start();
 	}
 
-	protected LocalServerClient getLocalServerClient() {
-		return LocalServerClient.getInstance();
-	}
-
 	protected ServerRegistry getServerRegistry() {
 		if (serverRegistry == null) {
-			serverRegistry = getLocalServerClient().invokeStatic(ServerRegistryImpl.class, "getInstance");
+			serverRegistry = ServerRegistryLs.getServerRegistry();
 			serverRegistry.addPropertyChangeListener(ServerRegistry.PropertyEnum.servers, serversPropertyChangeListener);
 		}
 		return serverRegistry;

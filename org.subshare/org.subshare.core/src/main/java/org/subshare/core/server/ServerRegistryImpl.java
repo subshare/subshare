@@ -7,11 +7,9 @@ import static co.codewizards.cloudstore.core.util.UrlUtil.canonicalizeURL;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collection;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.subshare.core.dto.ServerDto;
@@ -28,11 +26,6 @@ import co.codewizards.cloudstore.core.config.ConfigDir;
 import co.codewizards.cloudstore.core.io.LockFile;
 import co.codewizards.cloudstore.core.io.LockFileFactory;
 import co.codewizards.cloudstore.core.oio.File;
-import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
-import co.codewizards.cloudstore.core.repo.local.LocalRepoManagerFactory;
-import co.codewizards.cloudstore.core.repo.local.LocalRepoRegistry;
-import co.codewizards.cloudstore.core.repo.transport.RepoTransport;
-import co.codewizards.cloudstore.core.repo.transport.RepoTransportFactoryRegistry;
 
 public class ServerRegistryImpl implements ServerRegistry {
 
@@ -101,7 +94,7 @@ public class ServerRegistryImpl implements ServerRegistry {
 		serverListFile = createFile(ConfigDir.getInstance().getFile(), SERVER_LIST_FILE_NAME);
 
 		read();
-		populateServersFromLocalRepositories();
+//		populateServersFromLocalRepositories();
 
 	}
 
@@ -125,62 +118,59 @@ public class ServerRegistryImpl implements ServerRegistry {
 		dirty = false;
 	}
 
-	private void populateServersFromLocalRepositories() {
-		final LocalRepoRegistry localRepoRegistry = LocalRepoRegistry.getInstance();
-		for (final UUID localRepositoryId : localRepoRegistry.getRepositoryIds()) {
-			final File localRoot = localRepoRegistry.getLocalRoot(localRepositoryId);
-			if (localRoot == null)
-				continue; // maybe deleted during iteration
+//	private void populateServersFromLocalRepositories() {
+//		final LocalRepoRegistry localRepoRegistry = LocalRepoRegistry.getInstance();
+//		for (final UUID localRepositoryId : localRepoRegistry.getRepositoryIds()) {
+//			final File localRoot = localRepoRegistry.getLocalRoot(localRepositoryId);
+//			if (localRoot == null)
+//				continue; // maybe deleted during iteration
+//
+//			try (final LocalRepoManager localRepoManager = LocalRepoManagerFactory.Helper.getInstance().createLocalRepoManagerForExistingRepository(localRoot);) {
+//				for (final URL remoteRoot : localRepoManager.getRemoteRepositoryId2RemoteRootMap().values()) {
+//					if (getServerForRemoteRoot(remoteRoot) != null)
+//						continue; // we already have a server
+//
+//					final URL serverUrl;
+//					try (RepoTransport repoTransport = RepoTransportFactoryRegistry.getInstance().getRepoTransportFactoryOrFail(remoteRoot).createRepoTransport(remoteRoot, localRepositoryId);) {
+//						final URL remoteRootWithoutPathPrefix = repoTransport.getRemoteRootWithoutPathPrefix();
+//						// remoteRootWithoutPathPrefix still contains the repository-name or repository-id as last path-segment.
+//						serverUrl = removeLastPathSegment(remoteRootWithoutPathPrefix);
+//					}
+//
+//					final ServerImpl server = new ServerImpl();
+//					server.setName(serverUrl.getHost());
+//					server.setUrl(serverUrl);
+//					getServers().add(server);
+//				}
+//			}
+//		}
+//	}
+//
+//	private URL removeLastPathSegment(URL url) {
+//		assertNotNull("url", url);
+//		String urlStr = url.toExternalForm();
+//		if (urlStr.contains("?"))
+//			throw new IllegalArgumentException("url should not contain a query part!");
+//
+//		while (urlStr.endsWith("/"))
+//			urlStr = urlStr.substring(0, urlStr.length() - 1);
+//
+//		final int lastSlashIndex = urlStr.lastIndexOf('/');
+//		if (lastSlashIndex < 0)
+//			throw new IllegalArgumentException("No '/' found where expected!");
+//
+//		urlStr = urlStr.substring(0, lastSlashIndex);
+//
+//		while (urlStr.endsWith("/"))
+//			urlStr = urlStr.substring(0, urlStr.length() - 1);
+//
+//		try {
+//			return new URL(urlStr);
+//		} catch (MalformedURLException e) {
+//			throw new RuntimeException(e);
+//		}
+//	}
 
-			try (final LocalRepoManager localRepoManager = LocalRepoManagerFactory.Helper.getInstance().createLocalRepoManagerForExistingRepository(localRoot);) {
-				for (final URL remoteRoot : localRepoManager.getRemoteRepositoryId2RemoteRootMap().values()) {
-					if (getServerForRemoteRoot(remoteRoot) != null)
-						continue; // we already have a server
-
-					final URL serverUrl;
-					try (RepoTransport repoTransport = RepoTransportFactoryRegistry.getInstance().getRepoTransportFactoryOrFail(remoteRoot).createRepoTransport(remoteRoot, localRepositoryId);) {
-						final URL remoteRootWithoutPathPrefix = repoTransport.getRemoteRootWithoutPathPrefix();
-						// remoteRootWithoutPathPrefix still contains the repository-name or repository-id as last path-segment.
-						serverUrl = removeLastPathSegment(remoteRootWithoutPathPrefix);
-					}
-
-					final ServerImpl server = new ServerImpl();
-					server.setName(serverUrl.getHost());
-					server.setUrl(serverUrl);
-					getServers().add(server);
-				}
-			}
-		}
-	}
-
-	private URL removeLastPathSegment(URL url) {
-		assertNotNull("url", url);
-		String urlStr = url.toExternalForm();
-		if (urlStr.contains("?"))
-			throw new IllegalArgumentException("url should not contain a query part!");
-
-		while (urlStr.endsWith("/"))
-			urlStr = urlStr.substring(0, urlStr.length() - 1);
-
-		final int lastSlashIndex = urlStr.lastIndexOf('/');
-		if (lastSlashIndex < 0)
-			throw new IllegalArgumentException("No '/' found where expected!");
-
-		urlStr = urlStr.substring(0, lastSlashIndex);
-
-		while (urlStr.endsWith("/"))
-			urlStr = urlStr.substring(0, urlStr.length() - 1);
-
-		try {
-			return new URL(urlStr);
-		} catch (MalformedURLException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	/* (non-Javadoc)
-	 * @see org.subshare.core.server.IServerRegistry#getServerForRemoteRoot(java.net.URL)
-	 */
 	@Override
 	public Server getServerForRemoteRoot(final URL remoteRoot) {
 		assertNotNull("remoteRoot", remoteRoot);
@@ -215,6 +205,11 @@ public class ServerRegistryImpl implements ServerRegistry {
 	@Override
 	public List<Server> getServers() {
 		return servers;
+	}
+
+	@Override
+	public Server createServer() {
+		return new ServerImpl();
 	}
 
 	private LockFile acquireLockFile() {

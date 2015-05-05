@@ -16,24 +16,21 @@ public interface ServerRegistry {
 		servers_server
 	}
 
-	public abstract Server getServerForRemoteRoot(URL remoteRoot);
+	Server getServerForRemoteRoot(URL remoteRoot);
 
-	public abstract List<Server> getServers();
+	List<Server> getServers();
 
-	public abstract void writeIfNeeded();
+	Server createServer();
 
-	public abstract void write();
+	void writeIfNeeded();
 
-	public abstract void addPropertyChangeListener(
-			PropertyChangeListener listener);
+	void write();
 
-	public abstract void addPropertyChangeListener(Property property,
-			PropertyChangeListener listener);
+	void addPropertyChangeListener(PropertyChangeListener listener);
 
-	public abstract void removePropertyChangeListener(
-			PropertyChangeListener listener);
+	void addPropertyChangeListener(Property property, PropertyChangeListener listener);
 
-	public abstract void removePropertyChangeListener(Property property,
-			PropertyChangeListener listener);
+	void removePropertyChangeListener(PropertyChangeListener listener);
 
+	void removePropertyChangeListener(Property property, PropertyChangeListener listener);
 }

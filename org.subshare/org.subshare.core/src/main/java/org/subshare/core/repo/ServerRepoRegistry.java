@@ -1,31 +1,31 @@
-package org.subshare.core.server;
+package org.subshare.core.repo;
 
 import java.beans.PropertyChangeListener;
-import java.net.URL;
+import java.util.List;
+import java.util.UUID;
 
 import co.codewizards.cloudstore.core.bean.PropertyBase;
 import co.codewizards.cloudstore.core.dto.Uid;
 
-public interface Server {
+public interface ServerRepoRegistry {
 
 	public static interface Property extends PropertyBase {
 	}
 
 	public static enum PropertyEnum implements Property {
-		serverId,
-		name,
-		url
+		serverRepos,
+		serverRepos_serverRepo
 	}
 
-	Uid getServerId();
+	List<ServerRepo> getServerRepos();
 
-	String getName();
+	List<ServerRepo> getServerReposOfServer(Uid serverId);
 
-	void setName(String name);
+	ServerRepo createServerRepo(UUID repositoryId);
 
-	URL getUrl();
+	void writeIfNeeded();
 
-	void setUrl(URL url);
+	void write();
 
 	void addPropertyChangeListener(PropertyChangeListener listener);
 
@@ -34,7 +34,5 @@ public interface Server {
 	void removePropertyChangeListener(PropertyChangeListener listener);
 
 	void removePropertyChangeListener(Property property, PropertyChangeListener listener);
-
-	Server clone();
 
 }
