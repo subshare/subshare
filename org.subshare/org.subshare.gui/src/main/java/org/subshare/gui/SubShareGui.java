@@ -9,6 +9,8 @@ import javafx.stage.Stage;
 
 import org.subshare.ls.server.SsLocalServer;
 
+import co.codewizards.cloudstore.ls.client.LocalServerClient;
+
 public class SubShareGui extends Application {
 
 	private SsLocalServer localServer;
@@ -34,6 +36,7 @@ public class SubShareGui extends Application {
 
 	@Override
 	public void stop() throws Exception {
+		LocalServerClient.getInstance().close();
 		if (localServer != null) {
 			localServer.stop();
 			localServer = null;
