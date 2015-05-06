@@ -1,11 +1,16 @@
 package org.subshare.core.pgp.gnupg;
 
-import static co.codewizards.cloudstore.core.oio.OioFileFactory.createFile;
-import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
+import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static co.codewizards.cloudstore.core.util.HashUtil.*;
+import static co.codewizards.cloudstore.core.util.IOUtil.*;
+import static co.codewizards.cloudstore.core.util.Util.*;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -16,7 +21,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.bouncycastle.bcpg.BCPGOutputStream;
 import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPKeyRing;
+import org.bouncycastle.openpgp.PGPObjectFactory;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
@@ -85,6 +93,157 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 		return bcPgpKey == null ? null : bcPgpKey.getPgpKey();
 	}
 
+	@Override
+	public synchronized void exportPublicKeysWithPrivateKeys(final Set<PgpKey> pgpKeys, OutputStream out) {
+		throw new UnsupportedOperationException("NYI");
+	}
+
+	@Override
+	public synchronized void exportPublicKeys(final Set<PgpKey> pgpKeys, OutputStream out) {
+		assertNotNull("pgpKeys", pgpKeys);
+		assertNotNull("out", out);
+
+		if (! (out instanceof BCPGOutputStream))
+			out = new BCPGOutputStream(out); // seems not necessary, but maybe better (faster for sure, since it doesn't need to be created again and again).
+
+		try {
+			for (final PgpKey pgpKey : pgpKeys) {
+				final BcPgpKey bcPgpKey = getBcPgpKeyOrFail(pgpKey);
+				bcPgpKey.getPublicKeyRing().encode(out);
+			}
+		} catch (IOException x) {
+			throw new RuntimeException(x);
+		}
+	}
+
+	@Override
+	public synchronized void importKeys(InputStream in) {
+		assertNotNull("in", in);
+
+		try {
+			in = PGPUtil.getDecoderStream(in);
+			final PGPObjectFactory pgpF = new PGPObjectFactory(in);
+
+			Object o;
+			while ((o = pgpF.nextObject()) != null) {
+				if (o instanceof PGPPublicKeyRing)
+					importPublicKeyRing((PGPPublicKeyRing) o);
+				else if (o instanceof PGPSecretKeyRing)
+					importSecretKeyRing((PGPSecretKeyRing) o);
+				else
+					throw new IllegalStateException("Unexpected object in InputStream (only PGPPublicKeyRing and PGPSecretKeyRing are supported): " + o);
+			}
+		} catch (IOException | PGPException x) {
+			throw new RuntimeException(x);
+		}
+	}
+
+	private void importPublicKeyRing(final PGPPublicKeyRing publicKeyRing) throws IOException, PGPException {
+		assertNotNull("publicKeyRing", publicKeyRing);
+
+		final File pubringFile = getPubringFile();
+		if (!pubringFile.isFile())
+			throw new IllegalStateException("There is no public key-ring! You must first initialise your personal key-ring!");
+
+		PGPPublicKeyRingCollection oldPublicKeyRingCollection;
+		try (InputStream in = new BufferedInputStream(pubringFile.createInputStream());) {
+			oldPublicKeyRingCollection = new PGPPublicKeyRingCollection(PGPUtil.getDecoderStream(in));
+		}
+
+		PGPPublicKeyRingCollection newPublicKeyRingCollection = oldPublicKeyRingCollection;
+		newPublicKeyRingCollection = mergePublicKeyRing(newPublicKeyRingCollection, publicKeyRing);
+
+		if (oldPublicKeyRingCollection != newPublicKeyRingCollection) {
+			final File tmpFile = createFile(pubringFile.getParentFile(), pubringFile.getName() + ".tmp");
+			try (OutputStream out = new BufferedOutputStream(tmpFile.createOutputStream());) {
+				newPublicKeyRingCollection.encode(out);
+			}
+			pubringFile.delete();
+			tmpFile.renameTo(pubringFile);
+		}
+	}
+
+	private PGPPublicKeyRingCollection mergePublicKeyRing(PGPPublicKeyRingCollection publicKeyRingCollection, final PGPPublicKeyRing publicKeyRing) throws PGPException {
+		assertNotNull("publicKeyRingCollection", publicKeyRingCollection);
+		assertNotNull("publicKeyRing", publicKeyRing);
+
+		PGPPublicKeyRing oldPublicKeyRing = publicKeyRingCollection.getPublicKeyRing(publicKeyRing.getPublicKey().getKeyID());
+		if (oldPublicKeyRing == null)
+			publicKeyRingCollection = PGPPublicKeyRingCollection.addPublicKeyRing(publicKeyRingCollection, publicKeyRing);
+		else {
+			PGPPublicKeyRing newPublicKeyRing = oldPublicKeyRing;
+			for (final Iterator<?> it = publicKeyRing.getPublicKeys(); it.hasNext(); ) {
+				PGPPublicKey publicKey = (PGPPublicKey) it.next();
+				newPublicKeyRing = mergePublicKey(newPublicKeyRing, publicKey);
+			}
+
+			if (newPublicKeyRing != oldPublicKeyRing) {
+				publicKeyRingCollection = PGPPublicKeyRingCollection.removePublicKeyRing(publicKeyRingCollection, oldPublicKeyRing);
+				publicKeyRingCollection = PGPPublicKeyRingCollection.addPublicKeyRing(publicKeyRingCollection, newPublicKeyRing);
+			}
+		}
+		return publicKeyRingCollection;
+	}
+
+	private PGPPublicKeyRing mergePublicKey(PGPPublicKeyRing publicKeyRing, final PGPPublicKey publicKey) {
+		assertNotNull("publicKeyRing", publicKeyRing);
+		assertNotNull("publicKey", publicKey);
+
+		PGPPublicKey oldPublicKey = publicKeyRing.getPublicKey(publicKey.getKeyID());
+		if (oldPublicKey == null)
+			publicKeyRing = PGPPublicKeyRing.insertPublicKey(publicKeyRing, publicKey);
+		else {
+			PGPPublicKey newPublicKey = oldPublicKey;
+			for (final Iterator<?> it = publicKey.getSignatures(); it.hasNext(); ) {
+				PGPSignature signature = (PGPSignature) it.next();
+				newPublicKey = mergeSignature(newPublicKey, signature);
+			}
+
+			if (newPublicKey != oldPublicKey) {
+				publicKeyRing = PGPPublicKeyRing.removePublicKey(publicKeyRing, oldPublicKey);
+				publicKeyRing = PGPPublicKeyRing.insertPublicKey(publicKeyRing, newPublicKey);
+			}
+		}
+		return publicKeyRing;
+	}
+
+
+	private PGPPublicKey mergeSignature(PGPPublicKey publicKey, final PGPSignature signature) {
+		assertNotNull("publicKey", publicKey);
+		assertNotNull("signature", signature);
+
+		PGPSignature oldSignature = getSignature(publicKey, signature);
+		if (oldSignature == null)
+			publicKey = PGPPublicKey.addCertification(publicKey, signature);
+
+		return publicKey;
+	}
+
+	private static PGPSignature getSignature(final PGPPublicKey publicKey, final PGPSignature signature) {
+		assertNotNull("publicKey", publicKey);
+		assertNotNull("signature", signature);
+
+		for (final Iterator<?> it = publicKey.getSignatures(); it.hasNext(); ) {
+			final PGPSignature s = (PGPSignature) it.next();
+			if (isSignatureEqual(s, signature))
+				return s;
+		}
+		return null;
+	}
+
+	private static boolean isSignatureEqual(final PGPSignature one, final PGPSignature two) {
+		return equal(one.getKeyID(), two.getKeyID())
+				&& equal(one.getCreationTime(), two.getCreationTime())
+				&& equal(one.getHashAlgorithm(), two.getHashAlgorithm())
+				&& equal(one.getKeyAlgorithm(), two.getKeyAlgorithm())
+				&& equal(one.getSignatureType(), two.getSignatureType());
+	}
+
+	private void importSecretKeyRing(PGPSecretKeyRing secretKeyRing) throws IOException, PGPException {
+		// TODO implement this!
+		throw new UnsupportedOperationException("Importing secret keys is not yet supported!");
+	}
+
 	public BcPgpKey getBcPgpKeyOrFail(final PgpKey pgpKey) {
 		final BcPgpKey bcPgpKey = getBcPgpKey(pgpKey);
 		if (bcPgpKey == null)
@@ -150,7 +309,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 			logger.debug("load: secringFile='{}'", secringFile);
 			secringFileLastModified = secringFile.lastModified();
 			if (secringFile.isFile()) {
-				PGPSecretKeyRingCollection pgpSecretKeyRingCollection;
+				final PGPSecretKeyRingCollection pgpSecretKeyRingCollection;
 				try (InputStream in = new BufferedInputStream(secringFile.createInputStream());) {
 					pgpSecretKeyRingCollection = new PGPSecretKeyRingCollection(PGPUtil.getDecoderStream(in));
 				}
@@ -160,7 +319,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 					for (final Iterator<?> it2 = keyRing.getPublicKeys(); it2.hasNext(); ) {
 						final PGPPublicKey publicKey = (PGPPublicKey) it2.next();
 						lastMasterKey = enlistPublicKey(pgpKeyId2bcPgpKey,
-								pgpKeyId2masterKey, lastMasterKey, publicKey);
+								pgpKeyId2masterKey, lastMasterKey, keyRing, publicKey);
 					}
 
 					for (final Iterator<?> it3 = keyRing.getSecretKeys(); it3.hasNext(); ) {
@@ -180,7 +339,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 			logger.debug("load: pubringFile='{}'", pubringFile);
 			pubringFileLastModified = pubringFile.lastModified();
 			if (pubringFile.isFile()) {
-				PGPPublicKeyRingCollection pgpPublicKeyRingCollection;
+				final PGPPublicKeyRingCollection pgpPublicKeyRingCollection;
 				try (InputStream in = new BufferedInputStream(pubringFile.createInputStream());) {
 					pgpPublicKeyRingCollection = new PGPPublicKeyRingCollection(PGPUtil.getDecoderStream(in));
 				}
@@ -191,12 +350,20 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 					for (final Iterator<?> it2 = keyRing.getPublicKeys(); it2.hasNext(); ) {
 						final PGPPublicKey publicKey = (PGPPublicKey) it2.next();
 						lastMasterKey = enlistPublicKey(pgpKeyId2bcPgpKey,
-								pgpKeyId2masterKey, lastMasterKey, publicKey);
+								pgpKeyId2masterKey, lastMasterKey, keyRing, publicKey);
 					}
 				}
 			}
 		} catch (IOException | PGPException x) {
 			throw new RuntimeException(x);
+		}
+
+		for (final BcPgpKey bcPgpKey : pgpKeyId2bcPgpKey.values()) {
+			if (bcPgpKey.getPublicKey() == null)
+				throw new IllegalStateException("bcPgpKey.publicKey == null :: keyId = " + encodeHexStr(longToBytes(bcPgpKey.getPgpKeyId())));
+
+			if (bcPgpKey.getPublicKeyRing() == null)
+				throw new IllegalStateException("bcPgpKey.publicKeyRing == null :: keyId = " + encodeHexStr(longToBytes(bcPgpKey.getPgpKeyId())));
 		}
 
 		this.secringFileLastModified = secringFileLastModified;
@@ -260,7 +427,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 
 	private BcPgpKey enlistPublicKey(final Map<Long, BcPgpKey> pgpKeyId2bcPgpKey,
 			final Map<Long, BcPgpKey> pgpKeyId2masterKey,
-			BcPgpKey lastMasterKey, final PGPPublicKey publicKey)
+			BcPgpKey lastMasterKey, final PGPKeyRing keyRing, final PGPPublicKey publicKey)
 	{
 		final long pgpKeyId = publicKey.getKeyID();
 		BcPgpKey bcPgpKey = pgpKeyId2bcPgpKey.get(pgpKeyId);
@@ -268,6 +435,14 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 			bcPgpKey = new BcPgpKey(pgpKeyId);
 			pgpKeyId2bcPgpKey.put(pgpKeyId, bcPgpKey);
 		}
+
+		if (keyRing instanceof PGPSecretKeyRing)
+			bcPgpKey.setSecretKeyRing((PGPSecretKeyRing)keyRing);
+		else if (keyRing instanceof PGPPublicKeyRing)
+			bcPgpKey.setPublicKeyRing((PGPPublicKeyRing)keyRing);
+		else
+			throw new IllegalArgumentException("keyRing is neither an instance of PGPSecretKeyRing nor PGPPublicKeyRing!");
+
 		bcPgpKey.setPublicKey(publicKey);
 
 		if (publicKey.isMasterKey()) {

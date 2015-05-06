@@ -8,7 +8,11 @@ import static org.assertj.core.api.Assertions.*;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.HashSet;
 import java.util.Random;
+import java.util.Set;
 
 import org.subshare.core.gpg.GnuPgTest;
 import org.subshare.core.pgp.gnupg.GnuPgDir;
@@ -211,6 +215,59 @@ public class PgpTest {
 		} catch (Exception x) { // Might be every imaginable exception (not only SignatureException), because we might have corrupted meta-data needed for basic reading.
 			logger.debug("Caught expected exception: " + x, x);
 		}
+	}
+
+	@Test
+	public void exportImportPublicKey() throws Exception {
+		Set<PgpKey> pgpKeys = new HashSet<>();
+
+		PgpKey pgpKey = pgp.getPgpKey(bytesToLong(decodeHexStr("70c642ca41cd4390")));
+		assertThat(pgpKey).isNotNull();
+		pgpKeys.add(pgpKey);
+
+		pgpKey = pgp.getPgpKey(bytesToLong(decodeHexStr("d7a92a24aa97ddbd")));
+		assertThat(pgpKey).isNotNull();
+		assertThat(pgp.getSignatures(pgpKey).size()).isEqualTo(2); // 1 self-signed + 1 signed by 70c642ca41cd4390
+		pgpKeys.add(pgpKey);
+
+		File tempFile = createTempFile("pubkeys-", ".gpg");
+		try (OutputStream out = tempFile.createOutputStream();) {
+			pgp.exportPublicKeys(pgpKeys, out);
+		}
+
+
+		try (InputStream in = GnuPgTest.class.getResourceAsStream("0xAA97DDBD_with_aaa_sig.asc");) {
+			pgp.importKeys(in);
+		}
+
+		// check for 1 *additional* signature
+		pgpKey = pgp.getPgpKey(bytesToLong(decodeHexStr("d7a92a24aa97ddbd")));
+		assertThat(pgpKey).isNotNull();
+		assertThat(pgp.getSignatures(pgpKey).size()).isEqualTo(3);
+
+
+		try (InputStream in = GnuPgTest.class.getResourceAsStream("0xAA97DDBD_with_bbb_sig.asc");) {
+			pgp.importKeys(in);
+		}
+
+		// check for again 1 *additional* signature
+		assertThat(pgp.getSignatures(pgpKey).size()).isEqualTo(4);
+
+
+		try (InputStream in = GnuPgTest.class.getResourceAsStream("0xAA97DDBD_with_aaa_sig.asc");) {
+			pgp.importKeys(in);
+		}
+
+		// check for 0 *additional* signatures
+		assertThat(pgp.getSignatures(pgpKey).size()).isEqualTo(4);
+
+
+		try (InputStream in = tempFile.createInputStream();) {
+			pgp.importKeys(in);
+		}
+
+		// check for 0 *additional* signatures
+		assertThat(pgp.getSignatures(pgpKey).size()).isEqualTo(4);
 	}
 
 	private byte[] createTestData() {

@@ -7,12 +7,18 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.bouncycastle.openpgp.PGPPublicKey;
+import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKey;
+import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.subshare.core.pgp.PgpKey;
 
 public class BcPgpKey {
 
 	private final long pgpKeyId;
+
+	private PGPPublicKeyRing publicKeyRing;
+
+	private PGPSecretKeyRing secretKeyRing;
 
 	private PGPPublicKey publicKey;
 
@@ -28,6 +34,20 @@ public class BcPgpKey {
 
 	public long getPgpKeyId() {
 		return pgpKeyId;
+	}
+
+	public PGPPublicKeyRing getPublicKeyRing() {
+		return publicKeyRing;
+	}
+	public void setPublicKeyRing(PGPPublicKeyRing publicKeyRing) {
+		this.publicKeyRing = publicKeyRing;
+	}
+
+	public PGPSecretKeyRing getSecretKeyRing() {
+		return secretKeyRing;
+	}
+	public void setSecretKeyRing(PGPSecretKeyRing secretKeyRing) {
+		this.secretKeyRing = secretKeyRing;
 	}
 
 	public PGPPublicKey getPublicKey() {

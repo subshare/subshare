@@ -3,6 +3,7 @@ package org.subshare.core.pgp;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Collection;
+import java.util.Set;
 
 public interface Pgp {
 
@@ -26,4 +27,9 @@ public interface Pgp {
 
 	PgpKeyTrustLevel getKeyTrustLevel(PgpKey pgpKey);
 
+	void exportPublicKeys(Set<PgpKey> pgpKeys, OutputStream out);
+
+	void exportPublicKeysWithPrivateKeys(Set<PgpKey> pgpKeys, OutputStream out);
+
+	void importKeys(InputStream in);
 }
