@@ -126,6 +126,8 @@ public class UserRegistryTest {
 	}
 
 	private void initPgp() throws IOException {
+		PgpRegistry.getInstance().clearCache();
+		
 		final File gnuPgDir = GnuPgDir.getInstance().getFile();
 
 		gnuPgDir.mkdir();

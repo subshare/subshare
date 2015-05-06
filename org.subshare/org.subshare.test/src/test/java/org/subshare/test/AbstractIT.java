@@ -1,7 +1,7 @@
 package org.subshare.test;
 
-import static co.codewizards.cloudstore.core.oio.OioFileFactory.createFile;
-import static org.assertj.core.api.Assertions.assertThat;
+import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -72,9 +72,12 @@ public abstract class AbstractIT {
 	@AfterClass
 	public static void abstractIT_afterClass() {
 		if (subShareServerTestSupport.afterClass()) {
-			cryptreeRepoTransportFactory.setDynamicX509TrustManagerCallbackClass(null);
-			cryptreeRepoTransportFactory.setUserRepoKeyRing(null);
+			CryptreeRepoTransportFactory f = cryptreeRepoTransportFactory;
 			cryptreeRepoTransportFactory = null;
+			if (f != null) {
+				f.setDynamicX509TrustManagerCallbackClass(null);
+				f.setUserRepoKeyRing(null);
+			}
 		}
 	}
 

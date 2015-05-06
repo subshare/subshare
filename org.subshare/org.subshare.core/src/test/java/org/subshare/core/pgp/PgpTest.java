@@ -277,6 +277,8 @@ public class PgpTest {
 	}
 
 	private static void initPgp() throws IOException {
+		PgpRegistry.getInstance().clearCache();
+
 		final File gnuPgDir = GnuPgDir.getInstance().getFile();
 
 		gnuPgDir.mkdir();
