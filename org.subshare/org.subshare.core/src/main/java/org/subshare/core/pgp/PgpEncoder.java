@@ -17,6 +17,9 @@ public interface PgpEncoder {
 	OutputStream getOutputStream();
 	void setOutputStream(OutputStream out);
 
+	OutputStream getSignOutputStream();
+	void setSignOutputStream(OutputStream out);
+
 	/**
 	 * Gets the keys of the recipients of the encrypted message.
 	 * @return the keys with which the data is encrypted. Never <code>null</code>, but maybe empty.
@@ -44,7 +47,15 @@ public interface PgpEncoder {
 	 * If there is at least one entry in {@link #getEncryptPgpKeys() encryptPgpKeys}, the data is encrypted.
 	 * <p>
 	 * If there is a {@link #getSignPgpKey() signPgpKey}, the data is signed.
-	 * @throws IOException TODO
+	 * <p>
+	 * If there is a {@link #getSignOutputStream() signOutputStream} set, the signature is written separately to this stream, i.e.
+	 * as a <i>detached</i> signature. If {@code signOutputStream} is <code>null</code> and signing is enabled (i.e. a
+	 * {@code signPgpKey} was set), the signature is written inline into the ordinary output-stream.
+	 * <p>
+	 * <b>Important:</b> It is not (yet) supported to combine a <i>detached</i> signature with encryption. Currently,
+	 * a separate {@code signOutputStream} can thus only be used, when signing is the only operation being done.
+	 *
+	 * @throws IOException if reading or writing fails - which might be caused indirectly by a failed cipher operation.
 	 */
 	void encode() throws IOException;
 }

@@ -8,6 +8,7 @@ public abstract class AbstractPgpDecoder implements PgpDecoder {
 
 	private InputStream inputStream;
 	private OutputStream outputStream;
+	private InputStream signInputStream;
 	private PgpKey decryptPgpKey;
 	private PgpKey signPgpKey;
 
@@ -41,6 +42,15 @@ public abstract class AbstractPgpDecoder implements PgpDecoder {
 			throw new IllegalStateException("outputStream == null");
 
 		return outputStream;
+	}
+
+	@Override
+	public InputStream getSignInputStream() {
+		return signInputStream;
+	}
+	@Override
+	public void setSignInputStream(InputStream signInputStream) {
+		this.signInputStream = signInputStream;
 	}
 
 	protected PgpAuthenticationCallback getPgpAuthenticationCallback() {

@@ -1,6 +1,6 @@
 package org.subshare.core.pgp;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -12,6 +12,7 @@ public abstract class AbstractPgpEncoder implements PgpEncoder {
 
 	private InputStream inputStream;
 	private OutputStream outputStream;
+	private OutputStream signOutputStream;
 
 	private final Set<PgpKey> encryptPgpKeys = new HashSet<PgpKey>(0);
 	private PgpKey signPgpKey;
@@ -52,6 +53,15 @@ public abstract class AbstractPgpEncoder implements PgpEncoder {
 			throw new IllegalStateException("outputStream == null");
 
 		return outputStream;
+	}
+
+	@Override
+	public OutputStream getSignOutputStream() {
+		return signOutputStream;
+	}
+	@Override
+	public void setSignOutputStream(OutputStream signOutputStream) {
+		this.signOutputStream = signOutputStream;
 	}
 
 	@Override

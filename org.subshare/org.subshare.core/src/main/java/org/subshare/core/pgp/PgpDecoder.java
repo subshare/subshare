@@ -14,6 +14,13 @@ public interface PgpDecoder {
 	OutputStream getOutputStream();
 	void setOutputStream(OutputStream out);
 
+	/**
+	 * Input of a detached signature.
+	 * @return input of a detached signature, or <code>null</code>.
+	 */
+	InputStream getSignInputStream();
+	void setSignInputStream(InputStream in);
+
 	void decode() throws SignatureException, IOException;
 
 	/**

@@ -1,11 +1,17 @@
 package org.subshare.core.pgp.gnupg;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static co.codewizards.cloudstore.core.util.HashUtil.*;
+import static co.codewizards.cloudstore.core.util.IOUtil.*;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import org.bouncycastle.bcpg.SymmetricKeyAlgorithmTags;
 import org.bouncycastle.openpgp.PGPCompressedData;
@@ -46,31 +52,80 @@ public class BcPgpDecoder extends AbstractPgpDecoder {
 		setDecryptPgpKey(null);
 		setSignPgpKey(null);
 
-		final InputStream in = PGPUtil.getDecoderStream(getInputStreamOrFail());
+		InputStream in = getInputStreamOrFail();
+		InputStream signIn = getSignInputStream();
 
-		final PGPObjectFactory pgpF = new PGPObjectFactory(in);
-		PGPEncryptedDataList enc;
-		PGPCompressedData comp = null;
+		if (signIn == null)
+			in = PGPUtil.getDecoderStream(in);
 
-		final Object o = pgpF.nextObject();
-		//
-		// the first object might be a PGP marker packet.
-		//
-		if (o instanceof PGPEncryptedDataList) // encrypted (+ maybe signed)
-			enc = (PGPEncryptedDataList) o;
-		else if (o instanceof PGPCompressedData) { // *not* encrypted, probably only signed
-			enc = null;
-			comp = (PGPCompressedData) o;
+		if (signIn != null) {
+			signIn = PGPUtil.getDecoderStream(signIn);
+			decodePlainWithDetachedSignature(in, signIn);
 		}
-		else
-			enc = (PGPEncryptedDataList) pgpF.nextObject();
+		else {
+			final PGPObjectFactory pgpF = new PGPObjectFactory(in);
+			PGPEncryptedDataList enc = null;
+			PGPCompressedData comp = null;
 
-		if (enc != null)
-			decodeEncrypted(enc);
-		else if (comp != null)
-			decodeCompressed(comp);
-		else
-			throw new IllegalStateException("WTF?!");
+			Object o = pgpF.nextObject();
+
+			// the first object might be a PGP marker packet
+			if (o instanceof PGPEncryptedDataList) // encrypted (+ maybe signed)
+				enc = (PGPEncryptedDataList) o;
+			else if (o instanceof PGPCompressedData) { // *not* encrypted, only signed
+				enc = null;
+				comp = (PGPCompressedData) o;
+			}
+			else {
+				// in case the first object was some marker
+				o = pgpF.nextObject();
+
+				if (o instanceof PGPEncryptedDataList) // encrypted (+ maybe signed)
+					enc = (PGPEncryptedDataList) o;
+				else if (o instanceof PGPCompressedData) { // *not* encrypted, only signed
+					enc = null;
+					comp = (PGPCompressedData) o;
+				}
+			}
+
+			if (enc != null)
+				decodeEncrypted(enc);
+			else if (comp != null)
+				decodeCompressed(comp);
+			else
+				throw new IllegalStateException("WTF?!");
+		}
+	}
+
+	private void decodePlainWithDetachedSignature(final InputStream in, final InputStream signIn) throws SignatureException, IOException {
+		assertNotNull("in", in);
+		assertNotNull("signIn", signIn);
+
+		final PGPObjectFactory pgpF = new PGPObjectFactory(signIn);
+
+		PGPOnePassSignatureList onePassSignatureList = null;
+		PGPSignatureList signatureList = null;
+
+		try {
+			Object message = pgpF.nextObject();
+			while (message != null) {
+				if (message instanceof PGPOnePassSignatureList) {
+					onePassSignatureList = (PGPOnePassSignatureList) message;
+				} else if (message instanceof PGPSignatureList) {
+					signatureList = (PGPSignatureList) message;
+				} else
+					throw new PGPException("message unknown message type.");
+
+				message = pgpF.nextObject();
+			}
+
+			if (onePassSignatureList == null || signatureList == null)
+				throw new PGPException("Poor PGP. Signatures not found.");
+
+			verifySignature(onePassSignatureList, signatureList, in, getOutputStreamOrFail());
+		} catch (final PGPException x) {
+			throw new IOException(x);
+		}
 	}
 
 	private void decodeCompressed(final PGPCompressedData comp) throws SignatureException, IOException {
@@ -108,32 +163,12 @@ public class BcPgpDecoder extends AbstractPgpDecoder {
 			}
 
 			actualOutput.close();
-			PGPPublicKey publicKey = null;
 			final byte[] output = actualOutput.toByteArray();
-			if (onePassSignatureList == null || signatureList == null) {
+
+			if (onePassSignatureList == null || signatureList == null)
 				throw new PGPException("Poor PGP. Signatures not found.");
-			} else {
-				for (int i = 0; i < onePassSignatureList.size(); i++) {
-					final PGPOnePassSignature ops = onePassSignatureList.get(i);
-					final BcPgpKey bcPgpKey = pgp.getBcPgpKey(ops.getKeyID());
-					if (bcPgpKey != null) {
-						publicKey = bcPgpKey.getPublicKey();
-						ops.init(new BcPGPContentVerifierBuilderProvider(), publicKey);
-						ops.update(output);
-						final PGPSignature signature = signatureList.get(i);
-						if (ops.verify(signature)) {
-							setSignPgpKey(bcPgpKey.getPgpKey());
-						} else {
-							throw new SignatureException("Signature verification failed!");
-						}
-					}
-				}
 
-			}
-
-			getOutputStreamOrFail().write(output);
-		} catch (final java.security.SignatureException x) {
-			throw new SignatureException(x);
+			verifySignature(onePassSignatureList, signatureList, new ByteArrayInputStream(output), getOutputStreamOrFail());
 		} catch (final PGPException x) {
 			throw new IOException(x);
 		}
@@ -215,41 +250,74 @@ public class BcPgpDecoder extends AbstractPgpDecoder {
 			}
 
 			actualOutput.close();
-			PGPPublicKey publicKey = null;
 			final byte[] output = actualOutput.toByteArray();
-			if (onePassSignatureList == null || signatureList == null) {
+
+			if (onePassSignatureList == null || signatureList == null)
 				throw new PGPException("Poor PGP. Signatures not found.");
-			} else {
-				for (int i = 0; i < onePassSignatureList.size(); i++) {
-					final PGPOnePassSignature ops = onePassSignatureList.get(i);
-					final BcPgpKey bcPgpKey = pgp.getBcPgpKey(ops.getKeyID());
-					if (bcPgpKey != null) {
-						publicKey = bcPgpKey.getPublicKey();
-						ops.init(new BcPGPContentVerifierBuilderProvider(), publicKey);
-						ops.update(output);
-						final PGPSignature signature = signatureList.get(i);
-						if (ops.verify(signature)) {
-							setSignPgpKey(bcPgpKey.getPgpKey());
-						} else {
-							throw new SignatureException("Signature verification failed!");
-						}
-					}
-				}
 
-			}
+			verifySignature(onePassSignatureList, signatureList, new ByteArrayInputStream(output), getOutputStreamOrFail());
 
-			if (pbe.isIntegrityProtected() && !pbe.verify()) {
+			if (pbe.isIntegrityProtected() && !pbe.verify())
 				throw new PGPException("Data is integrity protected but integrity is lost.");
-			} else if (publicKey == null) {
-				throw new SignatureException("Signature not found");
-			} else {
-				getOutputStreamOrFail().write(output);
+		} catch (final PGPException x) {
+			throw new IOException(x);
+		}
+	}
+
+	private void verifySignature(final PGPOnePassSignatureList onePassSignatureList, final PGPSignatureList signatureList, final InputStream signedDataIn, final OutputStream signedDataOut) throws SignatureException, IOException {
+		assertNotNull("onePassSignatureList", onePassSignatureList);
+		assertNotNull("signatureList", signatureList);
+		assertNotNull("signedDataIn", signedDataIn);
+
+		setSignPgpKey(null);
+
+		if (onePassSignatureList.size() == 0)
+			return; // there is no signature
+
+		final List<String> pgpKeyIds = new ArrayList<>();
+		try {
+			PGPPublicKey publicKey = null;
+			for (int i = 0; i < onePassSignatureList.size(); i++) {
+				final PGPOnePassSignature ops = onePassSignatureList.get(i);
+				pgpKeyIds.add(encodeHexStr(longToBytes(ops.getKeyID())));
+
+				final BcPgpKey bcPgpKey = pgp.getBcPgpKey(ops.getKeyID());
+				if (bcPgpKey != null) {
+					publicKey = bcPgpKey.getPublicKey();
+					ops.init(new BcPGPContentVerifierBuilderProvider(), publicKey);
+
+					final byte[] buf = new byte[64 * 1024];
+					int bytesRead;
+					while ((bytesRead = signedDataIn.read(buf)) > 0) {
+						ops.update(buf, 0, bytesRead);
+
+						if (signedDataOut != null)
+							signedDataOut.write(buf, 0, bytesRead);
+					}
+					final PGPSignature signature = signatureList.get(i);
+					if (ops.verify(signature)) {
+						setSignPgpKey(bcPgpKey.getPgpKey());
+						return;
+					} else
+						throw new SignatureException("Signature verification failed!");
+				}
 			}
 		} catch (final java.security.SignatureException x) {
 			throw new SignatureException(x);
 		} catch (final PGPException x) {
 			throw new IOException(x);
 		}
+		throw new SignatureException("The data was signed using the following PGP-keys, of which none could be found in the local key-ring: " + pgpKeyIds);
 	}
 
+	private void rethrow(final Exception x) throws SignatureException, IOException {
+		if (x instanceof RuntimeException)
+			throw (SignatureException)x;
+		else if (x instanceof SignatureException)
+			throw (IOException)x;
+		else if (x instanceof IOException)
+			throw (IOException)x;
+		else
+			throw new RuntimeException(x);
+	}
 }

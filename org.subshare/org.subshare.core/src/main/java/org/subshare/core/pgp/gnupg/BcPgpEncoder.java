@@ -44,11 +44,15 @@ public class BcPgpEncoder extends AbstractPgpEncoder {
 		final int BUFFER_SIZE = 1024 * 32;
 
 		final InputStream in = getInputStreamOrFail();
+		final OutputStream signOut = getSignOutputStream();
 		OutputStream out = getOutputStreamOrFail();
 		try {
 			final PGPEncryptedDataGenerator edGenerator = getEncryptPgpKeys().isEmpty() ? null : createEncryptedDataGenerator();
 			try {
 				for (final PgpKey encryptPgpKey : getEncryptPgpKeys()) {
+					if (signOut != null)
+						throw new IllegalStateException("Signature cannot be detached when encryption is used!");
+
 					final BcPgpKey bcPgpKey = pgp.getBcPgpKey(encryptPgpKey);
 					edGenerator.addMethod(new BcPublicKeyKeyEncryptionMethodGenerator(bcPgpKey.getPublicKey()));
 				}
@@ -58,25 +62,33 @@ public class BcPgpEncoder extends AbstractPgpEncoder {
 					if (encryptedOut != null)
 						out = encryptedOut;
 
-					final PGPCompressedDataGenerator cdGenerator = createCompressedDataGenerator();
+					// If we generate a *detached* signature and do *not* encrypt, we generate the same output as we get as input
+					// (we might actually allow to omit the output-stream, then).
+					final boolean unmodifiedOutput = encryptedOut == null && signOut != null;
+
+					final PGPCompressedDataGenerator cdGenerator = unmodifiedOutput ? null : createCompressedDataGenerator();
 					try {
-						final OutputStream compressedOut = cdGenerator.open(out);
+						final OutputStream compressedOut = cdGenerator == null ? null : cdGenerator.open(out);
 						try {
-							out = compressedOut;
+							if (compressedOut != null)
+								out = compressedOut;
 
 							final PGPSignatureGenerator signatureGenerator = getSignPgpKey() == null ? null : createSignatureGenerator();
 
 							if (signatureGenerator != null)
-								signatureGenerator.generateOnePassVersion(false).encode(out);
+								signatureGenerator.generateOnePassVersion(false).encode(signOut != null ? signOut : out);
 
-							final PGPLiteralDataGenerator ldGenerator = new PGPLiteralDataGenerator();
+							final PGPLiteralDataGenerator ldGenerator = unmodifiedOutput ? null : new PGPLiteralDataGenerator();
 							try {
-								try (final OutputStream lOut = ldGenerator.open(out, PGPLiteralData.BINARY, getFileName(), new Date(), new byte[BUFFER_SIZE]);) {
+								try (final OutputStream lOut = ldGenerator == null ? null : ldGenerator.open(out, PGPLiteralData.BINARY, getFileName(), new Date(), new byte[BUFFER_SIZE]);) {
 									int bytesRead;
 									final byte[] buf = new byte[BUFFER_SIZE];
 									while ((bytesRead = in.read(buf, 0, buf.length)) >= 0) {
 										if (bytesRead > 0) {
-											lOut.write(buf, 0, bytesRead);
+											if (lOut != null)
+												lOut.write(buf, 0, bytesRead);
+											else
+												out.write(buf, 0, bytesRead);
 
 											if (signatureGenerator != null)
 												signatureGenerator.update(buf, 0, bytesRead);
@@ -84,16 +96,19 @@ public class BcPgpEncoder extends AbstractPgpEncoder {
 									}
 								}
 							} finally {
-								ldGenerator.close();
+								if (ldGenerator != null)
+									ldGenerator.close();
 							}
 
 							if (signatureGenerator != null)
-								signatureGenerator.generate().encode(out);
+								signatureGenerator.generate().encode(signOut != null ? signOut : out);
 						} finally {
-							compressedOut.close();
+							if (compressedOut != null)
+								compressedOut.close();
 						}
 					} finally {
-						cdGenerator.close();
+						if (cdGenerator != null)
+							cdGenerator.close();
 					}
 				} finally {
 					if (encryptedOut != null)
