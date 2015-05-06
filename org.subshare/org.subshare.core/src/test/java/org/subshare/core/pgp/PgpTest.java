@@ -1,8 +1,6 @@
 package org.subshare.core.pgp;
 
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
-import static co.codewizards.cloudstore.core.util.HashUtil.*;
-import static co.codewizards.cloudstore.core.util.IOUtil.*;
 import static org.assertj.core.api.Assertions.*;
 
 import java.io.ByteArrayInputStream;
@@ -66,7 +64,7 @@ public class PgpTest {
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		PgpEncoder encoder = pgp.createEncoder(new ByteArrayInputStream(testData), out);
 
-		long signPgpKeyId = bytesToLong(decodeHexStr("70c642ca41cd4390"));
+		PgpKeyId signPgpKeyId = new PgpKeyId("70c642ca41cd4390");
 		PgpKey signPgpKey = pgp.getPgpKey(signPgpKeyId);
 		encoder.setSignPgpKey(signPgpKey);
 
@@ -119,11 +117,11 @@ public class PgpTest {
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		PgpEncoder encoder = pgp.createEncoder(new ByteArrayInputStream(testData), out);
 
-		long signPgpKeyId = bytesToLong(decodeHexStr("70c642ca41cd4390"));
+		PgpKeyId signPgpKeyId = new PgpKeyId("70c642ca41cd4390");
 		PgpKey signPgpKey = pgp.getPgpKey(signPgpKeyId);
 		encoder.setSignPgpKey(signPgpKey);
 
-		long encryptPgpKeyId = bytesToLong(decodeHexStr("d7a92a24aa97ddbd"));
+		PgpKeyId encryptPgpKeyId = new PgpKeyId("d7a92a24aa97ddbd");
 		PgpKey encryptPgpKey = pgp.getPgpKey(encryptPgpKeyId);
 		encoder.getEncryptPgpKeys().add(encryptPgpKey);
 
@@ -166,7 +164,7 @@ public class PgpTest {
 		ByteArrayOutputStream signOut = new ByteArrayOutputStream();
 		PgpEncoder encoder = pgp.createEncoder(new ByteArrayInputStream(testData), out);
 
-		long signPgpKeyId = bytesToLong(decodeHexStr("70c642ca41cd4390"));
+		PgpKeyId signPgpKeyId = new PgpKeyId("70c642ca41cd4390");
 		PgpKey signPgpKey = pgp.getPgpKey(signPgpKeyId);
 		encoder.setSignPgpKey(signPgpKey);
 		encoder.setSignOutputStream(signOut);
@@ -221,11 +219,11 @@ public class PgpTest {
 	public void exportImportPublicKey() throws Exception {
 		Set<PgpKey> pgpKeys = new HashSet<>();
 
-		PgpKey pgpKey = pgp.getPgpKey(bytesToLong(decodeHexStr("70c642ca41cd4390")));
+		PgpKey pgpKey = pgp.getPgpKey(new PgpKeyId("70c642ca41cd4390"));
 		assertThat(pgpKey).isNotNull();
 		pgpKeys.add(pgpKey);
 
-		pgpKey = pgp.getPgpKey(bytesToLong(decodeHexStr("d7a92a24aa97ddbd")));
+		pgpKey = pgp.getPgpKey(new PgpKeyId("d7a92a24aa97ddbd"));
 		assertThat(pgpKey).isNotNull();
 		assertThat(pgp.getSignatures(pgpKey).size()).isEqualTo(2); // 1 self-signed + 1 signed by 70c642ca41cd4390
 		pgpKeys.add(pgpKey);
@@ -241,7 +239,7 @@ public class PgpTest {
 		}
 
 		// check for 1 *additional* signature
-		pgpKey = pgp.getPgpKey(bytesToLong(decodeHexStr("d7a92a24aa97ddbd")));
+		pgpKey = pgp.getPgpKey(new PgpKeyId("d7a92a24aa97ddbd"));
 		assertThat(pgpKey).isNotNull();
 		assertThat(pgp.getSignatures(pgpKey).size()).isEqualTo(3);
 

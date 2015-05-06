@@ -38,11 +38,11 @@ import org.subshare.core.sign.VerifierInputStream;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKeyPublicKeyLookup;
 import org.subshare.core.user.UserRepoKeyRing;
-import org.subshare.rest.client.transport.command.SsBeginPutFile;
-import org.subshare.rest.client.transport.command.SsMakeDirectory;
-import org.subshare.rest.client.transport.command.EndGetCryptoChangeSetDto;
-import org.subshare.rest.client.transport.command.GetCryptoChangeSetDto;
-import org.subshare.rest.client.transport.command.PutCryptoChangeSetDto;
+import org.subshare.rest.client.transport.request.SsBeginPutFile;
+import org.subshare.rest.client.transport.request.SsMakeDirectory;
+import org.subshare.rest.client.transport.request.EndGetCryptoChangeSetDto;
+import org.subshare.rest.client.transport.request.GetCryptoChangeSetDto;
+import org.subshare.rest.client.transport.request.PutCryptoChangeSetDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

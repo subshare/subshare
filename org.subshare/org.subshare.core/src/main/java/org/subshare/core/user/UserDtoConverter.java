@@ -1,12 +1,13 @@
 package org.subshare.core.user;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.util.ArrayList;
 
 import org.subshare.core.dto.UserDto;
 import org.subshare.core.dto.UserRepoKeyPublicKeyDto;
 import org.subshare.core.dto.UserRepoKeyRingDto;
+import org.subshare.core.pgp.PgpKeyId;
 
 public class UserDtoConverter {
 	private final UserRepoKeyPublicKeyDtoWithSignatureConverter userRepoKeyPublicKeyDtoWithSignatureConverter = new UserRepoKeyPublicKeyDtoWithSignatureConverter();
@@ -19,7 +20,7 @@ public class UserDtoConverter {
 		userDto.setUserId(user.getUserId());
 		userDto.setFirstName(user.getFirstName());
 		userDto.setLastName(user.getLastName());
-		userDto.setPgpKeyIds(new ArrayList<Long>(user.getPgpKeyIds()));
+		userDto.setPgpKeyIds(new ArrayList<PgpKeyId>(user.getPgpKeyIds()));
 		userDto.setEmails(new ArrayList<String>(user.getEmails()));
 
 		final UserRepoKeyRing userRepoKeyRing = user.getUserRepoKeyRing();

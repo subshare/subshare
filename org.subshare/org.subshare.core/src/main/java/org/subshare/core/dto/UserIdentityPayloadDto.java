@@ -5,6 +5,8 @@ import java.util.List;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.subshare.core.pgp.PgpKeyId;
+
 @XmlRootElement
 public class UserIdentityPayloadDto {
 
@@ -14,7 +16,7 @@ public class UserIdentityPayloadDto {
 
 	private List<String> emails;
 
-	private List<Long> pgpKeyIds;
+	private List<PgpKeyId> pgpKeyIds;
 
 	private UserRepoKeyPublicKeyDto userRepoKeyPublicKeyDto;
 
@@ -42,13 +44,13 @@ public class UserIdentityPayloadDto {
 		this.emails = emails;
 	}
 
-	public List<Long> getPgpKeyIds() {
+	public List<PgpKeyId> getPgpKeyIds() {
 		if (pgpKeyIds == null)
 			pgpKeyIds = new ArrayList<>();
 
 		return pgpKeyIds;
 	}
-	public void setPgpKeyIds(List<Long> pgpKeyIds) {
+	public void setPgpKeyIds(List<PgpKeyId> pgpKeyIds) {
 		this.pgpKeyIds = pgpKeyIds;
 	}
 

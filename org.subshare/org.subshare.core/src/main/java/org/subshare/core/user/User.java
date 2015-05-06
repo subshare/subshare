@@ -1,6 +1,6 @@
 package org.subshare.core.user;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -20,6 +20,7 @@ import org.subshare.core.observable.standard.StandardPostModificationEvent;
 import org.subshare.core.observable.standard.StandardPostModificationListener;
 import org.subshare.core.pgp.Pgp;
 import org.subshare.core.pgp.PgpKey;
+import org.subshare.core.pgp.PgpKeyId;
 import org.subshare.core.pgp.PgpRegistry;
 import org.subshare.core.sign.SignableSigner;
 
@@ -55,7 +56,7 @@ public class User implements Cloneable {
 
 	private UserRepoKeyRing userRepoKeyRing;
 
-	private ObservableList<Long> pgpKeyIds;
+	private ObservableList<PgpKeyId> pgpKeyIds;
 
 	private ObservableList<UserRepoKey.PublicKeyWithSignature> userRepoKeyPublicKeys;
 
@@ -119,9 +120,9 @@ public class User implements Cloneable {
 		return emails;
 	}
 
-	public synchronized List<Long> getPgpKeyIds() {
+	public synchronized List<PgpKeyId> getPgpKeyIds() {
 		if (pgpKeyIds == null) {
-			pgpKeyIds = ObservableList.decorate(new CopyOnWriteArrayList<Long>());
+			pgpKeyIds = ObservableList.decorate(new CopyOnWriteArrayList<PgpKeyId>());
 			pgpKeyIds.getHandler().addPostModificationListener(new PostModificationListener(PropertyEnum.pgpKeyIds));
 		}
 		return pgpKeyIds;
@@ -190,7 +191,7 @@ public class User implements Cloneable {
 	public Set<PgpKey> getPgpKeys() {
 		final Pgp pgp = PgpRegistry.getInstance().getPgpOrFail();
 		final Set<PgpKey> pgpKeys = new HashSet<PgpKey>(getPgpKeyIds().size());
-		for (final Long pgpKeyId : getPgpKeyIds()) {
+		for (final PgpKeyId pgpKeyId : getPgpKeyIds()) {
 			final PgpKey k = pgp.getPgpKey(pgpKeyId);
 			// TODO we should exclude disabled/expired keys here (or already earlier and make sure they're not in User.pgpKeyIds).
 			if (k != null)
@@ -209,14 +210,14 @@ public class User implements Cloneable {
 	}
 
 	public PgpKey getPgpKeyContainingPrivateKey() {
-		final List<Long> pgpKeyIds = getPgpKeyIds();
+		final List<PgpKeyId> pgpKeyIds = getPgpKeyIds();
 
 		if (pgpKeyIds.isEmpty())
 			throw new IllegalStateException(String.format("There is no PGP key associated with %s!", this));
 
 		final Pgp pgp = PgpRegistry.getInstance().getPgpOrFail();
 		PgpKey pgpKey = null;
-		for (final Long pgpKeyId : pgpKeyIds) {
+		for (final PgpKeyId pgpKeyId : pgpKeyIds) {
 			final PgpKey k = pgp.getPgpKey(pgpKeyId);
 			if (k != null && k.isPrivateKeyAvailable()) {
 				pgpKey = k;

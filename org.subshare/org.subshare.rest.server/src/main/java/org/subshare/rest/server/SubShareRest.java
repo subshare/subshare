@@ -12,6 +12,7 @@ import org.subshare.rest.server.service.SsMakeDirectoryService;
 import org.subshare.rest.server.service.SsRequestRepoConnectionService;
 import org.subshare.rest.server.service.SsWebDavService;
 import org.subshare.rest.server.service.CryptoChangeSetDtoService;
+import org.subshare.rest.server.service.PgpPublicKeyService;
 import org.subshare.rest.server.service.TestSubShareService;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.slf4j.Logger;
@@ -49,6 +50,7 @@ public class SubShareRest extends CloudStoreRest {
 
 		registerClasses(
 				CryptoChangeSetDtoService.class,
+				PgpPublicKeyService.class,
 				TestSubShareService.class
 				);
 	}

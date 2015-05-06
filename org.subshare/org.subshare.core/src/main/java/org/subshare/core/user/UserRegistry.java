@@ -1,8 +1,8 @@
 package org.subshare.core.user;
 
-import static co.codewizards.cloudstore.core.oio.OioFileFactory.createFile;
-import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
-import static co.codewizards.cloudstore.core.util.StringUtil.isEmpty;
+import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static co.codewizards.cloudstore.core.util.StringUtil.*;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -22,6 +22,7 @@ import org.subshare.core.dto.UserDto;
 import org.subshare.core.dto.UserRegistryDto;
 import org.subshare.core.dto.jaxb.UserRegistryDtoIo;
 import org.subshare.core.pgp.PgpKey;
+import org.subshare.core.pgp.PgpKeyId;
 import org.subshare.core.pgp.PgpRegistry;
 
 import co.codewizards.cloudstore.core.config.ConfigDir;
@@ -35,8 +36,8 @@ public class UserRegistry {
 	public static final String USER_LIST_FILE_NAME = "userList.xml.gz";
 	public static final String USER_LIST_LOCK = USER_LIST_FILE_NAME + ".lock";
 
-	private final Map<Long, User> pgpKeyId2User = new HashMap<Long, User>();
-	private final Map<Uid, User> userId2User = new LinkedHashMap<Uid, User>();
+	private final Map<PgpKeyId, User> pgpKeyId2User = new HashMap<>();
+	private final Map<Uid, User> userId2User = new LinkedHashMap<>();
 
 	private List<User> cache_users;
 	private Map<String, Set<User>> cache_email2Users;
@@ -212,7 +213,7 @@ public class UserRegistry {
 		// TODO we either need to hook listeners into user and get notified about all changes to update this registry!
 		// OR we need to provide a public write/save/store (or similarly named) method.
 
-		for (final Long pgpKeyId : user.getPgpKeyIds())
+		for (final PgpKeyId pgpKeyId : user.getPgpKeyIds())
 			pgpKeyId2User.put(pgpKeyId, user); // TODO what about collisions? remove pgpKeyId from the other user?!
 
 		user.addPropertyChangeListener(userPropertyChangeListener);

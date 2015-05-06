@@ -1,4 +1,4 @@
-package org.subshare.rest.client.transport.command;
+package org.subshare.rest.client.transport.request;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 

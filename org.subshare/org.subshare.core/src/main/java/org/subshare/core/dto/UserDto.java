@@ -5,6 +5,8 @@ import java.util.List;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.subshare.core.pgp.PgpKeyId;
+
 import co.codewizards.cloudstore.core.dto.Uid;
 
 @XmlRootElement
@@ -20,7 +22,7 @@ public class UserDto {
 
 	private UserRepoKeyRingDto userRepoKeyRingDto;
 
-	private List<Long> pgpKeyIds;
+	private List<PgpKeyId> pgpKeyIds;
 
 	private List<UserRepoKeyPublicKeyDto> userRepoKeyPublicKeyDtos;
 
@@ -62,13 +64,13 @@ public class UserDto {
 		this.emails = emails;
 	}
 
-	public List<Long> getPgpKeyIds() {
+	public List<PgpKeyId> getPgpKeyIds() {
 		if (pgpKeyIds == null)
-			pgpKeyIds = new ArrayList<Long>();
+			pgpKeyIds = new ArrayList<PgpKeyId>();
 
 		return pgpKeyIds;
 	}
-	public void setPgpKeyIds(final List<Long> pgpKeyIds) {
+	public void setPgpKeyIds(final List<PgpKeyId> pgpKeyIds) {
 		this.pgpKeyIds = pgpKeyIds;
 	}
 

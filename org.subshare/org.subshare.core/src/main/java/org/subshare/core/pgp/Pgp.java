@@ -13,7 +13,7 @@ public interface Pgp {
 
 	Collection<PgpKey> getMasterKeys();
 
-	PgpKey getPgpKey(long pgpKeyId);
+	PgpKey getPgpKey(PgpKeyId pgpKeyId);
 
 	PgpEncoder createEncoder(InputStream in, OutputStream out);
 

@@ -4,6 +4,7 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import org.subshare.core.pgp.Pgp;
 import org.subshare.core.pgp.PgpKey;
+import org.subshare.core.pgp.PgpKeyId;
 import org.subshare.core.pgp.PgpKeyTrustLevel;
 import org.subshare.core.pgp.PgpRegistry;
 import org.subshare.core.user.User;
@@ -49,7 +50,7 @@ public class UserListItem {
 
 	public String getKeyTrustLevel() {
 		PgpKeyTrustLevel highestKeyTrustLevel = null;
-		for (final Long pgpKeyId : user.getPgpKeyIds()) {
+		for (final PgpKeyId pgpKeyId : user.getPgpKeyIds()) {
 			final PgpKey pgpKey = pgp.getPgpKey(pgpKeyId);
 			if (pgpKey != null) {
 				final PgpKeyTrustLevel ktl = pgp.getKeyTrustLevel(pgpKey);

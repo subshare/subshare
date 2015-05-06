@@ -1,7 +1,7 @@
 package org.subshare.local;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
-import static co.codewizards.cloudstore.core.util.UrlUtil.appendNonEncodedPath;
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static co.codewizards.cloudstore.core.util.UrlUtil.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -31,6 +31,7 @@ import org.subshare.core.pgp.Pgp;
 import org.subshare.core.pgp.PgpDecoder;
 import org.subshare.core.pgp.PgpEncoder;
 import org.subshare.core.pgp.PgpKey;
+import org.subshare.core.pgp.PgpKeyId;
 import org.subshare.core.pgp.PgpRegistry;
 import org.subshare.core.user.User;
 import org.subshare.core.user.UserRegistry;
@@ -433,7 +434,7 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 //	}
 
 	private User findUserWithPgpKeyOrFail(PgpKey pgpKey) {
-		final Long pgpKeyId = pgpKey.getPgpKeyId();
+		final PgpKeyId pgpKeyId = pgpKey.getPgpKeyId();
 		for (final User user : userRegistry.getUsers()) {
 			if (user.getPgpKeyIds().contains(pgpKeyId))
 				return user;

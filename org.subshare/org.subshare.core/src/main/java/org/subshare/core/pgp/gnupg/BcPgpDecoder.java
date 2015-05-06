@@ -36,6 +36,7 @@ import org.bouncycastle.openpgp.operator.bc.BcPublicKeyDataDecryptorFactory;
 import org.bouncycastle.util.io.Streams;
 import org.subshare.core.pgp.AbstractPgpDecoder;
 import org.subshare.core.pgp.PgpKey;
+import org.subshare.core.pgp.PgpKeyId;
 
 import co.codewizards.cloudstore.core.auth.SignatureException;
 
@@ -187,7 +188,7 @@ public class BcPgpDecoder extends AbstractPgpDecoder {
 			char[] passphrase;
 			while (sKey == null && it.hasNext()) {
 				pbe = (PGPPublicKeyEncryptedData) it.next();
-				final BcPgpKey bcPgpKey = pgp.getBcPgpKey(pbe.getKeyID());
+				final BcPgpKey bcPgpKey = pgp.getBcPgpKey(new PgpKeyId(pbe.getKeyID()));
 				if (bcPgpKey != null) {
 					PGPSecretKey secretKey = bcPgpKey.getSecretKey();
 					if (secretKey != null && ! secretKey.isPrivateKeyEmpty()) {
@@ -281,7 +282,7 @@ public class BcPgpDecoder extends AbstractPgpDecoder {
 				final PGPOnePassSignature ops = onePassSignatureList.get(i);
 				pgpKeyIds.add(encodeHexStr(longToBytes(ops.getKeyID())));
 
-				final BcPgpKey bcPgpKey = pgp.getBcPgpKey(ops.getKeyID());
+				final BcPgpKey bcPgpKey = pgp.getBcPgpKey(new PgpKeyId(ops.getKeyID()));
 				if (bcPgpKey != null) {
 					publicKey = bcPgpKey.getPublicKey();
 					ops.init(new BcPGPContentVerifierBuilderProvider(), publicKey);

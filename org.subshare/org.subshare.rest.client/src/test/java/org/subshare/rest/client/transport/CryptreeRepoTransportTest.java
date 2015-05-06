@@ -1,6 +1,6 @@
 package org.subshare.rest.client.transport;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.*;
 
 import java.net.URL;
 import java.util.Collection;
@@ -10,6 +10,7 @@ import java.util.UUID;
 
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.subshare.core.crypto.KeyFactory;
+import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.user.User;
 import org.subshare.core.user.UserRegistry;
 import org.subshare.core.user.UserRepoKey;
@@ -98,7 +99,7 @@ public class CryptreeRepoTransportTest {
 		public TestUserRegistry() {
 			user = new User();
 			user.setUserId(new Uid());
-			user.getPgpKeyIds().add(0L);
+			user.getPgpKeyIds().add(PgpKey.TEST_DUMMY_PGP_KEY_ID);
 			user.getEmails().add("user@domain.tld");
 			user.setFirstName("Hans");
 			user.setLastName("Müller");

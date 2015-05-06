@@ -2,8 +2,6 @@ package org.subshare.core.pgp.gnupg;
 
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
-import static co.codewizards.cloudstore.core.util.HashUtil.*;
-import static co.codewizards.cloudstore.core.util.IOUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
 
 import java.io.BufferedInputStream;
@@ -37,6 +35,7 @@ import org.subshare.core.pgp.AbstractPgp;
 import org.subshare.core.pgp.PgpDecoder;
 import org.subshare.core.pgp.PgpEncoder;
 import org.subshare.core.pgp.PgpKey;
+import org.subshare.core.pgp.PgpKeyId;
 import org.subshare.core.pgp.PgpKeyTrustLevel;
 import org.subshare.core.pgp.PgpSignature;
 import org.subshare.core.pgp.PgpSignatureType;
@@ -54,8 +53,8 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 	private long pubringFileLastModified;
 	private long secringFileLastModified;
 
-	private Map<Long, BcPgpKey> pgpKeyId2bcPgpKey; // all keys
-	private Map<Long, BcPgpKey> pgpKeyId2masterKey; // only master-keys
+	private Map<PgpKeyId, BcPgpKey> pgpKeyId2bcPgpKey; // all keys
+	private Map<PgpKeyId, BcPgpKey> pgpKeyId2masterKey; // only master-keys
 
 	@Override
 	public int getPriority() {
@@ -83,10 +82,11 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 	}
 
 	@Override
-	public PgpKey getPgpKey(final long pgpKeyId) {
+	public PgpKey getPgpKey(final PgpKeyId pgpKeyId) {
+		assertNotNull("pgpKeyId", pgpKeyId);
 		loadIfNeeded();
 
-		if (PgpKey.TEST_DUMMY_PGP_KEY_ID == pgpKeyId)
+		if (PgpKey.TEST_DUMMY_PGP_KEY_ID.equals(pgpKeyId))
 			return PgpKey.TEST_DUMMY_PGP_KEY;
 
 		final BcPgpKey bcPgpKey = pgpKeyId2bcPgpKey.get(pgpKeyId);
@@ -111,6 +111,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 				final BcPgpKey bcPgpKey = getBcPgpKeyOrFail(pgpKey);
 				bcPgpKey.getPublicKeyRing().encode(out);
 			}
+			out.flush();
 		} catch (IOException x) {
 			throw new RuntimeException(x);
 		}
@@ -256,11 +257,12 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 	}
 
 	public BcPgpKey getBcPgpKey(final PgpKey pgpKey) {
-		final long pgpKeyId = assertNotNull("pgpKey", pgpKey).getPgpKeyId();
+		final PgpKeyId pgpKeyId = assertNotNull("pgpKey", pgpKey).getPgpKeyId();
 		return getBcPgpKey(pgpKeyId);
 	}
 
-	public BcPgpKey getBcPgpKey(final long pgpKeyId) {
+	public BcPgpKey getBcPgpKey(final PgpKeyId pgpKeyId) {
+		assertNotNull("pgpKeyId", pgpKeyId);
 		loadIfNeeded();
 		final BcPgpKey bcPgpKey = pgpKeyId2bcPgpKey.get(pgpKeyId);
 		return bcPgpKey;
@@ -302,8 +304,8 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 	}
 
 	protected synchronized void load() {
-		final Map<Long, BcPgpKey> pgpKeyId2bcPgpKey = new HashMap<Long, BcPgpKey>();
-		final Map<Long, BcPgpKey> pgpKeyId2masterKey = new HashMap<Long, BcPgpKey>();
+		final Map<PgpKeyId, BcPgpKey> pgpKeyId2bcPgpKey = new HashMap<PgpKeyId, BcPgpKey>();
+		final Map<PgpKeyId, BcPgpKey> pgpKeyId2masterKey = new HashMap<PgpKeyId, BcPgpKey>();
 
 		final long pubringFileLastModified;
 		final long secringFileLastModified;
@@ -327,13 +329,13 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 
 					for (final Iterator<?> it3 = keyRing.getSecretKeys(); it3.hasNext(); ) {
 						final PGPSecretKey secretKey = (PGPSecretKey) it3.next();
-						final long pgpKeyId = secretKey.getKeyID();
+						final PgpKeyId pgpKeyId = new PgpKeyId(secretKey.getKeyID());
 						final BcPgpKey bcPgpKey = pgpKeyId2bcPgpKey.get(pgpKeyId);
 						if (bcPgpKey == null)
-							throw new IllegalStateException("Secret key does not have corresponding public key in secret key ring! pgpKeyId=" + Long.toHexString(pgpKeyId));
+							throw new IllegalStateException("Secret key does not have corresponding public key in secret key ring! pgpKeyId=" + pgpKeyId);
 
 						bcPgpKey.setSecretKey(secretKey);
-						logger.debug("load: read secretKey with pgpKeyId={}", Long.toHexString(pgpKeyId));
+						logger.debug("load: read secretKey with pgpKeyId={}", pgpKeyId);
 					}
 				}
 			}
@@ -363,10 +365,10 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 
 		for (final BcPgpKey bcPgpKey : pgpKeyId2bcPgpKey.values()) {
 			if (bcPgpKey.getPublicKey() == null)
-				throw new IllegalStateException("bcPgpKey.publicKey == null :: keyId = " + encodeHexStr(longToBytes(bcPgpKey.getPgpKeyId())));
+				throw new IllegalStateException("bcPgpKey.publicKey == null :: keyId = " + bcPgpKey.getPgpKeyId());
 
 			if (bcPgpKey.getPublicKeyRing() == null)
-				throw new IllegalStateException("bcPgpKey.publicKeyRing == null :: keyId = " + encodeHexStr(longToBytes(bcPgpKey.getPgpKeyId())));
+				throw new IllegalStateException("bcPgpKey.publicKeyRing == null :: keyId = " + bcPgpKey.getPgpKeyId());
 		}
 
 		this.secringFileLastModified = secringFileLastModified;
@@ -382,7 +384,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 		for (final Iterator<?> it = bcPgpKey.getPublicKey().getSignatures(); it.hasNext(); ) {
 			final PGPSignature bcPgpSignature = (PGPSignature) it.next();
 			final PgpSignature pgpSignature = new PgpSignature();
-			pgpSignature.setPgpKeyId(bcPgpSignature.getKeyID());
+			pgpSignature.setPgpKeyId(new PgpKeyId(bcPgpSignature.getKeyID()));
 			pgpSignature.setCreated(bcPgpSignature.getCreationTime());
 			pgpSignature.setSignatureType(signatureTypeToEnum(bcPgpSignature.getSignatureType()));
 			result.add(pgpSignature);
@@ -428,11 +430,11 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 		return PgpKeyTrustLevel.NOT_TRUSTED;
 	}
 
-	private BcPgpKey enlistPublicKey(final Map<Long, BcPgpKey> pgpKeyId2bcPgpKey,
-			final Map<Long, BcPgpKey> pgpKeyId2masterKey,
+	private BcPgpKey enlistPublicKey(final Map<PgpKeyId, BcPgpKey> pgpKeyId2bcPgpKey,
+			final Map<PgpKeyId, BcPgpKey> pgpKeyId2masterKey,
 			BcPgpKey lastMasterKey, final PGPKeyRing keyRing, final PGPPublicKey publicKey)
 	{
-		final long pgpKeyId = publicKey.getKeyID();
+		final PgpKeyId pgpKeyId = new PgpKeyId(publicKey.getKeyID());
 		BcPgpKey bcPgpKey = pgpKeyId2bcPgpKey.get(pgpKeyId);
 		if (bcPgpKey == null) {
 			bcPgpKey = new BcPgpKey(pgpKeyId);

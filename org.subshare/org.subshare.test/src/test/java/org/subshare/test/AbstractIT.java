@@ -13,6 +13,7 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
 
+import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.gnupg.GnuPgDir;
 import org.subshare.core.user.User;
 import org.subshare.core.user.UserRegistry;
@@ -96,7 +97,7 @@ public abstract class AbstractIT {
 		public TestUserRegistry() {
 			user = new User();
 			user.setUserId(new Uid());
-			user.getPgpKeyIds().add(0L);
+			user.getPgpKeyIds().add(PgpKey.TEST_DUMMY_PGP_KEY_ID);
 			user.getEmails().add("user@domain.tld");
 			user.setFirstName("Hans");
 			user.setLastName("Müller");

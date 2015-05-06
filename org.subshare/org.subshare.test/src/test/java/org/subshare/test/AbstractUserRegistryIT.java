@@ -1,9 +1,8 @@
 package org.subshare.test;
 
-import static co.codewizards.cloudstore.core.oio.OioFileFactory.createFile;
-import static co.codewizards.cloudstore.core.util.Util.doNothing;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
+import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
+import static co.codewizards.cloudstore.core.util.Util.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -20,6 +19,7 @@ import org.subshare.core.dto.UserIdentityPayloadDto;
 import org.subshare.core.pgp.Pgp;
 import org.subshare.core.pgp.PgpAuthenticationCallback;
 import org.subshare.core.pgp.PgpKey;
+import org.subshare.core.pgp.PgpKeyId;
 import org.subshare.core.pgp.PgpRegistry;
 import org.subshare.core.pgp.gnupg.GnuPgDir;
 import org.subshare.core.user.User;
@@ -187,7 +187,7 @@ public class AbstractUserRegistryIT extends AbstractRepoToRepoSyncIT {
 		final PgpRegistry pgpRegistry = PgpRegistry.getInstance();
 		final Pgp pgp = pgpRegistry.getPgpOrFail();
 		for (final User user : userRegistry.getUsers()) {
-			for (final Long pgpKeyId : user.getPgpKeyIds()) {
+			for (final PgpKeyId pgpKeyId : user.getPgpKeyIds()) {
 				final PgpKey k = pgp.getPgpKey(pgpKeyId);
 				if (k != null && k.isPrivateKeyAvailable()) {
 					return user;
@@ -269,7 +269,7 @@ public class AbstractUserRegistryIT extends AbstractRepoToRepoSyncIT {
 			{
 				UserIdentityLinkDao dao = transaction.getDao(UserIdentityLinkDao.class);
 				assertThat(dao.getObjectsCount()).isEqualTo(expectedCount);
-	
+
 				transaction.commit();
 			}
 		}

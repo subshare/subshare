@@ -11,10 +11,11 @@ import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.subshare.core.pgp.PgpKey;
+import org.subshare.core.pgp.PgpKeyId;
 
 public class BcPgpKey {
 
-	private final long pgpKeyId;
+	private final PgpKeyId pgpKeyId;
 
 	private PGPPublicKeyRing publicKeyRing;
 
@@ -28,11 +29,11 @@ public class BcPgpKey {
 
 	private PgpKey pgpKey;
 
-	public BcPgpKey(final long pgpKeyId) {
-		this.pgpKeyId = pgpKeyId;
+	public BcPgpKey(final PgpKeyId pgpKeyId) {
+		this.pgpKeyId = assertNotNull("pgpKeyId", pgpKeyId);
 	}
 
-	public long getPgpKeyId() {
+	public PgpKeyId getPgpKeyId() {
 		return pgpKeyId;
 	}
 

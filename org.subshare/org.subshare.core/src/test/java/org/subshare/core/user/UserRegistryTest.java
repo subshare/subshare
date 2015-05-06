@@ -1,7 +1,7 @@
 package org.subshare.core.user;
 
-import static co.codewizards.cloudstore.core.oio.OioFileFactory.createFile;
-import static org.assertj.core.api.Assertions.assertThat;
+import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -13,6 +13,7 @@ import org.subshare.core.gpg.GnuPgTest;
 import org.subshare.core.pgp.Pgp;
 import org.subshare.core.pgp.PgpAuthenticationCallback;
 import org.subshare.core.pgp.PgpKey;
+import org.subshare.core.pgp.PgpKeyId;
 import org.subshare.core.pgp.PgpKeyTrustLevel;
 import org.subshare.core.pgp.PgpRegistry;
 import org.subshare.core.pgp.gnupg.GnuPgDir;
@@ -86,7 +87,7 @@ public class UserRegistryTest {
 			final User user = users.iterator().next();
 
 			PgpKeyTrustLevel highestKeyTrustLevel = null;
-			for (final Long pgpKeyId : user.getPgpKeyIds()) {
+			for (final PgpKeyId pgpKeyId : user.getPgpKeyIds()) {
 				final PgpKey pgpKey = pgp.getPgpKey(pgpKeyId);
 				if (pgpKey != null) {
 					final PgpKeyTrustLevel ktl = pgp.getKeyTrustLevel(pgpKey);
@@ -127,7 +128,7 @@ public class UserRegistryTest {
 
 	private void initPgp() throws IOException {
 		PgpRegistry.getInstance().clearCache();
-		
+
 		final File gnuPgDir = GnuPgDir.getInstance().getFile();
 
 		gnuPgDir.mkdir();

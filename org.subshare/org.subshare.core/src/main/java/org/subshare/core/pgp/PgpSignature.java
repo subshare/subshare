@@ -1,18 +1,20 @@
 package org.subshare.core.pgp;
 
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+
 import java.util.Date;
 
 public class PgpSignature {
 
-	private long pgpKeyId;
+	private PgpKeyId pgpKeyId;
 	private Date created;
 	private PgpSignatureType signatureType;
 
-	public long getPgpKeyId() {
+	public PgpKeyId getPgpKeyId() {
 		return pgpKeyId;
 	}
-	public void setPgpKeyId(final long pgpKeyId) {
-		this.pgpKeyId = pgpKeyId;
+	public void setPgpKeyId(final PgpKeyId pgpKeyId) {
+		this.pgpKeyId = assertNotNull("pgpKeyId", pgpKeyId);
 	}
 
 	public Date getCreated() {

@@ -171,7 +171,7 @@ public class BcPgpEncoder extends AbstractPgpEncoder {
 		if (secretKey == null)
 			throw new IllegalStateException(String.format(
 					"The PGP key %s does not have a secret key attached (it is a public key only)!",
-					Long.toHexString(pgpKey.getPgpKeyId())));
+					pgpKey.getPgpKeyId()));
 
 		return secretKey;
 	}
