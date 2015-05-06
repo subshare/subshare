@@ -160,6 +160,9 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 			}
 			pubringFile.delete();
 			tmpFile.renameTo(pubringFile);
+
+			// ensure that it's re-loaded.
+			pubringFileLastModified = 0;
 		}
 	}
 
