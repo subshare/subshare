@@ -32,4 +32,6 @@ public interface Pgp {
 	void exportPublicKeysWithPrivateKeys(Set<PgpKey> pgpKeys, OutputStream out);
 
 	void importKeys(InputStream in);
+
+	long getLocalRevision();
 }

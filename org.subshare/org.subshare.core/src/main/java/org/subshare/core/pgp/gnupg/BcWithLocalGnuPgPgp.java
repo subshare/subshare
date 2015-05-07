@@ -2,6 +2,7 @@ package org.subshare.core.pgp.gnupg;
 
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static co.codewizards.cloudstore.core.util.PropertiesUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
 
 import java.io.BufferedInputStream;
@@ -17,7 +18,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.locks.Lock;
 
 import org.bouncycastle.bcpg.BCPGOutputStream;
 import org.bouncycastle.openpgp.PGPException;
@@ -42,6 +45,9 @@ import org.subshare.core.pgp.PgpSignatureType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import co.codewizards.cloudstore.core.config.ConfigDir;
+import co.codewizards.cloudstore.core.io.LockFile;
+import co.codewizards.cloudstore.core.io.LockFileFactory;
 import co.codewizards.cloudstore.core.oio.File;
 
 public class BcWithLocalGnuPgPgp extends AbstractPgp {
@@ -55,6 +61,10 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 
 	private Map<PgpKeyId, BcPgpKey> pgpKeyId2bcPgpKey; // all keys
 	private Map<PgpKeyId, BcPgpKey> pgpKeyId2masterKey; // only master-keys
+
+	private File gpgPropertiesFile;
+
+	private Properties gpgProperties;
 
 	@Override
 	public int getPriority() {
@@ -95,6 +105,9 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 
 	@Override
 	public synchronized void exportPublicKeysWithPrivateKeys(final Set<PgpKey> pgpKeys, OutputStream out) {
+		assertNotNull("pgpKeys", pgpKeys);
+		assertNotNull("out", out);
+
 		throw new UnsupportedOperationException("NYI");
 	}
 
@@ -121,6 +134,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 	public synchronized void importKeys(InputStream in) {
 		assertNotNull("in", in);
 
+		boolean modified = false;
 		try {
 			in = PGPUtil.getDecoderStream(in);
 			final PGPObjectFactory pgpF = new PGPObjectFactory(in);
@@ -128,18 +142,21 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 			Object o;
 			while ((o = pgpF.nextObject()) != null) {
 				if (o instanceof PGPPublicKeyRing)
-					importPublicKeyRing((PGPPublicKeyRing) o);
+					modified |= importPublicKeyRing((PGPPublicKeyRing) o);
 				else if (o instanceof PGPSecretKeyRing)
-					importSecretKeyRing((PGPSecretKeyRing) o);
+					modified |= importSecretKeyRing((PGPSecretKeyRing) o);
 				else
 					throw new IllegalStateException("Unexpected object in InputStream (only PGPPublicKeyRing and PGPSecretKeyRing are supported): " + o);
 			}
 		} catch (IOException | PGPException x) {
 			throw new RuntimeException(x);
 		}
+
+		if (modified) // make sure the localRevision is incremented, even if the timestamp does not change (e.g. because the time resolution of the file system is too low).
+			incLocalRevision();
 	}
 
-	private void importPublicKeyRing(final PGPPublicKeyRing publicKeyRing) throws IOException, PGPException {
+	private boolean importPublicKeyRing(final PGPPublicKeyRing publicKeyRing) throws IOException, PGPException {
 		assertNotNull("publicKeyRing", publicKeyRing);
 
 		final File pubringFile = getPubringFile();
@@ -164,7 +181,9 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 
 			// ensure that it's re-loaded.
 			pubringFileLastModified = 0;
+			return true;
 		}
+		return false;
 	}
 
 	private PGPPublicKeyRingCollection mergePublicKeyRing(PGPPublicKeyRingCollection publicKeyRingCollection, final PGPPublicKeyRing publicKeyRing) throws PGPException {
@@ -243,7 +262,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 				&& equal(one.getSignatureType(), two.getSignatureType());
 	}
 
-	private void importSecretKeyRing(PGPSecretKeyRing secretKeyRing) throws IOException, PGPException {
+	private boolean importSecretKeyRing(PGPSecretKeyRing secretKeyRing) throws IOException, PGPException {
 		// TODO implement this!
 		throw new UnsupportedOperationException("Importing secret keys is not yet supported!");
 	}
@@ -498,6 +517,99 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 
 			default:
 				throw new IllegalArgumentException("Unknown signatureType: " + signatureType);
+		}
+	}
+
+	private File getGpgPropertiesFile() {
+		if (gpgPropertiesFile == null)
+			gpgPropertiesFile = createFile(ConfigDir.getInstance().getFile(), "gpg.properties");
+
+		return gpgPropertiesFile;
+	}
+
+	@Override
+	public long getLocalRevision() {
+		final Properties gpgProperties = getGpgProperties();
+
+		loadIfNeeded();
+		long pubringFileLastModified = this.pubringFileLastModified;
+		long secringFileLastModified = this.secringFileLastModified;
+
+		boolean needIncLocalRevision = false;
+		long localRevision;
+		synchronized (gpgProperties) {
+			localRevision = getPropertyValueAsLong(gpgProperties, PGP_PROPERTY_KEY_LOCAL_REVISION, -1L);
+			if (localRevision < 0)
+				needIncLocalRevision = true;
+			else {
+				long oldPubringFileLastModified = getPropertyValueAsLong(gpgProperties, PGP_PROPERTY_KEY_PUBRING_FILE_LAST_MODIFIED, 0L);
+				long oldSecringFileLastModified = getPropertyValueAsLong(gpgProperties, PGP_PROPERTY_KEY_SECRING_FILE_LAST_MODIFIED, 0L);
+
+				if (oldPubringFileLastModified != pubringFileLastModified || oldSecringFileLastModified != secringFileLastModified)
+					needIncLocalRevision = true;
+			}
+		}
+		if (needIncLocalRevision)
+			return incLocalRevision();
+		else
+			return localRevision;
+	}
+
+	private long incLocalRevision() {
+		final Properties gpgProperties = getGpgProperties();
+
+		loadIfNeeded();
+		long pubringFileLastModified = this.pubringFileLastModified;
+		long secringFileLastModified = this.secringFileLastModified;
+
+		final long localRevision;
+		synchronized (gpgProperties) {
+			localRevision = getPropertyValueAsLong(gpgProperties, PGP_PROPERTY_KEY_LOCAL_REVISION, -1L) + 1;
+			gpgProperties.setProperty(PGP_PROPERTY_KEY_LOCAL_REVISION, Long.toString(localRevision));
+			gpgProperties.setProperty(PGP_PROPERTY_KEY_PUBRING_FILE_LAST_MODIFIED, Long.toString(pubringFileLastModified));
+			gpgProperties.setProperty(PGP_PROPERTY_KEY_SECRING_FILE_LAST_MODIFIED, Long.toString(secringFileLastModified));
+			writeGpgProperties();
+		}
+		return localRevision;
+	}
+
+	private static final String PGP_PROPERTY_KEY_PUBRING_FILE_LAST_MODIFIED = "pubringFileLastModified";
+	private static final String PGP_PROPERTY_KEY_SECRING_FILE_LAST_MODIFIED = "secringFileLastModified";
+	private static final String PGP_PROPERTY_KEY_LOCAL_REVISION = "localRevision";
+
+	private Properties getGpgProperties() {
+		if (gpgProperties == null) {
+			try (final LockFile lockFile = LockFileFactory.getInstance().acquire(getGpgPropertiesFile(), 30000);) {
+				final Lock lock = lockFile.getLock();
+				lock.lock();
+				try {
+					if (gpgProperties == null) {
+						final Properties p = new Properties();
+						try (final InputStream in = lockFile.createInputStream();) {
+							p.load(in);
+						}
+						gpgProperties = p;
+					}
+				} finally {
+					lock.unlock();
+				}
+			} catch (final IOException x) {
+				throw new RuntimeException(x);
+			}
+		}
+		return gpgProperties;
+	}
+
+	private void writeGpgProperties() {
+		final Properties gpgProperties = getGpgProperties();
+		synchronized (gpgProperties) {
+			try (final LockFile lockFile = LockFileFactory.getInstance().acquire(getGpgPropertiesFile(), 30000);) {
+				try (final OutputStream out = lockFile.createOutputStream();) { // acquires LockFile.lock implicitly
+					gpgProperties.store(out, null);
+				}
+			} catch (final IOException x) {
+				throw new RuntimeException(x);
+			}
 		}
 	}
 }

@@ -19,6 +19,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 
+import org.subshare.core.dto.LongDto;
 import org.subshare.core.pgp.Pgp;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpKeyId;
@@ -29,6 +30,12 @@ import org.subshare.core.pgp.PgpRegistry;
 public class PgpPublicKeyService {
 
 	private final Pgp pgp = PgpRegistry.getInstance().getPgpOrFail();
+
+	@GET
+	@Path("localRevision")
+	public LongDto getLocalRevision() {
+		return new LongDto(pgp.getLocalRevision());
+	}
 
 	@GET
 	@Path("{pgpKeyIdList}")

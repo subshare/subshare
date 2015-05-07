@@ -15,12 +15,16 @@ import java.util.UUID;
 
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.gnupg.GnuPgDir;
+import org.subshare.core.pgp.transport.PgpTransportFactoryRegistry;
 import org.subshare.core.user.User;
 import org.subshare.core.user.UserRegistry;
 import org.subshare.core.user.UserRepoKeyRing;
+import org.subshare.rest.client.pgp.transport.RestPgpTransportFactory;
 import org.subshare.rest.client.transport.CryptreeRepoTransportFactory;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import co.codewizards.cloudstore.core.config.Config;
 import co.codewizards.cloudstore.core.config.ConfigDir;
@@ -37,8 +41,12 @@ import co.codewizards.cloudstore.rest.client.ssl.DynamicX509TrustManagerCallback
 
 public abstract class AbstractIT {
 
+	private static final Logger logger = LoggerFactory.getLogger(AbstractIT.class);
+
+	protected static Uid jvmInstanceId;
+
 	static {
-		final Uid jvmInstanceId = new Uid(); // for parallel test execution ;-)
+		jvmInstanceId = new Uid(); // for parallel test execution ;-)
 		System.setProperty(ConfigDir.SYSTEM_PROPERTY_CONFIG_DIR, "build/" + jvmInstanceId + "/.cloudstore");
 		System.setProperty(Config.SYSTEM_PROPERTY_PREFIX + GnuPgDir.CONFIG_KEY_GNU_PG_DIR, "build/" + jvmInstanceId + "/.gnupg");
 		System.setProperty(LocalRepoManager.SYSTEM_PROPERTY_KEY_SIZE, "1024");
@@ -59,6 +67,7 @@ public abstract class AbstractIT {
 	}
 
 	protected static CryptreeRepoTransportFactory cryptreeRepoTransportFactory;
+	protected static RestPgpTransportFactory restPgpTransportFactory;
 
 	@BeforeClass
 	public static void abstractIT_beforeClass() {
@@ -67,6 +76,9 @@ public abstract class AbstractIT {
 			// set any other dynamicX509TrustManagerCallbackClass!!! This setting is JVM-wide!
 			cryptreeRepoTransportFactory = RepoTransportFactoryRegistry.getInstance().getRepoTransportFactoryOrFail(CryptreeRepoTransportFactory.class);
 			cryptreeRepoTransportFactory.setDynamicX509TrustManagerCallbackClass(TestDynamicX509TrustManagerCallback.class);
+
+			restPgpTransportFactory = PgpTransportFactoryRegistry.getInstance().getPgpTransportFactoryOrFail(RestPgpTransportFactory.class);
+			restPgpTransportFactory.setDynamicX509TrustManagerCallbackClass(TestDynamicX509TrustManagerCallback.class);
 		}
 	}
 
@@ -79,6 +91,11 @@ public abstract class AbstractIT {
 				f.setDynamicX509TrustManagerCallbackClass(null);
 				f.setUserRepoKeyRing(null);
 			}
+
+			RestPgpTransportFactory p = restPgpTransportFactory;
+			restPgpTransportFactory = null;
+			if (p != null)
+				p.setDynamicX509TrustManagerCallbackClass(null);
 		}
 	}
 

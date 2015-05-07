@@ -1,4 +1,4 @@
-package org.subshare.rest.client.transport.request;
+package org.subshare.rest.client.pgp.transport.request;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 

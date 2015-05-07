@@ -1,8 +1,8 @@
 package org.subshare.test;
 
-import static co.codewizards.cloudstore.core.oio.OioFileFactory.createFile;
-import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
-import static org.assertj.core.api.Assertions.assertThat;
+import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -298,6 +298,4 @@ public abstract class AbstractRepoToRepoSyncIT extends AbstractIT {
 		pm.currentTransaction().begin();
 		return pm;
 	}
-
-
 }
