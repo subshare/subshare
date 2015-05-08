@@ -12,6 +12,7 @@ import org.subshare.core.pgp.PgpKeyId;
 import org.subshare.core.pgp.transport.AbstractPgpTransport;
 import org.subshare.rest.client.pgp.transport.request.GetLocalRevisionRequest;
 import org.subshare.rest.client.pgp.transport.request.GetPgpPublicKeys;
+import org.subshare.rest.client.pgp.transport.request.PutPgpPublicKeys;
 
 import co.codewizards.cloudstore.rest.client.CloudStoreRestClient;
 import co.codewizards.cloudstore.rest.client.CredentialsProvider;
@@ -85,6 +86,10 @@ public class RestPgpTransport extends AbstractPgpTransport {
 	@Override
 	public void exportPublicKeys(Set<PgpKeyId> pgpKeyIds, OutputStream out) {
 		final InputStream in = getClient().execute(new GetPgpPublicKeys(pgpKeyIds));
+//		final InputStream in = getClient().execute(new GetPgpPublicKeys());
+		if (in == null)
+			return;
+
 		final byte[] buf = new byte[64 * 1024];
 		int bytesRead;
 		try {
@@ -99,6 +104,6 @@ public class RestPgpTransport extends AbstractPgpTransport {
 
 	@Override
 	public void importKeys(InputStream in) {
-		throw new UnsupportedOperationException("NYI");
+		getClient().execute(new PutPgpPublicKeys(in));
 	}
 }

@@ -33,7 +33,7 @@ public class GetPgpPublicKeys extends AbstractRequest<InputStream> {
 	@Override
 	public InputStream execute() {
 		final WebTarget webTarget = createWebTarget("_PgpPublicKey", urlEncode(pgpKeyIdList.toString()));
-		final InputStream in = assignCredentials(webTarget.request(MediaType.APPLICATION_XML)).get(InputStream.class);
+		final InputStream in = assignCredentials(webTarget.request(MediaType.APPLICATION_OCTET_STREAM_TYPE)).get(InputStream.class);
 		return in;
 	}
 

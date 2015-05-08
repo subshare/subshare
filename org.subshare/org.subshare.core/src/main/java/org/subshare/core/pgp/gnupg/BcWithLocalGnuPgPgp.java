@@ -7,6 +7,7 @@ import static co.codewizards.cloudstore.core.util.Util.*;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -53,6 +54,7 @@ import co.codewizards.cloudstore.core.oio.File;
 public class BcWithLocalGnuPgPgp extends AbstractPgp {
 	private static final Logger logger = LoggerFactory.getLogger(BcWithLocalGnuPgPgp.class);
 
+	private File gnuPgDir;
 	private File pubringFile;
 	private File secringFile;
 
@@ -78,7 +80,10 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 	}
 
 	public File getGnuPgDir() {
-		return GnuPgDir.getInstance().getFile();
+		if (gnuPgDir == null)
+			gnuPgDir = GnuPgDir.getInstance().getFile();
+
+		return gnuPgDir;
 	}
 
 	@Override
@@ -159,13 +164,15 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 	private boolean importPublicKeyRing(final PGPPublicKeyRing publicKeyRing) throws IOException, PGPException {
 		assertNotNull("publicKeyRing", publicKeyRing);
 
+		PGPPublicKeyRingCollection oldPublicKeyRingCollection;
+
 		final File pubringFile = getPubringFile();
 		if (!pubringFile.isFile())
-			throw new IllegalStateException("There is no public key-ring! You must first initialise your personal key-ring!");
-
-		PGPPublicKeyRingCollection oldPublicKeyRingCollection;
-		try (InputStream in = new BufferedInputStream(pubringFile.createInputStream());) {
-			oldPublicKeyRingCollection = new PGPPublicKeyRingCollection(PGPUtil.getDecoderStream(in));
+			oldPublicKeyRingCollection = new PGPPublicKeyRingCollection(new ByteArrayInputStream(new byte[0]));
+		else {
+			try (InputStream in = new BufferedInputStream(pubringFile.createInputStream());) {
+				oldPublicKeyRingCollection = new PGPPublicKeyRingCollection(PGPUtil.getDecoderStream(in));
+			}
 		}
 
 		PGPPublicKeyRingCollection newPublicKeyRingCollection = oldPublicKeyRingCollection;
@@ -298,16 +305,20 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 	}
 
 	protected File getPubringFile() {
-		if (pubringFile == null)
-			pubringFile = createFile(GnuPgDir.getInstance().getFile(), "pubring.gpg");
-
+		if (pubringFile == null) {
+			final File gnuPgDir = getGnuPgDir();
+			gnuPgDir.mkdirs();
+			pubringFile = createFile(gnuPgDir, "pubring.gpg");
+		}
 		return pubringFile;
 	}
 
 	protected File getSecringFile() {
-		if (secringFile == null)
-			secringFile = createFile(GnuPgDir.getInstance().getFile(), "secring.gpg");
-
+		if (secringFile == null) {
+			final File gnuPgDir = getGnuPgDir();
+			gnuPgDir.mkdirs();
+			secringFile = createFile(gnuPgDir, "secring.gpg");
+		}
 		return secringFile;
 	}
 
