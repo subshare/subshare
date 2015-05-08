@@ -33,5 +33,18 @@ public interface Pgp {
 
 	void importKeys(InputStream in);
 
+	/**
+	 * Gets the <i>global</i> local-revision.
+	 * <p>
+	 * Whenever any key is added or changed (e.g. a new signature added).
+	 * @return the <i>global</i> local-revision.
+	 */
 	long getLocalRevision();
+
+	/**
+	 * Gets the local-revision of the given {@code pgpKey}.
+	 * @param pgpKey
+	 * @return
+	 */
+	long getLocalRevision(PgpKey pgpKey);
 }

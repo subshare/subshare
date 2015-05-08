@@ -37,6 +37,7 @@ import org.junit.ComparisonFailure;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import co.codewizards.cloudstore.core.config.ConfigDir;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.util.IOUtil;
 
@@ -47,13 +48,34 @@ public class PgpSyncIT extends AbstractIT {
 	static File clientGnuPgDirFile;
 	static File serverGnuPgDirFile;
 
+	static File configDir;
+	static File clientConfigDir;
+	static File serverConfigDir;
+
 	static Pgp clientPgp;
 	static Pgp serverPgp;
 
 	@BeforeClass
 	public static void beforePgpSyncIT() throws Exception {
 		clientGnuPgDirFile = createFile("build/" + jvmInstanceId + "/client/.gnupg");
+		clientGnuPgDirFile.mkdirs();
 		serverGnuPgDirFile = createFile("build/" + jvmInstanceId + "/server/.gnupg");
+		serverGnuPgDirFile.mkdirs();
+
+		clientConfigDir = createFile("build/" + jvmInstanceId + "/client/.csx");
+		clientConfigDir.mkdirs();
+		serverConfigDir = createFile("build/" + jvmInstanceId + "/server/.csx");
+		serverConfigDir.mkdirs();
+
+		new MockUp<ConfigDir>() {
+			@Mock
+			File getFile(Invocation invocation) {
+				if (configDir != null)
+					return configDir;
+
+				return invocation.proceed();
+			}
+		};
 
 		new MockUp<GnuPgDir>() {
 			@Mock
@@ -80,18 +102,30 @@ public class PgpSyncIT extends AbstractIT {
 	public void before() throws Exception {
 		clientGnuPgDirFile.deleteRecursively();
 		serverGnuPgDirFile.deleteRecursively();
+		deleteGpgFiles(clientConfigDir);
+		deleteGpgFiles(serverConfigDir);
 
 		setupPgp(clientGnuPgDirFile, "marco");
 
 		gnuPgDirFile = clientGnuPgDirFile;
+		configDir = clientConfigDir;
 		clientPgp = new BcWithLocalGnuPgPgp();
 		clientPgp.getMasterKeys(); // force initialisation!
+		clientPgp.getLocalRevision(); // force initialisation!
 
 		gnuPgDirFile = serverGnuPgDirFile;
+		configDir = serverConfigDir;
 		serverPgp = new BcWithLocalGnuPgPgp();
 		serverPgp.getMasterKeys(); // force initialisation!
+		serverPgp.getLocalRevision(); // force initialisation!
 
 		gnuPgDirFile = null;
+		configDir = null;
+	}
+
+	private static void deleteGpgFiles(File configDir) {
+		createFile(configDir, "gpg.properties").delete();
+		createFile(configDir, "gpgLocalRevision").deleteRecursively();
 	}
 
 	@After

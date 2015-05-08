@@ -63,4 +63,8 @@ public class PgpKeyId implements Comparable<PgpKeyId>, Serializable {
 		return (this.pgpKeyId < other.pgpKeyId ? -1 :
 				(this.pgpKeyId > other.pgpKeyId ? 1 : 0));
 	}
+
+	public long longValue() {
+		return pgpKeyId;
+	}
 }

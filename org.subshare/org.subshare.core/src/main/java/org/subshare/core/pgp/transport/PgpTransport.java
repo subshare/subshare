@@ -33,7 +33,7 @@ public interface PgpTransport extends AutoCloseable {
 
 	Set<PgpKeyId> getMasterKeyIds();
 
-	void exportPublicKeys(Set<PgpKeyId> pgpKeyIds, OutputStream out);
+	void exportPublicKeys(Set<PgpKeyId> pgpKeyIds, long changedAfterLocalRevision, OutputStream out);
 
 	void importKeys(InputStream in);
 }

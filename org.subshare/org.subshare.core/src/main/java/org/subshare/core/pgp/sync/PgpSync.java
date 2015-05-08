@@ -60,7 +60,8 @@ public class PgpSync implements AutoCloseable {
 
 		boolean needWrite = false;
 		if (lastSyncLocalLocalRevision != localLocalRevision) { // detected local change => sync to server
-			syncUp();
+			// sync UP (from local to server)
+			sync(getLocalPgpTransport(), lastSyncLocalLocalRevision, getServerPgpTransport());
 			getPgpSyncProperties().setProperty(lastSyncLocalLocalRevisionPropertyKey, Long.toString(localLocalRevision));
 			needWrite = true;
 		}
@@ -68,7 +69,8 @@ public class PgpSync implements AutoCloseable {
 		final long serverLocalRevision = getServerPgpTransport().getLocalRevision();
 		final long lastSyncServerLocalRevision = getPropertyValueAsLong(getPgpSyncProperties(), lastSyncServerLocalRevisionPropertyKey, -1);
 		if (lastSyncServerLocalRevision != serverLocalRevision) {
-			syncDown();
+			// sync DOWN (from server to local)
+			sync(getServerPgpTransport(), lastSyncServerLocalRevision, getLocalPgpTransport());
 			getPgpSyncProperties().setProperty(lastSyncServerLocalRevisionPropertyKey, Long.toString(localLocalRevision));
 			needWrite = true;
 		}
@@ -77,21 +79,14 @@ public class PgpSync implements AutoCloseable {
 			writePgpSyncProperties();
 	}
 
-	private void syncUp() {
-		sync(getLocalPgpTransport(), getServerPgpTransport());
-	}
 
-	private void syncDown() {
-		sync(getServerPgpTransport(), getLocalPgpTransport());
-	}
-
-	private void sync(final PgpTransport from, final PgpTransport to) {
+	private void sync(final PgpTransport from, final long fromLastSyncLocalRevision, final PgpTransport to) {
 		// we always sync all keys that are *locally* known - TODO maybe add a constraint to this later?
 		final Set<PgpKeyId> allMasterKeyIds = getLocalPgpTransport().getMasterKeyIds();
 
 		for (Set<PgpKeyId> masterKeyIds : split(allMasterKeyIds, 1000)) {
 			final ByteArrayOutputStream out = new ByteArrayOutputStream();
-			from.exportPublicKeys(masterKeyIds, out);
+			from.exportPublicKeys(masterKeyIds, fromLastSyncLocalRevision, out);
 			to.importKeys(new ByteArrayInputStream(out.toByteArray()));
 		}
 	}

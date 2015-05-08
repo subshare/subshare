@@ -36,10 +36,14 @@ public class LocalPgpTransport extends AbstractPgpTransport {
 	}
 
 	@Override
-	public void exportPublicKeys(final Set<PgpKeyId> pgpKeyIds, final OutputStream out) {
+	public void exportPublicKeys(final Set<PgpKeyId> pgpKeyIds, final long changedAfterLocalRevision, final OutputStream out) {
 		final HashSet<PgpKey> masterKeys = new HashSet<PgpKey>(pgpKeyIds.size());
-		for (final PgpKeyId pgpKeyId : pgpKeyIds)
-			masterKeys.add(pgp.getPgpKey(pgpKeyId));
+		for (final PgpKeyId pgpKeyId : pgpKeyIds) {
+			final PgpKey masterKey = pgp.getPgpKey(pgpKeyId);
+			final long localRevision = pgp.getLocalRevision(masterKey);
+			if (localRevision > changedAfterLocalRevision)
+				masterKeys.add(masterKey);
+		}
 
 		pgp.exportPublicKeys(masterKeys, out);
 	}

@@ -84,9 +84,8 @@ public class RestPgpTransport extends AbstractPgpTransport {
 	}
 
 	@Override
-	public void exportPublicKeys(Set<PgpKeyId> pgpKeyIds, OutputStream out) {
-		final InputStream in = getClient().execute(new GetPgpPublicKeys(pgpKeyIds));
-//		final InputStream in = getClient().execute(new GetPgpPublicKeys());
+	public void exportPublicKeys(final Set<PgpKeyId> pgpKeyIds, final long changedAfterLocalRevision, final OutputStream out) {
+		final InputStream in = getClient().execute(new GetPgpPublicKeys(pgpKeyIds, changedAfterLocalRevision));
 		if (in == null)
 			return;
 

@@ -2,7 +2,9 @@ package org.subshare.core.pgp.gnupg;
 
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static co.codewizards.cloudstore.core.util.HashUtil.*;
 import static co.codewizards.cloudstore.core.util.PropertiesUtil.*;
+import static co.codewizards.cloudstore.core.util.StringUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
 
 import java.io.BufferedInputStream;
@@ -54,6 +56,7 @@ import co.codewizards.cloudstore.core.oio.File;
 public class BcWithLocalGnuPgPgp extends AbstractPgp {
 	private static final Logger logger = LoggerFactory.getLogger(BcWithLocalGnuPgPgp.class);
 
+	private File configDir;
 	private File gnuPgDir;
 	private File pubringFile;
 	private File secringFile;
@@ -64,9 +67,9 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 	private Map<PgpKeyId, BcPgpKey> pgpKeyId2bcPgpKey; // all keys
 	private Map<PgpKeyId, BcPgpKey> pgpKeyId2masterKey; // only master-keys
 
-	private File gpgPropertiesFile;
-
 	private Properties gpgProperties;
+	private final Map<String, Object> pgpKeyIdRange2Mutex = new HashMap<>();
+	private final Map<String, Properties> pgpKeyIdRange2LocalRevisionProperties = Collections.synchronizedMap(new HashMap<String, Properties>());
 
 	@Override
 	public int getPriority() {
@@ -531,11 +534,15 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 		}
 	}
 
-	private File getGpgPropertiesFile() {
-		if (gpgPropertiesFile == null)
-			gpgPropertiesFile = createFile(ConfigDir.getInstance().getFile(), "gpg.properties");
+	private File getConfigDir() {
+		if (configDir == null)
+			configDir = ConfigDir.getInstance().getFile();
 
-		return gpgPropertiesFile;
+		return configDir;
+	}
+
+	private File getGpgPropertiesFile() {
+		return createFile(getConfigDir(), "gpg.properties");
 	}
 
 	@Override
@@ -621,6 +628,124 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 			} catch (final IOException x) {
 				throw new RuntimeException(x);
 			}
+		}
+	}
+
+	private Properties getLocalRevisionProperties(final PgpKeyId pgpKeyId) {
+		final String pgpKeyIdRange = getPgpKeyIdRange(pgpKeyId);
+		synchronized (getPgpKeyIdRangeMutex(pgpKeyIdRange)) {
+			Properties properties = pgpKeyIdRange2LocalRevisionProperties.get(pgpKeyIdRange);
+			if (properties == null) {
+				properties = new Properties();
+
+				try (final LockFile lockFile = LockFileFactory.getInstance().acquire(getLocalRevisionPropertiesFile(pgpKeyIdRange), 30000);) {
+					try (final InputStream in = lockFile.createInputStream();) {
+						properties.load(in);
+					}
+				} catch (final IOException x) {
+					throw new RuntimeException(x);
+				}
+
+				pgpKeyIdRange2LocalRevisionProperties.put(pgpKeyIdRange, properties);
+			}
+			return properties;
+		}
+	}
+
+	private void writeLocalRevisionProperties(final PgpKeyId pgpKeyId) {
+		final String pgpKeyIdRange = getPgpKeyIdRange(pgpKeyId);
+		synchronized (getPgpKeyIdRangeMutex(pgpKeyIdRange)) {
+			Properties properties = pgpKeyIdRange2LocalRevisionProperties.get(pgpKeyIdRange);
+			if (properties != null) {
+				try (final LockFile lockFile = LockFileFactory.getInstance().acquire(getLocalRevisionPropertiesFile(pgpKeyIdRange), 30000);) {
+					try (final OutputStream out = lockFile.createOutputStream();) {
+						properties.store(out, null);
+					}
+				} catch (final IOException x) {
+					throw new RuntimeException(x);
+				}
+			}
+		}
+	}
+
+	private File getLocalRevisionPropertiesFile(final String pgpKeyIdRange) {
+		assertNotNull("pgpKeyIdRange", pgpKeyIdRange);
+		final File dir = createFile(getConfigDir(), "gpgLocalRevision");
+		final File file = createFile(dir, pgpKeyIdRange + ".properties");
+		file.getParentFile().mkdirs();
+		return file;
+	}
+
+	private Object getPgpKeyIdRangeMutex(final String pgpKeyIdRange) {
+		assertNotNull("pgpKeyIdRange", pgpKeyIdRange);
+		synchronized (pgpKeyIdRange2Mutex) {
+			Object mutex = pgpKeyIdRange2Mutex.get(pgpKeyIdRange);
+			if (mutex == null) {
+				mutex = pgpKeyIdRange;
+				pgpKeyIdRange2Mutex.put(pgpKeyIdRange, mutex);
+			}
+			return mutex;
+		}
+	}
+
+	private String getPgpKeyIdRange(final PgpKeyId pgpKeyId) {
+		assertNotNull("pgpKeyId", pgpKeyId);
+		final int range1 = ((int) pgpKeyId.longValue()) & 0xff;
+		final int range2 = ((int) (pgpKeyId.longValue() >>> 8)) & 0xff;
+		return encodeHexStr(new byte[] { (byte)range2 }) + '/' + encodeHexStr(new byte[] { (byte)range1 });
+//		return Integer.toHexString(range2) + '/' + Integer.toHexString(range1);
+	}
+
+	@Override
+	public long getLocalRevision(final PgpKey pgpKey) {
+		final BcPgpKey bcPgpKey = getBcPgpKeyOrFail(pgpKey);
+		final PgpKeyId pgpKeyId = pgpKey.getPgpKeyId();
+		final String pgpKeyIdRange = getPgpKeyIdRange(pgpKeyId);
+		final long globalLocalRevision = getLocalRevision();
+
+		synchronized (getPgpKeyIdRangeMutex(pgpKeyIdRange)) {
+			final Properties localRevisionProperties = getLocalRevisionProperties(pgpKeyId);
+
+			final String propertyKeyPrefix = pgpKeyId.toString() + '.';
+			final String globalLocalRevisionPropertyKey = propertyKeyPrefix + "globalLocalRevision";
+			final String localRevisionPropertyKey = propertyKeyPrefix + "localRevision";
+
+			final long oldGlobalLocalRevision = getPropertyValueAsLong(localRevisionProperties, globalLocalRevisionPropertyKey, -1);
+			long localRevision = getPropertyValueAsLong(localRevisionProperties, localRevisionPropertyKey, -1);
+
+			if (globalLocalRevision != oldGlobalLocalRevision || localRevision < 0) {
+				final String publicKeySha1PropertyKey = propertyKeyPrefix + "publicKeySha1";
+				final String secretKeySha1PropertyKey = propertyKeyPrefix + "secretKeySha1";
+
+				final String oldPublicKeySha1 = localRevisionProperties.getProperty(publicKeySha1PropertyKey);
+				final String oldSecretKeySha1 = localRevisionProperties.getProperty(secretKeySha1PropertyKey);
+
+				final String publicKeySha1;
+				final String secretKeySha1;
+				try {
+					publicKeySha1 = sha1(bcPgpKey.getPublicKey().getEncoded());
+					secretKeySha1 = bcPgpKey.getSecretKey() == null ? null : sha1(bcPgpKey.getSecretKey().getEncoded());
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+
+				// if no change, we only need to set the new globalLocalRevision (we always need to update this).
+				localRevisionProperties.setProperty(globalLocalRevisionPropertyKey, Long.toString(globalLocalRevision));
+				if (!equal(oldPublicKeySha1, publicKeySha1) || !equal(oldSecretKeySha1, secretKeySha1) || localRevision < 0) {
+					localRevisionProperties.setProperty(publicKeySha1PropertyKey, publicKeySha1);
+
+					if (isEmpty(secretKeySha1))
+						localRevisionProperties.remove(secretKeySha1PropertyKey);
+					else
+						localRevisionProperties.setProperty(secretKeySha1PropertyKey, secretKeySha1);
+
+					// It was changed, hence we set this key's localRevision to the current global localRevision.
+					localRevision = globalLocalRevision;
+					localRevisionProperties.setProperty(localRevisionPropertyKey, Long.toString(localRevision));
+				}
+				writeLocalRevisionProperties(pgpKeyId);
+			}
+			return localRevision;
 		}
 	}
 }

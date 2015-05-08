@@ -3,7 +3,6 @@ package org.subshare.rest.client.pgp.transport.request;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.io.InputStream;
-import java.util.Arrays;
 import java.util.Collection;
 
 import javax.ws.rs.client.WebTarget;
@@ -17,22 +16,25 @@ import co.codewizards.cloudstore.rest.client.request.AbstractRequest;
 public class GetPgpPublicKeys extends AbstractRequest<InputStream> {
 
 	private final PgpKeyIdList pgpKeyIdList;
+	private final long changedAfterLocalRevision;
 
-	public GetPgpPublicKeys(final PgpKeyId ... pgpKeyIds) {
-		this(new PgpKeyIdList(Arrays.asList(assertNotNull("pgpKeyIds", pgpKeyIds))));
-	}
-
-	public GetPgpPublicKeys(final Collection<PgpKeyId> pgpKeyIds) {
+	public GetPgpPublicKeys(final Collection<PgpKeyId> pgpKeyIds, final long changedAfterLocalRevision) {
 		assertNotNull("pgpKeyIds", pgpKeyIds);
 		if (pgpKeyIds instanceof PgpKeyIdList)
 			this.pgpKeyIdList = (PgpKeyIdList) pgpKeyIds;
 		else
 			this.pgpKeyIdList = new PgpKeyIdList(pgpKeyIds);
+
+		this.changedAfterLocalRevision = changedAfterLocalRevision;
 	}
 
 	@Override
 	public InputStream execute() {
-		final WebTarget webTarget = createWebTarget("_PgpPublicKey", urlEncode(pgpKeyIdList.toString()));
+		WebTarget webTarget = createWebTarget("_PgpPublicKey", urlEncode(pgpKeyIdList.toString()));
+
+		if (changedAfterLocalRevision >= 0)
+			webTarget = webTarget.queryParam("changedAfterLocalRevision", changedAfterLocalRevision);
+
 		final InputStream in = assignCredentials(webTarget.request(MediaType.APPLICATION_OCTET_STREAM_TYPE)).get(InputStream.class);
 		return in;
 	}
