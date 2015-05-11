@@ -16,6 +16,7 @@ import co.codewizards.cloudstore.core.dto.Uid;
 
 @XmlRootElement
 public class CryptoLinkDto implements Signable {
+	public static final String SIGNED_DATA_TYPE = "CryptoLink";
 
 	private Uid cryptoLinkId;
 
@@ -98,6 +99,9 @@ public class CryptoLinkDto implements Signable {
 		try {
 			byte separatorIndex = 0;
 			return new MultiInputStream(
+					InputStreamSource.Helper.createInputStreamSource(CryptoLinkDto.SIGNED_DATA_TYPE),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(cryptoLinkId),
 //					localRevision
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),

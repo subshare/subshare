@@ -16,6 +16,7 @@ import co.codewizards.cloudstore.core.dto.Uid;
 
 @XmlRootElement
 public class CryptoRepoFileDto implements Signable {
+	public static final String SIGNED_DATA_TYPE = "CryptoRepoFile";
 
 	private Uid cryptoRepoFileId;
 
@@ -80,6 +81,9 @@ public class CryptoRepoFileDto implements Signable {
 		try {
 			byte separatorIndex = 0;
 			return new MultiInputStream(
+					InputStreamSource.Helper.createInputStreamSource(CryptoRepoFileDto.SIGNED_DATA_TYPE),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(cryptoRepoFileId),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),

@@ -15,6 +15,7 @@ import javax.jdo.annotations.Inheritance;
 import javax.jdo.annotations.InheritanceStrategy;
 import javax.jdo.annotations.PersistenceCapable;
 
+import org.subshare.core.dto.SsDirectoryDto;
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.io.InputStreamSource;
 import org.subshare.core.io.MultiInputStream;
@@ -46,6 +47,9 @@ public class SsDirectory extends Directory implements SsRepoFile {
 		try {
 			byte separatorIndex = 0;
 			return new MultiInputStream(
+					InputStreamSource.Helper.createInputStreamSource(SsDirectoryDto.SIGNED_DATA_TYPE),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(getName()),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),

@@ -17,6 +17,8 @@ import co.codewizards.cloudstore.core.dto.RepositoryDto;
 @XmlRootElement
 public class SsRequestRepoConnectionRepositoryDto extends RepositoryDto implements Signable {
 
+	public static final String SIGNED_DATA_TYPE = "RequestRepoConnectionRepository";
+
 	@XmlElement
 	private SignatureDto signatureDto;
 
@@ -30,6 +32,9 @@ public class SsRequestRepoConnectionRepositoryDto extends RepositoryDto implemen
 		try {
 			byte separatorIndex = 0;
 			return new MultiInputStream(
+					InputStreamSource.Helper.createInputStreamSource(SsRequestRepoConnectionRepositoryDto.SIGNED_DATA_TYPE),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(getRepositoryId()),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),

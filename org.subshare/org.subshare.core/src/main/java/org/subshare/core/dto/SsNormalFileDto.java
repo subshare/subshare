@@ -15,6 +15,7 @@ import co.codewizards.cloudstore.core.dto.NormalFileDto;
 
 @XmlRootElement
 public class SsNormalFileDto extends NormalFileDto implements SsRepoFileDto {
+	public static final String SIGNED_DATA_TYPE = "NormalFile";
 
 	private String parentName;
 
@@ -45,6 +46,9 @@ public class SsNormalFileDto extends NormalFileDto implements SsRepoFileDto {
 		try {
 			byte separatorIndex = 0;
 			return new MultiInputStream(
+					InputStreamSource.Helper.createInputStreamSource(SsNormalFileDto.SIGNED_DATA_TYPE),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(getName()),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),

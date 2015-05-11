@@ -1,6 +1,6 @@
 package org.subshare.local.persistence;
 
-import static co.codewizards.cloudstore.core.util.Util.equal;
+import static co.codewizards.cloudstore.core.util.Util.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,6 +19,7 @@ import javax.jdo.annotations.Unique;
 import javax.jdo.listener.StoreCallback;
 
 import org.subshare.core.dto.PermissionType;
+import org.subshare.core.dto.UserIdentityDto;
 import org.subshare.core.io.InputStreamSource;
 import org.subshare.core.io.MultiInputStream;
 import org.subshare.core.sign.Signature;
@@ -100,6 +101,9 @@ public class UserIdentity extends Entity implements WriteProtectedEntity, AutoTr
 		try {
 			byte separatorIndex = 0;
 			return new MultiInputStream(
+					InputStreamSource.Helper.createInputStreamSource(UserIdentityDto.SIGNED_DATA_TYPE),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(getUserIdentityId()),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),

@@ -1,7 +1,7 @@
 package org.subshare.local.persistence;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
-import static co.codewizards.cloudstore.core.util.Util.equal;
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static co.codewizards.cloudstore.core.util.Util.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -132,6 +132,9 @@ public class UserRepoKeyPublicKeyReplacementRequest extends Entity implements Si
 		try {
 			byte separatorIndex = 0;
 			return new MultiInputStream(
+					InputStreamSource.Helper.createInputStreamSource(UserRepoKeyPublicKeyReplacementRequestDto.SIGNED_DATA_TYPE),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(getRequestId()),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),

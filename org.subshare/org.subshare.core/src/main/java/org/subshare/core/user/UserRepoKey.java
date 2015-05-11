@@ -1,7 +1,7 @@
 package org.subshare.core.user;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
-import static co.codewizards.cloudstore.core.util.Util.equal;
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static co.codewizards.cloudstore.core.util.Util.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -15,6 +15,7 @@ import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
 import org.subshare.core.dto.InvitationUserRepoKeyPublicKeyDto;
 import org.subshare.core.dto.SignatureDto;
+import org.subshare.core.dto.UserRepoKeyDto;
 import org.subshare.core.io.InputStreamSource;
 import org.subshare.core.io.MultiInputStream;
 import org.subshare.core.pgp.PgpDecoder;
@@ -267,6 +268,9 @@ public class UserRepoKey {
 			try {
 				byte separatorIndex = 0;
 				return new MultiInputStream(
+						InputStreamSource.Helper.createInputStreamSource(UserRepoKeyDto.PUBLIC_KEY_SIGNED_DATA_TYPE),
+
+						InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 						InputStreamSource.Helper.createInputStreamSource(getUserRepoKeyId()),
 
 						InputStreamSource.Helper.createInputStreamSource(++separatorIndex),

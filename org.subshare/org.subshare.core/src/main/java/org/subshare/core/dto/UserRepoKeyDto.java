@@ -14,6 +14,8 @@ import co.codewizards.cloudstore.core.dto.Uid;
 @XmlRootElement
 public class UserRepoKeyDto {
 
+	public static final String PUBLIC_KEY_SIGNED_DATA_TYPE = "PublicKey";
+
 	private Uid userRepoKeyId;
 	private UUID serverRepositoryId;
 	private Date validTo;

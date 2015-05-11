@@ -17,6 +17,7 @@ import co.codewizards.cloudstore.core.dto.Uid;
 
 @XmlRootElement
 public class PermissionDto implements Signable {
+	public static final String SIGNED_DATA_TYPE = "Permission";
 
 	private Uid permissionId;
 
@@ -96,11 +97,19 @@ public class PermissionDto implements Signable {
 		return 0;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * <b>Important:</b> The implementation in {@code Permission} must exactly match the one in {@code PermissionDto}!
+	 */
 	@Override
 	public InputStream getSignedData(final int signedDataVersion) {
 		try {
 			byte separatorIndex = 0;
 			return new MultiInputStream(
+					InputStreamSource.Helper.createInputStreamSource(PermissionDto.SIGNED_DATA_TYPE),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(getPermissionId()),
 //					localRevision
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),

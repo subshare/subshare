@@ -15,6 +15,7 @@ import co.codewizards.cloudstore.core.dto.DirectoryDto;
 
 @XmlRootElement
 public class SsDirectoryDto extends DirectoryDto implements SsRepoFileDto {
+	public static final String SIGNED_DATA_TYPE = "Directory";
 
 	private String parentName;
 
@@ -62,6 +63,9 @@ public class SsDirectoryDto extends DirectoryDto implements SsRepoFileDto {
 		try {
 			byte separatorIndex = 0;
 			return new MultiInputStream(
+					InputStreamSource.Helper.createInputStreamSource(SsDirectoryDto.SIGNED_DATA_TYPE),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(getName()),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),

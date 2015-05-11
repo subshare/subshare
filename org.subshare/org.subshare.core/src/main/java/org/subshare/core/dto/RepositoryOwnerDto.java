@@ -18,6 +18,8 @@ import co.codewizards.cloudstore.core.dto.Uid;
 @XmlRootElement
 public class RepositoryOwnerDto implements Signable {
 
+	public static final String SIGNED_DATA_TYPE = "RepositoryOwner";
+
 	private UUID serverRepositoryId;
 
 	private Uid userRepoKeyId;
@@ -56,6 +58,9 @@ public class RepositoryOwnerDto implements Signable {
 		byte separatorIndex = 0;
 		try {
 			return new MultiInputStream(
+					InputStreamSource.Helper.createInputStreamSource(RepositoryOwnerDto.SIGNED_DATA_TYPE),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(serverRepositoryId),
 //					localRevision
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),

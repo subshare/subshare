@@ -8,6 +8,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 import org.subshare.core.io.InputStreamSource;
+import org.subshare.core.io.MultiInputStream;
 import org.subshare.core.sign.Signable;
 import org.subshare.core.sign.Signature;
 
@@ -15,6 +16,7 @@ import co.codewizards.cloudstore.core.dto.Uid;
 
 @XmlRootElement
 public class PermissionSetDto implements Signable {
+	public static final String SIGNED_DATA_TYPE = "PermissionSet";
 
 	private Uid cryptoRepoFileId;
 
@@ -42,7 +44,13 @@ public class PermissionSetDto implements Signable {
 	@Override
 	public InputStream getSignedData(final int signedDataVersion) {
 		try {
-			return InputStreamSource.Helper.createInputStreamSource(cryptoRepoFileId).createInputStream();
+			byte separatorIndex = 0;
+			return new MultiInputStream(
+					InputStreamSource.Helper.createInputStreamSource(PermissionSetDto.SIGNED_DATA_TYPE),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
+					InputStreamSource.Helper.createInputStreamSource(cryptoRepoFileId)
+					);
 		} catch (final IOException x) {
 			throw new RuntimeException(x);
 		}

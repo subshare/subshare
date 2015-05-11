@@ -1,7 +1,7 @@
 package org.subshare.local.persistence;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
-import static co.codewizards.cloudstore.core.util.Util.equal;
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static co.codewizards.cloudstore.core.util.Util.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,7 +18,9 @@ import javax.jdo.annotations.Unique;
 import javax.jdo.annotations.Uniques;
 
 import org.subshare.core.dto.PermissionType;
+import org.subshare.core.dto.UserRepoKeyPublicKeyReplacementRequestDeletionDto;
 import org.subshare.core.io.InputStreamSource;
+import org.subshare.core.io.MultiInputStream;
 import org.subshare.core.sign.Signature;
 
 import co.codewizards.cloudstore.core.dto.Uid;
@@ -68,7 +70,13 @@ public class UserRepoKeyPublicKeyReplacementRequestDeletion extends Entity imple
 	@Override
 	public InputStream getSignedData(int signedDataVersion) {
 		try {
-			return InputStreamSource.Helper.createInputStreamSource(getRequestId()).createInputStream();
+			byte separatorIndex = 0;
+			return new MultiInputStream(
+					InputStreamSource.Helper.createInputStreamSource(UserRepoKeyPublicKeyReplacementRequestDeletionDto.SIGNED_DATA_TYPE),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
+					InputStreamSource.Helper.createInputStreamSource(getRequestId())
+					);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}

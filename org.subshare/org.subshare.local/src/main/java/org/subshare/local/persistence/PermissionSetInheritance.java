@@ -127,6 +127,9 @@ public class PermissionSetInheritance extends Entity implements WriteProtectedEn
 		try {
 			byte separatorIndex = 0;
 			return new MultiInputStream(
+					InputStreamSource.Helper.createInputStreamSource(PermissionSetInheritanceDto.SIGNED_DATA_TYPE),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(getPermissionSetInheritanceId()),
 //					localRevision
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),

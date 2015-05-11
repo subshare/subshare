@@ -10,6 +10,7 @@ import co.codewizards.cloudstore.core.dto.Uid;
 
 @XmlRootElement
 public class UserRepoKeyPublicKeyReplacementRequestDeletionDto {
+	public static final String SIGNED_DATA_TYPE = "UserRepoKeyPublicKeyReplacementRequestDeletion";
 
 	private Uid requestId;
 

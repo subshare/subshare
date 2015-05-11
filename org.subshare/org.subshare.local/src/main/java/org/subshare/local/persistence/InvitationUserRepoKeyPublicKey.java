@@ -1,6 +1,6 @@
 package org.subshare.local.persistence;
 
-import static co.codewizards.cloudstore.core.util.Util.equal;
+import static co.codewizards.cloudstore.core.util.Util.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,6 +16,7 @@ import javax.jdo.annotations.PersistenceCapable;
 import javax.jdo.annotations.Persistent;
 
 import org.subshare.core.dto.InvitationUserRepoKeyPublicKeyDto;
+import org.subshare.core.dto.UserRepoKeyDto;
 import org.subshare.core.io.InputStreamSource;
 import org.subshare.core.io.MultiInputStream;
 import org.subshare.core.sign.Signable;
@@ -82,6 +83,9 @@ public class InvitationUserRepoKeyPublicKey extends UserRepoKeyPublicKey impleme
 		try {
 			byte separatorIndex = 0;
 			return new MultiInputStream(
+					InputStreamSource.Helper.createInputStreamSource(UserRepoKeyDto.PUBLIC_KEY_SIGNED_DATA_TYPE),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(getUserRepoKeyId()),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),

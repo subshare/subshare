@@ -10,6 +10,8 @@ import co.codewizards.cloudstore.core.dto.Uid;
 
 @XmlRootElement
 public class UserIdentityDto {
+	public static final String SIGNED_DATA_TYPE = "UserIdentity";
+
 	private Uid userIdentityId;
 
 	private Uid ofUserRepoKeyId;

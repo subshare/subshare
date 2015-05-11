@@ -15,6 +15,7 @@ import co.codewizards.cloudstore.core.dto.SymlinkDto;
 
 @XmlRootElement
 public class SsSymlinkDto extends SymlinkDto implements SsRepoFileDto {
+	public static final String SIGNED_DATA_TYPE = "Symlink";
 
 	private String parentName;
 
@@ -45,6 +46,9 @@ public class SsSymlinkDto extends SymlinkDto implements SsRepoFileDto {
 		try {
 			byte separatorIndex = 0;
 			return new MultiInputStream(
+					InputStreamSource.Helper.createInputStreamSource(SsSymlinkDto.SIGNED_DATA_TYPE),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(getName()),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),

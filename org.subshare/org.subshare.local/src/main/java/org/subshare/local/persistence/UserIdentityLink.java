@@ -1,7 +1,7 @@
 package org.subshare.local.persistence;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
-import static co.codewizards.cloudstore.core.util.Util.equal;
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static co.codewizards.cloudstore.core.util.Util.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -41,6 +41,7 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 	@Query(name="getUserIdentityLinks_ofUserRepoKeyPublicKey_forUserRepoKeyPublicKey", value="SELECT WHERE this.userIdentity.ofUserRepoKeyPublicKey == :ofUserRepoKeyPublicKey && this.forUserRepoKeyPublicKey == :forUserRepoKeyPublicKey")
 })
 public class UserIdentityLink extends Entity implements WriteProtectedEntity, AutoTrackLocalRevision, StoreCallback {
+	public static final String SIGNED_DATA_TYPE = "UserIdentityLink";
 
 	@Persistent(nullValue=NullValue.EXCEPTION)
 	@Column(length=22)
@@ -121,6 +122,9 @@ public class UserIdentityLink extends Entity implements WriteProtectedEntity, Au
 		try {
 			byte separatorIndex = 0;
 			return new MultiInputStream(
+					InputStreamSource.Helper.createInputStreamSource(UserIdentityLink.SIGNED_DATA_TYPE),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(getUserIdentityLinkId()),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),

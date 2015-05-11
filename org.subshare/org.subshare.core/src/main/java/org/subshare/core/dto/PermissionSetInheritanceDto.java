@@ -17,6 +17,7 @@ import co.codewizards.cloudstore.core.dto.Uid;
 
 @XmlRootElement
 public class PermissionSetInheritanceDto implements Signable {
+	public static final String SIGNED_DATA_TYPE = "PermissionSetInheritance";
 
 	private Uid permissionSetInheritanceId;
 
@@ -80,6 +81,9 @@ public class PermissionSetInheritanceDto implements Signable {
 		try {
 			byte separatorIndex = 0;
 			return new MultiInputStream(
+					InputStreamSource.Helper.createInputStreamSource(PermissionSetInheritanceDto.SIGNED_DATA_TYPE),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(permissionSetInheritanceId),
 //					localRevision
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),

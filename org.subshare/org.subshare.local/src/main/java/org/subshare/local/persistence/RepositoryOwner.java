@@ -107,6 +107,9 @@ public class RepositoryOwner extends Entity implements Signable, AutoTrackLocalR
 		byte separatorIndex = 0;
 		try {
 			return new MultiInputStream(
+					InputStreamSource.Helper.createInputStreamSource(RepositoryOwnerDto.SIGNED_DATA_TYPE),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(getServerRepositoryId()),
 //					localRevision
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),

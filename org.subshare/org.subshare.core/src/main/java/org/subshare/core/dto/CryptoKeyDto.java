@@ -16,6 +16,7 @@ import co.codewizards.cloudstore.core.dto.Uid;
 
 @XmlRootElement
 public class CryptoKeyDto implements Signable {
+	public static final String SIGNED_DATA_TYPE = "CryptoKey";
 
 	private Uid cryptoKeyId;
 
@@ -89,6 +90,9 @@ public class CryptoKeyDto implements Signable {
 		try {
 			byte separatorIndex = 0;
 			return new MultiInputStream(
+					InputStreamSource.Helper.createInputStreamSource(CryptoKeyDto.SIGNED_DATA_TYPE),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(cryptoKeyId),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
