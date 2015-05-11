@@ -416,13 +416,17 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 		final List<PgpSignature> result = new ArrayList<PgpSignature>();
 		for (final Iterator<?> it = bcPgpKey.getPublicKey().getSignatures(); it.hasNext(); ) {
 			final PGPSignature bcPgpSignature = (PGPSignature) it.next();
-			final PgpSignature pgpSignature = new PgpSignature();
-			pgpSignature.setPgpKeyId(new PgpKeyId(bcPgpSignature.getKeyID()));
-			pgpSignature.setCreated(bcPgpSignature.getCreationTime());
-			pgpSignature.setSignatureType(signatureTypeToEnum(bcPgpSignature.getSignatureType()));
-			result.add(pgpSignature);
+			result.add(createPgpSignature(bcPgpSignature));
 		}
 		return Collections.unmodifiableList(result);
+	}
+
+	public PgpSignature createPgpSignature(final PGPSignature bcPgpSignature) {
+		final PgpSignature pgpSignature = new PgpSignature();
+		pgpSignature.setPgpKeyId(new PgpKeyId(bcPgpSignature.getKeyID()));
+		pgpSignature.setCreated(bcPgpSignature.getCreationTime());
+		pgpSignature.setSignatureType(signatureTypeToEnum(bcPgpSignature.getSignatureType()));
+		return pgpSignature;
 	}
 
 	@Override

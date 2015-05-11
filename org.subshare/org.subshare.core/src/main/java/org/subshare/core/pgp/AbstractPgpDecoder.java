@@ -3,7 +3,6 @@ package org.subshare.core.pgp;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-
 public abstract class AbstractPgpDecoder implements PgpDecoder {
 
 	private InputStream inputStream;
@@ -11,6 +10,7 @@ public abstract class AbstractPgpDecoder implements PgpDecoder {
 	private InputStream signInputStream;
 	private PgpKey decryptPgpKey;
 	private PgpKey signPgpKey;
+	private PgpSignature pgpSignature;
 
 	@Override
 	public InputStream getInputStream() {
@@ -74,11 +74,18 @@ public abstract class AbstractPgpDecoder implements PgpDecoder {
 		this.decryptPgpKey = decryptPgpKey;
 	}
 
-	@Override
 	public PgpKey getSignPgpKey() {
 		return signPgpKey;
 	}
 	protected void setSignPgpKey(final PgpKey signPgpKey) {
 		this.signPgpKey = signPgpKey;
+	}
+
+	@Override
+	public PgpSignature getPgpSignature() {
+		return pgpSignature;
+	}
+	public void setPgpSignature(PgpSignature pgpSignature) {
+		this.pgpSignature = pgpSignature;
 	}
 }

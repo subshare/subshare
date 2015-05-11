@@ -83,8 +83,8 @@ public class PgpTest {
 		out.reset();
 
 		assertThat(decodedData).isEqualTo(testData);
-		assertThat(decoder.getSignPgpKey()).isNotNull();
-		assertThat(decoder.getSignPgpKey()).isSameAs(signPgpKey);
+		assertThat(decoder.getPgpSignature()).isNotNull();
+		assertThat(decoder.getPgpSignature().getPgpKeyId()).isEqualTo(signPgpKey.getPgpKeyId());
 		assertThat(decoder.getDecryptPgpKey()).isNull();
 
 		// break signature and try again
@@ -140,8 +140,8 @@ public class PgpTest {
 		out.reset();
 
 		assertThat(decodedData).isEqualTo(testData);
-		assertThat(decoder.getSignPgpKey()).isNotNull();
-		assertThat(decoder.getSignPgpKey()).isSameAs(signPgpKey);
+		assertThat(decoder.getPgpSignature()).isNotNull();
+		assertThat(decoder.getPgpSignature().getPgpKeyId()).isEqualTo(signPgpKey.getPgpKeyId());
 		assertThat(decoder.getDecryptPgpKey()).isNotNull();
 		assertThat(decoder.getDecryptPgpKey()).isSameAs(encryptPgpKey);
 
@@ -188,8 +188,8 @@ public class PgpTest {
 		out.reset();
 
 		assertThat(decodedData).isEqualTo(testData);
-		assertThat(decoder.getSignPgpKey()).isNotNull();
-		assertThat(decoder.getSignPgpKey()).isSameAs(signPgpKey);
+		assertThat(decoder.getPgpSignature()).isNotNull();
+		assertThat(decoder.getPgpSignature().getPgpKeyId()).isEqualTo(signPgpKey.getPgpKeyId());
 		assertThat(decoder.getDecryptPgpKey()).isNull();
 
 		// break signature by modifying signed data and try again

@@ -52,6 +52,7 @@ public class BcPgpDecoder extends AbstractPgpDecoder {
 	public void decode() throws SignatureException, IOException {
 		setDecryptPgpKey(null);
 		setSignPgpKey(null);
+		setPgpSignature(null);
 
 		InputStream in = getInputStreamOrFail();
 		InputStream signIn = getSignInputStream();
@@ -271,6 +272,7 @@ public class BcPgpDecoder extends AbstractPgpDecoder {
 		assertNotNull("signedDataIn", signedDataIn);
 
 		setSignPgpKey(null);
+		setPgpSignature(null);
 
 		if (onePassSignatureList.size() == 0)
 			return; // there is no signature
@@ -298,6 +300,7 @@ public class BcPgpDecoder extends AbstractPgpDecoder {
 					final PGPSignature signature = signatureList.get(i);
 					if (ops.verify(signature)) {
 						setSignPgpKey(bcPgpKey.getPgpKey());
+						setPgpSignature(pgp.createPgpSignature(signature));
 						return;
 					} else
 						throw new SignatureException("Signature verification failed!");

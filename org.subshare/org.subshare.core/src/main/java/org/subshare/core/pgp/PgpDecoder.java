@@ -33,12 +33,21 @@ public interface PgpDecoder {
 	 */
 	PgpKey getDecryptPgpKey();
 
+//	/**
+//	 * Gets the key that signed the data, if it was signed.
+//	 * <p>
+//	 * This property is <code>null</code>, before {@link #decode()} was called. It is only assigned to a non-<code>null</code>
+//	 * value, if the data was signed and the signature is correct (not broken).
+//	 * @return the key that signed the data or <code>null</code>.
+//	 */
+//	PgpKey getSignPgpKey();
+
 	/**
-	 * Gets the key that signed the data, if it was signed.
+	 * Gets the signature, if it was signed.
 	 * <p>
 	 * This property is <code>null</code>, before {@link #decode()} was called. It is only assigned to a non-<code>null</code>
 	 * value, if the data was signed and the signature is correct (not broken).
-	 * @return the key that signed the data or <code>null</code>.
+	 * @return the signature or <code>null</code>.
 	 */
-	PgpKey getSignPgpKey();
+	PgpSignature getPgpSignature();
 }
