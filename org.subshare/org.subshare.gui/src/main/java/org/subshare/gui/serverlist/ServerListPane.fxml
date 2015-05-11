@@ -58,6 +58,11 @@
 						<PropertyValueFactory property="url"/> 
 					</cellValueFactory>
 				</TableColumn>
+				<TableColumn fx:id="severityIconColumn" text="Severity" prefWidth="24"> 
+					<cellValueFactory>
+						<PropertyValueFactory property="severity"/> 
+					</cellValueFactory>
+				</TableColumn>
 			</columns>
 		</TableView>
 	</center>

@@ -3,6 +3,7 @@ package org.subshare.gui.serverlist
 import javafx.scene.layout.BorderPane
 import java.net.URL
 import javafx.util.converter.DefaultStringConverter
+import org.subshare.core.Severity
 import org.subshare.gui.serverlist.ServerListPane
 import org.subshare.gui.serverlist.ServerListItem
 import javafx.util.Callback
@@ -51,7 +52,22 @@ dynamic component ServerListPane resourcefile "messages.properties" {
 					cellValueFactory : PropertyValueFactory < ServerListItem, URL > {
 						property : "url"
 					}
+				},
+				TableColumn < ServerListItem, Severity > id severityIconColumn {
+					text : "Severity",
+					prefWidth : 24,
+					cellValueFactory : PropertyValueFactory < ServerListItem, Severity > {
+						property : "severity"
+					}
 				}
+//				,
+//				TableColumn < ServerListItem, String > id messageIconColumn {
+//					text : "Message",
+//					prefWidth : 200,
+//					cellValueFactory : PropertyValueFactory < ServerListItem, Severity > {
+//						property : "message"
+//					}
+//				}
 			]
 		}
 	}

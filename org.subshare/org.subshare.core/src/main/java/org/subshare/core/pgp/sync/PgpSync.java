@@ -79,6 +79,9 @@ public class PgpSync implements AutoCloseable {
 			writePgpSyncProperties();
 	}
 
+	public URL getServerUrl() {
+		return serverUrl;
+	}
 
 	private void sync(final PgpTransport from, final long fromLastSyncLocalRevision, final PgpTransport to) {
 		// we always sync all keys that are *locally* known - TODO maybe add a constraint to this later?

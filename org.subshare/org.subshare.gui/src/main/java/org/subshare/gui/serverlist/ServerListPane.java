@@ -1,7 +1,8 @@
 package org.subshare.gui.serverlist;
 
-import static co.codewizards.cloudstore.core.util.Util.cast;
-import static org.subshare.gui.util.FxmlUtil.loadDynamicComponentFxml;
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static co.codewizards.cloudstore.core.util.Util.*;
+import static org.subshare.gui.util.FxmlUtil.*;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -19,6 +20,7 @@ import java.util.concurrent.ExecutionException;
 
 import javafx.application.Platform;
 import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
@@ -26,22 +28,34 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.SelectionMode;
+import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableColumn.CellEditEvent;
 import javafx.scene.control.TableView;
+import javafx.scene.control.Tooltip;
 import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 
+import org.subshare.core.Severity;
+import org.subshare.core.pgp.sync.PgpSyncDaemon;
+import org.subshare.core.pgp.sync.PgpSyncState;
 import org.subshare.core.server.Server;
 import org.subshare.core.server.ServerRegistry;
+import org.subshare.gui.IconSize;
+import org.subshare.gui.ls.PgpSyncDaemonLs;
 import org.subshare.gui.ls.ServerRegistryLs;
+import org.subshare.gui.severity.SeverityImageRegistry;
 import org.subshare.gui.util.UrlStringConverter;
 
 import co.codewizards.cloudstore.core.dto.DateTime;
+import co.codewizards.cloudstore.core.util.StringUtil;
 
 public class ServerListPane extends BorderPane {
 
 	private ServerRegistry serverRegistry;
+
+	private PgpSyncDaemon pgpSyncDaemon;
 
 	@FXML
 	private Button addButton;
@@ -50,6 +64,15 @@ public class ServerListPane extends BorderPane {
 
 	@FXML
 	private TableView<ServerListItem> tableView;
+
+	@FXML
+	private TableColumn<ServerListItem, String> nameColumn;
+
+	@FXML
+	private TableColumn<ServerListItem, URL> urlColumn;
+
+	@FXML
+	private TableColumn<ServerListItem, Severity> severityIconColumn;
 
 	private final ListChangeListener<ServerListItem> selectionListener = new ListChangeListener<ServerListItem>() {
 		@Override
@@ -83,34 +106,70 @@ public class ServerListPane extends BorderPane {
 		}
 	};
 
+	private PropertyChangeListener pgpSyncStatePropertyChangeListener = new PropertyChangeListener() {
+		@Override
+		public void propertyChange(final PropertyChangeEvent evt) {
+			Platform.runLater(new Runnable() {
+				@Override
+				public void run() {
+					for (ServerListItem serverListItem : tableView.getItems()) {
+						final PgpSyncState state = getPgpSyncDaemon().getState(serverListItem.getServer());
+						serverListItem.setPgpSyncState(state);
+					}
+
+					// workaround for refresh bug
+					List<TableColumn<ServerListItem, ?>> columns = new ArrayList<>(tableView.getColumns());
+					tableView.getColumns().clear();
+					tableView.getColumns().addAll(columns);
+				}
+			});
+		}
+	};
+
 	public ServerListPane() {
 		loadDynamicComponentFxml(ServerListPane.class, this);
 		tableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 		tableView.getSelectionModel().getSelectedItems().addListener(selectionListener);
-		for (final TableColumn<ServerListItem, ?> tableColumn : tableView.getColumns()) {
-			if ("nameColumn".equals(tableColumn.getId())) {
-				final TableColumn<ServerListItem, String> tc = cast(tableColumn);
-				tc.setCellFactory(cast(TextFieldTableCell.forTableColumn()));
-				tc.setOnEditCommit(new EventHandler<CellEditEvent<ServerListItem, String>>() {
-					@Override
-					public void handle(CellEditEvent<ServerListItem, String> event) {
-						event.getRowValue().setName(event.getNewValue());
-						getServerRegistry().writeIfNeeded();
-					}
-				});
+
+		nameColumn.setCellFactory(cast(TextFieldTableCell.forTableColumn()));
+		nameColumn.setOnEditCommit(new EventHandler<CellEditEvent<ServerListItem, String>>() {
+			@Override
+			public void handle(CellEditEvent<ServerListItem, String> event) {
+				event.getRowValue().setName(event.getNewValue());
+				getServerRegistry().writeIfNeeded();
 			}
-			else if ("urlColumn".equals(tableColumn.getId())) {
-				final TableColumn<ServerListItem, URL> tc = cast(tableColumn);
-				tc.setCellFactory(cast(TextFieldTableCell.forTableColumn(new UrlStringConverter())));
-				tc.setOnEditCommit(new EventHandler<CellEditEvent<ServerListItem, URL>>() {
-					@Override
-					public void handle(CellEditEvent<ServerListItem, URL> event) {
-						event.getRowValue().setUrl(event.getNewValue());
-						getServerRegistry().writeIfNeeded();
-					}
-				});
+		});
+
+		urlColumn.setCellFactory(cast(TextFieldTableCell.forTableColumn(new UrlStringConverter())));
+		urlColumn.setOnEditCommit(new EventHandler<CellEditEvent<ServerListItem, URL>>() {
+			@Override
+			public void handle(CellEditEvent<ServerListItem, URL> event) {
+				event.getRowValue().setUrl(event.getNewValue());
+				getServerRegistry().writeIfNeeded();
 			}
-		}
+		});
+
+		severityIconColumn.setCellFactory(l -> new TableCell<ServerListItem, Severity>() {
+			@Override
+			public void updateItem(final Severity severity, final boolean empty) {
+				if (empty)
+					setGraphic(null);
+				else {
+					assertNotNull("severity", severity);
+					final ServerListItem serverListItem = (ServerListItem) getTableRow().getItem();
+					final String tooltipText = serverListItem.getTooltipText();
+
+					final ImageView imageView = new ImageView(SeverityImageRegistry.getInstance().getImage(severity, IconSize._16x16));
+
+					if (!StringUtil.isEmpty(tooltipText)) {
+						Tooltip tooltip = new Tooltip(tooltipText);
+						setTooltip(tooltip);
+					}
+					setGraphic(imageView);
+				}
+			}
+		});
+
 		populateTableViewAsync();
 		updateEnabled();
 	}
@@ -127,6 +186,7 @@ public class ServerListPane extends BorderPane {
 				return new Task<Collection<Server>>() {
 					@Override
 					protected Collection<Server> call() throws Exception {
+						getPgpSyncDaemon(); // initialise and start
 						return getServerRegistry().getServers();
 					}
 
@@ -139,6 +199,14 @@ public class ServerListPane extends BorderPane {
 				};
 			}
 		}.start();
+	}
+
+	protected PgpSyncDaemon getPgpSyncDaemon() {
+		if (pgpSyncDaemon == null) {
+			pgpSyncDaemon = PgpSyncDaemonLs.getPgpSyncDaemon();
+			pgpSyncDaemon.addPropertyChangeListener(pgpSyncStatePropertyChangeListener);
+		}
+		return pgpSyncDaemon;
 	}
 
 	protected ServerRegistry getServerRegistry() {
@@ -171,6 +239,8 @@ public class ServerListPane extends BorderPane {
 			for (final ServerListItem sli : viewServer2ServerListItem.values())
 				tableView.getItems().remove(sli);
 		}
+
+//		tableView.requestLayout();
 	}
 
 	private void addTableItemsViewCallback(final Collection<Server> servers) {
@@ -206,6 +276,13 @@ public class ServerListPane extends BorderPane {
 
 	@FXML
 	private void deleteButtonClicked(final ActionEvent event) {
-		System.out.println("deleteButtonClicked: " + event);
+		final ObservableList<ServerListItem> selectedItems = tableView.getSelectionModel().getSelectedItems();
+		final List<Server> selectedServers = new ArrayList<Server>(selectedItems.size());
+		for (ServerListItem serverListItem : selectedItems)
+			selectedServers.add(serverListItem.getServer());
+
+		// TODO how to handle servers that are in use?
+		getServerRegistry().getServers().removeAll(selectedServers);
+		getServerRegistry().write();
 	}
 }
