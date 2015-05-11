@@ -85,6 +85,11 @@ public class CryptoLinkDto implements Signable {
 	}
 
 	@Override
+	public String getSignedDataType() {
+		return CryptoLinkDto.SIGNED_DATA_TYPE;
+	}
+
+	@Override
 	public int getSignedDataVersion() {
 		return 0;
 	}
@@ -99,9 +104,6 @@ public class CryptoLinkDto implements Signable {
 		try {
 			byte separatorIndex = 0;
 			return new MultiInputStream(
-					InputStreamSource.Helper.createInputStreamSource(CryptoLinkDto.SIGNED_DATA_TYPE),
-
-					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(cryptoLinkId),
 //					localRevision
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),

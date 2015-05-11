@@ -313,6 +313,11 @@ public class CryptoRepoFile extends Entity implements WriteProtectedEntity, Auto
 	}
 
 	@Override
+	public String getSignedDataType() {
+		return CryptoRepoFileDto.SIGNED_DATA_TYPE;
+	}
+
+	@Override
 	public int getSignedDataVersion() {
 		return 0;
 	}
@@ -327,9 +332,6 @@ public class CryptoRepoFile extends Entity implements WriteProtectedEntity, Auto
 		try {
 			byte separatorIndex = 0;
 			return new MultiInputStream(
-					InputStreamSource.Helper.createInputStreamSource(CryptoRepoFileDto.SIGNED_DATA_TYPE),
-
-					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(getCryptoRepoFileId()),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),

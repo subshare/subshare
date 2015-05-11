@@ -92,6 +92,11 @@ public class UserIdentity extends Entity implements WriteProtectedEntity, AutoTr
 	}
 
 	@Override
+	public String getSignedDataType() {
+		return UserIdentityDto.SIGNED_DATA_TYPE;
+	}
+
+	@Override
 	public int getSignedDataVersion() {
 		return 0;
 	}
@@ -101,9 +106,6 @@ public class UserIdentity extends Entity implements WriteProtectedEntity, AutoTr
 		try {
 			byte separatorIndex = 0;
 			return new MultiInputStream(
-					InputStreamSource.Helper.createInputStreamSource(UserIdentityDto.SIGNED_DATA_TYPE),
-
-					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(getUserIdentityId()),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),

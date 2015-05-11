@@ -2,7 +2,14 @@ package org.subshare.core.sign;
 
 import java.io.InputStream;
 
+/**
+ * A {@code Signable} can be signed and its data is thus protected.
+ *
+ * @author Marco หงุ่ยตระกูล-Schulze - marco at codewizards dot co
+ */
 public interface Signable {
+
+	String getSignedDataType();
 
 	/**
 	 * Gets the current version of the signed data, used when signing right now.
@@ -26,7 +33,7 @@ public interface Signable {
 	 * modified.
 	 * @param signedDataVersion version of the signed data. If a new field was added later, it must not be
 	 * contained in the returned {@code InputStream}, if {@code signedDataVersion} is less than the version
-	 * introducing the new field. 
+	 * introducing the new field.
 	 * @return a stream with the object's data to be signed. Never <code>null</code>.
 	 * @see #getSignedDataVersion()
 	 */

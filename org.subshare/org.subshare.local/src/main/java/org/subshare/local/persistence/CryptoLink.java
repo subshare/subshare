@@ -206,6 +206,11 @@ public class CryptoLink extends Entity implements WriteProtectedEntity, AutoTrac
 	}
 
 	@Override
+	public String getSignedDataType() {
+		return CryptoLinkDto.SIGNED_DATA_TYPE;
+	}
+
+	@Override
 	public int getSignedDataVersion() {
 		return 0;
 	}
@@ -220,9 +225,6 @@ public class CryptoLink extends Entity implements WriteProtectedEntity, AutoTrac
 		try {
 			byte separatorIndex = 0;
 			return new MultiInputStream(
-					InputStreamSource.Helper.createInputStreamSource(CryptoLinkDto.SIGNED_DATA_TYPE),
-
-					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(getCryptoLinkId()),
 //					localRevision
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),

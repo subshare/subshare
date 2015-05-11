@@ -23,7 +23,6 @@ import javax.jdo.annotations.Uniques;
 import org.subshare.core.dto.PermissionSetDto;
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.io.InputStreamSource;
-import org.subshare.core.io.MultiInputStream;
 import org.subshare.core.sign.Signature;
 
 import co.codewizards.cloudstore.local.persistence.AutoTrackLocalRevision;
@@ -102,6 +101,11 @@ public class PermissionSet extends Entity implements WriteProtectedEntity, AutoT
 	}
 
 	@Override
+	public String getSignedDataType() {
+		return PermissionSetDto.SIGNED_DATA_TYPE;
+	}
+
+	@Override
 	public int getSignedDataVersion() {
 		return 0;
 	}
@@ -114,13 +118,7 @@ public class PermissionSet extends Entity implements WriteProtectedEntity, AutoT
 	@Override
 	public InputStream getSignedData(final int signedDataVersion) {
 		try {
-			byte separatorIndex = 0;
-			return new MultiInputStream(
-					InputStreamSource.Helper.createInputStreamSource(PermissionSetDto.SIGNED_DATA_TYPE),
-
-					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
-					InputStreamSource.Helper.createInputStreamSource(cryptoRepoFile.getCryptoRepoFileId())
-					);
+			return InputStreamSource.Helper.createInputStreamSource(cryptoRepoFile.getCryptoRepoFileId()).createInputStream();
 		} catch (final IOException x) {
 			throw new RuntimeException(x);
 		}

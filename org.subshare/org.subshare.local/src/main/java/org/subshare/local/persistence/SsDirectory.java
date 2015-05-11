@@ -33,6 +33,11 @@ public class SsDirectory extends Directory implements SsRepoFile {
 	private SignatureImpl signature;
 
 	@Override
+	public String getSignedDataType() {
+		return SsDirectoryDto.SIGNED_DATA_TYPE;
+	}
+
+	@Override
 	public int getSignedDataVersion() {
 		return 0;
 	}
@@ -47,9 +52,6 @@ public class SsDirectory extends Directory implements SsRepoFile {
 		try {
 			byte separatorIndex = 0;
 			return new MultiInputStream(
-					InputStreamSource.Helper.createInputStreamSource(SsDirectoryDto.SIGNED_DATA_TYPE),
-
-					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(getName()),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),

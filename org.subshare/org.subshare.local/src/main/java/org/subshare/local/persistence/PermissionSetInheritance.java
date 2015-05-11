@@ -113,6 +113,11 @@ public class PermissionSetInheritance extends Entity implements WriteProtectedEn
 	}
 
 	@Override
+	public String getSignedDataType() {
+		return PermissionSetInheritanceDto.SIGNED_DATA_TYPE;
+	}
+
+	@Override
 	public int getSignedDataVersion() {
 		return 0;
 	}
@@ -127,9 +132,6 @@ public class PermissionSetInheritance extends Entity implements WriteProtectedEn
 		try {
 			byte separatorIndex = 0;
 			return new MultiInputStream(
-					InputStreamSource.Helper.createInputStreamSource(PermissionSetInheritanceDto.SIGNED_DATA_TYPE),
-
-					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(getPermissionSetInheritanceId()),
 //					localRevision
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),

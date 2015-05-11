@@ -109,6 +109,11 @@ public class UserRepoKeyPublicKeyReplacementRequest extends Entity implements Si
 	}
 
 	@Override
+	public String getSignedDataType() {
+		return UserRepoKeyPublicKeyReplacementRequestDto.SIGNED_DATA_TYPE;
+	}
+
+	@Override
 	public int getSignedDataVersion() {
 		final int result = 0;
 
@@ -132,9 +137,6 @@ public class UserRepoKeyPublicKeyReplacementRequest extends Entity implements Si
 		try {
 			byte separatorIndex = 0;
 			return new MultiInputStream(
-					InputStreamSource.Helper.createInputStreamSource(UserRepoKeyPublicKeyReplacementRequestDto.SIGNED_DATA_TYPE),
-
-					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(getRequestId()),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),

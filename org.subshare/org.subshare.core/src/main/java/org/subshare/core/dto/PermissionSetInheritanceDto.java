@@ -68,6 +68,11 @@ public class PermissionSetInheritanceDto implements Signable {
 	}
 
 	@Override
+	public String getSignedDataType() {
+		return PermissionSetInheritanceDto.SIGNED_DATA_TYPE;
+	}
+
+	@Override
 	public int getSignedDataVersion() {
 		return 0;
 	}
@@ -81,9 +86,6 @@ public class PermissionSetInheritanceDto implements Signable {
 		try {
 			byte separatorIndex = 0;
 			return new MultiInputStream(
-					InputStreamSource.Helper.createInputStreamSource(PermissionSetInheritanceDto.SIGNED_DATA_TYPE),
-
-					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(permissionSetInheritanceId),
 //					localRevision
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),

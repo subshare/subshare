@@ -253,6 +253,11 @@ public class UserRepoKey {
 		}
 
 		@Override
+		public String getSignedDataType() {
+			return UserRepoKeyDto.PUBLIC_KEY_SIGNED_DATA_TYPE;
+		}
+
+		@Override
 		public int getSignedDataVersion() {
 			return 0;
 		}
@@ -268,9 +273,6 @@ public class UserRepoKey {
 			try {
 				byte separatorIndex = 0;
 				return new MultiInputStream(
-						InputStreamSource.Helper.createInputStreamSource(UserRepoKeyDto.PUBLIC_KEY_SIGNED_DATA_TYPE),
-
-						InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 						InputStreamSource.Helper.createInputStreamSource(getUserRepoKeyId()),
 
 						InputStreamSource.Helper.createInputStreamSource(++separatorIndex),

@@ -93,6 +93,11 @@ public class PermissionDto implements Signable {
 	}
 
 	@Override
+	public String getSignedDataType() {
+		return PermissionDto.SIGNED_DATA_TYPE;
+	}
+
+	@Override
 	public int getSignedDataVersion() {
 		return 0;
 	}
@@ -107,9 +112,6 @@ public class PermissionDto implements Signable {
 		try {
 			byte separatorIndex = 0;
 			return new MultiInputStream(
-					InputStreamSource.Helper.createInputStreamSource(PermissionDto.SIGNED_DATA_TYPE),
-
-					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(getPermissionId()),
 //					localRevision
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),

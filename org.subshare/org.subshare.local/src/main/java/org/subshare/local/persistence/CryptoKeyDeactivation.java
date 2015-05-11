@@ -17,7 +17,6 @@ import org.subshare.core.dto.CryptoKeyDeactivationDto;
 import org.subshare.core.dto.CryptoKeyRole;
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.io.InputStreamSource;
-import org.subshare.core.io.MultiInputStream;
 import org.subshare.core.sign.Signature;
 
 import co.codewizards.cloudstore.local.persistence.Entity;
@@ -44,6 +43,11 @@ public class CryptoKeyDeactivation extends Entity implements WriteProtectedEntit
 	}
 
 	@Override
+	public String getSignedDataType() {
+		return CryptoKeyDeactivationDto.SIGNED_DATA_TYPE;
+	}
+
+	@Override
 	public int getSignedDataVersion() {
 		return 0;
 	}
@@ -56,13 +60,7 @@ public class CryptoKeyDeactivation extends Entity implements WriteProtectedEntit
 	@Override
 	public InputStream getSignedData(final int signedDataVersion) {
 		try {
-			byte separatorIndex = 0;
-			return new MultiInputStream(
-					InputStreamSource.Helper.createInputStreamSource(CryptoKeyDeactivationDto.SIGNED_DATA_TYPE),
-
-					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
-					InputStreamSource.Helper.createInputStreamSource(cryptoKey.getCryptoKeyId())
-					);
+			return InputStreamSource.Helper.createInputStreamSource(cryptoKey.getCryptoKeyId()).createInputStream();
 		} catch (final IOException x) {
 			throw new RuntimeException(x);
 		}

@@ -32,6 +32,11 @@ public class SsSymlinkDto extends SymlinkDto implements SsRepoFileDto {
 	}
 
 	@Override
+	public String getSignedDataType() {
+		return SIGNED_DATA_TYPE;
+	}
+
+	@Override
 	public int getSignedDataVersion() {
 		return 0;
 	}
@@ -46,9 +51,6 @@ public class SsSymlinkDto extends SymlinkDto implements SsRepoFileDto {
 		try {
 			byte separatorIndex = 0;
 			return new MultiInputStream(
-					InputStreamSource.Helper.createInputStreamSource(SsSymlinkDto.SIGNED_DATA_TYPE),
-
-					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(getName()),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),

@@ -3,7 +3,7 @@ package org.subshare.core.sign;
 import java.io.InputStream;
 
 /**
- * Corresponds
+ * Corresponds to
  * @author Marco หงุ่ยตระกูล-Schulze - marco at codewizards dot co
  */
 public interface PgpSignable {

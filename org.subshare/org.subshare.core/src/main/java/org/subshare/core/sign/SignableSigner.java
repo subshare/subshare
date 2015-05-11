@@ -2,11 +2,13 @@ package org.subshare.core.sign;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.IOUtil.*;
+import static co.codewizards.cloudstore.core.util.StringUtil.*;
 import static org.subshare.core.crypto.CryptoConfigUtil.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 
@@ -45,6 +47,10 @@ public class SignableSigner {
 		signatureDto.setSignatureCreated(signatureCreated);
 		signatureDto.setSigningUserRepoKeyId(userRepoKey.getUserRepoKeyId());
 
+		final String signedDataType = signable.getSignedDataType();
+		if (isEmpty(signedDataType))
+			throw new IllegalArgumentException(String.format("Implementation error in class %s: signable.getSignedDataType() returned null! %s", signable.getClass().getName(), signable));
+
 		final int signedDataVersion = signable.getSignedDataVersion();
 		if (signedDataVersion > MAX_UNSIGNED_2_BYTE_VALUE)
 			throw new IllegalStateException("signedDataVersion > " + MAX_UNSIGNED_2_BYTE_VALUE);
@@ -64,6 +70,9 @@ public class SignableSigner {
 			out.write(signedDataVersion >>> 8);
 
 			signer.reset();
+
+			final byte[] signedDataTypeBytes = signedDataType.getBytes(StandardCharsets.UTF_8);
+			signer.update(signedDataTypeBytes, 0, signedDataTypeBytes.length);
 
 			final byte[] signatureCreatedBytes = longToBytes(signatureCreated.getTime());
 			signer.update(signatureCreatedBytes, 0, signatureCreatedBytes.length);

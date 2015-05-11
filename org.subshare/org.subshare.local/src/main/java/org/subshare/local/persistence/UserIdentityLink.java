@@ -113,6 +113,11 @@ public class UserIdentityLink extends Entity implements WriteProtectedEntity, Au
 	}
 
 	@Override
+	public String getSignedDataType() {
+		return UserIdentityLink.SIGNED_DATA_TYPE;
+	}
+
+	@Override
 	public int getSignedDataVersion() {
 		return 0;
 	}
@@ -122,9 +127,6 @@ public class UserIdentityLink extends Entity implements WriteProtectedEntity, Au
 		try {
 			byte separatorIndex = 0;
 			return new MultiInputStream(
-					InputStreamSource.Helper.createInputStreamSource(UserIdentityLink.SIGNED_DATA_TYPE),
-
-					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(getUserIdentityLinkId()),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),

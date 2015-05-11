@@ -188,11 +188,6 @@ public class Permission extends Entity implements WriteProtectedEntity, AutoTrac
 		getPermissionId();
 	}
 
-	@Override
-	public int getSignedDataVersion() {
-		return 0;
-	}
-
 	public Date getValidFrom() {
 		return validFrom;
 	}
@@ -217,6 +212,16 @@ public class Permission extends Entity implements WriteProtectedEntity, AutoTrac
 			this.validTo = validTo;
 	}
 
+	@Override
+	public String getSignedDataType() {
+		return PermissionDto.SIGNED_DATA_TYPE;
+	}
+
+	@Override
+	public int getSignedDataVersion() {
+		return 0;
+	}
+
 	/**
 	 * {@inheritDoc}
 	 * <p>
@@ -227,9 +232,6 @@ public class Permission extends Entity implements WriteProtectedEntity, AutoTrac
 		try {
 			byte separatorIndex = 0;
 			return new MultiInputStream(
-					InputStreamSource.Helper.createInputStreamSource(PermissionDto.SIGNED_DATA_TYPE),
-
-					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(getPermissionId()),
 //					localRevision
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),

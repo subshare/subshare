@@ -8,7 +8,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 import org.subshare.core.io.InputStreamSource;
-import org.subshare.core.io.MultiInputStream;
 import org.subshare.core.sign.Signable;
 import org.subshare.core.sign.Signature;
 
@@ -31,6 +30,11 @@ public class CryptoKeyDeactivationDto implements Signable {
 	}
 
 	@Override
+	public String getSignedDataType() {
+		return CryptoKeyDeactivationDto.SIGNED_DATA_TYPE;
+	}
+
+	@Override
 	public int getSignedDataVersion() {
 		return 0;
 	}
@@ -43,13 +47,7 @@ public class CryptoKeyDeactivationDto implements Signable {
 	@Override
 	public InputStream getSignedData(final int signedDataVersion) {
 		try {
-			byte separatorIndex = 0;
-			return new MultiInputStream(
-					InputStreamSource.Helper.createInputStreamSource(CryptoKeyDeactivationDto.SIGNED_DATA_TYPE),
-
-					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
-					InputStreamSource.Helper.createInputStreamSource(cryptoKeyId)
-					);
+			return InputStreamSource.Helper.createInputStreamSource(cryptoKeyId).createInputStream();
 		} catch (final IOException x) {
 			throw new RuntimeException(x);
 		}

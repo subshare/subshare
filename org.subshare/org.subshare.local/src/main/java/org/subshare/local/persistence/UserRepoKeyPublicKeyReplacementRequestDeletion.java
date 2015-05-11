@@ -20,7 +20,6 @@ import javax.jdo.annotations.Uniques;
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.dto.UserRepoKeyPublicKeyReplacementRequestDeletionDto;
 import org.subshare.core.io.InputStreamSource;
-import org.subshare.core.io.MultiInputStream;
 import org.subshare.core.sign.Signature;
 
 import co.codewizards.cloudstore.core.dto.Uid;
@@ -63,6 +62,11 @@ public class UserRepoKeyPublicKeyReplacementRequestDeletion extends Entity imple
 	}
 
 	@Override
+	public String getSignedDataType() {
+		return UserRepoKeyPublicKeyReplacementRequestDeletionDto.SIGNED_DATA_TYPE;
+	}
+
+	@Override
 	public int getSignedDataVersion() {
 		return 0;
 	}
@@ -70,13 +74,7 @@ public class UserRepoKeyPublicKeyReplacementRequestDeletion extends Entity imple
 	@Override
 	public InputStream getSignedData(int signedDataVersion) {
 		try {
-			byte separatorIndex = 0;
-			return new MultiInputStream(
-					InputStreamSource.Helper.createInputStreamSource(UserRepoKeyPublicKeyReplacementRequestDeletionDto.SIGNED_DATA_TYPE),
-
-					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
-					InputStreamSource.Helper.createInputStreamSource(getRequestId())
-					);
+			return InputStreamSource.Helper.createInputStreamSource(getRequestId()).createInputStream();
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}

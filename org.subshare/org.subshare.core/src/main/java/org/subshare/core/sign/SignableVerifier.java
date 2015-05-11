@@ -2,10 +2,12 @@ package org.subshare.core.sign;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.IOUtil.*;
+import static co.codewizards.cloudstore.core.util.StringUtil.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 import java.util.HashMap;
@@ -33,6 +35,10 @@ public class SignableVerifier {
 		final Signature signature = assertNotNull("signable", signable).getSignature();
 		if (signature == null)
 			throw new SignatureException("There is no signature! signable.signature == null");
+
+		final String signedDataType = signable.getSignedDataType();
+		if (isEmpty(signedDataType))
+			throw new IllegalArgumentException(String.format("Implementation error in class %s: signable.getSignedDataType() returned null! %s", signable.getClass().getName(), signable));
 
 		final Date signatureCreated = signature.getSignatureCreated();
 		if (signatureCreated == null)
@@ -76,6 +82,9 @@ public class SignableVerifier {
 			final Signer signer = getSigner(signerTransformation);
 			signer.init(false, userRepoKeyPublicKey.getPublicKey());
 //			signer.reset(); // already be done by init(...) above.
+
+			final byte[] signedDataTypeBytes = signedDataType.getBytes(StandardCharsets.UTF_8);
+			signer.update(signedDataTypeBytes, 0, signedDataTypeBytes.length);
 
 			final byte[] signatureCreatedBytes = longToBytes(signatureCreated.getTime());
 			signer.update(signatureCreatedBytes, 0, signatureCreatedBytes.length);

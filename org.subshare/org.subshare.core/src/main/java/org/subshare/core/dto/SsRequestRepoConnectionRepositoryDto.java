@@ -23,6 +23,11 @@ public class SsRequestRepoConnectionRepositoryDto extends RepositoryDto implemen
 	private SignatureDto signatureDto;
 
 	@Override
+	public String getSignedDataType() {
+		return SIGNED_DATA_TYPE;
+	}
+
+	@Override
 	public int getSignedDataVersion() {
 		return 0;
 	}
@@ -32,9 +37,6 @@ public class SsRequestRepoConnectionRepositoryDto extends RepositoryDto implemen
 		try {
 			byte separatorIndex = 0;
 			return new MultiInputStream(
-					InputStreamSource.Helper.createInputStreamSource(SsRequestRepoConnectionRepositoryDto.SIGNED_DATA_TYPE),
-
-					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(getRepositoryId()),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
