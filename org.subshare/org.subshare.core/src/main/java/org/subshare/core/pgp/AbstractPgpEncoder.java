@@ -1,6 +1,6 @@
 package org.subshare.core.pgp;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -21,7 +21,7 @@ public abstract class AbstractPgpEncoder implements PgpEncoder {
 	private boolean withIntegrityCheck;
 	private SymmetricEncryptionAlgorithm symmetricEncryptionAlgorithm = SymmetricEncryptionAlgorithm.AES_256;
 	private CompressionAlgorithm compressionAlgorithm = CompressionAlgorithm.ZIP;
-	private HashAlgorithm hashAlgorithm = HashAlgorithm.SHA1;
+	private HashAlgorithm hashAlgorithm = HashAlgorithm.SHA256;
 
 	@Override
 	public InputStream getInputStream() {

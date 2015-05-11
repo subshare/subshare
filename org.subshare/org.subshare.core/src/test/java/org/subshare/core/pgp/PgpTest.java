@@ -1,6 +1,7 @@
 package org.subshare.core.pgp;
 
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
+import static co.codewizards.cloudstore.core.util.Util.*;
 import static org.assertj.core.api.Assertions.*;
 
 import java.io.ByteArrayInputStream;
@@ -12,8 +13,11 @@ import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 
+import org.subshare.core.dto.CreateRepositoryRequestDto;
 import org.subshare.core.gpg.GnuPgTest;
 import org.subshare.core.pgp.gnupg.GnuPgDir;
+import org.subshare.core.sign.PgpSignableSigner;
+import org.subshare.core.sign.PgpSignableVerifier;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -266,6 +270,33 @@ public class PgpTest {
 
 		// check for 0 *additional* signatures
 		assertThat(pgp.getSignatures(pgpKey).size()).isEqualTo(4);
+	}
+
+	@Test
+	public void signAndVerifyViaPgpSignable() {
+		CreateRepositoryRequestDto dto = new CreateRepositoryRequestDto();
+		dto.setRequestId(new Uid());
+
+		PgpKeyId pgpKeyId = new PgpKeyId("70c642ca41cd4390");
+		PgpSignableSigner signer = new PgpSignableSigner(pgp, pgp.getPgpKey(pgpKeyId));
+		signer.sign(dto);
+
+		PgpSignableVerifier verifier = new PgpSignableVerifier(pgp);
+		PgpSignature pgpSignature = verifier.verify(dto);
+		assertThat(pgpSignature).isNotNull();
+
+		assertThat(pgpSignature.getPgpKeyId()).isEqualTo(pgpKeyId);
+
+		verifier.verify(dto);
+
+		dto.setRequestId(new Uid());
+
+		try {
+			verifier.verify(dto);
+			fail("PgpSignableVerifier did not detect modification!");
+		} catch (SignatureException x) {
+			doNothing(); // expected
+		}
 	}
 
 	private byte[] createTestData() {

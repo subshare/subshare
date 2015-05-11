@@ -2,11 +2,18 @@ package org.subshare.core.sign;
 
 import java.io.InputStream;
 
+import org.subshare.core.user.UserRepoKey;
+
 /**
- * Corresponds to
+ * A {@code PgpSignable} can be signed and its data is thus protected.
+ * <p>
+ * In contrast to a {@link Signable}, a {@code PgpSignable} is directly signed with an OpenPGP key - <i>not</i>
+ * with a {@link UserRepoKey}. An external attacker can thus see the identity
  * @author Marco หงุ่ยตระกูล-Schulze - marco at codewizards dot co
  */
 public interface PgpSignable {
+
+	String getSignedDataType();
 
 	/**
 	 * Gets the current version of the signed data, used when signing right now.

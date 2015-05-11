@@ -2,8 +2,21 @@ package org.subshare.core.sign;
 
 import java.io.InputStream;
 
+import org.subshare.core.dto.PermissionType;
+import org.subshare.core.user.UserRepoKey;
+
 /**
  * A {@code Signable} can be signed and its data is thus protected.
+ * <p>
+ * The object is signed by exactly one {@link Signature#getSigningUserRepoKeyId() UserRepoKey}. The identity of the
+ * signer is not revealed to an external attacker (who has no access to the mapping between
+ * {@link UserRepoKey} and OpenPGP key). Looking up the OpenPGP key for a {@code UserRepoKey} requires a permission
+ * of type  {@link PermissionType#readUserIdentity readUserIdentity}.
+ * <p>
+ * An object implementing this interface <i>usually must be signed</i> in order to be persisted or transferred
+ * between client and server. But this interface itself does not always require a signature.
+ * Depending on the situation, an object might <i>not</i> be signed, even though its class implements this
+ * interface. This should be a very rare exception, though.
  *
  * @author Marco หงุ่ยตระกูล-Schulze - marco at codewizards dot co
  */
