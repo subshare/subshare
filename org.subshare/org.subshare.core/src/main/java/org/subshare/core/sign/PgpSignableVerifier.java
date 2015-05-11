@@ -35,7 +35,7 @@ public class PgpSignableVerifier {
 	public PgpSignature verify(final PgpSignable pgpSignable) throws SignatureException {
 		final byte[] pgpSignatureData = assertNotNull("pgpSignable", pgpSignable).getPgpSignatureData();
 		if (pgpSignatureData == null)
-			throw new SignatureException("There is no signature! signable.pgpSignatureData == null");
+			throw new SignatureException("There is no signature! pgpSignable.pgpSignatureData == null");
 
 		final String signedDataType = pgpSignable.getSignedDataType();
 		if (isEmpty(signedDataType))
@@ -45,7 +45,7 @@ public class PgpSignableVerifier {
 			final ByteArrayInputStream in1 = new ByteArrayInputStream(pgpSignatureData);
 			final int version = in1.read();
 			if (version != 1)
-				throw new SignatureException(String.format("signatureData has unsupported version=%s!", version));
+				throw new SignatureException(String.format("pgpSignatureData has unsupported version=%s!", version));
 
 			final int signedDataVersion = readOrFail(in1) + (readOrFail(in1) << 8);
 
