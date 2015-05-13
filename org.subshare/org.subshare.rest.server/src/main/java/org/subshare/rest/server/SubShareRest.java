@@ -11,6 +11,7 @@ import org.subshare.rest.server.service.SsChangeSetDtoService;
 import org.subshare.rest.server.service.SsMakeDirectoryService;
 import org.subshare.rest.server.service.SsRequestRepoConnectionService;
 import org.subshare.rest.server.service.SsWebDavService;
+import org.subshare.rest.server.service.CreateRepositoryService;
 import org.subshare.rest.server.service.CryptoChangeSetDtoService;
 import org.subshare.rest.server.service.PgpPublicKeyService;
 import org.subshare.rest.server.service.TestSubShareService;
@@ -49,6 +50,7 @@ public class SubShareRest extends CloudStoreRest {
 		logger.debug("<init>: Instance created.");
 
 		registerClasses(
+				CreateRepositoryService.class,
 				CryptoChangeSetDtoService.class,
 				PgpPublicKeyService.class,
 				TestSubShareService.class

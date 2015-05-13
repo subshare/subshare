@@ -1,6 +1,6 @@
 package org.subshare.core.pgp.gnupg;
 
-import static co.codewizards.cloudstore.core.oio.OioFileFactory.createFile;
+import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +14,7 @@ public class GnuPgDir {
 	private static final Logger logger = LoggerFactory.getLogger(GnuPgDir.class);
 
 	public static final String CONFIG_KEY_GNU_PG_DIR = "gnupg.dir";
+	public static final String DEFAULT_GNU_PG_DIR = "${user.home}/.gnupg";
 
 	private static final class Holder {
 		public static final GnuPgDir instance = new GnuPgDir();
@@ -26,7 +27,7 @@ public class GnuPgDir {
 	protected GnuPgDir() { }
 
 	public File getFile() {
-		final String dirString = Config.getInstance().getProperty(CONFIG_KEY_GNU_PG_DIR, "${user.home}/.gnupg");
+		final String dirString = Config.getInstance().getPropertyAsNonEmptyTrimmedString(CONFIG_KEY_GNU_PG_DIR, DEFAULT_GNU_PG_DIR);
 		logger.debug("getFile: dirString={}", dirString);
 		final String resolvedDir = IOUtil.replaceTemplateVariables(dirString, System.getProperties());
 		final File result = createFile(resolvedDir).getAbsoluteFile();

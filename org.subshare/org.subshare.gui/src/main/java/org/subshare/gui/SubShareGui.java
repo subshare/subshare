@@ -7,13 +7,15 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
-import org.subshare.core.pgp.transport.PgpTransportFactoryRegistry;
-import org.subshare.gui.ssl.AcceptAllDynamicX509TrustManagerCallback;
+import org.subshare.core.pgp.Pgp;
+import org.subshare.core.pgp.PgpKey;
+import org.subshare.core.pgp.PgpKeyId;
+import org.subshare.core.pgp.man.PgpPrivateKeyPassphraseStore;
+import org.subshare.gui.ls.LocalServerInitLs;
+import org.subshare.gui.ls.PgpLs;
+import org.subshare.gui.ls.PgpPrivateKeyPassphraseManagerLs;
 import org.subshare.ls.server.SsLocalServer;
-import org.subshare.rest.client.pgp.transport.RestPgpTransportFactory;
-import org.subshare.rest.client.transport.CryptreeRepoTransportFactory;
 
-import co.codewizards.cloudstore.core.repo.transport.RepoTransportFactoryRegistry;
 import co.codewizards.cloudstore.ls.client.LocalServerClient;
 
 public class SubShareGui extends Application {
@@ -22,16 +24,14 @@ public class SubShareGui extends Application {
 
 	@Override
 	public void start(final Stage primaryStage) throws Exception {
-		RepoTransportFactoryRegistry.getInstance().getRepoTransportFactoryOrFail(CryptreeRepoTransportFactory.class).setDynamicX509TrustManagerCallbackClass(AcceptAllDynamicX509TrustManagerCallback.class);
-		PgpTransportFactoryRegistry.getInstance().getPgpTransportFactoryOrFail(RestPgpTransportFactory.class).setDynamicX509TrustManagerCallbackClass(AcceptAllDynamicX509TrustManagerCallback.class);
-
 		// We create the LocalServer before constructing the UI to make sure, the UI can access everything.
 		// TODO we should start an external JVM and keep it running when closing - or maybe handle this differently?!
 		localServer = new SsLocalServer();
 		if (! localServer.start())
 			localServer = null;
 
-//		LocalServerClient.getInstance().invokeStatic(clazz, methodName, arguments)
+		LocalServerInitLs.init();
+		promptPgpKeyPassphrases();
 
 		final Parent root = FXMLLoader.load(
 				SubShareGui.class.getResource("MainPane.fxml"),
@@ -56,5 +56,19 @@ public class SubShareGui extends Application {
 
 	public static void main(final String[] args) {
 		launch(args);
+	}
+
+	private void promptPgpKeyPassphrases() {
+		final Pgp pgp = PgpLs.getPgpOrFail();
+		final PgpPrivateKeyPassphraseStore pgpPrivateKeyPassphraseStore = PgpPrivateKeyPassphraseManagerLs.getPgpPrivateKeyPassphraseStore();
+		for (final PgpKey pgpKey : pgp.getMasterKeysWithPrivateKey()) {
+			final PgpKeyId pgpKeyId = pgpKey.getPgpKeyId();
+			if (pgpPrivateKeyPassphraseStore.hasPassphrase(pgpKeyId))
+				continue;
+
+			// TODO implement nice dialog asking for passphrase!
+			if (pgpKeyId.equals(new PgpKeyId("56422A5E710E3371")))
+				pgpPrivateKeyPassphraseStore.putPassphrase(pgpKeyId, "test12345".toCharArray());
+		}
 	}
 }

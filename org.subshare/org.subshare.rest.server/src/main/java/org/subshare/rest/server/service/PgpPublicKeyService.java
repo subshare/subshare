@@ -31,17 +31,12 @@ import org.subshare.core.pgp.transport.local.LocalPgpTransportFactory;
 @Path("_PgpPublicKey")
 public class PgpPublicKeyService {
 
-//	private final Pgp pgp = PgpRegistry.getInstance().getPgpOrFail();
-	private final PgpTransport localPgpTransport;
-	{
-		final PgpTransportFactory localPgpTransportFactory = PgpTransportFactoryRegistry.getInstance().getPgpTransportFactoryOrFail(LocalPgpTransportFactory.class);
-		localPgpTransport = localPgpTransportFactory.createPgpTransport(LocalPgpTransportFactory.LOCAL_URL);
-	}
-
 	@GET
 	@Path("localRevision")
 	public LongDto getLocalRevision() {
-		return new LongDto(localPgpTransport.getLocalRevision());
+		try (final PgpTransport localPgpTransport = createLocalPgpTransport();) {
+			return new LongDto(localPgpTransport.getLocalRevision());
+		}
 	}
 
 	// required! without this method an empty pgpKeyIdList causes an exception, because no matching method is found
@@ -59,26 +54,13 @@ public class PgpPublicKeyService {
 			@QueryParam("changedAfterLocalRevision") @DefaultValue("-1") final long changedAfterLocalRevision) {
 		assertNotNull("pgpKeyIdList", pgpKeyIdList);
 
-//		final Set<PgpKey> pgpKeys = new LinkedHashSet<PgpKey>(pgpKeyIdList.size());
-//		for (final PgpKeyId pgpKeyId : pgpKeyIdList) {
-//			final PgpKey pgpKey = pgp.getPgpKey(pgpKeyId);
-//			if (pgpKey != null) {
-//				// filter by changedAfterLocalRevision
-//				final long localRevision = pgp.getLocalRevision(pgpKey);
-//				if (localRevision > changedAfterLocalRevision)
-//					pgpKeys.add(pgpKey);
-//			}
-//		}
-//
-//		if (pgpKeys.isEmpty())
-//			return null;
-
 		final StreamingOutput result = new StreamingOutput() {
 			@Override
 			public void write(OutputStream output) throws IOException, WebApplicationException {
-				localPgpTransport.exportPublicKeys(new HashSet<PgpKeyId>(pgpKeyIdList), changedAfterLocalRevision, output);
-//				pgp.exportPublicKeys(pgpKeys, output);
-				output.flush();
+				try (final PgpTransport localPgpTransport = createLocalPgpTransport();) {
+					localPgpTransport.exportPublicKeys(new HashSet<PgpKeyId>(pgpKeyIdList), changedAfterLocalRevision, output);
+					output.flush();
+				}
 			}
 		};
 		return Response.ok(result).build();
@@ -88,7 +70,13 @@ public class PgpPublicKeyService {
 	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
 	public void putPgpPublicKeys(final InputStream in) {
 		assertNotNull("in", in);
-//		pgp.importKeys(in);
-		localPgpTransport.importKeys(in);
+		try (final PgpTransport localPgpTransport = createLocalPgpTransport();) {
+			localPgpTransport.importKeys(in);
+		}
+	}
+
+	private PgpTransport createLocalPgpTransport() {
+		final PgpTransportFactory localPgpTransportFactory = PgpTransportFactoryRegistry.getInstance().getPgpTransportFactoryOrFail(LocalPgpTransportFactory.class);
+		return localPgpTransportFactory.createPgpTransport(LocalPgpTransportFactory.LOCAL_URL);
 	}
 }

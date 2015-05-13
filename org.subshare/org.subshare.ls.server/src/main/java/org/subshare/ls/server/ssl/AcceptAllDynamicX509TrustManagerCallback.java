@@ -1,4 +1,4 @@
-package org.subshare.gui.ssl;
+package org.subshare.ls.server.ssl;
 
 import co.codewizards.cloudstore.rest.client.ssl.CheckServerTrustedCertificateExceptionContext;
 import co.codewizards.cloudstore.rest.client.ssl.CheckServerTrustedCertificateExceptionResult;

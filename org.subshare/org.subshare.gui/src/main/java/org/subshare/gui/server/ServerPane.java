@@ -1,8 +1,9 @@
 package org.subshare.gui.server;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
-import static co.codewizards.cloudstore.core.util.Util.cast;
-import static org.subshare.gui.util.FxmlUtil.loadDynamicComponentFxml;
+import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static co.codewizards.cloudstore.core.util.Util.*;
+import static org.subshare.gui.util.FxmlUtil.*;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -14,7 +15,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
 import javafx.application.Platform;
@@ -31,11 +31,15 @@ import javafx.scene.control.TableColumn.CellEditEvent;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.BorderPane;
+import javafx.stage.DirectoryChooser;
 
 import org.subshare.core.repo.ServerRepo;
 import org.subshare.core.repo.ServerRepoRegistry;
 import org.subshare.core.server.Server;
+import org.subshare.gui.ls.ServerRepoManagerLs;
 import org.subshare.gui.ls.ServerRepoRegistryLs;
+
+import co.codewizards.cloudstore.core.oio.File;
 
 public class ServerPane extends BorderPane /* GridPane */ {
 
@@ -187,16 +191,22 @@ public class ServerPane extends BorderPane /* GridPane */ {
 
 	@FXML
 	private void createRepositoryButtonClicked(final ActionEvent event) {
-		ServerRepoRegistry serverRepoRegistry = ServerRepoRegistryLs.getServerRepoRegistry();
+		final File directory = selectLocalDirectory();
+		if (directory == null)
+			return;
+
+		ServerRepoManagerLs.getServerRepoManager().createRepository(directory, server);
 
 		// TODO really create the repo on the server!
 		// TODO 2: need to verify, if server-URLs and repos really exist! Maybe show an error marker in the UI, if there's a problem (might be temporary!)
 		// TODO 3: and maybe switch from UUID to Uid?!
-		final UUID repositoryId = UUID.randomUUID();
-		final ServerRepo serverRepo = serverRepoRegistry.createServerRepo(repositoryId);
-		serverRepo.setServerId(server.getServerId());
-		serverRepo.setName(repositoryId.toString());
-		serverRepoRegistry.getServerRepos().add(serverRepo);
-		serverRepoRegistry.writeIfNeeded();
+	}
+
+	private File selectLocalDirectory() {
+		// TODO implement our own directory-selection-dialog which allows for showing some more information to the user.
+		final DirectoryChooser directoryChooser = new DirectoryChooser();
+		directoryChooser.setTitle("Select local directory to be shared.");
+		final java.io.File directory = directoryChooser.showDialog(getScene().getWindow());
+		return directory == null ? null : createFile(directory);
 	}
 }

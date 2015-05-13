@@ -29,14 +29,14 @@ public class CryptreeRepoTransportTest {
 
 	@Test
 	public void encryptAndSignAndVerifyAndDecrypt() throws Exception {
-		final CryptreeRepoTransportFactory factory = new CryptreeRepoTransportFactory();
+		final CryptreeRepoTransportFactoryImpl factory = new CryptreeRepoTransportFactoryImpl();
 //		factory.setDynamicX509TrustManagerCallbackClass(TestDynamicX509TrustManagerCallback.class);
 		final UUID serverRepositoryId = UUID.randomUUID();
 		final UUID clientRepositoryId = UUID.randomUUID();
 		final UserRepoKeyRing userRepoKeyRing = createUserRepoKeyRing(serverRepositoryId);
 		factory.setUserRepoKeyRing(userRepoKeyRing);
 
-		final CryptreeRepoTransport repoTransport = new CryptreeRepoTransport() {
+		final CryptreeRepoTransportImpl repoTransport = new CryptreeRepoTransportImpl() {
 			@Override
 			public UUID getRepositoryId() {
 				return serverRepositoryId;

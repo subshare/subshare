@@ -3,6 +3,7 @@ package org.subshare.core.pgp.gnupg;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -25,7 +26,7 @@ public class BcPgpKey {
 
 	private PGPSecretKey secretKey;
 
-	private final List<BcPgpKey> subKeys = new ArrayList<BcPgpKey>();
+	private List<BcPgpKey> subKeys = new ArrayList<BcPgpKey>();
 
 	private PgpKey pgpKey;
 
@@ -71,15 +72,19 @@ public class BcPgpKey {
 
 	public PgpKey getPgpKey() {
 		if (pgpKey == null) {
-			final PgpKey pgpKey = new PgpKey();
-			pgpKey.setPgpKeyId(pgpKeyId);
-			pgpKey.setFingerprint(assertNotNull("publicKey", publicKey).getFingerprint());
-			pgpKey.setPrivateKeyAvailable(secretKey != null && ! secretKey.isPrivateKeyEmpty());
+			final byte[] fingerprint = assertNotNull("publicKey", publicKey).getFingerprint();
+			final boolean privateKeyAvailable = secretKey != null && ! secretKey.isPrivateKeyEmpty();
 
+			final List<String> userIds = new ArrayList<String>();
 			for (final Iterator<?> itUserIDs = publicKey.getUserIDs(); itUserIDs.hasNext(); )
-				pgpKey.getUserIds().add((String) itUserIDs.next());
+				userIds.add((String) itUserIDs.next());
 
-			this.pgpKey = pgpKey;
+			this.subKeys = Collections.unmodifiableList(new ArrayList<>(this.subKeys)); // turn read-only
+			final List<PgpKey> subKeys = new ArrayList<PgpKey>(this.subKeys.size());
+			for (final BcPgpKey bcPgpKey : this.subKeys)
+				subKeys.add(bcPgpKey.getPgpKey());
+
+			this.pgpKey = new PgpKey(pgpKeyId, fingerprint, privateKeyAvailable, userIds, subKeys);
 		}
 		return pgpKey;
 	}

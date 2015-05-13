@@ -12,6 +12,7 @@ import java.io.OutputStream;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
+import java.util.UUID;
 
 import org.subshare.core.dto.CreateRepositoryRequestDto;
 import org.subshare.core.gpg.GnuPgTest;
@@ -275,7 +276,7 @@ public class PgpTest {
 	@Test
 	public void signAndVerifyViaPgpSignable() {
 		CreateRepositoryRequestDto dto = new CreateRepositoryRequestDto();
-		dto.setRequestId(new Uid());
+		dto.setServerRepositoryId(UUID.randomUUID());
 
 		PgpKeyId pgpKeyId = new PgpKeyId("70c642ca41cd4390");
 		PgpSignableSigner signer = new PgpSignableSigner(pgp, pgp.getPgpKey(pgpKeyId));
@@ -289,7 +290,7 @@ public class PgpTest {
 
 		verifier.verify(dto);
 
-		dto.setRequestId(new Uid());
+		dto.setServerRepositoryId(UUID.randomUUID());
 
 		try {
 			verifier.verify(dto);

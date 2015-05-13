@@ -1,4 +1,5 @@
 dependencies {
 	compile group: 'co.codewizards.cloudstore', name: 'co.codewizards.cloudstore.ls.server', version: cloudstoreVersion
 	compile project(':org.subshare.ls.rest.server')
+	compile project(':org.subshare.rest.client')
 }

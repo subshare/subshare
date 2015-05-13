@@ -1,8 +1,8 @@
 package org.subshare.rest.client.transport;
 
-import static co.codewizards.cloudstore.core.oio.OioFileFactory.createFile;
-import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
-import static org.subshare.core.crypto.CryptoConfigUtil.getSymmetricCipherTransformation;
+import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static org.subshare.core.crypto.CryptoConfigUtil.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -27,9 +27,13 @@ import org.subshare.core.dto.SsDirectoryDto;
 import org.subshare.core.dto.SsNormalFileDto;
 import org.subshare.core.dto.SsRepoFileDto;
 import org.subshare.core.dto.SsRequestRepoConnectionRepositoryDto;
+import org.subshare.core.dto.CreateRepositoryRequestDto;
 import org.subshare.core.dto.CryptoChangeSetDto;
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.io.LimitedInputStream;
+import org.subshare.core.pgp.PgpKey;
+import org.subshare.core.repo.transport.CryptreeRepoTransport;
+import org.subshare.core.sign.PgpSignableSigner;
 import org.subshare.core.sign.SignableSigner;
 import org.subshare.core.sign.SignableVerifier;
 import org.subshare.core.sign.Signature;
@@ -40,6 +44,7 @@ import org.subshare.core.user.UserRepoKeyPublicKeyLookup;
 import org.subshare.core.user.UserRepoKeyRing;
 import org.subshare.rest.client.transport.request.SsBeginPutFile;
 import org.subshare.rest.client.transport.request.SsMakeDirectory;
+import org.subshare.rest.client.transport.request.CreateRepository;
 import org.subshare.rest.client.transport.request.EndGetCryptoChangeSetDto;
 import org.subshare.rest.client.transport.request.GetCryptoChangeSetDto;
 import org.subshare.rest.client.transport.request.PutCryptoChangeSetDto;
@@ -64,8 +69,8 @@ import co.codewizards.cloudstore.core.util.IOUtil;
 import co.codewizards.cloudstore.rest.client.CloudStoreRestClient;
 import co.codewizards.cloudstore.rest.client.request.RequestRepoConnection;
 
-public class CryptreeRepoTransport extends AbstractRepoTransport implements ContextWithLocalRepoManager {
-	private static final Logger logger = LoggerFactory.getLogger(CryptreeRepoTransport.class);
+public class CryptreeRepoTransportImpl extends AbstractRepoTransport implements CryptreeRepoTransport, ContextWithLocalRepoManager {
+	private static final Logger logger = LoggerFactory.getLogger(CryptreeRepoTransportImpl.class);
 
 	private CryptreeFactory cryptreeFactory;
 	private RestRepoTransport restRepoTransport;
@@ -84,6 +89,15 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 	@Override
 	public byte[] getPublicKey() {
 		return getRestRepoTransport().getPublicKey();
+	}
+
+	@Override
+	public void createRepository(final UUID serverRepositoryId, PgpKey pgpKey) {
+		assertNotNull("pgpKey", pgpKey);
+		CreateRepositoryRequestDto createRepositoryRequestDto = new CreateRepositoryRequestDto();
+		createRepositoryRequestDto.setServerRepositoryId(serverRepositoryId);
+		new PgpSignableSigner(pgpKey).sign(createRepositoryRequestDto);
+		getClient().execute(new CreateRepository(createRepositoryRequestDto));
 	}
 
 	@Override
@@ -656,8 +670,8 @@ public class CryptreeRepoTransport extends AbstractRepoTransport implements Cont
 	}
 
 	@Override
-	public final CryptreeRepoTransportFactory getRepoTransportFactory() {
-		return (CryptreeRepoTransportFactory) super.getRepoTransportFactory();
+	public final CryptreeRepoTransportFactoryImpl getRepoTransportFactory() {
+		return (CryptreeRepoTransportFactoryImpl) super.getRepoTransportFactory();
 	}
 
 	@Override

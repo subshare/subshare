@@ -20,7 +20,7 @@ import org.subshare.core.user.User;
 import org.subshare.core.user.UserRegistry;
 import org.subshare.core.user.UserRepoKeyRing;
 import org.subshare.rest.client.pgp.transport.RestPgpTransportFactory;
-import org.subshare.rest.client.transport.CryptreeRepoTransportFactory;
+import org.subshare.rest.client.transport.CryptreeRepoTransportFactoryImpl;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.slf4j.Logger;
@@ -66,7 +66,7 @@ public abstract class AbstractIT {
 		return subShareServerTestSupport.getSecureUrl();
 	}
 
-	protected static CryptreeRepoTransportFactory cryptreeRepoTransportFactory;
+	protected static CryptreeRepoTransportFactoryImpl cryptreeRepoTransportFactory;
 	protected static RestPgpTransportFactory restPgpTransportFactory;
 
 	@BeforeClass
@@ -74,7 +74,7 @@ public abstract class AbstractIT {
 		if (subShareServerTestSupport.beforeClass()) {
 			// *IMPORTANT* We run *all* tests in parallel in the same JVM. Therefore, we must - in this entire project - *not*
 			// set any other dynamicX509TrustManagerCallbackClass!!! This setting is JVM-wide!
-			cryptreeRepoTransportFactory = RepoTransportFactoryRegistry.getInstance().getRepoTransportFactoryOrFail(CryptreeRepoTransportFactory.class);
+			cryptreeRepoTransportFactory = RepoTransportFactoryRegistry.getInstance().getRepoTransportFactoryOrFail(CryptreeRepoTransportFactoryImpl.class);
 			cryptreeRepoTransportFactory.setDynamicX509TrustManagerCallbackClass(TestDynamicX509TrustManagerCallback.class);
 
 			restPgpTransportFactory = PgpTransportFactoryRegistry.getInstance().getPgpTransportFactoryOrFail(RestPgpTransportFactory.class);
@@ -85,7 +85,7 @@ public abstract class AbstractIT {
 	@AfterClass
 	public static void abstractIT_afterClass() {
 		if (subShareServerTestSupport.afterClass()) {
-			CryptreeRepoTransportFactory f = cryptreeRepoTransportFactory;
+			CryptreeRepoTransportFactoryImpl f = cryptreeRepoTransportFactory;
 			cryptreeRepoTransportFactory = null;
 			if (f != null) {
 				f.setDynamicX509TrustManagerCallbackClass(null);

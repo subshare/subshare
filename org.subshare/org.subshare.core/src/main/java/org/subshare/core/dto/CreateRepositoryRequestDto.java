@@ -4,27 +4,27 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.subshare.core.io.InputStreamSource;
+import org.subshare.core.io.MultiInputStream;
 import org.subshare.core.sign.PgpSignable;
-
-import co.codewizards.cloudstore.core.dto.Uid;
 
 @XmlRootElement
 public class CreateRepositoryRequestDto implements PgpSignable {
 	private static final String SIGNED_DATA_TYPE = "CreateRepositoryRequest";
 
-	private Uid requestId;
+	private UUID serverRepositoryId;
 
 	private byte[] pgpSignatureData;
 
-	public Uid getRequestId() {
-		return requestId;
+	public UUID getServerRepositoryId() {
+		return serverRepositoryId;
 	}
-	public void setRequestId(Uid requestId) {
-		this.requestId = requestId;
+	public void setServerRepositoryId(UUID serverRepositoryId) {
+		this.serverRepositoryId = serverRepositoryId;
 	}
 
 	@Override
@@ -39,9 +39,11 @@ public class CreateRepositoryRequestDto implements PgpSignable {
 
 	@Override
 	public InputStream getSignedData(int signedDataVersion) {
-		assertNotNull("requestId", requestId);
+		assertNotNull("serverRepositoryId", serverRepositoryId);
 		try {
-			return InputStreamSource.Helper.createInputStreamSource(requestId).createInputStream();
+			return new MultiInputStream(
+					InputStreamSource.Helper.createInputStreamSource(serverRepositoryId)
+					);
 		} catch (IOException x) {
 			throw new RuntimeException(x);
 		}

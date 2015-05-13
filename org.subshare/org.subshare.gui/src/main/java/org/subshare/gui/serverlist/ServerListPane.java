@@ -157,6 +157,9 @@ public class ServerListPane extends BorderPane {
 				else {
 					assertNotNull("severity", severity);
 					final ServerListItem serverListItem = (ServerListItem) getTableRow().getItem();
+					if (serverListItem == null)
+						return;
+
 					final String tooltipText = serverListItem.getTooltipText();
 
 					final ImageView imageView = new ImageView(SeverityImageRegistry.getInstance().getImage(severity, IconSize._16x16));

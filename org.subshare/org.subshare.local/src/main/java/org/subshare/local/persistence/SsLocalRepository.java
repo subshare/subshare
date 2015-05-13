@@ -1,5 +1,7 @@
 package org.subshare.local.persistence;
 
+import java.util.UUID;
+
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Discriminator;
 import javax.jdo.annotations.DiscriminatorStrategy;
@@ -8,6 +10,8 @@ import javax.jdo.annotations.InheritanceStrategy;
 import javax.jdo.annotations.NullValue;
 import javax.jdo.annotations.PersistenceCapable;
 import javax.jdo.annotations.Persistent;
+
+import org.subshare.core.repo.CreateRepositoryContext;
 
 import co.codewizards.cloudstore.local.persistence.LocalRepository;
 
@@ -34,5 +38,14 @@ public class SsLocalRepository extends LocalRepository {
 	}
 	public void setAssertedAllRepoFilesAreSigned(final boolean assertedAllRepoFilesAreSigned) {
 		this.assertedAllRepoFilesAreSigned = assertedAllRepoFilesAreSigned;
+	}
+
+	@Override
+	protected UUID createRepositoryId() {
+		final UUID repositoryId = CreateRepositoryContext.repositoryIdThreadLocal.get();
+		if (repositoryId != null)
+			return repositoryId;
+
+		return super.createRepositoryId();
 	}
 }
