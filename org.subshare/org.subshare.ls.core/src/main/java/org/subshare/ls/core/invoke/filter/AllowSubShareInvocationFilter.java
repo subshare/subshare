@@ -4,6 +4,7 @@ import static co.codewizards.cloudstore.core.util.ReflectionUtil.*;
 
 import java.lang.reflect.Proxy;
 
+import org.subshare.core.pgp.PgpAuthenticationCallback;
 import org.subshare.core.pgp.man.PgpPrivateKeyPassphraseStore;
 
 import co.codewizards.cloudstore.ls.core.invoke.ExtMethodInvocationRequest;
@@ -17,6 +18,9 @@ public class AllowSubShareInvocationFilter extends AbstractInvocationFilter {
 
 		if (PgpPrivateKeyPassphraseStore.class.isAssignableFrom(targetClass))
 			return canInvoke_PgpPrivateKeyPassphraseStore(extMethodInvocationRequest);
+
+		if (PgpAuthenticationCallback.class.isAssignableFrom(targetClass))
+			return false;
 
 		if (isWhiteListed(targetClass))
 			return true;
