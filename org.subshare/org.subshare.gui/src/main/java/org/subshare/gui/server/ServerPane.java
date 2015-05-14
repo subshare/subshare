@@ -33,11 +33,16 @@ import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.DirectoryChooser;
 
+import org.subshare.core.pgp.PgpKeyId;
 import org.subshare.core.repo.ServerRepo;
 import org.subshare.core.repo.ServerRepoRegistry;
 import org.subshare.core.server.Server;
+import org.subshare.core.user.User;
+import org.subshare.core.user.UserRegistry;
+import org.subshare.gui.ls.PgpPrivateKeyPassphraseManagerLs;
 import org.subshare.gui.ls.ServerRepoManagerLs;
 import org.subshare.gui.ls.ServerRepoRegistryLs;
+import org.subshare.gui.ls.UserRegistryLs;
 
 import co.codewizards.cloudstore.core.oio.File;
 
@@ -195,7 +200,19 @@ public class ServerPane extends BorderPane /* GridPane */ {
 		if (directory == null)
 			return;
 
-		ServerRepoManagerLs.getServerRepoManager().createRepository(directory, server);
+		final Set<PgpKeyId> pgpKeyIds = PgpPrivateKeyPassphraseManagerLs.getPgpPrivateKeyPassphraseStore().getPgpKeyIdsHavingPassphrase();
+		if (pgpKeyIds.isEmpty())
+			throw new IllegalStateException("There is no PGP private key unlocked.");
+
+		final UserRegistry userRegistry = UserRegistryLs.getUserRegistry();
+		final Collection<User> users = userRegistry.getUsersByPgpKeyIds(pgpKeyIds);
+
+		if (users.isEmpty())
+			throw new IllegalStateException("There is no user for any of these PGP keys: " + pgpKeyIds);
+
+		User user = users.iterator().next(); // TODO select via UI, if there's more than one!
+
+		ServerRepoManagerLs.getServerRepoManager().createRepository(directory, server, user);
 
 		// TODO really create the repo on the server!
 		// TODO 2: need to verify, if server-URLs and repos really exist! Maybe show an error marker in the UI, if there's a problem (might be temporary!)

@@ -268,7 +268,7 @@ public class UserRepoKeyPublicKeyHelper {
 	}
 
 	private UserIdentityPayloadDto createUserIdentityPayloadDto(final UserRepoKeyPublicKey ofUserRepoKeyPublicKey) {
-		final User user = context.getUserRegistry().getUserOrFail(ofUserRepoKeyPublicKey.getUserRepoKeyId());
+		final User user = context.getUserRegistry().getUserByUserRepoKeyIdOrFail(ofUserRepoKeyPublicKey.getUserRepoKeyId());
 		final UserIdentityPayloadDto result = new UserIdentityPayloadDto();
 		result.setFirstName(user.getFirstName());
 		result.setLastName(user.getLastName());

@@ -1,7 +1,7 @@
 package org.subshare.core.repo;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
-import static co.codewizards.cloudstore.core.util.Util.equal;
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static co.codewizards.cloudstore.core.util.Util.*;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
@@ -16,6 +16,7 @@ public class ServerRepoImpl implements ServerRepo {
 	private final UUID repositoryId;
 	private String name;
 	private Uid serverId;
+	private Uid userId;
 
 	public ServerRepoImpl(final UUID repositoryId) {
 		this.repositoryId = assertNotNull("repositoryId)", repositoryId);
@@ -48,7 +49,23 @@ public class ServerRepoImpl implements ServerRepo {
 		if (this.serverId != null && ! equal(this.serverId, serverId)) // TODO do we ever need to support changing this?
 			throw new IllegalStateException("Cannot modify serverId!");
 
+		final Uid old = this.serverId;
 		this.serverId = serverId;
+		firePropertyChange(PropertyEnum.serverId, old, serverId);
+	}
+
+	@Override
+	public Uid getUserId() {
+		return userId;
+	}
+	@Override
+	public void setUserId(Uid userId) {
+		if (this.userId != null && ! equal(this.userId, userId)) // TODO do we ever need to support changing this?
+			throw new IllegalStateException("Cannot modify userId!");
+
+		final Uid old = this.userId;
+		this.userId = userId;
+		firePropertyChange(PropertyEnum.userId, old, userId);
 	}
 
 	@Override

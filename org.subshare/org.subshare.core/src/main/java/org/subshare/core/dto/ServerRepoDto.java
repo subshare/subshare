@@ -9,6 +9,7 @@ public class ServerRepoDto {
 	private UUID repositoryId;
 	private String name;
 	private Uid serverId;
+	private Uid userId;
 
 	public UUID getRepositoryId() {
 		return repositoryId;
@@ -29,5 +30,12 @@ public class ServerRepoDto {
 	}
 	public void setServerId(Uid serverId) {
 		this.serverId = serverId;
+	}
+
+	public Uid getUserId() {
+		return userId;
+	}
+	public void setUserId(Uid userId) {
+		this.userId = userId;
 	}
 }

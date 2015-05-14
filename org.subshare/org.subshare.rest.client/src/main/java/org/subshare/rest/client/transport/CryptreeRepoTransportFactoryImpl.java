@@ -2,7 +2,7 @@ package org.subshare.rest.client.transport;
 
 import java.net.URL;
 
-import org.subshare.core.user.UserRepoKeyRing;
+import org.subshare.core.user.UserRepoKeyRingLookup;
 
 import co.codewizards.cloudstore.core.repo.transport.AbstractRepoTransportFactory;
 import co.codewizards.cloudstore.core.repo.transport.RepoTransport;
@@ -10,7 +10,7 @@ import co.codewizards.cloudstore.rest.client.ssl.DynamicX509TrustManagerCallback
 
 public class CryptreeRepoTransportFactoryImpl extends AbstractRepoTransportFactory {
 	protected final RestRepoTransportFactory restRepoTransportFactory = new RestRepoTransportFactory();
-	private UserRepoKeyRing userRepoKeyRing;
+	private UserRepoKeyRingLookup userRepoKeyRingLookup;
 
 	public Class<? extends DynamicX509TrustManagerCallback> getDynamicX509TrustManagerCallbackClass() {
 		return restRepoTransportFactory.getDynamicX509TrustManagerCallbackClass();
@@ -19,11 +19,11 @@ public class CryptreeRepoTransportFactoryImpl extends AbstractRepoTransportFacto
 		restRepoTransportFactory.setDynamicX509TrustManagerCallbackClass(dynamicX509TrustManagerCallbackClass);
 	}
 
-	public UserRepoKeyRing getUserRepoKeyRing() {
-		return userRepoKeyRing;
+	public UserRepoKeyRingLookup getUserRepoKeyRingLookup() {
+		return userRepoKeyRingLookup;
 	}
-	public void setUserRepoKeyRing(final UserRepoKeyRing userRepoKeyRing) {
-		this.userRepoKeyRing = userRepoKeyRing;
+	public void setUserRepoKeyRingLookup(final UserRepoKeyRingLookup userRepoKeyRingLookup) {
+		this.userRepoKeyRingLookup = userRepoKeyRingLookup;
 	}
 
 	@Override

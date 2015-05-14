@@ -1,7 +1,7 @@
 package org.subshare.test;
 
-import static co.codewizards.cloudstore.core.oio.OioFileFactory.createFile;
-import static org.assertj.core.api.Assertions.assertThat;
+import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.util.List;
 
@@ -93,14 +93,14 @@ public class RepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 
 			syncFromLocalSrcToRemote();
 
-			final UserRepoKeyRing ownerUserRepoKeyRing = cryptreeRepoTransportFactory.getUserRepoKeyRing();
+			final UserRepoKeyRing ownerUserRepoKeyRing = getUserRepoKeyRing(cryptreeRepoTransportFactory);
 			assertThat(ownerUserRepoKeyRing).isNotNull();
 			try {
-				cryptreeRepoTransportFactory.setUserRepoKeyRing(otherUserRepoKeyRing);
+				cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(otherUserRepoKeyRing));
 				createLocalDestinationRepo();
 				syncFromRemoteToLocalDest();
 			} finally {
-				cryptreeRepoTransportFactory.setUserRepoKeyRing(ownerUserRepoKeyRing);
+				cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(ownerUserRepoKeyRing));
 			}
 
 			createFile(child_2, "yyyyyyyy").delete();
@@ -114,10 +114,10 @@ public class RepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 			syncFromLocalSrcToRemote();
 
 			try {
-				cryptreeRepoTransportFactory.setUserRepoKeyRing(otherUserRepoKeyRing);
+				cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(otherUserRepoKeyRing));
 				syncFromRemoteToLocalDest();
 			} finally {
-				cryptreeRepoTransportFactory.setUserRepoKeyRing(ownerUserRepoKeyRing);
+				cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(ownerUserRepoKeyRing));
 			}
 		}
 	}
@@ -140,21 +140,21 @@ public class RepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 
 		syncFromLocalSrcToRemote();
 
-		final UserRepoKeyRing ownerUserRepoKeyRing = cryptreeRepoTransportFactory.getUserRepoKeyRing();
+		final UserRepoKeyRing ownerUserRepoKeyRing = getUserRepoKeyRing(cryptreeRepoTransportFactory);
 		assertThat(ownerUserRepoKeyRing).isNotNull();
 		try {
-			cryptreeRepoTransportFactory.setUserRepoKeyRing(otherUserRepoKeyRing1);
+			cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(otherUserRepoKeyRing1));
 			createLocalDestinationRepo();
 			syncFromRemoteToLocalDest();
 		} finally {
-			cryptreeRepoTransportFactory.setUserRepoKeyRing(ownerUserRepoKeyRing);
+			cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(ownerUserRepoKeyRing));
 		}
 
 		revokePermission(remotePathPrefix2Plain, PermissionType.read, publicKey1);
 		syncFromLocalSrcToRemote();
 
 		try {
-			cryptreeRepoTransportFactory.setUserRepoKeyRing(otherUserRepoKeyRing1);
+			cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(otherUserRepoKeyRing1));
 			createLocalDestinationRepo();
 
 			// The following sync should still work, because the original files/dirs were not yet modified
@@ -162,7 +162,7 @@ public class RepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 			// lazy revocation.
 			syncFromRemoteToLocalDest();
 		} finally {
-			cryptreeRepoTransportFactory.setUserRepoKeyRing(ownerUserRepoKeyRing);
+			cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(ownerUserRepoKeyRing));
 		}
 
 		// Now, we modify the directory locally and sync it up again. This should cause the next down-sync
@@ -171,7 +171,7 @@ public class RepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 		syncFromLocalSrcToRemote();
 
 		try {
-			cryptreeRepoTransportFactory.setUserRepoKeyRing(otherUserRepoKeyRing1);
+			cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(otherUserRepoKeyRing1));
 			createLocalDestinationRepo();
 			try {
 				syncFromRemoteToLocalDest();
@@ -180,7 +180,7 @@ public class RepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 				logger.info("Fine! Expected this AccessDeniedException: " + x);
 			}
 
-			cryptreeRepoTransportFactory.setUserRepoKeyRing(otherUserRepoKeyRing2);
+			cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(otherUserRepoKeyRing2));
 			createLocalDestinationRepo();
 
 			logger.info("");
@@ -189,7 +189,7 @@ public class RepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 			logger.info("*** before syncFromRemoteToLocalDest() ***");
 			syncFromRemoteToLocalDest();
 		} finally {
-			cryptreeRepoTransportFactory.setUserRepoKeyRing(ownerUserRepoKeyRing);
+			cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(ownerUserRepoKeyRing));
 		}
 	}
 
@@ -210,10 +210,10 @@ public class RepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 
 		syncFromLocalSrcToRemote();
 
-		final UserRepoKeyRing ownerUserRepoKeyRing = cryptreeRepoTransportFactory.getUserRepoKeyRing();
+		final UserRepoKeyRing ownerUserRepoKeyRing = getUserRepoKeyRing(cryptreeRepoTransportFactory);
 		assertThat(ownerUserRepoKeyRing).isNotNull();
 		try {
-			cryptreeRepoTransportFactory.setUserRepoKeyRing(otherUserRepoKeyRing1);
+			cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(otherUserRepoKeyRing1));
 			createLocalDestinationRepo();
 			syncFromRemoteToLocalDest();
 
@@ -225,13 +225,13 @@ public class RepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 			syncFromLocalSrcToRemote();
 			syncFromRemoteToLocalDest();
 		} finally {
-			cryptreeRepoTransportFactory.setUserRepoKeyRing(ownerUserRepoKeyRing);
+			cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(ownerUserRepoKeyRing));
 		}
 
 		revokePermission(remotePathPrefix2Plain, PermissionType.write, publicKey1);
 
 		try {
-			cryptreeRepoTransportFactory.setUserRepoKeyRing(otherUserRepoKeyRing1);
+			cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(otherUserRepoKeyRing1));
 
 			// The following write should still work, because the revocation becomes active only in the next up-sync.
 			final File child_3 = createFile(localSrcRoot, remotePathPrefix2Plain);
@@ -244,14 +244,14 @@ public class RepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 			syncFromLocalSrcToRemote();
 			syncFromRemoteToLocalDest();
 		} finally {
-			cryptreeRepoTransportFactory.setUserRepoKeyRing(ownerUserRepoKeyRing);
+			cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(ownerUserRepoKeyRing));
 		}
 
 		// We enact the revocation in the other repository - this should work fine ;-)
 		syncFromRemoteToLocalDest();
 
 		try {
-			cryptreeRepoTransportFactory.setUserRepoKeyRing(otherUserRepoKeyRing1);
+			cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(otherUserRepoKeyRing1));
 
 			// And now, the next write(s) should fail, because the revocation should now be active.
 			final File child_3 = createFile(localSrcRoot, remotePathPrefix2Plain);
@@ -274,7 +274,7 @@ public class RepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 			}
 
 		} finally {
-			cryptreeRepoTransportFactory.setUserRepoKeyRing(ownerUserRepoKeyRing);
+			cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(ownerUserRepoKeyRing));
 		}
 	}
 
@@ -289,7 +289,7 @@ public class RepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 
 		final UserRepoKeyRing otherUserRepoKeyRing = createUserRepoKeyRing();
 
-		final UserRepoKeyRing ownerUserRepoKeyRing = cryptreeRepoTransportFactory.getUserRepoKeyRing();
+		final UserRepoKeyRing ownerUserRepoKeyRing = getUserRepoKeyRing(cryptreeRepoTransportFactory);
 		assertThat(ownerUserRepoKeyRing).isNotNull();
 
 		// Do *not* grant read access to the sub-dir! It must fail.
@@ -298,7 +298,7 @@ public class RepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 		persistPublicKeysToRemoteRepository(otherUserRepoKeyRing);
 
 		try {
-			cryptreeRepoTransportFactory.setUserRepoKeyRing(otherUserRepoKeyRing);
+			cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(otherUserRepoKeyRing));
 			createLocalDestinationRepo();
 
 			try {
@@ -308,7 +308,7 @@ public class RepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 				logger.info("syncFromLocalToRemoteToLocalWithPathPrefixWithoutSubdirClearanceKey: Caught ReadAccessDeniedException as expected.");
 			}
 		} finally {
-			cryptreeRepoTransportFactory.setUserRepoKeyRing(ownerUserRepoKeyRing);
+			cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(ownerUserRepoKeyRing));
 		}
 	}
 

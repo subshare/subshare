@@ -39,13 +39,13 @@ public class UserRegistryTest {
 
 	@Before
 	public void before() throws Exception {
-		createFile(ConfigDir.getInstance().getFile(), UserRegistry.USER_LIST_FILE_NAME).delete();
+		createFile(ConfigDir.getInstance().getFile(), UserRegistry.USER_REGISTRY_FILE_NAME).delete();
 		initPgp();
 	}
 
 	@Test
 	public void initUserRegistryFromGpgKeys() throws Exception {
-		final UserRegistry userRegistry = new UserRegistry();
+		final UserRegistry userRegistry = new UserRegistryImpl();
 		final Collection<User> users = userRegistry.getUsers();
 		assertThat(users).isNotEmpty();
 
@@ -67,7 +67,7 @@ public class UserRegistryTest {
 
 	@Test
 	public void testGpgKeyTrustLevels() throws Exception {
-		final UserRegistry userRegistry = new UserRegistry();
+		final UserRegistry userRegistry = new UserRegistryImpl();
 		final Pgp pgp = PgpRegistry.getInstance().getPgpOrFail();
 
 		final Map<String, PgpKeyTrustLevel> email2ExpectedPgpKeyTrustLevel = new HashMap<String, PgpKeyTrustLevel>();
@@ -102,9 +102,9 @@ public class UserRegistryTest {
 
 	@Test
 	public void addUser() throws Exception {
-		final UserRegistry userRegistry1 = new UserRegistry();
+		final UserRegistry userRegistry1 = new UserRegistryImpl();
 
-		User user1 = new User();
+		User user1 = userRegistry1.createUser();
 		user1.setUserId(new Uid());
 		user1.setFirstName("Anton");
 		user1.setLastName("Müller");
@@ -118,7 +118,7 @@ public class UserRegistryTest {
 
 		userRegistry1.writeIfNeeded();
 
-		final UserRegistry userRegistry2 = new UserRegistry();
+		final UserRegistry userRegistry2 = new UserRegistryImpl();
 
 		Collection<User> users2 = userRegistry2.getUsersByEmail(email1);
 		assertThat(users2).hasSize(1);

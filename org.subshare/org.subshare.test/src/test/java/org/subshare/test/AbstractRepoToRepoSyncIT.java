@@ -17,8 +17,10 @@ import org.subshare.core.CryptreeFactoryRegistry;
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKeyRing;
+import org.subshare.core.user.UserRepoKeyRingLookup;
 import org.subshare.local.persistence.CryptoRepoFile;
 import org.subshare.local.persistence.CryptoRepoFileDao;
+import org.subshare.rest.client.transport.CryptreeRepoTransportFactoryImpl;
 import org.junit.After;
 import org.junit.Before;
 import org.slf4j.Logger;
@@ -131,7 +133,7 @@ public abstract class AbstractRepoToRepoSyncIT extends AbstractIT {
 		localRepoManagerRemote.close();
 
 		ownerUserRepoKeyRing = createUserRepoKeyRing();
-		cryptreeRepoTransportFactory.setUserRepoKeyRing(ownerUserRepoKeyRing);
+		cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(ownerUserRepoKeyRing));
 
 		new CloudStoreClient("requestRepoConnection", getLocalRootWithPathPrefix().getPath(), remoteRootURLWithPathPrefixForLocalSrc.toExternalForm()).execute();
 		//	acceptRepoConnection is not needed, because already accepted implicitly by *signed* request
@@ -204,10 +206,18 @@ public abstract class AbstractRepoToRepoSyncIT extends AbstractIT {
 
 		remoteRootURLWithPathPrefixForLocalDest = getRemoteRootURLWithPathPrefixForLocalDest(remoteRepositoryId);
 
-		if (! cryptreeRepoTransportFactory.getUserRepoKeyRing().getUserRepoKeys(remoteRepositoryId).isEmpty()) {
+		if (! getUserRepoKeyRing(cryptreeRepoTransportFactory).getUserRepoKeys(remoteRepositoryId).isEmpty()) {
 			new CloudStoreClient("requestRepoConnection", localDestRoot.getPath(), remoteRootURLWithPathPrefixForLocalDest.toExternalForm()).execute();
 			//	acceptRepoConnection is not needed, because already accepted implicitly by *signed* request
 		}
+	}
+
+	protected static UserRepoKeyRing getUserRepoKeyRing(CryptreeRepoTransportFactoryImpl factory) {
+		UserRepoKeyRingLookup lookup = factory.getUserRepoKeyRingLookup();
+		if (lookup == null)
+			return null;
+
+		return ((StaticUserRepoKeyRingLookup) lookup).getUserRepoKeyRing();
 	}
 
 	protected void determineRemotePathPrefix2Encrypted() {
@@ -237,7 +247,7 @@ public abstract class AbstractRepoToRepoSyncIT extends AbstractIT {
 				final Cryptree cryptree = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail().getCryptreeOrCreate(
 						transaction, remoteRepositoryId,
 						remotePathPrefix2Encrypted,
-						cryptreeRepoTransportFactory.getUserRepoKeyRing());
+						getUserRepoKeyRing(cryptreeRepoTransportFactory));
 				cryptree.grantPermission(localPath, permissionType, userRepoKeyPublicKey);
 
 				transaction.commit();
@@ -257,7 +267,7 @@ public abstract class AbstractRepoToRepoSyncIT extends AbstractIT {
 				final Cryptree cryptree = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail().getCryptreeOrCreate(
 						transaction, remoteRepositoryId,
 						remotePathPrefix2Encrypted,
-						cryptreeRepoTransportFactory.getUserRepoKeyRing());
+						getUserRepoKeyRing(cryptreeRepoTransportFactory));
 				cryptree.setPermissionsInherited(localPath, inherited);
 
 				transaction.commit();
@@ -277,7 +287,7 @@ public abstract class AbstractRepoToRepoSyncIT extends AbstractIT {
 				final Cryptree cryptree = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail().getCryptreeOrCreate(
 						transaction, remoteRepositoryId,
 						remotePathPrefix2Encrypted,
-						cryptreeRepoTransportFactory.getUserRepoKeyRing());
+						getUserRepoKeyRing(cryptreeRepoTransportFactory));
 				cryptree.revokePermission(localPath, permissionType, Collections.singleton(userRepoKeyPublicKey.getUserRepoKeyId()));
 
 				transaction.commit();

@@ -1,7 +1,7 @@
 package org.subshare.local;
 
-import static co.codewizards.cloudstore.core.oio.OioFileFactory.createFile;
-import static org.assertj.core.api.Assertions.assertThat;
+import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -19,6 +19,7 @@ import org.subshare.core.CryptreeFactoryRegistry;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.user.User;
 import org.subshare.core.user.UserRegistry;
+import org.subshare.core.user.UserRegistryImpl;
 import org.subshare.core.user.UserRepoKeyRing;
 import org.subshare.local.persistence.UserRepoKeyPublicKey;
 import org.junit.Before;
@@ -50,11 +51,11 @@ public abstract class AbstractTest {
 		return userRepoKeyRing;
 	}
 
-	private static class TestUserRegistry extends UserRegistry {
+	private static class TestUserRegistry extends UserRegistryImpl {
 		private final User user;
 
 		public TestUserRegistry() {
-			user = new User();
+			user = createUser();
 			user.setUserId(new Uid());
 			user.getPgpKeyIds().add(PgpKey.TEST_DUMMY_PGP_KEY_ID);
 			user.getEmails().add("user@domain.tld");

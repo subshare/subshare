@@ -13,9 +13,12 @@ import org.subshare.core.crypto.KeyFactory;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.user.User;
 import org.subshare.core.user.UserRegistry;
+import org.subshare.core.user.UserRegistryImpl;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKeyPublicKeyLookup;
 import org.subshare.core.user.UserRepoKeyRing;
+import org.subshare.core.user.UserRepoKeyRingLookup;
+import org.subshare.core.user.UserRepoKeyRingLookupContext;
 import org.junit.Test;
 
 import co.codewizards.cloudstore.core.dto.Uid;
@@ -34,7 +37,12 @@ public class CryptreeRepoTransportTest {
 		final UUID serverRepositoryId = UUID.randomUUID();
 		final UUID clientRepositoryId = UUID.randomUUID();
 		final UserRepoKeyRing userRepoKeyRing = createUserRepoKeyRing(serverRepositoryId);
-		factory.setUserRepoKeyRing(userRepoKeyRing);
+		factory.setUserRepoKeyRingLookup(new UserRepoKeyRingLookup() {
+			@Override
+			public UserRepoKeyRing getUserRepoKeyRing(UserRepoKeyRingLookupContext context) {
+				return userRepoKeyRing;
+			}
+		});
 
 		final CryptreeRepoTransportImpl repoTransport = new CryptreeRepoTransportImpl() {
 			@Override
@@ -93,11 +101,11 @@ public class CryptreeRepoTransportTest {
 		return userRepoKeyRing;
 	}
 
-	private static class TestUserRegistry extends UserRegistry {
+	private static class TestUserRegistry extends UserRegistryImpl {
 		private final User user;
 
 		public TestUserRegistry() {
-			user = new User();
+			user = createUser();
 			user.setUserId(new Uid());
 			user.getPgpKeyIds().add(PgpKey.TEST_DUMMY_PGP_KEY_ID);
 			user.getEmails().add("user@domain.tld");

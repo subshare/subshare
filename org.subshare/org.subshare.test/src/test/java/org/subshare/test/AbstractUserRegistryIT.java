@@ -24,6 +24,7 @@ import org.subshare.core.pgp.PgpRegistry;
 import org.subshare.core.pgp.gnupg.GnuPgDir;
 import org.subshare.core.user.User;
 import org.subshare.core.user.UserRegistry;
+import org.subshare.core.user.UserRegistryImpl;
 import org.subshare.core.user.UserRepoInvitationManager;
 import org.subshare.core.user.UserRepoInvitationToken;
 import org.subshare.core.user.UserRepoKeyRing;
@@ -103,14 +104,14 @@ public class AbstractUserRegistryIT extends AbstractRepoToRepoSyncIT {
 		userRegistry = ownerUserRegistry;
 		assignOwnerAndFriendFromCurrentUserRegistry();
 		setupPgp("marco", "test12345");
-		cryptreeRepoTransportFactory.setUserRepoKeyRing(owner.getUserRepoKeyRingOrCreate());
+		cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(owner.getUserRepoKeyRingOrCreate()));
 	}
 
 	protected void switchLocationToFriend() throws Exception {
 		userRegistry = friendUserRegistry;
 		assignOwnerAndFriendFromCurrentUserRegistry();
 		setupPgp("khaled", "test678");
-		cryptreeRepoTransportFactory.setUserRepoKeyRing(friend.getUserRepoKeyRingOrCreate());
+		cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(friend.getUserRepoKeyRingOrCreate()));
 	}
 
 	private void assignOwnerAndFriendFromCurrentUserRegistry() {
@@ -178,7 +179,7 @@ public class AbstractUserRegistryIT extends AbstractRepoToRepoSyncIT {
 		final Cryptree cryptree = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail().getCryptreeOrCreate(
 				transaction, remoteRepository.getRepositoryId(),
 				((SsRemoteRepository)remoteRepository).getRemotePathPrefix(),
-				cryptreeRepoTransportFactory.getUserRepoKeyRing());
+				getUserRepoKeyRing(cryptreeRepoTransportFactory));
 
 		return cryptree;
 	}
@@ -200,7 +201,7 @@ public class AbstractUserRegistryIT extends AbstractRepoToRepoSyncIT {
 	protected UserRegistry createUserRegistry(String ownerName, final String passphrase) throws Exception {
 		setupPgp(ownerName, passphrase);
 
-		UserRegistry userRegistry = new UserRegistry() { // protected constructor => subclass ;-)
+		UserRegistry userRegistry = new UserRegistryImpl() { // protected constructor => subclass ;-)
 		};
 		return userRegistry;
 	}

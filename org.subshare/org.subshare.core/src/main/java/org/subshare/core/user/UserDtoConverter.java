@@ -36,7 +36,7 @@ public class UserDtoConverter {
 	public User fromUserDto(UserDto userDto) {
 		assertNotNull("userDto", userDto);
 
-		final User user = new User();
+		final User user = new UserImpl();
 		user.setUserId(userDto.getUserId());
 		user.setFirstName(userDto.getFirstName());
 		user.setLastName(userDto.getLastName());

@@ -1,10 +1,9 @@
 package org.subshare.test;
 
-import static co.codewizards.cloudstore.core.oio.OioFileFactory.createFile;
-import static co.codewizards.cloudstore.core.util.Util.doNothing;
-import static mockit.Deencapsulation.setField;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
+import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
+import static co.codewizards.cloudstore.core.util.Util.*;
+import static mockit.Deencapsulation.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.io.OutputStream;
 import java.util.Date;
@@ -117,10 +116,10 @@ public class PermissionIT extends AbstractRepoToRepoSyncIT {
 
 		final long cryptoKeyCountTotalAfterGrant2 = cryptoKeyCountTotalAfterGrant1; // this should not change
 		final long cryptoLinkCountTotalAfterGrant2;
-		final UserRepoKeyRing ownerUserRepoKeyRing = cryptreeRepoTransportFactory.getUserRepoKeyRing();
+		final UserRepoKeyRing ownerUserRepoKeyRing = getUserRepoKeyRing(cryptreeRepoTransportFactory);
 		assertThat(ownerUserRepoKeyRing).isNotNull();
 		try {
-			cryptreeRepoTransportFactory.setUserRepoKeyRing(otherUserRepoKeyRing1);
+			cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(otherUserRepoKeyRing1));
 			createLocalDestinationRepo();
 			syncFromRemoteToLocalDest();
 
@@ -138,13 +137,13 @@ public class PermissionIT extends AbstractRepoToRepoSyncIT {
 
 			syncFromRemoteToLocalDest();
 		} finally {
-			cryptreeRepoTransportFactory.setUserRepoKeyRing(ownerUserRepoKeyRing);
+			cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(ownerUserRepoKeyRing));
 		}
 
 		final File localDestRoot1 = localDestRoot;
 
 		try {
-			cryptreeRepoTransportFactory.setUserRepoKeyRing(otherUserRepoKeyRing2);
+			cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(otherUserRepoKeyRing2));
 			createLocalDestinationRepo();
 			syncFromRemoteToLocalDest();
 
@@ -158,14 +157,14 @@ public class PermissionIT extends AbstractRepoToRepoSyncIT {
 				doNothing();
 			}
 		} finally {
-			cryptreeRepoTransportFactory.setUserRepoKeyRing(ownerUserRepoKeyRing);
+			cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(ownerUserRepoKeyRing));
 		}
 
 		final File localDestRoot2 = localDestRoot;
 		localDestRoot = localDestRoot1;
 
 		try {
-			cryptreeRepoTransportFactory.setUserRepoKeyRing(otherUserRepoKeyRing1);
+			cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(otherUserRepoKeyRing1));
 			grantPermission(localDestRoot, "/", PermissionType.write, publicKey2);
 
 			// We already granted read access before, hence granting write access should not have any effect.
@@ -174,13 +173,13 @@ public class PermissionIT extends AbstractRepoToRepoSyncIT {
 
 			syncFromRemoteToLocalDest();
 		} finally {
-			cryptreeRepoTransportFactory.setUserRepoKeyRing(ownerUserRepoKeyRing);
+			cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(ownerUserRepoKeyRing));
 		}
 
 		localDestRoot = localDestRoot2;
 
 		try {
-			cryptreeRepoTransportFactory.setUserRepoKeyRing(otherUserRepoKeyRing2);
+			cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(otherUserRepoKeyRing2));
 			createLocalDestinationRepo();
 			syncFromRemoteToLocalDest();
 
@@ -188,16 +187,16 @@ public class PermissionIT extends AbstractRepoToRepoSyncIT {
 
 			syncFromRemoteToLocalDest(false);
 		} finally {
-			cryptreeRepoTransportFactory.setUserRepoKeyRing(ownerUserRepoKeyRing);
+			cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(ownerUserRepoKeyRing));
 		}
 
 		syncFromLocalSrcToRemote();
 
 		try {
-			cryptreeRepoTransportFactory.setUserRepoKeyRing(otherUserRepoKeyRing2);
+			cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(otherUserRepoKeyRing2));
 			syncFromRemoteToLocalDest();
 		} finally {
-			cryptreeRepoTransportFactory.setUserRepoKeyRing(ownerUserRepoKeyRing);
+			cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(ownerUserRepoKeyRing));
 		}
 	}
 
@@ -236,10 +235,10 @@ public class PermissionIT extends AbstractRepoToRepoSyncIT {
 		grantPermission("/", PermissionType.write, publicKey1);
 		syncFromLocalSrcToRemote();
 
-		final UserRepoKeyRing ownerUserRepoKeyRing = cryptreeRepoTransportFactory.getUserRepoKeyRing();
+		final UserRepoKeyRing ownerUserRepoKeyRing = getUserRepoKeyRing(cryptreeRepoTransportFactory);
 		assertThat(ownerUserRepoKeyRing).isNotNull();
 		try {
-			cryptreeRepoTransportFactory.setUserRepoKeyRing(otherUserRepoKeyRing1);
+			cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(otherUserRepoKeyRing1));
 			createLocalDestinationRepo();
 			syncFromRemoteToLocalDest();
 
@@ -247,7 +246,7 @@ public class PermissionIT extends AbstractRepoToRepoSyncIT {
 
 			syncFromRemoteToLocalDest(false);
 		} finally {
-			cryptreeRepoTransportFactory.setUserRepoKeyRing(ownerUserRepoKeyRing);
+			cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(ownerUserRepoKeyRing));
 		}
 
 		final Date timestampBeforeRevokingWritePermission = new Date();
@@ -258,7 +257,7 @@ public class PermissionIT extends AbstractRepoToRepoSyncIT {
 		Thread.sleep(10);
 
 		try {
-			cryptreeRepoTransportFactory.setUserRepoKeyRing(otherUserRepoKeyRing1);
+			cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(otherUserRepoKeyRing1));
 			syncFromRemoteToLocalDest(false);
 
 			final File file = createFileWithRandomContent(localDestRoot, "new-file2");
@@ -291,7 +290,7 @@ public class PermissionIT extends AbstractRepoToRepoSyncIT {
 				doNothing();
 			}
 		} finally {
-			cryptreeRepoTransportFactory.setUserRepoKeyRing(ownerUserRepoKeyRing);
+			cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(ownerUserRepoKeyRing));
 		}
 	}
 
@@ -322,25 +321,25 @@ public class PermissionIT extends AbstractRepoToRepoSyncIT {
 
 		syncFromLocalSrcToRemote();
 
-		final UserRepoKeyRing ownerUserRepoKeyRing = cryptreeRepoTransportFactory.getUserRepoKeyRing();
+		final UserRepoKeyRing ownerUserRepoKeyRing = getUserRepoKeyRing(cryptreeRepoTransportFactory);
 		assertThat(ownerUserRepoKeyRing).isNotNull();
 		try {
-			cryptreeRepoTransportFactory.setUserRepoKeyRing(otherUserRepoKeyRing1);
+			cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(otherUserRepoKeyRing1));
 			createLocalDestinationRepo();
 			syncFromRemoteToLocalDest();
 		} finally {
-			cryptreeRepoTransportFactory.setUserRepoKeyRing(ownerUserRepoKeyRing);
+			cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(ownerUserRepoKeyRing));
 		}
 
 		try {
-			cryptreeRepoTransportFactory.setUserRepoKeyRing(otherUserRepoKeyRing2);
+			cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(otherUserRepoKeyRing2));
 			createLocalDestinationRepo();
 			syncFromRemoteToLocalDest(false);
 
 			final File dir = createFile(localDestRoot, testSubdirPath);
 			assertThat(dir.exists()).isFalse();
 		} finally {
-			cryptreeRepoTransportFactory.setUserRepoKeyRing(ownerUserRepoKeyRing);
+			cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(ownerUserRepoKeyRing));
 		}
 	}
 

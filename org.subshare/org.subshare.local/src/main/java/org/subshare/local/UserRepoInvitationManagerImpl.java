@@ -33,6 +33,12 @@ import org.subshare.core.pgp.PgpEncoder;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpKeyId;
 import org.subshare.core.pgp.PgpRegistry;
+import org.subshare.core.repo.ServerRepo;
+import org.subshare.core.repo.ServerRepoRegistry;
+import org.subshare.core.repo.ServerRepoRegistryImpl;
+import org.subshare.core.server.Server;
+import org.subshare.core.server.ServerRegistry;
+import org.subshare.core.server.ServerRegistryImpl;
 import org.subshare.core.user.User;
 import org.subshare.core.user.UserRegistry;
 import org.subshare.core.user.UserRepoInvitation;
@@ -356,6 +362,8 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 		final PgpKey decryptPgpKey = determineDecryptPgpKey(userRepoInvitation);
 		final User user = findUserWithPgpKeyOrFail(decryptPgpKey);
 
+		registerInServerRepoRegistry(userRepoInvitation, user);
+
 //		final UUID localRepositoryId = cryptree.getTransaction().getLocalRepoManager().getRepositoryId();
 //		final URL serverUrl = userRepoInvitation.getServerUrl();
 //		try (final RepoTransport repoTransport = RepoTransportFactoryRegistry.getInstance().getRepoTransportFactory(serverUrl).createRepoTransport(serverUrl, localRepositoryId);)
@@ -404,7 +412,36 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 		}
 
 		userRegistry.write(); // TODO writeIfNeeded() and maybe make write() protected?!
+	}
 
+	private Server registerInServerRegistry(final UserRepoInvitation userRepoInvitation) {
+		final ServerRegistry serverRegistry = ServerRegistryImpl.getInstance();
+		final URL serverUrl = userRepoInvitation.getServerUrl();
+		Server server = serverRegistry.getServerForRemoteRoot(serverUrl);
+		if (server == null) {
+			server = serverRegistry.createServer();
+			server.setName(serverUrl.getHost());
+			server.setUrl(serverUrl);
+			serverRegistry.getServers().add(server);
+			serverRegistry.writeIfNeeded();
+		}
+		return server;
+	}
+
+	private ServerRepo registerInServerRepoRegistry(final UserRepoInvitation userRepoInvitation, final User user) {
+		final Server server = registerInServerRegistry(userRepoInvitation);
+
+		final UUID serverRepositoryId = userRepoInvitation.getInvitationUserRepoKey().getServerRepositoryId();
+
+		final ServerRepoRegistry serverRepoRegistry = ServerRepoRegistryImpl.getInstance();
+		final ServerRepo serverRepo = serverRepoRegistry.createServerRepo(serverRepositoryId);
+		serverRepo.setServerId(server.getServerId());
+		serverRepo.setName(serverRepositoryId.toString());
+		serverRepo.setUserId(user.getUserId());
+		serverRepoRegistry.getServerRepos().add(serverRepo);
+		serverRepoRegistry.writeIfNeeded();
+
+		return serverRepo;
 	}
 
 	private PgpKey determineDecryptPgpKey(final UserRepoInvitation userRepoInvitation) {

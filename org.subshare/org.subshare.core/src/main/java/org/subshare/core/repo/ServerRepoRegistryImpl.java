@@ -26,21 +26,12 @@ import org.subshare.core.observable.standard.StandardPostModificationEvent;
 import org.subshare.core.observable.standard.StandardPostModificationListener;
 import org.subshare.core.observable.standard.StandardPreModificationEvent;
 import org.subshare.core.observable.standard.StandardPreModificationListener;
-import org.subshare.core.server.Server;
-import org.subshare.core.server.ServerImpl;
-import org.subshare.core.server.ServerRegistry;
-import org.subshare.core.server.ServerRegistryImpl;
 
 import co.codewizards.cloudstore.core.config.ConfigDir;
 import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.io.LockFile;
 import co.codewizards.cloudstore.core.io.LockFileFactory;
 import co.codewizards.cloudstore.core.oio.File;
-import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
-import co.codewizards.cloudstore.core.repo.local.LocalRepoManagerFactory;
-import co.codewizards.cloudstore.core.repo.local.LocalRepoRegistry;
-import co.codewizards.cloudstore.core.repo.transport.RepoTransport;
-import co.codewizards.cloudstore.core.repo.transport.RepoTransportFactoryRegistry;
 
 public class ServerRepoRegistryImpl implements ServerRepoRegistry {
 
@@ -147,43 +138,46 @@ public class ServerRepoRegistryImpl implements ServerRepoRegistry {
 	}
 
 	private void populateServerReposFromLocalRepositories() {
-		final ServerRegistry serverRegistry = ServerRegistryImpl.getInstance();
-		final Map<UUID, ServerRepo> repositoryId2ServerRepo = getRepositoryId2ServerRepo();
-		final LocalRepoRegistry localRepoRegistry = LocalRepoRegistry.getInstance();
-		for (final UUID localRepositoryId : localRepoRegistry.getRepositoryIds()) {
-			final File localRoot = localRepoRegistry.getLocalRoot(localRepositoryId);
-			if (localRoot == null || !localRoot.exists())
-				continue; // maybe deleted during iteration
+		// This is not really needed and we cannot easily implement this without knowing the User who should be the local owner.
+		// Hence commented this out - at least temporarily. Maybe will delete this altogether, later.
 
-			try (final LocalRepoManager localRepoManager = LocalRepoManagerFactory.Helper.getInstance().createLocalRepoManagerForExistingRepository(localRoot);) {
-				for (final Map.Entry<UUID, URL> me : localRepoManager.getRemoteRepositoryId2RemoteRootMap().entrySet()) {
-					final UUID serverRepositoryId = me.getKey();
-					final URL remoteRoot = me.getValue();
-
-					Server server = serverRegistry.getServerForRemoteRoot(remoteRoot);
-					if (server == null) {
-						final URL serverUrl;
-						try (RepoTransport repoTransport = RepoTransportFactoryRegistry.getInstance().getRepoTransportFactoryOrFail(remoteRoot).createRepoTransport(remoteRoot, localRepositoryId);) {
-							final URL remoteRootWithoutPathPrefix = repoTransport.getRemoteRootWithoutPathPrefix();
-							// remoteRootWithoutPathPrefix still contains the repository-name or repository-id as last path-segment.
-							serverUrl = removeLastPathSegment(remoteRootWithoutPathPrefix);
-						}
-
-						server = new ServerImpl();
-						server.setName(serverUrl.getHost());
-						server.setUrl(serverUrl);
-						serverRegistry.getServers().add(server);
-					}
-
-					if (repositoryId2ServerRepo.get(serverRepositoryId) == null) {
-						final ServerRepo serverRepo = new ServerRepoImpl(serverRepositoryId);
-						serverRepo.setName(serverRepositoryId.toString());
-						serverRepo.setServerId(server.getServerId());
-						getServerRepos().add(serverRepo);
-					}
-				}
-			}
-		}
+//		final ServerRegistry serverRegistry = ServerRegistryImpl.getInstance();
+//		final Map<UUID, ServerRepo> repositoryId2ServerRepo = getRepositoryId2ServerRepo();
+//		final LocalRepoRegistry localRepoRegistry = LocalRepoRegistry.getInstance();
+//		for (final UUID localRepositoryId : localRepoRegistry.getRepositoryIds()) {
+//			final File localRoot = localRepoRegistry.getLocalRoot(localRepositoryId);
+//			if (localRoot == null || !localRoot.exists())
+//				continue; // maybe deleted during iteration
+//
+//			try (final LocalRepoManager localRepoManager = LocalRepoManagerFactory.Helper.getInstance().createLocalRepoManagerForExistingRepository(localRoot);) {
+//				for (final Map.Entry<UUID, URL> me : localRepoManager.getRemoteRepositoryId2RemoteRootMap().entrySet()) {
+//					final UUID serverRepositoryId = me.getKey();
+//					final URL remoteRoot = me.getValue();
+//
+//					Server server = serverRegistry.getServerForRemoteRoot(remoteRoot);
+//					if (server == null) {
+//						final URL serverUrl;
+//						try (RepoTransport repoTransport = RepoTransportFactoryRegistry.getInstance().getRepoTransportFactoryOrFail(remoteRoot).createRepoTransport(remoteRoot, localRepositoryId);) {
+//							final URL remoteRootWithoutPathPrefix = repoTransport.getRemoteRootWithoutPathPrefix();
+//							// remoteRootWithoutPathPrefix still contains the repository-name or repository-id as last path-segment.
+//							serverUrl = removeLastPathSegment(remoteRootWithoutPathPrefix);
+//						}
+//
+//						server = new ServerImpl();
+//						server.setName(serverUrl.getHost());
+//						server.setUrl(serverUrl);
+//						serverRegistry.getServers().add(server);
+//					}
+//
+//					if (repositoryId2ServerRepo.get(serverRepositoryId) == null) {
+//						final ServerRepo serverRepo = new ServerRepoImpl(serverRepositoryId);
+//						serverRepo.setName(serverRepositoryId.toString());
+//						serverRepo.setServerId(server.getServerId());
+//						getServerRepos().add(serverRepo);
+//					}
+//				}
+//			}
+//		}
 	}
 
 	private URL removeLastPathSegment(URL url) {

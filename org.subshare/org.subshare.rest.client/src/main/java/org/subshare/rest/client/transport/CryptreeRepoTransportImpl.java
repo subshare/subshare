@@ -42,6 +42,8 @@ import org.subshare.core.sign.VerifierInputStream;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKeyPublicKeyLookup;
 import org.subshare.core.user.UserRepoKeyRing;
+import org.subshare.core.user.UserRepoKeyRingLookup;
+import org.subshare.core.user.UserRepoKeyRingLookupContext;
 import org.subshare.rest.client.transport.request.SsBeginPutFile;
 import org.subshare.rest.client.transport.request.SsMakeDirectory;
 import org.subshare.rest.client.transport.request.CreateRepository;
@@ -75,6 +77,7 @@ public class CryptreeRepoTransportImpl extends AbstractRepoTransport implements 
 	private CryptreeFactory cryptreeFactory;
 	private RestRepoTransport restRepoTransport;
 	private LocalRepoManager localRepoManager;
+	private UserRepoKeyRing userRepoKeyRing;
 
 	@Override
 	public RepositoryDto getRepositoryDto() {
@@ -390,7 +393,16 @@ public class CryptreeRepoTransportImpl extends AbstractRepoTransport implements 
 	}
 
 	protected UserRepoKeyRing getUserRepoKeyRing() {
-		return assertNotNull("cryptreeRepoTransportFactory.userRepoKeyRing", getRepoTransportFactory().getUserRepoKeyRing());
+		if (userRepoKeyRing == null) {
+			final UserRepoKeyRingLookup lookup = assertNotNull("cryptreeRepoTransportFactory.userRepoKeyRingLookup", getRepoTransportFactory().getUserRepoKeyRingLookup());
+			final UserRepoKeyRingLookupContext context = new UserRepoKeyRingLookupContext(getClientRepositoryIdOrFail(), getRepositoryId());
+			userRepoKeyRing = lookup.getUserRepoKeyRing(context);
+			if (userRepoKeyRing == null)
+				throw new IllegalStateException(String.format("UserRepoKeyRingLookup.getUserRepoKeyRing(context) returned null! lookup=%s context=%s", lookup, context));
+
+//			return assertNotNull("cryptreeRepoTransportFactory.userRepoKeyRing", getRepoTransportFactory().getUserRepoKeyRing());
+		}
+		return userRepoKeyRing;
 	}
 
 	@Override

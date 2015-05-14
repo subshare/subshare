@@ -18,6 +18,7 @@ import org.subshare.core.pgp.gnupg.GnuPgDir;
 import org.subshare.core.pgp.transport.PgpTransportFactoryRegistry;
 import org.subshare.core.user.User;
 import org.subshare.core.user.UserRegistry;
+import org.subshare.core.user.UserRegistryImpl;
 import org.subshare.core.user.UserRepoKeyRing;
 import org.subshare.rest.client.pgp.transport.RestPgpTransportFactory;
 import org.subshare.rest.client.transport.CryptreeRepoTransportFactoryImpl;
@@ -89,7 +90,7 @@ public abstract class AbstractIT {
 			cryptreeRepoTransportFactory = null;
 			if (f != null) {
 				f.setDynamicX509TrustManagerCallbackClass(null);
-				f.setUserRepoKeyRing(null);
+				f.setUserRepoKeyRingLookup(null);
 			}
 
 			RestPgpTransportFactory p = restPgpTransportFactory;
@@ -108,11 +109,11 @@ public abstract class AbstractIT {
 		return userRepoKeyRing;
 	}
 
-	private static class TestUserRegistry extends UserRegistry {
+	private static class TestUserRegistry extends UserRegistryImpl {
 		private final User user;
 
 		public TestUserRegistry() {
-			user = new User();
+			user = createUser();
 			user.setUserId(new Uid());
 			user.getPgpKeyIds().add(PgpKey.TEST_DUMMY_PGP_KEY_ID);
 			user.getEmails().add("user@domain.tld");

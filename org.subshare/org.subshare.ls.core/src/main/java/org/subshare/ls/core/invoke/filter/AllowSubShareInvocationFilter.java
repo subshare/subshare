@@ -7,8 +7,8 @@ import java.lang.reflect.Proxy;
 import org.subshare.core.pgp.PgpAuthenticationCallback;
 import org.subshare.core.pgp.man.PgpPrivateKeyPassphraseStore;
 
-import co.codewizards.cloudstore.ls.core.invoke.ExtMethodInvocationRequest;
 import co.codewizards.cloudstore.ls.core.invoke.filter.AbstractInvocationFilter;
+import co.codewizards.cloudstore.ls.core.invoke.filter.ExtMethodInvocationRequest;
 
 public class AllowSubShareInvocationFilter extends AbstractInvocationFilter {
 

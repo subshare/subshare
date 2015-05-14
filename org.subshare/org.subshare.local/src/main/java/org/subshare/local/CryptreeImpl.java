@@ -426,7 +426,7 @@ public class CryptreeImpl extends AbstractCryptree {
 			getCryptreeContext().getSignableSigner(oldKeySigningUserRepoKey).sign(permission);
 
 		// TODO extract this into a separate method (and maybe not only this!)
-		final User user = getCryptreeContext().getUserRegistry().getUserOrFail(request.getOldKey().getUserRepoKeyId());
+		final User user = getCryptreeContext().getUserRegistry().getUserByUserRepoKeyIdOrFail(request.getOldKey().getUserRepoKeyId());
 		final UserIdentityPayloadDto userIdentityPayloadDto = getUserIdentityPayloadDtoOrFail(request.getNewKey().getUserRepoKeyId());
 		UserRepoKeyPublicKeyDtoWithSignatureConverter urkpkConverter = new UserRepoKeyPublicKeyDtoWithSignatureConverter();
 		UserRepoKey.PublicKeyWithSignature newPublicKey = urkpkConverter.fromUserRepoKeyPublicKeyDto(userIdentityPayloadDto.getUserRepoKeyPublicKeyDto());

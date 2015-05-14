@@ -1,7 +1,7 @@
 package org.subshare.local;
 
-import static co.codewizards.cloudstore.core.oio.OioFileFactory.createFile;
-import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
+import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -11,6 +11,7 @@ import org.subshare.core.Cryptree;
 import org.subshare.core.sign.SignableSigner;
 import org.subshare.core.sign.SignableVerifier;
 import org.subshare.core.user.UserRegistry;
+import org.subshare.core.user.UserRegistryImpl;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKeyRing;
 import org.subshare.local.persistence.CryptoRepoFile;
@@ -75,7 +76,7 @@ public class CryptreeContext {
 	}
 
 	public UserRegistry getUserRegistry() {
-		return UserRegistry.getInstance();
+		return UserRegistryImpl.getInstance();
 	}
 
 	public CryptreeNode getCryptreeNodeOrCreate(String localPath) {

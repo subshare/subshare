@@ -25,7 +25,8 @@ public interface ServerRepo {
 	public static enum PropertyEnum implements Property {
 		repositoryId,
 		name,
-		serverId
+		serverId,
+		userId
 	}
 
 	/**
@@ -50,6 +51,10 @@ public interface ServerRepo {
 	 */
 	void setServerId(Uid serverId);
 
+	Uid getUserId();
+
+	void setUserId(Uid userId);
+
 	ServerRepo clone();
 
 	void addPropertyChangeListener(PropertyChangeListener listener);
@@ -59,5 +64,4 @@ public interface ServerRepo {
 	void removePropertyChangeListener(PropertyChangeListener listener);
 
 	void removePropertyChangeListener(Property property, PropertyChangeListener listener);
-
 }
