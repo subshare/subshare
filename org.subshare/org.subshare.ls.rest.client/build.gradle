@@ -1,4 +1,5 @@
 dependencies {
 	compile group: 'co.codewizards.cloudstore', name: 'co.codewizards.cloudstore.ls.rest.client', version: cloudstoreVersion
+	compile project(':org.subshare.ls.core')
 	compile project(':org.subshare.core')
 }

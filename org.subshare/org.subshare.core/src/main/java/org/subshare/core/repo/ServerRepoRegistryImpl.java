@@ -1,7 +1,7 @@
 package org.subshare.core.repo;
 
-import static co.codewizards.cloudstore.core.oio.OioFileFactory.createFile;
-import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
+import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -152,7 +152,7 @@ public class ServerRepoRegistryImpl implements ServerRepoRegistry {
 		final LocalRepoRegistry localRepoRegistry = LocalRepoRegistry.getInstance();
 		for (final UUID localRepositoryId : localRepoRegistry.getRepositoryIds()) {
 			final File localRoot = localRepoRegistry.getLocalRoot(localRepositoryId);
-			if (localRoot == null)
+			if (localRoot == null || !localRoot.exists())
 				continue; // maybe deleted during iteration
 
 			try (final LocalRepoManager localRepoManager = LocalRepoManagerFactory.Helper.getInstance().createLocalRepoManagerForExistingRepository(localRoot);) {
