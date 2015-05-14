@@ -62,7 +62,7 @@ public class AbstractUserRegistryIT extends AbstractRepoToRepoSyncIT {
 		logger.info("*** >>>>>>>>>>>>>> ***");
 		logger.info("*** >>> before >>> ***");
 
-		new MockUp<UserRegistry>() {
+		new MockUp<UserRegistryImpl>() {
 		    @Mock
 		    UserRegistry getInstance() {
 		    	UserRegistry ur = userRegistry;
