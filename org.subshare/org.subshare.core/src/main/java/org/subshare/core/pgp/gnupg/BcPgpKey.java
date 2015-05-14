@@ -5,7 +5,9 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
@@ -26,7 +28,9 @@ public class BcPgpKey {
 
 	private PGPSecretKey secretKey;
 
-	private List<BcPgpKey> subKeys = new ArrayList<BcPgpKey>();
+	// A sub-key may be added twice, because we enlist from both the secret *and* public key ring
+	// collection. Therefore, we now use a LinkedHashSet (instead of an ArrayList).
+	private Set<BcPgpKey> subKeys = new LinkedHashSet<BcPgpKey>();
 
 	private PgpKey pgpKey;
 
@@ -66,7 +70,7 @@ public class BcPgpKey {
 		this.secretKey = secretKey;
 	}
 
-	public List<BcPgpKey> getSubKeys() {
+	public Set<BcPgpKey> getSubKeys() {
 		return subKeys;
 	}
 
@@ -79,7 +83,7 @@ public class BcPgpKey {
 			for (final Iterator<?> itUserIDs = publicKey.getUserIDs(); itUserIDs.hasNext(); )
 				userIds.add((String) itUserIDs.next());
 
-			this.subKeys = Collections.unmodifiableList(new ArrayList<>(this.subKeys)); // turn read-only
+			this.subKeys = Collections.unmodifiableSet(new LinkedHashSet<>(this.subKeys)); // turn read-only
 			final List<PgpKey> subKeys = new ArrayList<PgpKey>(this.subKeys.size());
 			for (final BcPgpKey bcPgpKey : this.subKeys)
 				subKeys.add(bcPgpKey.getPgpKey());
