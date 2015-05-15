@@ -92,7 +92,6 @@ public class UserListItem {
 			firstName = assertNotNull("user", user).getFirstName();
 			this.firstName = firstName == null ? NULL : firstName;
 		}
-
 		return firstName == NULL ? null : firstName;
 	}
 
@@ -102,7 +101,6 @@ public class UserListItem {
 			lastName = assertNotNull("user", user).getLastName();
 			this.lastName = lastName == null ? NULL : lastName;
 		}
-
 		return lastName == NULL ? null : lastName;
 	}
 
