@@ -1,11 +1,20 @@
 package org.subshare.core.pgp;
 
+import java.beans.PropertyChangeListener;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Collection;
 import java.util.Set;
 
+import co.codewizards.cloudstore.core.bean.PropertyBase;
+
 public interface Pgp {
+
+	interface Property extends PropertyBase { }
+
+	enum PropertyEnum implements Property {
+		localRevision
+	}
 
 	int getPriority();
 
@@ -47,4 +56,10 @@ public interface Pgp {
 	 * @return
 	 */
 	long getLocalRevision(PgpKey pgpKey);
+
+	void addPropertyChangeListener(PropertyChangeListener listener);
+	void addPropertyChangeListener(Property property, PropertyChangeListener listener);
+
+	void removePropertyChangeListener(PropertyChangeListener listener);
+	void removePropertyChangeListener(Property property, PropertyChangeListener listener);
 }

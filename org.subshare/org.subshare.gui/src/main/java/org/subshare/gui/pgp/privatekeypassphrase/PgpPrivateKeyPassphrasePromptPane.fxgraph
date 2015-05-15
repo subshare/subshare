@@ -1,0 +1,62 @@
+package org.subshare.gui.pgp.privatekeypassphrase
+
+import javafx.scene.layout.GridPane
+import javafx.collections.FXCollections
+import javafx.scene.control.Label
+import javafx.scene.control.TextField
+import javafx.scene.control.PasswordField
+import javafx.scene.control.ComboBox
+
+dynamic component PgpPrivateKeyPassphrasePromptPane {
+	GridPane {
+		children : [
+			Label {
+				text : "Please enter the passphrase for the following PGP key:",
+				static columnIndex : 0,
+				static rowIndex : 0,
+				static columnSpan : 2
+			},
+
+			Label {
+				text : "Identity:",
+				static columnIndex : 0,
+				static rowIndex : 1
+				
+			},
+			ComboBox<String> {
+				items : FXCollections createdby observableArrayList {
+					String("Marco หงุ่ยตระกูล-Schulze <Marco@NightLabs.de>"),
+					String("Marco หงุ่ยตระกูล-Schulze <marco@codewizards.co>"),
+					String("Marco หงุ่ยตระกูล-Schulze <schulze@bikt.de>")
+				},
+				editable : false,
+				static columnIndex : 1,
+				static rowIndex : 1
+			},
+
+			Label {
+				text : "Key ID:",
+				static columnIndex : 0,
+				static rowIndex : 2
+				
+			},
+			TextField {
+				text: "0x4AB0FBC1",
+				editable : false,
+				static columnIndex : 1,
+				static rowIndex : 2
+			},
+
+			Label {
+				text : "Passphrase:",
+				static columnIndex : 0,
+				static rowIndex : 3
+				
+			},
+			PasswordField {
+				static columnIndex : 1,
+				static rowIndex : 3
+			}
+		]
+	}
+}

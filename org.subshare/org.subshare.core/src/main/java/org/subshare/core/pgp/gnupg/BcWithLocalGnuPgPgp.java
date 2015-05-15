@@ -594,6 +594,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 			gpgProperties.setProperty(PGP_PROPERTY_KEY_SECRING_FILE_LAST_MODIFIED, Long.toString(secringFileLastModified));
 			writeGpgProperties();
 		}
+		firePropertyChange(PropertyEnum.localRevision, localRevision - 1, localRevision);
 		return localRevision;
 	}
 
