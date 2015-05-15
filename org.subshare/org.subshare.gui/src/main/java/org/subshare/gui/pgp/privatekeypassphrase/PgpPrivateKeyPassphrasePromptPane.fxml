@@ -14,9 +14,9 @@
 <fx:root xmlns:fx="http://javafx.com/fxml" type="GridPane">
 
 	<children>
-		<Label text="Please enter the passphrase for the following PGP key:" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="2"/> 
+		<Label fx:id="headerLabel" text="Please enter the passphrase for the following PGP key:" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="2"/> 
 		<Label text="Identity:" GridPane.columnIndex="0" GridPane.rowIndex="1"/> 
-		<ComboBox editable="false" GridPane.columnIndex="1" GridPane.rowIndex="1"> 
+		<ComboBox fx:id="userIdsComboBox" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="1"> 
 			<items>
 				<FXCollections fx:factory="observableArrayList"> 
 					<String fx:value="Marco หงุ่ยตระกูล-Schulze <Marco@NightLabs.de>"/> 
@@ -26,8 +26,8 @@
 			</items>
 		</ComboBox>
 		<Label text="Key ID:" GridPane.columnIndex="0" GridPane.rowIndex="2"/> 
-		<TextField text="0x4AB0FBC1" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="2"/> 
+		<TextField fx:id="keyIdTextField" text="0x4AB0FBC1" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="2"/> 
 		<Label text="Passphrase:" GridPane.columnIndex="0" GridPane.rowIndex="3"/> 
-		<PasswordField GridPane.columnIndex="1" GridPane.rowIndex="3"/> 
+		<PasswordField fx:id="passwordField" GridPane.columnIndex="1" GridPane.rowIndex="3"/> 
 	</children>
 </fx:root>

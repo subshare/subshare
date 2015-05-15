@@ -10,7 +10,7 @@ import javafx.scene.control.ComboBox
 dynamic component PgpPrivateKeyPassphrasePromptPane {
 	GridPane {
 		children : [
-			Label {
+			Label id headerLabel {
 				text : "Please enter the passphrase for the following PGP key:",
 				static columnIndex : 0,
 				static rowIndex : 0,
@@ -23,7 +23,7 @@ dynamic component PgpPrivateKeyPassphrasePromptPane {
 				static rowIndex : 1
 				
 			},
-			ComboBox<String> {
+			ComboBox<String> id userIdsComboBox {
 				items : FXCollections createdby observableArrayList {
 					String("Marco หงุ่ยตระกูล-Schulze <Marco@NightLabs.de>"),
 					String("Marco หงุ่ยตระกูล-Schulze <marco@codewizards.co>"),
@@ -40,7 +40,7 @@ dynamic component PgpPrivateKeyPassphrasePromptPane {
 				static rowIndex : 2
 				
 			},
-			TextField {
+			TextField id keyIdTextField {
 				text: "0x4AB0FBC1",
 				editable : false,
 				static columnIndex : 1,
@@ -53,7 +53,7 @@ dynamic component PgpPrivateKeyPassphrasePromptPane {
 				static rowIndex : 3
 				
 			},
-			PasswordField {
+			PasswordField id passwordField {
 				static columnIndex : 1,
 				static rowIndex : 3
 			}

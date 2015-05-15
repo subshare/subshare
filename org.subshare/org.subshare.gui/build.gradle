@@ -30,6 +30,8 @@ dependencies {
 	// the following is needed only to configure the SSL certificate check callback - maybe not needed in the future, anymore
 	compile project(':org.subshare.rest.client')
 
+	compile "org.slf4j:log4j-over-slf4j:$slf4jVersion", "ch.qos.logback:logback-classic:$logbackVersion"
+
 	// runtime-dependencies (needed when starting the app - not for compilation)
 	runtime project(':org.subshare.local')
 //	runtime project(':org.subshare.rest.client')
