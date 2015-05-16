@@ -37,6 +37,8 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPUtil;
+import org.bouncycastle.openpgp.operator.bc.BcPBESecretKeyDecryptorBuilder;
+import org.bouncycastle.openpgp.operator.bc.BcPGPDigestCalculatorProvider;
 import org.subshare.core.pgp.AbstractPgp;
 import org.subshare.core.pgp.PgpDecoder;
 import org.subshare.core.pgp.PgpEncoder;
@@ -753,6 +755,21 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 				writeLocalRevisionProperties(pgpKeyId);
 			}
 			return localRevision;
+		}
+	}
+
+	@Override
+	public void testPassphrase(final PgpKey pgpKey, final char[] passphrase) throws IllegalArgumentException, SecurityException {
+		assertNotNull("pgpKey", pgpKey);
+		final BcPgpKey bcPgpKey = getBcPgpKeyOrFail(pgpKey);
+		final PGPSecretKey secretKey = bcPgpKey.getSecretKey();
+		if (secretKey == null)
+			throw new IllegalArgumentException("pgpKey has no secret key!");
+
+		try {
+			secretKey.extractPrivateKey(new BcPBESecretKeyDecryptorBuilder(new BcPGPDigestCalculatorProvider()).build(passphrase));
+		} catch (PGPException e) {
+			throw new SecurityException(e);
 		}
 	}
 }

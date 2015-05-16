@@ -18,7 +18,7 @@ public interface PgpPrivateKeyPassphraseStore {
 
 	boolean hasPassphrase(PgpKeyId pgpKeyId);
 
-	void putPassphrase(PgpKeyId pgpKeyId, char[] passphrase);
+	void putPassphrase(PgpKeyId pgpKeyId, char[] passphrase) throws SecurityException;
 
 	Set<PgpKeyId> getPgpKeyIdsHavingPassphrase();
 }

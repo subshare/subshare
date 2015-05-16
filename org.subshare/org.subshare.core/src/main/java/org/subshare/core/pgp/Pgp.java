@@ -62,4 +62,6 @@ public interface Pgp {
 
 	void removePropertyChangeListener(PropertyChangeListener listener);
 	void removePropertyChangeListener(Property property, PropertyChangeListener listener);
+
+	void testPassphrase(PgpKey pgpKey, char[] passphrase) throws IllegalArgumentException, SecurityException;
 }

@@ -10,7 +10,10 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 
 import org.subshare.core.pgp.Pgp;
 import org.subshare.core.pgp.PgpKey;
@@ -21,6 +24,7 @@ import org.subshare.gui.ls.PgpLs;
 import org.subshare.gui.ls.PgpPrivateKeyPassphraseManagerLs;
 import org.subshare.gui.pgp.privatekeypassphrase.PgpPrivateKeyPassphrasePromptDialog;
 import org.subshare.ls.server.SsLocalServer;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ch.qos.logback.classic.LoggerContext;
@@ -35,6 +39,8 @@ import co.codewizards.cloudstore.ls.client.LocalServerClient;
 
 public class SubShareGui extends Application {
 
+	private static final Logger logger = LoggerFactory.getLogger(SubShareGui.class);
+
 	private SsLocalServer localServer;
 
 	@Override
@@ -48,7 +54,6 @@ public class SubShareGui extends Application {
 			localServer = null;
 
 		LocalServerInitLs.init();
-		promptPgpKeyPassphrases();
 
 		final Parent root = FXMLLoader.load(
 				SubShareGui.class.getResource("MainPane.fxml"),
@@ -59,6 +64,8 @@ public class SubShareGui extends Application {
 		primaryStage.setScene(scene);
 		primaryStage.setTitle("SubShare");
 		primaryStage.show();
+
+		promptPgpKeyPassphrases(primaryStage.getScene().getWindow());
 	}
 
 	@Override
@@ -75,7 +82,7 @@ public class SubShareGui extends Application {
 		launch(args);
 	}
 
-	private void promptPgpKeyPassphrases() {
+	private void promptPgpKeyPassphrases(Window owner) {
 		final Pgp pgp = PgpLs.getPgpOrFail();
 		final PgpPrivateKeyPassphraseStore pgpPrivateKeyPassphraseStore = PgpPrivateKeyPassphraseManagerLs.getPgpPrivateKeyPassphraseStore();
 		for (final PgpKey pgpKey : pgp.getMasterKeysWithPrivateKey()) {
@@ -83,12 +90,28 @@ public class SubShareGui extends Application {
 			if (pgpPrivateKeyPassphraseStore.hasPassphrase(pgpKeyId))
 				continue;
 
-			final PgpPrivateKeyPassphrasePromptDialog dialog = new PgpPrivateKeyPassphrasePromptDialog(pgpKey);
-			dialog.showAndWait();
+			boolean retry = false;
+			do {
+				final PgpPrivateKeyPassphrasePromptDialog dialog = new PgpPrivateKeyPassphrasePromptDialog(owner, pgpKey);
+				dialog.showAndWait();
 
-			// TODO implement nice dialog asking for passphrase!
-			if (pgpKeyId.equals(new PgpKeyId("56422A5E710E3371")))
-				pgpPrivateKeyPassphraseStore.putPassphrase(pgpKeyId, "test12345".toCharArray());
+				retry = false;
+
+				final char[] passphrase = dialog.getPassphrase();
+				if (passphrase != null) {
+					try {
+						pgpPrivateKeyPassphraseStore.putPassphrase(pgpKeyId, passphrase);
+					} catch (SecurityException x) {
+						logger.error("promptPgpKeyPassphrases: " + x, x);
+						final Alert alert = new Alert(AlertType.ERROR);
+						alert.setHeaderText("Sorry, the passphrase you entered is wrong! Please try again.");
+						alert.showAndWait();
+						retry = true;
+					} catch (Exception x) {
+						logger.error("promptPgpKeyPassphrases: " + x, x);
+					}
+				}
+			} while (retry);
 		}
 	}
 

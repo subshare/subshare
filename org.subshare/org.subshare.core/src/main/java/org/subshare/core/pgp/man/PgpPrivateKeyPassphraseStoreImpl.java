@@ -8,9 +8,11 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.subshare.core.pgp.Pgp;
 import org.subshare.core.pgp.PgpAuthenticationCallback;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpKeyId;
+import org.subshare.core.pgp.PgpRegistry;
 
 /**
  * In-memory store holding the passwords for the private OpenPGP keys.
@@ -61,10 +63,22 @@ public class PgpPrivateKeyPassphraseStoreImpl implements PgpPrivateKeyPassphrase
 	}
 
 	@Override
-	public synchronized void putPassphrase(final PgpKeyId pgpKeyId, final char[] passphrase) {
+	public void putPassphrase(final PgpKeyId pgpKeyId, final char[] passphrase) throws SecurityException {
 		assertNotNull("pgpKeyId", pgpKeyId);
 		assertNotNull("passphrase", passphrase);
-		pgpKeyId2Passphrase.put(pgpKeyId, passphrase);
+
+		testPassphrase(pgpKeyId, passphrase);
+
+		synchronized (this) {
+			pgpKeyId2Passphrase.put(pgpKeyId, passphrase);
+		}
+	}
+
+	private void testPassphrase(final PgpKeyId pgpKeyId, final char[] passphrase) throws SecurityException {
+		final Pgp pgp = PgpRegistry.getInstance().getPgpOrFail();
+		final PgpKey pgpKey = pgp.getPgpKey(pgpKeyId);
+		assertNotNull("pgp.getPgpKey(" + pgpKeyId + ")", pgpKey);
+		pgp.testPassphrase(pgpKey, passphrase);
 	}
 
 	@Override
