@@ -24,11 +24,11 @@ dynamic component PgpPrivateKeyPassphrasePromptPane {
 				
 			},
 			ComboBox<String> id userIdsComboBox {
-				items : FXCollections createdby observableArrayList {
-					String("Marco หงุ่ยตระกูล-Schulze <Marco@NightLabs.de>"),
-					String("Marco หงุ่ยตระกูล-Schulze <marco@codewizards.co>"),
-					String("Marco หงุ่ยตระกูล-Schulze <schulze@bikt.de>")
-				},
+//				items : FXCollections createdby observableArrayList {
+//					String("Marco หงุ่ยตระกูล-Schulze <Marco@NightLabs.de>"),
+//					String("Marco หงุ่ยตระกูล-Schulze <marco@codewizards.co>"),
+//					String("Marco หงุ่ยตระกูล-Schulze <schulze@bikt.de>")
+//				},
 				editable : false,
 				static columnIndex : 1,
 				static rowIndex : 1

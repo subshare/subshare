@@ -19,6 +19,7 @@ import org.subshare.core.pgp.man.PgpPrivateKeyPassphraseStore;
 import org.subshare.gui.ls.LocalServerInitLs;
 import org.subshare.gui.ls.PgpLs;
 import org.subshare.gui.ls.PgpPrivateKeyPassphraseManagerLs;
+import org.subshare.gui.pgp.privatekeypassphrase.PgpPrivateKeyPassphrasePromptDialog;
 import org.subshare.ls.server.SsLocalServer;
 import org.slf4j.LoggerFactory;
 
@@ -81,6 +82,9 @@ public class SubShareGui extends Application {
 			final PgpKeyId pgpKeyId = pgpKey.getPgpKeyId();
 			if (pgpPrivateKeyPassphraseStore.hasPassphrase(pgpKeyId))
 				continue;
+
+			final PgpPrivateKeyPassphrasePromptDialog dialog = new PgpPrivateKeyPassphrasePromptDialog(pgpKey);
+			dialog.showAndWait();
 
 			// TODO implement nice dialog asking for passphrase!
 			if (pgpKeyId.equals(new PgpKeyId("56422A5E710E3371")))
