@@ -24,8 +24,8 @@ import java.util.zip.ZipOutputStream;
 import org.bouncycastle.util.io.Streams;
 
 import co.codewizards.cloudstore.core.io.NoCloseInputStream;
+import co.codewizards.cloudstore.core.io.NoCloseOutputStream;
 
-import com.sun.xml.internal.ws.util.NoCloseOutputStream;
 
 public class EncryptedDataFile {
 	public static final String CONTENT_TYPE_VALUE = "application/vnd.subshare.encrypted";
