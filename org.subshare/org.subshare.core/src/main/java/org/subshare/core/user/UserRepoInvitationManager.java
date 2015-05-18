@@ -25,7 +25,6 @@ public interface UserRepoInvitationManager {
 				throw new IllegalStateException("No UserRepoInvitationManager implementation found!");
 
 			result.setUserRegistry(userRegistry);
-//			result.setCryptree(cryptree);
 			result.setLocalRepoManager(localRepoManager);
 			return result;
 		}
@@ -36,14 +35,10 @@ public interface UserRepoInvitationManager {
 	UserRegistry getUserRegistry();
 	void setUserRegistry(UserRegistry userRegistry);
 
-//	Cryptree getCryptree();
-//	void setCryptree(Cryptree cryptree);
 	LocalRepoManager getLocalRepoManager();
 	void setLocalRepoManager(LocalRepoManager localRepoManager);
 
 	UserRepoInvitationToken createUserRepoInvitationToken(final String localPath, final User user, PermissionType permissionType, final long validityDurationMillis);
 
 	void importUserRepoInvitationToken(UserRepoInvitationToken userRepoInvitationToken);
-
-
 }

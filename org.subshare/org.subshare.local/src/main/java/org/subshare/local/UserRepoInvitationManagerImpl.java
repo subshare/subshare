@@ -2,6 +2,7 @@ package org.subshare.local;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.UrlUtil.*;
+import static org.subshare.core.file.FileConst.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -27,6 +28,7 @@ import org.subshare.core.Cryptree;
 import org.subshare.core.CryptreeFactoryRegistry;
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.dto.UserRepoInvitationDto;
+import org.subshare.core.file.EncryptedDataFile;
 import org.subshare.core.pgp.Pgp;
 import org.subshare.core.pgp.PgpDecoder;
 import org.subshare.core.pgp.PgpEncoder;
@@ -66,12 +68,6 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 	private static final String USER_REPO_INVITATION_DTO_XML_FILE_NAME = "userRepoInvitationDto.xml";
 
 	private static final Logger logger = LoggerFactory.getLogger(UserRepoInvitationManagerImpl.class);
-
-	private static final String MANIFEST_PROPERTY_VERSION = "version";
-
-	private static final String MANIFEST_PROPERTY_CONTENT_TYPE = "contentType";
-
-	private static final String MANIFEST_PROPERTIES_FILE_NAME = "MANIFEST.properties";
 
 	private final UserRepoInvitationDtoConverter userRepoInvitationDtoConverter = new UserRepoInvitationDtoConverter();
 
@@ -136,15 +132,31 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 			throw new RuntimeException(x);
 		}
 
-		return new UserRepoInvitationToken(out.toByteArray());
+		final EncryptedDataFile edf = new EncryptedDataFile();
+		edf.putDefaultData(out.toByteArray());
+		try {
+			return new UserRepoInvitationToken(edf.write());
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	@Override
 	public void importUserRepoInvitationToken(final UserRepoInvitationToken userRepoInvitationToken) {
 		assertNotNull("userRepoInvitationToken", userRepoInvitationToken);
 
+		final EncryptedDataFile edf;
+		try {
+			edf = new EncryptedDataFile(userRepoInvitationToken.getSignedEncryptedUserRepoInvitationData());
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+		byte[] defaultData = edf.getDefaultData();
+		if (defaultData == null)
+			throw new IllegalArgumentException("Container does not contain defaultData!");
+
 		final ByteArrayOutputStream out = new ByteArrayOutputStream();
-		final PgpDecoder pgpDecoder = getPgpOrFail().createDecoder(new ByteArrayInputStream(userRepoInvitationToken.getSignedEncryptedUserRepoInvitationData()), out);
+		final PgpDecoder pgpDecoder = getPgpOrFail().createDecoder(new ByteArrayInputStream(defaultData), out);
 		try {
 			pgpDecoder.decode();
 		} catch (final SignatureException | IOException e) {

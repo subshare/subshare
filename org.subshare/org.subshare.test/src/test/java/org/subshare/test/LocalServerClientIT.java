@@ -2,8 +2,12 @@ package org.subshare.test;
 
 import static co.codewizards.cloudstore.core.util.Util.*;
 import static org.assertj.core.api.Assertions.*;
+import mockit.Mock;
+import mockit.MockUp;
 
+import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpKeyId;
+import org.subshare.core.pgp.gnupg.BcWithLocalGnuPgPgp;
 import org.subshare.core.pgp.man.PgpPrivateKeyPassphraseStore;
 import org.subshare.core.pgp.man.PgpPrivateKeyPassphraseStoreImpl;
 import org.subshare.ls.server.SsLocalServer;
@@ -18,6 +22,7 @@ public class LocalServerClientIT extends AbstractIT {
 
 	private static SsLocalServer localServer;
 	private static LocalServerClient client;
+	private static MockUp<BcWithLocalGnuPgPgp> pgpMockUp;
 
 	@BeforeClass
 	public static void beforeLocalServerClientIT() {
@@ -33,12 +38,32 @@ public class LocalServerClientIT extends AbstractIT {
 				return localServerRestClient;
 			}
 		};
+
+		pgpMockUp = new MockUp<BcWithLocalGnuPgPgp>() {
+			@Mock
+			PgpKey getPgpKey(PgpKeyId pgpKeyId) {
+				if ("d7a92a24aa97ddbd".equals(pgpKeyId.toString()))
+					return PgpKey.TEST_DUMMY_PGP_KEY;
+
+				throw new UnsupportedOperationException("Not implemented!");
+			}
+
+			@Mock
+			void testPassphrase(PgpKey pgpKey, char[] passphrase) throws IllegalArgumentException, SecurityException {
+				// nothing ;-)
+			}
+		};
 	}
 
 	@AfterClass
 	public static void afterLocalServerClientIT() {
 		client.close();
 		localServer.stop();
+
+		if (pgpMockUp != null)
+			pgpMockUp.tearDown();
+
+		pgpMockUp = null;
 	}
 
 	@Test
