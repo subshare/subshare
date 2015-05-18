@@ -10,56 +10,61 @@ import javafx.scene.control.ButtonBar
 import javafx.scene.control.Button
 import javafx.scene.image.ImageView
 import javafx.scene.image.Image
+import javafx.scene.layout.HBox
 
 dynamic component PgpPrivateKeyPassphrasePromptPane {
 	GridPane {
 		children : [
+			HBox id errorMessageBox {
+				children : [
+					ImageView { image : Image { url : "@../../severity/ERROR-24x24.png" } },
+					Label id errorMessageLabel
+				],
+				static columnIndex : 0,
+				static rowIndex : 0,
+				static columnSpan : 2
+			},
+
 			Label id headerLabel {
 				text : "Please enter the passphrase for the following PGP key:",
 				static columnIndex : 0,
-				static rowIndex : 0,
+				static rowIndex : 1,
 				static columnSpan : 2
 			},
 
 			Label {
 				text : "Identity:",
 				static columnIndex : 0,
-				static rowIndex : 1
+				static rowIndex : 2
 				
 			},
 			ComboBox<String> id userIdsComboBox {
-//				items : FXCollections createdby observableArrayList {
-//					String("Marco หงุ่ยตระกูล-Schulze <Marco@NightLabs.de>"),
-//					String("Marco หงุ่ยตระกูล-Schulze <marco@codewizards.co>"),
-//					String("Marco หงุ่ยตระกูล-Schulze <schulze@bikt.de>")
-//				},
 				editable : false,
 				static columnIndex : 1,
-				static rowIndex : 1
+				static rowIndex : 2
 			},
 
 			Label {
 				text : "Key ID:",
 				static columnIndex : 0,
-				static rowIndex : 2
-				
+				static rowIndex : 3
 			},
 			TextField id keyIdTextField {
 				text: "0x4AB0FBC1",
 				editable : false,
 				static columnIndex : 1,
-				static rowIndex : 2
+				static rowIndex : 3
 			},
 
 			Label {
 				text : "Passphrase:",
 				static columnIndex : 0,
-				static rowIndex : 3
+				static rowIndex : 4
 				
 			},
 			PasswordField id passwordField {
 				static columnIndex : 1,
-				static rowIndex : 3
+				static rowIndex : 4
 			},
 
 			ButtonBar {
@@ -67,16 +72,18 @@ dynamic component PgpPrivateKeyPassphrasePromptPane {
 					Button id okButton {
 						graphic : ImageView { image : Image { url : "@ok-24x24.png" } },
 						text : "OK",
+						defaultButton : true,
 						onAction : controllermethod okButtonClicked
 					},
 					Button id cancelButton {
 						graphic : ImageView { image : Image { url : "@cancel-24x24.png" } },
 						text : "Cancel",
+						cancelButton : true,
 						onAction : controllermethod cancelButtonClicked
 					}
 				],
 				static columnIndex : 0,
-				static rowIndex : 4,
+				static rowIndex : 5,
 				static columnSpan : 2
 			}
 		]

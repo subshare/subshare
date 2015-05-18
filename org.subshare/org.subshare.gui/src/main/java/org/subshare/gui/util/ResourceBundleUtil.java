@@ -5,7 +5,7 @@ import static co.codewizards.cloudstore.core.util.StringUtil.*;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
-public class ResourceBundleUtil {
+public final class ResourceBundleUtil {
 
 	public static final String MESSAGES_NAME = "messages";
 

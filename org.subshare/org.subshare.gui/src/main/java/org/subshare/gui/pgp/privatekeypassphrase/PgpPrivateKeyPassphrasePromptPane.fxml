@@ -13,20 +13,31 @@
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
 
 <fx:root xmlns:fx="http://javafx.com/fxml" type="GridPane">
 
 	<children>
-		<Label fx:id="headerLabel" text="Please enter the passphrase for the following PGP key:" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="2"/> 
-		<Label text="Identity:" GridPane.columnIndex="0" GridPane.rowIndex="1"/> 
-		<ComboBox fx:id="userIdsComboBox" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="1"/> 
-		<Label text="Key ID:" GridPane.columnIndex="0" GridPane.rowIndex="2"/> 
-		<TextField fx:id="keyIdTextField" text="0x4AB0FBC1" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="2"/> 
-		<Label text="Passphrase:" GridPane.columnIndex="0" GridPane.rowIndex="3"/> 
-		<PasswordField fx:id="passwordField" GridPane.columnIndex="1" GridPane.rowIndex="3"/> 
-		<ButtonBar GridPane.columnIndex="0" GridPane.rowIndex="4" GridPane.columnSpan="2"> 
+		<HBox fx:id="errorMessageBox" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="2"> 
+			<children>
+				<ImageView> 
+					<image>
+						<Image url="@../../severity/ERROR-24x24.png"/> 
+					</image>
+				</ImageView>
+				<Label fx:id="errorMessageLabel"/> 
+			</children>
+		</HBox>
+		<Label fx:id="headerLabel" text="Please enter the passphrase for the following PGP key:" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.columnSpan="2"/> 
+		<Label text="Identity:" GridPane.columnIndex="0" GridPane.rowIndex="2"/> 
+		<ComboBox fx:id="userIdsComboBox" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="2"/> 
+		<Label text="Key ID:" GridPane.columnIndex="0" GridPane.rowIndex="3"/> 
+		<TextField fx:id="keyIdTextField" text="0x4AB0FBC1" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="3"/> 
+		<Label text="Passphrase:" GridPane.columnIndex="0" GridPane.rowIndex="4"/> 
+		<PasswordField fx:id="passwordField" GridPane.columnIndex="1" GridPane.rowIndex="4"/> 
+		<ButtonBar GridPane.columnIndex="0" GridPane.rowIndex="5" GridPane.columnSpan="2"> 
 			<buttons>
-				<Button fx:id="okButton" text="OK" onAction="#okButtonClicked"> 
+				<Button fx:id="okButton" text="OK" defaultButton="true" onAction="#okButtonClicked"> 
 					<graphic>
 						<ImageView> 
 							<image>
@@ -35,7 +46,7 @@
 						</ImageView>
 					</graphic>
 				</Button>
-				<Button fx:id="cancelButton" text="Cancel" onAction="#cancelButtonClicked"> 
+				<Button fx:id="cancelButton" text="Cancel" cancelButton="true" onAction="#cancelButtonClicked"> 
 					<graphic>
 						<ImageView> 
 							<image>

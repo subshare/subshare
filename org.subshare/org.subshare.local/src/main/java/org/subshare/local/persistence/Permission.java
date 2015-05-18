@@ -70,7 +70,7 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 					+ "&& this.permissionType == :permissionType "
 					+ "&& this.userRepoKeyPublicKey.userRepoKeyId == :userRepoKeyId "
 					+ "&& this.validFrom <= :timestamp "
-					+ "&& ( this.validTo == null || this.validTo >= :timestamp )"
+					+ "&& ( this.validTo == null || this.validTo > :timestamp )"
 			),
 	@Query(
 			name="getValidPermissions_permissionType_userRepoKeyId_timestamp",
@@ -78,7 +78,7 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 					+ "this.permissionType == :permissionType "
 					+ "&& this.userRepoKeyPublicKey.userRepoKeyId == :userRepoKeyId "
 					+ "&& this.validFrom <= :timestamp "
-					+ "&& ( this.validTo == null || this.validTo >= :timestamp )"
+					+ "&& ( this.validTo == null || this.validTo > :timestamp )"
 			),
 	@Query(
 			name="PermissionCountOfDirectChildCryptoRepoFiles_parentCryptoRepoFile_permissionType",

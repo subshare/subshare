@@ -28,5 +28,4 @@ public class UrlStringConverter extends StringConverter<URL> {
 			throw new IllegalArgumentException(e);
 		}
 	}
-
 }

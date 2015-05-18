@@ -4,6 +4,7 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -88,7 +89,10 @@ public class BcPgpKey {
 			for (final BcPgpKey bcPgpKey : this.subKeys)
 				subKeys.add(bcPgpKey.getPgpKey());
 
-			this.pgpKey = new PgpKey(pgpKeyId, fingerprint, privateKeyAvailable, userIds, subKeys);
+			final long validSeconds = publicKey.getValidSeconds();
+			final Date created = publicKey.getCreationTime();
+			final Date validTo = validSeconds < 1 ? null : new Date(created.getTime() + (validSeconds * 1000));
+			this.pgpKey = new PgpKey(pgpKeyId, fingerprint, created, validTo, privateKeyAvailable, userIds, subKeys);
 		}
 		return pgpKey;
 	}

@@ -1,0 +1,15 @@
+package org.subshare.gui.splash
+
+import javafx.scene.layout.BorderPane
+import javafx.scene.image.ImageView
+import javafx.scene.image.Image
+
+dynamic component SplashPane {
+	BorderPane {
+		center : ImageView id imageView {
+			image : Image id image { url : "@splash.jpg" },
+			preserveRatio : true,
+			smooth : true
+		}
+	}
+}

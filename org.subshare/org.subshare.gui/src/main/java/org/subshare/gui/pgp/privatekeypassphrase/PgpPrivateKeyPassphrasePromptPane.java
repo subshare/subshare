@@ -11,12 +11,20 @@ import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.RowConstraints;
 
 import org.subshare.core.pgp.PgpKey;
 
 public abstract class PgpPrivateKeyPassphrasePromptPane extends GridPane {
 
 	private final PgpKey pgpKey;
+
+	@FXML
+	private HBox errorMessageBox;
+
+	@FXML
+	private Label errorMessageLabel;
 
 	@FXML
 	private Label headerLabel;
@@ -36,12 +44,26 @@ public abstract class PgpPrivateKeyPassphrasePromptPane extends GridPane {
 	@FXML
 	private Button cancelButton;
 
-	public PgpPrivateKeyPassphrasePromptPane(final PgpKey pgpKey) {
+	public PgpPrivateKeyPassphrasePromptPane(final PgpKey pgpKey, final String errorMessage) {
 		loadDynamicComponentFxml(PgpPrivateKeyPassphrasePromptPane.class, this);
 		this.pgpKey = assertNotNull("pgpKey", pgpKey);
 		userIdsComboBox.setItems(FXCollections.observableArrayList(this.pgpKey.getUserIds()));
 		userIdsComboBox.getSelectionModel().select(0);
 		keyIdTextField.setText("0x" + this.pgpKey.getPgpKeyId());
+
+		if (errorMessage == null) {
+			errorMessageBox.setVisible(false);
+			getRowConstraints().add(0, new RowConstraints(0, 0, 0));
+		}
+		else {
+			errorMessageBox.setVisible(true);
+			errorMessageLabel.setText(errorMessage);
+		}
+	}
+
+	@Override
+	public void requestFocus() {
+		super.requestFocus();
 		passwordField.requestFocus();
 	}
 

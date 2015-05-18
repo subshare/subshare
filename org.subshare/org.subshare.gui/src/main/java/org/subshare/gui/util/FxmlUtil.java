@@ -6,7 +6,7 @@ import java.io.IOException;
 
 import javafx.fxml.FXMLLoader;
 
-public class FxmlUtil {
+public final class FxmlUtil {
 
 	private FxmlUtil() { }
 

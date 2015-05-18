@@ -5,13 +5,13 @@ import static co.codewizards.cloudstore.core.util.Util.*;
 import static org.subshare.gui.util.ResourceBundleUtil.*;
 
 import java.io.IOException;
+import java.util.Date;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 
@@ -19,10 +19,12 @@ import org.subshare.core.pgp.Pgp;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpKeyId;
 import org.subshare.core.pgp.man.PgpPrivateKeyPassphraseStore;
+import org.subshare.gui.error.ErrorHandler;
 import org.subshare.gui.ls.LocalServerInitLs;
 import org.subshare.gui.ls.PgpLs;
 import org.subshare.gui.ls.PgpPrivateKeyPassphraseManagerLs;
 import org.subshare.gui.pgp.privatekeypassphrase.PgpPrivateKeyPassphrasePromptDialog;
+import org.subshare.gui.splash.SplashPane;
 import org.subshare.ls.server.SsLocalServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,30 +44,79 @@ public class SubShareGui extends Application {
 	private static final Logger logger = LoggerFactory.getLogger(SubShareGui.class);
 
 	private SsLocalServer localServer;
+	private Stage primaryStage;
+	private SplashPane splashPane;
 
 	@Override
 	public void start(final Stage primaryStage) throws Exception {
-		initLogging();
+		this.primaryStage = primaryStage;
 
-		// We create the LocalServer before constructing the UI to make sure, the UI can access everything.
-		// TODO we should start an external JVM and keep it running when closing - or maybe handle this differently?!
-		localServer = new SsLocalServer();
-		if (! localServer.start())
-			localServer = null;
+		// Show splash...
+		showSplash();
 
-		LocalServerInitLs.init();
+		// ...and do initialisation in background.
+		startInitThread();
+	}
 
-		final Parent root = FXMLLoader.load(
-				SubShareGui.class.getResource("MainPane.fxml"),
-				getMessages(SubShareGui.class));
-
-		final Scene scene = new Scene(root, 800, 600);
+	private void showSplash() {
+		splashPane = new SplashPane();
+		final Scene scene = new Scene(splashPane, 400, 300);
 		scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
 		primaryStage.setScene(scene);
 		primaryStage.setTitle("SubShare");
 		primaryStage.show();
+	}
 
-		promptPgpKeyPassphrases(primaryStage.getScene().getWindow());
+	private void startInitThread() {
+		new Thread() {
+			{
+				setName("Initialisation");
+			}
+
+			@Override
+			public void run() {
+				try {
+					Thread.setDefaultUncaughtExceptionHandler(ErrorHandler.getUncaughtExceptionHandler());
+					initLogging();
+
+					// We create the LocalServer before constructing the UI to make sure, the UI can access everything.
+					// TODO we should start an external JVM and keep it running when closing - or maybe handle this differently?!
+					localServer = new SsLocalServer();
+					if (! localServer.start())
+						localServer = null;
+
+					LocalServerInitLs.init();
+
+					tryPgpKeysNoPassphrase();
+
+					Platform.runLater(new Runnable() {
+						@Override
+						public void run() {
+							try {
+								promptPgpKeyPassphrases(primaryStage.getScene().getWindow());
+
+								final Parent root = FXMLLoader.load(
+										SubShareGui.class.getResource("MainPane.fxml"),
+										getMessages(SubShareGui.class));
+
+								final Scene scene = new Scene(root, 800, 600);
+								scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
+								primaryStage.hide();
+								primaryStage.setScene(scene);
+								primaryStage.show();
+								splashPane = null;
+							} catch (Exception x) {
+								ErrorHandler.handleError(x);
+								System.exit(666);
+							}
+						}
+					});
+				} catch (Exception x) {
+					ErrorHandler.handleError(x);
+					System.exit(666);
+				}
+			}
+		}.start();
 	}
 
 	@Override
@@ -82,20 +133,50 @@ public class SubShareGui extends Application {
 		launch(args);
 	}
 
+	private void tryPgpKeysNoPassphrase() {
+		final Pgp pgp = PgpLs.getPgpOrFail();
+		final PgpPrivateKeyPassphraseStore pgpPrivateKeyPassphraseStore = PgpPrivateKeyPassphraseManagerLs.getPgpPrivateKeyPassphraseStore();
+		final Date now = new Date();
+
+		for (final PgpKey pgpKey : pgp.getMasterKeysWithPrivateKey()) {
+			if (!pgpKey.isValid(now))
+				continue;
+
+			final PgpKeyId pgpKeyId = pgpKey.getPgpKeyId();
+			if (pgpPrivateKeyPassphraseStore.hasPassphrase(pgpKeyId))
+				continue;
+
+			// Try an empty password to prevent a dialog from popping up, if the PGP key is not passphrase-protected.
+			try {
+				pgpPrivateKeyPassphraseStore.putPassphrase(pgpKeyId, new char[0]);
+				// successful => next PGP key
+			} catch (Exception x) {
+				doNothing();
+			}
+		}
+	}
+
 	private void promptPgpKeyPassphrases(Window owner) {
 		final Pgp pgp = PgpLs.getPgpOrFail();
 		final PgpPrivateKeyPassphraseStore pgpPrivateKeyPassphraseStore = PgpPrivateKeyPassphraseManagerLs.getPgpPrivateKeyPassphraseStore();
+		final Date now = new Date();
+
 		for (final PgpKey pgpKey : pgp.getMasterKeysWithPrivateKey()) {
+			if (!pgpKey.isValid(now))
+				continue;
+
 			final PgpKeyId pgpKeyId = pgpKey.getPgpKeyId();
 			if (pgpPrivateKeyPassphraseStore.hasPassphrase(pgpKeyId))
 				continue;
 
 			boolean retry = false;
+			String errorMessage = null;
 			do {
-				final PgpPrivateKeyPassphrasePromptDialog dialog = new PgpPrivateKeyPassphrasePromptDialog(owner, pgpKey);
+				final PgpPrivateKeyPassphrasePromptDialog dialog = new PgpPrivateKeyPassphrasePromptDialog(owner, pgpKey, errorMessage);
 				dialog.showAndWait();
 
 				retry = false;
+				errorMessage = null;
 
 				final char[] passphrase = dialog.getPassphrase();
 				if (passphrase != null) {
@@ -103,12 +184,10 @@ public class SubShareGui extends Application {
 						pgpPrivateKeyPassphraseStore.putPassphrase(pgpKeyId, passphrase);
 					} catch (SecurityException x) {
 						logger.error("promptPgpKeyPassphrases: " + x, x);
-						final Alert alert = new Alert(AlertType.ERROR);
-						alert.setHeaderText("Sorry, the passphrase you entered is wrong! Please try again.");
-						alert.showAndWait();
 						retry = true;
+						errorMessage = "Sorry, the passphrase you entered is wrong! Please try again.";
 					} catch (Exception x) {
-						logger.error("promptPgpKeyPassphrases: " + x, x);
+						ErrorHandler.handleError(x);
 					}
 				}
 			} while (retry);
