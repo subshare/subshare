@@ -29,6 +29,7 @@ public class LocalRepoPane extends GridPane {
 
 	private void bind() {
 		try {
+			// nameProperty must be kept as field to prevent garbage-collection!
 			nameProperty = JavaBeanStringPropertyBuilder.create()
 				    .bean(localRepo)
 				    .name(LocalRepo.PropertyEnum.name.name())
