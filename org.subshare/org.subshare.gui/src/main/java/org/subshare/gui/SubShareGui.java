@@ -6,6 +6,9 @@ import static org.subshare.gui.util.ResourceBundleUtil.*;
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -133,26 +136,39 @@ public class SubShareGui extends Application {
 		launch(args);
 	}
 
-	private void tryPgpKeysNoPassphrase() {
+	private void tryPgpKeysNoPassphrase() throws InterruptedException {
 		final Pgp pgp = PgpLs.getPgpOrFail();
 		final PgpPrivateKeyPassphraseStore pgpPrivateKeyPassphraseStore = PgpPrivateKeyPassphraseManagerLs.getPgpPrivateKeyPassphraseStore();
 		final Date now = new Date();
 
-		for (final PgpKey pgpKey : pgp.getMasterKeysWithPrivateKey()) {
-			if (!pgpKey.isValid(now))
-				continue;
+		// Trying to submit the empty passphrases takes a while, because the exceptions cause our
+		// LocalServerClient to perform a retry. We therefore simply use multiple threads.
+		final ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
+		try {
+			for (final PgpKey pgpKey : pgp.getMasterKeysWithPrivateKey()) {
+				if (!pgpKey.isValid(now))
+					continue;
 
-			final PgpKeyId pgpKeyId = pgpKey.getPgpKeyId();
-			if (pgpPrivateKeyPassphraseStore.hasPassphrase(pgpKeyId))
-				continue;
+				final PgpKeyId pgpKeyId = pgpKey.getPgpKeyId();
+				if (pgpPrivateKeyPassphraseStore.hasPassphrase(pgpKeyId))
+					continue;
 
-			// Try an empty password to prevent a dialog from popping up, if the PGP key is not passphrase-protected.
-			try {
-				pgpPrivateKeyPassphraseStore.putPassphrase(pgpKeyId, new char[0]);
-				// successful => next PGP key
-			} catch (Exception x) {
-				doNothing();
+				executorService.submit(new Runnable() {
+					@Override
+					public void run() {
+						// Try an empty password to prevent a dialog from popping up, if the PGP key is not passphrase-protected.
+						try {
+							pgpPrivateKeyPassphraseStore.putPassphrase(pgpKeyId, new char[0]);
+							// successful => next PGP key
+						} catch (Exception x) {
+							doNothing();
+						}
+					}
+				});
 			}
+		} finally {
+			executorService.shutdown();
+			executorService.awaitTermination(10, TimeUnit.MINUTES);
 		}
 	}
 

@@ -64,7 +64,7 @@ import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.repo.local.ContextWithLocalRepoManager;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManagerFactory;
-import co.codewizards.cloudstore.core.repo.local.LocalRepoRegistry;
+import co.codewizards.cloudstore.core.repo.local.LocalRepoRegistryImpl;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
 import co.codewizards.cloudstore.core.repo.transport.AbstractRepoTransport;
 import co.codewizards.cloudstore.core.util.IOUtil;
@@ -665,7 +665,7 @@ public class CryptreeRepoTransportImpl extends AbstractRepoTransport implements 
 	public LocalRepoManager getLocalRepoManager() {
 		if (localRepoManager == null) {
 			logger.debug("getLocalRepoManager: Creating a new LocalRepoManager.");
-			final File localRoot = LocalRepoRegistry.getInstance().getLocalRoot(getClientRepositoryIdOrFail());
+			final File localRoot = LocalRepoRegistryImpl.getInstance().getLocalRoot(getClientRepositoryIdOrFail());
 			localRepoManager = LocalRepoManagerFactory.Helper.getInstance().createLocalRepoManagerForExistingRepository(localRoot);
 		}
 		return localRepoManager;

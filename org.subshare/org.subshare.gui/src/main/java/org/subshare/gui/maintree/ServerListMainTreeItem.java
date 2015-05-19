@@ -22,9 +22,6 @@ import org.subshare.gui.serverlist.ServerListPane;
 
 public class ServerListMainTreeItem extends MainTreeItem<String> {
 
-	// TODO we should use the LocalServer somehow! Maybe use proxies? Or switch to ServerDto? What about notifications, then?
-	// Or is this not necessary for the Server[Registry], because it's not needed by the real JVM, anyway?
-	// Or do we only notify the separate JVM whenever we changed the file and make it reload it?
 	private ServerRegistry serverRegistry;
 
 	private PropertyChangeListener serversPropertyChangeListener = new PropertyChangeListener() {
