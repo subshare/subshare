@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -43,6 +43,7 @@ import org.subshare.core.pgp.sync.PgpSyncState;
 import org.subshare.core.server.Server;
 import org.subshare.core.server.ServerRegistry;
 import org.subshare.gui.IconSize;
+import org.subshare.gui.concurrent.SsTask;
 import org.subshare.gui.ls.PgpSyncDaemonLs;
 import org.subshare.gui.ls.ServerRegistryLs;
 import org.subshare.gui.severity.SeverityImageRegistry;
@@ -85,8 +86,13 @@ public class ServerListPane extends BorderPane {
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
 			@SuppressWarnings("unchecked")
-			final List<Server> servers = (List<Server>) evt.getNewValue();
-			addOrRemoveItemTablesViewCallback(servers);
+			final Set<Server> servers = new LinkedHashSet<Server>((List<Server>) evt.getNewValue());
+			Platform.runLater(new Runnable() {
+				@Override
+				public void run() {
+					addOrRemoveItemTablesViewCallback(servers);
+				}
+			});
 		}
 	};
 
@@ -186,7 +192,7 @@ public class ServerListPane extends BorderPane {
 		new Service<Collection<Server>>() {
 			@Override
 			protected Task<Collection<Server>> createTask() {
-				return new Task<Collection<Server>>() {
+				return new SsTask<Collection<Server>>() {
 					@Override
 					protected Collection<Server> call() throws Exception {
 						getPgpSyncDaemon(); // initialise and start
@@ -221,8 +227,8 @@ public class ServerListPane extends BorderPane {
 		return serverRegistry;
 	}
 
-	private void addOrRemoveItemTablesViewCallback(final Collection<Server> servers) {
-		final Set<Server> modelServers = new HashSet<Server>(servers);
+	private void addOrRemoveItemTablesViewCallback(final Set<Server> servers) {
+		assertNotNull("servers", servers);
 		final Map<Server, ServerListItem> viewServer2ServerListItem = new HashMap<>();
 		for (final ServerListItem sli : tableView.getItems())
 			viewServer2ServerListItem.put(sli.getServer(), sli);
@@ -235,8 +241,8 @@ public class ServerListPane extends BorderPane {
 			}
 		}
 
-		if (modelServers.size() < viewServer2ServerListItem.size()) {
-			for (final Server server : modelServers)
+		if (servers.size() < viewServer2ServerListItem.size()) {
+			for (final Server server : servers)
 				viewServer2ServerListItem.remove(server);
 
 			for (final ServerListItem sli : viewServer2ServerListItem.values())
@@ -247,6 +253,7 @@ public class ServerListPane extends BorderPane {
 	}
 
 	private void addTableItemsViewCallback(final Collection<Server> servers) {
+		assertNotNull("servers", servers);
 		for (final Server server : servers)
 			tableView.getItems().add(new ServerListItem(server));
 

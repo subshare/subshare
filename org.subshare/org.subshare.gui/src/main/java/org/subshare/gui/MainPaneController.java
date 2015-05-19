@@ -9,6 +9,7 @@ import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.layout.BorderPane;
 
+import org.subshare.gui.maintree.LocalRepoListMainTreeItem;
 import org.subshare.gui.maintree.MainTreeItem;
 import org.subshare.gui.maintree.ServerListMainTreeItem;
 import org.subshare.gui.maintree.UserListMainTreeItem;
@@ -45,13 +46,7 @@ public class MainPaneController {
 	public void initialize() {
 		final TreeItem<String> root = new TreeItem<String>();
 
-//		for (final ServerMainTreeItem serverMainTreeItem : getServerMainTreeItems()) {
-//			final TreeItem<MainTreeItem> serverTI = new TreeItem<MainTreeItem>(serverMainTreeItem);
-//			root.getChildren().add(serverTI);
-//			for (final RepositoryMainTreeItem repositoryMainTreeItem : serverMainTreeItem.getRepositoryMainTreeItems())
-//				serverTI.getChildren().add(new TreeItem<MainTreeItem>(repositoryMainTreeItem));
-//		}
-
+		root.getChildren().add(new LocalRepoListMainTreeItem());
 		root.getChildren().add(new ServerListMainTreeItem());
 		root.getChildren().add(new UserListMainTreeItem());
 		mainTree.setShowRoot(false);

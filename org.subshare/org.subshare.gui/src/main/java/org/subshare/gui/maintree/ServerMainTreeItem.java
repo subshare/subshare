@@ -1,6 +1,6 @@
 package org.subshare.gui.maintree;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import javafx.scene.Parent;
 
 import org.subshare.core.server.Server;
@@ -16,8 +16,8 @@ public class ServerMainTreeItem extends MainTreeItem<Server> {
 //	private final List<RepositoryMainTreeItem> repositoryMainTreeItems = new ArrayList<RepositoryMainTreeItem>();
 
 	@Override
-	protected String getValueString(Server valueObject) {
-		return valueObject.getName();
+	protected String getValueString() {
+		return getValueObject().getName();
 	}
 
 	@Override

@@ -22,8 +22,6 @@ public class SplashPane extends BorderPane {
 		widthProperty().addListener(new ChangeListener<Number>() {
 			@Override
 			public void changed(final ObservableValue<? extends Number> observable, final Number oldValue, final Number newValue) {
-//				final Bounds boundsInParent = imageView.getBoundsInParent();
-//				final double width = boundsInParent.getMaxX() - boundsInParent.getMinX();
 				imageView.setFitWidth(getWidth());
 			}
 		});

@@ -22,10 +22,9 @@ public class MainTreeItem<T> extends TreeItem<String> {
 	private ObjectProperty<T> valueObject;
 
 	private final PropertyChangeListener valueObjectPropertyChangeListener = new PropertyChangeListener() {
-		@SuppressWarnings("unchecked")
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
-			setValue(getValueString((T) evt.getSource()));
+			setValue(getValueString());
 		}
 	};
 
@@ -41,7 +40,7 @@ public class MainTreeItem<T> extends TreeItem<String> {
 		valueObjectProperty().addListener(new ChangeListener<T>() {
 			@Override
 			public void changed(ObservableValue<? extends T> observable, T oldValue, T newValue) {
-				setValue(getValueString(valueObject));
+				setValue(getValueString());
 			}
 		});
 
@@ -49,7 +48,8 @@ public class MainTreeItem<T> extends TreeItem<String> {
 		setGraphic(graphic);
 	}
 
-	protected String getValueString(final T valueObject) {
+	protected String getValueString() {
+		final T valueObject = getValueObject();
 		return valueObject == null ? "" : valueObject.toString();
 	}
 
@@ -71,7 +71,7 @@ public class MainTreeItem<T> extends TreeItem<String> {
 
 					super.set(newValue);
 
-					if (old != newValue)
+					if (newValue != null && old != newValue)
 						hookPropertyChangeListener(newValue);
 				}
 

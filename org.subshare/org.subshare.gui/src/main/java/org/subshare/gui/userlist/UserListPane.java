@@ -16,6 +16,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.layout.BorderPane;
 
 import org.subshare.core.user.User;
+import org.subshare.gui.concurrent.SsTask;
 import org.subshare.gui.ls.UserRegistryLs;
 
 public class UserListPane extends BorderPane {
@@ -55,7 +56,7 @@ public class UserListPane extends BorderPane {
 		new Service<Collection<User>>() {
 			@Override
 			protected Task<Collection<User>> createTask() {
-				return new Task<Collection<User>>() {
+				return new SsTask<Collection<User>>() {
 					@Override
 					protected Collection<User> call() throws Exception {
 						return UserRegistryLs.getUserRegistry().getUsers();

@@ -39,6 +39,7 @@ import org.subshare.core.repo.ServerRepoRegistry;
 import org.subshare.core.server.Server;
 import org.subshare.core.user.User;
 import org.subshare.core.user.UserRegistry;
+import org.subshare.gui.concurrent.SsTask;
 import org.subshare.gui.ls.PgpPrivateKeyPassphraseManagerLs;
 import org.subshare.gui.ls.ServerRepoManagerLs;
 import org.subshare.gui.ls.ServerRepoRegistryLs;
@@ -157,7 +158,7 @@ public class ServerPane extends BorderPane /* GridPane */ {
 		new Service<Collection<ServerRepo>>() {
 			@Override
 			protected Task<Collection<ServerRepo>> createTask() {
-				return new Task<Collection<ServerRepo>>() {
+				return new SsTask<Collection<ServerRepo>>() {
 					@Override
 					protected Collection<ServerRepo> call() throws Exception {
 						return getServerRepoRegistry().getServerReposOfServer(server.getServerId());
