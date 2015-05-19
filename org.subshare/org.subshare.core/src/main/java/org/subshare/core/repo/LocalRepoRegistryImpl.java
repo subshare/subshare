@@ -1,5 +1,7 @@
 package org.subshare.core.repo;
 
+import static co.codewizards.cloudstore.core.util.StringUtil.*;
+
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
@@ -32,18 +34,35 @@ public class LocalRepoRegistryImpl implements LocalRepoRegistry {
 	private final ObservableList<LocalRepo> localRepos;
 	private final PreModificationListener preModificationListener = new PreModificationListener();
 	private final PostModificationListener postModificationListener = new PostModificationListener();
+	private boolean backendLocalRepoRegistryChangeListenerIgnored;
+
 	private final PropertyChangeListener localRepoPropertyChangeListener = new PropertyChangeListener() {
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
 			repositoryId2LocalRepo = null;
 			final LocalRepo localRepo = (LocalRepo) evt.getSource();
 
-			if (LocalRepo.PropertyEnum.name.equals(evt.getPropertyName())) {
-				final co.codewizards.cloudstore.core.repo.local.LocalRepoRegistry backendLocalRepoRegistry = getBackendLocalRepoRegistry();
-				backendLocalRepoRegistry.removeRepositoryAlias((String) evt.getOldValue());
-				backendLocalRepoRegistry.putRepositoryAlias((String) evt.getNewValue(), localRepo.getRepositoryId());
-			}
+			if (LocalRepo.PropertyEnum.name.name().equals(evt.getPropertyName())) {
+				synchronized (LocalRepoRegistryImpl.this) {
+					backendLocalRepoRegistryChangeListenerIgnored = true;
+					try {
+						final co.codewizards.cloudstore.core.repo.local.LocalRepoRegistry backendLocalRepoRegistry = getBackendLocalRepoRegistry();
+						final UUID repositoryId = localRepo.getRepositoryId();
 
+						final Collection<String> repositoryAliases = backendLocalRepoRegistry.getRepositoryAliases(repositoryId.toString());
+						if (repositoryAliases != null) {
+							for (final String repositoryAlias : repositoryAliases)
+								backendLocalRepoRegistry.removeRepositoryAlias(repositoryAlias);
+						}
+
+						final String newName = (String) evt.getNewValue();
+						if (! isEmpty(newName))
+							backendLocalRepoRegistry.putRepositoryAlias(newName, repositoryId);
+					} finally {
+						backendLocalRepoRegistryChangeListenerIgnored = false;
+					}
+				}
+			}
 			firePropertyChange(PropertyEnum.localRepos_localRepo, null, localRepo);
 		}
 	};
@@ -133,6 +152,7 @@ public class LocalRepoRegistryImpl implements LocalRepoRegistry {
 	protected synchronized co.codewizards.cloudstore.core.repo.local.LocalRepoRegistry getBackendLocalRepoRegistry() {
 		if (backendLocalRepoRegistry == null) {
 			backendLocalRepoRegistry = co.codewizards.cloudstore.core.repo.local.LocalRepoRegistryImpl.getInstance();
+			backendLocalRepoRegistry.getRepositoryIds(); // force loading *before* hooking listener.
 			backendLocalRepoRegistry.addPropertyChangeListener(backendLocalRepoRegistryChangeListener);
 		}
 		return backendLocalRepoRegistry;
@@ -141,46 +161,51 @@ public class LocalRepoRegistryImpl implements LocalRepoRegistry {
 	private final PropertyChangeListener backendLocalRepoRegistryChangeListener = new PropertyChangeListener() {
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
-			final co.codewizards.cloudstore.core.repo.local.LocalRepoRegistry backendLocalRepoRegistry = getBackendLocalRepoRegistry();
-			final Set<UUID> repositoryIds = new HashSet<UUID>(backendLocalRepoRegistry.getRepositoryIds());
+			synchronized (LocalRepoRegistryImpl.this) {
+				if (backendLocalRepoRegistryChangeListenerIgnored)
+					return;
 
-			final List<LocalRepo> newLocalRepos = new ArrayList<>();
-			for (final UUID repositoryId : repositoryIds) {
-				LocalRepo localRepo = getRepositoryId2LocalRepo().get(repositoryId);
-				if (localRepo == null) {
-					localRepo = createPopulatedLocalRepo(repositoryId);
+				final co.codewizards.cloudstore.core.repo.local.LocalRepoRegistry backendLocalRepoRegistry = getBackendLocalRepoRegistry();
+				final Set<UUID> repositoryIds = new HashSet<UUID>(backendLocalRepoRegistry.getRepositoryIds());
 
-					if (localRepo != null)
-						newLocalRepos.add(localRepo);
+				final List<LocalRepo> newLocalRepos = new ArrayList<>();
+				for (final UUID repositoryId : repositoryIds) {
+					LocalRepo localRepo = getRepositoryId2LocalRepo().get(repositoryId);
+					if (localRepo == null) {
+						localRepo = createPopulatedLocalRepo(repositoryId);
+
+						if (localRepo != null)
+							newLocalRepos.add(localRepo);
+					}
 				}
-			}
 
-			for (final LocalRepo localRepo : localRepos) {
-				final UUID repositoryId = localRepo.getRepositoryId();
-				final File localRoot = backendLocalRepoRegistry.getLocalRoot(repositoryId);
-				if (localRoot == null)
-					continue;
-
-				localRepo.setLocalRoot(localRoot);
-				final Collection<String> repositoryAliases = backendLocalRepoRegistry.getRepositoryAliases(repositoryId.toString());
-				if (repositoryAliases != null) {
-					if (repositoryAliases.isEmpty())
-						localRepo.setName(null);
-					else
-						localRepo.setName(repositoryAliases.iterator().next());
-				}
-			}
-
-			for (final LocalRepo localRepo : newLocalRepos)
-				localRepos.add(localRepo);
-
-			if (repositoryIds.size() < localRepos.size()) {
-				final List<LocalRepo> localReposToBeRemoved = new ArrayList<>();
 				for (final LocalRepo localRepo : localRepos) {
-					if (!repositoryIds.contains(localRepo.getRepositoryId()))
-						localReposToBeRemoved.add(localRepo);
+					final UUID repositoryId = localRepo.getRepositoryId();
+					final File localRoot = backendLocalRepoRegistry.getLocalRoot(repositoryId);
+					if (localRoot == null)
+						continue;
+
+					localRepo.setLocalRoot(localRoot);
+					final Collection<String> repositoryAliases = backendLocalRepoRegistry.getRepositoryAliases(repositoryId.toString());
+					if (repositoryAliases != null) {
+						if (repositoryAliases.isEmpty())
+							localRepo.setName(null);
+						else
+							localRepo.setName(repositoryAliases.iterator().next());
+					}
 				}
-				localRepos.removeAll(localReposToBeRemoved);
+
+				for (final LocalRepo localRepo : newLocalRepos)
+					localRepos.add(localRepo);
+
+				if (repositoryIds.size() < localRepos.size()) {
+					final List<LocalRepo> localReposToBeRemoved = new ArrayList<>();
+					for (final LocalRepo localRepo : localRepos) {
+						if (!repositoryIds.contains(localRepo.getRepositoryId()))
+							localReposToBeRemoved.add(localRepo);
+					}
+					localRepos.removeAll(localReposToBeRemoved);
+				}
 			}
 		}
 	};

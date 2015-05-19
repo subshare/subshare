@@ -32,7 +32,7 @@
 		<Label text="Identity:" GridPane.columnIndex="0" GridPane.rowIndex="2"/> 
 		<ComboBox fx:id="userIdsComboBox" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="2"/> 
 		<Label text="Key ID:" GridPane.columnIndex="0" GridPane.rowIndex="3"/> 
-		<TextField fx:id="keyIdTextField" text="0x4AB0FBC1" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="3"/> 
+		<TextField fx:id="keyIdTextField" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="3"/> 
 		<Label text="Passphrase:" GridPane.columnIndex="0" GridPane.rowIndex="4"/> 
 		<PasswordField fx:id="passwordField" GridPane.columnIndex="1" GridPane.rowIndex="4"/> 
 		<ButtonBar GridPane.columnIndex="0" GridPane.rowIndex="5" GridPane.columnSpan="2"> 

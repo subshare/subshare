@@ -50,7 +50,6 @@ dynamic component PgpPrivateKeyPassphrasePromptPane {
 				static rowIndex : 3
 			},
 			TextField id keyIdTextField {
-				text: "0x4AB0FBC1",
 				editable : false,
 				static columnIndex : 1,
 				static rowIndex : 3

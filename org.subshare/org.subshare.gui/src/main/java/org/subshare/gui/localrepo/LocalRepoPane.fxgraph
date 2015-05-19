@@ -1,0 +1,32 @@
+package org.subshare.gui.localrepo
+
+import javafx.scene.layout.GridPane
+import javafx.scene.control.Label
+import javafx.scene.control.TextField
+
+dynamic component LocalRepoPane {
+	GridPane {
+		children : [
+			Label {
+				text : "Name:",
+				static columnIndex : 0,
+				static rowIndex : 0
+			},
+			TextField id nameTextField {
+				static columnIndex : 1,
+				static rowIndex : 0
+			},
+			
+			Label {
+				text : "Local root:",
+				static columnIndex : 0,
+				static rowIndex : 1
+			},
+			TextField id localRootTextField {
+				editable : false,
+				static columnIndex : 1,
+				static rowIndex : 1
+			}
+		]
+	}
+}
