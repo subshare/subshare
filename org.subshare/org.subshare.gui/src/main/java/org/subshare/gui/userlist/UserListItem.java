@@ -16,9 +16,9 @@ import org.subshare.gui.ls.PgpLs;
 public class UserListItem {
 
 	private static final String NULL = "null";
-	private final Pgp pgp = PgpLs.getPgpOrFail();
 
 	private final User user;
+	private Pgp pgp;
 
 	private volatile String firstName;
 	private volatile String lastName;
@@ -28,14 +28,24 @@ public class UserListItem {
 	public UserListItem(final User user) {
 		this.user = user;
 		user.addPropertyChangeListener(userPropertyChangeListener);
-		pgp.addPropertyChangeListener(pgpPropertyChangeListener);
 	}
 
 	@Override
 	protected void finalize() throws Throwable {
 		user.removePropertyChangeListener(userPropertyChangeListener);
-		pgp.removePropertyChangeListener(pgpPropertyChangeListener);
+
+		if (pgp != null)
+			pgp.removePropertyChangeListener(pgpPropertyChangeListener);
+
 		super.finalize();
+	}
+
+	protected synchronized Pgp getPgp() {
+		if (pgp == null) {
+			pgp = PgpLs.getPgpOrFail();
+			pgp.addPropertyChangeListener(pgpPropertyChangeListener);
+		}
+		return pgp;
 	}
 
 	private final PropertyChangeListener userPropertyChangeListener = new UserPropertyChangeListener(this);
@@ -126,9 +136,9 @@ public class UserListItem {
 		if (keyTrustLevel == null) { // TODO we need a mechanism to invalidate this cached value - maybe a listener in Pgp?
 			PgpKeyTrustLevel highestKeyTrustLevel = null;
 			for (final PgpKeyId pgpKeyId : user.getPgpKeyIds()) {
-				final PgpKey pgpKey = pgp.getPgpKey(pgpKeyId);
+				final PgpKey pgpKey = getPgp().getPgpKey(pgpKeyId);
 				if (pgpKey != null) {
-					final PgpKeyTrustLevel ktl = pgp.getKeyTrustLevel(pgpKey);
+					final PgpKeyTrustLevel ktl = getPgp().getKeyTrustLevel(pgpKey);
 					if (highestKeyTrustLevel == null || ktl.compareTo(highestKeyTrustLevel) > 0)
 						highestKeyTrustLevel = ktl;
 				}

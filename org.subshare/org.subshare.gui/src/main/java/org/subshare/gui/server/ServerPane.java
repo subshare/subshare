@@ -44,6 +44,7 @@ import org.subshare.gui.ls.PgpPrivateKeyPassphraseManagerLs;
 import org.subshare.gui.ls.ServerRepoManagerLs;
 import org.subshare.gui.ls.ServerRepoRegistryLs;
 import org.subshare.gui.ls.UserRegistryLs;
+import org.subshare.gui.selectuser.SelectUserDialog;
 
 import co.codewizards.cloudstore.core.oio.File;
 
@@ -203,21 +204,36 @@ public class ServerPane extends BorderPane /* GridPane */ {
 
 		final Set<PgpKeyId> pgpKeyIds = PgpPrivateKeyPassphraseManagerLs.getPgpPrivateKeyPassphraseStore().getPgpKeyIdsHavingPassphrase();
 		if (pgpKeyIds.isEmpty())
-			throw new IllegalStateException("There is no PGP private key unlocked.");
+			throw new IllegalStateException("There is no PGP private key unlocked."); // TODO show nice message and ask the user, if he would like to unlock.
 
 		final UserRegistry userRegistry = UserRegistryLs.getUserRegistry();
 		final Collection<User> users = userRegistry.getUsersByPgpKeyIds(pgpKeyIds);
 
 		if (users.isEmpty())
-			throw new IllegalStateException("There is no user for any of these PGP keys: " + pgpKeyIds);
+			throw new IllegalStateException("There is no user for any of these PGP keys: " + pgpKeyIds); // TODO should we ask to unlock (further) PGP keys?
 
-		User user = users.iterator().next(); // TODO select via UI, if there's more than one!
+		User owner;
+		if (users.size() == 1)
+			owner = users.iterator().next();
+		else {
+			owner = selectOwner(new ArrayList<>(users));
+			if (owner == null)
+				return; // user cancelled the selection dialog.
+		}
 
-		ServerRepoManagerLs.getServerRepoManager().createRepository(directory, server, user);
+		ServerRepoManagerLs.getServerRepoManager().createRepository(directory, server, owner);
 
 		// TODO really create the repo on the server!
 		// TODO 2: need to verify, if server-URLs and repos really exist! Maybe show an error marker in the UI, if there's a problem (might be temporary!)
 		// TODO 3: and maybe switch from UUID to Uid?!
+	}
+
+	private User selectOwner(final List<User> users) {
+		SelectUserDialog dialog = new SelectUserDialog(getScene().getWindow(), users, null, SelectionMode.SINGLE,
+				"There are multiple users in the user database having an unlocked private PGP key.\n\nPlease select the user who should become the owner of the new repository.");
+		dialog.showAndWait();
+		final List<User> selectedUsers = dialog.getSelectedUsers();
+		return selectedUsers == null || selectedUsers.isEmpty() ? null : selectedUsers.get(0);
 	}
 
 	private File selectLocalDirectory() {

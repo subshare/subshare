@@ -2,13 +2,11 @@ package org.subshare.gui.pgp.privatekeypassphrase;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.scene.Scene;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
-import javafx.stage.WindowEvent;
 
 import org.subshare.core.pgp.PgpKey;
 
@@ -24,12 +22,12 @@ public class PgpPrivateKeyPassphrasePromptDialog extends Stage {
 
 		setTitle("Unlock PGP private key");
 		setResizable(false);
-        initStyle(StageStyle.UTILITY);
-        initModality(Modality.APPLICATION_MODAL);
-        initOwner(owner);
-        setIconified(false);
+		initStyle(StageStyle.UTILITY);
+		initModality(Modality.APPLICATION_MODAL);
+		initOwner(owner);
+		setIconified(false);
 
-        pgpPrivateKeyPassphrasePromptPane = new PgpPrivateKeyPassphrasePromptPane(pgpKey, errorMessage) {
+		pgpPrivateKeyPassphrasePromptPane = new PgpPrivateKeyPassphrasePromptPane(pgpKey, errorMessage) {
 			@Override
 			protected void okButtonClicked(ActionEvent event) {
 				PgpPrivateKeyPassphrasePromptDialog.this.okButtonClicked(event);
@@ -38,20 +36,17 @@ public class PgpPrivateKeyPassphrasePromptDialog extends Stage {
 			protected void cancelButtonClicked(ActionEvent event) {
 				PgpPrivateKeyPassphrasePromptDialog.this.cancelButtonClicked(event);
 			}
-        };
-        setScene(new Scene(pgpPrivateKeyPassphrasePromptPane));
+		};
+		setScene(new Scene(pgpPrivateKeyPassphrasePromptPane));
 
-        setOnShown(new EventHandler<WindowEvent>() {
-			@Override
-			public void handle(WindowEvent event) {
-				// First, we must make this dialog request the focus. Otherwise, the focus
-				// will stay with the owner-window. IMHO very strange, wrong default behaviour...
-				PgpPrivateKeyPassphrasePromptDialog.this.requestFocus();
+		setOnShown(event -> {
+			// First, we must make this dialog request the focus. Otherwise, the focus
+			// will stay with the owner-window. IMHO very strange, wrong default behaviour...
+			PgpPrivateKeyPassphrasePromptDialog.this.requestFocus();
 
-				// Now, we must make sure the correct field is focused. This causes the passphrase
-				// text-field to be focused.
-				pgpPrivateKeyPassphrasePromptPane.requestFocus();
-			}
+			// Now, we must make sure the correct field is focused. This causes the passphrase
+			// text-field to be focused.
+			pgpPrivateKeyPassphrasePromptPane.requestFocus();
 		});
 	}
 
