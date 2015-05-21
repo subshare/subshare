@@ -55,6 +55,22 @@ public class RepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 	}
 
 	@Test
+	public void syncFromLocalToRemoteToLocalThenDeleteFileAndSyncAgain() throws Exception {
+		syncFromLocalToRemoteToLocal();
+
+		final File child_2 = createFile(localSrcRoot, "2");
+		final File child_2_a = createFile(child_2, "a");
+		assertThat(child_2_a.exists()).isTrue();
+
+		child_2_a.delete();
+
+		assertThat(child_2_a.exists()).isFalse();
+
+		syncFromLocalSrcToRemote();
+		syncFromRemoteToLocalDest();
+	}
+
+	@Test
 	public void syncFromLocalToRemoteToLocalWithPathPrefix() throws Exception {
 		remotePathPrefix2Plain = "/3 + &#ä";
 		syncFromLocalToRemoteToLocal();

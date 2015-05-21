@@ -1,7 +1,7 @@
 package org.subshare.local.persistence;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
-import static co.codewizards.cloudstore.core.util.Util.equal;
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static co.codewizards.cloudstore.core.util.Util.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -105,6 +105,44 @@ public class CryptoLinkDao extends Dao<CryptoLink, CryptoLinkDao> {
 			long startTimestamp = System.currentTimeMillis();
 			@SuppressWarnings("unchecked")
 			Collection<CryptoLink> cryptoLinks = (Collection<CryptoLink>) query.execute(fromUserRepoKeyPublicKey);
+			logger.debug("getCryptoLinks: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
+
+			startTimestamp = System.currentTimeMillis();
+			cryptoLinks = load(cryptoLinks);
+			logger.debug("getCryptoLinks: Loading result-set with {} elements took {} ms.", cryptoLinks.size(), System.currentTimeMillis() - startTimestamp);
+
+			return cryptoLinks;
+		} finally {
+			query.closeAll();
+		}
+	}
+
+	public Collection<CryptoLink> getCryptoLinksFrom(final CryptoKey fromCryptoKey) {
+		assertNotNull("fromCryptoKey", fromCryptoKey);
+		final Query query = pm().newNamedQuery(getEntityClass(), "getCryptoLinksFrom_fromCryptoKey");
+		try {
+			long startTimestamp = System.currentTimeMillis();
+			@SuppressWarnings("unchecked")
+			Collection<CryptoLink> cryptoLinks = (Collection<CryptoLink>) query.execute(fromCryptoKey);
+			logger.debug("getCryptoLinks: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
+
+			startTimestamp = System.currentTimeMillis();
+			cryptoLinks = load(cryptoLinks);
+			logger.debug("getCryptoLinks: Loading result-set with {} elements took {} ms.", cryptoLinks.size(), System.currentTimeMillis() - startTimestamp);
+
+			return cryptoLinks;
+		} finally {
+			query.closeAll();
+		}
+	}
+
+	public Collection<CryptoLink> getCryptoLinksTo(final CryptoKey toCryptoKey) {
+		assertNotNull("toCryptoKey", toCryptoKey);
+		final Query query = pm().newNamedQuery(getEntityClass(), "getCryptoLinksTo_toCryptoKey");
+		try {
+			long startTimestamp = System.currentTimeMillis();
+			@SuppressWarnings("unchecked")
+			Collection<CryptoLink> cryptoLinks = (Collection<CryptoLink>) query.execute(toCryptoKey);
 			logger.debug("getCryptoLinks: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
 
 			startTimestamp = System.currentTimeMillis();

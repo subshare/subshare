@@ -419,7 +419,18 @@ public class CryptreeRepoTransportImpl extends AbstractRepoTransport implements 
 
 	@Override
 	public void delete(final String path) {
-		// TODO Auto-generated method stub
+		// This does not work, because the CryptoRepoFile was already deleted when the RepoFile was => not possible to
+		// determine serverPath anymore :-(
+		// TODO handle this differently!
+//		final LocalRepoManager localRepoManager = getLocalRepoManager();
+//		try (final LocalRepoTransaction transaction = localRepoManager.beginReadTransaction();) {
+//			final Cryptree cryptree = getCryptree(transaction);
+//			final String unprefixedServerPath = unprefixPath(cryptree.getServerPath(path)); // it's automatically prefixed *again*, thus we must prefix it here (if we don't want to somehow suppress the automatic prefixing, which is probably quite a lot of work).
+//			getRestRepoTransport().delete(unprefixedServerPath);
+//
+//			transaction.commit();
+//		}
+
 		throw new UnsupportedOperationException("NYI");
 	}
 

@@ -55,46 +55,48 @@ import co.codewizards.cloudstore.local.persistence.Entity;
  * @author Marco หงุ่ยตระกูล-Schulze - marco at codewizards dot co
  */
 @PersistenceCapable
-@Inheritance(strategy=InheritanceStrategy.NEW_TABLE)
-@Unique(name="CryptoKey_cryptoKeyId", members="cryptoKeyId")
+@Inheritance(strategy = InheritanceStrategy.NEW_TABLE)
+@Unique(name = "CryptoKey_cryptoKeyId", members = "cryptoKeyId")
 @Indices({
-	@Index(name="CryptoKey_localRevision", members="localRevision"),
-	@Index(name="CryptoKey_cryptoKeyRole", members="cryptoKeyRole")
+	@Index(name = "CryptoKey_localRevision", members = "localRevision"),
+	@Index(name = "CryptoKey_cryptoKeyRole", members = "cryptoKeyRole")
 })
 @Queries({
-	@Query(name="getCryptoKey_cryptoKeyId", value="SELECT UNIQUE WHERE this.cryptoKeyId == :cryptoKeyId"),
-	@Query(name="getActiveCryptoKeys_cryptoRepoFile_cryptoKeyRole", value="SELECT WHERE this.cryptoRepoFile == :cryptoRepoFile && this.cryptoKeyRole == :cryptoKeyRole && this.cryptoKeyDeactivation == null"),
-	@Query(name="getCryptoKeysChangedAfter_localRevision", value="SELECT WHERE this.localRevision > :localRevision")
+	@Query(name = "getCryptoKey_cryptoKeyId", value = "SELECT UNIQUE WHERE this.cryptoKeyId == :cryptoKeyId"),
+	@Query(name = "getActiveCryptoKeys_cryptoRepoFile_cryptoKeyRole", value = "SELECT WHERE this.cryptoRepoFile == :cryptoRepoFile && this.cryptoKeyRole == :cryptoKeyRole && this.cryptoKeyDeactivation == null"),
+	@Query(name = "getCryptoKeys_cryptoRepoFile", value = "SELECT WHERE this.cryptoRepoFile == :cryptoRepoFile"),
+	@Query(name = "getCryptoKeysChangedAfter_localRevision", value = "SELECT WHERE this.localRevision > :localRevision")
 })
 public class CryptoKey extends Entity implements WriteProtectedEntity, AutoTrackLocalRevision, StoreCallback {
 
-	@Persistent(nullValue=NullValue.EXCEPTION)
-	@Column(length=22)
+	@Persistent(nullValue = NullValue.EXCEPTION)
+	@Column(length = 22)
 	private String cryptoKeyId;
 
-	@Persistent(nullValue=NullValue.EXCEPTION)
+	@Persistent(nullValue = NullValue.EXCEPTION)
 	private CryptoRepoFile cryptoRepoFile;
 
-	@Persistent(nullValue=NullValue.EXCEPTION)
-	@Column(jdbcType="INTEGER")
+	@Persistent(nullValue = NullValue.EXCEPTION)
+	@Column(jdbcType = "INTEGER")
 	private CryptoKeyRole cryptoKeyRole;
 
-	@Persistent(nullValue=NullValue.EXCEPTION)
-	@Column(jdbcType="INTEGER")
+	@Persistent(nullValue = NullValue.EXCEPTION)
+	@Column(jdbcType = "INTEGER")
 	private CryptoKeyType cryptoKeyType;
 
 	private long localRevision;
 
-	@Persistent(mappedBy="toCryptoKey", dependentElement="true")
+	@Persistent(mappedBy = "toCryptoKey", dependentElement = "true")
 	private Set<CryptoLink> inCryptoLinks;
 
-	@Persistent(mappedBy="fromCryptoKey")
+	@Persistent(mappedBy = "fromCryptoKey")
 	private Set<CryptoLink> outCryptoLinks;
 
+	@Persistent(dependent = "true")
 	private CryptoKeyDeactivation cryptoKeyDeactivation;
 
-	@Persistent(nullValue=NullValue.EXCEPTION)
-	@Embedded(nullIndicatorColumn="signatureCreated")
+	@Persistent(nullValue = NullValue.EXCEPTION)
+	@Embedded(nullIndicatorColumn = "signatureCreated")
 	private SignatureImpl signature;
 
 	public CryptoKey() { }

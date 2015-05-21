@@ -3,6 +3,8 @@ package org.subshare.local.persistence;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.jdo.Query;
 
@@ -86,4 +88,51 @@ public class CryptoKeyDao extends Dao<CryptoKey, CryptoKeyDao> {
 		}
 	}
 
+	public Collection<CryptoKey> getCryptoKeys(final CryptoRepoFile cryptoRepoFile) {
+		assertNotNull("cryptoRepoFile", cryptoRepoFile);
+		final Query query = pm().newNamedQuery(getEntityClass(), "getCryptoKeys_cryptoRepoFile");
+		try {
+			long startTimestamp = System.currentTimeMillis();
+			@SuppressWarnings("unchecked")
+			Collection<CryptoKey> cryptoKeys = (Collection<CryptoKey>) query.execute(cryptoRepoFile);
+			logger.debug("getCryptoKeys: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
+
+			startTimestamp = System.currentTimeMillis();
+			cryptoKeys = load(cryptoKeys);
+			logger.debug("getCryptoKeys: Loading result-set with {} elements took {} ms.", cryptoKeys.size(), System.currentTimeMillis() - startTimestamp);
+
+			return cryptoKeys;
+		} finally {
+			query.closeAll();
+		}
+	}
+
+	@Override
+	public void deletePersistent(CryptoKey entity) {
+		deleteDependentObjects(entity);
+		pm().flush();
+		super.deletePersistent(entity);
+	}
+
+	@Override
+	public void deletePersistentAll(Collection<? extends CryptoKey> entities) {
+		for (final CryptoKey cryptoKey : entities)
+			deleteDependentObjects(cryptoKey);
+
+		pm().flush();
+		super.deletePersistentAll(entities);
+	}
+
+	protected void deleteDependentObjects(final CryptoKey cryptoKey) {
+		assertNotNull("cryptoKey", cryptoKey);
+		final CryptoLinkDao cryptoLinkDao = getDao(CryptoLinkDao.class);
+
+		final Collection<CryptoLink> cryptoLinksFrom = cryptoLinkDao.getCryptoLinksFrom(cryptoKey);
+		final Collection<CryptoLink> cryptoLinksTo = cryptoLinkDao.getCryptoLinksTo(cryptoKey);
+		final Set<CryptoLink> cryptoLinks = new HashSet<CryptoLink>(cryptoLinksFrom.size() + cryptoLinksTo.size());
+		cryptoLinks.addAll(cryptoLinksFrom);
+		cryptoLinks.addAll(cryptoLinksTo);
+
+		cryptoLinkDao.deletePersistentAll(cryptoLinks);
+	}
 }

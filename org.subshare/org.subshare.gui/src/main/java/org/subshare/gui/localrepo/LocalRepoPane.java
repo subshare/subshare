@@ -4,11 +4,16 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static org.subshare.gui.util.FxmlUtil.*;
 import javafx.beans.property.adapter.JavaBeanStringProperty;
 import javafx.beans.property.adapter.JavaBeanStringPropertyBuilder;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 
 import org.subshare.core.repo.LocalRepo;
+import org.subshare.gui.ls.RepoSyncDaemonLs;
+
+import co.codewizards.cloudstore.core.oio.File;
+import co.codewizards.cloudstore.core.repo.sync.RepoSyncDaemon;
 
 public class LocalRepoPane extends GridPane {
 	private final LocalRepo localRepo;
@@ -38,6 +43,13 @@ public class LocalRepoPane extends GridPane {
 		} catch (NoSuchMethodException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	@FXML
+	private void syncButtonClicked(final ActionEvent event) {
+		final File localRoot = localRepo.getLocalRoot();
+		final RepoSyncDaemon repoSyncDaemon = RepoSyncDaemonLs.getRepoSyncDaemon();
+		repoSyncDaemon.startSync(localRoot);
 	}
 
 }

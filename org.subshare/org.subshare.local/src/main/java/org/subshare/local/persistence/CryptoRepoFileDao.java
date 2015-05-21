@@ -175,4 +175,38 @@ public class CryptoRepoFileDao extends Dao<CryptoRepoFile, CryptoRepoFileDao> {
 		else
 			return parentPath;
 	}
+
+	@Override
+	public void deletePersistent(CryptoRepoFile entity) {
+		nullCryptoRepoKey(entity);
+		pm().flush();
+
+		deleteDependentObjects(entity);
+		pm().flush();
+		super.deletePersistent(entity);
+	}
+
+	@Override
+	public void deletePersistentAll(final Collection<? extends CryptoRepoFile> entities) {
+		for (CryptoRepoFile cryptoRepoFile : entities)
+			nullCryptoRepoKey(cryptoRepoFile);
+
+		pm().flush();
+
+		for (CryptoRepoFile cryptoRepoFile : entities)
+			deleteDependentObjects(cryptoRepoFile);
+
+		pm().flush();
+		super.deletePersistentAll(entities);
+	}
+
+	protected void nullCryptoRepoKey(final CryptoRepoFile cryptoRepoFile) {
+		cryptoRepoFile.setCryptoKey(null); // must null this first! otherwise there's a circular dependency
+	}
+
+	protected void deleteDependentObjects(final CryptoRepoFile cryptoRepoFile) {
+		assertNotNull("cryptoRepoFile", cryptoRepoFile);
+		final CryptoKeyDao cryptoKeyDao = getDao(CryptoKeyDao.class);
+		cryptoKeyDao.deletePersistentAll(cryptoKeyDao.getCryptoKeys(cryptoRepoFile));
+	}
 }

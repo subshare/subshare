@@ -22,6 +22,11 @@ dynamic component ServerPane resourcefile "messages.properties" {
 				graphic : ImageView { image : Image { url : "@create-repository-24x24.png" } },
 				tooltip : Tooltip { text : "Create a new repository on this server." },
 				onAction : controllermethod createRepositoryButtonClicked
+			},
+			Button id syncButton {
+				graphic : ImageView { image : Image { url : "@sync-24x24.png" } },
+				tooltip : Tooltip { text : "Synchronize the selected repositories now." },
+				onAction : controllermethod syncButtonClicked
 			}
 		},
 //		center : Label { text : "ServerPane" }

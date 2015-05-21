@@ -41,12 +41,14 @@ import org.subshare.core.user.User;
 import org.subshare.core.user.UserRegistry;
 import org.subshare.gui.concurrent.SsTask;
 import org.subshare.gui.ls.PgpPrivateKeyPassphraseManagerLs;
+import org.subshare.gui.ls.RepoSyncDaemonLs;
 import org.subshare.gui.ls.ServerRepoManagerLs;
 import org.subshare.gui.ls.ServerRepoRegistryLs;
 import org.subshare.gui.ls.UserRegistryLs;
 import org.subshare.gui.selectuser.SelectUserDialog;
 
 import co.codewizards.cloudstore.core.oio.File;
+import co.codewizards.cloudstore.core.repo.sync.RepoSyncDaemon;
 
 public class ServerPane extends BorderPane /* GridPane */ {
 
@@ -56,6 +58,9 @@ public class ServerPane extends BorderPane /* GridPane */ {
 
 	@FXML
 	private Button createRepositoryButton;
+
+	@FXML
+	private Button syncButton;
 
 	@FXML
 	private TableView<ServerRepoListItem> tableView;
@@ -151,8 +156,9 @@ public class ServerPane extends BorderPane /* GridPane */ {
 	}
 
 	private void updateEnabled() {
+		// TODO find out whether local repositories are connected to the server repositories (otherwise there's nothing to sync)!
 		final boolean selectionEmpty = tableView.getSelectionModel().getSelectedItems().isEmpty();
-//		deleteButton.setDisable(selectionEmpty);
+		syncButton.setDisable(selectionEmpty);
 	}
 
 	private void populateTableViewAsync() {
@@ -197,6 +203,13 @@ public class ServerPane extends BorderPane /* GridPane */ {
 	}
 
 	@FXML
+	private void syncButtonClicked(final ActionEvent event) {
+		// TODO find out all local repositories that are connected to the server repositories and sync them!
+		for (ServerRepoListItem item : tableView.getSelectionModel().getSelectedItems())
+			item.getServerRepo().getRepositoryId();
+	}
+
+	@FXML
 	private void createRepositoryButtonClicked(final ActionEvent event) {
 		final File directory = selectLocalDirectory();
 		if (directory == null)
@@ -212,7 +225,7 @@ public class ServerPane extends BorderPane /* GridPane */ {
 		if (users.isEmpty())
 			throw new IllegalStateException("There is no user for any of these PGP keys: " + pgpKeyIds); // TODO should we ask to unlock (further) PGP keys?
 
-		User owner;
+		final User owner;
 		if (users.size() == 1)
 			owner = users.iterator().next();
 		else {
@@ -221,7 +234,12 @@ public class ServerPane extends BorderPane /* GridPane */ {
 				return; // user cancelled the selection dialog.
 		}
 
+		// TODO do this in the background!
 		ServerRepoManagerLs.getServerRepoManager().createRepository(directory, server, owner);
+
+		// ...immediately sync after creation. This happens in the background (this method is non-blocking).
+		final RepoSyncDaemon repoSyncDaemon = RepoSyncDaemonLs.getRepoSyncDaemon();
+		repoSyncDaemon.startSync(directory);
 
 		// TODO really create the repo on the server!
 		// TODO 2: need to verify, if server-URLs and repos really exist! Maybe show an error marker in the UI, if there's a problem (might be temporary!)
@@ -241,6 +259,6 @@ public class ServerPane extends BorderPane /* GridPane */ {
 		final DirectoryChooser directoryChooser = new DirectoryChooser();
 		directoryChooser.setTitle("Select local directory to be shared.");
 		final java.io.File directory = directoryChooser.showDialog(getScene().getWindow());
-		return directory == null ? null : createFile(directory);
+		return directory == null ? null : createFile(directory).getAbsoluteFile();
 	}
 }

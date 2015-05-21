@@ -31,6 +31,18 @@
 					<Tooltip text="Create a new repository on this server."/> 
 				</tooltip>
 			</Button>
+			<Button fx:id="syncButton" onAction="#syncButtonClicked"> 
+				<graphic>
+					<ImageView> 
+						<image>
+							<Image url="@sync-24x24.png"/> 
+						</image>
+					</ImageView>
+				</graphic>
+				<tooltip>
+					<Tooltip text="Synchronize the selected repositories now."/> 
+				</tooltip>
+			</Button>
 		</FlowPane>
 	</top>
 	<center>

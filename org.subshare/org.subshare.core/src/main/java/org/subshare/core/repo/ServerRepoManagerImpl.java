@@ -15,6 +15,7 @@ import org.subshare.core.pgp.PgpRegistry;
 import org.subshare.core.repo.transport.CryptreeRepoTransport;
 import org.subshare.core.server.Server;
 import org.subshare.core.user.User;
+import org.subshare.core.user.UserRegistryImpl;
 
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoHelper;
@@ -56,6 +57,7 @@ public class ServerRepoManagerImpl implements ServerRepoManager {
 		registerInServerRepoRegistry(server, serverRepositoryId, owner);
 
 		owner.createUserRepoKey(serverRepositoryId);
+		UserRegistryImpl.getInstance().writeIfNeeded(); // it's definitely needed because we just created a userRepoKey ;-)
 
 		connectLocalRepositoryWithServerRepository(localRoot, server, serverRepositoryId);
 	}

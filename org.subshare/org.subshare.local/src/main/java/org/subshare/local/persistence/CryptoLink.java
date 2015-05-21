@@ -50,6 +50,9 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 	@Query(name="getCryptoLink_cryptoLinkId", value="SELECT UNIQUE WHERE this.cryptoLinkId == :cryptoLinkId"),
 	@Query(name="getCryptoLinksChangedAfter_localRevision", value="SELECT WHERE this.localRevision > :localRevision"),
 
+	@Query(name="getCryptoLinksFrom_fromCryptoKey", value="SELECT WHERE this.fromCryptoKey == :fromCryptoKey"),
+	@Query(name="getCryptoLinksTo_toCryptoKey", value="SELECT WHERE this.toCryptoKey == :toCryptoKey"),
+
 	@Query(name="getCryptoLinks_fromUserRepoKeyPublicKey",
 			value="SELECT WHERE this.fromUserRepoKeyPublicKey == :fromUserRepoKeyPublicKey"),
 
