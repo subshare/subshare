@@ -23,6 +23,7 @@ import org.subshare.core.dto.UserIdentityDto;
 import org.subshare.core.io.InputStreamSource;
 import org.subshare.core.io.MultiInputStream;
 import org.subshare.core.sign.Signature;
+import org.subshare.core.sign.WriteProtected;
 
 import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.local.persistence.AutoTrackLocalRevision;
@@ -37,7 +38,7 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 	@Query(name="getUserIdentitiesChangedAfter_localRevision", value="SELECT WHERE this.localRevision > :localRevision"),
 	@Query(name="getUserIdentities_ofUserRepoKeyPublicKey", value="SELECT WHERE this.ofUserRepoKeyPublicKey == :ofUserRepoKeyPublicKey")
 })
-public class UserIdentity extends Entity implements WriteProtectedEntity, AutoTrackLocalRevision, StoreCallback {
+public class UserIdentity extends Entity implements WriteProtected, AutoTrackLocalRevision, StoreCallback {
 
 	@Persistent(nullValue=NullValue.EXCEPTION)
 	@Column(length=22)
@@ -147,7 +148,7 @@ public class UserIdentity extends Entity implements WriteProtectedEntity, AutoTr
 	}
 
 	@Override
-	public CryptoRepoFile getCryptoRepoFileControllingPermissions() {
+	public Uid getCryptoRepoFileIdControllingPermissions() {
 		return null; // global
 	}
 

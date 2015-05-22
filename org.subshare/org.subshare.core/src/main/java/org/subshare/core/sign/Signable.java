@@ -6,7 +6,7 @@ import org.subshare.core.dto.PermissionType;
 import org.subshare.core.user.UserRepoKey;
 
 /**
- * A {@code Signable} can be signed and its data is thus protected.
+ * A {@code Signable} can be signed and its data is thus protected against unauthorized modifications.
  * <p>
  * The object is signed by exactly one {@link Signature#getSigningUserRepoKeyId() UserRepoKey}. The identity of the
  * signer is not revealed to an external attacker (who has no access to the mapping between

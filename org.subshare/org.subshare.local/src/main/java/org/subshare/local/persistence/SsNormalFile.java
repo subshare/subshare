@@ -21,6 +21,7 @@ import org.subshare.core.io.InputStreamSource;
 import org.subshare.core.io.MultiInputStream;
 import org.subshare.core.sign.Signature;
 
+import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.local.persistence.NormalFile;
 
 @PersistenceCapable
@@ -73,9 +74,9 @@ public class SsNormalFile extends NormalFile implements SsRepoFile {
 	}
 
 	@Override
-	public CryptoRepoFile getCryptoRepoFileControllingPermissions() {
+	public Uid getCryptoRepoFileIdControllingPermissions() {
 		final PersistenceManager pm = assertNotNull("JDOHelper.getPersistenceManager(this)", JDOHelper.getPersistenceManager(this));
-		return new CryptoRepoFileDao().persistenceManager(pm).getCryptoRepoFileOrFail(this);
+		return new CryptoRepoFileDao().persistenceManager(pm).getCryptoRepoFileOrFail(this).getCryptoRepoFileId();
 	}
 
 	@Override

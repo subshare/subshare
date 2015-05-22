@@ -1,5 +1,7 @@
 package org.subshare.local.persistence;
 
-public interface SsRepoFile extends WriteProtectedEntity {
+import org.subshare.core.sign.WriteProtected;
+
+public interface SsRepoFile extends WriteProtected {
 
 }

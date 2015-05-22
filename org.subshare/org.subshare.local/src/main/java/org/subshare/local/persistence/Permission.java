@@ -26,6 +26,7 @@ import org.subshare.core.dto.PermissionType;
 import org.subshare.core.io.InputStreamSource;
 import org.subshare.core.io.MultiInputStream;
 import org.subshare.core.sign.Signature;
+import org.subshare.core.sign.WriteProtected;
 
 import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.local.persistence.AutoTrackLocalRevision;
@@ -95,7 +96,7 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 			),
 	@Query(name="getPermissionsChangedAfter_localRevision", value="SELECT WHERE this.localRevision > :localRevision")
 })
-public class Permission extends Entity implements WriteProtectedEntity, AutoTrackLocalRevision, StoreCallback {
+public class Permission extends Entity implements WriteProtected, AutoTrackLocalRevision, StoreCallback {
 
 	@Persistent(nullValue=NullValue.EXCEPTION)
 	@Column(length=22)
@@ -268,9 +269,10 @@ public class Permission extends Entity implements WriteProtectedEntity, AutoTrac
 	}
 
 	@Override
-	public CryptoRepoFile getCryptoRepoFileControllingPermissions() {
+	public Uid getCryptoRepoFileIdControllingPermissions() {
 		assertNotNull("permissionSet", permissionSet);
-		return assertNotNull("permissionSet.cryptoRepoFile", permissionSet.getCryptoRepoFile());
+		return assertNotNull("permissionSet.cryptoRepoFile.cryptoRepoFileId",
+				assertNotNull("permissionSet.cryptoRepoFile", permissionSet.getCryptoRepoFile()).getCryptoRepoFileId());
 	}
 
 	@Override

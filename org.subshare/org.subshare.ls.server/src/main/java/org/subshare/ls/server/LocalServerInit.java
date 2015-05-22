@@ -7,7 +7,7 @@ import org.subshare.core.pgp.transport.PgpTransportFactoryRegistry;
 import org.subshare.core.user.UserRepoKeyRingLookupImpl;
 import org.subshare.ls.server.ssl.AcceptAllDynamicX509TrustManagerCallback;
 import org.subshare.rest.client.pgp.transport.RestPgpTransportFactory;
-import org.subshare.rest.client.transport.CryptreeRepoTransportFactoryImpl;
+import org.subshare.rest.client.transport.CryptreeRestRepoTransportFactoryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,9 +26,9 @@ public class LocalServerInit {
 		if (! initialised) {
 			PgpTransportFactoryRegistry.getInstance().getPgpTransportFactoryOrFail(RestPgpTransportFactory.class).setDynamicX509TrustManagerCallbackClass(AcceptAllDynamicX509TrustManagerCallback.class);
 
-			final CryptreeRepoTransportFactoryImpl cryptreeRepoTransportFactoryImpl = RepoTransportFactoryRegistry.getInstance().getRepoTransportFactoryOrFail(CryptreeRepoTransportFactoryImpl.class);
-			cryptreeRepoTransportFactoryImpl.setDynamicX509TrustManagerCallbackClass(AcceptAllDynamicX509TrustManagerCallback.class);
-			cryptreeRepoTransportFactoryImpl.setUserRepoKeyRingLookup(new UserRepoKeyRingLookupImpl());
+			final CryptreeRestRepoTransportFactoryImpl cryptreeRestRepoTransportFactoryImpl = RepoTransportFactoryRegistry.getInstance().getRepoTransportFactoryOrFail(CryptreeRestRepoTransportFactoryImpl.class);
+			cryptreeRestRepoTransportFactoryImpl.setDynamicX509TrustManagerCallbackClass(AcceptAllDynamicX509TrustManagerCallback.class);
+			cryptreeRestRepoTransportFactoryImpl.setUserRepoKeyRingLookup(new UserRepoKeyRingLookupImpl());
 
 			final PgpAuthenticationCallback pgpAuthenticationCallback = PgpPrivateKeyPassphraseStoreImpl.getInstance().getPgpAuthenticationCallback();
 			PgpRegistry.getInstance().setPgpAuthenticationCallback(pgpAuthenticationCallback);

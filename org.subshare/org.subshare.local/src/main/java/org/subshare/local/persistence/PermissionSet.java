@@ -24,7 +24,9 @@ import org.subshare.core.dto.PermissionSetDto;
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.io.InputStreamSource;
 import org.subshare.core.sign.Signature;
+import org.subshare.core.sign.WriteProtected;
 
+import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.local.persistence.AutoTrackLocalRevision;
 import co.codewizards.cloudstore.local.persistence.Entity;
 
@@ -37,7 +39,7 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 	@Query(name="getPermissionSet_cryptoRepoFile", value="SELECT UNIQUE WHERE this.cryptoRepoFile == :cryptoRepoFile"),
 	@Query(name="getPermissionSetsChangedAfter_localRevision", value="SELECT WHERE this.localRevision > :localRevision")
 })
-public class PermissionSet extends Entity implements WriteProtectedEntity, AutoTrackLocalRevision {
+public class PermissionSet extends Entity implements WriteProtected, AutoTrackLocalRevision {
 
 	@Persistent(nullValue=NullValue.EXCEPTION)
 	private CryptoRepoFile cryptoRepoFile;
@@ -135,7 +137,7 @@ public class PermissionSet extends Entity implements WriteProtectedEntity, AutoT
 	}
 
 	@Override
-	public CryptoRepoFile getCryptoRepoFileControllingPermissions() {
+	public Uid getCryptoRepoFileIdControllingPermissions() {
 		// We *must* use the parent, whenever there is one, because we are otherwise not able to interrupt
 		// the inheritance of permissions by another party. If we wouldn't take the parent for PermissionSetInheritance
 		// (and for consistency, here in PermissionSet, too), we would interrupt the chain of trust in the moment
@@ -144,7 +146,8 @@ public class PermissionSet extends Entity implements WriteProtectedEntity, AutoT
 		// instead, is the easiest and most elegant solution.
 		final CryptoRepoFile cryptoRepoFile = assertNotNull("this.cryptoRepoFile", this.cryptoRepoFile);
 		final CryptoRepoFile parentCryptoRepoFile = cryptoRepoFile.getParent();
-		return parentCryptoRepoFile == null ? cryptoRepoFile : parentCryptoRepoFile;
+		return assertNotNull("cryptoRepoFileIdControllingPermissions",
+				parentCryptoRepoFile == null ? cryptoRepoFile.getCryptoRepoFileId() : parentCryptoRepoFile.getCryptoRepoFileId());
 	}
 
 	@Override

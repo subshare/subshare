@@ -23,6 +23,7 @@ import org.subshare.core.WriteAccessDeniedException;
 import org.subshare.core.crypto.DecrypterInputStream;
 import org.subshare.core.crypto.EncrypterOutputStream;
 import org.subshare.core.crypto.RandomIvFactory;
+import org.subshare.core.dto.SsDeleteModificationDto;
 import org.subshare.core.dto.SsDirectoryDto;
 import org.subshare.core.dto.SsNormalFileDto;
 import org.subshare.core.dto.SsRepoFileDto;
@@ -32,7 +33,7 @@ import org.subshare.core.dto.CryptoChangeSetDto;
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.io.LimitedInputStream;
 import org.subshare.core.pgp.PgpKey;
-import org.subshare.core.repo.transport.CryptreeRepoTransport;
+import org.subshare.core.repo.transport.CryptreeRestRepoTransport;
 import org.subshare.core.sign.PgpSignableSigner;
 import org.subshare.core.sign.SignableSigner;
 import org.subshare.core.sign.SignableVerifier;
@@ -71,8 +72,8 @@ import co.codewizards.cloudstore.core.util.IOUtil;
 import co.codewizards.cloudstore.rest.client.CloudStoreRestClient;
 import co.codewizards.cloudstore.rest.client.request.RequestRepoConnection;
 
-public class CryptreeRepoTransportImpl extends AbstractRepoTransport implements CryptreeRepoTransport, ContextWithLocalRepoManager {
-	private static final Logger logger = LoggerFactory.getLogger(CryptreeRepoTransportImpl.class);
+public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport implements CryptreeRestRepoTransport, ContextWithLocalRepoManager {
+	private static final Logger logger = LoggerFactory.getLogger(CryptreeRestRepoTransportImpl.class);
 
 	private CryptreeFactory cryptreeFactory;
 	private RestRepoTransport restRepoTransport;
@@ -418,6 +419,17 @@ public class CryptreeRepoTransportImpl extends AbstractRepoTransport implements 
 	}
 
 	@Override
+	public void delete(SsDeleteModificationDto deleteModificationDto) {
+		try (final LocalRepoTransaction transaction = localRepoManager.beginReadTransaction();) {
+			final Cryptree cryptree = getCryptree(transaction);
+			cryptree.sign(deleteModificationDto);
+			transaction.commit();
+		}
+//		getClient().execute(request);
+		getRestRepoTransport().delete(deleteModificationDto.getServerPath()); // TODO send DTO to server!
+	}
+
+	@Override
 	public void delete(final String path) {
 		// This does not work, because the CryptoRepoFile was already deleted when the RepoFile was => not possible to
 		// determine serverPath anymore :-(
@@ -693,8 +705,8 @@ public class CryptreeRepoTransportImpl extends AbstractRepoTransport implements 
 	}
 
 	@Override
-	public final CryptreeRepoTransportFactoryImpl getRepoTransportFactory() {
-		return (CryptreeRepoTransportFactoryImpl) super.getRepoTransportFactory();
+	public final CryptreeRestRepoTransportFactoryImpl getRepoTransportFactory() {
+		return (CryptreeRestRepoTransportFactoryImpl) super.getRepoTransportFactory();
 	}
 
 	@Override

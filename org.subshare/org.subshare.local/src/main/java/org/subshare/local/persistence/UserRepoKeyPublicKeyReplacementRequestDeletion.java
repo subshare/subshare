@@ -21,6 +21,7 @@ import org.subshare.core.dto.PermissionType;
 import org.subshare.core.dto.UserRepoKeyPublicKeyReplacementRequestDeletionDto;
 import org.subshare.core.io.InputStreamSource;
 import org.subshare.core.sign.Signature;
+import org.subshare.core.sign.WriteProtected;
 
 import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.local.persistence.AutoTrackLocalRevision;
@@ -35,7 +36,7 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 	@Query(name="getUserRepoKeyPublicKeyReplacementRequestDeletion_requestId", value="SELECT UNIQUE WHERE this.requestId == :requestId"),
 	@Query(name="getUserRepoKeyPublicKeyReplacementRequestDeletionsChangedAfter_localRevision", value="SELECT WHERE this.localRevision > :localRevision")
 })
-public class UserRepoKeyPublicKeyReplacementRequestDeletion extends Entity implements WriteProtectedEntity, AutoTrackLocalRevision {
+public class UserRepoKeyPublicKeyReplacementRequestDeletion extends Entity implements WriteProtected, AutoTrackLocalRevision {
 
 	@Persistent(nullValue=NullValue.EXCEPTION)
 	private String requestId;
@@ -102,8 +103,8 @@ public class UserRepoKeyPublicKeyReplacementRequestDeletion extends Entity imple
 	}
 
 	@Override
-	public CryptoRepoFile getCryptoRepoFileControllingPermissions() {
-		return null;
+	public Uid getCryptoRepoFileIdControllingPermissions() {
+		return null; // global
 	}
 
 	@Override

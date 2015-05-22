@@ -23,6 +23,7 @@ import org.subshare.core.dto.PermissionType;
 import org.subshare.core.io.InputStreamSource;
 import org.subshare.core.io.MultiInputStream;
 import org.subshare.core.sign.Signature;
+import org.subshare.core.sign.WriteProtected;
 
 import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.local.persistence.AutoTrackLocalRevision;
@@ -40,7 +41,7 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 	@Query(name="getUserIdentityLinks_forUserRepoKeyPublicKey", value="SELECT WHERE this.forUserRepoKeyPublicKey == :forUserRepoKeyPublicKey"),
 	@Query(name="getUserIdentityLinks_ofUserRepoKeyPublicKey_forUserRepoKeyPublicKey", value="SELECT WHERE this.userIdentity.ofUserRepoKeyPublicKey == :ofUserRepoKeyPublicKey && this.forUserRepoKeyPublicKey == :forUserRepoKeyPublicKey")
 })
-public class UserIdentityLink extends Entity implements WriteProtectedEntity, AutoTrackLocalRevision, StoreCallback {
+public class UserIdentityLink extends Entity implements WriteProtected, AutoTrackLocalRevision, StoreCallback {
 	public static final String SIGNED_DATA_TYPE = "UserIdentityLink";
 
 	@Persistent(nullValue=NullValue.EXCEPTION)
@@ -171,7 +172,7 @@ public class UserIdentityLink extends Entity implements WriteProtectedEntity, Au
 	}
 
 	@Override
-	public CryptoRepoFile getCryptoRepoFileControllingPermissions() {
+	public Uid getCryptoRepoFileIdControllingPermissions() {
 		return null; // global
 	}
 

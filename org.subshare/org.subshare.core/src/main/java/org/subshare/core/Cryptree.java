@@ -11,11 +11,13 @@ import org.subshare.core.dto.CryptoLinkDto;
 import org.subshare.core.dto.CryptoRepoFileDto;
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.dto.UserIdentityPayloadDto;
+import org.subshare.core.sign.WriteProtected;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKey.PublicKey;
 import org.subshare.core.user.UserRepoKeyPublicKeyLookup;
 import org.subshare.core.user.UserRepoKeyRing;
 
+import co.codewizards.cloudstore.core.auth.SignatureException;
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
 import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
@@ -139,4 +141,7 @@ public interface Cryptree {
 
 	UserIdentityPayloadDto getUserIdentityPayloadDtoOrFail(Uid userRepoKeyId)
 			throws ReadUserIdentityAccessDeniedException;
+
+	void sign(WriteProtected writeProtected) throws AccessDeniedException;
+	void assertSignatureOk(WriteProtected writeProtected) throws SignatureException, AccessDeniedException;
 }

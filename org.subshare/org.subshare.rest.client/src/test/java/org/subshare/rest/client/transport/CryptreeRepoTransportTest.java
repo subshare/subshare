@@ -32,7 +32,7 @@ public class CryptreeRepoTransportTest {
 
 	@Test
 	public void encryptAndSignAndVerifyAndDecrypt() throws Exception {
-		final CryptreeRepoTransportFactoryImpl factory = new CryptreeRepoTransportFactoryImpl();
+		final CryptreeRestRepoTransportFactoryImpl factory = new CryptreeRestRepoTransportFactoryImpl();
 //		factory.setDynamicX509TrustManagerCallbackClass(TestDynamicX509TrustManagerCallback.class);
 		final UUID serverRepositoryId = UUID.randomUUID();
 		final UUID clientRepositoryId = UUID.randomUUID();
@@ -44,7 +44,7 @@ public class CryptreeRepoTransportTest {
 			}
 		});
 
-		final CryptreeRepoTransportImpl repoTransport = new CryptreeRepoTransportImpl() {
+		final CryptreeRestRepoTransportImpl repoTransport = new CryptreeRestRepoTransportImpl() {
 			@Override
 			public UUID getRepositoryId() {
 				return serverRepositoryId;

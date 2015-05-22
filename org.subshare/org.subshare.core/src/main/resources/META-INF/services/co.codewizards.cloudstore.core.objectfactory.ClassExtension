@@ -1,3 +1,5 @@
+org.subshare.core.dto.SsDeleteModificationDtoClassExtension
 org.subshare.core.dto.SsDirectoryDtoClassExtension
 org.subshare.core.dto.SsNormalFileDtoClassExtension
 org.subshare.core.dto.SsSymlinkDtoClassExtension
+org.subshare.core.repo.sync.SsRepoToRepoSyncClassExtension

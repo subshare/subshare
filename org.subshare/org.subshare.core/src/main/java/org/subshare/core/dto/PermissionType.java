@@ -47,6 +47,11 @@ public enum PermissionType {
 	 * to individual directories or files. Because a {@code PermissionSet} always belongs to a file/directory,
 	 * i.e. we cannot easily technically manage them globally without an (unnecessary) refactoring, we simply
 	 * manage all permissions of this type in the repository's root directory.
+	 * <p>
+	 * TODO maybe we have to refactor this (and allow a PermissionSet without an associated CryptoRepoFile),
+	 * because if I see this correctly, the user would need grant permission on the root directory to grant
+	 * readUserIdentity - which is actually not necessary, if the user has grant-permission on a sub-directory
+	 * and wants to grant readUserIdentity - this should work!
 	 */
 	readUserIdentity
 

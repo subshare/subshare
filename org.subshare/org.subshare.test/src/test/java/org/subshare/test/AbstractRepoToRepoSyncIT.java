@@ -20,7 +20,7 @@ import org.subshare.core.user.UserRepoKeyRing;
 import org.subshare.core.user.UserRepoKeyRingLookup;
 import org.subshare.local.persistence.CryptoRepoFile;
 import org.subshare.local.persistence.CryptoRepoFileDao;
-import org.subshare.rest.client.transport.CryptreeRepoTransportFactoryImpl;
+import org.subshare.rest.client.transport.CryptreeRestRepoTransportFactoryImpl;
 import org.junit.After;
 import org.junit.Before;
 import org.slf4j.Logger;
@@ -172,7 +172,7 @@ public abstract class AbstractRepoToRepoSyncIT extends AbstractIT {
 	}
 
 	protected void syncFromLocalSrcToRemote() throws Exception {
-		try (final RepoToRepoSync repoToRepoSync = new RepoToRepoSync(getLocalRootWithPathPrefix(), remoteRootURLWithPathPrefixForLocalSrc);)
+		try (final RepoToRepoSync repoToRepoSync = RepoToRepoSync.create(getLocalRootWithPathPrefix(), remoteRootURLWithPathPrefixForLocalSrc);)
 		{
 			repoToRepoSync.sync(new LoggerProgressMonitor(logger));
 		}
@@ -183,7 +183,7 @@ public abstract class AbstractRepoToRepoSyncIT extends AbstractIT {
 	}
 
 	protected void syncFromRemoteToLocalDest(final boolean assertLocalSrcAndDestDirectoriesAreEqual) throws Exception {
-		try (final RepoToRepoSync repoToRepoSync = new RepoToRepoSync(localDestRoot, remoteRootURLWithPathPrefixForLocalDest);) {
+		try (final RepoToRepoSync repoToRepoSync = RepoToRepoSync.create(localDestRoot, remoteRootURLWithPathPrefixForLocalDest);) {
 			repoToRepoSync.sync(new LoggerProgressMonitor(logger));
 		}
 
@@ -212,7 +212,7 @@ public abstract class AbstractRepoToRepoSyncIT extends AbstractIT {
 		}
 	}
 
-	protected static UserRepoKeyRing getUserRepoKeyRing(CryptreeRepoTransportFactoryImpl factory) {
+	protected static UserRepoKeyRing getUserRepoKeyRing(CryptreeRestRepoTransportFactoryImpl factory) {
 		UserRepoKeyRingLookup lookup = factory.getUserRepoKeyRingLookup();
 		if (lookup == null)
 			return null;

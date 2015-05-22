@@ -18,12 +18,14 @@ import org.subshare.core.dto.CryptoKeyRole;
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.io.InputStreamSource;
 import org.subshare.core.sign.Signature;
+import org.subshare.core.sign.WriteProtected;
 
+import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.local.persistence.Entity;
 
 @PersistenceCapable
 @Inheritance(strategy=InheritanceStrategy.NEW_TABLE)
-public class CryptoKeyDeactivation extends Entity implements WriteProtectedEntity {
+public class CryptoKeyDeactivation extends Entity implements WriteProtected {
 
 	public CryptoKeyDeactivation() { }
 
@@ -77,7 +79,7 @@ public class CryptoKeyDeactivation extends Entity implements WriteProtectedEntit
 	}
 
 	@Override
-	public CryptoRepoFile getCryptoRepoFileControllingPermissions() {
+	public Uid getCryptoRepoFileIdControllingPermissions() {
 		final CryptoKey ck = assertNotNull("cryptoKey", cryptoKey);
 		final CryptoKeyRole cryptoKeyRole = assertNotNull("cryptoKey.cryptoKeyRole", ck.getCryptoKeyRole());
 		final CryptoRepoFile cryptoRepoFile = assertNotNull("cryptoKey.cryptoRepoFile", ck.getCryptoRepoFile());
@@ -87,7 +89,7 @@ public class CryptoKeyDeactivation extends Entity implements WriteProtectedEntit
 			case dataKey:
 				return null;
 			default:
-				return cryptoRepoFile;
+				return assertNotNull("cryptoRepoFile.cryptoRepoFileId", cryptoRepoFile.getCryptoRepoFileId());
 		}
 	}
 

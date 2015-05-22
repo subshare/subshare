@@ -7,7 +7,11 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.UUID;
 
+import javax.ws.rs.DELETE;
 import javax.ws.rs.Path;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 
 import org.subshare.core.Cryptree;
 import org.subshare.core.CryptreeFactory;
@@ -83,5 +87,13 @@ public class SsWebDavService extends WebDavService {
 		}
 
 		super.putFileData(path, offset, fileData);
+	}
+
+	// Replaced by DeleteService, because we need a PUT with a *signed* DTO!
+	@DELETE
+	@Path("{path:.*}")
+	@Override
+	public void delete(String path) {
+		throw new WebApplicationException(Response.status(Status.NOT_FOUND).build());
 	}
 }

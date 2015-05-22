@@ -36,7 +36,7 @@ import org.subshare.local.persistence.PermissionDao;
 import org.subshare.local.persistence.PermissionSetDao;
 import org.subshare.local.persistence.PermissionSetInheritanceDao;
 import org.subshare.local.persistence.UserRepoKeyPublicKey;
-import org.subshare.rest.client.transport.CryptreeRepoTransportImpl;
+import org.subshare.rest.client.transport.CryptreeRestRepoTransportImpl;
 import org.subshare.rest.server.service.SsWebDavService;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -95,7 +95,7 @@ public class BrokenSignatureIT extends AbstractRepoToRepoSyncIT {
 	public void uploadBrokenSignature() throws Exception {
 		jmockitShouldBeUsed = true;
 
-		new MockUp<CryptreeRepoTransportImpl>() {
+		new MockUp<CryptreeRestRepoTransportImpl>() {
 			@Mock
 			public byte[] encryptAndSign(final Invocation invocation, final byte[] plainText, final KeyParameter keyParameter, final UserRepoKey signingUserRepoKey) {
 				jmockitWasUsed = true;

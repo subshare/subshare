@@ -27,6 +27,7 @@ import org.subshare.core.dto.PermissionType;
 import org.subshare.core.io.InputStreamSource;
 import org.subshare.core.io.MultiInputStream;
 import org.subshare.core.sign.Signature;
+import org.subshare.core.sign.WriteProtected;
 import org.subshare.core.user.UserRepoKey;
 
 import co.codewizards.cloudstore.core.dto.Uid;
@@ -66,7 +67,7 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 	@Query(name="getCryptoLinks_signingUserRepoKeyId",
 			value="SELECT WHERE this.signature.signingUserRepoKeyId == :signingUserRepoKeyId")
 })
-public class CryptoLink extends Entity implements WriteProtectedEntity, AutoTrackLocalRevision, StoreCallback {
+public class CryptoLink extends Entity implements WriteProtected, AutoTrackLocalRevision, StoreCallback {
 
 	@Persistent(nullValue=NullValue.EXCEPTION)
 	@Column(length=22)
@@ -261,9 +262,9 @@ public class CryptoLink extends Entity implements WriteProtectedEntity, AutoTrac
 	}
 
 	@Override
-	public CryptoRepoFile getCryptoRepoFileControllingPermissions() {
-		assertNotNull("toCryptoKey", toCryptoKey);
-		return toCryptoKey.getCryptoRepoFile();
+	public Uid getCryptoRepoFileIdControllingPermissions() {
+		final CryptoRepoFile cryptoRepoFile = assertNotNull("toCryptoKey", toCryptoKey).getCryptoRepoFile();
+		return assertNotNull("cryptoRepoFile", cryptoRepoFile).getCryptoRepoFileId();
 	}
 
 	@Override

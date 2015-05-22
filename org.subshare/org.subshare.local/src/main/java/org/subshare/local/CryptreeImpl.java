@@ -1,9 +1,8 @@
 package org.subshare.local;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
-import static co.codewizards.cloudstore.core.util.Util.doNothing;
-import static org.subshare.local.CryptreeNodeUtil.decrypt;
-import static org.subshare.local.CryptreeNodeUtil.encrypt;
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static co.codewizards.cloudstore.core.util.Util.*;
+import static org.subshare.local.CryptreeNodeUtil.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -42,6 +41,7 @@ import org.subshare.core.dto.UserRepoKeyPublicKeyDto;
 import org.subshare.core.dto.UserRepoKeyPublicKeyReplacementRequestDeletionDto;
 import org.subshare.core.dto.UserRepoKeyPublicKeyReplacementRequestDto;
 import org.subshare.core.sign.Signature;
+import org.subshare.core.sign.WriteProtected;
 import org.subshare.core.user.User;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKeyPublicKeyDtoWithSignatureConverter;
@@ -85,7 +85,6 @@ import org.subshare.local.persistence.UserRepoKeyPublicKeyReplacementRequest;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyReplacementRequestDao;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyReplacementRequestDeletion;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyReplacementRequestDeletionDao;
-import org.subshare.local.persistence.WriteProtectedEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -1271,9 +1270,10 @@ public class CryptreeImpl extends AbstractCryptree {
 		}
 	}
 
-	private void sign(final WriteProtectedEntity writeProtectedEntity) throws AccessDeniedException {
+	@Override
+	public void sign(final WriteProtected writeProtected) throws AccessDeniedException {
 		final CryptreeNode rootCryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(getRootCryptoRepoFileId());
-		rootCryptreeNode.sign(writeProtectedEntity);
+		rootCryptreeNode.sign(writeProtected);
 	}
 
 	private void populateChangedPermissionSetDtos(final CryptoChangeSetDto cryptoChangeSetDto, final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {
@@ -1501,14 +1501,14 @@ public class CryptreeImpl extends AbstractCryptree {
 		}
 	}
 
-	// TODO this should be exposed as public API - thus, we need to refactor the WriteProtectedEntity interface out of the persistence layer into core (similar to Signable).
-	public void assertSignatureOk(final WriteProtectedEntity entity) throws SignatureException, AccessDeniedException {
-		CryptoRepoFile cryptoRepoFile = entity.getCryptoRepoFileControllingPermissions();
-		if (cryptoRepoFile == null)
-			cryptoRepoFile = getTransactionOrFail().getDao(CryptoRepoFileDao.class).getRootCryptoRepoFile();
+	@Override
+	public void assertSignatureOk(final WriteProtected writeProtected) throws SignatureException, AccessDeniedException {
+		Uid crfIdControllingPermissions = writeProtected.getCryptoRepoFileIdControllingPermissions();
+		if (crfIdControllingPermissions == null)
+			crfIdControllingPermissions = getTransactionOrFail().getDao(CryptoRepoFileDao.class).getRootCryptoRepoFile().getCryptoRepoFileId();
 
-		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(cryptoRepoFile.getCryptoRepoFileId());
-		cryptreeNode.assertSignatureOk(entity);
+		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(crfIdControllingPermissions);
+		cryptreeNode.assertSignatureOk(writeProtected);
 	}
 
 	@Override
@@ -1518,6 +1518,10 @@ public class CryptreeImpl extends AbstractCryptree {
 			final PermissionType permissionType, final Date timestamp
 			) throws AccessDeniedException
 	{
+		assertNotNull("cryptoRepoFileId", cryptoRepoFileId);
+		assertNotNull("userRepoKeyId", userRepoKeyId);
+		assertNotNull("permissionType", permissionType);
+		assertNotNull("timestamp", timestamp);
 		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(cryptoRepoFileId);
 		cryptreeNode.assertHasPermission(false, userRepoKeyId, permissionType, timestamp);
 	}

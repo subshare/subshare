@@ -8,7 +8,7 @@ import co.codewizards.cloudstore.core.repo.transport.AbstractRepoTransportFactor
 import co.codewizards.cloudstore.core.repo.transport.RepoTransport;
 import co.codewizards.cloudstore.rest.client.ssl.DynamicX509TrustManagerCallback;
 
-public class CryptreeRepoTransportFactoryImpl extends AbstractRepoTransportFactory {
+public class CryptreeRestRepoTransportFactoryImpl extends AbstractRepoTransportFactory {
 	protected final RestRepoTransportFactory restRepoTransportFactory = new RestRepoTransportFactory();
 	private UserRepoKeyRingLookup userRepoKeyRingLookup;
 
@@ -51,6 +51,6 @@ public class CryptreeRepoTransportFactoryImpl extends AbstractRepoTransportFacto
 
 	@Override
 	protected RepoTransport _createRepoTransport() {
-		return new CryptreeRepoTransportImpl();
+		return new CryptreeRestRepoTransportImpl();
 	}
 }

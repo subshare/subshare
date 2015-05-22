@@ -12,7 +12,7 @@ import org.subshare.core.pgp.Pgp;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpKeyId;
 import org.subshare.core.pgp.PgpRegistry;
-import org.subshare.core.repo.transport.CryptreeRepoTransport;
+import org.subshare.core.repo.transport.CryptreeRestRepoTransport;
 import org.subshare.core.server.Server;
 import org.subshare.core.user.User;
 import org.subshare.core.user.UserRegistryImpl;
@@ -91,7 +91,7 @@ public class ServerRepoManagerImpl implements ServerRepoManager {
 		final UUID serverRepositoryId = UUID.randomUUID(); // or should we better have the server create it? does it matter?
 		final URL remoteRoot = UrlUtil.appendNonEncodedPath(server.getUrl(), serverRepositoryId.toString());
 		final RepoTransportFactory repoTransportFactory = RepoTransportFactoryRegistry.getInstance().getRepoTransportFactory(remoteRoot);
-		try (final CryptreeRepoTransport repoTransport = (CryptreeRepoTransport) repoTransportFactory.createRepoTransport(remoteRoot, clientRepositoryId);) {
+		try (final CryptreeRestRepoTransport repoTransport = (CryptreeRestRepoTransport) repoTransportFactory.createRepoTransport(remoteRoot, clientRepositoryId);) {
 			repoTransport.createRepository(serverRepositoryId, getPgpKey(owner));
 		}
 		return serverRepositoryId;

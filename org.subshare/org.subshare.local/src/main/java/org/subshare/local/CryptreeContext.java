@@ -93,6 +93,7 @@ public class CryptreeContext {
 	}
 
 	public CryptreeNode getCryptreeNodeOrCreate(final Uid cryptoRepoFileId) {
+		assertNotNull("cryptoRepoFileId", cryptoRepoFileId);
 		CryptreeNode cryptreeNode = cryptoRepoFileId2CryptreeNode.get(cryptoRepoFileId);
 		if (cryptreeNode == null) {
 			cryptreeNode = createCryptreeNodeOrFail(cryptoRepoFileId);

@@ -1,10 +1,7 @@
 package org.subshare.local;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
-import static org.subshare.local.CryptreeNodeUtil.createCryptoLink;
-import static org.subshare.local.CryptreeNodeUtil.decrypt;
-import static org.subshare.local.CryptreeNodeUtil.decryptLarge;
-import static org.subshare.local.CryptreeNodeUtil.encrypt;
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static org.subshare.local.CryptreeNodeUtil.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -35,6 +32,7 @@ import org.subshare.core.dto.CryptoKeyRole;
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.dto.SignatureDto;
 import org.subshare.core.sign.Signable;
+import org.subshare.core.sign.WriteProtected;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKey.PublicKey;
 import org.subshare.crypto.CipherOperationMode;
@@ -57,7 +55,6 @@ import org.subshare.local.persistence.UserIdentityLinkDao;
 import org.subshare.local.persistence.UserRepoKeyPublicKey;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyDao;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyReplacementRequestDao;
-import org.subshare.local.persistence.WriteProtectedEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -981,15 +978,15 @@ public class CryptreeNode {
 		}
 	}
 
-	public void assertSignatureOk(final WriteProtectedEntity entity) throws SignatureException, AccessDeniedException {
+	public void assertSignatureOk(final WriteProtected entity) throws SignatureException, AccessDeniedException {
 		assertNotNull("entity", entity);
-		final CryptoRepoFile cryptoRepoFileControllingPermissions = entity.getCryptoRepoFileControllingPermissions();
-		if (cryptoRepoFileControllingPermissions == null)
+		final Uid crfIdControllingPermissions = entity.getCryptoRepoFileIdControllingPermissions();
+		if (crfIdControllingPermissions == null)
 			this.assertSignatureOk(entity, true, entity.getPermissionTypeRequiredForWrite());
-		else if (cryptoRepoFileControllingPermissions.equals(this.getCryptoRepoFile()))
+		else if (crfIdControllingPermissions.equals(this.getCryptoRepoFile().getCryptoRepoFileId()))
 			this.assertSignatureOk(entity, false, entity.getPermissionTypeRequiredForWrite());
 		else {
-			final CryptreeNode cryptreeNode = context.getCryptreeNodeOrCreate(cryptoRepoFileControllingPermissions.getCryptoRepoFileId());
+			final CryptreeNode cryptreeNode = context.getCryptreeNodeOrCreate(crfIdControllingPermissions);
 			cryptreeNode.assertSignatureOk(entity, false, entity.getPermissionTypeRequiredForWrite());
 		}
 	}
@@ -1037,19 +1034,19 @@ public class CryptreeNode {
 		return permissionSet;
 	}
 
-	public void sign(final WriteProtectedEntity writeProtectedEntity) throws AccessDeniedException {
-		assertNotNull("writeProtectedEntity", writeProtectedEntity);
-		final CryptoRepoFile cryptoRepoFileControllingPermissions = writeProtectedEntity.getCryptoRepoFileControllingPermissions();
+	public void sign(final WriteProtected writeProtected) throws AccessDeniedException {
+		assertNotNull("writeProtectedEntity", writeProtected);
+		final Uid crfIdControllingPermissions = writeProtected.getCryptoRepoFileIdControllingPermissions();
 		final UserRepoKey userRepoKey;
-		if (cryptoRepoFileControllingPermissions == null)
-			userRepoKey = this.getUserRepoKeyOrFail(true, writeProtectedEntity.getPermissionTypeRequiredForWrite());
-		else if (cryptoRepoFileControllingPermissions.equals(this.getCryptoRepoFile()))
-			userRepoKey = this.getUserRepoKeyOrFail(false, writeProtectedEntity.getPermissionTypeRequiredForWrite());
+		if (crfIdControllingPermissions == null)
+			userRepoKey = this.getUserRepoKeyOrFail(true, writeProtected.getPermissionTypeRequiredForWrite());
+		else if (crfIdControllingPermissions.equals(this.getCryptoRepoFile().getCryptoRepoFileId()))
+			userRepoKey = this.getUserRepoKeyOrFail(false, writeProtected.getPermissionTypeRequiredForWrite());
 		else {
-			final CryptreeNode cryptreeNode = context.getCryptreeNodeOrCreate(cryptoRepoFileControllingPermissions.getCryptoRepoFileId());
-			userRepoKey = cryptreeNode.getUserRepoKeyOrFail(false, writeProtectedEntity.getPermissionTypeRequiredForWrite());
+			final CryptreeNode cryptreeNode = context.getCryptreeNodeOrCreate(crfIdControllingPermissions);
+			userRepoKey = cryptreeNode.getUserRepoKeyOrFail(false, writeProtected.getPermissionTypeRequiredForWrite());
 		}
-		context.getSignableSigner(userRepoKey).sign(writeProtectedEntity);
+		context.getSignableSigner(userRepoKey).sign(writeProtected);
 	}
 
 	/**

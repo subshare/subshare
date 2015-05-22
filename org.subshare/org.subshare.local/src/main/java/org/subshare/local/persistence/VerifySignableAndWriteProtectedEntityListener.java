@@ -17,6 +17,7 @@ import org.subshare.core.ReadAccessDeniedException;
 import org.subshare.core.WriteAccessDeniedException;
 import org.subshare.core.sign.Signable;
 import org.subshare.core.sign.SignableVerifier;
+import org.subshare.core.sign.WriteProtected;
 import org.subshare.local.CryptreeImpl;
 
 import co.codewizards.cloudstore.core.auth.SignatureException;
@@ -133,8 +134,8 @@ public class VerifySignableAndWriteProtectedEntityListener extends AbstractLocal
 			final Cryptree cryptree = getTransactionOrFail().getContextObject(Cryptree.class);
 			try {
 
-				if (cryptree != null && signable instanceof WriteProtectedEntity)
-					((CryptreeImpl) cryptree).assertSignatureOk((WriteProtectedEntity) signable);
+				if (cryptree != null && signable instanceof WriteProtected)
+					((CryptreeImpl) cryptree).assertSignatureOk((WriteProtected) signable);
 				else
 					getSignableVerifier().verify(signable);
 

@@ -25,4 +25,8 @@ public class RepositoryOwnerDao extends Dao<RepositoryOwner, RepositoryOwnerDao>
 		return repositoryOwner;
 	}
 
+	@Override
+	public <P extends RepositoryOwner> P makePersistent(P entity) {
+		return super.makePersistent(entity);
+	}
 }

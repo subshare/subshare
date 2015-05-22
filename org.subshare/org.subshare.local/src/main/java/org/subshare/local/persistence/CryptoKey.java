@@ -30,6 +30,7 @@ import org.subshare.core.dto.PermissionType;
 import org.subshare.core.io.InputStreamSource;
 import org.subshare.core.io.MultiInputStream;
 import org.subshare.core.sign.Signature;
+import org.subshare.core.sign.WriteProtected;
 
 import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.local.persistence.AutoTrackLocalRevision;
@@ -67,7 +68,7 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 	@Query(name = "getCryptoKeys_cryptoRepoFile", value = "SELECT WHERE this.cryptoRepoFile == :cryptoRepoFile"),
 	@Query(name = "getCryptoKeysChangedAfter_localRevision", value = "SELECT WHERE this.localRevision > :localRevision")
 })
-public class CryptoKey extends Entity implements WriteProtectedEntity, AutoTrackLocalRevision, StoreCallback {
+public class CryptoKey extends Entity implements WriteProtected, AutoTrackLocalRevision, StoreCallback {
 
 	@Persistent(nullValue = NullValue.EXCEPTION)
 	@Column(length = 22)
@@ -265,8 +266,9 @@ public class CryptoKey extends Entity implements WriteProtectedEntity, AutoTrack
 	}
 
 	@Override
-	public CryptoRepoFile getCryptoRepoFileControllingPermissions() {
-		return assertNotNull("cryptoRepoFile", cryptoRepoFile);
+	public Uid getCryptoRepoFileIdControllingPermissions() {
+		return assertNotNull("cryptoRepoFile.cryptoRepoFileId",
+				assertNotNull("cryptoRepoFile", cryptoRepoFile).getCryptoRepoFileId());
 
 //		switch (cryptoKeyRole) {
 //			case backlinkKey:

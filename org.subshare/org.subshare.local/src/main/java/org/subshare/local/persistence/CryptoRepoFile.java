@@ -34,6 +34,7 @@ import org.subshare.core.dto.PermissionType;
 import org.subshare.core.io.InputStreamSource;
 import org.subshare.core.io.MultiInputStream;
 import org.subshare.core.sign.Signature;
+import org.subshare.core.sign.WriteProtected;
 
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
 import co.codewizards.cloudstore.core.dto.Uid;
@@ -70,7 +71,7 @@ import co.codewizards.cloudstore.local.persistence.RepoFile;
 			name="getCryptoRepoFileChangedAfter_localRevision_exclLastSyncFromRepositoryId",
 			value="SELECT WHERE this.localRevision > :localRevision && (this.lastSyncFromRepositoryId == null || this.lastSyncFromRepositoryId != :lastSyncFromRepositoryId)") // TODO this necessary == null is IMHO a DN bug!
 })
-public class CryptoRepoFile extends Entity implements WriteProtectedEntity, AutoTrackLocalRevision, StoreCallback {
+public class CryptoRepoFile extends Entity implements WriteProtected, AutoTrackLocalRevision, StoreCallback {
 
 	@Persistent(nullValue=NullValue.EXCEPTION)
 	@Column(length=22)
@@ -117,6 +118,10 @@ public class CryptoRepoFile extends Entity implements WriteProtectedEntity, Auto
 
 		return new Uid(cryptoRepoFileId);
 	}
+
+//	public static Uid getCryptoRepoFileId(final CryptoRepoFile cryptoRepoFile) {
+//		return cryptoRepoFile == null ? null : cryptoRepoFile.getCryptoRepoFileId();
+//	}
 
 	public CryptoRepoFile getParent() {
 		return parent;
@@ -364,8 +369,8 @@ public class CryptoRepoFile extends Entity implements WriteProtectedEntity, Auto
 	}
 
 	@Override
-	public CryptoRepoFile getCryptoRepoFileControllingPermissions() {
-		return this;
+	public Uid getCryptoRepoFileIdControllingPermissions() {
+		return assertNotNull("cryptoRepoFileId", this.getCryptoRepoFileId());
 	}
 
 	@Override

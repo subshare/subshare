@@ -23,6 +23,7 @@ import org.subshare.core.dto.PermissionType;
 import org.subshare.core.io.InputStreamSource;
 import org.subshare.core.io.MultiInputStream;
 import org.subshare.core.sign.Signature;
+import org.subshare.core.sign.WriteProtected;
 
 import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.local.persistence.AutoTrackLocalRevision;
@@ -35,7 +36,7 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 	@Query(name="getPermissionSetInheritance_permissionSetInheritanceId", value="SELECT UNIQUE WHERE this.permissionSetInheritanceId == :permissionSetInheritanceId"),
 	@Query(name="getPermissionSetInheritancesChangedAfter_localRevision", value="SELECT WHERE this.localRevision > :localRevision")
 })
-public class PermissionSetInheritance extends Entity implements WriteProtectedEntity, AutoTrackLocalRevision {
+public class PermissionSetInheritance extends Entity implements WriteProtected, AutoTrackLocalRevision {
 
 	@Persistent(nullValue=NullValue.EXCEPTION)
 	@Column(length=22)
@@ -162,10 +163,10 @@ public class PermissionSetInheritance extends Entity implements WriteProtectedEn
 	}
 
 	@Override
-	public CryptoRepoFile getCryptoRepoFileControllingPermissions() {
+	public Uid getCryptoRepoFileIdControllingPermissions() {
 		assertNotNull("permissionSet", permissionSet);
-		return assertNotNull("permissionSet.cryptoRepoFileControllingPermissions",
-				permissionSet.getCryptoRepoFileControllingPermissions());
+		return assertNotNull("permissionSet.cryptoRepoFileIdControllingPermissions",
+				permissionSet.getCryptoRepoFileIdControllingPermissions());
 	}
 
 	@Override
