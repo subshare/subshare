@@ -14,7 +14,7 @@ import org.subshare.core.repo.transport.CryptreeFileRepoTransport;
 import co.codewizards.cloudstore.core.repo.transport.RepoTransport;
 import co.codewizards.cloudstore.rest.server.service.AbstractServiceWithRepoToRepoAuth;
 
-@Path("_delete")
+@Path("_delete/{repositoryName}")
 @Consumes(MediaType.APPLICATION_XML)
 @Produces(MediaType.APPLICATION_XML)
 public class DeleteService extends AbstractServiceWithRepoToRepoAuth {

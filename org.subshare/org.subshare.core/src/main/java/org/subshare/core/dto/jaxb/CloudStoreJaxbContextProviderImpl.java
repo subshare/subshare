@@ -1,5 +1,6 @@
 package org.subshare.core.dto.jaxb;
 
+import org.subshare.core.dto.SsDeleteModificationDto;
 import org.subshare.core.dto.SsDirectoryDto;
 import org.subshare.core.dto.SsNormalFileDto;
 import org.subshare.core.dto.SsRequestRepoConnectionRepositoryDto;
@@ -35,6 +36,7 @@ public class CloudStoreJaxbContextProviderImpl extends AbstractCloudStoreJaxbCon
 	@Override
 	public Class<?>[] getClassesToBeBound() {
 		return new Class<?>[] {
+				SsDeleteModificationDto.class,
 				SsDirectoryDto.class,
 				SsNormalFileDto.class,
 				SsRequestRepoConnectionRepositoryDto.class,

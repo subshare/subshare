@@ -92,10 +92,12 @@ import co.codewizards.cloudstore.core.auth.SignatureException;
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
 import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
+import co.codewizards.cloudstore.core.util.StringUtil;
 import co.codewizards.cloudstore.local.persistence.LocalRepository;
 import co.codewizards.cloudstore.local.persistence.LocalRepositoryDao;
 import co.codewizards.cloudstore.local.persistence.RemoteRepository;
 import co.codewizards.cloudstore.local.persistence.RemoteRepositoryDao;
+import co.codewizards.cloudstore.local.persistence.RepoFile;
 
 public class CryptreeImpl extends AbstractCryptree {
 
@@ -145,6 +147,29 @@ public class CryptreeImpl extends AbstractCryptree {
 		final CryptoRepoFile cryptoRepoFile = cryptreeNode.getCryptoRepoFile();
 		assertNotNull("cryptoRepoFile", cryptoRepoFile);
 		return cryptoRepoFile.getServerPath();
+	}
+
+	@Override
+	public String getLocalPath(final String serverPath) {
+		assertNotNull("serverPath", serverPath);
+		if (StringUtil.isEmpty(serverPath))
+			throw new IllegalArgumentException("serverPath is empty"); // TODO do we need to support this? Is this the root? Shouldn't this be mapped to the local root [or more precisely the local connection-point]?!
+
+		// We don't actually need the complete serverPath as every single path-segment is a cryptoRepoFileId
+		// which is globally unique. Hence we're only interested in the last path-segment.
+		String cryptoRepoFileIdStr = serverPath;
+		while (cryptoRepoFileIdStr.endsWith("/"))
+			cryptoRepoFileIdStr = cryptoRepoFileIdStr.substring(0, cryptoRepoFileIdStr.length() - 1);
+
+		int lastSlashIndex = cryptoRepoFileIdStr.lastIndexOf('/');
+		if (lastSlashIndex >= 0)
+			cryptoRepoFileIdStr = cryptoRepoFileIdStr.substring(lastSlashIndex + 1);
+
+		final Uid cryptoRepoFileId = new Uid(cryptoRepoFileIdStr);
+		final CryptoRepoFile cryptoRepoFile = getCryptreeContext().getCryptoRepoFileOrFail(cryptoRepoFileId);
+		final RepoFile repoFile = cryptoRepoFile.getRepoFile();
+		final String localPath = repoFile.getPath();
+		return localPath;
 	}
 
 	@Override

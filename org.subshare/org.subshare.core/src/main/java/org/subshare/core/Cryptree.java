@@ -81,6 +81,7 @@ public interface Cryptree {
 	CryptoChangeSetDto getCryptoChangeSetDtoOrFail(String localPath);
 
 	String getServerPath(String localPath);
+	String getLocalPath(String serverPath);
 
 	/**
 	 * Gets a {@link CryptoChangeSetDto} with all those {@link CryptoRepoFileDto}s, {@link CryptoKeyDto}s

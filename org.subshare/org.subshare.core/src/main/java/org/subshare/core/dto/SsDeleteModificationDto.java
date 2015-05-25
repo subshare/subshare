@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 import org.subshare.core.io.InputStreamSource;
@@ -14,6 +15,7 @@ import org.subshare.core.sign.WriteProtected;
 import co.codewizards.cloudstore.core.dto.DeleteModificationDto;
 import co.codewizards.cloudstore.core.dto.Uid;
 
+@XmlRootElement
 public class SsDeleteModificationDto extends DeleteModificationDto implements WriteProtected {
 	public static final String SIGNED_DATA_TYPE = "DeleteModification";
 

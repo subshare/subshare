@@ -35,11 +35,13 @@ import org.subshare.core.io.LimitedInputStream;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.repo.transport.CryptreeRestRepoTransport;
 import org.subshare.core.sign.PgpSignableSigner;
+import org.subshare.core.sign.Signable;
 import org.subshare.core.sign.SignableSigner;
 import org.subshare.core.sign.SignableVerifier;
 import org.subshare.core.sign.Signature;
 import org.subshare.core.sign.SignerOutputStream;
 import org.subshare.core.sign.VerifierInputStream;
+import org.subshare.core.sign.WriteProtected;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKeyPublicKeyLookup;
 import org.subshare.core.user.UserRepoKeyRing;
@@ -48,6 +50,7 @@ import org.subshare.core.user.UserRepoKeyRingLookupContext;
 import org.subshare.rest.client.transport.request.SsBeginPutFile;
 import org.subshare.rest.client.transport.request.SsMakeDirectory;
 import org.subshare.rest.client.transport.request.CreateRepository;
+import org.subshare.rest.client.transport.request.Delete;
 import org.subshare.rest.client.transport.request.EndGetCryptoChangeSetDto;
 import org.subshare.rest.client.transport.request.GetCryptoChangeSetDto;
 import org.subshare.rest.client.transport.request.PutCryptoChangeSetDto;
@@ -179,11 +182,11 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 			decryptedChangeSetDto.setRepositoryDto(changeSetDto.getRepositoryDto());
 
 			for (final ModificationDto modificationDto : changeSetDto.getModificationDtos()) {
+				verifySignatureAndPermission(cryptree, signableVerifier, modificationDto);
+
 				final ModificationDto decryptedModificationDto = decryptModificationDto(cryptree, modificationDto);
 				if (decryptedModificationDto != null) // if it's null, it could not be decrypted (missing access rights?!) and should be ignored.
 					decryptedChangeSetDto.getModificationDtos().add(decryptedModificationDto);
-
-				// TODO verify signature of modificationDTO!
 			}
 
 			final Set<Long> nonDecryptableRepoFileIds = new HashSet<Long>();
@@ -215,6 +218,16 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 		}
 
 		return decryptedChangeSetDto;
+	}
+
+	private void verifySignatureAndPermission(final Cryptree cryptree, final SignableVerifier signableVerifier, final ModificationDto modificationDto) {
+		if (!(modificationDto instanceof Signable))
+			throw new IllegalArgumentException("modificationDto is not Signable: " + modificationDto); // We do not accept any unsigned data from the server! Server might be compromised!
+
+		if (modificationDto instanceof WriteProtected)
+			cryptree.assertSignatureOk((WriteProtected) modificationDto);
+		else
+			signableVerifier.verify((Signable) modificationDto);
 	}
 
 	/**
@@ -273,6 +286,7 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 			final Uid cryptoRepoFileId = repoFileDto.getName().isEmpty() ? cryptree.getRootCryptoRepoFileId() : new Uid(repoFileDto.getName());
 			cryptree.assertHasPermission(
 					cryptoRepoFileId, signature.getSigningUserRepoKeyId(), PermissionType.write, signature.getSignatureCreated());
+			// TODO wouldn't it be better to use cryptree.assertSignatureOk(...) instead?! Need to implement WriteProtected, of course...
 		} finally {
 			if (restoreVirtualRootName)
 				ssRepoFileDto.setName("");
@@ -327,8 +341,21 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 	}
 
 	private ModificationDto decryptModificationDto(final Cryptree cryptree, final ModificationDto modificationDto) {
-		// TODO implement this!
+		assertNotNull("modificationDto", modificationDto);
+
+		if (modificationDto instanceof SsDeleteModificationDto)
+			return decryptDeleteModificationDto(cryptree, (SsDeleteModificationDto) modificationDto);
+
+		// TODO implement this for other modifications.
 		throw new UnsupportedOperationException("NYI");
+	}
+
+	private ModificationDto decryptDeleteModificationDto(final Cryptree cryptree, final SsDeleteModificationDto modificationDto) {
+		assertNotNull("modificationDto", modificationDto);
+
+		final String localPath = cryptree.getLocalPath(modificationDto.getServerPath());
+		modificationDto.setPath(localPath);
+		return modificationDto;
 	}
 
 	private RepoFileDto decryptRepoFileDto(final Cryptree cryptree, final RepoFileDto repoFileDto) {
@@ -419,31 +446,22 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 	}
 
 	@Override
-	public void delete(SsDeleteModificationDto deleteModificationDto) {
+	public void delete(final SsDeleteModificationDto deleteModificationDto) {
 		try (final LocalRepoTransaction transaction = localRepoManager.beginReadTransaction();) {
 			final Cryptree cryptree = getCryptree(transaction);
 			cryptree.sign(deleteModificationDto);
+			deleteModificationDto.setPath(null); // path is *not* signed and *must* *not* be transferred to the server! It is secret!
 			transaction.commit();
 		}
-//		getClient().execute(request);
-		getRestRepoTransport().delete(deleteModificationDto.getServerPath()); // TODO send DTO to server!
+		getClient().execute(new Delete(getRepositoryId().toString(), deleteModificationDto));
 	}
 
 	@Override
 	public void delete(final String path) {
-		// This does not work, because the CryptoRepoFile was already deleted when the RepoFile was => not possible to
-		// determine serverPath anymore :-(
-		// TODO handle this differently!
-//		final LocalRepoManager localRepoManager = getLocalRepoManager();
-//		try (final LocalRepoTransaction transaction = localRepoManager.beginReadTransaction();) {
-//			final Cryptree cryptree = getCryptree(transaction);
-//			final String unprefixedServerPath = unprefixPath(cryptree.getServerPath(path)); // it's automatically prefixed *again*, thus we must prefix it here (if we don't want to somehow suppress the automatic prefixing, which is probably quite a lot of work).
-//			getRestRepoTransport().delete(unprefixedServerPath);
-//
-//			transaction.commit();
-//		}
-
-		throw new UnsupportedOperationException("NYI");
+		// Resolving the server-path from the local path here does not work, because the CryptoRepoFile was already deleted when
+		// the RepoFile was. That's why we register the server-path already at the deletion moment and store it in
+		// SsDeleteModificationDto.serverPath. This is then handled by delete(SsDeleteModificationDto) above.
+		throw new UnsupportedOperationException("Replaced by delete(SsDeleteModificationDto)!");
 	}
 
 	@Override
