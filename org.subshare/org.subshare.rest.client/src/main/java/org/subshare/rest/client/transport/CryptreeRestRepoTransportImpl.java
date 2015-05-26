@@ -48,9 +48,10 @@ import org.subshare.core.user.UserRepoKeyRing;
 import org.subshare.core.user.UserRepoKeyRingLookup;
 import org.subshare.core.user.UserRepoKeyRingLookupContext;
 import org.subshare.rest.client.transport.request.SsBeginPutFile;
+import org.subshare.rest.client.transport.request.SsDelete;
+import org.subshare.rest.client.transport.request.SsEndPutFile;
 import org.subshare.rest.client.transport.request.SsMakeDirectory;
 import org.subshare.rest.client.transport.request.CreateRepository;
-import org.subshare.rest.client.transport.request.Delete;
 import org.subshare.rest.client.transport.request.EndGetCryptoChangeSetDto;
 import org.subshare.rest.client.transport.request.GetCryptoChangeSetDto;
 import org.subshare.rest.client.transport.request.PutCryptoChangeSetDto;
@@ -60,6 +61,7 @@ import org.slf4j.LoggerFactory;
 import co.codewizards.cloudstore.core.auth.SignatureException;
 import co.codewizards.cloudstore.core.dto.ChangeSetDto;
 import co.codewizards.cloudstore.core.dto.ModificationDto;
+import co.codewizards.cloudstore.core.dto.NormalFileDto;
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
 import co.codewizards.cloudstore.core.dto.RepoFileDtoTreeNode;
 import co.codewizards.cloudstore.core.dto.RepositoryDto;
@@ -453,7 +455,7 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 			deleteModificationDto.setPath(null); // path is *not* signed and *must* *not* be transferred to the server! It is secret!
 			transaction.commit();
 		}
-		getClient().execute(new Delete(getRepositoryId().toString(), deleteModificationDto));
+		getClient().execute(new SsDelete(getRepositoryId().toString(), deleteModificationDto));
 	}
 
 	@Override
@@ -497,31 +499,44 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 
 	@Override
 	public void beginPutFile(final String path) {
+		throw new UnsupportedOperationException("Replaced by beginPutFile(String path, NormalFileDto fromNormalFileDto)!");
+	}
+
+	@Override
+	public void beginPutFile(final String path, NormalFileDto fromNormalFileDto) {
 		final LocalRepoManager localRepoManager = getLocalRepoManager();
 		try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
 			final Cryptree cryptree = getCryptree(transaction);
 			final CryptoChangeSetDto cryptoChangeSetDto = cryptree.createOrUpdateCryptoRepoFile(path);
 			putCryptoChangeSetDto(cryptoChangeSetDto);
 			cryptree.updateLastCryptoKeySyncToRemoteRepo();
-			final UserRepoKey userRepoKey = cryptree.getUserRepoKeyOrFail(path, PermissionType.write);
 
 			final String serverPath = cryptree.getServerPath(path);
-
-			final SsNormalFileDto normalFileDto = new SsNormalFileDto();
-
-			final File f = createFile(serverPath);
-			normalFileDto.setName(f.getName());
-
-			final File pf = f.getParentFile();
-			normalFileDto.setParentName(pf == null ? null : pf.getName());
-
-			final SignableSigner signableSigner = new SignableSigner(userRepoKey);
-			signableSigner.sign(normalFileDto);
-
-			getClient().execute(new SsBeginPutFile(getRepositoryId().toString(), serverPath, normalFileDto));
+			final SsNormalFileDto serverNormalFileDto = createNormalFileDtoForPutFile(cryptree, path, serverPath, fromNormalFileDto.getLength());
+			getClient().execute(new SsBeginPutFile(getRepositoryId().toString(), serverPath, serverNormalFileDto));
 
 			transaction.commit();
 		}
+	}
+
+	protected SsNormalFileDto createNormalFileDtoForPutFile(final Cryptree cryptree, final String localPath, final String serverPath, long length) {
+		final UserRepoKey userRepoKey = cryptree.getUserRepoKeyOrFail(localPath, PermissionType.write);
+
+		final SsNormalFileDto normalFileDto = new SsNormalFileDto();
+
+		final File f = createFile(serverPath);
+		normalFileDto.setName(f.getName());
+
+		final File pf = f.getParentFile();
+		normalFileDto.setParentName(pf == null ? null : pf.getName());
+
+		final SignableSigner signableSigner = new SignableSigner(userRepoKey);
+		signableSigner.sign(normalFileDto);
+
+		// Calculating the SHA1 of the encrypted data is too complicated and unnecessary. We thus omit it (now optional in CloudStore).
+		final long serverLength = getServerOffset(length) + 65535; // TODO remove this (both multiplication + addition) as soon as we store the chunks individually on the server!
+		normalFileDto.setLength(serverLength);
+		return normalFileDto;
 	}
 
 	@Override
@@ -539,6 +554,33 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 			// Temporarily, we simply multiply the offset with a margin in order to have some reserve.
 			final String unprefixedServerPath = unprefixPath(cryptree.getServerPath(path)); // it's automatically prefixed *again*, thus we must prefix it here (if we don't want to somehow suppress the automatic prefixing, which is probably quite a lot of work).
 			getRestRepoTransport().putFileData(unprefixedServerPath, getServerOffset(offset), encryptedFileData);
+
+			transaction.commit();
+		}
+	}
+
+	@Override
+	public void endPutFile(final String path, final Date lastModified, final long length, final String sha1) {
+		throw new UnsupportedOperationException("Replaced by endPutFile(String path, NormalFileDto fromNormalFileDto)!");
+	}
+
+	@Override
+	public void endPutFile(final String path, final NormalFileDto fromNormalFileDto) {
+		// TODO handle path correctly => pathPrefix on both sides possible!!!
+		final LocalRepoManager localRepoManager = getLocalRepoManager();
+		try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
+			final Cryptree cryptree = getCryptree(transaction);
+			final CryptoChangeSetDto cryptoChangeSetDto = cryptree.getCryptoChangeSetDtoOrFail(path);
+			putCryptoChangeSetDto(cryptoChangeSetDto);
+			cryptree.updateLastCryptoKeySyncToRemoteRepo();
+
+//			// Calculating the SHA1 of the encrypted data is too complicated and unnecessary. We thus omit it (now optional in CloudStore).
+//			final String unprefixedServerPath = unprefixPath(cryptree.getServerPath(path)); // it's automatically prefixed *again*, thus we must prefix it here (if we don't want to somehow suppress the automatic prefixing, which is probably quite a lot of work).
+//			final long serverLength = getServerOffset(length) + 65535; // TODO remove this (both multiplication + addition) as soon as we store the chunks individually on the server!
+//			getRestRepoTransport().endPutFile(unprefixedServerPath, new Date(0), serverLength, null);
+			final String serverPath = cryptree.getServerPath(path);
+			final SsNormalFileDto serverNormalFileDto = createNormalFileDtoForPutFile(cryptree, path, serverPath, fromNormalFileDto.getLength());
+			getClient().execute(new SsEndPutFile(getRepositoryId().toString(), serverPath, serverNormalFileDto));
 
 			transaction.commit();
 		}
@@ -626,25 +668,6 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 	private static long getServerOffset(final long plainOffset) {
 		// 10 % buffer should be sufficient - for now.
 		return plainOffset * 110 / 100;
-	}
-
-	@Override
-	public void endPutFile(final String path, final Date lastModified, final long length, final String sha1) {
-		// TODO handle path correctly => pathPrefix on both sides possible!!!
-		final LocalRepoManager localRepoManager = getLocalRepoManager();
-		try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
-			final Cryptree cryptree = getCryptree(transaction);
-			final CryptoChangeSetDto cryptoChangeSetDto = cryptree.getCryptoChangeSetDtoOrFail(path);
-			putCryptoChangeSetDto(cryptoChangeSetDto);
-			cryptree.updateLastCryptoKeySyncToRemoteRepo();
-
-			// Calculating the SHA1 of the encrypted data is too complicated. We thus omit it (now optional in CloudStore).
-			final String unprefixedServerPath = unprefixPath(cryptree.getServerPath(path)); // it's automatically prefixed *again*, thus we must prefix it here (if we don't want to somehow suppress the automatic prefixing, which is probably quite a lot of work).
-			final long serverLength = getServerOffset(length) + 65535; // TODO remove this (both multiplication + addition) as soon as we store the chunks individually on the server!
-			getRestRepoTransport().endPutFile(unprefixedServerPath, new Date(0), serverLength, null);
-
-			transaction.commit();
-		}
 	}
 
 	private void putCryptoChangeSetDto(final CryptoChangeSetDto cryptoChangeSetDto) {

@@ -20,6 +20,7 @@ import org.subshare.local.persistence.InvitationUserRepoKeyPublicKey;
 import org.subshare.local.persistence.UserRepoKeyPublicKey;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyDao;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,13 +55,77 @@ public class RepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 		syncFromRemoteToLocalDest();
 	}
 
-//	@Ignore("Still working on this - will probably take a bit longer...")
 	@Test
 	public void syncFromLocalToRemoteToLocalThenDeleteFileAndSyncAgain() throws Exception {
 		syncFromLocalToRemoteToLocal();
 
+		// SsDelete file /2/a in local source repository and sync this deletion.
 		final File child_2 = createFile(localSrcRoot, "2");
 		final File child_2_a = createFile(child_2, "a");
+		assertThat(child_2_a.exists()).isTrue();
+
+		child_2_a.delete();
+
+		assertThat(child_2_a.exists()).isFalse();
+
+		syncFromLocalSrcToRemote();
+		syncFromRemoteToLocalDest();
+	}
+
+//	@Override
+//	protected void populateLocalSourceRepo() throws Exception {
+//		final LocalRepoManager localRepoManagerLocal = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(localSrcRoot);
+//
+////		final File child_1 = createDirectory(localSrcRoot, "1 {11 11ä11} 1");
+////
+////		createFileWithRandomContent(child_1, "a");
+////		createFileWithRandomContent(child_1, "b");
+////		createFileWithRandomContent(child_1, "c");
+//
+//		final File child_2 = createDirectory(localSrcRoot, "2");
+//
+//		createFileWithRandomContent(child_2, "a");
+//
+////		final File child_2_1 = createDirectory(child_2, "1 {11 11ä11} 1");
+////		createFileWithRandomContent(child_2_1, "a");
+////		createFileWithRandomContent(child_2_1, "b");
+////
+////		final File child_3 = createDirectory(localSrcRoot, "3 + &#ä");
+////
+////		createFileWithRandomContent(child_3, "aa");
+////		createFileWithRandomContent(child_3, "bb");
+////		createFileWithRandomContent(child_3, "cc");
+////		createFileWithRandomContent(child_3, "dd");
+////
+////		final File child_3_5 = createDirectory(child_3, "5");
+////		createFileWithRandomContent(child_3_5, "h");
+////		createFileWithRandomContent(child_3_5, "i");
+//
+//		localRepoManagerLocal.localSync(new LoggerProgressMonitor(logger));
+//		localRepoManagerLocal.close();
+//	}
+
+	@Ignore("Still working on this - collisions are still not supported!")
+	@Test
+	public void syncFromLocalToRemoteToLocalThenCauseDeleteCollisionOnServerDuringUpSync() throws Exception {
+		syncFromLocalToRemoteToLocal();
+
+		syncFromRemoteToLocalDest(false);
+		syncFromRemoteToLocalDest(false);
+		syncFromRemoteToLocalDest(false);
+
+		// 2 modifications:
+		// 1) change file /2/a in local destination repo and sync
+		File child_2 = createFile(localDestRoot, "2");
+		File child_2_a = createFile(child_2, "a");
+		assertThat(child_2_a.exists()).isTrue();
+
+		child_2_a.delete(); createFileWithRandomContent(child_2_a);
+		syncFromRemoteToLocalDest(false);
+
+		// 2) delete file /2/a in local source repo and sync
+		child_2 = createFile(localSrcRoot, "2");
+		child_2_a = createFile(child_2, "a");
 		assertThat(child_2_a.exists()).isTrue();
 
 		child_2_a.delete();

@@ -8,6 +8,7 @@ import javax.ws.rs.ApplicationPath;
 
 import org.subshare.rest.server.service.SsBeginPutFileService;
 import org.subshare.rest.server.service.SsChangeSetDtoService;
+import org.subshare.rest.server.service.SsEndPutFileService;
 import org.subshare.rest.server.service.SsMakeDirectoryService;
 import org.subshare.rest.server.service.SsRequestRepoConnectionService;
 import org.subshare.rest.server.service.SsWebDavService;
@@ -23,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import co.codewizards.cloudstore.rest.server.CloudStoreRest;
 import co.codewizards.cloudstore.rest.server.service.BeginPutFileService;
 import co.codewizards.cloudstore.rest.server.service.ChangeSetDtoService;
+import co.codewizards.cloudstore.rest.server.service.EndPutFileService;
 import co.codewizards.cloudstore.rest.server.service.MakeDirectoryService;
 import co.codewizards.cloudstore.rest.server.service.RequestRepoConnectionService;
 import co.codewizards.cloudstore.rest.server.service.WebDavService;
@@ -39,6 +41,7 @@ public class SubShareRest extends CloudStoreRest {
 		final HashMap<Class<?>, Class<?>> m = new HashMap<>();
 
 		m.put(BeginPutFileService.class, SsBeginPutFileService.class);
+		m.put(EndPutFileService.class, SsEndPutFileService.class);
 		m.put(ChangeSetDtoService.class, SsChangeSetDtoService.class);
 		m.put(MakeDirectoryService.class, SsMakeDirectoryService.class);
 		m.put(RequestRepoConnectionService.class, SsRequestRepoConnectionService.class);
