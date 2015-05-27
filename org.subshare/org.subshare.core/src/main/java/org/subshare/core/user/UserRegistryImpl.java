@@ -41,8 +41,10 @@ public class UserRegistryImpl implements UserRegistry {
 	private Map<Uid, User> cache_userRepoKeyId2User;
 	private Map<Uid, User> cache_userId2User;
 
-	private final File userListFile;
+	private final File userRegistryFile;
 	private boolean dirty;
+
+	private Uid version;
 
 	private static final class Holder {
 		public static final UserRegistryImpl instance = new UserRegistryImpl();
@@ -53,30 +55,41 @@ public class UserRegistryImpl implements UserRegistry {
 	}
 
 	protected UserRegistryImpl() {
-		userListFile = createFile(ConfigDir.getInstance().getFile(), USER_REGISTRY_FILE_NAME);
-		readUserListFile();
+		userRegistryFile = createFile(ConfigDir.getInstance().getFile(), USER_REGISTRY_FILE_NAME);
+		readUserRegistryFile();
 		readPgpUsers();
 		writeIfNeeded();
 	}
 
-	protected void readUserListFile() {
+	protected File getUserRegistryFile() {
+		return userRegistryFile;
+	}
+
+	protected void readUserRegistryFile() {
+		Uid version = null;
 		final UserDtoConverter userDtoConverter = new UserDtoConverter();
 		try (LockFile lockFile = acquireLockFile();) {
 			lockFile.getLock().lock();
 			try {
-				if (userListFile.exists()) {
+				if (userRegistryFile.exists()) {
 					final UserRegistryDtoIo userRegistryDtoIo = new UserRegistryDtoIo();
-					final UserRegistryDto userRegistryDto = userRegistryDtoIo.deserializeWithGz(userListFile);
+					final UserRegistryDto userRegistryDto = userRegistryDtoIo.deserializeWithGz(userRegistryFile);
 					for (final UserDto userDto : userRegistryDto.getUserDtos()) {
 						final User user = userDtoConverter.fromUserDto(userDto);
 						addUser(user);
 					}
+					version = userRegistryDto.getVersion();
 				}
 			} finally {
 				lockFile.getLock().unlock();
 			}
 		}
 		dirty = false;
+		this.version = version != null ? version : new Uid();
+	}
+
+	public Uid getVersion() {
+		return assertNotNull("version", version);
 	}
 
 	protected synchronized void readPgpUsers() {
@@ -226,7 +239,7 @@ public class UserRegistryImpl implements UserRegistry {
 		user.addPropertyChangeListener(userPropertyChangeListener);
 
 		cleanCache();
-		dirty = true;
+		markDirty();
 	}
 
 	@Override
@@ -307,12 +320,17 @@ public class UserRegistryImpl implements UserRegistry {
 			final User user = (User) evt.getSource();
 			assertNotNull("user", user);
 
-			dirty = true;
+			markDirty();
 			cleanCache();
 		}
 	};
 
-	private LockFile acquireLockFile() {
+	protected void markDirty() {
+		dirty = true;
+		version = new Uid();
+	}
+
+	protected LockFile acquireLockFile() {
 		final File dir = ConfigDir.getInstance().getFile();
 		return LockFileFactory.getInstance().acquire(createFile(dir, USER_REGISTRY_FILE_LOCK), 30000);
 	}
@@ -331,10 +349,10 @@ public class UserRegistryImpl implements UserRegistry {
 		try (LockFile lockFile = acquireLockFile();) {
 			lockFile.getLock().lock();
 			try {
-				final File newUserListFile = createFile(userListFile.getParentFile(), userListFile.getName() + ".new");
+				final File newUserListFile = createFile(userRegistryFile.getParentFile(), userRegistryFile.getName() + ".new");
 				userRegistryDtoIo.serializeWithGz(userRegistryDto, newUserListFile);
-				userListFile.delete();
-				newUserListFile.renameTo(userListFile);
+				userRegistryFile.delete();
+				newUserListFile.renameTo(userRegistryFile);
 			} finally {
 				lockFile.getLock().unlock();
 			}

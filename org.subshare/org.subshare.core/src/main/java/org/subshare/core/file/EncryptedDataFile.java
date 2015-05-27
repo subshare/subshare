@@ -125,12 +125,14 @@ public class EncryptedDataFile {
 
 	public void write(final OutputStream out) throws IOException {
 		assertNotNull("out", out);
-		ZipOutputStream zout = new ZipOutputStream(new NoCloseOutputStream(out));
+		final ZipOutputStream zout = new ZipOutputStream(new NoCloseOutputStream(out));
 
 		final byte[] manifestData = createManifestData();
 		zout.putNextEntry(createManifestZipEntry(manifestData));
 		zout.write(manifestData);
 		zout.closeEntry();
+
+		signManifestData(zout, manifestData);
 
 		for (final Map.Entry<String, byte[]> me : name2ByteArray.entrySet()) {
 			zout.putNextEntry(new ZipEntry(me.getKey()));
@@ -138,6 +140,15 @@ public class EncryptedDataFile {
 			zout.closeEntry();
 		}
 		zout.close();
+	}
+
+	protected void signManifestData(final ZipOutputStream zout, final byte[] manifestData) {
+		// TODO implement this - either here or in a sub-class!
+//		Pgp pgp = null;
+//		final PgpEncoder encoder = pgp.createEncoder(new ByteArrayInputStream(manifestData), new NullOutputStream());
+//		final ByteArrayOutputStream out = new ByteArrayOutputStream();
+//		encoder.setSignOutputStream(out);
+//		encoder.setSignPgpKey(pgpKey);
 	}
 
 	private ZipEntry createManifestZipEntry(final byte[] manifestData) {

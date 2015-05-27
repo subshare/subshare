@@ -17,10 +17,10 @@ public interface PgpTransport extends AutoCloseable {
 	PgpTransportFactory getPgpTransportFactory();
 	/**
 	 * Sets the factory which created this instance.
-	 * @param repoTransportFactory the factory which created this instance. Must not be <code>null</code>.
+	 * @param factory the factory which created this instance. Must not be <code>null</code>.
 	 * @see #getPgpTransportFactory()
 	 */
-	void setPgpTransportFactory(PgpTransportFactory repoTransportFactory);
+	void setPgpTransportFactory(PgpTransportFactory factory);
 
 	URL getUrl();
 

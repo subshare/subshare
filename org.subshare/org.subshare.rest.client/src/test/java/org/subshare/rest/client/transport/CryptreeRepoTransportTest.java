@@ -115,7 +115,7 @@ public class CryptreeRepoTransportTest {
 		}
 
 		@Override
-		protected void readUserListFile() {
+		protected void readUserRegistryFile() {
 			// nothing
 		}
 		@Override

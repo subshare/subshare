@@ -5,6 +5,8 @@ import java.util.List;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
+import co.codewizards.cloudstore.core.dto.Uid;
+
 @XmlRootElement
 public class UserRegistryDto {
 
@@ -13,6 +15,8 @@ public class UserRegistryDto {
 	private List<DeletedUid> deletedUserIds;
 
 	private List<DeletedUid> deletedUserRepoKeyIds;
+
+	private Uid version;
 
 	public List<UserDto> getUserDtos() {
 		if (userDtos == null)
@@ -42,5 +46,12 @@ public class UserRegistryDto {
 	}
 	public void setDeletedUserRepoKeyIds(List<DeletedUid> deletedUserRepoKeyIds) {
 		this.deletedUserRepoKeyIds = deletedUserRepoKeyIds;
+	}
+
+	public Uid getVersion() {
+		return version;
+	}
+	public void setVersion(Uid version) {
+		this.version = version;
 	}
 }

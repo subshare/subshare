@@ -111,7 +111,7 @@ public class PgpSync implements AutoCloseable {
 	private PgpTransport getLocalPgpTransport() {
 		if (localPgpTransport == null) {
 			final PgpTransportFactoryRegistry pgpTransportFactoryRegistry = PgpTransportFactoryRegistry.getInstance();
-			final PgpTransportFactory pgpTransportFactory = pgpTransportFactoryRegistry.getPgpTransportFactoryOrFail(LocalPgpTransportFactory.class);
+			final PgpTransportFactory pgpTransportFactory = pgpTransportFactoryRegistry.getPgpTransportFactoryOrFail(LocalPgpTransportFactory.LOCAL_URL);
 			localPgpTransport = pgpTransportFactory.createPgpTransport(LocalPgpTransportFactory.LOCAL_URL);
 		}
 		return localPgpTransport;
@@ -173,7 +173,6 @@ public class PgpSync implements AutoCloseable {
 	public void close() {
 		final PgpTransport lpt = localPgpTransport;
 		localPgpTransport = null;
-
 		if (lpt != null)
 			lpt.close();
 

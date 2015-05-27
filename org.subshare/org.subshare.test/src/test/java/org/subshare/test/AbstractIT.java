@@ -123,7 +123,7 @@ public abstract class AbstractIT {
 		}
 
 		@Override
-		protected void readUserListFile() {
+		protected void readUserRegistryFile() {
 			// nothing
 		}
 		@Override
