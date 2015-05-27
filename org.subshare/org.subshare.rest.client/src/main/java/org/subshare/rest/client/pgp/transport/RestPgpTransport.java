@@ -8,16 +8,18 @@ import java.io.OutputStream;
 import java.security.GeneralSecurityException;
 import java.util.Set;
 
+import javax.ws.rs.client.ClientBuilder;
+
 import org.subshare.core.pgp.PgpKeyId;
 import org.subshare.core.pgp.transport.AbstractPgpTransport;
 import org.subshare.rest.client.pgp.transport.request.GetLocalRevisionRequest;
 import org.subshare.rest.client.pgp.transport.request.GetPgpPublicKeys;
 import org.subshare.rest.client.pgp.transport.request.PutPgpPublicKeys;
 
+import co.codewizards.cloudstore.rest.client.ClientBuilderDefaultValuesDecorator;
 import co.codewizards.cloudstore.rest.client.CloudStoreRestClient;
 import co.codewizards.cloudstore.rest.client.CredentialsProvider;
 import co.codewizards.cloudstore.rest.client.ssl.DynamicX509TrustManagerCallback;
-import co.codewizards.cloudstore.rest.client.ssl.HostnameVerifierAllowingAll;
 import co.codewizards.cloudstore.rest.client.ssl.SSLContextBuilder;
 
 public class RestPgpTransport extends AbstractPgpTransport {
@@ -46,19 +48,24 @@ public class RestPgpTransport extends AbstractPgpTransport {
 
 	protected CloudStoreRestClient getClient() {
 		if (client == null) {
-			final CloudStoreRestClient c = new CloudStoreRestClient(getUrl());
-			c.setHostnameVerifier(new HostnameVerifierAllowingAll());
-			try {
-				c.setSslContext(SSLContextBuilder.create()
-						.remoteURL(getUrl())
-						.callback(getDynamicX509TrustManagerCallback()).build());
-			} catch (final GeneralSecurityException e) {
-				throw new RuntimeException(e);
-			}
+			final ClientBuilder clientBuilder = createClientBuilder();
+			final CloudStoreRestClient c = new CloudStoreRestClient(getUrl(), clientBuilder);
 			c.setCredentialsProvider(nullCredentialsProvider);
 			client = c;
 		}
 		return client;
+	}
+
+	private ClientBuilder createClientBuilder(){
+		final ClientBuilder builder = new ClientBuilderDefaultValuesDecorator();
+		try {
+			builder.sslContext(SSLContextBuilder.create()
+					.remoteURL(getUrl())
+					.callback(getDynamicX509TrustManagerCallback()).build());
+		} catch (final GeneralSecurityException e) {
+			throw new RuntimeException(e);
+		}
+		return builder;
 	}
 
 	private final CredentialsProvider nullCredentialsProvider = new CredentialsProvider() {
