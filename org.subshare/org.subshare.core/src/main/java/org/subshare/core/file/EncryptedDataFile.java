@@ -11,9 +11,11 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.zip.CRC32;
@@ -22,10 +24,17 @@ import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 import org.bouncycastle.util.io.Streams;
+import org.subshare.core.io.NullOutputStream;
+import org.subshare.core.pgp.Pgp;
+import org.subshare.core.pgp.PgpDecoder;
+import org.subshare.core.pgp.PgpEncoder;
+import org.subshare.core.pgp.PgpKey;
+import org.subshare.core.pgp.PgpRegistry;
+import org.subshare.core.pgp.PgpSignature;
 
+import co.codewizards.cloudstore.core.auth.SignatureException;
 import co.codewizards.cloudstore.core.io.NoCloseInputStream;
 import co.codewizards.cloudstore.core.io.NoCloseOutputStream;
-
 
 public class EncryptedDataFile {
 	public static final String CONTENT_TYPE_VALUE = "application/vnd.subshare.encrypted";
@@ -59,6 +68,10 @@ public class EncryptedDataFile {
 		assertNotNull("name", name);
 		assertNotNull("data", data);
 		name2ByteArray.put(name, data);
+	}
+
+	public Set<String> getDataNames() {
+		return Collections.unmodifiableSet(name2ByteArray.keySet());
 	}
 
 	public byte[] getData(final String name) {
@@ -135,20 +148,64 @@ public class EncryptedDataFile {
 		signManifestData(zout, manifestData);
 
 		for (final Map.Entry<String, byte[]> me : name2ByteArray.entrySet()) {
-			zout.putNextEntry(new ZipEntry(me.getKey()));
+			final String name = me.getKey();
+			zout.putNextEntry(new ZipEntry(name));
 			zout.write(me.getValue());
 			zout.closeEntry();
 		}
 		zout.close();
 	}
 
-	protected void signManifestData(final ZipOutputStream zout, final byte[] manifestData) {
-		// TODO implement this - either here or in a sub-class!
-//		Pgp pgp = null;
-//		final PgpEncoder encoder = pgp.createEncoder(new ByteArrayInputStream(manifestData), new NullOutputStream());
-//		final ByteArrayOutputStream out = new ByteArrayOutputStream();
-//		encoder.setSignOutputStream(out);
-//		encoder.setSignPgpKey(pgpKey);
+	private PgpKey signPgpKey;
+
+	public PgpKey getSignPgpKey() {
+		return signPgpKey;
+	}
+	public void setSignPgpKey(PgpKey signPgpKey) {
+		this.signPgpKey = signPgpKey;
+	}
+
+	protected void signManifestData(final ZipOutputStream zout, final byte[] manifestData) throws IOException {
+		final PgpKey signPgpKey = getSignPgpKey();
+		if (signPgpKey == null) {
+			final byte[] detachedSignatureData = name2ByteArray.get(MANIFEST_PROPERTIES_SIGNATURE_FILE_NAME);
+			if (detachedSignatureData != null) {
+				if (!isSignatureValid(manifestData, detachedSignatureData))
+					name2ByteArray.remove(MANIFEST_PROPERTIES_SIGNATURE_FILE_NAME);
+			}
+			return;
+		}
+
+		final Pgp pgp = PgpRegistry.getInstance().getPgpOrFail();
+		final PgpEncoder encoder = pgp.createEncoder(new ByteArrayInputStream(manifestData), new NullOutputStream());
+		final ByteArrayOutputStream out = new ByteArrayOutputStream();
+		encoder.setSignOutputStream(out);
+		encoder.setSignPgpKey(signPgpKey);
+		encoder.encode();
+
+		final byte[] detachedSignatureData = out.toByteArray();
+		name2ByteArray.put(MANIFEST_PROPERTIES_SIGNATURE_FILE_NAME, detachedSignatureData);
+	}
+
+	private boolean isSignatureValid(final byte[] signedData, final byte[] detachedSignatureData) {
+		assertNotNull("signedData", signedData);
+		assertNotNull("detachedSignatureData", detachedSignatureData);
+		try {
+			assertSignatureValid(signedData, detachedSignatureData);
+			return true;
+		} catch (SignatureException | IOException x) {
+			return false;
+		}
+	}
+
+	private PgpSignature assertSignatureValid(final byte[] signedData, final byte[] detachedSignatureData) throws SignatureException, IOException {
+		assertNotNull("signedData", signedData);
+		assertNotNull("detachedSignatureData", detachedSignatureData);
+		final Pgp pgp = PgpRegistry.getInstance().getPgpOrFail();
+		final PgpDecoder decoder = pgp.createDecoder(new ByteArrayInputStream(signedData), new NullOutputStream());
+		decoder.setSignInputStream(new ByteArrayInputStream(detachedSignatureData));
+		decoder.decode();
+		return decoder.getPgpSignature();
 	}
 
 	private ZipEntry createManifestZipEntry(final byte[] manifestData) {
@@ -188,6 +245,29 @@ public class EncryptedDataFile {
 		return out.toByteArray();
 	}
 
+	public boolean isManifestSigned() {
+		return name2ByteArray.get(MANIFEST_PROPERTIES_SIGNATURE_FILE_NAME) != null;
+	}
+
+	public PgpSignature assertManifestSignatureValid() throws SignatureException {
+		final byte[] manifestSignatureData = name2ByteArray.get(MANIFEST_PROPERTIES_SIGNATURE_FILE_NAME);
+		if (manifestSignatureData == null)
+			throw new SignatureException(String.format("There is no signature! No entry named '%s' found!", MANIFEST_PROPERTIES_SIGNATURE_FILE_NAME));
+
+		final byte[] manifestData;
+		try {
+			manifestData = createManifestData();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+
+		try {
+			return assertSignatureValid(manifestData, manifestSignatureData);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	private SortedMap<String, String> createSortedManifestProperties() {
 		final TreeMap<String, String> result = new TreeMap<String, String>();
 		for (final Map.Entry<Object, Object> me : manifestProperties.entrySet())
@@ -206,5 +286,4 @@ public class EncryptedDataFile {
 		w.write(value);
 		w.write('\n');
 	}
-
 }

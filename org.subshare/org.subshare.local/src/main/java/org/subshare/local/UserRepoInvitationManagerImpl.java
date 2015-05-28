@@ -159,9 +159,11 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 		final PgpDecoder pgpDecoder = getPgpOrFail().createDecoder(new ByteArrayInputStream(defaultData), out);
 		try {
 			pgpDecoder.decode();
-		} catch (final SignatureException | IOException e) {
+		} catch (final IOException e) {
 			throw new RuntimeException(e);
 		}
+		if (pgpDecoder.getPgpSignature() == null)
+			throw new SignatureException("Missing signature!");
 
 		final UserRepoInvitation userRepoInvitation = fromUserRepoInvitationData(out.toByteArray());
 		importUserRepoInvitation(userRepoInvitation);
@@ -462,6 +464,9 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 		final PgpDecoder decoder = getPgpOrFail().createDecoder(new ByteArrayInputStream(encryptedSignedPrivateKeyData), out);
 		try {
 			decoder.decode();
+			if (decoder.getPgpSignature() == null)
+				throw new SignatureException("Missing signature!");
+
 			return decoder.getDecryptPgpKey();
 		} catch (final IOException e) {
 			throw new RuntimeException(e);

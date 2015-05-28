@@ -137,6 +137,9 @@ public class UserRepoKey {
 		final PgpDecoder decoder = PgpRegistry.getInstance().getPgpOrFail().createDecoder(new ByteArrayInputStream(encryptedSignedPrivateKeyData), out);
 		try {
 			decoder.decode();
+			if (decoder.getPgpSignature() == null)
+				throw new SignatureException("Missing signature!");
+
 			final byte[] privateKeyData = out.toByteArray();
 			final AsymmetricKeyParameter privateKey = CryptoRegistry.getInstance().decodePrivateKey(privateKeyData);
 			return privateKey;
@@ -172,6 +175,9 @@ public class UserRepoKey {
 		final PgpDecoder decoder = PgpRegistry.getInstance().getPgpOrFail().createDecoder(new ByteArrayInputStream(signedPublicKeyData), out);
 		try {
 			decoder.decode();
+			if (decoder.getPgpSignature() == null)
+				throw new SignatureException("Missing signature!");
+
 			final byte[] publicKeyData = out.toByteArray();
 			final AsymmetricKeyParameter publicKey = CryptoRegistry.getInstance().decodePublicKey(publicKeyData);
 			return publicKey;

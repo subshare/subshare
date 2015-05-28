@@ -39,7 +39,7 @@ public class UserRegistryLockerFile extends FileLockerContent {
 	}
 
 	@Override
-	public void merge(byte[] serverData) throws IOException {
+	public void mergeFrom(byte[] serverData) throws IOException {
 		// TODO Auto-generated method stub
 
 	}

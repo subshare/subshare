@@ -23,7 +23,10 @@ import org.subshare.core.locker.transport.LockerTransport;
 import org.subshare.core.locker.transport.LockerTransportFactory;
 import org.subshare.core.locker.transport.LockerTransportFactoryRegistry;
 import org.subshare.core.locker.transport.local.LocalLockerTransportFactory;
+import org.subshare.core.pgp.Pgp;
+import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpKeyId;
+import org.subshare.core.pgp.PgpRegistry;
 import org.subshare.core.pgp.man.PgpPrivateKeyPassphraseStoreImpl;
 import org.subshare.core.server.Server;
 
@@ -45,67 +48,80 @@ public class LockerSync implements AutoCloseable {
 	private File lockerSyncPropertiesFile;
 	private Properties lockerSyncProperties;
 
-	private final String lastSyncServerVersionsPropertyKey;
+	private PgpKey pgpKey;
 
 	public LockerSync(final Server server) {
 		this.server = assertNotNull("server", server);
 		this.serverId = assertNotNull("server.serverId", this.server.getServerId());
 		this.serverUrl = assertNotNull("server.url", this.server.getUrl());
-
-		lastSyncServerVersionsPropertyKey = String.format("lastSync[serverId=%s].server.version", serverId);
 	}
 
 	public void sync() {
+		pgpKey = null;
 		final Set<PgpKeyId> pgpKeyIds = PgpPrivateKeyPassphraseStoreImpl.getInstance().getPgpKeyIdsHavingPassphrase();
-
+		final Pgp pgp = PgpRegistry.getInstance().getPgpOrFail();
 		for (final LockerContent lockerContent : getLockerContents()) {
-			getLocalLockerTransport().setPgpKeyIds(pgpKeyIds);
-			getServerLockerTransport().setPgpKeyIds(pgpKeyIds);
 			getLocalLockerTransport().setLockerContent(lockerContent);
 			getServerLockerTransport().setLockerContent(lockerContent);
 
-			final List<Uid> localVersions = getLocalLockerTransport().getVersions();
-			if (localVersions.size() != 1)
-				throw new IllegalStateException("localVersions.size() != 1");
+			for (final PgpKeyId pgpKeyId : pgpKeyIds) {
+				pgpKey = pgp.getPgpKey(pgpKeyId);
+				if (pgpKey == null)
+					throw new IllegalStateException("PgpKey not found: " + pgpKeyId);
 
-			final Uid localVersion = localVersions.get(0);
+				getLocalLockerTransport().setPgpKey(pgpKey);
+				getServerLockerTransport().setPgpKey(pgpKey);
 
-			boolean syncUpNeeded = false;
+				final List<Uid> localVersions = getLocalLockerTransport().getVersions();
+				if (localVersions.size() != 1)
+					throw new IllegalStateException("localVersions.size() != 1");
 
-			List<Uid> serverVersions = getServerLockerTransport().getVersions();
-			if (serverVersions.size() > 1) {
-				syncUpNeeded = true;
-				serverVersions = syncDown(serverVersions); // replace serverVersions by the ones actually synced (might have changed in the meantime).
-			}
-			else if (serverVersions.isEmpty())
-				doNothing(); // if there's nothing on the server, it obviously makes no sense to sync down.
-			else {
-				final Set<Uid> lastSyncServerVersions = new HashSet<>(getLastSyncServerVersions());
-				final Set<Uid> serverVersionsSet = new HashSet<>(serverVersions);
-				if (!serverVersionsSet.equals(lastSyncServerVersions)) {
+				final Uid localVersion = localVersions.get(0);
+
+				boolean syncUpNeeded = false;
+
+				List<Uid> serverVersions = getServerLockerTransport().getVersions();
+				if (serverVersions.size() > 1) {
 					syncUpNeeded = true;
-					serverVersions = syncDown(serverVersions); // replace serverVersions by the ones actually synced (might have changed in the meantime).
+					serverVersions = syncDown(); // replace serverVersions by the ones actually synced (might have changed in the meantime).
 				}
-			}
+				else if (serverVersions.isEmpty())
+					doNothing(); // if there's nothing on the server, it obviously makes no sense to sync down.
+				else {
+					final Set<Uid> lastSyncServerVersions = new HashSet<>(getLastSyncServerVersions());
+					final Set<Uid> serverVersionsSet = new HashSet<>(serverVersions);
+					if (!serverVersionsSet.equals(lastSyncServerVersions)) {
+						syncUpNeeded = true;
+						serverVersions = syncDown(); // replace serverVersions by the ones actually synced (might have changed in the meantime).
+					}
+				}
 
-			if (!syncUpNeeded) {
-				if (serverVersions.size() != 1)
-					syncUpNeeded = true;
-				else
-					syncUpNeeded = !localVersion.equals(serverVersions.get(0));
-			}
+				if (!syncUpNeeded) {
+					if (serverVersions.size() != 1)
+						syncUpNeeded = true;
+					else
+						syncUpNeeded = !localVersion.equals(serverVersions.get(0));
+				}
 
-			if (syncUpNeeded)
-				syncUp(serverVersions, localVersion);
+				if (syncUpNeeded)
+					syncUp();
+			}
 		}
+		pgpKey = null;
+	}
+
+	public String getLastSyncServerVersionsPropertyKey() {
+		final PgpKeyId pgpKeyId = pgpKey.getPgpKeyId();
+		return String.format("lastSync[serverId=%s,pgpKeyId=%s].server.versions", serverId, pgpKeyId);
 	}
 
 	/**
-	 * Gets the last {@linkplain LockerTransport#getVersions() version} that was synced from/to the server.
-	 * @return the last {@linkplain LockerTransport#getVersions() version} that was synced from/to the server. Never <code>null</code>.
+	 * Gets the last {@linkplain LockerTransport#getVersions() versions} that were synced from/to the server.
+	 * @return the last {@linkplain LockerTransport#getVersions() versions} that were synced from/to the server.
+	 * Never <code>null</code>, but maybe empty.
 	 */
 	private List<Uid> getLastSyncServerVersions() {
-		final String value = getLockerSyncProperties().getProperty(lastSyncServerVersionsPropertyKey);
+		final String value = getLockerSyncProperties().getProperty(getLastSyncServerVersionsPropertyKey());
 		if (isEmpty(value))
 			return Collections.emptyList();
 
@@ -127,23 +143,44 @@ public class LockerSync implements AutoCloseable {
 
 			sb.append(serverVersion);
 		}
-		getLockerSyncProperties().setProperty(lastSyncServerVersionsPropertyKey, sb.toString());
+		getLockerSyncProperties().setProperty(getLastSyncServerVersionsPropertyKey(), sb.toString());
 		writeLockerSyncProperties();
 	}
 
-	private List<Uid> syncDown(final List<Uid> serverVersions) {
-//		getServerLockerTransport().getEncryptedDataFiles()
-
-
-		setLastSyncServerVersions(serverVersions);
-		throw new UnsupportedOperationException("NYI"); // TODO implement!
+	private List<Uid> syncDown() {
+//		final List<LockerEncryptedDataFile> encryptedDataFiles = getServerLockerTransport().getEncryptedDataFiles();
+//		final List<Uid> serverVersions = new ArrayList<Uid>(encryptedDataFiles.size());
+//		for (final LockerEncryptedDataFile encryptedDataFile : encryptedDataFiles) {
+//			encryptedDataFile.assertManifestSignatureValid();
+//			final Uid serverVersion = encryptedDataFile.getContentVersion();
+//			assertNotNull("encryptedDataFile.contentVersion", serverVersion);
+//			serverVersions.add(serverVersion);
+//
+//			getLocalLockerTransport().putEncryptedDataFile(encryptedDataFile);
+//		}
+//
+//		setLastSyncServerVersions(serverVersions);
+//		return serverVersions;
+		return sync(getServerLockerTransport(), getLocalLockerTransport());
 	}
 
-	private void syncUp(final List<Uid> serverVersions, final Uid localVersion) {
+	private List<Uid> sync(final LockerTransport fromLockerTransport, final LockerTransport toLockerTransport) {
+		final List<LockerEncryptedDataFile> encryptedDataFiles = fromLockerTransport.getEncryptedDataFiles();
+		final List<Uid> serverVersions = new ArrayList<Uid>(encryptedDataFiles.size());
+		for (final LockerEncryptedDataFile encryptedDataFile : encryptedDataFiles) {
+			encryptedDataFile.assertManifestSignatureValid();
+			final Uid serverVersion = encryptedDataFile.getContentVersion();
+			assertNotNull("encryptedDataFile.contentVersion", serverVersion);
+			serverVersions.add(serverVersion);
 
+			toLockerTransport.putEncryptedDataFile(encryptedDataFile);
+		}
+		setLastSyncServerVersions(serverVersions);
+		return serverVersions;
+	}
 
-
-		setLastSyncServerVersions(Collections.singletonList(localVersion));
+	private void syncUp() {
+		sync(getLocalLockerTransport(), getServerLockerTransport());
 	}
 
 	private List<LockerContent> getLockerContents() {

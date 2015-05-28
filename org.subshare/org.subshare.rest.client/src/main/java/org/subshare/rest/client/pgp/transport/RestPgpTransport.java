@@ -96,15 +96,23 @@ public class RestPgpTransport extends AbstractPgpTransport {
 		if (in == null)
 			return;
 
-		final byte[] buf = new byte[64 * 1024];
-		int bytesRead;
 		try {
+			final byte[] buf = new byte[64 * 1024];
+			int bytesRead;
+			try {
 
-			while ((bytesRead = in.read(buf)) >= 0)
-				out.write(buf, 0, bytesRead);
+				while ((bytesRead = in.read(buf)) >= 0)
+					out.write(buf, 0, bytesRead);
 
-		} catch (IOException e) {
-			throw new RuntimeException(e);
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		} finally {
+			try {
+				in.close();
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
 		}
 	}
 

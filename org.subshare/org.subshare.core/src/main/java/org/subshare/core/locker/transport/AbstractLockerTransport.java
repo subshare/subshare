@@ -3,11 +3,10 @@ package org.subshare.core.locker.transport;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.net.URL;
-import java.util.Set;
 
 import org.subshare.core.locker.LockerContent;
 import org.subshare.core.pgp.Pgp;
-import org.subshare.core.pgp.PgpKeyId;
+import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +22,7 @@ public abstract class AbstractLockerTransport implements LockerTransport {
 	private LockerTransportFactory lockerTransportFactory;
 	private URL url;
 	private LockerContent lockerContent;
-	private Set<PgpKeyId> pgpKeyIds;
+	private PgpKey pgpKey;
 
 	// Don't know, if fillInStackTrace() is necessary, but better do it.
 	// I did a small test: 1 million invocations of new Exception() vs. new Exception() with fillInStackTrace(): 3 s vs 2.2 s
@@ -73,12 +72,17 @@ public abstract class AbstractLockerTransport implements LockerTransport {
 	}
 
 	@Override
-	public Set<PgpKeyId> getPgpKeyIds() {
-		return pgpKeyIds;
+	public PgpKey getPgpKey() {
+		return pgpKey;
+	}
+	protected PgpKey getPgpKeyOrFail() {
+		final PgpKey pgpKey = getPgpKey();
+		assertNotNull("pgpKey", pgpKey);
+		return pgpKey;
 	}
 	@Override
-	public void setPgpKeyIds(Set<PgpKeyId> pgpKeyIds) {
-		this.pgpKeyIds = pgpKeyIds;
+	public void setPgpKey(PgpKey pgpKey) {
+		this.pgpKey = pgpKey;
 	}
 
 	@Override

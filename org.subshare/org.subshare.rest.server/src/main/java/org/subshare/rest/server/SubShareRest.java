@@ -15,6 +15,7 @@ import org.subshare.rest.server.service.SsWebDavService;
 import org.subshare.rest.server.service.CreateRepositoryService;
 import org.subshare.rest.server.service.CryptoChangeSetDtoService;
 import org.subshare.rest.server.service.DeleteService;
+import org.subshare.rest.server.service.LockerService;
 import org.subshare.rest.server.service.PgpPublicKeyService;
 import org.subshare.rest.server.service.TestSubShareService;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -57,6 +58,7 @@ public class SubShareRest extends CloudStoreRest {
 				CreateRepositoryService.class,
 				CryptoChangeSetDtoService.class,
 				DeleteService.class,
+				LockerService.class,
 				PgpPublicKeyService.class,
 				TestSubShareService.class
 				);

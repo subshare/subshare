@@ -2,11 +2,10 @@ package org.subshare.core.locker.transport;
 
 import java.net.URL;
 import java.util.List;
-import java.util.Set;
 
-import org.subshare.core.file.EncryptedDataFile;
 import org.subshare.core.locker.LockerContent;
-import org.subshare.core.pgp.PgpKeyId;
+import org.subshare.core.locker.LockerEncryptedDataFile;
+import org.subshare.core.pgp.PgpKey;
 
 import co.codewizards.cloudstore.core.dto.Uid;
 
@@ -35,10 +34,12 @@ public interface LockerTransport extends AutoCloseable {
 
 	List<Uid> getVersions();
 
-	List<EncryptedDataFile> getEncryptedDataFiles();
+	List<LockerEncryptedDataFile> getEncryptedDataFiles();
 
-	void setPgpKeyIds(Set<PgpKeyId> pgpKeyIds);
-	Set<PgpKeyId> getPgpKeyIds();
+	void putEncryptedDataFile(LockerEncryptedDataFile encryptedDataFile);
+
+	PgpKey getPgpKey();
+	void setPgpKey(PgpKey pgpKey);
 
 	@Override
 	void close();

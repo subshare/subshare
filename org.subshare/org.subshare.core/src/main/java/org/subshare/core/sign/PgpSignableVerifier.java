@@ -70,7 +70,7 @@ public class PgpSignableVerifier {
 					// decoder.decode() should already have thrown an exception, if pgpSignature is null, but we should
 					// better check ourselves, too - we might only throw a different exception, here (e.g. IllegalStateException).
 					if (pgpSignature == null)
-						throw new SignatureException("Signature not valid!");
+						throw new SignatureException("Missing signature!");
 
 					return pgpSignature;
 				}

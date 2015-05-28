@@ -29,7 +29,10 @@ public interface LockerContent {
 
 	/**
 	 * Merges the data from the server into the local file.
+	 * <p>
+	 * <b>Important:</b> The same data might be merged multiple times (e.g. because it is synced down from multiple servers)!
+	 *
 	 * @param serverData the data as downloaded from the server, already decrypted (i.e. plain). Never <code>null</code>.
 	 */
-	void merge(byte[] serverData) throws IOException;
+	void mergeFrom(byte[] serverData) throws IOException;
 }
