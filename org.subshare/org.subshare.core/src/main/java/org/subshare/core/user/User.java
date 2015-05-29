@@ -1,6 +1,7 @@
 package org.subshare.core.user;
 
 import java.beans.PropertyChangeListener;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -23,7 +24,8 @@ public interface User extends Cloneable {
 		emails,
 		userRepoKeyRing,
 		pgpKeyIds,
-		userRepoKeyPublicKeys
+		userRepoKeyPublicKeys,
+		changed
 	}
 
 	Uid getUserId();
@@ -58,4 +60,6 @@ public interface User extends Cloneable {
 	void removePropertyChangeListener(Property property, PropertyChangeListener listener);
 
 	User clone();
+	Date getChanged();
+	void setChanged(Date changed);
 }

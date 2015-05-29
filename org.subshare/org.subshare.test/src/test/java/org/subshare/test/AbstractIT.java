@@ -13,6 +13,7 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
 
+import org.subshare.core.locker.transport.LockerTransportFactoryRegistry;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.gnupg.GnuPgDir;
 import org.subshare.core.pgp.transport.PgpTransportFactoryRegistry;
@@ -20,6 +21,7 @@ import org.subshare.core.user.User;
 import org.subshare.core.user.UserRegistry;
 import org.subshare.core.user.UserRegistryImpl;
 import org.subshare.core.user.UserRepoKeyRing;
+import org.subshare.rest.client.locker.transport.RestLockerTransportFactory;
 import org.subshare.rest.client.pgp.transport.RestPgpTransportFactory;
 import org.subshare.rest.client.transport.CryptreeRestRepoTransportFactoryImpl;
 import org.junit.AfterClass;
@@ -69,6 +71,7 @@ public abstract class AbstractIT {
 
 	protected static CryptreeRestRepoTransportFactoryImpl cryptreeRepoTransportFactory;
 	protected static RestPgpTransportFactory restPgpTransportFactory;
+	protected static RestLockerTransportFactory restLockerTransportFactory;
 
 	@BeforeClass
 	public static void abstractIT_beforeClass() {
@@ -80,6 +83,9 @@ public abstract class AbstractIT {
 
 			restPgpTransportFactory = PgpTransportFactoryRegistry.getInstance().getPgpTransportFactoryOrFail(RestPgpTransportFactory.class);
 			restPgpTransportFactory.setDynamicX509TrustManagerCallbackClass(TestDynamicX509TrustManagerCallback.class);
+
+			restLockerTransportFactory = LockerTransportFactoryRegistry.getInstance().getLockerTransportFactory(RestLockerTransportFactory.class);
+			restLockerTransportFactory.setDynamicX509TrustManagerCallbackClass(TestDynamicX509TrustManagerCallback.class);
 		}
 	}
 

@@ -9,8 +9,8 @@ import javax.ws.rs.core.MediaType;
 
 import org.subshare.core.pgp.PgpKeyId;
 
-import co.codewizards.cloudstore.core.dto.ListDto;
 import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.dto.UidList;
 import co.codewizards.cloudstore.rest.client.request.AbstractRequest;
 
 public class GetLockerContentVersions extends AbstractRequest<List<Uid>> {
@@ -26,9 +26,8 @@ public class GetLockerContentVersions extends AbstractRequest<List<Uid>> {
 	@Override
 	public List<Uid> execute() {
 		final WebTarget webTarget = createWebTarget("_Locker", urlEncode(pgpKeyId.toString()), urlEncode(lockerContentName));
-		@SuppressWarnings("unchecked")
-		final ListDto<Uid> listDto = assignCredentials(webTarget.request(MediaType.APPLICATION_XML_TYPE)).get(ListDto.class);
-		return listDto.getElements();
+		final UidList uidList = assignCredentials(webTarget.request(MediaType.APPLICATION_XML_TYPE)).get(UidList.class);
+		return uidList;
 	}
 
 	@Override

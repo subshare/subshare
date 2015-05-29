@@ -30,6 +30,8 @@ public class UserDtoConverter {
 			for (final UserRepoKey.PublicKeyWithSignature publicKey : user.getUserRepoKeyPublicKeys())
 				userDto.getUserRepoKeyPublicKeyDtos().add(userRepoKeyPublicKeyDtoWithSignatureConverter.toUserRepoKeyPublicKeyDto(publicKey));
 		}
+
+		userDto.setChanged(user.getChanged());
 		return userDto;
 	}
 
@@ -50,6 +52,8 @@ public class UserDtoConverter {
 			for (final UserRepoKeyPublicKeyDto userRepoKeyPublicKeyDto : userDto.getUserRepoKeyPublicKeyDtos())
 				user.getUserRepoKeyPublicKeys().add(userRepoKeyPublicKeyDtoWithSignatureConverter.fromUserRepoKeyPublicKeyDto(userRepoKeyPublicKeyDto));
 		}
+
+		user.setChanged(userDto.getChanged());
 		return user;
 	}
 }

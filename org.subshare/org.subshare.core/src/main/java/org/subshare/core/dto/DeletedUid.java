@@ -1,5 +1,7 @@
 package org.subshare.core.dto;
 
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+
 import java.util.Date;
 
 import co.codewizards.cloudstore.core.dto.Uid;
@@ -18,6 +20,13 @@ public class DeletedUid {
 	private Uid uid;
 
 	private Date deleted;
+
+	public DeletedUid() { }
+
+	public DeletedUid(Uid uid) {
+		this.uid = assertNotNull("uid", uid);
+		this.deleted = new Date();
+	}
 
 	public Uid getUid() {
 		return uid;

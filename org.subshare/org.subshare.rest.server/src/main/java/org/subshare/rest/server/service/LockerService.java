@@ -3,6 +3,7 @@ package org.subshare.rest.server.service;
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.IOUtil.*;
+import static org.subshare.core.file.FileConst.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -30,11 +31,11 @@ import org.subshare.core.pgp.PgpDecoder;
 import org.subshare.core.pgp.PgpKeyId;
 import org.subshare.core.pgp.PgpRegistry;
 import org.subshare.core.pgp.PgpSignature;
+import org.subshare.rest.server.LockerDir;
 
 import co.codewizards.cloudstore.core.auth.SignatureException;
-import co.codewizards.cloudstore.core.config.ConfigDir;
-import co.codewizards.cloudstore.core.dto.ListDto;
 import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.dto.UidList;
 import co.codewizards.cloudstore.core.io.LockFile;
 import co.codewizards.cloudstore.core.io.LockFileFactory;
 import co.codewizards.cloudstore.core.oio.File;
@@ -50,27 +51,30 @@ public class LockerService {
 	@PathParam("lockerContentName")
 	private String lockerContentName;
 
-	private final File lockerBaseDir;
+	private final File lockerDir;
 	public LockerService() {
-		lockerBaseDir = createFile(ConfigDir.getInstance().getFile(), "locker");
+		lockerDir = LockerDir.getInstance().getFile();
 	}
 
 	@GET
 	@Path("{pgpKeyId}/{lockerContentName}")
 	@Produces(MediaType.APPLICATION_XML)
-	public ListDto<Uid> getLockerContentVersions() {
+	public UidList getLockerContentVersions() {
 		assertNotNull("pgpKeyId", pgpKeyId);
 		assertNotNull("lockerContentName", lockerContentName);
 
-		final ListDto<Uid> result = new ListDto<Uid>();
-		final File dir = createFile(lockerBaseDir, pgpKeyId.toString(), lockerContentName);
-		for (final File file : dir.listFiles()) {
-			final String fileName = file.getName();
-			if (!fileName.endsWith(DATA_FILE_SUFFIX))
-				continue;
+		final UidList result = new UidList();
+		final File dir = createFile(lockerDir, pgpKeyId.toString(), lockerContentName);
+		final File[] children = dir.listFiles();
+		if (children != null) {
+			for (final File file : children) {
+				final String fileName = file.getName();
+				if (!fileName.endsWith(DATA_FILE_SUFFIX))
+					continue;
 
-			final String s = fileName.substring(0, fileName.length() - DATA_FILE_SUFFIX.length());
-			result.getElements().add(new Uid(s));
+				final String s = fileName.substring(0, fileName.length() - DATA_FILE_SUFFIX.length());
+				result.add(new Uid(s));
+			}
 		}
 		return result;
 	}
@@ -93,6 +97,9 @@ public class LockerService {
 
 		final Pgp pgp = PgpRegistry.getInstance().getPgpOrFail();
 		for (final String name : encryptedDataFile.getDataNames()) {
+			if (MANIFEST_PROPERTIES_SIGNATURE_FILE_NAME.equals(name))
+				continue;
+
 			final PgpDecoder decoder = pgp.createDecoder(new ByteArrayInputStream(encryptedDataFile.getData(name)), new NullOutputStream());
 			decoder.decode();
 			pgpSignature = decoder.getPgpSignature();
@@ -104,7 +111,7 @@ public class LockerService {
 						name, pgpKeyId, pgpSignature.getPgpKeyId()));
 		}
 
-		final File file = createFile(lockerBaseDir, pgpKeyId.toString(), lockerContentName, lockerContentVersion.toString() + DATA_FILE_SUFFIX);
+		final File file = createFile(lockerDir, pgpKeyId.toString(), lockerContentName, lockerContentVersion.toString() + DATA_FILE_SUFFIX);
 		file.getParentFile().mkdirs();
 		try (final LockFile lockFile = LockFileFactory.getInstance().acquire(file, 30000);) {
 			if (lockFile.getFile().length() == input.length) {
@@ -135,7 +142,7 @@ public class LockerService {
 		assertNotNull("pgpKeyId", pgpKeyId);
 		assertNotNull("lockerContentName", lockerContentName);
 
-		final File file = createFile(lockerBaseDir, pgpKeyId.toString(), lockerContentName, version.toString() + DATA_FILE_SUFFIX);
+		final File file = createFile(lockerDir, pgpKeyId.toString(), lockerContentName, version.toString() + DATA_FILE_SUFFIX);
 		if (! file.exists())
 			return Response.status(Status.NOT_FOUND).build();
 

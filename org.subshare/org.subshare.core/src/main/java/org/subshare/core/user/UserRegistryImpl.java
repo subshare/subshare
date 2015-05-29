@@ -6,6 +6,7 @@ import static co.codewizards.cloudstore.core.util.StringUtil.*;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -18,6 +19,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import org.subshare.core.dto.DeletedUid;
 import org.subshare.core.dto.UserDto;
 import org.subshare.core.dto.UserRegistryDto;
 import org.subshare.core.dto.jaxb.UserRegistryDtoIo;
@@ -36,10 +38,13 @@ public class UserRegistryImpl implements UserRegistry {
 	private final Map<PgpKeyId, User> pgpKeyId2User = new HashMap<>();
 	private final Map<Uid, User> userId2User = new LinkedHashMap<>();
 
+	private final List<DeletedUid> deletedUserIds = new ArrayList<>();
+	private final List<DeletedUid> deletedUserRepoKeyIds = new ArrayList<>();
+
 	private List<User> cache_users;
 	private Map<String, Set<User>> cache_email2Users;
 	private Map<Uid, User> cache_userRepoKeyId2User;
-	private Map<Uid, User> cache_userId2User;
+//	private Map<Uid, User> cache_userId2User;
 
 	private final File userRegistryFile;
 	private boolean dirty;
@@ -71,6 +76,8 @@ public class UserRegistryImpl implements UserRegistry {
 		try (LockFile lockFile = acquireLockFile();) {
 			lockFile.getLock().lock();
 			try {
+				deletedUserIds.clear();
+				deletedUserRepoKeyIds.clear();
 				if (userRegistryFile.exists()) {
 					final UserRegistryDtoIo userRegistryDtoIo = new UserRegistryDtoIo();
 					final UserRegistryDto userRegistryDto = userRegistryDtoIo.deserializeWithGz(userRegistryFile);
@@ -79,6 +86,8 @@ public class UserRegistryImpl implements UserRegistry {
 						addUser(user);
 					}
 					version = userRegistryDto.getVersion();
+					deletedUserIds.addAll(userRegistryDto.getDeletedUserIds());
+					deletedUserRepoKeyIds.addAll(userRegistryDto.getDeletedUserRepoKeyIds());
 				}
 			} finally {
 				lockFile.getLock().unlock();
@@ -195,7 +204,7 @@ public class UserRegistryImpl implements UserRegistry {
 		cache_users = null;
 		cache_email2Users = null;
 		cache_userRepoKeyId2User = null;
-		cache_userId2User = null;
+//		cache_userId2User = null;
 	}
 
 	@Override
@@ -243,6 +252,25 @@ public class UserRegistryImpl implements UserRegistry {
 	}
 
 	@Override
+	public synchronized void removeUser(final User user) {
+		_removeUser(user);
+		deletedUserIds.add(new DeletedUid(user.getUserId()));
+	}
+
+	protected synchronized void _removeUser(final User user) {
+		assertNotNull("user", user);
+		userId2User.remove(user.getUserId());
+
+		for (final PgpKeyId pgpKeyId : user.getPgpKeyIds())
+			pgpKeyId2User.remove(pgpKeyId);
+
+		user.removePropertyChangeListener(userPropertyChangeListener);
+
+		cleanCache();
+		markDirty();
+	}
+
+	@Override
 	public synchronized User getUserByUserIdOrFail(final Uid userId) {
 		final User user = getUserByUserId(userId);
 		if (user == null)
@@ -254,15 +282,16 @@ public class UserRegistryImpl implements UserRegistry {
 	@Override
 	public synchronized User getUserByUserId(final Uid userId) {
 		assertNotNull("userId", userId);
-		if (cache_userId2User == null) {
-			final Map<Uid, User> m = new HashMap<>();
-
-			for (final User user : getUsers())
-				m.put(user.getUserId(), user);
-
-			cache_userId2User = m;
-		}
-		return cache_userId2User.get(userId);
+//		if (cache_userId2User == null) {
+//			final Map<Uid, User> m = new HashMap<>();
+//
+//			for (final User user : getUsers())
+//				m.put(user.getUserId(), user);
+//
+//			cache_userId2User = m;
+//		}
+//		return cache_userId2User.get(userId);
+		return userId2User.get(userId);
 	}
 
 	@Override
@@ -358,6 +387,86 @@ public class UserRegistryImpl implements UserRegistry {
 			}
 		}
 		dirty = false;
+	}
+
+	public void mergeFrom(final byte[] data) {
+		assertNotNull("data", data);
+		final UserRegistryDtoIo userRegistryDtoIo = new UserRegistryDtoIo();
+		final UserRegistryDto userRegistryDto = userRegistryDtoIo.deserializeWithGz(new ByteArrayInputStream(data));
+		mergeFrom(userRegistryDto);
+	}
+
+	protected synchronized void mergeFrom(final UserRegistryDto userRegistryDto) {
+		assertNotNull("userRegistryDto", userRegistryDto);
+
+		final List<UserDto> newUserDtos = new ArrayList<>(userRegistryDto.getUserDtos().size());
+		for (final UserDto userDto : userRegistryDto.getUserDtos()) {
+			final Uid userId = assertNotNull("userDto.userId", userDto.getUserId());
+			final User user = getUserByUserId(userId);
+			if (user == null)
+				newUserDtos.add(userDto);
+			else
+				merge(user, userDto);
+		}
+
+		final Set<DeletedUid> newDeletedUserIds = new HashSet<>(userRegistryDto.getDeletedUserIds());
+		newDeletedUserIds.removeAll(this.deletedUserIds);
+		final Map<DeletedUid, User> newDeletedUsers = new HashMap<>(newDeletedUserIds.size());
+		for (final DeletedUid deletedUserId : newDeletedUserIds) {
+			final User user = getUserByUserId(deletedUserId.getUid());
+			if (user != null)
+				newDeletedUsers.put(deletedUserId, user);
+		}
+
+		final Set<DeletedUid> newDeletedUserRepoKeyIds = new HashSet<>(userRegistryDto.getDeletedUserRepoKeyIds());
+		newDeletedUserRepoKeyIds.removeAll(this.deletedUserRepoKeyIds);
+		final Map<DeletedUid, User> newDeletedUserRepoKeyId2User = new HashMap<>(newDeletedUserRepoKeyIds.size());
+		for (final DeletedUid deletedUserRepoKeyId : newDeletedUserRepoKeyIds) {
+			final User user = getUserByUserRepoKeyId(deletedUserRepoKeyId.getUid());
+			if (user != null)
+				newDeletedUserRepoKeyId2User.put(deletedUserRepoKeyId, user);
+		}
+
+		final UserDtoConverter userDtoConverter = new UserDtoConverter();
+		for (final UserDto userDto : newUserDtos) {
+			final User user = userDtoConverter.fromUserDto(userDto);
+			addUser(user);
+		}
+
+		for (final Map.Entry<DeletedUid, User> me : newDeletedUsers.entrySet()) {
+			_removeUser(me.getValue());
+			deletedUserIds.add(me.getKey());
+		}
+
+		for (final Map.Entry<DeletedUid, User> me : newDeletedUserRepoKeyId2User.entrySet()) {
+			// TODO implement this!
+			throw new UnsupportedOperationException("NYI");
+		}
+
+		writeIfNeeded();
+	}
+
+	private void merge(final User toUser, final UserDto fromUserDto) {
+		assertNotNull("toUser", toUser);
+		assertNotNull("fromUserDto", fromUserDto);
+		if (toUser.getChanged().before(fromUserDto.getChanged())) {
+			toUser.setFirstName(fromUserDto.getFirstName());
+			toUser.setLastName(fromUserDto.getLastName());
+
+			if (!toUser.getEmails().equals(fromUserDto.getEmails())) {
+				toUser.getEmails().clear();
+				toUser.getEmails().addAll(fromUserDto.getEmails());
+			}
+
+			if (!toUser.getPgpKeyIds().equals(fromUserDto.getPgpKeyIds())) {
+				toUser.getPgpKeyIds().clear();
+				toUser.getPgpKeyIds().addAll(fromUserDto.getPgpKeyIds());
+			}
+
+			toUser.setChanged(fromUserDto.getChanged());
+			if (!toUser.getChanged().equals(fromUserDto.getChanged())) // sanity check - to make sure listeners don't change it again
+				throw new IllegalStateException("toUser.changed != fromUserDto.changed");
+		}
 	}
 
 	private synchronized UserRegistryDto createUserListDto() {

@@ -11,7 +11,7 @@ import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.io.LockFile;
 import co.codewizards.cloudstore.core.oio.File;
 
-public class UserRegistryLockerFile extends FileLockerContent {
+public class UserRegistryLockerContent extends FileLockerContent {
 
 	@Override
 	public File getFile() {
@@ -40,8 +40,7 @@ public class UserRegistryLockerFile extends FileLockerContent {
 
 	@Override
 	public void mergeFrom(byte[] serverData) throws IOException {
-		// TODO Auto-generated method stub
-
+		getUserRegistry().mergeFrom(serverData);
 	}
 
 	@Override

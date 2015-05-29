@@ -1,10 +1,9 @@
 package org.subshare.test;
 
-import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
 import static org.assertj.core.api.Assertions.*;
+import static org.subshare.test.PgpTestUtil.*;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.UUID;
 
@@ -17,11 +16,9 @@ import org.subshare.core.ReadUserIdentityAccessDeniedException;
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.dto.UserIdentityPayloadDto;
 import org.subshare.core.pgp.Pgp;
-import org.subshare.core.pgp.PgpAuthenticationCallback;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpKeyId;
 import org.subshare.core.pgp.PgpRegistry;
-import org.subshare.core.pgp.gnupg.GnuPgDir;
 import org.subshare.core.user.User;
 import org.subshare.core.user.UserRegistry;
 import org.subshare.core.user.UserRegistryImpl;
@@ -40,16 +37,12 @@ import co.codewizards.cloudstore.core.config.ConfigDir;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
-import co.codewizards.cloudstore.core.util.IOUtil;
 import co.codewizards.cloudstore.local.persistence.RemoteRepository;
 import co.codewizards.cloudstore.local.persistence.RemoteRepositoryDao;
 
 public class AbstractUserRegistryIT extends AbstractRepoToRepoSyncIT {
 
 	private static final Logger logger = LoggerFactory.getLogger(AbstractUserRegistryIT.class);
-
-	public static final String PUBRING_FILE_NAME = "pubring.gpg";
-	public static final String SECRING_FILE_NAME = "secring.gpg";
 
 	protected UserRegistry ownerUserRegistry;
 	protected User owner;
@@ -206,27 +199,6 @@ public class AbstractUserRegistryIT extends AbstractRepoToRepoSyncIT {
 		return userRegistry;
 	}
 
-	protected void setupPgp(String ownerName, final String passphrase) throws Exception {
-		logger.info("setupPgp: ownerName={}", ownerName);
-		final String gpgDir = "gpg/" + ownerName;
-
-		final File gnuPgDir = GnuPgDir.getInstance().getFile();
-		gnuPgDir.mkdir();
-		copyResource(gpgDir + '/' + PUBRING_FILE_NAME, createFile(gnuPgDir, PUBRING_FILE_NAME));
-		copyResource(gpgDir + '/' + SECRING_FILE_NAME, createFile(gnuPgDir, SECRING_FILE_NAME));
-
-		final PgpRegistry pgpRegistry = PgpRegistry.getInstance();
-
-		pgpRegistry.setPgpAuthenticationCallback(new PgpAuthenticationCallback() {
-			@Override
-			public char[] getPassphrase(final PgpKey pgpKey) {
-				return passphrase.toCharArray();
-			}
-		});
-
-		pgpRegistry.clearCache();
-	}
-
 	protected UserRepoInvitationToken createUserRepoInvitationToken(final String localPath, PermissionType permissionType) {
 		final UserRepoInvitationToken userRepoInvitationToken;
 		try (final LocalRepoManager localRepoManager = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(localSrcRoot);)
@@ -275,10 +247,4 @@ public class AbstractUserRegistryIT extends AbstractRepoToRepoSyncIT {
 			}
 		}
 	}
-
-	private static void copyResource(final String sourceResName, final File destinationFile) throws IOException {
-		logger.info("copyResource: sourceResName='{}' destinationFile='{}'", sourceResName, destinationFile);
-		IOUtil.copyResource(InviteUserAndSyncIT.class, sourceResName, destinationFile);
-	}
-
 }

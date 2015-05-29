@@ -138,14 +138,20 @@ public class EncryptedDataFile {
 
 	public void write(final OutputStream out) throws IOException {
 		assertNotNull("out", out);
-		final ZipOutputStream zout = new ZipOutputStream(new NoCloseOutputStream(out));
 
 		final byte[] manifestData = createManifestData();
+
+		final byte[] detachedSignatureData = name2ByteArray.get(MANIFEST_PROPERTIES_SIGNATURE_FILE_NAME);
+		if (detachedSignatureData != null) {
+			if (!isSignatureValid(manifestData, detachedSignatureData))
+				name2ByteArray.remove(MANIFEST_PROPERTIES_SIGNATURE_FILE_NAME);
+		}
+
+		final ZipOutputStream zout = new ZipOutputStream(new NoCloseOutputStream(out));
+
 		zout.putNextEntry(createManifestZipEntry(manifestData));
 		zout.write(manifestData);
 		zout.closeEntry();
-
-		signManifestData(zout, manifestData);
 
 		for (final Map.Entry<String, byte[]> me : name2ByteArray.entrySet()) {
 			final String name = me.getKey();
@@ -156,25 +162,14 @@ public class EncryptedDataFile {
 		zout.close();
 	}
 
-	private PgpKey signPgpKey;
-
-	public PgpKey getSignPgpKey() {
-		return signPgpKey;
-	}
-	public void setSignPgpKey(PgpKey signPgpKey) {
-		this.signPgpKey = signPgpKey;
+	public void signManifestData(final PgpKey signPgpKey) throws IOException {
+		final byte[] manifestData = createManifestData();
+		signManifestData(signPgpKey, manifestData);
 	}
 
-	protected void signManifestData(final ZipOutputStream zout, final byte[] manifestData) throws IOException {
-		final PgpKey signPgpKey = getSignPgpKey();
-		if (signPgpKey == null) {
-			final byte[] detachedSignatureData = name2ByteArray.get(MANIFEST_PROPERTIES_SIGNATURE_FILE_NAME);
-			if (detachedSignatureData != null) {
-				if (!isSignatureValid(manifestData, detachedSignatureData))
-					name2ByteArray.remove(MANIFEST_PROPERTIES_SIGNATURE_FILE_NAME);
-			}
-			return;
-		}
+	protected void signManifestData(final PgpKey signPgpKey, final byte[] manifestData) throws IOException {
+		assertNotNull("signPgpKey", signPgpKey);
+		assertNotNull("manifestData", manifestData);
 
 		final Pgp pgp = PgpRegistry.getInstance().getPgpOrFail();
 		final PgpEncoder encoder = pgp.createEncoder(new ByteArrayInputStream(manifestData), new NullOutputStream());

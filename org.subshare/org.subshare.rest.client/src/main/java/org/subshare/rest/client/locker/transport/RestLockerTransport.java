@@ -25,7 +25,7 @@ public class RestLockerTransport extends AbstractLockerTransport {
 
 	@Override
 	public List<Uid> getVersions() {
-		final List<Uid> result = client.execute(
+		final List<Uid> result = getClient().execute(
 				new GetLockerContentVersions(getPgpKeyOrFail().getPgpKeyId(), getLockerContentOrFail().getName()));
 
 		return result;
@@ -37,7 +37,7 @@ public class RestLockerTransport extends AbstractLockerTransport {
 		final List<LockerEncryptedDataFile> result = new ArrayList<>(versions.size());
 
 		for (final Uid version : versions) {
-			final LockerEncryptedDataFile lockerEncryptedDataFile = client.execute(
+			final LockerEncryptedDataFile lockerEncryptedDataFile = getClient().execute(
 					new GetLockerEncryptedDataFile(getPgpKeyOrFail().getPgpKeyId(), getLockerContentOrFail().getName(), version));
 
 			if (lockerEncryptedDataFile != null)
@@ -48,7 +48,7 @@ public class RestLockerTransport extends AbstractLockerTransport {
 
 	@Override
 	public void putEncryptedDataFile(LockerEncryptedDataFile encryptedDataFile) {
-		client.execute(new PutLockerEncryptedDataFile(encryptedDataFile));
+		getClient().execute(new PutLockerEncryptedDataFile(encryptedDataFile));
 	}
 
 	protected CloudStoreRestClient getClient() {

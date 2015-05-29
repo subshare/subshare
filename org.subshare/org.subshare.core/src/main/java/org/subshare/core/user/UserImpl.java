@@ -48,6 +48,8 @@ public class UserImpl implements User {
 
 	private final UserRepoKeyRingChangeListener userRepoKeyRingChangeListener = new UserRepoKeyRingChangeListener();
 
+	private Date changed = new Date();
+
 	private class PostModificationListener implements StandardPostModificationListener {
 		private final Property property;
 
@@ -58,6 +60,7 @@ public class UserImpl implements User {
 		@Override
 		public void modificationOccurred(StandardPostModificationEvent event) {
 			firePropertyChange(property, null, event.getObservedCollection());
+			updateChanged();
 		}
 	};
 
@@ -78,6 +81,7 @@ public class UserImpl implements User {
 			throw new IllegalStateException("this.userId is already assigned! Cannot modify afterwards!");
 
 		this.userId = userId;
+		updateChanged();
 	}
 
 	@Override
@@ -90,6 +94,7 @@ public class UserImpl implements User {
 		final String old = this.firstName;
 		this.firstName = firstName;
 		firePropertyChange(PropertyEnum.firstName, old, firstName);
+		updateChanged();
 	}
 
 	@Override
@@ -102,6 +107,7 @@ public class UserImpl implements User {
 		final String old = this.lastName;
 		this.lastName = lastName;
 		firePropertyChange(PropertyEnum.lastName, old, lastName);
+		updateChanged();
 	}
 
 	@Override
@@ -138,6 +144,7 @@ public class UserImpl implements User {
 			userRepoKeyRing.addPropertyChangeListener(userRepoKeyRingChangeListener);
 
 		firePropertyChange(PropertyEnum.userRepoKeyRing, old, userRepoKeyRing);
+		updateChanged();
 	}
 	@Override
 	public synchronized UserRepoKeyRing getUserRepoKeyRingOrCreate() {
@@ -237,6 +244,22 @@ public class UserImpl implements User {
 			userRepoKeyPublicKeys.getHandler().addPostModificationListener(new PostModificationListener(PropertyEnum.userRepoKeyPublicKeys));
 		}
 		return userRepoKeyPublicKeys;
+	}
+
+	@Override
+	public Date getChanged() {
+		return changed;
+	}
+	@Override
+	public void setChanged(final Date changed) {
+		assertNotNull("changed", changed);
+		final Date old = this.changed;
+		this.changed = changed;
+		firePropertyChange(PropertyEnum.changed, old, changed);
+	}
+
+	protected void updateChanged() {
+		setChanged(new Date());
 	}
 
 	@Override

@@ -20,6 +20,7 @@ import org.subshare.core.locker.LockerContent;
 import org.subshare.core.locker.LockerEncryptedDataFile;
 import org.subshare.core.locker.transport.AbstractLockerTransport;
 import org.subshare.core.pgp.PgpDecoder;
+import org.subshare.core.pgp.PgpEncoder;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpKeyId;
 
@@ -92,18 +93,26 @@ public class LocalLockerTransport extends AbstractLockerTransport {
 
 	@Override
 	public List<LockerEncryptedDataFile> getEncryptedDataFiles() {
+		final LockerContent lockerContent = getLockerContentOrFail();
+		final PgpKey pgpKey = getPgpKeyOrFail();
+
 		final LockerEncryptedDataFile encryptedDataFile = new LockerEncryptedDataFile();
+		encryptedDataFile.setContentName(lockerContent.getName());
 		encryptedDataFile.setContentVersion(getVersion());
 		encryptedDataFile.setReplacedContentVersions(mergedVersions);
-		encryptedDataFile.setSignPgpKey(getPgpKeyOrFail());
-
 		try {
-			final byte[] localData = getLockerContentOrFail().getLocalData();
-			encryptedDataFile.putDefaultData(localData);
+			encryptedDataFile.signManifestData(pgpKey);
+
+			final byte[] localData = lockerContent.getLocalData();
+			final ByteArrayOutputStream out = new ByteArrayOutputStream();
+			final PgpEncoder encoder = getPgp().createEncoder(new ByteArrayInputStream(localData), out);
+			encoder.setSignPgpKey(pgpKey);
+			encoder.encode();
+
+			encryptedDataFile.putDefaultData(out.toByteArray());
 		} catch (IOException x) {
 			throw new RuntimeException(x);
 		}
-
 		return Collections.singletonList(encryptedDataFile);
 	}
 
