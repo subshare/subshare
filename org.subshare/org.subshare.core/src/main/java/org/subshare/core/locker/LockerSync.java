@@ -49,6 +49,7 @@ public class LockerSync implements AutoCloseable {
 	private Properties lockerSyncProperties;
 
 	private PgpKey pgpKey;
+	private LockerContent lockerContent;
 
 	public LockerSync(final Server server) {
 		this.server = assertNotNull("server", server);
@@ -57,10 +58,12 @@ public class LockerSync implements AutoCloseable {
 	}
 
 	public void sync() {
+		lockerContent = null;
 		pgpKey = null;
 		final Set<PgpKeyId> pgpKeyIds = PgpPrivateKeyPassphraseStoreImpl.getInstance().getPgpKeyIdsHavingPassphrase();
 		final Pgp pgp = PgpRegistry.getInstance().getPgpOrFail();
 		for (final LockerContent lockerContent : getLockerContents()) {
+			this.lockerContent = lockerContent;
 			getLocalLockerTransport().setLockerContent(lockerContent);
 			getServerLockerTransport().setLockerContent(lockerContent);
 
@@ -108,11 +111,13 @@ public class LockerSync implements AutoCloseable {
 			}
 		}
 		pgpKey = null;
+		lockerContent = null;
 	}
 
 	public String getLastSyncServerVersionsPropertyKey() {
-		final PgpKeyId pgpKeyId = pgpKey.getPgpKeyId();
-		return String.format("lastSync[serverId=%s,pgpKeyId=%s].server.versions", serverId, pgpKeyId);
+		final PgpKeyId pgpKeyId = assertNotNull("pgpKey", pgpKey).getPgpKeyId();
+		final String lockerContentName = assertNotNull("lockerContent", lockerContent).getName();
+		return String.format("server[%s].pgpKey[%s].lockerContent[%s].lastSyncServerVersions", serverId, pgpKeyId, lockerContentName);
 	}
 
 	/**

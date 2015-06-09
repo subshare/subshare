@@ -1,6 +1,7 @@
 package org.subshare.core.repo;
 
 import java.beans.PropertyChangeListener;
+import java.util.Date;
 import java.util.UUID;
 
 import org.subshare.core.server.Server;
@@ -26,7 +27,8 @@ public interface ServerRepo {
 		repositoryId,
 		name,
 		serverId,
-		userId
+		userId,
+		changed
 	}
 
 	/**
@@ -54,6 +56,10 @@ public interface ServerRepo {
 	Uid getUserId();
 
 	void setUserId(Uid userId);
+
+	Date getChanged();
+
+	void setChanged(Date changed);
 
 	ServerRepo clone();
 

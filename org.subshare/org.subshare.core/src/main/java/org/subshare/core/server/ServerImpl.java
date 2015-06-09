@@ -1,8 +1,11 @@
 package org.subshare.core.server;
 
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.net.URL;
+import java.util.Date;
 
 import co.codewizards.cloudstore.core.dto.Uid;
 
@@ -24,6 +27,8 @@ public class ServerImpl implements Cloneable, Server {
 
 	private URL url;
 
+	private Date changed = new Date();
+
 	@Override
 	public Uid getServerId() {
 		return serverId;
@@ -38,6 +43,7 @@ public class ServerImpl implements Cloneable, Server {
 		final String old = this.name;
 		this.name = name;
 		firePropertyChange(PropertyEnum.name, old, name);
+		updateChanged();
 	}
 
 	@Override
@@ -49,6 +55,23 @@ public class ServerImpl implements Cloneable, Server {
 		final URL old = this.url;
 		this.url = url;
 		firePropertyChange(PropertyEnum.url, old, url);
+		updateChanged();
+	}
+
+	@Override
+	public Date getChanged() {
+		return changed;
+	}
+	@Override
+	public void setChanged(final Date changed) {
+		assertNotNull("changed", changed);
+		final Date old = this.changed;
+		this.changed = changed;
+		firePropertyChange(PropertyEnum.changed, old, changed);
+	}
+
+	protected void updateChanged() {
+		setChanged(new Date());
 	}
 
 	@Override

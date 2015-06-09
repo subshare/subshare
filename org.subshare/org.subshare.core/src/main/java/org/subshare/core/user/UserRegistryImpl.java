@@ -48,7 +48,6 @@ public class UserRegistryImpl implements UserRegistry {
 
 	private final File userRegistryFile;
 	private boolean dirty;
-
 	private Uid version;
 
 	private static final class Holder {
@@ -373,7 +372,7 @@ public class UserRegistryImpl implements UserRegistry {
 	@Override
 	public synchronized void write() {
 		final UserRegistryDtoIo userRegistryDtoIo = new UserRegistryDtoIo();
-		final UserRegistryDto userRegistryDto = createUserListDto();
+		final UserRegistryDto userRegistryDto = createUserRegistryDto();
 
 		try (LockFile lockFile = acquireLockFile();) {
 			lockFile.getLock().lock();
@@ -391,6 +390,9 @@ public class UserRegistryImpl implements UserRegistry {
 
 	public void mergeFrom(final byte[] data) {
 		assertNotNull("data", data);
+		if (data.length == 0)
+			return;
+
 		final UserRegistryDtoIo userRegistryDtoIo = new UserRegistryDtoIo();
 		final UserRegistryDto userRegistryDto = userRegistryDtoIo.deserializeWithGz(new ByteArrayInputStream(data));
 		mergeFrom(userRegistryDto);
@@ -469,13 +471,15 @@ public class UserRegistryImpl implements UserRegistry {
 		}
 	}
 
-	private synchronized UserRegistryDto createUserListDto() {
+	private synchronized UserRegistryDto createUserRegistryDto() {
 		final UserDtoConverter userDtoConverter = new UserDtoConverter();
 		final UserRegistryDto userRegistryDto = new UserRegistryDto();
 		for (final User user : userId2User.values()) {
 			final UserDto userDto = userDtoConverter.toUserDto(user);
 			userRegistryDto.getUserDtos().add(userDto);
 		}
+		userRegistryDto.getDeletedUserIds().addAll(deletedUserIds);
+		userRegistryDto.setVersion(version);
 		return userRegistryDto;
 	}
 }

@@ -5,12 +5,16 @@ import java.util.List;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
+import co.codewizards.cloudstore.core.dto.Uid;
+
 @XmlRootElement
 public class ServerRegistryDto {
 
 	private List<ServerDto> serverDtos;
 
 	private List<DeletedUid> deletedServerIds;
+
+	private Uid version;
 
 	public List<ServerDto> getServerDtos() {
 		if (serverDtos == null)
@@ -30,5 +34,12 @@ public class ServerRegistryDto {
 	}
 	public void setDeletedServerIds(List<DeletedUid> deletedServerIds) {
 		this.deletedServerIds = deletedServerIds;
+	}
+
+	public Uid getVersion() {
+		return version;
+	}
+	public void setVersion(Uid version) {
+		this.version = version;
 	}
 }

@@ -1,6 +1,6 @@
 package org.subshare.core.server;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -15,6 +15,8 @@ public class ServerDtoConverter {
 		serverDto.setServerId(server.getServerId());
 		serverDto.setName(server.getName());
 		serverDto.setUrl(server.getUrl() == null ? null : server.getUrl().toExternalForm());
+
+		serverDto.setChanged(server.getChanged());
 		return serverDto;
 	}
 
@@ -27,6 +29,8 @@ public class ServerDtoConverter {
 		} catch (final MalformedURLException e) {
 			throw new RuntimeException(e);
 		}
+
+		server.setChanged(serverDto.getChanged());
 		return server;
 	}
 }

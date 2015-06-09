@@ -2,6 +2,7 @@ package org.subshare.core.server;
 
 import java.beans.PropertyChangeListener;
 import java.net.URL;
+import java.util.Date;
 
 import co.codewizards.cloudstore.core.bean.PropertyBase;
 import co.codewizards.cloudstore.core.dto.Uid;
@@ -14,7 +15,8 @@ public interface Server {
 	public static enum PropertyEnum implements Property {
 		serverId,
 		name,
-		url
+		url,
+		changed
 	}
 
 	Uid getServerId();
@@ -27,6 +29,10 @@ public interface Server {
 
 	void setUrl(URL url);
 
+	Date getChanged();
+
+	void setChanged(Date changed);
+
 	void addPropertyChangeListener(PropertyChangeListener listener);
 
 	void addPropertyChangeListener(Property property, PropertyChangeListener listener);
@@ -36,5 +42,4 @@ public interface Server {
 	void removePropertyChangeListener(Property property, PropertyChangeListener listener);
 
 	Server clone();
-
 }

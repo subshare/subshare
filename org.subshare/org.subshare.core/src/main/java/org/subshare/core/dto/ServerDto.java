@@ -1,5 +1,7 @@
 package org.subshare.core.dto;
 
+import java.util.Date;
+
 import co.codewizards.cloudstore.core.dto.Uid;
 
 public class ServerDto {
@@ -9,6 +11,8 @@ public class ServerDto {
 	private String name;
 
 	private String url;
+
+	private Date changed;
 
 	public Uid getServerId() {
 		return serverId;
@@ -31,4 +35,10 @@ public class ServerDto {
 		this.url = url;
 	}
 
+	public Date getChanged() {
+		return changed;
+	}
+	public void setChanged(Date changed) {
+		this.changed = changed;
+	}
 }

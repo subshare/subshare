@@ -10,7 +10,7 @@ public class ServerRepoRegistryDto {
 
 	private List<ServerRepoDto> serverRepoDtos;
 
-	private List<DeletedUid> deletedServerRepoIds;
+	private List<DeletedUUID> deletedServerRepoIds;
 
 	public List<ServerRepoDto> getServerRepoDtos() {
 		if (serverRepoDtos == null)
@@ -22,13 +22,13 @@ public class ServerRepoRegistryDto {
 		this.serverRepoDtos = serverRepoDtos;
 	}
 
-	public List<DeletedUid> getDeletedServerRepoIds() {
+	public List<DeletedUUID> getDeletedServerRepoIds() {
 		if (deletedServerRepoIds == null)
 			deletedServerRepoIds = new ArrayList<>();
 
 		return deletedServerRepoIds;
 	}
-	public void setDeletedServerIds(List<DeletedUid> deletedServerRepoIds) {
+	public void setDeletedServerIds(List<DeletedUUID> deletedServerRepoIds) {
 		this.deletedServerRepoIds = deletedServerRepoIds;
 	}
 }

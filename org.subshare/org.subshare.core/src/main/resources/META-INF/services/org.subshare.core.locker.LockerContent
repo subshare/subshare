@@ -1,1 +1,3 @@
 org.subshare.core.user.UserRegistryLockerContent
+org.subshare.core.server.ServerRegistryLockerContent
+org.subshare.core.repo.ServerRepoRegistryLockerContent

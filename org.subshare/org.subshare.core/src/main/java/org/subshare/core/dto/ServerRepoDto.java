@@ -1,5 +1,6 @@
 package org.subshare.core.dto;
 
+import java.util.Date;
 import java.util.UUID;
 
 import co.codewizards.cloudstore.core.dto.Uid;
@@ -10,6 +11,7 @@ public class ServerRepoDto {
 	private String name;
 	private Uid serverId;
 	private Uid userId;
+	private Date changed;
 
 	public UUID getRepositoryId() {
 		return repositoryId;
@@ -37,5 +39,12 @@ public class ServerRepoDto {
 	}
 	public void setUserId(Uid userId) {
 		this.userId = userId;
+	}
+
+	public Date getChanged() {
+		return changed;
+	}
+	public void setChanged(Date changed) {
+		this.changed = changed;
 	}
 }

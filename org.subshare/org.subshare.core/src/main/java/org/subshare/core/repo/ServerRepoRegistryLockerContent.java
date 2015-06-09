@@ -1,4 +1,4 @@
-package org.subshare.core.user;
+package org.subshare.core.repo;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -11,21 +11,21 @@ import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.io.LockFile;
 import co.codewizards.cloudstore.core.oio.File;
 
-public class UserRegistryLockerContent extends FileLockerContent {
+public class ServerRepoRegistryLockerContent extends FileLockerContent {
 
 	@Override
 	public File getFile() {
-		return getUserRegistry().getUserRegistryFile();
+		return getServerRepoRegistry().getServerRepoRegistryFile();
 	}
 
-	protected UserRegistryImpl getUserRegistry() {
-		final UserRegistryImpl userRegistry = (UserRegistryImpl) UserRegistryImpl.getInstance();
+	protected ServerRepoRegistryImpl getServerRepoRegistry() {
+		final ServerRepoRegistryImpl userRegistry = (ServerRepoRegistryImpl) ServerRepoRegistryImpl.getInstance();
 		return userRegistry;
 	}
 
 	@Override
 	protected LockFile acquireLockFile() {
-		return getUserRegistry().acquireLockFile();
+		return getServerRepoRegistry().acquireLockFile();
 	}
 
 	@Override
@@ -42,12 +42,12 @@ public class UserRegistryLockerContent extends FileLockerContent {
 	}
 
 	@Override
-	public void mergeFrom(byte[] serverData) throws IOException {
-		getUserRegistry().mergeFrom(serverData);
+	public void mergeFrom(byte[] serverRepoData) throws IOException {
+		getServerRepoRegistry().mergeFrom(serverRepoData);
 	}
 
 	@Override
 	public Uid getLocalVersion() {
-		return getUserRegistry().getVersion();
+		return getServerRepoRegistry().getVersion();
 	}
 }

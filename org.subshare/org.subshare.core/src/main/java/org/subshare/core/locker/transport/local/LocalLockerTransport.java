@@ -63,7 +63,10 @@ public class LocalLockerTransport extends AbstractLockerTransport {
 		// being somehow linked (other than by access time correlation - which we might solve later, too).
 		// Therefore, we generate a new version-per-pgp-key whenever the underlying version changes.
 
-		final Uid lockerContentLocalVersion = getLockerContentOrFail().getLocalVersion();
+		final LockerContent lockerContent = getLockerContentOrFail();
+		final Uid lockerContentLocalVersion = lockerContent.getLocalVersion();
+		if (lockerContentLocalVersion == null)
+			throw new IllegalStateException(String.format("Implementation error: %s.getLocalVersion() returned null! ", lockerContent.getClass().getName()));
 
 		String s = getLocalLockerTransportProperties().getProperty(getLocalVersionPropertyKey());
 		Uid persistentLocalVersion = isEmpty(s) ? null : new Uid(s);
@@ -83,12 +86,12 @@ public class LocalLockerTransport extends AbstractLockerTransport {
 
 	public String getLocalVersionPropertyKey() {
 		final PgpKeyId pgpKeyId = getPgpKeyOrFail().getPgpKeyId();
-		return String.format("localVersion[pgpKeyId=%s]", pgpKeyId);
+		return String.format("pgpKey[%s].lockerContent[%s].localVersion", pgpKeyId, getLockerContentOrFail().getName());
 	}
 
 	public String getServerVersionPropertyKey() {
 		final PgpKeyId pgpKeyId = getPgpKeyOrFail().getPgpKeyId();
-		return String.format("serverVersion[pgpKeyId=%s]", pgpKeyId);
+		return String.format("pgpKey[%s].lockerContent[%s].serverVersion", pgpKeyId, getLockerContentOrFail().getName());
 	}
 
 	@Override
@@ -104,8 +107,12 @@ public class LocalLockerTransport extends AbstractLockerTransport {
 			encryptedDataFile.signManifestData(pgpKey);
 
 			final byte[] localData = lockerContent.getLocalData();
+			if (localData == null)
+				throw new IllegalStateException(String.format("Implementation error: %s.getLocalData() returned null! ", lockerContent.getClass().getName()));
+
 			final ByteArrayOutputStream out = new ByteArrayOutputStream();
 			final PgpEncoder encoder = getPgp().createEncoder(new ByteArrayInputStream(localData), out);
+			encoder.getEncryptPgpKeys().add(pgpKey);
 			encoder.setSignPgpKey(pgpKey);
 			encoder.encode();
 
@@ -136,6 +143,9 @@ public class LocalLockerTransport extends AbstractLockerTransport {
 			decoder.decode();
 			if (decoder.getPgpSignature() == null)
 				throw new SignatureException("Missing signature!");
+
+			if (decoder.getDecryptPgpKey() == null)
+				throw new IllegalStateException("WTF?! The data was not encrypted!");
 
 			getLockerContentOrFail().mergeFrom(out.toByteArray());
 			mergedVersions.add(contentVersion);

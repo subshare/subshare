@@ -5,6 +5,7 @@ import static co.codewizards.cloudstore.core.util.Util.*;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.util.Date;
 import java.util.UUID;
 
 import co.codewizards.cloudstore.core.dto.Uid;
@@ -17,6 +18,7 @@ public class ServerRepoImpl implements ServerRepo {
 	private String name;
 	private Uid serverId;
 	private Uid userId;
+	private Date changed = new Date();
 
 	public ServerRepoImpl(final UUID repositoryId) {
 		this.repositoryId = assertNotNull("repositoryId)", repositoryId);
@@ -37,6 +39,7 @@ public class ServerRepoImpl implements ServerRepo {
 		final String old = this.name;
 		this.name = name;
 		firePropertyChange(PropertyEnum.name, old, name);
+		updateChanged();
 	}
 
 	@Override
@@ -52,6 +55,7 @@ public class ServerRepoImpl implements ServerRepo {
 		final Uid old = this.serverId;
 		this.serverId = serverId;
 		firePropertyChange(PropertyEnum.serverId, old, serverId);
+		updateChanged();
 	}
 
 	@Override
@@ -66,6 +70,23 @@ public class ServerRepoImpl implements ServerRepo {
 		final Uid old = this.userId;
 		this.userId = userId;
 		firePropertyChange(PropertyEnum.userId, old, userId);
+		updateChanged();
+	}
+
+	@Override
+	public Date getChanged() {
+		return changed;
+	}
+	@Override
+	public void setChanged(final Date changed) {
+		assertNotNull("changed", changed);
+		final Date old = this.changed;
+		this.changed = changed;
+		firePropertyChange(PropertyEnum.changed, old, changed);
+	}
+
+	protected void updateChanged() {
+		setChanged(new Date());
 	}
 
 	@Override
