@@ -23,6 +23,7 @@ import org.subshare.core.pgp.PgpDecoder;
 import org.subshare.core.pgp.PgpEncoder;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpKeyId;
+import org.subshare.core.pgp.PgpSignature;
 
 import co.codewizards.cloudstore.core.auth.SignatureException;
 import co.codewizards.cloudstore.core.config.ConfigDir;
@@ -56,6 +57,12 @@ public class LocalLockerTransport extends AbstractLockerTransport {
 	public void setPgpKey(PgpKey pgpKey) {
 		super.setPgpKey(pgpKey);
 		mergedVersions.clear(); // prevent the different PgpKeys of a user from becoming associated!
+	}
+
+	@Override
+	public void addMergedVersions(final List<Uid> serverVersions) {
+		assertNotNull("serverVersions", serverVersions);
+		mergedVersions.addAll(serverVersions);
 	}
 
 	protected Uid getVersion() {
@@ -129,7 +136,10 @@ public class LocalLockerTransport extends AbstractLockerTransport {
 		final Uid contentVersion = encryptedDataFile.getContentVersion();
 		assertNotNull("encryptedDataFile.contentVersion", contentVersion);
 
-		// This method assumes that the given encryptedDataFile was already checked for valid manifest signature!
+		final PgpSignature manifestSignature = encryptedDataFile.assertManifestSignatureValid();
+		final PgpKeyId pgpKeyId = getPgpKeyOrFail().getPgpKeyId();
+		if (! pgpKeyId.equals(manifestSignature.getPgpKeyId()))
+			throw new IllegalStateException(String.format("pgpKeyId != manifestSignature.pgpKeyId :: %s != %s", pgpKeyId, manifestSignature.getPgpKeyId()));
 
 		if (mergedVersions.contains(contentVersion))
 			return; // no need to merge the same version multiple times - can theoretically happen because of multiple servers, but currently we sync only one server at a time - so purely theoretical at the moment.
@@ -141,11 +151,15 @@ public class LocalLockerTransport extends AbstractLockerTransport {
 			final ByteArrayOutputStream out = new ByteArrayOutputStream();
 			final PgpDecoder decoder = getPgp().createDecoder(new ByteArrayInputStream(defaultData), out);
 			decoder.decode();
-			if (decoder.getPgpSignature() == null)
+			final PgpSignature defaultDataSignature = decoder.getPgpSignature();
+			if (defaultDataSignature == null)
 				throw new SignatureException("Missing signature!");
 
 			if (decoder.getDecryptPgpKey() == null)
 				throw new IllegalStateException("WTF?! The data was not encrypted!");
+
+			if (! pgpKeyId.equals(defaultDataSignature.getPgpKeyId()))
+				throw new IllegalStateException(String.format("pgpKeyId != defaultDataSignature.pgpKeyId :: %s != %s", pgpKeyId, defaultDataSignature.getPgpKeyId()));
 
 			getLockerContentOrFail().mergeFrom(out.toByteArray());
 			mergedVersions.add(contentVersion);

@@ -3,7 +3,6 @@ package org.subshare.rest.server.service;
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.IOUtil.*;
-import static org.subshare.core.file.FileConst.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -24,16 +23,11 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 
 import org.bouncycastle.util.io.Streams;
-import org.subshare.core.io.NullOutputStream;
 import org.subshare.core.locker.LockerEncryptedDataFile;
-import org.subshare.core.pgp.Pgp;
-import org.subshare.core.pgp.PgpDecoder;
 import org.subshare.core.pgp.PgpKeyId;
-import org.subshare.core.pgp.PgpRegistry;
 import org.subshare.core.pgp.PgpSignature;
 import org.subshare.rest.server.LockerDir;
 
-import co.codewizards.cloudstore.core.auth.SignatureException;
 import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.dto.UidList;
 import co.codewizards.cloudstore.core.io.LockFile;
@@ -95,21 +89,23 @@ public class LockerService {
 		final Uid lockerContentVersion = encryptedDataFile.getContentVersion();
 		assertNotNull("encryptedDataFile.contentVersion", lockerContentVersion);
 
-		final Pgp pgp = PgpRegistry.getInstance().getPgpOrFail();
-		for (final String name : encryptedDataFile.getDataNames()) {
-			if (MANIFEST_PROPERTIES_SIGNATURE_FILE_NAME.equals(name))
-				continue;
-
-			final PgpDecoder decoder = pgp.createDecoder(new ByteArrayInputStream(encryptedDataFile.getData(name)), new NullOutputStream());
-			decoder.decode();
-			pgpSignature = decoder.getPgpSignature();
-			if (pgpSignature == null)
-				throw new SignatureException(String.format("Missing signature! name='%s'", name));
-
-			if (!pgpKeyId.equals(pgpSignature.getPgpKeyId()))
-				throw new SignatureException(String.format("Manifest signature's pgpKeyId does not match data's (name='%s') signature's pgpKeyId! %s != %s",
-						name, pgpKeyId, pgpSignature.getPgpKeyId()));
-		}
+// We cannot verify the signatures of the signed+encrypted data, because OpenPGP first signs and then encrypts.
+// This verification is thus only possible on the client-side (it's done in
+//		final Pgp pgp = PgpRegistry.getInstance().getPgpOrFail();
+//		for (final String name : encryptedDataFile.getDataNames()) {
+//			if (MANIFEST_PROPERTIES_SIGNATURE_FILE_NAME.equals(name))
+//				continue;
+//
+//			final PgpDecoder decoder = pgp.createDecoder(new ByteArrayInputStream(encryptedDataFile.getData(name)), new NullOutputStream());
+//			decoder.decode();
+//			pgpSignature = decoder.getPgpSignature();
+//			if (pgpSignature == null)
+//				throw new SignatureException(String.format("Missing signature! name='%s'", name));
+//
+//			if (!pgpKeyId.equals(pgpSignature.getPgpKeyId()))
+//				throw new SignatureException(String.format("Manifest signature's pgpKeyId does not match data's (name='%s') signature's pgpKeyId! %s != %s",
+//						name, pgpKeyId, pgpSignature.getPgpKeyId()));
+//		}
 
 		final File file = createFile(lockerDir, pgpKeyId.toString(), lockerContentName, lockerContentVersion.toString() + DATA_FILE_SUFFIX);
 		file.getParentFile().mkdirs();

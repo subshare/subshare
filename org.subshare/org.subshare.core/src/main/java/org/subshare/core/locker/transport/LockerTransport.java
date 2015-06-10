@@ -34,6 +34,7 @@ public interface LockerTransport extends AutoCloseable {
 
 	List<Uid> getVersions();
 
+	void addMergedVersions(List<Uid> serverVersions);
 	List<LockerEncryptedDataFile> getEncryptedDataFiles();
 
 	void putEncryptedDataFile(LockerEncryptedDataFile encryptedDataFile);

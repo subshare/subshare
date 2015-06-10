@@ -3,7 +3,6 @@ package org.subshare.core.locker;
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
-import static co.codewizards.cloudstore.core.util.Util.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -81,33 +80,38 @@ public class LockerSync implements AutoCloseable {
 
 				final Uid localVersion = localVersions.get(0);
 
+				boolean syncDownDone = false;
 				boolean syncUpNeeded = false;
 
 				List<Uid> serverVersions = getServerLockerTransport().getVersions();
 				if (serverVersions.size() > 1) {
 					syncUpNeeded = true;
 					serverVersions = syncDown(); // replace serverVersions by the ones actually synced (might have changed in the meantime).
+					syncDownDone = true;
 				}
-				else if (serverVersions.isEmpty())
-					doNothing(); // if there's nothing on the server, it obviously makes no sense to sync down.
+				else if (serverVersions.isEmpty()) {
+					// if there's nothing on the server, it obviously makes no sense to sync down.
+					syncUpNeeded = true; // but we definitely need to sync *up*!
+				}
 				else {
 					final Set<Uid> lastSyncServerVersions = new HashSet<>(getLastSyncServerVersions());
 					final Set<Uid> serverVersionsSet = new HashSet<>(serverVersions);
 					if (!serverVersionsSet.equals(lastSyncServerVersions)) {
 						syncUpNeeded = true;
 						serverVersions = syncDown(); // replace serverVersions by the ones actually synced (might have changed in the meantime).
+						syncDownDone = true;
 					}
-				}
 
-				if (!syncUpNeeded) {
-					if (serverVersions.size() != 1)
-						syncUpNeeded = true;
-					else
+					if (!syncUpNeeded)
 						syncUpNeeded = !localVersion.equals(serverVersions.get(0));
 				}
 
-				if (syncUpNeeded)
+				if (syncUpNeeded) {
+					if (! syncDownDone)
+						getLocalLockerTransport().addMergedVersions(serverVersions); // if we don't sync down, now, we must register the versions we synced, previously.
+
 					syncUp();
+				}
 			}
 		}
 		pgpKey = null;
@@ -173,7 +177,6 @@ public class LockerSync implements AutoCloseable {
 		final List<LockerEncryptedDataFile> encryptedDataFiles = fromLockerTransport.getEncryptedDataFiles();
 		final List<Uid> serverVersions = new ArrayList<Uid>(encryptedDataFiles.size());
 		for (final LockerEncryptedDataFile encryptedDataFile : encryptedDataFiles) {
-			encryptedDataFile.assertManifestSignatureValid();
 			final Uid serverVersion = encryptedDataFile.getContentVersion();
 			assertNotNull("encryptedDataFile.contentVersion", serverVersion);
 			serverVersions.add(serverVersion);
