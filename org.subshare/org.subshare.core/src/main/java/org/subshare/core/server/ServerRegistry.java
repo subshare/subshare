@@ -24,8 +24,6 @@ public interface ServerRegistry {
 
 	void writeIfNeeded();
 
-	void write();
-
 	void addPropertyChangeListener(PropertyChangeListener listener);
 
 	void addPropertyChangeListener(Property property, PropertyChangeListener listener);

@@ -133,7 +133,6 @@ public class ServerRepoRegistryImpl implements ServerRepoRegistry {
 		serverRepoRegistryFile = createFile(ConfigDir.getInstance().getFile(), SERVER_REPO_REGISTRY_FILE_NAME);
 
 		read();
-		populateServerReposFromLocalRepositories();
 	}
 
 	protected File getServerRepoRegistryFile() {
@@ -171,74 +170,6 @@ public class ServerRepoRegistryImpl implements ServerRepoRegistry {
 		dirty = false;
 		this.version = version != null ? version : new Uid();
 	}
-
-	private void populateServerReposFromLocalRepositories() {
-		// This is not really needed and we cannot easily implement this without knowing the ServerRepo who should be the local owner.
-		// Hence commented this out - at least temporarily. Maybe will delete this altogether, later.
-
-//		final ServerRegistry serverRegistry = ServerRegistryImpl.getInstance();
-//		final Map<UUID, ServerRepo> repositoryId2ServerRepo = getRepositoryId2ServerRepo();
-//		final LocalRepoRegistry localRepoRegistry = LocalRepoRegistry.getInstance();
-//		for (final UUID localRepositoryId : localRepoRegistry.getRepositoryIds()) {
-//			final File localRoot = localRepoRegistry.getLocalRoot(localRepositoryId);
-//			if (localRoot == null || !localRoot.exists())
-//				continue; // maybe deleted during iteration
-//
-//			try (final LocalRepoManager localRepoManager = LocalRepoManagerFactory.Helper.getInstance().createLocalRepoManagerForExistingRepository(localRoot);) {
-//				for (final Map.Entry<UUID, URL> me : localRepoManager.getRemoteRepositoryId2RemoteRootMap().entrySet()) {
-//					final UUID serverRepositoryId = me.getKey();
-//					final URL remoteRoot = me.getValue();
-//
-//					Server server = serverRegistry.getServerForRemoteRoot(remoteRoot);
-//					if (server == null) {
-//						final URL serverUrl;
-//						try (RepoTransport repoTransport = RepoTransportFactoryRegistry.getInstance().getRepoTransportFactoryOrFail(remoteRoot).createRepoTransport(remoteRoot, localRepositoryId);) {
-//							final URL remoteRootWithoutPathPrefix = repoTransport.getRemoteRootWithoutPathPrefix();
-//							// remoteRootWithoutPathPrefix still contains the repository-name or repository-id as last path-segment.
-//							serverUrl = removeLastPathSegment(remoteRootWithoutPathPrefix);
-//						}
-//
-//						server = new ServerImpl();
-//						server.setName(serverUrl.getHost());
-//						server.setUrl(serverUrl);
-//						serverRegistry.getServers().add(server);
-//					}
-//
-//					if (repositoryId2ServerRepo.get(serverRepositoryId) == null) {
-//						final ServerRepo serverRepo = new ServerRepoImpl(serverRepositoryId);
-//						serverRepo.setName(serverRepositoryId.toString());
-//						serverRepo.setServerId(server.getServerId());
-//						getServerRepos().add(serverRepo);
-//					}
-//				}
-//			}
-//		}
-	}
-
-//	private URL removeLastPathSegment(URL url) {
-//		assertNotNull("url", url);
-//		String urlStr = url.toExternalForm();
-//		if (urlStr.contains("?"))
-//			throw new IllegalArgumentException("url should not contain a query part!");
-//
-//		while (urlStr.endsWith("/"))
-//			urlStr = urlStr.substring(0, urlStr.length() - 1);
-//
-//		final int lastSlashIndex = urlStr.lastIndexOf('/');
-//		if (lastSlashIndex < 0)
-//			throw new IllegalArgumentException("No '/' found where expected!");
-//
-//		urlStr = urlStr.substring(0, lastSlashIndex);
-//
-//		while (urlStr.endsWith("/"))
-//			urlStr = urlStr.substring(0, urlStr.length() - 1);
-//
-//		try {
-//			return new URL(urlStr);
-//		} catch (MalformedURLException e) {
-//			throw new RuntimeException(e);
-//		}
-//	}
 
 	@Override
 	public List<ServerRepo> getServerReposOfServer(final Uid serverId) {

@@ -261,7 +261,7 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 	}
 
 	private int getVersionFromManifestProperties(final Properties manifestProperties) {
-		final String versionStr = manifestProperties.getProperty(MANIFEST_PROPERTY_VERSION);
+		final String versionStr = manifestProperties.getProperty(MANIFEST_PROPERTY_CONTENT_TYPE_VERSION);
 		final int version;
 		try {
 			version = Integer.parseInt(versionStr);
@@ -287,7 +287,7 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 		final Writer w = new OutputStreamWriter(out, StandardCharsets.UTF_8);
 
 		writeManifestEntry(w, MANIFEST_PROPERTY_CONTENT_TYPE, UserRepoInvitationToken.CONTENT_TYPE_USER_REPO_INVITATION);
-		writeManifestEntry(w, MANIFEST_PROPERTY_VERSION, Integer.toString(1));
+		writeManifestEntry(w, MANIFEST_PROPERTY_CONTENT_TYPE_VERSION, Integer.toString(1));
 
 		w.close();
 		return out.toByteArray();

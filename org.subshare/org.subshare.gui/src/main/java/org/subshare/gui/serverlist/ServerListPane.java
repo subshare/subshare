@@ -281,7 +281,7 @@ public class ServerListPane extends BorderPane {
 			throw new RuntimeException();
 		}
 		getServerRegistry().getServers().add(server);
-		getServerRegistry().write();
+		getServerRegistry().writeIfNeeded();
 	}
 
 	@FXML
@@ -293,6 +293,6 @@ public class ServerListPane extends BorderPane {
 
 		// TODO how to handle servers that are in use?
 		getServerRegistry().getServers().removeAll(selectedServers);
-		getServerRegistry().write();
+		getServerRegistry().writeIfNeeded();
 	}
 }

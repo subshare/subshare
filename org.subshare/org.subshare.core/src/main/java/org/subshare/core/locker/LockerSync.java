@@ -157,20 +157,11 @@ public class LockerSync implements AutoCloseable {
 	}
 
 	private List<Uid> syncDown() {
-//		final List<LockerEncryptedDataFile> encryptedDataFiles = getServerLockerTransport().getEncryptedDataFiles();
-//		final List<Uid> serverVersions = new ArrayList<Uid>(encryptedDataFiles.size());
-//		for (final LockerEncryptedDataFile encryptedDataFile : encryptedDataFiles) {
-//			encryptedDataFile.assertManifestSignatureValid();
-//			final Uid serverVersion = encryptedDataFile.getContentVersion();
-//			assertNotNull("encryptedDataFile.contentVersion", serverVersion);
-//			serverVersions.add(serverVersion);
-//
-//			getLocalLockerTransport().putEncryptedDataFile(encryptedDataFile);
-//		}
-//
-//		setLastSyncServerVersions(serverVersions);
-//		return serverVersions;
 		return sync(getServerLockerTransport(), getLocalLockerTransport());
+	}
+
+	private void syncUp() {
+		sync(getLocalLockerTransport(), getServerLockerTransport());
 	}
 
 	private List<Uid> sync(final LockerTransport fromLockerTransport, final LockerTransport toLockerTransport) {
@@ -185,10 +176,6 @@ public class LockerSync implements AutoCloseable {
 		}
 		setLastSyncServerVersions(serverVersions);
 		return serverVersions;
-	}
-
-	private void syncUp() {
-		sync(getLocalLockerTransport(), getServerLockerTransport());
 	}
 
 	private List<LockerContent> getLockerContents() {

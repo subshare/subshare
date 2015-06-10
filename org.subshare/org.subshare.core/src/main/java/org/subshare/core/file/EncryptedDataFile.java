@@ -106,7 +106,7 @@ public class EncryptedDataFile {
 	private void initManifestProperties() {
 		manifestProperties = new Properties();
 		manifestProperties.setProperty(MANIFEST_PROPERTY_CONTENT_TYPE, CONTENT_TYPE_VALUE);
-		manifestProperties.setProperty(MANIFEST_PROPERTY_VERSION, Integer.toString(1));
+		manifestProperties.setProperty(MANIFEST_PROPERTY_CONTENT_TYPE_VERSION, Integer.toString(1));
 	}
 
 	private Properties readManifest(final ZipInputStream zin) throws IOException {
@@ -224,14 +224,14 @@ public class EncryptedDataFile {
 		assertNotNull(MANIFEST_PROPERTY_CONTENT_TYPE, contentType);
 		writeManifestEntry(w, MANIFEST_PROPERTY_CONTENT_TYPE, contentType);
 
-		final String version = sortedManifestProperties.remove(MANIFEST_PROPERTY_VERSION);
-		assertNotNull(MANIFEST_PROPERTY_VERSION, version);
+		final String version = sortedManifestProperties.remove(MANIFEST_PROPERTY_CONTENT_TYPE_VERSION);
+		assertNotNull(MANIFEST_PROPERTY_CONTENT_TYPE_VERSION, version);
 		try {
 			Integer.parseInt(version);
 		} catch (NumberFormatException x) {
-			throw new IllegalStateException(MANIFEST_PROPERTY_VERSION + " is not a valid integer: " + version);
+			throw new IllegalStateException(MANIFEST_PROPERTY_CONTENT_TYPE_VERSION + " is not a valid integer: " + version);
 		}
-		writeManifestEntry(w, MANIFEST_PROPERTY_VERSION, version);
+		writeManifestEntry(w, MANIFEST_PROPERTY_CONTENT_TYPE_VERSION, version);
 
 		for (Map.Entry<String, String> me : sortedManifestProperties.entrySet())
 			writeManifestEntry(w, me.getKey(), me.getValue());
