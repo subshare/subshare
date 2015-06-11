@@ -3,12 +3,10 @@ package org.subshare.core.server;
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.UrlUtil.*;
-import static org.subshare.core.file.FileConst.*;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -19,7 +17,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.zip.ZipEntry;
@@ -145,31 +142,6 @@ public class ServerRegistryImpl extends FileBasedObjectRegistry implements Serve
 //		populateServersFromLocalRepositories();
 	}
 
-//	@Override
-//	private void read() {
-//		Uid version = null;
-//		final ServerDtoConverter serverDtoConverter = new ServerDtoConverter();
-//		try (LockFile lockFile = acquireLockFile();) {
-//			lockFile.getLock().lock();
-//			try {
-//				if (serverRegistryFile.exists()) {
-//					final ServerRegistryDtoIo serverRegistryDtoIo = new ServerRegistryDtoIo();
-//					final ServerRegistryDto serverRegistryDto = serverRegistryDtoIo.deserializeWithGz(serverRegistryFile);
-//					for (final ServerDto serverDto : serverRegistryDto.getServerDtos()) {
-//						final Server server = serverDtoConverter.fromServerDto(serverDto);
-//						getServers().add(server);
-//					}
-//					version = serverRegistryDto.getVersion();
-//					deletedServerIds.addAll(serverRegistryDto.getDeletedServerIds());
-//				}
-//			} finally {
-//				lockFile.getLock().unlock();
-//			}
-//		}
-//		dirty = false;
-//
-//	}
-
 	@Override
 	protected String getContentType() {
 		return "application/vnd.subshare.server-registry";
@@ -194,11 +166,16 @@ public class ServerRegistryImpl extends FileBasedObjectRegistry implements Serve
 		final ServerDtoConverter serverDtoConverter = new ServerDtoConverter();
 		final ServerRegistryDtoIo serverRegistryDtoIo = new ServerRegistryDtoIo();
 		final ServerRegistryDto serverRegistryDto = serverRegistryDtoIo.deserialize(zin);
+
 		for (final ServerDto serverDto : serverRegistryDto.getServerDtos()) {
 			final Server server = serverDtoConverter.fromServerDto(serverDto);
-			getServers().add(server);
+			servers.add(server);
 		}
-		this.version = serverRegistryDto.getVersion();
+
+		deletedServerIds.clear();
+		deletedServerIds.addAll(serverRegistryDto.getDeletedServerIds());
+
+		version = serverRegistryDto.getVersion();
 	}
 
 	@Override
@@ -306,25 +283,6 @@ public class ServerRegistryImpl extends FileBasedObjectRegistry implements Serve
 			write();
 	}
 
-//	@Override
-//	public synchronized void write() {
-//		final ServerRegistryDtoIo serverRegistryDtoIo = new ServerRegistryDtoIo();
-//		final ServerRegistryDto serverRegistryDto = createServerRegistryDto();
-//
-//		try (LockFile lockFile = acquireLockFile();) {
-//			lockFile.getLock().lock();
-//			try {
-//				final File newServerListFile = createFile(serverRegistryFile.getParentFile(), serverRegistryFile.getName() + ".new");
-//				serverRegistryDtoIo.serializeWithGz(serverRegistryDto, newServerListFile);
-//				serverRegistryFile.delete();
-//				newServerListFile.renameTo(serverRegistryFile);
-//			} finally {
-//				lockFile.getLock().unlock();
-//			}
-//		}
-//		dirty = false;
-//	}
-
 	@Override
 	protected synchronized void writePayload(ZipOutputStream zout) throws IOException {
 		final ServerRegistryDtoIo serverRegistryDtoIo = new ServerRegistryDtoIo();
@@ -371,29 +329,12 @@ public class ServerRegistryImpl extends FileBasedObjectRegistry implements Serve
 		propertyChangeSupport.firePropertyChange(property.name(), oldValue, newValue);
 	}
 
-	public void mergeFrom(final byte[] data) {
-		assertNotNull("data", data);
-		if (data.length == 0)
-			return;
-
-		try {
-			try (final ZipInputStream zin = new ZipInputStream(new ByteArrayInputStream(data));) {
-				final Properties manifestProperties = readManifest(zin);
-				if (!getContentType().equals(manifestProperties.getProperty(MANIFEST_PROPERTY_CONTENT_TYPE)))
-					throw new IllegalArgumentException(String.format(
-							"data has unexpected contentType: '%s' was found, but '%s' was expected!", getContentType(), manifestProperties.getProperty(MANIFEST_PROPERTY_CONTENT_TYPE)));
-
-				ZipEntry zipEntry;
-				while (null != (zipEntry = zin.getNextEntry())) {
-					if (PAYLOAD_ENTRY_NAME.equals(zipEntry.getName())) {
-						final ServerRegistryDtoIo serverRegistryDtoIo = new ServerRegistryDtoIo();
-						final ServerRegistryDto serverRegistryDto = serverRegistryDtoIo.deserialize(zin);
-						mergeFrom(serverRegistryDto);
-					}
-				}
-			}
-		} catch (IOException x) {
-			throw new RuntimeException(x);
+	@Override
+	protected void mergeFrom(ZipInputStream zin, ZipEntry zipEntry) {
+		if (PAYLOAD_ENTRY_NAME.equals(zipEntry.getName())) {
+			final ServerRegistryDtoIo serverRegistryDtoIo = new ServerRegistryDtoIo();
+			final ServerRegistryDto serverRegistryDto = serverRegistryDtoIo.deserialize(zin);
+			mergeFrom(serverRegistryDto);
 		}
 	}
 

@@ -3,6 +3,7 @@ package org.subshare.core.fbor;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static org.subshare.core.file.FileConst.*;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -202,6 +203,29 @@ public abstract class FileBasedObjectRegistry {
 		w.close();
 		return out.toByteArray();
 	}
+
+	public void mergeFrom(final byte[] data) {
+		assertNotNull("data", data);
+		if (data.length == 0)
+			return;
+
+		try {
+			try (final ZipInputStream zin = new ZipInputStream(new ByteArrayInputStream(data));) {
+				final Properties manifestProperties = readManifest(zin);
+				if (!getContentType().equals(manifestProperties.getProperty(MANIFEST_PROPERTY_CONTENT_TYPE)))
+					throw new IllegalArgumentException(String.format(
+							"data has unexpected contentType: '%s' was found, but '%s' was expected!", getContentType(), manifestProperties.getProperty(MANIFEST_PROPERTY_CONTENT_TYPE)));
+
+				ZipEntry zipEntry;
+				while (null != (zipEntry = zin.getNextEntry()))
+					mergeFrom(zin, zipEntry);
+			}
+		} catch (IOException x) {
+			throw new RuntimeException(x);
+		}
+	}
+
+	protected abstract void mergeFrom(ZipInputStream zin, ZipEntry zipEntry);
 
 	private SortedMap<String, String> createSortedManifestProperties() {
 		final TreeMap<String, String> result = new TreeMap<String, String>();

@@ -129,11 +129,7 @@ public abstract class AbstractIT {
 		}
 
 		@Override
-		protected void readUserRegistryFile() {
-			// nothing
-		}
-		@Override
-		protected void readPgpUsers() {
+		protected void read() {
 			// nothing
 		}
 

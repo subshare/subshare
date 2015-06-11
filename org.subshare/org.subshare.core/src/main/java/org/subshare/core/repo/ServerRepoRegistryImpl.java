@@ -6,7 +6,8 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
-import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -17,25 +18,33 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 import org.subshare.core.dto.DeletedUUID;
 import org.subshare.core.dto.ServerRepoDto;
 import org.subshare.core.dto.ServerRepoRegistryDto;
 import org.subshare.core.dto.jaxb.ServerRepoRegistryDtoIo;
+import org.subshare.core.fbor.FileBasedObjectRegistry;
 import org.subshare.core.observable.ModificationEventType;
 import org.subshare.core.observable.ObservableList;
 import org.subshare.core.observable.standard.StandardPostModificationEvent;
 import org.subshare.core.observable.standard.StandardPostModificationListener;
 import org.subshare.core.observable.standard.StandardPreModificationEvent;
 import org.subshare.core.observable.standard.StandardPreModificationListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import co.codewizards.cloudstore.core.config.ConfigDir;
 import co.codewizards.cloudstore.core.dto.Uid;
-import co.codewizards.cloudstore.core.io.LockFile;
-import co.codewizards.cloudstore.core.io.LockFileFactory;
 import co.codewizards.cloudstore.core.oio.File;
 
-public class ServerRepoRegistryImpl implements ServerRepoRegistry {
+public class ServerRepoRegistryImpl extends FileBasedObjectRegistry implements ServerRepoRegistry {
+
+	private static final Logger logger = LoggerFactory.getLogger(ServerRepoRegistryImpl.class);
+
+	private static final String PAYLOAD_ENTRY_NAME = ServerRepoRegistryDto.class.getSimpleName() + ".xml";
 
 	private final PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
 
@@ -135,7 +144,13 @@ public class ServerRepoRegistryImpl implements ServerRepoRegistry {
 		read();
 	}
 
-	protected File getServerRepoRegistryFile() {
+	@Override
+	protected String getContentType() {
+		return "application/vnd.subshare.server-repo-registry";
+	}
+
+	@Override
+	protected File getFile() {
 		return serverRepoRegistryFile;
 	}
 
@@ -150,26 +165,37 @@ public class ServerRepoRegistryImpl implements ServerRepoRegistry {
 		return repositoryId2ServerRepo;
 	}
 
-	private void read() {
-		final ServerRepoDtoConverter serverRepoDtoConverter = new ServerRepoDtoConverter();
-		try (LockFile lockFile = acquireLockFile();) {
-			lockFile.getLock().lock();
-			try {
-				if (serverRepoRegistryFile.exists()) {
-					final ServerRepoRegistryDtoIo serverRepoRegistryDtoIo = new ServerRepoRegistryDtoIo();
-					final ServerRepoRegistryDto serverRepoRegistryDto = serverRepoRegistryDtoIo.deserializeWithGz(serverRepoRegistryFile);
-					for (final ServerRepoDto serverRepoDto : serverRepoRegistryDto.getServerRepoDtos()) {
-						final ServerRepo serverRepo = serverRepoDtoConverter.fromServerRepoDto(serverRepoDto);
-						getServerRepos().add(serverRepo);
-					}
-				}
-			} finally {
-				lockFile.getLock().unlock();
-			}
-		}
-		dirty = false;
-		this.version = version != null ? version : new Uid();
+	@Override
+	protected void read(InputStream in) throws IOException {
+		version = null;
+
+		super.read(in);
+
+		if (version == null)
+			version = new Uid();
 	}
+
+	@Override
+	protected void readPayloadEntry(ZipInputStream zin, ZipEntry zipEntry) throws IOException {
+		if (!PAYLOAD_ENTRY_NAME.equals(zipEntry.getName())) {
+			logger.warn("readPayloadEntry: Ignoring unexpected zip-entry: {}", zipEntry.getName());
+			return;
+		}
+		final ServerRepoDtoConverter serverRepoDtoConverter = new ServerRepoDtoConverter();
+		final ServerRepoRegistryDtoIo serverRepoRegistryDtoIo = new ServerRepoRegistryDtoIo();
+		final ServerRepoRegistryDto serverRepoRegistryDto = serverRepoRegistryDtoIo.deserializeWithGz(serverRepoRegistryFile);
+
+		for (final ServerRepoDto serverRepoDto : serverRepoRegistryDto.getServerRepoDtos()) {
+			final ServerRepo serverRepo = serverRepoDtoConverter.fromServerRepoDto(serverRepoDto);
+			serverRepos.add(serverRepo);
+		}
+
+		deletedServerRepoIds.clear();
+		deletedServerRepoIds.addAll(serverRepoRegistryDto.getDeletedServerRepoIds());
+
+		version = serverRepoRegistryDto.getVersion();
+	}
+
 
 	@Override
 	public List<ServerRepo> getServerReposOfServer(final Uid serverId) {
@@ -196,11 +222,6 @@ public class ServerRepoRegistryImpl implements ServerRepoRegistry {
 		return serverRepos;
 	}
 
-	protected LockFile acquireLockFile() {
-		final File dir = ConfigDir.getInstance().getFile();
-		return LockFileFactory.getInstance().acquire(createFile(dir, SERVER_REPO_REGISTRY_LOCK), 30000);
-	}
-
 	@Override
 	public synchronized void writeIfNeeded() {
 		if (dirty)
@@ -208,22 +229,13 @@ public class ServerRepoRegistryImpl implements ServerRepoRegistry {
 	}
 
 	@Override
-	public synchronized void write() {
+	protected void writePayload(ZipOutputStream zout) throws IOException {
 		final ServerRepoRegistryDtoIo serverRepoRegistryDtoIo = new ServerRepoRegistryDtoIo();
 		final ServerRepoRegistryDto serverRepoRegistryDto = createServerRepoListDto();
 
-		try (LockFile lockFile = acquireLockFile();) {
-			lockFile.getLock().lock();
-			try {
-				final File newServerRepoListFile = createFile(serverRepoRegistryFile.getParentFile(), serverRepoRegistryFile.getName() + ".new");
-				serverRepoRegistryDtoIo.serializeWithGz(serverRepoRegistryDto, newServerRepoListFile);
-				serverRepoRegistryFile.delete();
-				newServerRepoListFile.renameTo(serverRepoRegistryFile);
-			} finally {
-				lockFile.getLock().unlock();
-			}
-		}
-		dirty = false;
+		zout.putNextEntry(new ZipEntry(PAYLOAD_ENTRY_NAME));
+		serverRepoRegistryDtoIo.serialize(serverRepoRegistryDto, zout);
+		zout.closeEntry();
 	}
 
 	private ServerRepoRegistryDto createServerRepoListDto() {
@@ -233,6 +245,8 @@ public class ServerRepoRegistryImpl implements ServerRepoRegistry {
 			final ServerRepoDto serverRepoDto = converter.toServerRepoDto(serverRepo);
 			result.getServerRepoDtos().add(serverRepoDto);
 		}
+		result.getDeletedServerRepoIds().addAll(deletedServerRepoIds);
+		result.setVersion(version);
 		return result;
 	}
 
@@ -260,13 +274,10 @@ public class ServerRepoRegistryImpl implements ServerRepoRegistry {
 		propertyChangeSupport.firePropertyChange(property.name(), oldValue, newValue);
 	}
 
-	public void mergeFrom(final byte[] data) {
-		assertNotNull("data", data);
-		if (data.length == 0)
-			return;
-
+	@Override
+	protected void mergeFrom(ZipInputStream zin, ZipEntry zipEntry) {
 		final ServerRepoRegistryDtoIo serverRepoRegistryDtoIo = new ServerRepoRegistryDtoIo();
-		final ServerRepoRegistryDto serverRepoRegistryDto = serverRepoRegistryDtoIo.deserializeWithGz(new ByteArrayInputStream(data));
+		final ServerRepoRegistryDto serverRepoRegistryDto = serverRepoRegistryDtoIo.deserialize(zin);
 		mergeFrom(serverRepoRegistryDto);
 	}
 

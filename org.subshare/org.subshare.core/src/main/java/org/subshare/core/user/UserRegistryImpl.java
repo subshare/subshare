@@ -6,7 +6,8 @@ import static co.codewizards.cloudstore.core.util.StringUtil.*;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -18,22 +19,30 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 import org.subshare.core.dto.DeletedUid;
 import org.subshare.core.dto.UserDto;
 import org.subshare.core.dto.UserRegistryDto;
 import org.subshare.core.dto.jaxb.UserRegistryDtoIo;
+import org.subshare.core.fbor.FileBasedObjectRegistry;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpKeyId;
 import org.subshare.core.pgp.PgpRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import co.codewizards.cloudstore.core.config.ConfigDir;
 import co.codewizards.cloudstore.core.dto.Uid;
-import co.codewizards.cloudstore.core.io.LockFile;
-import co.codewizards.cloudstore.core.io.LockFileFactory;
 import co.codewizards.cloudstore.core.oio.File;
 
-public class UserRegistryImpl implements UserRegistry {
+public class UserRegistryImpl extends FileBasedObjectRegistry implements UserRegistry {
+
+	private static final Logger logger = LoggerFactory.getLogger(UserRegistryImpl.class);
+
+	private static final String PAYLOAD_ENTRY_NAME = UserRegistryDto.class.getSimpleName() + ".xml";
 
 	private final Map<PgpKeyId, User> pgpKeyId2User = new HashMap<>();
 	private final Map<Uid, User> userId2User = new LinkedHashMap<>();
@@ -60,40 +69,62 @@ public class UserRegistryImpl implements UserRegistry {
 
 	protected UserRegistryImpl() {
 		userRegistryFile = createFile(ConfigDir.getInstance().getFile(), USER_REGISTRY_FILE_NAME);
-		readUserRegistryFile();
+//		readUserRegistryFile();
+		read();
+	}
+
+	@Override
+	protected String getContentType() {
+		return "application/vnd.subshare.user-registry";
+	}
+
+	@Override
+	protected File getFile() {
+		return userRegistryFile;
+	}
+
+	@Override
+	protected void read() {
+		super.read();
 		readPgpUsers();
 		writeIfNeeded();
 	}
 
-	protected File getUserRegistryFile() {
-		return userRegistryFile;
+	@Override
+	protected void read(InputStream in) throws IOException {
+		version = null;
+
+		super.read(in);
+
+		if (version == null)
+			version = new Uid();
 	}
 
-	protected void readUserRegistryFile() {
-		Uid version = null;
-		final UserDtoConverter userDtoConverter = new UserDtoConverter();
-		try (LockFile lockFile = acquireLockFile();) {
-			lockFile.getLock().lock();
-			try {
-				deletedUserIds.clear();
-				deletedUserRepoKeyIds.clear();
-				if (userRegistryFile.exists()) {
-					final UserRegistryDtoIo userRegistryDtoIo = new UserRegistryDtoIo();
-					final UserRegistryDto userRegistryDto = userRegistryDtoIo.deserializeWithGz(userRegistryFile);
-					for (final UserDto userDto : userRegistryDto.getUserDtos()) {
-						final User user = userDtoConverter.fromUserDto(userDto);
-						addUser(user);
-					}
-					version = userRegistryDto.getVersion();
-					deletedUserIds.addAll(userRegistryDto.getDeletedUserIds());
-					deletedUserRepoKeyIds.addAll(userRegistryDto.getDeletedUserRepoKeyIds());
-				}
-			} finally {
-				lockFile.getLock().unlock();
-			}
+	@Override
+	protected void readPayloadEntry(ZipInputStream zin, ZipEntry zipEntry) throws IOException {
+		if (!PAYLOAD_ENTRY_NAME.equals(zipEntry.getName())) {
+			logger.warn("readPayloadEntry: Ignoring unexpected zip-entry: {}", zipEntry.getName());
+			return;
 		}
-		dirty = false;
-		this.version = version != null ? version : new Uid();
+		final UserDtoConverter userDtoConverter = new UserDtoConverter();
+		final UserRegistryDtoIo userRegistryDtoIo = new UserRegistryDtoIo();
+		final UserRegistryDto userRegistryDto = userRegistryDtoIo.deserialize(zin);
+
+		for (User user : getUsers())
+			removeUser(user);
+
+		for (final UserDto userDto : userRegistryDto.getUserDtos()) {
+			final User user = userDtoConverter.fromUserDto(userDto);
+			addUser(user);
+		}
+
+		deletedUserIds.clear();
+		deletedUserIds.addAll(userRegistryDto.getDeletedUserIds());
+
+		deletedUserRepoKeyIds.clear();
+		deletedUserRepoKeyIds.addAll(userRegistryDto.getDeletedUserRepoKeyIds());
+
+		version = userRegistryDto.getVersion();
 	}
 
 	public Uid getVersion() {
@@ -353,14 +384,10 @@ public class UserRegistryImpl implements UserRegistry {
 		}
 	};
 
+	@Override
 	protected void markDirty() {
 		dirty = true;
 		version = new Uid();
-	}
-
-	protected LockFile acquireLockFile() {
-		final File dir = ConfigDir.getInstance().getFile();
-		return LockFileFactory.getInstance().acquire(createFile(dir, USER_REGISTRY_FILE_LOCK), 30000);
 	}
 
 	@Override
@@ -370,32 +397,22 @@ public class UserRegistryImpl implements UserRegistry {
 	}
 
 	@Override
-	public synchronized void write() {
+	protected void writePayload(ZipOutputStream zout) throws IOException {
 		final UserRegistryDtoIo userRegistryDtoIo = new UserRegistryDtoIo();
 		final UserRegistryDto userRegistryDto = createUserRegistryDto();
 
-		try (LockFile lockFile = acquireLockFile();) {
-			lockFile.getLock().lock();
-			try {
-				final File newUserListFile = createFile(userRegistryFile.getParentFile(), userRegistryFile.getName() + ".new");
-				userRegistryDtoIo.serializeWithGz(userRegistryDto, newUserListFile);
-				userRegistryFile.delete();
-				newUserListFile.renameTo(userRegistryFile);
-			} finally {
-				lockFile.getLock().unlock();
-			}
-		}
-		dirty = false;
+		zout.putNextEntry(new ZipEntry(PAYLOAD_ENTRY_NAME));
+		userRegistryDtoIo.serialize(userRegistryDto, zout);
+		zout.closeEntry();
 	}
 
-	public void mergeFrom(final byte[] data) {
-		assertNotNull("data", data);
-		if (data.length == 0)
-			return;
-
-		final UserRegistryDtoIo userRegistryDtoIo = new UserRegistryDtoIo();
-		final UserRegistryDto userRegistryDto = userRegistryDtoIo.deserializeWithGz(new ByteArrayInputStream(data));
-		mergeFrom(userRegistryDto);
+	@Override
+	protected void mergeFrom(ZipInputStream zin, ZipEntry zipEntry) {
+		if (PAYLOAD_ENTRY_NAME.equals(zipEntry.getName())) {
+			final UserRegistryDtoIo userRegistryDtoIo = new UserRegistryDtoIo();
+			final UserRegistryDto userRegistryDto = userRegistryDtoIo.deserialize(zin);
+			mergeFrom(userRegistryDto);
+		}
 	}
 
 	protected synchronized void mergeFrom(final UserRegistryDto userRegistryDto) {

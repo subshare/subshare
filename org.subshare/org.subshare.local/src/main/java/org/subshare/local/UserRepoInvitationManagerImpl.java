@@ -425,7 +425,7 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 			this.transaction = null;
 		}
 
-		userRegistry.write(); // TODO writeIfNeeded() and maybe make write() protected?!
+		userRegistry.writeIfNeeded();
 	}
 
 	private Server registerInServerRegistry(final UserRepoInvitation userRepoInvitation) {

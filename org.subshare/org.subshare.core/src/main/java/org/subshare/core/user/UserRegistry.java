@@ -8,8 +8,7 @@ import org.subshare.core.pgp.PgpKeyId;
 import co.codewizards.cloudstore.core.dto.Uid;
 
 public interface UserRegistry {
-	public static final String USER_REGISTRY_FILE_NAME = "userRegistry.xml.gz";
-	public static final String USER_REGISTRY_FILE_LOCK = USER_REGISTRY_FILE_NAME + ".lock";
+	public static final String USER_REGISTRY_FILE_NAME = "userRegistry.zip";
 
 	User createUser();
 
@@ -25,7 +24,4 @@ public interface UserRegistry {
 	User getUserByUserRepoKeyIdOrFail(Uid userRepoKeyId);
 	User getUserByUserRepoKeyId(Uid userRepoKeyId);
 	void writeIfNeeded();
-	void write();
-
-
 }
