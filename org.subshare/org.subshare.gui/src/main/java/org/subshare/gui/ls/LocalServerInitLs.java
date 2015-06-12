@@ -7,7 +7,11 @@ public class LocalServerInitLs {
 	private LocalServerInitLs() {
 	}
 
-	public static void init() {
-		LocalServerClient.getInstance().invokeStatic("org.subshare.ls.server.LocalServerInit", "init");
+	public static void initPrepare() {
+		LocalServerClient.getInstance().invokeStatic("org.subshare.ls.server.LocalServerInit", "initPrepare");
+	}
+
+	public static void initFinish() {
+		LocalServerClient.getInstance().invokeStatic("org.subshare.ls.server.LocalServerInit", "initFinish");
 	}
 }

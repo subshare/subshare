@@ -1,4 +1,4 @@
-package org.subshare.core.pgp.sync;
+package org.subshare.core.sync;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
@@ -10,7 +10,7 @@ import org.subshare.core.server.Server;
 
 import co.codewizards.cloudstore.core.dto.Error;
 
-public class PgpSyncState implements Serializable {
+public class SyncState implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	private final Server server;
@@ -23,7 +23,7 @@ public class PgpSyncState implements Serializable {
 
 	private final Error error;
 
-	public PgpSyncState(final Server server, final URL url, final Severity severity, final String message, final Error error) {
+	public SyncState(final Server server, final URL url, final Severity severity, final String message, final Error error) {
 		this.server = assertNotNull("server", server);
 		this.url = assertNotNull("url", url);
 		this.severity = assertNotNull("severity", severity);

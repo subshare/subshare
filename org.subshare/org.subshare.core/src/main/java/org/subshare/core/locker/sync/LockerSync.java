@@ -1,4 +1,4 @@
-package org.subshare.core.locker;
+package org.subshare.core.locker.sync;
 
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
@@ -18,6 +18,8 @@ import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
 
+import org.subshare.core.locker.LockerContent;
+import org.subshare.core.locker.LockerEncryptedDataFile;
 import org.subshare.core.locker.transport.LockerTransport;
 import org.subshare.core.locker.transport.LockerTransportFactory;
 import org.subshare.core.locker.transport.LockerTransportFactoryRegistry;
@@ -28,6 +30,7 @@ import org.subshare.core.pgp.PgpKeyId;
 import org.subshare.core.pgp.PgpRegistry;
 import org.subshare.core.pgp.man.PgpPrivateKeyPassphraseStoreImpl;
 import org.subshare.core.server.Server;
+import org.subshare.core.sync.Sync;
 
 import co.codewizards.cloudstore.core.config.ConfigDir;
 import co.codewizards.cloudstore.core.dto.Uid;
@@ -35,7 +38,7 @@ import co.codewizards.cloudstore.core.io.LockFile;
 import co.codewizards.cloudstore.core.io.LockFileFactory;
 import co.codewizards.cloudstore.core.oio.File;
 
-public class LockerSync implements AutoCloseable {
+public class LockerSync implements Sync {
 
 	private final Uid serverId;
 	private final Server server;
@@ -56,6 +59,17 @@ public class LockerSync implements AutoCloseable {
 		this.serverUrl = assertNotNull("server.url", this.server.getUrl());
 	}
 
+	public Server getServer() {
+		return server;
+	}
+	public Uid getServerId() {
+		return serverId;
+	}
+	public URL getServerUrl() {
+		return serverUrl;
+	}
+
+	@Override
 	public void sync() {
 		lockerContent = null;
 		pgpKey = null;

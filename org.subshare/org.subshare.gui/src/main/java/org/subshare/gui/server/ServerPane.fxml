@@ -28,19 +28,19 @@
 					</ImageView>
 				</graphic>
 				<tooltip>
-					<Tooltip text="Create a new repository on this server."/> 
+					<Tooltip text="Create a new repository on this server.&#010;&#010;You'll select a local directory which is going to be uploaded to (and kept in-sync with) the new repository."/> 
 				</tooltip>
 			</Button>
-			<Button fx:id="syncButton" onAction="#syncButtonClicked"> 
+			<Button fx:id="checkOutButton" onAction="#checkOutButtonClicked"> 
 				<graphic>
 					<ImageView> 
 						<image>
-							<Image url="@sync-24x24.png"/> 
+							<Image url="@check-out-24x24.png"/> 
 						</image>
 					</ImageView>
 				</graphic>
 				<tooltip>
-					<Tooltip text="Synchronize the selected repositories now."/> 
+					<Tooltip text="Check the selected repository out.&#010;&#010;You'll select a local directory into which the selected server-repository is going to be downloaded (and kept in-sync with, afterwards)."/> 
 				</tooltip>
 			</Button>
 		</FlowPane>

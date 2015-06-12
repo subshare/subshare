@@ -48,8 +48,7 @@ public class ServerRepoRegistryImpl extends FileBasedObjectRegistry implements S
 
 	private final PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
 
-	public static final String SERVER_REPO_REGISTRY_FILE_NAME = "serverRepoRegistry.xml.gz";
-	public static final String SERVER_REPO_REGISTRY_LOCK = SERVER_REPO_REGISTRY_FILE_NAME + ".lock";
+	public static final String SERVER_REPO_REGISTRY_FILE_NAME = "serverRepoRegistry.zip";
 
 	private Map<UUID, ServerRepo> repositoryId2ServerRepo;
 	private final ObservableList<ServerRepo> serverRepos;
@@ -183,7 +182,7 @@ public class ServerRepoRegistryImpl extends FileBasedObjectRegistry implements S
 		}
 		final ServerRepoDtoConverter serverRepoDtoConverter = new ServerRepoDtoConverter();
 		final ServerRepoRegistryDtoIo serverRepoRegistryDtoIo = new ServerRepoRegistryDtoIo();
-		final ServerRepoRegistryDto serverRepoRegistryDto = serverRepoRegistryDtoIo.deserializeWithGz(serverRepoRegistryFile);
+		final ServerRepoRegistryDto serverRepoRegistryDto = serverRepoRegistryDtoIo.deserialize(zin);
 
 		for (final ServerRepoDto serverRepoDto : serverRepoRegistryDto.getServerRepoDtos()) {
 			final ServerRepo serverRepo = serverRepoDtoConverter.fromServerRepoDto(serverRepoDto);

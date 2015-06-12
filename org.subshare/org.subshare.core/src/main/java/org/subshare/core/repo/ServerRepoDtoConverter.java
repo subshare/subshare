@@ -13,6 +13,8 @@ public class ServerRepoDtoConverter {
 		serverRepoDto.setName(serverRepo.getName());
 		serverRepoDto.setServerId(serverRepo.getServerId());
 		serverRepoDto.setUserId(serverRepo.getUserId());
+
+		serverRepoDto.setChanged(serverRepo.getChanged());
 		return serverRepoDto;
 	}
 
@@ -22,6 +24,8 @@ public class ServerRepoDtoConverter {
 		serverRepo.setName(serverRepoDto.getName());
 		serverRepo.setServerId(serverRepoDto.getServerId());
 		serverRepo.setUserId(serverRepoDto.getUserId());
+
+		serverRepo.setChanged(serverRepoDto.getChanged());
 		return serverRepo;
 	}
 }

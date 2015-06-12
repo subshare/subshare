@@ -88,7 +88,7 @@ public class SubShareGui extends Application {
 					if (! localServer.start())
 						localServer = null;
 
-					LocalServerInitLs.init();
+					LocalServerInitLs.initPrepare();
 
 					tryPgpKeysNoPassphrase();
 
@@ -108,6 +108,8 @@ public class SubShareGui extends Application {
 								primaryStage.setScene(scene);
 								primaryStage.show();
 								splashPane = null;
+
+								LocalServerInitLs.initFinish();
 							} catch (Exception x) {
 								ErrorHandler.handleError(x);
 								System.exit(666);

@@ -23,6 +23,7 @@ import org.subshare.core.pgp.transport.PgpTransportFactory;
 import org.subshare.core.pgp.transport.PgpTransportFactoryRegistry;
 import org.subshare.core.pgp.transport.local.LocalPgpTransportFactory;
 import org.subshare.core.server.Server;
+import org.subshare.core.sync.Sync;
 
 import co.codewizards.cloudstore.core.config.ConfigDir;
 import co.codewizards.cloudstore.core.dto.Uid;
@@ -30,7 +31,7 @@ import co.codewizards.cloudstore.core.io.LockFile;
 import co.codewizards.cloudstore.core.io.LockFileFactory;
 import co.codewizards.cloudstore.core.oio.File;
 
-public class PgpSync implements AutoCloseable {
+public class PgpSync implements Sync {
 
 	private final Uid serverId;
 	private final Server server;
@@ -54,6 +55,7 @@ public class PgpSync implements AutoCloseable {
 		lastSyncServerLocalRevisionPropertyKey = String.format("lastSync[serverId=%s].server.localRevision", serverId);
 	}
 
+	@Override
 	public void sync() {
 		final long localLocalRevision = getLocalPgpTransport().getLocalRevision();
 		final long lastSyncLocalLocalRevision = getPropertyValueAsLong(getPgpSyncProperties(), lastSyncLocalLocalRevisionPropertyKey, -1);

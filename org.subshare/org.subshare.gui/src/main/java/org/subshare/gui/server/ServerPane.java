@@ -59,8 +59,11 @@ public class ServerPane extends BorderPane /* GridPane */ {
 	@FXML
 	private Button createRepositoryButton;
 
+//	@FXML
+//	private Button syncButton;
+
 	@FXML
-	private Button syncButton;
+	private Button checkOutButton;
 
 	@FXML
 	private TableView<ServerRepoListItem> tableView;
@@ -156,9 +159,12 @@ public class ServerPane extends BorderPane /* GridPane */ {
 	}
 
 	private void updateEnabled() {
-		// TODO find out whether local repositories are connected to the server repositories (otherwise there's nothing to sync)!
-		final boolean selectionEmpty = tableView.getSelectionModel().getSelectedItems().isEmpty();
-		syncButton.setDisable(selectionEmpty);
+		final int selectionCount = tableView.getSelectionModel().getSelectedItems().size();
+
+		checkOutButton.setDisable(selectionCount != 1);
+
+//		// TODO find out whether local repositories are connected to the server repositories (otherwise there's nothing to sync)!
+//		syncButton.setDisable(selectionCount == 0);
 	}
 
 	private void populateTableViewAsync() {
@@ -203,15 +209,8 @@ public class ServerPane extends BorderPane /* GridPane */ {
 	}
 
 	@FXML
-	private void syncButtonClicked(final ActionEvent event) {
-		// TODO find out all local repositories that are connected to the server repositories and sync them!
-		for (ServerRepoListItem item : tableView.getSelectionModel().getSelectedItems())
-			item.getServerRepo().getRepositoryId();
-	}
-
-	@FXML
 	private void createRepositoryButtonClicked(final ActionEvent event) {
-		final File directory = selectLocalDirectory();
+		final File directory = selectLocalDirectory("Select local directory to be shared (upload).");
 		if (directory == null)
 			return;
 
@@ -241,9 +240,33 @@ public class ServerPane extends BorderPane /* GridPane */ {
 		final RepoSyncDaemon repoSyncDaemon = RepoSyncDaemonLs.getRepoSyncDaemon();
 		repoSyncDaemon.startSync(directory);
 
-		// TODO really create the repo on the server!
+		// TO DO really create the repo on the server! => DONE!
 		// TODO 2: need to verify, if server-URLs and repos really exist! Maybe show an error marker in the UI, if there's a problem (might be temporary!)
 		// TODO 3: and maybe switch from UUID to Uid?!
+	}
+
+	@FXML
+	private void checkOutButtonClicked(final ActionEvent event) {
+		final ServerRepoListItem serverRepoListItem = tableView.getSelectionModel().getSelectedItems().get(0);
+		final ServerRepo serverRepo = serverRepoListItem.getServerRepo();
+
+		final File directory = selectLocalDirectory("Select local directory for check-out (download).");
+		if (directory == null)
+			return;
+
+		// TODO do this in the background!
+		ServerRepoManagerLs.getServerRepoManager().checkOutRepository(server, serverRepo, directory);
+
+		// ...immediately sync after check-out. This happens in the background (this method is non-blocking).
+		final RepoSyncDaemon repoSyncDaemon = RepoSyncDaemonLs.getRepoSyncDaemon();
+		repoSyncDaemon.startSync(directory);
+	}
+
+	@FXML
+	private void syncButtonClicked(final ActionEvent event) {
+		// TODO find out all local repositories that are connected to the server repositories and sync them!
+		for (ServerRepoListItem item : tableView.getSelectionModel().getSelectedItems())
+			item.getServerRepo().getRepositoryId();
 	}
 
 	private User selectOwner(final List<User> users) {
@@ -254,10 +277,10 @@ public class ServerPane extends BorderPane /* GridPane */ {
 		return selectedUsers == null || selectedUsers.isEmpty() ? null : selectedUsers.get(0);
 	}
 
-	private File selectLocalDirectory() {
+	private File selectLocalDirectory(final String title) {
 		// TODO implement our own directory-selection-dialog which allows for showing some more information to the user.
 		final DirectoryChooser directoryChooser = new DirectoryChooser();
-		directoryChooser.setTitle("Select local directory to be shared.");
+		directoryChooser.setTitle(title);
 		final java.io.File directory = directoryChooser.showDialog(getScene().getWindow());
 		return directory == null ? null : createFile(directory).getAbsoluteFile();
 	}

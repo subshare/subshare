@@ -29,6 +29,18 @@
 					<Tooltip text="Synchronize this repository now."/> 
 				</tooltip>
 			</Button>
+			<Button fx:id="inviteButton" onAction="#inviteButtonClicked"> 
+				<graphic>
+					<ImageView> 
+						<image>
+							<Image url="@invite-24x24.png"/> 
+						</image>
+					</ImageView>
+				</graphic>
+				<tooltip>
+					<Tooltip text="Invite someone to share this repository.&#010;&#010;You'll select another user and an invitation token is going to be created for this user."/> 
+				</tooltip>
+			</Button>
 		</FlowPane>
 		<Label text="Name:" GridPane.columnIndex="0" GridPane.rowIndex="1"/> 
 		<TextField fx:id="nameTextField" GridPane.columnIndex="1" GridPane.rowIndex="1"/> 

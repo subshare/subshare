@@ -5,16 +5,18 @@ import static co.codewizards.cloudstore.core.util.StringUtil.*;
 
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.subshare.core.Severity;
-import org.subshare.core.pgp.sync.PgpSyncState;
 import org.subshare.core.server.Server;
+import org.subshare.core.sync.SyncState;
 
 public class ServerListItem {
 
 	private Server server;
-	private PgpSyncState pgpSyncState;
+	private SyncState pgpSyncState;
+	private SyncState lockerSyncState;
 
 	public ServerListItem() { }
 
@@ -44,12 +46,14 @@ public class ServerListItem {
 	}
 
 	public Severity getSeverity() {
-		// TODO get the highest severity of all - once there are more.
+		// TODO get the highest severity of all - once there are more. The repo-sync-state is still missing ;-)
 
-		final PgpSyncState pgpSyncState = getPgpSyncState();
+		final SyncState pgpSyncState = getPgpSyncState();
+		final SyncState lockerSyncState = getLockerSyncState();
 
 		return getHighestSeverity(
-				pgpSyncState == null ? null : pgpSyncState.getSeverity()
+				(pgpSyncState == null ? null : pgpSyncState.getSeverity()),
+				(lockerSyncState == null ? null : lockerSyncState.getSeverity())
 				);
 	}
 
@@ -65,24 +69,36 @@ public class ServerListItem {
 		return result;
 	}
 
-	public PgpSyncState getPgpSyncState() {
+	public SyncState getPgpSyncState() {
 		return pgpSyncState;
 	}
-	public void setPgpSyncState(PgpSyncState pgpSyncState) {
+	public void setPgpSyncState(SyncState pgpSyncState) {
 		this.pgpSyncState = pgpSyncState;
 	}
 
-	public String getTooltipText() {
-		final List<String> tooltipTexts = new ArrayList<>();
-
-		final String pgpSyncStateTooltipText = getPgpSyncStateTooltipText();
-		if (!isEmpty(pgpSyncStateTooltipText))
-			tooltipTexts.add(pgpSyncStateTooltipText);
-
-		return assembleTooltipText(tooltipTexts);
+	public SyncState getLockerSyncState() {
+		return lockerSyncState;
+	}
+	public void setLockerSyncState(SyncState lockerSyncState) {
+		this.lockerSyncState = lockerSyncState;
 	}
 
-	private String assembleTooltipText(final List<String> tooltipTexts) {
+	public String getTooltipText() {
+		return assembleTooltipText(
+				getPgpSyncStateTooltipText(),
+				getLockerSyncStateTooltipText());
+	}
+
+	private String assembleTooltipText(final String ... tooltipTexts) {
+		assertNotNull("tooltipTexts", tooltipTexts);
+
+		final List<String> tooltipTextList = Arrays.asList(tooltipTexts);
+		return assembleTooltipText(tooltipTextList);
+	}
+
+	private String assembleTooltipText(List<String> tooltipTexts) {
+		tooltipTexts = filterEmpty(tooltipTexts);
+
 		if (tooltipTexts.isEmpty())
 			return null;
 		else if (tooltipTexts.size() == 1)
@@ -99,15 +115,34 @@ public class ServerListItem {
 		}
 	}
 
+	private List<String> filterEmpty(final List<String> strings) {
+		assertNotNull("strings", strings);
+		final List<String> result = new ArrayList<String>(strings.size());
+		for (final String string : strings) {
+			if (! isEmpty(string))
+				result.add(string);
+		}
+		return result;
+	}
+
 	private String getPgpSyncStateTooltipText() {
-		if (pgpSyncState != null) {
-			if (!isEmpty(pgpSyncState.getMessage()))
-				return pgpSyncState.getMessage();
-			else if (pgpSyncState.getError() != null) {
-				if (!isEmpty(pgpSyncState.getError().getMessage()))
-					return pgpSyncState.getError().getClassName() + ": " + pgpSyncState.getError().getMessage();
+		return getSyncStateTooltipText(pgpSyncState);
+	}
+
+	private String getLockerSyncStateTooltipText() {
+		return getSyncStateTooltipText(lockerSyncState);
+	}
+
+	private static String getSyncStateTooltipText(final SyncState syncState) {
+		if (syncState != null) {
+			if (!isEmpty(syncState.getMessage()))
+				return syncState.getMessage();
+
+			if (syncState.getError() != null) {
+				if (!isEmpty(syncState.getError().getMessage()))
+					return syncState.getError().getClassName() + ": " + syncState.getError().getMessage();
 				else
-					return pgpSyncState.getError().getClassName();
+					return syncState.getError().getClassName();
 			}
 		}
 		return null;

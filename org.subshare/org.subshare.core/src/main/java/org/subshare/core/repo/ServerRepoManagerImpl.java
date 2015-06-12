@@ -40,7 +40,7 @@ public class ServerRepoManagerImpl implements ServerRepoManager {
 	}
 
 	@Override
-	public void createRepository(final File localDirectory, final Server server, final User owner) {
+	public ServerRepo createRepository(final File localDirectory, final Server server, final User owner) {
 		assertNotNull("localDirectory", localDirectory);
 		assertNotNull("server", server);
 		assertNotNull("owner", owner);
@@ -54,12 +54,30 @@ public class ServerRepoManagerImpl implements ServerRepoManager {
 		final UUID clientRepositoryId = localRootAndRepositoryId.getValue();
 
 		final UUID serverRepositoryId = createServerRepository(clientRepositoryId, server, owner);
-		registerInServerRepoRegistry(server, serverRepositoryId, owner);
+		final ServerRepo serverRepo = registerInServerRepoRegistry(server, serverRepositoryId, owner);
 
 		owner.createUserRepoKey(serverRepositoryId);
 		UserRegistryImpl.getInstance().writeIfNeeded(); // it's definitely needed because we just created a userRepoKey ;-)
 
 		connectLocalRepositoryWithServerRepository(localRoot, server, serverRepositoryId);
+
+		return serverRepo;
+	}
+
+	@Override
+	public void checkOutRepository(final Server server, final ServerRepo serverRepo, final File localDirectory) {
+		assertNotNull("server", server);
+		assertNotNull("serverRepo", serverRepo);
+		assertNotNull("localDirectory", localDirectory);
+
+		if (! server.getServerId().equals(serverRepo.getServerId()))
+			throw new IllegalArgumentException(String.format(
+					"server.serverId != serverRepo.serverId :: %s != %s", server.getServerId(), serverRepo.getServerId()));
+
+		final Pair<File, UUID> localRootAndRepositoryId = createLocalRepository(localDirectory);
+		final File localRoot = localRootAndRepositoryId.getKey();
+
+		connectLocalRepositoryWithServerRepository(localRoot, server, serverRepo.getRepositoryId());
 	}
 
 	private Pair<File, UUID> createLocalRepository(final File localDirectory) {
@@ -122,7 +140,7 @@ public class ServerRepoManagerImpl implements ServerRepoManager {
 //		return masterKeysWithPrivateKey.iterator().next();
 	}
 
-	private void registerInServerRepoRegistry(final Server server, final UUID serverRepositoryId, final User owner) {
+	private ServerRepo registerInServerRepoRegistry(final Server server, final UUID serverRepositoryId, final User owner) {
 		assertNotNull("server", server);
 		assertNotNull("serverRepositoryId", serverRepositoryId);
 		assertNotNull("owner", owner);
@@ -134,6 +152,7 @@ public class ServerRepoManagerImpl implements ServerRepoManager {
 		serverRepo.setUserId(owner.getUserId());
 		serverRepoRegistry.getServerRepos().add(serverRepo);
 		serverRepoRegistry.writeIfNeeded();
+		return serverRepo;
 	}
 
 	private ServerRepoRegistry getServerRepoRegistry() {

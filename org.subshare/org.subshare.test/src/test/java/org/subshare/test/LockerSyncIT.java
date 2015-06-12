@@ -13,7 +13,7 @@ import java.util.Map;
 import mockit.Mock;
 import mockit.MockUp;
 
-import org.subshare.core.locker.LockerSync;
+import org.subshare.core.locker.sync.LockerSync;
 import org.subshare.core.pgp.Pgp;
 import org.subshare.core.pgp.PgpKeyId;
 import org.subshare.core.pgp.PgpRegistry;
