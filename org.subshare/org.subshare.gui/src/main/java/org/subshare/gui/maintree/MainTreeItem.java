@@ -1,5 +1,7 @@
 package org.subshare.gui.maintree;
 
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
@@ -12,6 +14,7 @@ import javafx.event.EventType;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.TreeItem;
+import javafx.scene.control.TreeView;
 import co.codewizards.cloudstore.core.util.ExceptionUtil;
 import co.codewizards.cloudstore.core.util.ReflectionUtil;
 
@@ -147,5 +150,11 @@ public class MainTreeItem<T> extends TreeItem<String> {
 
 	protected Parent createMainDetailContent() {
 		return null;
+	}
+
+	protected TreeView<String> getMainTree() {
+		final MainTreeItem<?> parent = (MainTreeItem<?>) getParent();
+		assertNotNull("parent", parent);
+		return parent.getMainTree();
 	}
 }

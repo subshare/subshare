@@ -11,6 +11,7 @@ import javafx.scene.layout.BorderPane;
 
 import org.subshare.gui.maintree.LocalRepoListMainTreeItem;
 import org.subshare.gui.maintree.MainTreeItem;
+import org.subshare.gui.maintree.RootMainTreeItem;
 import org.subshare.gui.maintree.ServerListMainTreeItem;
 import org.subshare.gui.maintree.UserListMainTreeItem;
 import org.slf4j.Logger;
@@ -35,23 +36,27 @@ public class MainPaneController {
 	private final ListChangeListener<? super TreeItem<String>> mainTreeSelectionListener = new ListChangeListener<TreeItem<String>>() {
 		@Override
 		public void onChanged(final ListChangeListener.Change<? extends TreeItem<String>> c) {
-			final ObservableList<? extends TreeItem<String>> selection = c.getList();
-			if (selection.isEmpty())
-				mainDetail.setCenter(null);
-			else
-				mainDetail.setCenter(((MainTreeItem<String>)selection.get(0)).getMainDetailContent());
+			while (c.next()) {
+				final ObservableList<? extends TreeItem<String>> selection = c.getList();
+				if (selection.isEmpty())
+					mainDetail.setCenter(null);
+				else
+					mainDetail.setCenter(((MainTreeItem<String>)selection.get(0)).getMainDetailContent());
+			}
 		}
 	};
 
 	public void initialize() {
-		final TreeItem<String> root = new TreeItem<String>();
+		final RootMainTreeItem root = new RootMainTreeItem(mainTree);
 
 		root.getChildren().add(new LocalRepoListMainTreeItem());
 		root.getChildren().add(new ServerListMainTreeItem());
 		root.getChildren().add(new UserListMainTreeItem());
+
 		mainTree.setShowRoot(false);
 		mainTree.setRoot(root);
 		mainTree.getSelectionModel().getSelectedItems().addListener(mainTreeSelectionListener);
+
 		// TODO we should save and restore the selection!
 		mainTree.getSelectionModel().select(0);
 
@@ -59,7 +64,13 @@ public class MainPaneController {
 		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
-				splitPane.setDividerPosition(0, 0.3);
+				Platform.runLater(
+						new Runnable() {
+							@Override
+							public void run() {
+								splitPane.setDividerPosition(0, 0.3);
+							}
+						});
 			}
 		});
 	}

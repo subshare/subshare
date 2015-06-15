@@ -58,7 +58,7 @@ public class ServerListMainTreeItem extends MainTreeItem<String> {
 					protected void succeeded() {
 						final List<Server> servers;
 						try { servers = get(); } catch (InterruptedException | ExecutionException e) { throw new RuntimeException(e); }
-						addTableItemsViewCallback(servers);
+						addTreeItemsViewCallback(servers);
 						super.succeeded();
 					}
 				};
@@ -99,7 +99,7 @@ public class ServerListMainTreeItem extends MainTreeItem<String> {
 		}
 	}
 
-	private void addTableItemsViewCallback(final Collection<Server> servers) {
+	private void addTreeItemsViewCallback(final Collection<Server> servers) {
 		assertNotNull("servers", servers);
 		for (final Server server : servers)
 			getChildren().add(new ServerMainTreeItem(server));

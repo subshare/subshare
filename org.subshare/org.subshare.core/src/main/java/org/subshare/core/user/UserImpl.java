@@ -74,6 +74,9 @@ public class UserImpl implements User {
 
 	@Override
 	public synchronized Uid getUserId() {
+		if (userId == null)
+			userId = new Uid();
+
 		return userId;
 	}
 	@Override
