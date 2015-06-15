@@ -14,6 +14,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.UUID;
 import java.util.zip.CRC32;
 import java.util.zip.ZipEntry;
@@ -107,6 +108,13 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 		assertNotNull("user", user);
 		assertNotNull("permissionType", permissionType);
 
+		if (user.getPgpKeys().isEmpty())
+			throw new IllegalArgumentException("The user does not have any PGP keys assigned: " + user);
+
+		final Set<PgpKey> inviteePgpKeys = user.getValidPgpKeys();
+		if (inviteePgpKeys.isEmpty())
+			throw new IllegalArgumentException("All the user's PGP keys are revoked or expired: " + user);
+
 		final UserRepoInvitation userRepoInvitation = createUserRepoInvitation(localPath, user, permissionType, validityDurationMillis);
 		final User grantingUser = assertNotNull("grantingUser", this.grantingUser);
 
@@ -125,7 +133,8 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 		final ByteArrayOutputStream out = new ByteArrayOutputStream();
 		final PgpEncoder encoder = getPgpOrFail().createEncoder(new ByteArrayInputStream(userRepoInvitationData), out);
 		encoder.setSignPgpKey(signPgpKey);
-		encoder.getEncryptPgpKeys().addAll(user.getPgpKeys());
+		encoder.getEncryptPgpKeys().add(signPgpKey); // We want to be able to decrypt our own invitations, too ;-)
+		encoder.getEncryptPgpKeys().addAll(inviteePgpKeys);
 		try {
 			encoder.encode();
 		} catch (final IOException x) {

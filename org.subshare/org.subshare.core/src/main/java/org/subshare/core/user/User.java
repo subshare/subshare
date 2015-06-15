@@ -48,7 +48,20 @@ public interface User extends Cloneable {
 
 	UserRepoKey createInvitationUserRepoKey(final User invitedUser, final UUID serverRepositoryId, final long validityDurationMillis);
 
+	/**
+	 * Gets the PGP keys associated with this user.
+	 * @return the PGP keys associated with this user. Never <code>null</code>, but maybe empty.
+	 * @see #getValidPgpKeys()
+	 */
 	Set<PgpKey> getPgpKeys();
+
+	/**
+	 * Gets the valid (neither revoked nor expired) PGP keys of this user.
+	 * @return the valid (neither revoked nor expired) PGP keys of this user. Never <code>null</code>, but maybe empty.
+	 * @see #getPgpKeys()
+	 */
+	Set<PgpKey> getValidPgpKeys();
+
 	PgpKey getPgpKeyContainingPrivateKeyOrFail();
 	PgpKey getPgpKeyContainingPrivateKey();
 	List<UserRepoKey.PublicKeyWithSignature> getUserRepoKeyPublicKeys();

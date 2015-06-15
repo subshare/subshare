@@ -17,4 +17,6 @@ public interface FileConst {
 	 */
 	String MANIFEST_PROPERTY_CONTENT_TYPE_VERSION = "contentTypeVersion";
 
+	String SUBSHARE_FILE_EXTENSION = ".csx";
+
 }

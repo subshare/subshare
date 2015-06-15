@@ -24,7 +24,10 @@ import javax.ws.rs.core.StreamingOutput;
 
 import org.bouncycastle.util.io.Streams;
 import org.subshare.core.locker.LockerEncryptedDataFile;
+import org.subshare.core.pgp.Pgp;
+import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpKeyId;
+import org.subshare.core.pgp.PgpRegistry;
 import org.subshare.core.pgp.PgpSignature;
 import org.subshare.rest.server.LockerDir;
 
@@ -46,8 +49,11 @@ public class LockerService {
 	private String lockerContentName;
 
 	private final File lockerDir;
+	private final Pgp pgp;
+
 	public LockerService() {
 		lockerDir = LockerDir.getInstance().getFile();
+		pgp = PgpRegistry.getInstance().getPgpOrFail();
 	}
 
 	@GET
@@ -80,8 +86,13 @@ public class LockerService {
 
 		final LockerEncryptedDataFile encryptedDataFile = new LockerEncryptedDataFile(input);
 		PgpSignature pgpSignature = encryptedDataFile.assertManifestSignatureValid();
-		pgpKeyId = pgpSignature.getPgpKeyId();
-		assertNotNull("pgpSignature.pgpKeyId", pgpKeyId);
+
+		final PgpKeyId signaturePgpKeyId = pgpSignature.getPgpKeyId(); // likely a sub-key
+		assertNotNull("pgpSignature.pgpKeyId", signaturePgpKeyId);
+		final PgpKey signaturePgpKey = pgp.getPgpKey(signaturePgpKeyId);
+		assertNotNull("pgp.getPgpKey(signaturePgpKeyId=" + signaturePgpKeyId + ")", signaturePgpKey);
+
+		pgpKeyId = signaturePgpKey.getMasterKey().getPgpKeyId();
 
 		lockerContentName = encryptedDataFile.getContentName();
 		assertNotNull("encryptedDataFile.contentName", lockerContentName);

@@ -29,6 +29,8 @@ public class BcPgpKey {
 
 	private PGPSecretKey secretKey;
 
+	private BcPgpKey masterKey;
+
 	// A sub-key may be added twice, because we enlist from both the secret *and* public key ring
 	// collection. Therefore, we now use a LinkedHashSet (instead of an ArrayList).
 	private Set<BcPgpKey> subKeys = new LinkedHashSet<BcPgpKey>();
@@ -71,11 +73,18 @@ public class BcPgpKey {
 		this.secretKey = secretKey;
 	}
 
+	public BcPgpKey getMasterKey() {
+		return masterKey;
+	}
+	public void setMasterKey(BcPgpKey masterKey) {
+		this.masterKey = masterKey;
+	}
+
 	public Set<BcPgpKey> getSubKeys() {
 		return subKeys;
 	}
 
-	public PgpKey getPgpKey() {
+	public synchronized PgpKey getPgpKey() {
 		if (pgpKey == null) {
 			final byte[] fingerprint = assertNotNull("publicKey", publicKey).getFingerprint();
 			final boolean privateKeyAvailable = secretKey != null && ! secretKey.isPrivateKeyEmpty();
@@ -92,9 +101,19 @@ public class BcPgpKey {
 			final long validSeconds = publicKey.getValidSeconds();
 			final Date created = publicKey.getCreationTime();
 			final Date validTo = validSeconds < 1 ? null : new Date(created.getTime() + (validSeconds * 1000));
-			this.pgpKey = new PgpKey(pgpKeyId, fingerprint, created, validTo, privateKeyAvailable, userIds, subKeys);
+			this.pgpKey = new PgpKey(
+					pgpKeyId, fingerprint, created, validTo,
+					privateKeyAvailable, userIds,
+					publicKey.isEncryptionKey(), publicKey.isRevoked(), subKeys);
+
+			for (final PgpKey subKey : this.pgpKey.getSubKeys())
+				subKey.setMasterKey(this.pgpKey);
+
+			if (masterKey == null)
+				this.pgpKey.setMasterKey(this.pgpKey);
+			else
+				masterKey.getPgpKey(); // needed for initialising the masterKey-back-refs.
 		}
 		return pgpKey;
 	}
-
 }

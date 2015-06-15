@@ -89,7 +89,12 @@ public class PgpTest {
 
 		assertThat(decodedData).isEqualTo(testData);
 		assertThat(decoder.getPgpSignature()).isNotNull();
-		assertThat(decoder.getPgpSignature().getPgpKeyId()).isEqualTo(signPgpKey.getPgpKeyId());
+
+		PgpKey signatureMasterKey = pgp.getPgpKey(decoder.getPgpSignature().getPgpKeyId());
+		assertThat(signatureMasterKey).isNotNull();
+		signatureMasterKey = signatureMasterKey.getMasterKey();
+
+		assertThat(signatureMasterKey.getPgpKeyId()).isEqualTo(signPgpKey.getPgpKeyId());
 		assertThat(decoder.getDecryptPgpKey()).isNull();
 
 		// break signature and try again
@@ -146,9 +151,13 @@ public class PgpTest {
 
 		assertThat(decodedData).isEqualTo(testData);
 		assertThat(decoder.getPgpSignature()).isNotNull();
-		assertThat(decoder.getPgpSignature().getPgpKeyId()).isEqualTo(signPgpKey.getPgpKeyId());
+		assertThat(decoder.getPgpSignature().getPgpKeyId()).isEqualTo(signPgpKey.getPgpKeyForSignatureOrFail().getPgpKeyId());
 		assertThat(decoder.getDecryptPgpKey()).isNotNull();
-		assertThat(decoder.getDecryptPgpKey()).isSameAs(encryptPgpKey);
+
+		PgpKey decryptMasterKey = decoder.getDecryptPgpKey();
+		decryptMasterKey = decryptMasterKey.getMasterKey();
+
+		assertThat(decryptMasterKey).isSameAs(encryptPgpKey);
 
 		// break signature and try again
 		modifyOneByte(inlineSignedEncryptedData);
@@ -194,7 +203,12 @@ public class PgpTest {
 
 		assertThat(decodedData).isEqualTo(testData);
 		assertThat(decoder.getPgpSignature()).isNotNull();
-		assertThat(decoder.getPgpSignature().getPgpKeyId()).isEqualTo(signPgpKey.getPgpKeyId());
+
+		PgpKey signatureMasterKey = pgp.getPgpKey(decoder.getPgpSignature().getPgpKeyId());
+		assertThat(signatureMasterKey).isNotNull();
+		signatureMasterKey = signatureMasterKey.getMasterKey();
+
+		assertThat(signatureMasterKey.getPgpKeyId()).isEqualTo(signPgpKey.getPgpKeyId());
 		assertThat(decoder.getDecryptPgpKey()).isNull();
 
 		// break signature by modifying signed data and try again
@@ -286,7 +300,11 @@ public class PgpTest {
 		PgpSignature pgpSignature = verifier.verify(dto);
 		assertThat(pgpSignature).isNotNull();
 
-		assertThat(pgpSignature.getPgpKeyId()).isEqualTo(pgpKeyId);
+		PgpKey signaturePgpKey = pgp.getPgpKey(pgpSignature.getPgpKeyId());
+		assertThat(signaturePgpKey).isNotNull();
+		signaturePgpKey	= signaturePgpKey.getMasterKey();
+
+		assertThat(signaturePgpKey.getPgpKeyId()).isEqualTo(pgpKeyId);
 
 		verifier.verify(dto);
 

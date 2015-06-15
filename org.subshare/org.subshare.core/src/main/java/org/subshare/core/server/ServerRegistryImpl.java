@@ -3,6 +3,7 @@ package org.subshare.core.server;
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.UrlUtil.*;
+import static org.subshare.core.file.FileConst.*;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -47,7 +48,7 @@ public class ServerRegistryImpl extends FileBasedObjectRegistry implements Serve
 
 	private final PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
 
-	public static final String SERVER_REGISTRY_FILE_NAME = "serverRegistry.zip";
+	public static final String SERVER_REGISTRY_FILE_NAME = "serverRegistry" + SUBSHARE_FILE_EXTENSION;
 
 	private static final String PAYLOAD_ENTRY_NAME = ServerRegistryDto.class.getSimpleName() + ".xml";
 

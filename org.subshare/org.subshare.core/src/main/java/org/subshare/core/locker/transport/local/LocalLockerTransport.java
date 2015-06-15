@@ -138,8 +138,15 @@ public class LocalLockerTransport extends AbstractLockerTransport {
 
 		final PgpSignature manifestSignature = encryptedDataFile.assertManifestSignatureValid();
 		final PgpKeyId pgpKeyId = getPgpKeyOrFail().getPgpKeyId();
-		if (! pgpKeyId.equals(manifestSignature.getPgpKeyId()))
-			throw new IllegalStateException(String.format("pgpKeyId != manifestSignature.pgpKeyId :: %s != %s", pgpKeyId, manifestSignature.getPgpKeyId()));
+
+		PgpKey manifestSignatureKey = getPgp().getPgpKey(manifestSignature.getPgpKeyId());
+		if (manifestSignatureKey == null)
+			throw new IllegalStateException(String.format("PGP key (used for signing the manifest) not found: %s", manifestSignature.getPgpKeyId()));
+
+		manifestSignatureKey = manifestSignatureKey.getMasterKey();
+
+		if (! pgpKeyId.equals(manifestSignatureKey.getPgpKeyId()))
+			throw new IllegalStateException(String.format("pgpKeyId != manifestSignatureKey.pgpKeyId :: %s != %s", pgpKeyId, manifestSignature.getPgpKeyId()));
 
 		if (mergedVersions.contains(contentVersion))
 			return; // no need to merge the same version multiple times - can theoretically happen because of multiple servers, but currently we sync only one server at a time - so purely theoretical at the moment.
@@ -158,7 +165,13 @@ public class LocalLockerTransport extends AbstractLockerTransport {
 			if (decoder.getDecryptPgpKey() == null)
 				throw new IllegalStateException("WTF?! The data was not encrypted!");
 
-			if (! pgpKeyId.equals(defaultDataSignature.getPgpKeyId()))
+			PgpKey defaultDataSignatureKey = getPgp().getPgpKey(defaultDataSignature.getPgpKeyId());
+			if (defaultDataSignatureKey == null)
+				throw new IllegalStateException(String.format("PGP key (used for signing the default-data) not found: %s", defaultDataSignature.getPgpKeyId()));
+
+			defaultDataSignatureKey = defaultDataSignatureKey.getMasterKey();
+
+			if (! pgpKeyId.equals(defaultDataSignatureKey.getPgpKeyId()))
 				throw new IllegalStateException(String.format("pgpKeyId != defaultDataSignature.pgpKeyId :: %s != %s", pgpKeyId, defaultDataSignature.getPgpKeyId()));
 
 			getLockerContentOrFail().mergeFrom(out.toByteArray());

@@ -29,7 +29,8 @@ public class PgpPrivateKeyPassphraseStoreImpl implements PgpPrivateKeyPassphrase
 	private final PgpAuthenticationCallback pgpAuthenticationCallback = new PgpAuthenticationCallback() {
 		@Override
 		public char[] getPassphrase(final PgpKey pgpKey) {
-			final PgpKeyId pgpKeyId = assertNotNull("pgpKey", pgpKey).getPgpKeyId();
+			final PgpKey masterKey = assertNotNull("pgpKey", pgpKey).getMasterKey();
+			final PgpKeyId pgpKeyId = masterKey.getPgpKeyId();
 			assertNotNull("pgpKey.pgpKeyId", pgpKeyId);
 			return PgpPrivateKeyPassphraseStoreImpl.this.getPassphrase(pgpKeyId);
 		}

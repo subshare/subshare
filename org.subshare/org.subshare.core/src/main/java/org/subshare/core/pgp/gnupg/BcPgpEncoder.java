@@ -53,7 +53,8 @@ public class BcPgpEncoder extends AbstractPgpEncoder {
 					if (signOut != null)
 						throw new IllegalStateException("Signature cannot be detached when encryption is used!");
 
-					final BcPgpKey bcPgpKey = pgp.getBcPgpKey(encryptPgpKey);
+					final PgpKey actualEncryptPgpKey = encryptPgpKey.getPgpKeyForEncryptionOrFail();
+					final BcPgpKey bcPgpKey = pgp.getBcPgpKey(actualEncryptPgpKey);
 					edGenerator.addMethod(new BcPublicKeyKeyEncryptionMethodGenerator(bcPgpKey.getPublicKey()));
 				}
 
@@ -125,9 +126,11 @@ public class BcPgpEncoder extends AbstractPgpEncoder {
 
 	private PGPSignatureGenerator createSignatureGenerator() throws PGPException {
 		final PgpKey signPgpKey = assertNotNull("signPgpKey", getSignPgpKey());
-		final PGPSecretKey signSecretKey = getPgpSecretKeyOrFail(signPgpKey);
+		final PgpKey actualSignPgpKey = signPgpKey.getPgpKeyForSignatureOrFail();
 
-		final char[] signPassphrase = getPassphrase(signPgpKey);
+		final PGPSecretKey signSecretKey = getPgpSecretKeyOrFail(actualSignPgpKey);
+
+		final char[] signPassphrase = getPassphrase(actualSignPgpKey);
 		final PGPPrivateKey pgpPrivKey = signSecretKey.extractPrivateKey(
 				new BcPBESecretKeyDecryptorBuilder(new BcPGPDigestCalculatorProvider()).build(signPassphrase));
 

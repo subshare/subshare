@@ -2,6 +2,7 @@ package org.subshare.core.repo;
 
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static org.subshare.core.file.FileConst.*;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -48,7 +49,7 @@ public class ServerRepoRegistryImpl extends FileBasedObjectRegistry implements S
 
 	private final PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
 
-	public static final String SERVER_REPO_REGISTRY_FILE_NAME = "serverRepoRegistry.zip";
+	public static final String SERVER_REPO_REGISTRY_FILE_NAME = "serverRepoRegistry" + SUBSHARE_FILE_EXTENSION;
 
 	private Map<UUID, ServerRepo> repositoryId2ServerRepo;
 	private final ObservableList<ServerRepo> serverRepos;

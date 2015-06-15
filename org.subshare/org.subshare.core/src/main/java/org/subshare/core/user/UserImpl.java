@@ -5,6 +5,7 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
@@ -181,11 +182,14 @@ public class UserImpl implements User {
 		final PgpKey ownPgpKey = getPgpKeyContainingPrivateKeyOrFail();
 
 		if (invitedUser.getPgpKeyIds().isEmpty())
-			throw new IllegalStateException("There is no PGP key associated with the invitedUser!");
+			throw new IllegalStateException("There is no PGP key associated with the invited user!");
 
-		final Set<PgpKey> invitedUserPgpKeys = invitedUser.getPgpKeys();
+		if (invitedUser.getPgpKeys().isEmpty())
+			throw new IllegalStateException("None of the PGP keys associated with the invited user is available in our PGP key ring!");
+
+		final Set<PgpKey> invitedUserPgpKeys = invitedUser.getValidPgpKeys();
 		if (invitedUserPgpKeys.isEmpty())
-			throw new IllegalStateException("None of the PGP keys associated with the invitedUser is available in our PGP key ring!");
+			throw new IllegalStateException("All PGP keys associated with the invited user and available in our PGP key ring are revoked or expired!");
 
 		final AsymmetricCipherKeyPair keyPair = KeyFactory.getInstance().createAsymmetricKeyPair();
 		final UserRepoKey userRepoKey = new UserRepoKey(serverRepositoryId, keyPair, invitedUserPgpKeys, ownPgpKey, new Date(System.currentTimeMillis() + validityDurationMillis));
@@ -200,11 +204,27 @@ public class UserImpl implements User {
 		final Set<PgpKey> pgpKeys = new HashSet<PgpKey>(getPgpKeyIds().size());
 		for (final PgpKeyId pgpKeyId : getPgpKeyIds()) {
 			final PgpKey k = pgp.getPgpKey(pgpKeyId);
-			// TODO we should exclude disabled/expired keys here (or already earlier and make sure they're not in User.pgpKeyIds).
 			if (k != null)
 				pgpKeys.add(k);
 		}
 		return pgpKeys;
+	}
+
+	@Override
+	public Set<PgpKey> getValidPgpKeys() {
+		final Collection<? extends PgpKey> pgpKeys = getPgpKeys();
+		final Date now = new Date();
+		final Set<PgpKey> result = new HashSet<PgpKey>(pgpKeys.size());
+		for (PgpKey pgpKey : pgpKeys) {
+			if (pgpKey.isRevoked())
+				continue;
+
+			if (! pgpKey.isValid(now))
+				continue;
+
+			result.add(pgpKey);
+		}
+		return result;
 	}
 
 	@Override

@@ -497,6 +497,8 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 			if (lastMasterKey == null)
 				throw new IllegalStateException("First key is a non-master key!");
 
+			bcPgpKey.setMasterKey(lastMasterKey);
+
 			// It may already be in the lastMasterKey.subKeys, because we enlist from both the
 			// secret *and* public key ring collection. Therefore, we now use a LinkedHashSet (instead of an ArrayList).
 			lastMasterKey.getSubKeys().add(bcPgpKey);

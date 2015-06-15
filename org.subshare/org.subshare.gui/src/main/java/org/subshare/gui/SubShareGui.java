@@ -148,7 +148,7 @@ public class SubShareGui extends Application {
 		final ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
 		try {
 			for (final PgpKey pgpKey : pgp.getMasterKeysWithPrivateKey()) {
-				if (!pgpKey.isValid(now))
+				if (pgpKey.isRevoked() || !pgpKey.isValid(now))
 					continue;
 
 				final PgpKeyId pgpKeyId = pgpKey.getPgpKeyId();
@@ -180,7 +180,7 @@ public class SubShareGui extends Application {
 		final Date now = new Date();
 
 		for (final PgpKey pgpKey : pgp.getMasterKeysWithPrivateKey()) {
-			if (!pgpKey.isValid(now))
+			if (pgpKey.isRevoked() || !pgpKey.isValid(now))
 				continue;
 
 			final PgpKeyId pgpKeyId = pgpKey.getPgpKeyId();

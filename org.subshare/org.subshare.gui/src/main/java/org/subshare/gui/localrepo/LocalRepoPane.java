@@ -3,6 +3,7 @@ package org.subshare.gui.localrepo;
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
+import static org.subshare.core.file.FileConst.*;
 import static org.subshare.gui.util.FxmlUtil.*;
 
 import java.io.IOException;
@@ -187,7 +188,7 @@ public class LocalRepoPane extends GridPane {
 		sb.append('_');
 		sb.append(new Uid());
 
-		sb.append(".zip");
+		sb.append(SUBSHARE_FILE_EXTENSION);
 		return sb.toString();
 	}
 

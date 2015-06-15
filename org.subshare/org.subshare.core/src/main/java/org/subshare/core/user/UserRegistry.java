@@ -1,5 +1,7 @@
 package org.subshare.core.user;
 
+import static org.subshare.core.file.FileConst.*;
+
 import java.util.Collection;
 import java.util.Set;
 
@@ -8,7 +10,7 @@ import org.subshare.core.pgp.PgpKeyId;
 import co.codewizards.cloudstore.core.dto.Uid;
 
 public interface UserRegistry {
-	public static final String USER_REGISTRY_FILE_NAME = "userRegistry.zip";
+	public static final String USER_REGISTRY_FILE_NAME = "userRegistry" + SUBSHARE_FILE_EXTENSION;
 
 	User createUser();
 
