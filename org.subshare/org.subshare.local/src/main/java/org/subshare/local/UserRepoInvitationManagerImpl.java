@@ -497,7 +497,7 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 //	}
 
 	private User findUserWithPgpKeyOrFail(PgpKey pgpKey) {
-		final PgpKeyId pgpKeyId = pgpKey.getPgpKeyId();
+		final PgpKeyId pgpKeyId = assertNotNull("pgpKey", pgpKey).getMasterKey().getPgpKeyId();
 		for (final User user : userRegistry.getUsers()) {
 			if (user.getPgpKeyIds().contains(pgpKeyId))
 				return user;
