@@ -12,6 +12,9 @@ import javafx.scene.image.ImageView
 import javafx.scene.image.Image
 import javafx.scene.control.Label
 import javafx.scene.text.Text
+import javafx.scene.control.TextField
+import javafx.scene.layout.HBox
+import javafx.geometry.Insets
 
 dynamic component SelectUserPane {
 	GridPane {
@@ -22,6 +25,26 @@ dynamic component SelectUserPane {
 			Text id headerText {
 				static columnIndex : 0,
 				static rowIndex : 0
+			},
+
+			HBox {
+				children : [
+					Label {
+						text : "Filter: "
+					},
+					TextField id filterTextField {
+						static hgrow : "ALWAYS",
+						static margin : Insets {
+							left : 4
+						}
+					}
+				],
+				static margin : Insets {
+					top : 4,
+					bottom : 4
+				},
+				static columnIndex : 0,
+				static rowIndex : 1
 			},
 
 			TableView < UserListItem > id tableView {
@@ -53,7 +76,7 @@ dynamic component SelectUserPane {
 				static vgrow : "ALWAYS",
 				static hgrow : "ALWAYS",
 				static columnIndex : 0,
-				static rowIndex : 1
+				static rowIndex : 2
 			},
 			ButtonBar {
 				buttons : [
@@ -72,7 +95,7 @@ dynamic component SelectUserPane {
 				],
 				static vgrow : "NEVER",
 				static columnIndex : 0,
-				static rowIndex : 2,
+				static rowIndex : 3,
 				static columnSpan : 1
 			}
 		]

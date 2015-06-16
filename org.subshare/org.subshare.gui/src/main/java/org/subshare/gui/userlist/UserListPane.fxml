@@ -4,58 +4,80 @@
 -->
 
 <?import java.lang.*?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.Tooltip?>
 <?import javafx.scene.control.cell.PropertyValueFactory?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
 <?scenebuilder-preview-i18n-resource messages.properties?>
 
 <fx:root xmlns:fx="http://javafx.com/fxml" type="BorderPane">
 
 	<top>
-		<FlowPane> 
-			<Button fx:id="addButton" onAction="#addButtonClicked"> 
-				<graphic>
-					<ImageView> 
-						<image>
-							<Image url="@add-24x24.png"/> 
-						</image>
-					</ImageView>
-				</graphic>
-				<tooltip>
-					<Tooltip text="Add a new user."/> 
-				</tooltip>
-			</Button>
-			<Button fx:id="editButton" onAction="#editButtonClicked"> 
-				<graphic>
-					<ImageView> 
-						<image>
-							<Image url="@edit-24x24.png"/> 
-						</image>
-					</ImageView>
-				</graphic>
-				<tooltip>
-					<Tooltip text="Edit the selected user."/> 
-				</tooltip>
-			</Button>
-			<Button fx:id="deleteButton" onAction="#deleteButtonClicked"> 
-				<graphic>
-					<ImageView> 
-						<image>
-							<Image url="@delete-24x24.png"/> 
-						</image>
-					</ImageView>
-				</graphic>
-				<tooltip>
-					<Tooltip text="Delete the selected users."/> 
-				</tooltip>
-			</Button>
-		</FlowPane>
+		<VBox> 
+			<children>
+				<FlowPane> 
+					<Button fx:id="addButton" onAction="#addButtonClicked"> 
+						<graphic>
+							<ImageView> 
+								<image>
+									<Image url="@add-24x24.png"/> 
+								</image>
+							</ImageView>
+						</graphic>
+						<tooltip>
+							<Tooltip text="Add a new user."/> 
+						</tooltip>
+					</Button>
+					<Button fx:id="editButton" onAction="#editButtonClicked"> 
+						<graphic>
+							<ImageView> 
+								<image>
+									<Image url="@edit-24x24.png"/> 
+								</image>
+							</ImageView>
+						</graphic>
+						<tooltip>
+							<Tooltip text="Edit the selected user."/> 
+						</tooltip>
+					</Button>
+					<Button fx:id="deleteButton" onAction="#deleteButtonClicked"> 
+						<graphic>
+							<ImageView> 
+								<image>
+									<Image url="@delete-24x24.png"/> 
+								</image>
+							</ImageView>
+						</graphic>
+						<tooltip>
+							<Tooltip text="Delete the selected users."/> 
+						</tooltip>
+					</Button>
+				</FlowPane>
+				<HBox> 
+					<children>
+						<Label text="Filter: "/> 
+						<TextField fx:id="filterTextField" HBox.hgrow="ALWAYS"> 
+							<HBox.margin>
+								<Insets left="4"/> 
+							</HBox.margin>
+						</TextField>
+					</children>
+					<VBox.margin>
+						<Insets top="4" bottom="4"/> 
+					</VBox.margin>
+				</HBox>
+			</children>
+		</VBox>
 	</top>
 	<center>
 		<TableView fx:id="tableView"> 

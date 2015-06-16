@@ -5,6 +5,8 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.subshare.core.pgp.Pgp;
 import org.subshare.core.pgp.PgpKey;
@@ -22,6 +24,7 @@ public class UserListItem {
 
 	private volatile String firstName;
 	private volatile String lastName;
+	private volatile List<String> emails;
 	private volatile String email;
 	private volatile String keyTrustLevel;
 
@@ -114,13 +117,21 @@ public class UserListItem {
 		return lastName == NULL ? null : lastName;
 	}
 
+	public List<String> getEmails() {
+		List<String> emails = this.emails;
+		if (emails == null)
+			this.emails = emails = new ArrayList<>(assertNotNull("user", user).getEmails());
+
+		return emails;
+	}
+
 	public String getEmail() {
 		String email = this.email;
 		if (email == null) {
-			if (assertNotNull("user", user).getEmails().isEmpty())
+			if (getEmails().isEmpty())
 				email = NULL;
 			else {
-				final String firstEmail = user.getEmails().get(0);
+				final String firstEmail = getEmails().get(0);
 				if (user.getEmails().size() == 1)
 					email = firstEmail;
 				else
@@ -146,5 +157,25 @@ public class UserListItem {
 			this.keyTrustLevel = keyTrustLevel = highestKeyTrustLevel == null ? null : highestKeyTrustLevel.toString();
 		}
 		return keyTrustLevel;
+	}
+
+	public boolean matchesFilter(final String filterText) {
+		if (filterText.isEmpty())
+			return true;
+
+		final String firstName = this.getFirstName();
+		if (firstName != null && firstName.toLowerCase().contains(filterText))
+			return true;
+
+		final String lastName = this.getLastName();
+		if (lastName != null && lastName.toLowerCase().contains(filterText))
+			return true;
+
+		for (final String email : this.getEmails()) {
+			if (email.toLowerCase().contains(filterText))
+				return true;
+		}
+
+		return false;
 	}
 }

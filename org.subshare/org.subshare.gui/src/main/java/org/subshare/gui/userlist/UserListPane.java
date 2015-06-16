@@ -6,9 +6,17 @@ import static org.subshare.gui.util.FxmlUtil.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
+import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ExecutionException;
 
+import javafx.application.Platform;
+import javafx.beans.InvalidationListener;
 import javafx.collections.ListChangeListener;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
@@ -18,6 +26,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
@@ -40,7 +49,15 @@ public class UserListPane extends BorderPane {
 	private Button deleteButton;
 
 	@FXML
+	private TextField filterTextField;
+
+	@FXML
 	private TableView<UserListItem> tableView;
+
+	private final List<UserListItem> userListItems = new ArrayList<>();
+
+	private final Timer applyFilterLaterTimer = new Timer(true);
+	private TimerTask applyFilterLaterTimerTask;
 
 	private final ListChangeListener<UserListItem> selectionListener = new ListChangeListener<UserListItem>() {
 		@Override
@@ -71,6 +88,7 @@ public class UserListPane extends BorderPane {
 		tableView.setOnMouseClicked(mouseEventHandler);
 		populateTableViewAsync();
 		updateEnabled();
+		filterTextField.textProperty().addListener((InvalidationListener) observable -> applyFilterLater());
 	}
 
 	private void updateEnabled() {
@@ -105,6 +123,7 @@ public class UserListPane extends BorderPane {
 		for (final User user : users) {
 			final UserListItem userListItem = new UserListItem(user);
 			result.add(userListItem);
+			userListItems.add(userListItem);
 			tableView.getItems().add(userListItem);
 		}
 
@@ -139,5 +158,66 @@ public class UserListPane extends BorderPane {
 	@FXML
 	private void deleteButtonClicked(final ActionEvent event) {
 		System.out.println("deleteButtonClicked: " + event);
+	}
+
+	private void applyFilterLater() {
+		if (applyFilterLaterTimerTask != null) {
+			applyFilterLaterTimerTask.cancel();
+			applyFilterLaterTimerTask = null;
+		}
+
+		applyFilterLaterTimerTask = new TimerTask() {
+			@Override
+			public void run() {
+				Platform.runLater(new Runnable() {
+					@Override
+					public void run() {
+						applyFilterLaterTimerTask = null;
+						applyFilter();
+					}
+				});
+
+			}
+		};
+
+		applyFilterLaterTimer.schedule(applyFilterLaterTimerTask, 300);
+	}
+
+	private void applyFilter() {
+		final String filterText = filterTextField.getText().toLowerCase();
+		final Iterator<UserListItem> sourceIterator = userListItems.iterator();
+		final ListIterator<UserListItem> tableItemIterator = tableView.getItems().listIterator();
+
+		final Set<User> includedUsers = new HashSet<>();
+
+		while (sourceIterator.hasNext()) {
+			final UserListItem sourceUserListItem = sourceIterator.next();
+			final boolean matchesFilter = sourceUserListItem.matchesFilter(filterText);
+			if (matchesFilter)
+				includedUsers.add(sourceUserListItem.getUser());
+
+			final UserListItem tableUserListItem = tableItemIterator.hasNext() ? tableItemIterator.next() : null;
+			if (tableUserListItem == null) {
+				if (matchesFilter)
+					tableItemIterator.add(sourceUserListItem);
+			}
+			else if (tableUserListItem == sourceUserListItem) {
+				if (! matchesFilter)
+					tableItemIterator.remove();
+			}
+			else {
+				if (matchesFilter) {
+					tableItemIterator.previous();
+					tableItemIterator.add(sourceUserListItem);
+				}
+				else
+					tableItemIterator.previous();
+			}
+		}
+
+		while (tableItemIterator.hasNext()) {
+			tableItemIterator.next();
+			tableItemIterator.remove();
+		}
 	}
 }
