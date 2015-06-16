@@ -39,6 +39,7 @@ public class UserListMainTreeItem extends MainTreeItem<String> {
 
 	public UserListMainTreeItem() {
 		super("Users");
+
 		editUserManager.getEditedUsers().addListener(editedUsersListener);
 		editUserManager.addEditUserListener(event -> {
 			final User user = getLast(event.getUsers());

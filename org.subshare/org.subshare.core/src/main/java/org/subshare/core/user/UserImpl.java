@@ -4,7 +4,6 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -25,11 +24,10 @@ import org.subshare.core.pgp.PgpKeyId;
 import org.subshare.core.pgp.PgpRegistry;
 import org.subshare.core.sign.SignableSigner;
 
+import co.codewizards.cloudstore.core.bean.AbstractBean;
 import co.codewizards.cloudstore.core.dto.Uid;
 
-public class UserImpl implements User {
-
-	private /*final*cloned*/ PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
+public class UserImpl extends AbstractBean<User.Property> implements User {
 
 	public UserImpl() { }
 
@@ -80,11 +78,12 @@ public class UserImpl implements User {
 		return userId;
 	}
 	@Override
-	public synchronized void setUserId(Uid userId) {
-		if (this.userId != null && !this.userId.equals(userId))
-			throw new IllegalStateException("this.userId is already assigned! Cannot modify afterwards!");
-
-		this.userId = userId;
+	public void setUserId(Uid userId) {
+		synchronized (this) {
+			if (this.userId != null && !this.userId.equals(userId))
+				throw new IllegalStateException("this.userId is already assigned! Cannot modify afterwards!");
+		}
+		setPropertyValue(PropertyEnum.userId, userId); // outside of synchronized block, because it fires events (and synchronizes itself)!
 		updateChanged();
 	}
 
@@ -94,10 +93,8 @@ public class UserImpl implements User {
 	}
 
 	@Override
-	public synchronized void setFirstName(final String firstName) {
-		final String old = this.firstName;
-		this.firstName = firstName;
-		firePropertyChange(PropertyEnum.firstName, old, firstName);
+	public void setFirstName(final String firstName) {
+		setPropertyValue(PropertyEnum.firstName, firstName);
 		updateChanged();
 	}
 
@@ -107,10 +104,8 @@ public class UserImpl implements User {
 	}
 
 	@Override
-	public synchronized void setLastName(final String lastName) {
-		final String old = this.lastName;
-		this.lastName = lastName;
-		firePropertyChange(PropertyEnum.lastName, old, lastName);
+	public void setLastName(final String lastName) {
+		setPropertyValue(PropertyEnum.lastName, lastName);
 		updateChanged();
 	}
 
@@ -137,7 +132,13 @@ public class UserImpl implements User {
 		return userRepoKeyRing;
 	}
 	@Override
-	public synchronized void setUserRepoKeyRing(final UserRepoKeyRing userRepoKeyRing) {
+	public void setUserRepoKeyRing(final UserRepoKeyRing userRepoKeyRing) {
+		final UserRepoKeyRing old = _setUserRepoKeyRing(userRepoKeyRing);
+		firePropertyChange(PropertyEnum.userRepoKeyRing, old, userRepoKeyRing);
+		updateChanged();
+	}
+
+	protected synchronized UserRepoKeyRing _setUserRepoKeyRing(final UserRepoKeyRing userRepoKeyRing) {
 		final UserRepoKeyRing old = this.userRepoKeyRing;
 		this.userRepoKeyRing = userRepoKeyRing;
 
@@ -147,18 +148,27 @@ public class UserImpl implements User {
 		if (userRepoKeyRing != null)
 			userRepoKeyRing.addPropertyChangeListener(userRepoKeyRingChangeListener);
 
-		firePropertyChange(PropertyEnum.userRepoKeyRing, old, userRepoKeyRing);
-		updateChanged();
+		return old;
 	}
-	@Override
-	public synchronized UserRepoKeyRing getUserRepoKeyRingOrCreate() {
-		if (! getUserRepoKeyPublicKeys().isEmpty())
-			throw new IllegalStateException("There are public keys! Either there is a userRepoKeyRing or there are public keys! There cannot be both!");
 
-		UserRepoKeyRing userRepoKeyRing = getUserRepoKeyRing();
-		if (userRepoKeyRing == null) {
-			userRepoKeyRing = new UserRepoKeyRing();
-			setUserRepoKeyRing(userRepoKeyRing);
+	@Override
+	public UserRepoKeyRing getUserRepoKeyRingOrCreate() {
+		boolean created = false;
+		UserRepoKeyRing userRepoKeyRing;
+		synchronized (this) {
+			if (! getUserRepoKeyPublicKeys().isEmpty())
+				throw new IllegalStateException("There are public keys! Either there is a userRepoKeyRing or there are public keys! There cannot be both!");
+
+			userRepoKeyRing = getUserRepoKeyRing();
+			if (userRepoKeyRing == null) {
+				created = true;
+				userRepoKeyRing = new UserRepoKeyRing();
+				_setUserRepoKeyRing(userRepoKeyRing);
+			}
+		}
+		if (created) {
+			firePropertyChange(PropertyEnum.userRepoKeyRing, null, userRepoKeyRing);
+			updateChanged();
 		}
 		return userRepoKeyRing;
 	}
@@ -276,37 +286,11 @@ public class UserImpl implements User {
 	@Override
 	public void setChanged(final Date changed) {
 		assertNotNull("changed", changed);
-		final Date old = this.changed;
-		this.changed = changed;
-		firePropertyChange(PropertyEnum.changed, old, changed);
+		setPropertyValue(PropertyEnum.changed, changed);
 	}
 
 	protected void updateChanged() {
 		setChanged(new Date());
-	}
-
-	@Override
-	public void addPropertyChangeListener(PropertyChangeListener listener) {
-		propertyChangeSupport.addPropertyChangeListener(listener);
-	}
-
-	@Override
-	public void addPropertyChangeListener(Property property, PropertyChangeListener listener) {
-		propertyChangeSupport.addPropertyChangeListener(property.name(), listener);
-	}
-
-	@Override
-	public void removePropertyChangeListener(PropertyChangeListener listener) {
-		propertyChangeSupport.removePropertyChangeListener(listener);
-	}
-
-	@Override
-	public void removePropertyChangeListener(Property property, PropertyChangeListener listener) {
-		propertyChangeSupport.removePropertyChangeListener(property.name(), listener);
-	}
-
-	protected void firePropertyChange(Property property, Object oldValue, Object newValue) {
-		propertyChangeSupport.firePropertyChange(property.name(), oldValue, newValue);
 	}
 
 	@Override
@@ -316,13 +300,7 @@ public class UserImpl implements User {
 
 	@Override
 	public UserImpl clone() {
-		final UserImpl clone;
-		try {
-			clone = (UserImpl) super.clone();
-		} catch (CloneNotSupportedException e) {
-			throw new RuntimeException(e);
-		}
-		clone.propertyChangeSupport = new PropertyChangeSupport(clone);
+		final UserImpl clone = (UserImpl) super.clone();
 
 		if (clone.emails != null) {
 			clone.emails = null;

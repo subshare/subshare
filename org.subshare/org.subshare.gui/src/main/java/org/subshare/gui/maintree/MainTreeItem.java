@@ -49,6 +49,7 @@ public class MainTreeItem<T> extends TreeItem<String> {
 
 		setValueObject(valueObject);
 		setGraphic(graphic);
+//		workaround_hookChangeListener();
 	}
 
 	protected String getValueString() {
@@ -157,4 +158,48 @@ public class MainTreeItem<T> extends TreeItem<String> {
 		assertNotNull("parent", parent);
 		return parent.getMainTree();
 	}
+
+//	/**
+//	 * The treeView.selectedItems are not updated (or at least their ListChangeEvent is not fired) when a
+//	 * tree item is removed. We therefore manually take care of the selection in this case.
+//	 */
+//	private void workaround_hookChangeListener() {
+//		getChildren().addListener(workaroundChangeListener);
+//	}
+//
+//	private ListChangeListener<? super TreeItem<String>> workaroundChangeListener = new ListChangeListener<TreeItem<String>>() {
+//		@Override
+//		public void onChanged(final ListChangeListener.Change<? extends TreeItem<String>> c) {
+//			final List<TreeItem<String>> selectedItems = new ArrayList<>(getMainTree().getSelectionModel().getSelectedItems());
+//
+//			Set<TreeItem<String>> removedSet = null;
+//
+//			while (c.next()) {
+//				if (c.getRemoved().isEmpty())
+//					continue;
+//
+//				if (removedSet == null)
+//					removedSet = new HashSet<>(c.getRemoved());
+//				else
+//					removedSet.addAll(c.getRemoved());
+//			}
+//
+//			if (removedSet != null) {
+//				boolean needsHelp = false;
+//				for (final TreeItem<String> selectedItem : selectedItems) {
+//					if (removedSet.contains(selectedItem))
+//						needsHelp = true;
+//				}
+//
+//				if (needsHelp) {
+//					selectedItems.removeAll(removedSet);
+//					getMainTree().getSelectionModel().clearSelection();
+//					if (! selectedItems.isEmpty()) {
+//						for (TreeItem<String> selectedItem : selectedItems)
+//							getMainTree().getSelectionModel().select(selectedItem);
+//					}
+//				}
+//			}
+//		}
+//	};
 }

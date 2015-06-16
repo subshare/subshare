@@ -3,16 +3,13 @@ package org.subshare.core.repo;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
 
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
 import java.util.Date;
 import java.util.UUID;
 
+import co.codewizards.cloudstore.core.bean.AbstractBean;
 import co.codewizards.cloudstore.core.dto.Uid;
 
-public class ServerRepoImpl implements ServerRepo {
-
-	private PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
+public class ServerRepoImpl extends AbstractBean<ServerRepo.Property> implements ServerRepo {
 
 	private final UUID repositoryId;
 	private String name;
@@ -30,59 +27,53 @@ public class ServerRepoImpl implements ServerRepo {
 	}
 
 	@Override
-	public String getName() {
+	public synchronized String getName() {
 		return name;
 	}
 
 	@Override
 	public void setName(final String name) {
-		final String old = this.name;
-		this.name = name;
-		firePropertyChange(PropertyEnum.name, old, name);
+		setPropertyValue(PropertyEnum.name, name);
 		updateChanged();
 	}
 
 	@Override
-	public Uid getServerId() {
+	public synchronized Uid getServerId() {
 		return serverId;
 	}
 
 	@Override
 	public void setServerId(final Uid serverId) {
-		if (this.serverId != null && ! equal(this.serverId, serverId)) // TODO do we ever need to support changing this?
-			throw new IllegalStateException("Cannot modify serverId!");
-
-		final Uid old = this.serverId;
-		this.serverId = serverId;
-		firePropertyChange(PropertyEnum.serverId, old, serverId);
+		synchronized (this) {
+			if (this.serverId != null && ! equal(this.serverId, serverId)) // TODO do we ever need to support changing this?
+				throw new IllegalStateException("Cannot modify serverId!");
+		}
+		setPropertyValue(PropertyEnum.serverId, serverId);
 		updateChanged();
 	}
 
 	@Override
-	public Uid getUserId() {
+	public synchronized Uid getUserId() {
 		return userId;
 	}
 	@Override
 	public void setUserId(Uid userId) {
-		if (this.userId != null && ! equal(this.userId, userId)) // TODO do we ever need to support changing this?
-			throw new IllegalStateException("Cannot modify userId!");
-
-		final Uid old = this.userId;
-		this.userId = userId;
-		firePropertyChange(PropertyEnum.userId, old, userId);
+		synchronized (this) {
+			if (this.userId != null && ! equal(this.userId, userId)) // TODO do we ever need to support changing this?
+				throw new IllegalStateException("Cannot modify userId!");
+		}
+		setPropertyValue(PropertyEnum.userId, userId);
 		updateChanged();
 	}
 
 	@Override
-	public Date getChanged() {
+	public synchronized Date getChanged() {
 		return changed;
 	}
 	@Override
 	public void setChanged(final Date changed) {
 		assertNotNull("changed", changed);
-		final Date old = this.changed;
-		this.changed = changed;
-		firePropertyChange(PropertyEnum.changed, old, changed);
+		setPropertyValue(PropertyEnum.changed, changed);
 	}
 
 	protected void updateChanged() {
@@ -90,38 +81,7 @@ public class ServerRepoImpl implements ServerRepo {
 	}
 
 	@Override
-	public void addPropertyChangeListener(PropertyChangeListener listener) {
-		propertyChangeSupport.addPropertyChangeListener(listener);
-	}
-
-	@Override
-	public void addPropertyChangeListener(Property property, PropertyChangeListener listener) {
-		propertyChangeSupport.addPropertyChangeListener(property.name(), listener);
-	}
-
-	@Override
-	public void removePropertyChangeListener(PropertyChangeListener listener) {
-		propertyChangeSupport.removePropertyChangeListener(listener);
-	}
-
-	@Override
-	public void removePropertyChangeListener(Property property, PropertyChangeListener listener) {
-		propertyChangeSupport.removePropertyChangeListener(property.name(), listener);
-	}
-
-	protected void firePropertyChange(Property property, Object oldValue, Object newValue) {
-		propertyChangeSupport.firePropertyChange(property.name(), oldValue, newValue);
-	}
-
-	@Override
 	public ServerRepo clone() {
-		final ServerRepoImpl clone;
-		try {
-			clone = (ServerRepoImpl) super.clone();
-		} catch (CloneNotSupportedException e) {
-			throw new RuntimeException(e);
-		}
-		clone.propertyChangeSupport = new PropertyChangeSupport(clone);
-		return clone;
+		return (ServerRepoImpl) super.clone();
 	}
 }

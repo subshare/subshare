@@ -1,8 +1,10 @@
 package org.subshare.gui;
 
+import java.util.Arrays;
+
 import javafx.application.Platform;
-import javafx.collections.ListChangeListener;
-import javafx.collections.ObservableList;
+import javafx.beans.value.ChangeListener;
+import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TreeItem;
@@ -33,29 +35,31 @@ public class MainPaneController {
 	@FXML
 	private BorderPane mainDetail;
 
-	private final ListChangeListener<? super TreeItem<String>> mainTreeSelectionListener = new ListChangeListener<TreeItem<String>>() {
-		@Override
-		public void onChanged(final ListChangeListener.Change<? extends TreeItem<String>> c) {
-			while (c.next()) {
-				final ObservableList<? extends TreeItem<String>> selection = c.getList();
-				if (selection.isEmpty())
-					mainDetail.setCenter(null);
-				else
-					mainDetail.setCenter(((MainTreeItem<String>)selection.get(0)).getMainDetailContent());
-			}
-		}
-	};
+//	private final ListChangeListener<? super TreeItem<String>> mainTreeSelectionListener = new ListChangeListener<TreeItem<String>>() {
+//		@Override
+//		public void onChanged(final ListChangeListener.Change<? extends TreeItem<String>> c) {
+//			onSelectionChange();
+//		}
+//	};
 
 	public void initialize() {
 		final RootMainTreeItem root = new RootMainTreeItem(mainTree);
 
-		root.getChildren().add(new LocalRepoListMainTreeItem());
-		root.getChildren().add(new ServerListMainTreeItem());
-		root.getChildren().add(new UserListMainTreeItem());
+//		root.getChildren().add(new LocalRepoListMainTreeItem());
+//		root.getChildren().add(new ServerListMainTreeItem());
+//		root.getChildren().add(new UserListMainTreeItem());
+
+		root.getChildren().addAll(FXCollections.observableArrayList(Arrays.asList(
+				new LocalRepoListMainTreeItem(),
+				new ServerListMainTreeItem(),
+				new UserListMainTreeItem()
+				)));
 
 		mainTree.setShowRoot(false);
 		mainTree.setRoot(root);
-		mainTree.getSelectionModel().getSelectedItems().addListener(mainTreeSelectionListener);
+//		mainTree.getSelectionModel().getSelectedItems().addListener(mainTreeSelectionListener);
+		mainTree.getSelectionModel().selectedItemProperty().addListener(
+				(ChangeListener<TreeItem<String>>) (observable, oldValue, newValue) -> onSelectionChange() );
 
 		// TODO we should save and restore the selection!
 		mainTree.getSelectionModel().select(0);
@@ -73,6 +77,11 @@ public class MainPaneController {
 						});
 			}
 		});
+	}
+
+	private void onSelectionChange() {
+		final MainTreeItem<?> selectedItem = (MainTreeItem<?>) mainTree.getSelectionModel().getSelectedItem();
+		mainDetail.setCenter(selectedItem == null ? null : selectedItem.getMainDetailContent());
 	}
 
 //	private ServerListMainTreeItem createServerListMainTreeItem() {
