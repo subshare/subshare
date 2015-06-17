@@ -8,9 +8,9 @@ import org.subshare.core.user.User;
 
 public class RootPgpKeyTreeItem extends PgpKeyTreeItem<User> {
 
-	private final TreeTableView<String> treeTableView;
+	private final TreeTableView<PgpKeyTreeItem<?>> treeTableView;
 
-	public RootPgpKeyTreeItem(final TreeTableView<String> treeTableView, final User user) {
+	public RootPgpKeyTreeItem(final TreeTableView<PgpKeyTreeItem<?>> treeTableView, final User user) {
 		super(assertNotNull("user", user));
 		this.treeTableView = assertNotNull("treeTableView", treeTableView);
 
@@ -21,7 +21,7 @@ public class RootPgpKeyTreeItem extends PgpKeyTreeItem<User> {
 	}
 
 	@Override
-	protected TreeTableView<String> getTreeTableView() {
+	protected TreeTableView<PgpKeyTreeItem<?>> getTreeTableView() {
 		return treeTableView;
 	}
 }

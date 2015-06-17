@@ -29,6 +29,7 @@ import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.GridPane;
 
 import org.subshare.core.user.User;
+import org.subshare.gui.user.pgpkeytree.PgpKeyTreeItem;
 import org.subshare.gui.user.pgpkeytree.RootPgpKeyTreeItem;
 
 public class UserPane extends GridPane {
@@ -54,7 +55,7 @@ public class UserPane extends GridPane {
 	private TableColumn<EmailWrapper, String> emailTableColumn;
 
 	@FXML
-	private TreeTableView<String> pgpKeyTreeTableView;
+	private TreeTableView<PgpKeyTreeItem<?>> pgpKeyTreeTableView;
 
 	private boolean ignoreUpdateEmailsOrWrappers;
 

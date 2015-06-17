@@ -140,7 +140,7 @@ public class PgpKeyTreeItem<T> extends TreeItem<PgpKeyTreeItem<?>> {
 //		Event.fireEvent(this, evt);
 //	}
 
-	protected TreeTableView<String> getTreeTableView() {
+	protected TreeTableView<PgpKeyTreeItem<?>> getTreeTableView() {
 		final PgpKeyTreeItem<?> parent = (PgpKeyTreeItem<?>) getParent();
 		assertNotNull("parent", parent);
 		return parent.getTreeTableView();
