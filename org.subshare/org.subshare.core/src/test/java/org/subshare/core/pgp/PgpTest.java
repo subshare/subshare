@@ -244,7 +244,7 @@ public class PgpTest {
 
 		pgpKey = pgp.getPgpKey(new PgpKeyId("d7a92a24aa97ddbd"));
 		assertThat(pgpKey).isNotNull();
-		assertThat(pgp.getSignatures(pgpKey).size()).isEqualTo(2); // 1 self-signed + 1 signed by 70c642ca41cd4390
+		assertThat(pgp.getUserIdSignatures(pgpKey).size()).isEqualTo(2); // 1 self-signed + 1 signed by 70c642ca41cd4390
 		pgpKeys.add(pgpKey);
 
 		File tempFile = createTempFile("pubkeys-", ".gpg");
@@ -260,7 +260,7 @@ public class PgpTest {
 		// check for 1 *additional* signature
 		pgpKey = pgp.getPgpKey(new PgpKeyId("d7a92a24aa97ddbd"));
 		assertThat(pgpKey).isNotNull();
-		assertThat(pgp.getSignatures(pgpKey).size()).isEqualTo(3);
+		assertThat(pgp.getUserIdSignatures(pgpKey).size()).isEqualTo(3);
 
 
 		try (InputStream in = GnuPgTest.class.getResourceAsStream("0xAA97DDBD_with_bbb_sig.asc");) {
@@ -268,7 +268,7 @@ public class PgpTest {
 		}
 
 		// check for again 1 *additional* signature
-		assertThat(pgp.getSignatures(pgpKey).size()).isEqualTo(4);
+		assertThat(pgp.getUserIdSignatures(pgpKey).size()).isEqualTo(4);
 
 
 		try (InputStream in = GnuPgTest.class.getResourceAsStream("0xAA97DDBD_with_aaa_sig.asc");) {
@@ -276,7 +276,7 @@ public class PgpTest {
 		}
 
 		// check for 0 *additional* signatures
-		assertThat(pgp.getSignatures(pgpKey).size()).isEqualTo(4);
+		assertThat(pgp.getUserIdSignatures(pgpKey).size()).isEqualTo(4);
 
 
 		try (InputStream in = tempFile.createInputStream();) {
@@ -284,7 +284,7 @@ public class PgpTest {
 		}
 
 		// check for 0 *additional* signatures
-		assertThat(pgp.getSignatures(pgpKey).size()).isEqualTo(4);
+		assertThat(pgp.getUserIdSignatures(pgpKey).size()).isEqualTo(4);
 	}
 
 	@Test

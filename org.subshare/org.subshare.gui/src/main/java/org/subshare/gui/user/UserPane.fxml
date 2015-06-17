@@ -10,7 +10,10 @@
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.Tooltip?>
+<?import javafx.scene.control.TreeTableColumn?>
+<?import javafx.scene.control.TreeTableView?>
 <?import javafx.scene.control.cell.PropertyValueFactory?>
+<?import javafx.scene.control.cell.TreeItemPropertyValueFactory?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.FlowPane?>
@@ -19,7 +22,7 @@
 <fx:root xmlns:fx="http://javafx.com/fxml" type="GridPane">
 
 	<children>
-		<FlowPane GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="2"> 
+		<FlowPane GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="2" GridPane.fillWidth="true" GridPane.hgrow="ALWAYS"> 
 			<Button fx:id="closeButton" onAction="#closeButtonClicked"> 
 				<graphic>
 					<ImageView> 
@@ -34,17 +37,31 @@
 			</Button>
 		</FlowPane>
 		<Label text="First name:" GridPane.columnIndex="0" GridPane.rowIndex="1"/> 
-		<TextField fx:id="firstNameTextField" GridPane.columnIndex="1" GridPane.rowIndex="1"/> 
+		<TextField fx:id="firstNameTextField" GridPane.columnIndex="1" GridPane.rowIndex="1" GridPane.fillWidth="true" GridPane.hgrow="ALWAYS"/> 
 		<Label text="Last name:" GridPane.columnIndex="0" GridPane.rowIndex="2"/> 
-		<TextField fx:id="lastNameTextField" GridPane.columnIndex="1" GridPane.rowIndex="2"/> 
-		<TableView fx:id="emailsTableView" editable="true" GridPane.columnIndex="0" GridPane.rowIndex="3" GridPane.columnSpan="2"> 
+		<TextField fx:id="lastNameTextField" GridPane.columnIndex="1" GridPane.rowIndex="2" GridPane.fillWidth="true" GridPane.hgrow="ALWAYS"/> 
+		<TableView fx:id="emailsTableView" editable="true" GridPane.columnIndex="0" GridPane.rowIndex="3" GridPane.columnSpan="2" GridPane.fillWidth="true" GridPane.hgrow="ALWAYS"> 
 			<columns>
-				<TableColumn fx:id="emailTableColumn" text="E-Mail" prefWidth="300"> 
+				<TableColumn fx:id="emailTableColumn" text="E-mail" prefWidth="300"> 
 					<cellValueFactory>
 						<PropertyValueFactory property="value"/> 
 					</cellValueFactory>
 				</TableColumn>
 			</columns>
 		</TableView>
+		<TreeTableView fx:id="pgpKeyTreeTableView" GridPane.columnIndex="0" GridPane.rowIndex="4" GridPane.columnSpan="2" GridPane.fillWidth="true" GridPane.hgrow="ALWAYS"> 
+			<columns>
+				<TreeTableColumn fx:id="pgpKeyTreeTableColumn" text="Name" prefWidth="300"> 
+					<cellValueFactory>
+						<TreeItemPropertyValueFactory property="name"/> 
+					</cellValueFactory>
+				</TreeTableColumn>
+				<TreeTableColumn fx:id="pgpKeyTreeTableColumn" text="Key-ID" prefWidth="150"> 
+					<cellValueFactory>
+						<TreeItemPropertyValueFactory property="keyId"/> 
+					</cellValueFactory>
+				</TreeTableColumn>
+			</columns>
+		</TreeTableView>
 	</children>
 </fx:root>

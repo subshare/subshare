@@ -17,14 +17,17 @@ public class PgpKey implements Serializable {
 	public static final PgpKey TEST_DUMMY_PGP_KEY = new PgpKey(
 			TEST_DUMMY_PGP_KEY_ID,
 			new byte[0],
+			null,
 			new Date(), // created
 			null, // validTo
 			true,
 			Collections.<String>emptyList(),
 			true,
-			false,
-			Collections.<PgpKey>emptyList()
+			false
 			);
+	static {
+		TEST_DUMMY_PGP_KEY.setSubKeys(Collections.<PgpKey>emptyList());
+	}
 
 	private final PgpKeyId pgpKeyId;
 
@@ -42,29 +45,29 @@ public class PgpKey implements Serializable {
 
 	private final boolean revoked;
 
-	private PgpKey masterKey;
+	private final PgpKey masterKey;
 
-	private final List<PgpKey> subKeys;
+	private List<PgpKey> subKeys;
 
 	public PgpKey(
 			final PgpKeyId pgpKeyId,
 			final byte[] fingerprint,
+			final PgpKey masterKey,
 			final Date created,
 			final Date validTo,
 			final boolean privateKeyAvailable,
 			final List<String> userIds,
 			final boolean encryptionKey,
-			final boolean revoked,
-			final List<PgpKey> subKeys) {
+			final boolean revoked) {
 		this.pgpKeyId = assertNotNull("pgpKeyId", pgpKeyId);
 		this.fingerprint = assertNotNull("fingerprint", fingerprint);
+		this.masterKey = masterKey == null ? this : masterKey;
 		this.created = assertNotNull("created", created);
 		this.validTo = validTo; // may be null - null means, it does *not* expire.
 		this.privateKeyAvailable = privateKeyAvailable;
 		this.userIds = Collections.unmodifiableList(new ArrayList<String>(assertNotNull("userIds", userIds)));
 		this.encryptionKey = encryptionKey;
 		this.revoked = revoked;
-		this.subKeys = Collections.unmodifiableList(new ArrayList<PgpKey>(assertNotNull("subKeys", subKeys)));
 	}
 
 	public PgpKeyId getPgpKeyId() {
@@ -126,21 +129,28 @@ public class PgpKey implements Serializable {
 		return assertNotNull("masterKey", masterKey);
 	}
 
-	/**
-	 * Sets the master-key. This method can only be invoked once! The master-key cannot be re-assigned.
-	 * @param masterKey the master-key (or <code>this</code> itself, if this is the master-key).
-	 */
-	public void setMasterKey(final PgpKey masterKey) {
-		assertNotNull("masterKey", masterKey);
+//	/**
+//	 * Sets the master-key. This method can only be invoked once! The master-key cannot be re-assigned.
+//	 * @param masterKey the master-key (or <code>this</code> itself, if this is the master-key).
+//	 */
+//	public void setMasterKey(final PgpKey masterKey) {
+//		assertNotNull("masterKey", masterKey);
+//
+//		if (this.masterKey != null) {
+//			if (this.masterKey.equals(masterKey))
+//				return;
+//
+//			throw new IllegalStateException("this.masterKey already assigned! Cannot change!");
+//		}
+//
+//		this.masterKey = masterKey;
+//	}
 
-		if (this.masterKey != null) {
-			if (this.masterKey.equals(masterKey))
-				return;
+	public void setSubKeys(List<PgpKey> subKeys) {
+		if (this.subKeys != null)
+			throw new IllegalStateException("this.subKeys already assigned!");
 
-			throw new IllegalStateException("this.masterKey already assigned! Cannot change!");
-		}
-
-		this.masterKey = masterKey;
+		this.subKeys = Collections.unmodifiableList(new ArrayList<PgpKey>(assertNotNull("subKeys", subKeys)));
 	}
 
 	public PgpKey getPgpKeyForEncryptionOrFail() {
@@ -221,5 +231,10 @@ public class PgpKey implements Serializable {
 			return false;
 		final PgpKey other = (PgpKey) obj;
 		return equal(this.pgpKeyId, other.pgpKeyId);
+	}
+
+	@Override
+	public String toString() {
+		return String.format("%s[%s]", getClass().getSimpleName(), pgpKeyId);
 	}
 }

@@ -28,7 +28,7 @@ public interface Pgp {
 
 	PgpDecoder createDecoder(InputStream in, OutputStream out);
 
-	Collection<PgpSignature> getSignatures(PgpKey pgpKey);
+	Collection<PgpSignature> getUserIdSignatures(PgpKey pgpKey);
 
 	Collection<PgpKey> getMasterKeysWithPrivateKey();
 

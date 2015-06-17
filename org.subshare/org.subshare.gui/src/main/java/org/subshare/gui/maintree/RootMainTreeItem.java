@@ -33,7 +33,7 @@ public class RootMainTreeItem extends MainTreeItem<String> {
 	}
 
 	@Override
-	protected TreeView<String> getMainTree() {
+	protected TreeView<String> getTreeView() {
 		return mainTree;
 	}
 }

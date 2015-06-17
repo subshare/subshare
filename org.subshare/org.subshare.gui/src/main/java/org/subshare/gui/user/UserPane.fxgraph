@@ -12,9 +12,14 @@ import javafx.scene.control.Label
 import javafx.scene.control.TextField
 import javafx.scene.control.TableView
 import javafx.scene.control.TableColumn
+import javafx.scene.control.TreeTableView
+import javafx.scene.control.TreeView
+import javafx.scene.control.TreeTableColumn
 import javafx.scene.control.cell.PropertyValueFactory
+import javafx.scene.control.cell.TreeItemPropertyValueFactory
 
 import org.subshare.gui.user.EmailWrapper
+import org.subshare.gui.user.pgpkeytree.PgpKeyTreeItem
 
 dynamic component UserPane {
 	GridPane {
@@ -27,7 +32,9 @@ dynamic component UserPane {
 				},
 				static columnIndex : 0,
 				static rowIndex : 0,
-				static columnSpan : 2
+				static columnSpan : 2,
+				static fillWidth : true,
+				static hgrow : "ALWAYS"
 			},
 
 			Label {
@@ -37,7 +44,9 @@ dynamic component UserPane {
 			},
 			TextField id firstNameTextField {
 				static columnIndex : 1,
-				static rowIndex : 1
+				static rowIndex : 1,
+				static fillWidth : true,
+				static hgrow : "ALWAYS"
 			},
 
 			Label {
@@ -47,7 +56,9 @@ dynamic component UserPane {
 			},
 			TextField id lastNameTextField {
 				static columnIndex : 1,
-				static rowIndex : 2
+				static rowIndex : 2,
+				static fillWidth : true,
+				static hgrow : "ALWAYS"
 			},
 
 			TableView < EmailWrapper > id emailsTableView {
@@ -55,7 +66,7 @@ dynamic component UserPane {
 	
 				columns : [
 					TableColumn < EmailWrapper, String > id emailTableColumn {
-						text : "E-Mail",
+						text : "E-mail",
 						prefWidth : 300,
 						cellValueFactory : PropertyValueFactory < EmailWrapper, String > {
 							property : "value"
@@ -65,7 +76,34 @@ dynamic component UserPane {
 				
 				static columnIndex : 0,
 				static rowIndex : 3,
-				static columnSpan : 2
+				static columnSpan : 2,
+				static fillWidth : true,
+				static hgrow : "ALWAYS"
+			},
+
+			TreeTableView < PgpKeyTreeItem<?> > id pgpKeyTreeTableView {
+				columns : [
+					TreeTableColumn < Object, String > id pgpKeyTreeTableColumn {
+						text : "Name",
+						prefWidth : 300,
+						cellValueFactory : TreeItemPropertyValueFactory < PgpKeyTreeItem<?>, String > {
+							property : "name"
+						}
+					},
+					TreeTableColumn < Object, String > id pgpKeyTreeTableColumn {
+						text : "Key-ID",
+						prefWidth : 150,
+						cellValueFactory : TreeItemPropertyValueFactory < PgpKeyTreeItem<?>, String > {
+							property : "keyId"
+						}
+					}
+				],
+
+				static columnIndex : 0,
+				static rowIndex : 4,
+				static columnSpan : 2,
+				static fillWidth : true,
+				static hgrow : "ALWAYS"
 			}
 		]
 	}

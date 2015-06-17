@@ -15,7 +15,7 @@ import javafx.scene.control.Tooltip
 
 component MainPane controlledby MainPaneController resourcefile "messages.properties" {
 	SplitPane id splitPane {
-		TreeView<MainTreeItem> id mainTree,
+		TreeView < String > id mainTreeView,
 		BorderPane id mainDetail {
 //			center : Sample
 		}

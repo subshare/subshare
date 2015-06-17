@@ -19,6 +19,8 @@ import org.subshare.core.pgp.PgpKeyId;
 
 public class BcPgpKey {
 
+	private final BcWithLocalGnuPgPgp pgp;
+
 	private final PgpKeyId pgpKeyId;
 
 	private PGPPublicKeyRing publicKeyRing;
@@ -33,11 +35,12 @@ public class BcPgpKey {
 
 	// A sub-key may be added twice, because we enlist from both the secret *and* public key ring
 	// collection. Therefore, we now use a LinkedHashSet (instead of an ArrayList).
-	private Set<BcPgpKey> subKeys = new LinkedHashSet<BcPgpKey>();
+	private Set<PgpKeyId> subKeyIds = new LinkedHashSet<>();
 
 	private PgpKey pgpKey;
 
-	public BcPgpKey(final PgpKeyId pgpKeyId) {
+	public BcPgpKey(final BcWithLocalGnuPgPgp pgp, final PgpKeyId pgpKeyId) {
+		this.pgp = pgp;
 		this.pgpKeyId = assertNotNull("pgpKeyId", pgpKeyId);
 	}
 
@@ -80,11 +83,14 @@ public class BcPgpKey {
 		this.masterKey = masterKey;
 	}
 
-	public Set<BcPgpKey> getSubKeys() {
-		return subKeys;
+	public Set<PgpKeyId> getSubKeyIds() {
+		return subKeyIds;
 	}
 
 	public synchronized PgpKey getPgpKey() {
+		// We make sure, masterKey.pgpKey is initialised, before we do anything in sub-keys!
+		final PgpKey masterPgpKey = masterKey == null ? null : masterKey.getPgpKey();
+
 		if (pgpKey == null) {
 			final byte[] fingerprint = assertNotNull("publicKey", publicKey).getFingerprint();
 			final boolean privateKeyAvailable = secretKey != null && ! secretKey.isPrivateKeyEmpty();
@@ -93,26 +99,24 @@ public class BcPgpKey {
 			for (final Iterator<?> itUserIDs = publicKey.getUserIDs(); itUserIDs.hasNext(); )
 				userIds.add((String) itUserIDs.next());
 
-			this.subKeys = Collections.unmodifiableSet(new LinkedHashSet<>(this.subKeys)); // turn read-only
-			final List<PgpKey> subKeys = new ArrayList<PgpKey>(this.subKeys.size());
-			for (final BcPgpKey bcPgpKey : this.subKeys)
-				subKeys.add(bcPgpKey.getPgpKey());
-
 			final long validSeconds = publicKey.getValidSeconds();
 			final Date created = publicKey.getCreationTime();
 			final Date validTo = validSeconds < 1 ? null : new Date(created.getTime() + (validSeconds * 1000));
 			this.pgpKey = new PgpKey(
-					pgpKeyId, fingerprint, created, validTo,
+					pgpKeyId, fingerprint, masterPgpKey, created, validTo,
 					privateKeyAvailable, userIds,
-					publicKey.isEncryptionKey(), publicKey.isRevoked(), subKeys);
+					publicKey.isEncryptionKey(), publicKey.isRevoked());
 
-			for (final PgpKey subKey : this.pgpKey.getSubKeys())
-				subKey.setMasterKey(this.pgpKey);
+			this.subKeyIds = Collections.unmodifiableSet(new LinkedHashSet<>(this.subKeyIds)); // turn read-only!
+			final List<PgpKey> subKeys = new ArrayList<PgpKey>(this.subKeyIds.size());
+			for (final PgpKeyId subKeyId : this.subKeyIds) {
+				final BcPgpKey subKey = pgp.getBcPgpKey(subKeyId);
+				if (subKey == null)
+					throw new IllegalStateException("Key not found: " + subKeyId);
 
-			if (masterKey == null)
-				this.pgpKey.setMasterKey(this.pgpKey);
-			else
-				masterKey.getPgpKey(); // needed for initialising the masterKey-back-refs.
+				subKeys.add(subKey.getPgpKey());
+			}
+			this.pgpKey.setSubKeys(subKeys);
 		}
 		return pgpKey;
 	}

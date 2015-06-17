@@ -24,10 +24,12 @@ import javafx.fxml.FXML;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TreeTableView;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.GridPane;
 
 import org.subshare.core.user.User;
+import org.subshare.gui.user.pgpkeytree.RootPgpKeyTreeItem;
 
 public class UserPane extends GridPane {
 
@@ -50,6 +52,9 @@ public class UserPane extends GridPane {
 
 	@FXML
 	private TableColumn<EmailWrapper, String> emailTableColumn;
+
+	@FXML
+	private TreeTableView<String> pgpKeyTreeTableView;
 
 	private boolean ignoreUpdateEmailsOrWrappers;
 
@@ -85,6 +90,12 @@ public class UserPane extends GridPane {
 
 		emailsTableView.setItems(emailWrappers);
 		emailTableColumn.setCellFactory(cast(TextFieldTableCell.forTableColumn()));
+
+		emailTableColumn.prefWidthProperty().bind(emailsTableView.widthProperty().subtract(10)); // TODO we should find out the scroll-bar-width and subtract this!
+
+		final RootPgpKeyTreeItem root = new RootPgpKeyTreeItem(pgpKeyTreeTableView, user);
+		pgpKeyTreeTableView.setShowRoot(false);
+		pgpKeyTreeTableView.setRoot(root);
 	}
 
 	private List<EmailWrapper> createEmailWrapperList() {

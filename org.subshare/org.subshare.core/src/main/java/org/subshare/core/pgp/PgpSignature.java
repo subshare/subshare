@@ -2,13 +2,16 @@ package org.subshare.core.pgp;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
+import java.io.Serializable;
 import java.util.Date;
 
-public class PgpSignature {
+public class PgpSignature implements Serializable {
+	private static final long serialVersionUID = 1L;
 
 	private PgpKeyId pgpKeyId;
 	private Date created;
 	private PgpSignatureType signatureType;
+	private String userId;
 
 	public PgpKeyId getPgpKeyId() {
 		return pgpKeyId;
@@ -29,5 +32,16 @@ public class PgpSignature {
 	}
 	public void setSignatureType(final PgpSignatureType signatureType) {
 		this.signatureType = signatureType;
+	}
+
+	/**
+	 * Gets the user-id that was certified by this signature or <code>null</code>, if this signature is not a certification.
+	 * @return the user-id that was certified by this signature; <code>null</code>, if this signature is not a certification.
+	 */
+	public String getUserId() {
+		return userId;
+	}
+	public void setUserId(String userId) {
+		this.userId = userId;
 	}
 }

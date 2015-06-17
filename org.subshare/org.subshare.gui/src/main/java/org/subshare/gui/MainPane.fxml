@@ -11,6 +11,6 @@
 
 <SplitPane xmlns:fx="http://javafx.com/fxml" fx:id="splitPane" fx:controller="org.subshare.gui.MainPaneController">
 
-	<TreeView fx:id="mainTree"/> 
+	<TreeView fx:id="mainTreeView"/> 
 	<BorderPane fx:id="mainDetail"/> 
 </SplitPane>

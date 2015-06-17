@@ -67,4 +67,8 @@ public class PgpKeyId implements Comparable<PgpKeyId>, Serializable {
 	public long longValue() {
 		return pgpKeyId;
 	}
+
+	public String toHumanString() {
+		return "0x" + toString();
+	}
 }

@@ -49,7 +49,7 @@ public abstract class PgpPrivateKeyPassphrasePromptPane extends GridPane {
 		this.pgpKey = assertNotNull("pgpKey", pgpKey);
 		userIdsComboBox.setItems(FXCollections.observableArrayList(this.pgpKey.getUserIds()));
 		userIdsComboBox.getSelectionModel().select(0);
-		keyIdTextField.setText("0x" + this.pgpKey.getPgpKeyId());
+		keyIdTextField.setText(this.pgpKey.getPgpKeyId().toHumanString());
 
 		if (errorMessage == null) {
 			errorMessageBox.setVisible(false);

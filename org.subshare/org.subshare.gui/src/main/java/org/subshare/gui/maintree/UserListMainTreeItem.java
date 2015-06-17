@@ -71,7 +71,7 @@ public class UserListMainTreeItem extends MainTreeItem<String> {
 
 		final UserMainTreeItem userMainTreeItem = getUserMainTreeItem(user);
 		if (userMainTreeItem != null)
-			getMainTree().getSelectionModel().select(userMainTreeItem);
+			getTreeView().getSelectionModel().select(userMainTreeItem);
 	}
 
 	private UserMainTreeItem getUserMainTreeItem(final User user) {

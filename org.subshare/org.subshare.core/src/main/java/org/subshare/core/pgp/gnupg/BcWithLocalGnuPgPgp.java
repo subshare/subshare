@@ -413,13 +413,24 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 	}
 
 	@Override
-	public Collection<PgpSignature> getSignatures(final PgpKey pgpKey) {
+	public Collection<PgpSignature> getUserIdSignatures(final PgpKey pgpKey) {
 		final BcPgpKey bcPgpKey = getBcPgpKeyOrFail(pgpKey);
+		final PGPPublicKey publicKey = bcPgpKey.getPublicKey();
 		final List<PgpSignature> result = new ArrayList<PgpSignature>();
-		for (final Iterator<?> it = bcPgpKey.getPublicKey().getSignatures(); it.hasNext(); ) {
-			final PGPSignature bcPgpSignature = (PGPSignature) it.next();
-			result.add(createPgpSignature(bcPgpSignature));
+
+		for (Iterator<?> itUserId = publicKey.getUserIDs(); itUserId.hasNext(); ) {
+			final String userId = (String) itUserId.next();
+			for (final Iterator<?> itSig = publicKey.getSignaturesForID(userId); itSig.hasNext(); ) {
+				final PGPSignature bcPgpSignature = (PGPSignature) itSig.next();
+				final PgpSignature pgpSignature = createPgpSignature(bcPgpSignature);
+				pgpSignature.setUserId(userId);
+				result.add(pgpSignature);
+			}
 		}
+//		for (final Iterator<?> it = publicKey.getSignatures(); it.hasNext(); ) {
+//			final PGPSignature bcPgpSignature = (PGPSignature) it.next();
+//			result.add(createPgpSignature(bcPgpSignature));
+//		}
 		return Collections.unmodifiableList(result);
 	}
 
@@ -458,7 +469,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 		if (masterKeysWithPrivateKey.contains(pgpKey))
 			return PgpKeyTrustLevel.ULTIMATE;
 
-		for (final PgpSignature signature : getSignatures(pgpKey)) {
+		for (final PgpSignature signature : getUserIdSignatures(pgpKey)) {
 			if (signature.getSignatureType().getTrustLevel() < PgpSignatureType.CASUAL_CERTIFICATION.getTrustLevel())
 				continue;
 
@@ -476,7 +487,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 		final PgpKeyId pgpKeyId = new PgpKeyId(publicKey.getKeyID());
 		BcPgpKey bcPgpKey = pgpKeyId2bcPgpKey.get(pgpKeyId);
 		if (bcPgpKey == null) {
-			bcPgpKey = new BcPgpKey(pgpKeyId);
+			bcPgpKey = new BcPgpKey(this, pgpKeyId);
 			pgpKeyId2bcPgpKey.put(pgpKeyId, bcPgpKey);
 		}
 
@@ -501,7 +512,9 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 
 			// It may already be in the lastMasterKey.subKeys, because we enlist from both the
 			// secret *and* public key ring collection. Therefore, we now use a LinkedHashSet (instead of an ArrayList).
-			lastMasterKey.getSubKeys().add(bcPgpKey);
+			// And to make sure the one we have in the subkeys is the same instance, we first remove and then re-add (as
+			// a set does not add, if it is contained, while a Map [pgpKeyId2bcPgpKey] does overwrite).
+			lastMasterKey.getSubKeyIds().add(bcPgpKey.getPgpKeyId());
 		}
 		return lastMasterKey;
 	}

@@ -153,10 +153,10 @@ public class MainTreeItem<T> extends TreeItem<String> {
 		return null;
 	}
 
-	protected TreeView<String> getMainTree() {
+	protected TreeView<String> getTreeView() {
 		final MainTreeItem<?> parent = (MainTreeItem<?>) getParent();
 		assertNotNull("parent", parent);
-		return parent.getMainTree();
+		return parent.getTreeView();
 	}
 
 //	/**

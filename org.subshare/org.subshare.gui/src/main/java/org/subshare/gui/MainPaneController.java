@@ -30,7 +30,7 @@ public class MainPaneController {
 	private BorderPane mainTreePane;
 
 	@FXML
-	private TreeView<String> mainTree;
+	private TreeView<String> mainTreeView;
 
 	@FXML
 	private BorderPane mainDetail;
@@ -43,11 +43,7 @@ public class MainPaneController {
 //	};
 
 	public void initialize() {
-		final RootMainTreeItem root = new RootMainTreeItem(mainTree);
-
-//		root.getChildren().add(new LocalRepoListMainTreeItem());
-//		root.getChildren().add(new ServerListMainTreeItem());
-//		root.getChildren().add(new UserListMainTreeItem());
+		final RootMainTreeItem root = new RootMainTreeItem(mainTreeView);
 
 		root.getChildren().addAll(FXCollections.observableArrayList(Arrays.asList(
 				new LocalRepoListMainTreeItem(),
@@ -55,14 +51,14 @@ public class MainPaneController {
 				new UserListMainTreeItem()
 				)));
 
-		mainTree.setShowRoot(false);
-		mainTree.setRoot(root);
-//		mainTree.getSelectionModel().getSelectedItems().addListener(mainTreeSelectionListener);
-		mainTree.getSelectionModel().selectedItemProperty().addListener(
+		mainTreeView.setShowRoot(false);
+		mainTreeView.setRoot(root);
+//		mainTreeView.getSelectionModel().getSelectedItems().addListener(mainTreeSelectionListener);
+		mainTreeView.getSelectionModel().selectedItemProperty().addListener(
 				(ChangeListener<TreeItem<String>>) (observable, oldValue, newValue) -> onSelectionChange() );
 
 		// TODO we should save and restore the selection!
-		mainTree.getSelectionModel().select(0);
+		mainTreeView.getSelectionModel().select(0);
 
 		// TODO we should save and restore the divider position!
 		Platform.runLater(new Runnable() {
@@ -80,7 +76,7 @@ public class MainPaneController {
 	}
 
 	private void onSelectionChange() {
-		final MainTreeItem<?> selectedItem = (MainTreeItem<?>) mainTree.getSelectionModel().getSelectedItem();
+		final MainTreeItem<?> selectedItem = (MainTreeItem<?>) mainTreeView.getSelectionModel().getSelectedItem();
 		mainDetail.setCenter(selectedItem == null ? null : selectedItem.getMainDetailContent());
 	}
 
