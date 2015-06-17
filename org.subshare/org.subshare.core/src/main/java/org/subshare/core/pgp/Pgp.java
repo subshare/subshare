@@ -28,7 +28,13 @@ public interface Pgp {
 
 	PgpDecoder createDecoder(InputStream in, OutputStream out);
 
-	Collection<PgpSignature> getUserIdSignatures(PgpKey pgpKey);
+	/**
+	 * Gets the certifications for the authenticity of the given {@code pgpKey}.
+	 * @param pgpKey the key for which to look up the certifications. Must not be <code>null</code>.
+	 * @return the certifications proving the authenticity of the given {@code pgpKey}. Never <code>null</code>; and usually
+	 * never empty, either, because a PGP key should at least be self-signed.
+	 */
+	Collection<PgpSignature> getCertifications(PgpKey pgpKey);
 
 	Collection<PgpKey> getMasterKeysWithPrivateKey();
 

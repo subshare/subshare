@@ -20,15 +20,43 @@ import javafx.scene.control.cell.TreeItemPropertyValueFactory
 
 import org.subshare.gui.user.EmailWrapper
 import org.subshare.gui.user.pgpkeytree.PgpKeyTreeItem
+import javafx.geometry.Insets
 
 dynamic component UserPane {
 	GridPane {
 		children : [
 			FlowPane {
+				Button id createPgpKeyButton {
+					graphic : ImageView { image : Image { url : "@create-pgp-key-24x24.png" } },
+					tooltip : Tooltip { text : "Create a new PGP key pair." },
+					onAction : controllermethod createPgpKeyButtonClicked
+				},
+				Button id importPgpKeyButton {
+					graphic : ImageView { image : Image { url : "@import-pgp-key-24x24.png" } },
+					tooltip : Tooltip { text : "Import one or more PGP keys from a file." },
+					onAction : controllermethod importPgpKeyButtonClicked
+				},
+				Button id exportPgpKeyButton {
+					graphic : ImageView { image : Image { url : "@export-pgp-key-24x24.png" } },
+					tooltip : Tooltip { text : "Export the selected PGP keys into a file." },
+					onAction : controllermethod exportPgpKeyButtonClicked
+				},
+				Button id signPgpKeyButton {
+					graphic : ImageView { image : Image { url : "@sign-pgp-key-24x24.png" } },
+					tooltip : Tooltip { text : "Certify the authenticity of the selected PGP key (sign it)." },
+					onAction : controllermethod signPgpKeyButtonClicked
+				},
+				Button id deletePgpKeyButton {
+					graphic : ImageView { image : Image { url : "@delete-pgp-key-24x24.png" } },
+					tooltip : Tooltip { text : "Delete the selected PGP keys." },
+					onAction : controllermethod deletePgpKeyButtonClicked
+				},
+
 				Button id closeButton {
 					graphic : ImageView { image : Image { url : "@close-24x24.png" } },
 					tooltip : Tooltip { text : "Close this user (end editing)." },
-					onAction : controllermethod closeButtonClicked
+					onAction : controllermethod closeButtonClicked,
+					static margin : Insets { left : 16 }
 				},
 				static columnIndex : 0,
 				static rowIndex : 0,
@@ -78,13 +106,14 @@ dynamic component UserPane {
 				static rowIndex : 3,
 				static columnSpan : 2,
 				static fillWidth : true,
-				static hgrow : "ALWAYS"
+				static hgrow : "ALWAYS",
+				static margin : Insets { top : 8 }
 			},
 
 			TreeTableView < PgpKeyTreeItem<?> > id pgpKeyTreeTableView {
 				columns : [
 					TreeTableColumn < Object, String > id pgpKeyTreeTableColumn {
-						text : "Name",
+						text : "PGP key",
 						prefWidth : 300,
 						cellValueFactory : TreeItemPropertyValueFactory < PgpKeyTreeItem<?>, String > {
 							property : "name"
@@ -103,7 +132,8 @@ dynamic component UserPane {
 				static rowIndex : 4,
 				static columnSpan : 2,
 				static fillWidth : true,
-				static hgrow : "ALWAYS"
+				static hgrow : "ALWAYS",
+				static margin : Insets { top : 8 }
 			}
 		]
 	}

@@ -268,7 +268,7 @@ public class PgpSyncIT extends AbstractIT {
 	private static Map<PgpKey, Collection<PgpSignature>> getSignatures(Pgp pgp, Collection<PgpKey> pgpKeys) {
 		Map<PgpKey, Collection<PgpSignature>> result = new LinkedHashMap<>(pgpKeys.size());
 		for (PgpKey pgpKey : pgpKeys) {
-			Collection<PgpSignature> signatures = new HashSet<PgpSignature>(pgp.getUserIdSignatures(pgpKey));
+			Collection<PgpSignature> signatures = new HashSet<PgpSignature>(pgp.getCertifications(pgpKey));
 			result.put(pgpKey, signatures);
 		}
 		assertThat(result.size()).isEqualTo(pgpKeys.size());

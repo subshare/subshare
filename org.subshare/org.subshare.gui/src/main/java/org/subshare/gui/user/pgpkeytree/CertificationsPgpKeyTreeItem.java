@@ -12,12 +12,12 @@ import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpSignature;
 import org.subshare.gui.ls.PgpLs;
 
-public class SignaturesPgpKeyTreeItem extends PgpKeyTreeItem<PgpKey> {
+public class CertificationsPgpKeyTreeItem extends PgpKeyTreeItem<PgpKey> {
 
 	private final String userId;
 	private boolean childrenInitialised;
 
-	public SignaturesPgpKeyTreeItem(final PgpKey pgpKey, final String userId) {
+	public CertificationsPgpKeyTreeItem(final PgpKey pgpKey, final String userId) {
 		super(assertNotNull("pgpKey", pgpKey));
 		this.userId = assertNotNull("userId", userId);
 	}
@@ -29,10 +29,10 @@ public class SignaturesPgpKeyTreeItem extends PgpKeyTreeItem<PgpKey> {
 			childrenInitialised = true;
 			final Pgp pgp = PgpLs.getPgpOrFail();
 			final PgpKey pgpKey = getValueObject();
-			final Collection<PgpSignature> signatures = pgp.getUserIdSignatures(pgpKey);
+			final Collection<PgpSignature> signatures = pgp.getCertifications(pgpKey);
 			for (PgpSignature signature : signatures) {
 				if (userId.equals(signature.getUserId()))
-					getChildren().add(new SignaturePgpKeyTreeItem(pgp, signature));
+					getChildren().add(new CertificationPgpKeyTreeItem(pgp, signature));
 			}
 		}
 		return children;
@@ -45,6 +45,6 @@ public class SignaturesPgpKeyTreeItem extends PgpKeyTreeItem<PgpKey> {
 
 	@Override
 	public String getName() {
-		return "Signatures";
+		return "Certifications";
 	}
 }

@@ -9,8 +9,10 @@ import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Set;
 
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
@@ -21,14 +23,19 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
+import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeTableView;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.GridPane;
 
+import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.user.User;
+import org.subshare.gui.user.pgpkeytree.PgpKeyPgpKeyTreeItem;
 import org.subshare.gui.user.pgpkeytree.PgpKeyTreeItem;
 import org.subshare.gui.user.pgpkeytree.RootPgpKeyTreeItem;
 
@@ -56,6 +63,21 @@ public class UserPane extends GridPane {
 
 	@FXML
 	private TreeTableView<PgpKeyTreeItem<?>> pgpKeyTreeTableView;
+
+	@FXML
+	private Button createPgpKeyButton;
+
+	@FXML
+	private Button importPgpKeyButton;
+
+	@FXML
+	private Button exportPgpKeyButton;
+
+	@FXML
+	private Button signPgpKeyButton;
+
+	@FXML
+	private Button deletePgpKeyButton;
 
 	private boolean ignoreUpdateEmailsOrWrappers;
 
@@ -97,6 +119,28 @@ public class UserPane extends GridPane {
 		final RootPgpKeyTreeItem root = new RootPgpKeyTreeItem(pgpKeyTreeTableView, user);
 		pgpKeyTreeTableView.setShowRoot(false);
 		pgpKeyTreeTableView.setRoot(root);
+		pgpKeyTreeTableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+		pgpKeyTreeTableView.getSelectionModel().getSelectedItems().addListener((InvalidationListener) observable -> updateDisable());
+		updateDisable();
+	}
+
+	private void updateDisable() {
+		final int selectedPgpKeysSize = getSelectedPgpKeys().size();
+		exportPgpKeyButton.setDisable(selectedPgpKeysSize == 0);
+		deletePgpKeyButton.setDisable(selectedPgpKeysSize == 0);
+		signPgpKeyButton.setDisable(selectedPgpKeysSize != 1);
+	}
+
+	private Set<PgpKey> getSelectedPgpKeys() {
+		final Set<PgpKey> result = new LinkedHashSet<PgpKey>();
+		for (final TreeItem<PgpKeyTreeItem<?>> treeItem : pgpKeyTreeTableView.getSelectionModel().getSelectedItems()) {
+			final PgpKeyTreeItem<?> pgpKeyTreeItem = treeItem.getValue();
+			final PgpKeyPgpKeyTreeItem pgpKeyPgpKeyTreeItem = pgpKeyTreeItem.getThisOrParentPgpKeyTreeItemOfType(PgpKeyPgpKeyTreeItem.class);
+			assertNotNull("pgpKeyPgpKeyTreeItem", pgpKeyPgpKeyTreeItem);
+			final PgpKey pgpKey = pgpKeyPgpKeyTreeItem.getPgpKey();
+			result.add(pgpKey);
+		}
+		return result;
 	}
 
 	private List<EmailWrapper> createEmailWrapperList() {
@@ -194,6 +238,31 @@ public class UserPane extends GridPane {
 		} finally {
 			ignoreUpdateEmailsOrWrappers = false;
 		}
+	}
+
+	@FXML
+	private void createPgpKeyButtonClicked(final ActionEvent event) {
+
+	}
+
+	@FXML
+	private void importPgpKeyButtonClicked(final ActionEvent event) {
+
+	}
+
+	@FXML
+	private void exportPgpKeyButtonClicked(final ActionEvent event) {
+
+	}
+
+	@FXML
+	private void signPgpKeyButtonClicked(final ActionEvent event) {
+
+	}
+
+	@FXML
+	private void deletePgpKeyButtonClicked(final ActionEvent event) {
+
 	}
 
 	@FXML

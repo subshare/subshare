@@ -18,7 +18,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -413,20 +415,59 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 	}
 
 	@Override
-	public Collection<PgpSignature> getUserIdSignatures(final PgpKey pgpKey) {
+	public Collection<PgpSignature> getCertifications(final PgpKey pgpKey) {
 		final BcPgpKey bcPgpKey = getBcPgpKeyOrFail(pgpKey);
 		final PGPPublicKey publicKey = bcPgpKey.getPublicKey();
 		final List<PgpSignature> result = new ArrayList<PgpSignature>();
 
+		final IdentityHashMap<PGPSignature, PGPSignature> bcPgpSignatures = new IdentityHashMap<>();
+
+		final List<String> userIds = new LinkedList<String>();
 		for (Iterator<?> itUserId = publicKey.getUserIDs(); itUserId.hasNext(); ) {
 			final String userId = (String) itUserId.next();
-			for (final Iterator<?> itSig = publicKey.getSignaturesForID(userId); itSig.hasNext(); ) {
+			userIds.add(userId);
+
+			final Iterator<?> itSig = publicKey.getSignaturesForID(userId);
+			if (itSig == null)
+				continue;
+
+			while (itSig.hasNext()) {
 				final PGPSignature bcPgpSignature = (PGPSignature) itSig.next();
+				bcPgpSignatures.put(bcPgpSignature, bcPgpSignature);
 				final PgpSignature pgpSignature = createPgpSignature(bcPgpSignature);
+
+				// all of them should be certifications, but we still check to make 100% sure
+				if (! pgpSignature.getSignatureType().isCertification())
+					continue;
+
 				pgpSignature.setUserId(userId);
 				result.add(pgpSignature);
 			}
 		}
+
+		// It seems, there are both: certifications for individual user-ids and certifications for the
+		// entire key. I therefore first take the individual ones (above) and then I emulate the ones for the entire key
+		// as if they were individual ones (below).
+
+		final Iterator<?> itAllSigs = publicKey.getSignatures();
+		if (itAllSigs != null) {
+			while (itAllSigs.hasNext()) {
+				final PGPSignature bcPgpSignature = (PGPSignature) itAllSigs.next();
+				if (bcPgpSignatures.containsKey(bcPgpSignature))
+					continue;
+
+				final PgpSignatureType signatureType = signatureTypeToEnum(bcPgpSignature.getSignatureType());
+				if (! signatureType.isCertification())
+					continue;
+
+				for (String userId : userIds) {
+					final PgpSignature pgpSignature = createPgpSignature(bcPgpSignature);
+					pgpSignature.setUserId(userId);
+					result.add(pgpSignature);
+				}
+			}
+		}
+
 //		for (final Iterator<?> it = publicKey.getSignatures(); it.hasNext(); ) {
 //			final PGPSignature bcPgpSignature = (PGPSignature) it.next();
 //			result.add(createPgpSignature(bcPgpSignature));
@@ -469,7 +510,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 		if (masterKeysWithPrivateKey.contains(pgpKey))
 			return PgpKeyTrustLevel.ULTIMATE;
 
-		for (final PgpSignature signature : getUserIdSignatures(pgpKey)) {
+		for (final PgpSignature signature : getCertifications(pgpKey)) {
 			if (signature.getSignatureType().getTrustLevel() < PgpSignatureType.CASUAL_CERTIFICATION.getTrustLevel())
 				continue;
 

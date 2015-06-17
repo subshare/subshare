@@ -20,7 +20,7 @@ public class UserIdPgpKeyTreeItem extends PgpKeyTreeItem<String> {
 		final ObservableList<TreeItem<PgpKeyTreeItem<?>>> children = super.getChildren();
 		if (children.isEmpty()) {
 			final String userId = getValueObject();
-			children.add(new SignaturesPgpKeyTreeItem(pgpKey, userId));
+			children.add(new CertificationsPgpKeyTreeItem(pgpKey, userId));
 		}
 		return children;
 	}

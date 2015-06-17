@@ -145,4 +145,17 @@ public class PgpKeyTreeItem<T> extends TreeItem<PgpKeyTreeItem<?>> {
 		assertNotNull("parent", parent);
 		return parent.getTreeTableView();
 	}
+
+	public <I extends PgpKeyTreeItem<?>> I getThisOrParentPgpKeyTreeItemOfType(final Class<I> type) {
+		assertNotNull("type", type);
+
+		if (type.isInstance(this))
+			return type.cast(this);
+
+		final PgpKeyTreeItem<?> parent = (PgpKeyTreeItem<?>) getParent();
+		if (parent == null)
+			return null;
+
+		return parent.getThisOrParentPgpKeyTreeItemOfType(type);
+	}
 }

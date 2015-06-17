@@ -15,6 +15,10 @@ public class PgpKeyPgpKeyTreeItem extends PgpKeyTreeItem<PgpKey> {
 		super(assertNotNull("pgpKey", pgpKey));
 	}
 
+	public PgpKey getPgpKey() {
+		return getValueObject();
+	}
+
 	@Override
 	public ObservableList<TreeItem<PgpKeyTreeItem<?>>> getChildren() {
 		final ObservableList<TreeItem<PgpKeyTreeItem<?>>> children = super.getChildren();
@@ -33,12 +37,12 @@ public class PgpKeyPgpKeyTreeItem extends PgpKeyTreeItem<PgpKey> {
 
 	@Override
 	public String getName() {
-		final List<String> userIds = getValueObject().getUserIds();
+		final List<String> userIds = getPgpKey().getUserIds();
 		return userIds.isEmpty() ? getKeyId() : userIds.get(0);
 	}
 
 	@Override
 	public String getKeyId() {
-		return getValueObject().getPgpKeyId().toHumanString();
+		return getPgpKey().getPgpKeyId().toHumanString();
 	}
 }

@@ -4,6 +4,7 @@
 -->
 
 <?import java.lang.*?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TableColumn?>
@@ -23,6 +24,66 @@
 
 	<children>
 		<FlowPane GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="2" GridPane.fillWidth="true" GridPane.hgrow="ALWAYS"> 
+			<Button fx:id="createPgpKeyButton" onAction="#createPgpKeyButtonClicked"> 
+				<graphic>
+					<ImageView> 
+						<image>
+							<Image url="@create-pgp-key-24x24.png"/> 
+						</image>
+					</ImageView>
+				</graphic>
+				<tooltip>
+					<Tooltip text="Create a new PGP key pair."/> 
+				</tooltip>
+			</Button>
+			<Button fx:id="importPgpKeyButton" onAction="#importPgpKeyButtonClicked"> 
+				<graphic>
+					<ImageView> 
+						<image>
+							<Image url="@import-pgp-key-24x24.png"/> 
+						</image>
+					</ImageView>
+				</graphic>
+				<tooltip>
+					<Tooltip text="Import one or more PGP keys from a file."/> 
+				</tooltip>
+			</Button>
+			<Button fx:id="exportPgpKeyButton" onAction="#exportPgpKeyButtonClicked"> 
+				<graphic>
+					<ImageView> 
+						<image>
+							<Image url="@export-pgp-key-24x24.png"/> 
+						</image>
+					</ImageView>
+				</graphic>
+				<tooltip>
+					<Tooltip text="Export the selected PGP keys into a file."/> 
+				</tooltip>
+			</Button>
+			<Button fx:id="signPgpKeyButton" onAction="#signPgpKeyButtonClicked"> 
+				<graphic>
+					<ImageView> 
+						<image>
+							<Image url="@sign-pgp-key-24x24.png"/> 
+						</image>
+					</ImageView>
+				</graphic>
+				<tooltip>
+					<Tooltip text="Certify the authenticity of the selected PGP key (sign it)."/> 
+				</tooltip>
+			</Button>
+			<Button fx:id="deletePgpKeyButton" onAction="#deletePgpKeyButtonClicked"> 
+				<graphic>
+					<ImageView> 
+						<image>
+							<Image url="@delete-pgp-key-24x24.png"/> 
+						</image>
+					</ImageView>
+				</graphic>
+				<tooltip>
+					<Tooltip text="Delete the selected PGP keys."/> 
+				</tooltip>
+			</Button>
 			<Button fx:id="closeButton" onAction="#closeButtonClicked"> 
 				<graphic>
 					<ImageView> 
@@ -34,6 +95,9 @@
 				<tooltip>
 					<Tooltip text="Close this user (end editing)."/> 
 				</tooltip>
+				<FlowPane.margin>
+					<Insets left="16"/> 
+				</FlowPane.margin>
 			</Button>
 		</FlowPane>
 		<Label text="First name:" GridPane.columnIndex="0" GridPane.rowIndex="1"/> 
@@ -48,10 +112,13 @@
 					</cellValueFactory>
 				</TableColumn>
 			</columns>
+			<GridPane.margin>
+				<Insets top="8"/> 
+			</GridPane.margin>
 		</TableView>
 		<TreeTableView fx:id="pgpKeyTreeTableView" GridPane.columnIndex="0" GridPane.rowIndex="4" GridPane.columnSpan="2" GridPane.fillWidth="true" GridPane.hgrow="ALWAYS"> 
 			<columns>
-				<TreeTableColumn fx:id="pgpKeyTreeTableColumn" text="Name" prefWidth="300"> 
+				<TreeTableColumn fx:id="pgpKeyTreeTableColumn" text="PGP key" prefWidth="300"> 
 					<cellValueFactory>
 						<TreeItemPropertyValueFactory property="name"/> 
 					</cellValueFactory>
@@ -62,6 +129,9 @@
 					</cellValueFactory>
 				</TreeTableColumn>
 			</columns>
+			<GridPane.margin>
+				<Insets top="8"/> 
+			</GridPane.margin>
 		</TreeTableView>
 	</children>
 </fx:root>

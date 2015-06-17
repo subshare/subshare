@@ -1,5 +1,9 @@
 package org.subshare.core.pgp;
 
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.Set;
+
 public enum PgpSignatureType {
 	BINARY_DOCUMENT(-1),
     CANONICAL_TEXT_DOCUMENT(-1),
@@ -20,11 +24,21 @@ public enum PgpSignatureType {
 
 	private final int trustLevel;
 
+	public static final Set<PgpSignatureType> CERTIFICATIONS = Collections.unmodifiableSet(EnumSet.of(
+			DEFAULT_CERTIFICATION,
+			NO_CERTIFICATION,
+			CASUAL_CERTIFICATION,
+			POSITIVE_CERTIFICATION));
+
 	private PgpSignatureType(final int trustLevel) {
 		this.trustLevel = trustLevel;
 	}
 
 	public int getTrustLevel() {
 		return trustLevel;
+	}
+
+	public boolean isCertification() {
+		return CERTIFICATIONS.contains(this);
 	}
 }

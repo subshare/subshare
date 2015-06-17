@@ -62,7 +62,7 @@ public class UserListPane extends BorderPane {
 	private final ListChangeListener<UserListItem> selectionListener = new ListChangeListener<UserListItem>() {
 		@Override
 		public void onChanged(final ListChangeListener.Change<? extends UserListItem> c) {
-			updateEnabled();
+			updateDisable();
 		}
 	};
 
@@ -87,11 +87,11 @@ public class UserListPane extends BorderPane {
 		tableView.getSelectionModel().getSelectedItems().addListener(selectionListener);
 		tableView.setOnMouseClicked(mouseEventHandler);
 		populateTableViewAsync();
-		updateEnabled();
+		updateDisable();
 		filterTextField.textProperty().addListener((InvalidationListener) observable -> applyFilterLater());
 	}
 
-	private void updateEnabled() {
+	private void updateDisable() {
 		final boolean selectionEmpty = tableView.getSelectionModel().getSelectedItems().isEmpty();
 		editButton.disableProperty().set(selectionEmpty);
 		deleteButton.disableProperty().set(selectionEmpty);

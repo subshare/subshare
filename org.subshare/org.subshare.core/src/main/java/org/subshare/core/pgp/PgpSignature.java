@@ -35,8 +35,10 @@ public class PgpSignature implements Serializable {
 	}
 
 	/**
-	 * Gets the user-id that was certified by this signature or <code>null</code>, if this signature is not a certification.
-	 * @return the user-id that was certified by this signature; <code>null</code>, if this signature is not a certification.
+	 * Gets the user-id that was certified by this signature or <code>null</code>, if this signature is not a {@linkplain PgpSignatureType#isCertification() certification}.
+	 * @return the user-id that was certified by this signature; <code>null</code>, if this signature is not a {@linkplain PgpSignatureType#isCertification() certification}.
+	 * @see Pgp#getCertifications(PgpKey)
+	 * @see PgpSignatureType#isCertification()
 	 */
 	public String getUserId() {
 		return userId;
