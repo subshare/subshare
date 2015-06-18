@@ -24,6 +24,8 @@ public interface Pgp {
 
 	PgpKey getPgpKey(PgpKeyId pgpKeyId);
 
+	PgpKey createPgpKey(CreatePgpKeyParam createPgpKeyParam);
+
 	PgpEncoder createEncoder(InputStream in, OutputStream out);
 
 	PgpDecoder createDecoder(InputStream in, OutputStream out);

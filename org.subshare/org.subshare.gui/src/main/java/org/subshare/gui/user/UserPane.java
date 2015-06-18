@@ -32,9 +32,14 @@ import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeTableView;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.GridPane;
+import javafx.stage.Window;
 
+import org.subshare.core.pgp.CreatePgpKeyParam;
+import org.subshare.core.pgp.Pgp;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.user.User;
+import org.subshare.gui.ls.PgpLs;
+import org.subshare.gui.pgp.createkey.CreatePgpKeyDialog;
 import org.subshare.gui.user.pgpkeytree.PgpKeyPgpKeyTreeItem;
 import org.subshare.gui.user.pgpkeytree.PgpKeyTreeItem;
 import org.subshare.gui.user.pgpkeytree.RootPgpKeyTreeItem;
@@ -240,9 +245,65 @@ public class UserPane extends GridPane {
 		}
 	}
 
+	protected Pgp getPgp() {
+		return PgpLs.getPgpOrFail();
+	}
+
 	@FXML
 	private void createPgpKeyButtonClicked(final ActionEvent event) {
+		final Window owner = getScene().getWindow();
+		final CreatePgpKeyDialog dialog = new CreatePgpKeyDialog(owner, createCreatePgpKeyParam());
+		dialog.showAndWait();
+		final CreatePgpKeyParam createPgpKeyParam = dialog.getCreatePgpKeyParam();
+		if (createPgpKeyParam == null)
+			return;
 
+		final Pgp pgp = getPgp();
+		final PgpKey pgpKey = pgp.createPgpKey(createPgpKeyParam);
+		System.out.println(pgpKey);
+	}
+
+	private CreatePgpKeyParam createCreatePgpKeyParam() {
+		final CreatePgpKeyParam createPgpKeyParam = new CreatePgpKeyParam();
+		final String name = getName();
+
+		for (final EmailWrapper emailWrapper : emailWrappers) {
+			final String email = trim(emailWrapper.getValue());
+			if (isEmpty(email))
+				continue;
+
+			final StringBuilder sb = new StringBuilder();
+			if (! isEmpty(name))
+				sb.append(name);
+
+			if (sb.length() > 0)
+				sb.append(' ');
+
+			sb.append('<').append(email).append('>');
+
+			final String userId = sb.toString();
+			createPgpKeyParam.getUserIds().add(userId);
+		}
+
+		return createPgpKeyParam;
+	}
+
+	private String getName() {
+		final String firstName = trim(firstNameTextField.getText());
+		final String lastName = trim(lastNameTextField.getText());
+		final StringBuilder sb = new StringBuilder();
+
+		if (! isEmpty(firstName))
+			sb.append(firstName);
+
+		if (! isEmpty(lastName)) {
+			if (sb.length() > 0)
+				sb.append(' ');
+
+			sb.append(lastName);
+		}
+
+		return sb.toString();
 	}
 
 	@FXML

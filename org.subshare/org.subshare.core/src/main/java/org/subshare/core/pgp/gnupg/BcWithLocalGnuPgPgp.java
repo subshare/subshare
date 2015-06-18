@@ -13,9 +13,11 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
@@ -28,8 +30,15 @@ import java.util.Set;
 import java.util.concurrent.locks.Lock;
 
 import org.bouncycastle.bcpg.BCPGOutputStream;
+import org.bouncycastle.bcpg.CompressionAlgorithmTags;
+import org.bouncycastle.bcpg.HashAlgorithmTags;
+import org.bouncycastle.bcpg.PublicKeyAlgorithmTags;
+import org.bouncycastle.bcpg.SymmetricKeyAlgorithmTags;
+import org.bouncycastle.crypto.AsymmetricCipherKeyPairGenerator;
 import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPKeyFlags;
 import org.bouncycastle.openpgp.PGPKeyRing;
+import org.bouncycastle.openpgp.PGPKeyRingGenerator;
 import org.bouncycastle.openpgp.PGPObjectFactory;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
@@ -38,10 +47,15 @@ import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.PGPSignatureSubpacketGenerator;
 import org.bouncycastle.openpgp.PGPUtil;
 import org.bouncycastle.openpgp.operator.bc.BcPBESecretKeyDecryptorBuilder;
+import org.bouncycastle.openpgp.operator.bc.BcPBESecretKeyEncryptorBuilder;
+import org.bouncycastle.openpgp.operator.bc.BcPGPContentSignerBuilder;
 import org.bouncycastle.openpgp.operator.bc.BcPGPDigestCalculatorProvider;
+import org.bouncycastle.openpgp.operator.bc.BcPGPKeyPair;
 import org.subshare.core.pgp.AbstractPgp;
+import org.subshare.core.pgp.CreatePgpKeyParam;
 import org.subshare.core.pgp.PgpDecoder;
 import org.subshare.core.pgp.PgpEncoder;
 import org.subshare.core.pgp.PgpKey;
@@ -49,6 +63,7 @@ import org.subshare.core.pgp.PgpKeyId;
 import org.subshare.core.pgp.PgpKeyTrustLevel;
 import org.subshare.core.pgp.PgpSignature;
 import org.subshare.core.pgp.PgpSignatureType;
+import org.subshare.crypto.CryptoRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -244,7 +259,6 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 		return publicKeyRing;
 	}
 
-
 	private PGPPublicKey mergeSignature(PGPPublicKey publicKey, final PGPSignature signature) {
 		assertNotNull("publicKey", publicKey);
 		assertNotNull("signature", signature);
@@ -276,9 +290,70 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 				&& equal(one.getSignatureType(), two.getSignatureType());
 	}
 
-	private boolean importSecretKeyRing(PGPSecretKeyRing secretKeyRing) throws IOException, PGPException {
-		// TODO implement this!
-		throw new UnsupportedOperationException("Importing secret keys is not yet supported!");
+	private boolean importSecretKeyRing(final PGPSecretKeyRing secretKeyRing) throws IOException, PGPException {
+		assertNotNull("secretKeyRing", secretKeyRing);
+
+		PGPSecretKeyRingCollection oldSecretKeyRingCollection;
+
+		final File secringFile = getSecringFile();
+		if (!secringFile.isFile())
+			oldSecretKeyRingCollection = new PGPSecretKeyRingCollection(new ByteArrayInputStream(new byte[0]));
+		else {
+			try (InputStream in = new BufferedInputStream(secringFile.createInputStream());) {
+				oldSecretKeyRingCollection = new PGPSecretKeyRingCollection(PGPUtil.getDecoderStream(in));
+			}
+		}
+
+		PGPSecretKeyRingCollection newSecretKeyRingCollection = oldSecretKeyRingCollection;
+		newSecretKeyRingCollection = mergeSecretKeyRing(newSecretKeyRingCollection, secretKeyRing);
+
+		if (oldSecretKeyRingCollection != newSecretKeyRingCollection) {
+			final File tmpFile = createFile(secringFile.getParentFile(), secringFile.getName() + ".tmp");
+			try (OutputStream out = new BufferedOutputStream(tmpFile.createOutputStream());) {
+				newSecretKeyRingCollection.encode(out);
+			}
+			secringFile.delete();
+			tmpFile.renameTo(secringFile);
+
+			// ensure that it's re-loaded.
+			secringFileLastModified = 0;
+			return true;
+		}
+		return false;
+	}
+
+	private PGPSecretKeyRingCollection mergeSecretKeyRing(PGPSecretKeyRingCollection secretKeyRingCollection, final PGPSecretKeyRing secretKeyRing) throws PGPException {
+		assertNotNull("secretKeyRingCollection", secretKeyRingCollection);
+		assertNotNull("secretKeyRing", secretKeyRing);
+
+		PGPSecretKeyRing oldSecretKeyRing = secretKeyRingCollection.getSecretKeyRing(secretKeyRing.getSecretKey().getKeyID());
+		if (oldSecretKeyRing == null)
+			secretKeyRingCollection = PGPSecretKeyRingCollection.addSecretKeyRing(secretKeyRingCollection, secretKeyRing);
+		else {
+			PGPSecretKeyRing newSecretKeyRing = oldSecretKeyRing;
+			for (final Iterator<?> it = secretKeyRing.getSecretKeys(); it.hasNext(); ) {
+				PGPSecretKey secretKey = (PGPSecretKey) it.next();
+				newSecretKeyRing = mergeSecretKey(newSecretKeyRing, secretKey);
+			}
+
+			if (newSecretKeyRing != oldSecretKeyRing) {
+				secretKeyRingCollection = PGPSecretKeyRingCollection.removeSecretKeyRing(secretKeyRingCollection, oldSecretKeyRing);
+				secretKeyRingCollection = PGPSecretKeyRingCollection.addSecretKeyRing(secretKeyRingCollection, newSecretKeyRing);
+			}
+		}
+		return secretKeyRingCollection;
+	}
+
+	private PGPSecretKeyRing mergeSecretKey(PGPSecretKeyRing secretKeyRing, final PGPSecretKey secretKey) {
+		assertNotNull("secretKeyRing", secretKeyRing);
+		assertNotNull("secretKey", secretKey);
+
+		PGPSecretKey oldSecretKey = secretKeyRing.getSecretKey(secretKey.getKeyID());
+		if (oldSecretKey == null)
+			secretKeyRing = PGPSecretKeyRing.insertSecretKey(secretKeyRing, secretKey);
+		// else: there is nothing to merge - a secret key is immutable. btw. it contains a public key - but without signatures.
+
+		return secretKeyRing;
 	}
 
 	public BcPgpKey getBcPgpKeyOrFail(final PgpKey pgpKey) {
@@ -598,6 +673,44 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 		}
 	}
 
+	private int signatureTypeFromEnum(final PgpSignatureType signatureType) {
+		switch (assertNotNull("signatureType", signatureType)) {
+			case BINARY_DOCUMENT:
+				return PGPSignature.BINARY_DOCUMENT;
+			case CANONICAL_TEXT_DOCUMENT:
+				return PGPSignature.CANONICAL_TEXT_DOCUMENT;
+			case STAND_ALONE:
+				return PGPSignature.STAND_ALONE;
+
+			case DEFAULT_CERTIFICATION:
+				return PGPSignature.DEFAULT_CERTIFICATION;
+			case NO_CERTIFICATION:
+				return PGPSignature.NO_CERTIFICATION;
+			case CASUAL_CERTIFICATION:
+				return PGPSignature.CASUAL_CERTIFICATION;
+			case POSITIVE_CERTIFICATION:
+				return PGPSignature.POSITIVE_CERTIFICATION;
+
+			case SUBKEY_BINDING:
+				return PGPSignature.SUBKEY_BINDING;
+			case PRIMARYKEY_BINDING:
+				return PGPSignature.PRIMARYKEY_BINDING;
+			case DIRECT_KEY:
+				return PGPSignature.DIRECT_KEY;
+			case KEY_REVOCATION:
+				return PGPSignature.KEY_REVOCATION;
+			case SUBKEY_REVOCATION:
+				return PGPSignature.SUBKEY_REVOCATION;
+			case CERTIFICATION_REVOCATION:
+				return PGPSignature.CERTIFICATION_REVOCATION;
+			case TIMESTAMP:
+				return PGPSignature.TIMESTAMP;
+
+			default:
+				throw new IllegalArgumentException("Unknown signatureType: " + signatureType);
+		}
+	}
+
 	private File getConfigDir() {
 		if (configDir == null)
 			configDir = ConfigDir.getInstance().getFile();
@@ -827,5 +940,193 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 		} catch (PGPException e) {
 			throw new SecurityException(e);
 		}
+	}
+
+	@Override
+	public PgpKey createPgpKey(final CreatePgpKeyParam createPgpKeyParam) {
+		assertNotNull("createPgpKeyParam", createPgpKeyParam);
+		try {
+			final Pair<PGPPublicKeyRing, PGPSecretKeyRing> pair = createPGPSecretKeyRing(createPgpKeyParam);
+			final PGPPublicKeyRing pgpPublicKeyRing = pair.a;
+			final PGPSecretKeyRing pgpSecretKeyRing = pair.b;
+			importPublicKeyRing(pgpPublicKeyRing);
+			importSecretKeyRing(pgpSecretKeyRing);
+
+			final PGPSecretKey secretKey = pgpSecretKeyRing.getSecretKey();
+			final PgpKey pgpKey = getPgpKey(new PgpKeyId(secretKey.getKeyID()));
+			assertNotNull("pgpKey", pgpKey);
+			return pgpKey;
+		} catch (IOException | NoSuchAlgorithmException | PGPException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	private static final class Pair<A, B> {
+		public final A a;
+		public final B b;
+
+		public Pair(A a, B b) {
+			this.a = a;
+			this.b = b;
+		}
+	}
+
+	private Pair<PGPPublicKeyRing, PGPSecretKeyRing> createPGPSecretKeyRing(final CreatePgpKeyParam createPgpKeyParam) throws PGPException, NoSuchAlgorithmException {
+		assertNotNull("createPgpKeyParam", createPgpKeyParam);
+		final Date now = new Date();
+//		BcPGPKeyPair pgpKeyPair = new BcPGPKeyPair(algorithm, keyPair, now);
+//
+//		PGPKeyPair secretKey = new PGPKeyPair(
+//                PGPPublicKey.RSA_GENERAL,
+//                keyPair,
+//                new Date());
+//        PGPKeyPair secretKey2 = new PGPKeyPair(
+//                PGPPublicKey.RSA_GENERAL,
+//                keyPair2,
+//                new Date());
+//
+//        PGPKeyRingGenerator    keyRingGen = new
+//        PGPKeyRingGenerator(PGPSignature.POSITIVE_CERTIFICATION, secretKey,
+//                email+"<"+email+"@"+gui.getDomain()+">", PGPEncryptedData.AES_256, password,true,
+//                hashedGen.generate(), null, new SecureRandom(), "BC");
+//
+//        keyRingGen.addSubKey(secretKey2);
+//         skr=keyRingGen.generateSecretKeyRing();
+//
+//        KeyPair keyPair = null;
+//        PGPKeyPair secretKey=null;
+//        PGPSecretKeyRing skr=null;
+//        try {
+//
+//            KeyPairGenerator  keyPairGen = KeyPairGenerator.getInstance("RSA", "BC");
+//            keyPairGen.initialize(4096);
+//
+//            keyPair = keyPairGen.generateKeyPair();
+//
+//            PGPSignatureSubpacketGenerator hashedGen = new PGPSignatureSubpacketGenerator();
+//
+//
+//            hashedGen.setKeyFlags(true, KeyFlags.CERTIFY_OTHER | KeyFlags.SIGN_DATA
+//                                         | KeyFlags.ENCRYPT_COMMS | KeyFlags.ENCRYPT_STORAGE);
+//
+//
+//            hashedGen.setPreferredCompressionAlgorithms(false,
+//                    new int[] {CompressionAlgorithmTags.ZIP});
+//
+//            hashedGen.setPreferredHashAlgorithms(false,
+//                    new int[] {HashAlgorithmTags.SHA1} );
+//
+//            hashedGen.setPreferredSymmetricAlgorithms(false,
+//                    new int[] { SymmetricKeyAlgorithmTags.AES_256});
+//
+//            secretKey = new PGPKeyPair(
+//                    PGPSignature.POSITIVE_CERTIFICATION,
+//                    keyPair.getPublic(),
+//                    keyPair.getPrivate(),
+//                    new Date());
+//
+//            PGPKeyRingGenerator keyRingGen = new PGPKeyRingGenerator(PGPSignature.POSITIVE_CERTIFICATION, secretKey,
+//                    email+"<"+email+"@"+gui.getDomain()+">", PGPEncryptedData.AES_256, password,true,
+//                    hashedGen.generate(), null, new SecureRandom(), "BC");
+//
+//             skr=keyRingGen.generateSecretKeyRing();
+//
+//
+//        } catch (Exception e) {
+//
+//            e.printStackTrace();
+//        }
+//
+//
+//        return skr;
+
+
+		final String keyPairGeneratorAlgorithm = "RSA";
+		final int masterKeyAlgorithm = PublicKeyAlgorithmTags.RSA_SIGN;
+		final int hashAlgorithm = HashAlgorithmTags.SHA1; // TODO use sth. stronger!
+		final int subKey1Algorithm = PublicKeyAlgorithmTags.RSA_GENERAL;
+		final int secretKeyEncryptionAlgorithm = SymmetricKeyAlgorithmTags.TWOFISH;
+		final PgpSignatureType certificationLevel = PgpSignatureType.POSITIVE_CERTIFICATION;
+		final String primaryUserId = createPgpKeyParam.getUserIds().get(0);
+		createPgpKeyParam.setPassphrase("test12345".toCharArray()); // TODO take from client!
+		final long validitySeconds = 5 * 365 * 24 * 3600;
+
+
+		final AsymmetricCipherKeyPairGenerator keyPairGenerator = CryptoRegistry.getInstance().createKeyPairGenerator(keyPairGeneratorAlgorithm, true);
+//		keyPairGenerator.init(param); // TODO initialise with params instead using of using defaults
+
+
+		/* Create the master (signing-only) key. */
+		final BcPGPKeyPair masterKeyPair = new BcPGPKeyPair(masterKeyAlgorithm, keyPairGenerator.generateKeyPair(), now);
+
+		PGPSignatureSubpacketGenerator masterSubpckGen = new PGPSignatureSubpacketGenerator();
+
+		masterSubpckGen.setKeyFlags(false, PGPKeyFlags.CAN_SIGN | PGPKeyFlags.CAN_CERTIFY);
+
+		masterSubpckGen.setPreferredSymmetricAlgorithms(false, new int[] { // TODO configurable?!
+				SymmetricKeyAlgorithmTags.TWOFISH,
+				SymmetricKeyAlgorithmTags.AES_256
+				});
+
+		masterSubpckGen.setPreferredHashAlgorithms(false, new int[] { // TODO configurable?!
+				HashAlgorithmTags.SHA512,
+				HashAlgorithmTags.SHA384,
+				HashAlgorithmTags.SHA256,
+				HashAlgorithmTags.SHA1
+				});
+
+		masterSubpckGen.setPreferredCompressionAlgorithms(false, new int[] { CompressionAlgorithmTags.ZIP });
+
+		masterSubpckGen.setKeyExpirationTime(false, validitySeconds);
+
+
+		/* Create an encryption sub-key. */
+		final BcPGPKeyPair encKeyPair = new BcPGPKeyPair(subKey1Algorithm, keyPairGenerator.generateKeyPair(), now);
+
+		PGPSignatureSubpacketGenerator encSubpckGen = new PGPSignatureSubpacketGenerator();
+
+		encSubpckGen.setKeyFlags(false, PGPKeyFlags.CAN_ENCRYPT_COMMS | PGPKeyFlags.CAN_ENCRYPT_STORAGE);
+
+		encSubpckGen.setPreferredSymmetricAlgorithms(false, new int[] { // TODO configurable?!
+				SymmetricKeyAlgorithmTags.TWOFISH,
+				SymmetricKeyAlgorithmTags.AES_256
+				});
+
+		encSubpckGen.setPreferredHashAlgorithms(false, new int[] { // TODO configurable?!
+				HashAlgorithmTags.SHA512,
+				HashAlgorithmTags.SHA384,
+				HashAlgorithmTags.SHA256,
+				HashAlgorithmTags.SHA1
+				});
+
+		encSubpckGen.setPreferredCompressionAlgorithms(false, new int[] { CompressionAlgorithmTags.ZIP });
+
+		encSubpckGen.setKeyExpirationTime(false, validitySeconds);
+
+
+		/* Create the key ring. */
+		BcPGPDigestCalculatorProvider digestCalculatorProvider = new BcPGPDigestCalculatorProvider();
+		BcPGPContentSignerBuilder signerBuilder = new BcPGPContentSignerBuilder(masterKeyAlgorithm, hashAlgorithm);
+		BcPBESecretKeyEncryptorBuilder pbeSecretKeyEncryptorBuilder = new BcPBESecretKeyEncryptorBuilder(secretKeyEncryptionAlgorithm, digestCalculatorProvider.get(hashAlgorithm));
+
+		PGPKeyRingGenerator keyRingGen = new PGPKeyRingGenerator(
+				signatureTypeFromEnum(certificationLevel),
+				masterKeyPair,
+				primaryUserId,
+				digestCalculatorProvider.get(hashAlgorithm),
+				masterSubpckGen.generate(),
+				null,
+				signerBuilder,
+				pbeSecretKeyEncryptorBuilder.build(createPgpKeyParam.getPassphrase()));
+
+
+		/* Add encryption subkey. */
+		keyRingGen.addSubKey(encKeyPair, encSubpckGen.generate(), null);
+
+
+		/* Generate the key ring. */
+		PGPSecretKeyRing secretKeyRing = keyRingGen.generateSecretKeyRing();
+		PGPPublicKeyRing publicKeyRing = keyRingGen.generatePublicKeyRing();
+		return new Pair<>(publicKeyRing,  secretKeyRing);
 	}
 }
