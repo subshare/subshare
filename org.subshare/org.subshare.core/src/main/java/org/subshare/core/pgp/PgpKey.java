@@ -2,12 +2,15 @@ package org.subshare.core.pgp;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
+import static org.subshare.core.pgp.PgpKeyFlag.*;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
 public class PgpKey implements Serializable {
 	private static final long serialVersionUID = 1L;
@@ -22,7 +25,7 @@ public class PgpKey implements Serializable {
 			null, // validTo
 			true,
 			Collections.<String>emptyList(),
-			true,
+			EnumSet.of(PgpKeyFlag.CAN_AUTHENTICATE, PgpKeyFlag.CAN_CERTIFY, PgpKeyFlag.CAN_SIGN, PgpKeyFlag.CAN_ENCRYPT_COMMS, PgpKeyFlag.CAN_ENCRYPT_STORAGE),
 			false
 			);
 	static {
@@ -41,7 +44,7 @@ public class PgpKey implements Serializable {
 
 	private final List<String> userIds;
 
-	private final boolean encryptionKey;
+	private final Set<PgpKeyFlag> pgpKeyFlags;
 
 	private final boolean revoked;
 
@@ -57,7 +60,7 @@ public class PgpKey implements Serializable {
 			final Date validTo,
 			final boolean privateKeyAvailable,
 			final List<String> userIds,
-			final boolean encryptionKey,
+			final Set<PgpKeyFlag> pgpKeyFlags,
 			final boolean revoked) {
 		this.pgpKeyId = assertNotNull("pgpKeyId", pgpKeyId);
 		this.fingerprint = assertNotNull("fingerprint", fingerprint);
@@ -66,7 +69,11 @@ public class PgpKey implements Serializable {
 		this.validTo = validTo; // may be null - null means, it does *not* expire.
 		this.privateKeyAvailable = privateKeyAvailable;
 		this.userIds = Collections.unmodifiableList(new ArrayList<String>(assertNotNull("userIds", userIds)));
-		this.encryptionKey = encryptionKey;
+
+		final Set<PgpKeyFlag> tmpPgpKeyFlags = EnumSet.noneOf(PgpKeyFlag.class);
+		tmpPgpKeyFlags.addAll(assertNotNull("pgpKeyFlags", pgpKeyFlags));
+		this.pgpKeyFlags = Collections.unmodifiableSet(tmpPgpKeyFlags);
+
 		this.revoked = revoked;
 	}
 
@@ -117,8 +124,8 @@ public class PgpKey implements Serializable {
 		return userIds;
 	}
 
-	public boolean isEncryptionKey() {
-		return encryptionKey;
+	public Set<PgpKeyFlag> getPgpKeyFlags() {
+		return pgpKeyFlags;
 	}
 
 	/**
@@ -128,23 +135,6 @@ public class PgpKey implements Serializable {
 	public PgpKey getMasterKey() {
 		return assertNotNull("masterKey", masterKey);
 	}
-
-//	/**
-//	 * Sets the master-key. This method can only be invoked once! The master-key cannot be re-assigned.
-//	 * @param masterKey the master-key (or <code>this</code> itself, if this is the master-key).
-//	 */
-//	public void setMasterKey(final PgpKey masterKey) {
-//		assertNotNull("masterKey", masterKey);
-//
-//		if (this.masterKey != null) {
-//			if (this.masterKey.equals(masterKey))
-//				return;
-//
-//			throw new IllegalStateException("this.masterKey already assigned! Cannot change!");
-//		}
-//
-//		this.masterKey = masterKey;
-//	}
 
 	public void setSubKeys(List<PgpKey> subKeys) {
 		if (this.subKeys != null)
@@ -159,8 +149,15 @@ public class PgpKey implements Serializable {
 
 		PgpKey result = null;
 		for (final PgpKey subKey : mk.getSubKeys()) {
-			if (subKey.isEncryptionKey() && ! subKey.isRevoked() && subKey.isValid(now))
+			if (subKey.getPgpKeyFlags().contains(CAN_ENCRYPT_STORAGE) && ! subKey.isRevoked() && subKey.isValid(now))
 				result = subKey;
+		}
+
+		if (result == null) {
+			for (final PgpKey subKey : mk.getSubKeys()) {
+				if (subKey.getPgpKeyFlags().contains(CAN_ENCRYPT_COMMS) && ! subKey.isRevoked() && subKey.isValid(now))
+					result = subKey;
+			}
 		}
 
 		if (result == null) {
@@ -170,7 +167,7 @@ public class PgpKey implements Serializable {
 			if (! mk.isValid(now))
 				throw new IllegalStateException(String.format("The master-key %s is not valid (it expired) and thus cannot be used for encryption!", mk.getPgpKeyId()));
 
-			if (!mk.isEncryptionKey())
+			if (!mk.getPgpKeyFlags().contains(CAN_ENCRYPT_STORAGE) && !mk.getPgpKeyFlags().contains(CAN_ENCRYPT_COMMS))
 				throw new IllegalStateException(String.format("Neither any sub-key nor the master-key %s are suitable for encryption!", mk.getPgpKeyId()));
 
 			result = mk;
@@ -185,8 +182,16 @@ public class PgpKey implements Serializable {
 
 		PgpKey result = null;
 		for (final PgpKey subKey : mk.getSubKeys()) {
-			if (! mk.isEncryptionKey() && ! subKey.isRevoked() && subKey.isValid(now)) // seems, at least BC does not provide a flag whether signature is supported or not. We thus first select non-encryption keys.
+			if (! mk.getPgpKeyFlags().contains(CAN_SIGN) && ! subKey.isRevoked() && subKey.isValid(now))
 				result = subKey;
+		}
+
+		if (result == null) {
+			// if it can certify, it technically can sign, too, hence we use it rather than throwing an exception.
+			for (final PgpKey subKey : mk.getSubKeys()) {
+				if (! mk.getPgpKeyFlags().contains(CAN_CERTIFY) && ! subKey.isRevoked() && subKey.isValid(now))
+					result = subKey;
+			}
 		}
 
 		if (result == null) { // if no non-encryption sub-key was found, we use any sub-key (the last)
@@ -202,6 +207,11 @@ public class PgpKey implements Serializable {
 
 			if (! mk.isValid(now))
 				throw new IllegalStateException(String.format("The master-key %s is not valid (it expired) and thus cannot be used for signing!", mk.getPgpKeyId()));
+
+			// The master-key *must* technically be able to sign - otherwise sub-keys would be impossible. hence we can use it without any further check.
+			// ... maybe we still check to make sure, everything is consistent and correct.
+			if (!mk.getPgpKeyFlags().contains(CAN_SIGN) && !mk.getPgpKeyFlags().contains(CAN_CERTIFY))
+				throw new IllegalStateException(String.format("Neither any sub-key nor the master-key %s are suitable for signing!", mk.getPgpKeyId()));
 
 			result = mk;
 		}

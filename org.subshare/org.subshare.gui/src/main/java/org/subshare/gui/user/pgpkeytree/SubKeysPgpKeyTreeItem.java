@@ -20,8 +20,9 @@ public class SubKeysPgpKeyTreeItem extends PgpKeyTreeItem<PgpKey> {
 		if (! childrenInitialised) {
 			childrenInitialised = true;
 			final PgpKey pgpKey = getValueObject();
+			children.add(new SubKeyPgpKeyTreeItem(pgpKey)); // primary key
 			for (final PgpKey subKey : pgpKey.getSubKeys())
-				children.add(new SubKeyPgpKeyTreeItem(subKey));
+				children.add(new SubKeyPgpKeyTreeItem(subKey)); // secondary key
 		}
 		return children;
 	}

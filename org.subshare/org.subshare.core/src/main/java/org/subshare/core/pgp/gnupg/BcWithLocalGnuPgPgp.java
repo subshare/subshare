@@ -13,7 +13,9 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -34,9 +36,16 @@ import org.bouncycastle.bcpg.CompressionAlgorithmTags;
 import org.bouncycastle.bcpg.HashAlgorithmTags;
 import org.bouncycastle.bcpg.PublicKeyAlgorithmTags;
 import org.bouncycastle.bcpg.SymmetricKeyAlgorithmTags;
+import org.bouncycastle.bcpg.sig.KeyFlags;
 import org.bouncycastle.crypto.AsymmetricCipherKeyPairGenerator;
+import org.bouncycastle.crypto.generators.DSAParametersGenerator;
+import org.bouncycastle.crypto.generators.ElGamalParametersGenerator;
+import org.bouncycastle.crypto.params.DSAKeyGenerationParameters;
+import org.bouncycastle.crypto.params.DSAParameters;
+import org.bouncycastle.crypto.params.ElGamalKeyGenerationParameters;
+import org.bouncycastle.crypto.params.ElGamalParameters;
+import org.bouncycastle.crypto.params.RSAKeyGenerationParameters;
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPKeyFlags;
 import org.bouncycastle.openpgp.PGPKeyRing;
 import org.bouncycastle.openpgp.PGPKeyRingGenerator;
 import org.bouncycastle.openpgp.PGPObjectFactory;
@@ -49,6 +58,7 @@ import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureSubpacketGenerator;
 import org.bouncycastle.openpgp.PGPUtil;
+import org.bouncycastle.openpgp.operator.PGPDigestCalculator;
 import org.bouncycastle.openpgp.operator.bc.BcPBESecretKeyDecryptorBuilder;
 import org.bouncycastle.openpgp.operator.bc.BcPBESecretKeyEncryptorBuilder;
 import org.bouncycastle.openpgp.operator.bc.BcPGPContentSignerBuilder;
@@ -973,160 +983,225 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 
 	private Pair<PGPPublicKeyRing, PGPSecretKeyRing> createPGPSecretKeyRing(final CreatePgpKeyParam createPgpKeyParam) throws PGPException, NoSuchAlgorithmException {
 		assertNotNull("createPgpKeyParam", createPgpKeyParam);
+		final String primaryUserId = createPgpKeyParam.getUserIds().get(0);
+		logger.info("createPGPSecretKeyRing: Creating PGP key: primaryUserId='{}' algorithm='{}' strength={}",
+				primaryUserId, createPgpKeyParam.getAlgorithm(), createPgpKeyParam.getStrength());
+
 		final Date now = new Date();
-//		BcPGPKeyPair pgpKeyPair = new BcPGPKeyPair(algorithm, keyPair, now);
-//
-//		PGPKeyPair secretKey = new PGPKeyPair(
-//                PGPPublicKey.RSA_GENERAL,
-//                keyPair,
-//                new Date());
-//        PGPKeyPair secretKey2 = new PGPKeyPair(
-//                PGPPublicKey.RSA_GENERAL,
-//                keyPair2,
-//                new Date());
-//
-//        PGPKeyRingGenerator    keyRingGen = new
-//        PGPKeyRingGenerator(PGPSignature.POSITIVE_CERTIFICATION, secretKey,
-//                email+"<"+email+"@"+gui.getDomain()+">", PGPEncryptedData.AES_256, password,true,
-//                hashedGen.generate(), null, new SecureRandom(), "BC");
-//
-//        keyRingGen.addSubKey(secretKey2);
-//         skr=keyRingGen.generateSecretKeyRing();
-//
-//        KeyPair keyPair = null;
-//        PGPKeyPair secretKey=null;
-//        PGPSecretKeyRing skr=null;
-//        try {
-//
-//            KeyPairGenerator  keyPairGen = KeyPairGenerator.getInstance("RSA", "BC");
-//            keyPairGen.initialize(4096);
-//
-//            keyPair = keyPairGen.generateKeyPair();
-//
-//            PGPSignatureSubpacketGenerator hashedGen = new PGPSignatureSubpacketGenerator();
-//
-//
-//            hashedGen.setKeyFlags(true, KeyFlags.CERTIFY_OTHER | KeyFlags.SIGN_DATA
-//                                         | KeyFlags.ENCRYPT_COMMS | KeyFlags.ENCRYPT_STORAGE);
-//
-//
-//            hashedGen.setPreferredCompressionAlgorithms(false,
-//                    new int[] {CompressionAlgorithmTags.ZIP});
-//
-//            hashedGen.setPreferredHashAlgorithms(false,
-//                    new int[] {HashAlgorithmTags.SHA1} );
-//
-//            hashedGen.setPreferredSymmetricAlgorithms(false,
-//                    new int[] { SymmetricKeyAlgorithmTags.AES_256});
-//
-//            secretKey = new PGPKeyPair(
-//                    PGPSignature.POSITIVE_CERTIFICATION,
-//                    keyPair.getPublic(),
-//                    keyPair.getPrivate(),
-//                    new Date());
-//
-//            PGPKeyRingGenerator keyRingGen = new PGPKeyRingGenerator(PGPSignature.POSITIVE_CERTIFICATION, secretKey,
-//                    email+"<"+email+"@"+gui.getDomain()+">", PGPEncryptedData.AES_256, password,true,
-//                    hashedGen.generate(), null, new SecureRandom(), "BC");
-//
-//             skr=keyRingGen.generateSecretKeyRing();
-//
-//
-//        } catch (Exception e) {
-//
-//            e.printStackTrace();
-//        }
-//
-//
-//        return skr;
 
-
-		final String keyPairGeneratorAlgorithm = "RSA";
-		final int masterKeyAlgorithm = PublicKeyAlgorithmTags.RSA_SIGN;
-		final int hashAlgorithm = HashAlgorithmTags.SHA1; // TODO use sth. stronger!
-		final int subKey1Algorithm = PublicKeyAlgorithmTags.RSA_GENERAL;
+		final int masterKeyAlgorithm = getMasterKeyAlgorithm(createPgpKeyParam);
+		final int subKey1Algorithm = getSubKey1Algorithm(createPgpKeyParam);
 		final int secretKeyEncryptionAlgorithm = SymmetricKeyAlgorithmTags.TWOFISH;
 		final PgpSignatureType certificationLevel = PgpSignatureType.POSITIVE_CERTIFICATION;
-		final String primaryUserId = createPgpKeyParam.getUserIds().get(0);
-		createPgpKeyParam.setPassphrase("test12345".toCharArray()); // TODO take from client!
-		final long validitySeconds = 5 * 365 * 24 * 3600;
 
+		// TODO additional user-ids!
 
-		final AsymmetricCipherKeyPairGenerator keyPairGenerator = CryptoRegistry.getInstance().createKeyPairGenerator(keyPairGeneratorAlgorithm, true);
-//		keyPairGenerator.init(param); // TODO initialise with params instead using of using defaults
+		final int[] preferredHashAlgorithms = new int[] { // TODO configurable?!
+				HashAlgorithmTags.SHA512,
+				HashAlgorithmTags.SHA384,
+				HashAlgorithmTags.SHA256,
+				HashAlgorithmTags.SHA1
+		};
+
+		final int[] preferredSymmetricAlgorithms = new int[] { // TODO configurable?!
+				SymmetricKeyAlgorithmTags.TWOFISH,
+				SymmetricKeyAlgorithmTags.AES_256,
+				SymmetricKeyAlgorithmTags.BLOWFISH
+		};
+
+		// null causes an exception - empty is possible, though
+		final char[] passphrase = createPgpKeyParam.getPassphrase() == null ? new char[0] : createPgpKeyParam.getPassphrase();
+
+		logger.info("createPGPSecretKeyRing: Creating masterKeyPairGenerator...");
+		final AsymmetricCipherKeyPairGenerator masterKeyPairGenerator = createAsymmetricCipherKeyPairGenerator(createPgpKeyParam, 0);
+
+		logger.info("createPGPSecretKeyRing: Creating sub1KeyPairGenerator...");
+		final AsymmetricCipherKeyPairGenerator sub1KeyPairGenerator = createAsymmetricCipherKeyPairGenerator(createPgpKeyParam, 1);
 
 
 		/* Create the master (signing-only) key. */
-		final BcPGPKeyPair masterKeyPair = new BcPGPKeyPair(masterKeyAlgorithm, keyPairGenerator.generateKeyPair(), now);
+		logger.info("createPGPSecretKeyRing: Creating masterKeyPair...");
+		final BcPGPKeyPair masterKeyPair = new BcPGPKeyPair(masterKeyAlgorithm, masterKeyPairGenerator.generateKeyPair(), now);
 
-		PGPSignatureSubpacketGenerator masterSubpckGen = new PGPSignatureSubpacketGenerator();
+		final PGPSignatureSubpacketGenerator masterSubpckGen = new PGPSignatureSubpacketGenerator();
 
-		masterSubpckGen.setKeyFlags(false, PGPKeyFlags.CAN_SIGN | PGPKeyFlags.CAN_CERTIFY);
-
-		masterSubpckGen.setPreferredSymmetricAlgorithms(false, new int[] { // TODO configurable?!
-				SymmetricKeyAlgorithmTags.TWOFISH,
-				SymmetricKeyAlgorithmTags.AES_256
-				});
-
-		masterSubpckGen.setPreferredHashAlgorithms(false, new int[] { // TODO configurable?!
-				HashAlgorithmTags.SHA512,
-				HashAlgorithmTags.SHA384,
-				HashAlgorithmTags.SHA256,
-				HashAlgorithmTags.SHA1
-				});
-
+		// Using KeyFlags instead of PGPKeyFlags, because the latter seem incomplete.
+		masterSubpckGen.setKeyFlags(false, KeyFlags.SIGN_DATA | KeyFlags.CERTIFY_OTHER | KeyFlags.AUTHENTICATION);
+		masterSubpckGen.setPreferredSymmetricAlgorithms(false, preferredSymmetricAlgorithms);
+		masterSubpckGen.setPreferredHashAlgorithms(false, preferredHashAlgorithms);
 		masterSubpckGen.setPreferredCompressionAlgorithms(false, new int[] { CompressionAlgorithmTags.ZIP });
-
-		masterSubpckGen.setKeyExpirationTime(false, validitySeconds);
+		masterSubpckGen.setKeyExpirationTime(false, createPgpKeyParam.getValiditySeconds());
 
 
 		/* Create an encryption sub-key. */
-		final BcPGPKeyPair encKeyPair = new BcPGPKeyPair(subKey1Algorithm, keyPairGenerator.generateKeyPair(), now);
+		logger.info("createPGPSecretKeyRing: Creating sub1KeyPair...");
+		final BcPGPKeyPair sub1KeyPair = new BcPGPKeyPair(subKey1Algorithm, sub1KeyPairGenerator.generateKeyPair(), now);
 
-		PGPSignatureSubpacketGenerator encSubpckGen = new PGPSignatureSubpacketGenerator();
+		final PGPSignatureSubpacketGenerator sub1SubpckGen = new PGPSignatureSubpacketGenerator();
 
-		encSubpckGen.setKeyFlags(false, PGPKeyFlags.CAN_ENCRYPT_COMMS | PGPKeyFlags.CAN_ENCRYPT_STORAGE);
-
-		encSubpckGen.setPreferredSymmetricAlgorithms(false, new int[] { // TODO configurable?!
-				SymmetricKeyAlgorithmTags.TWOFISH,
-				SymmetricKeyAlgorithmTags.AES_256
-				});
-
-		encSubpckGen.setPreferredHashAlgorithms(false, new int[] { // TODO configurable?!
-				HashAlgorithmTags.SHA512,
-				HashAlgorithmTags.SHA384,
-				HashAlgorithmTags.SHA256,
-				HashAlgorithmTags.SHA1
-				});
-
-		encSubpckGen.setPreferredCompressionAlgorithms(false, new int[] { CompressionAlgorithmTags.ZIP });
-
-		encSubpckGen.setKeyExpirationTime(false, validitySeconds);
+		sub1SubpckGen.setKeyFlags(false, KeyFlags.ENCRYPT_COMMS | KeyFlags.ENCRYPT_STORAGE);
+		sub1SubpckGen.setPreferredSymmetricAlgorithms(false, preferredSymmetricAlgorithms);
+		sub1SubpckGen.setPreferredHashAlgorithms(false, preferredHashAlgorithms);
+		sub1SubpckGen.setPreferredCompressionAlgorithms(false, new int[] { CompressionAlgorithmTags.ZIP });
+		sub1SubpckGen.setKeyExpirationTime(false, createPgpKeyParam.getValiditySeconds());
 
 
 		/* Create the key ring. */
-		BcPGPDigestCalculatorProvider digestCalculatorProvider = new BcPGPDigestCalculatorProvider();
-		BcPGPContentSignerBuilder signerBuilder = new BcPGPContentSignerBuilder(masterKeyAlgorithm, hashAlgorithm);
-		BcPBESecretKeyEncryptorBuilder pbeSecretKeyEncryptorBuilder = new BcPBESecretKeyEncryptorBuilder(secretKeyEncryptionAlgorithm, digestCalculatorProvider.get(hashAlgorithm));
+		logger.info("createPGPSecretKeyRing: Creating keyRingGenerator...");
+		final BcPGPDigestCalculatorProvider digestCalculatorProvider = new BcPGPDigestCalculatorProvider();
+		final BcPGPContentSignerBuilder signerBuilder = new BcPGPContentSignerBuilder(masterKeyAlgorithm, HashAlgorithmTags.SHA512);
+		final BcPBESecretKeyEncryptorBuilder pbeSecretKeyEncryptorBuilder = new BcPBESecretKeyEncryptorBuilder(
+				secretKeyEncryptionAlgorithm, digestCalculatorProvider.get(HashAlgorithmTags.SHA512));
 
-		PGPKeyRingGenerator keyRingGen = new PGPKeyRingGenerator(
+		// Tried SHA512 for checksumCalculator => org.bouncycastle.openpgp.PGPException: only SHA1 supported for key checksum calculations.
+		final PGPDigestCalculator checksumCalculator = digestCalculatorProvider.get(HashAlgorithmTags.SHA1);
+
+		PGPKeyRingGenerator keyRingGenerator = new PGPKeyRingGenerator(
 				signatureTypeFromEnum(certificationLevel),
 				masterKeyPair,
 				primaryUserId,
-				digestCalculatorProvider.get(hashAlgorithm),
+				checksumCalculator,
 				masterSubpckGen.generate(),
 				null,
 				signerBuilder,
-				pbeSecretKeyEncryptorBuilder.build(createPgpKeyParam.getPassphrase()));
+				pbeSecretKeyEncryptorBuilder.build(passphrase));
 
 
 		/* Add encryption subkey. */
-		keyRingGen.addSubKey(encKeyPair, encSubpckGen.generate(), null);
+		keyRingGenerator.addSubKey(sub1KeyPair, sub1SubpckGen.generate(), null);
 
 
 		/* Generate the key ring. */
-		PGPSecretKeyRing secretKeyRing = keyRingGen.generateSecretKeyRing();
-		PGPPublicKeyRing publicKeyRing = keyRingGen.generatePublicKeyRing();
+		logger.info("createPGPSecretKeyRing: generateSecretKeyRing...");
+		final PGPSecretKeyRing secretKeyRing = keyRingGenerator.generateSecretKeyRing();
+
+		logger.info("createPGPSecretKeyRing: generatePublicKeyRing...");
+		final PGPPublicKeyRing publicKeyRing = keyRingGenerator.generatePublicKeyRing();
+
+		logger.info("createPGPSecretKeyRing: all done!");
 		return new Pair<>(publicKeyRing,  secretKeyRing);
+	}
+
+	private int getMasterKeyAlgorithm(final CreatePgpKeyParam createPgpKeyParam) {
+		switch (createPgpKeyParam.getAlgorithm()) {
+			case DSA_AND_EL_GAMAL:
+				return PublicKeyAlgorithmTags.DSA;
+			case RSA:
+				return PublicKeyAlgorithmTags.RSA_SIGN;
+			default:
+				throw new IllegalStateException("Unknown algorithm: " + createPgpKeyParam.getAlgorithm());
+		}
+	}
+
+	private int getSubKey1Algorithm(final CreatePgpKeyParam createPgpKeyParam) {
+		switch (createPgpKeyParam.getAlgorithm()) {
+			case DSA_AND_EL_GAMAL:
+				return PublicKeyAlgorithmTags.ELGAMAL_ENCRYPT; // ELGAMAL_GENERAL does not work - Thunderbird/Enigmail says it wouldn't find a suitable sub-key.
+			case RSA:
+				return PublicKeyAlgorithmTags.RSA_ENCRYPT; // RSA_GENERAL and RSA_ENCRYPT both work.
+			default:
+				throw new IllegalStateException("Unknown algorithm: " + createPgpKeyParam.getAlgorithm());
+		}
+	}
+
+	private AsymmetricCipherKeyPairGenerator createAsymmetricCipherKeyPairGenerator(final CreatePgpKeyParam createPgpKeyParam, final int keyIndex) throws NoSuchAlgorithmException {
+		final CryptoRegistry cryptoRegistry = CryptoRegistry.getInstance();
+		final AsymmetricCipherKeyPairGenerator keyPairGenerator;
+		switch (createPgpKeyParam.getAlgorithm()) {
+			case DSA_AND_EL_GAMAL:
+				if (keyIndex == 0) { // master-key
+					keyPairGenerator = cryptoRegistry.createKeyPairGenerator("DSA", false);
+					keyPairGenerator.init(createDsaKeyGenerationParameters(createPgpKeyParam));
+				}
+				else { // sub-key 1
+					keyPairGenerator = cryptoRegistry.createKeyPairGenerator("ElGamal", false);
+					keyPairGenerator.init(createElGamalKeyGenerationParameters(createPgpKeyParam));
+				}
+				break;
+			case RSA:
+				keyPairGenerator = cryptoRegistry.createKeyPairGenerator("RSA", false);
+				keyPairGenerator.init(createRsaKeyGenerationParameters(createPgpKeyParam));
+				break;
+			default:
+				throw new IllegalStateException("Unknown algorithm: " + createPgpKeyParam.getAlgorithm());
+		}
+		return keyPairGenerator;
+	}
+
+	private DSAKeyGenerationParameters createDsaKeyGenerationParameters(final CreatePgpKeyParam createPgpKeyParam) {
+		/*
+		 * How certain do we want to be that the chosen primes are really primes.
+		 * <p>
+		 * The higher this number, the more tests are done to make sure they are primes (and not composites).
+		 * <p>
+		 * See: <a href="http://crypto.stackexchange.com/questions/3114/what-is-the-correct-value-for-certainty-in-rsa-key-pair-generation">What is the correct value for “certainty” in RSA key pair generation?</a>
+		 * and
+		 * <a href="http://crypto.stackexchange.com/questions/3126/does-a-high-exponent-compensate-for-a-low-degree-of-certainty?lq=1">Does a high exponent compensate for a low degree of certainty?</a>
+		 */
+		final int certainty = 12;
+
+		final SecureRandom random = createSecureRandom();
+
+		final DSAParametersGenerator pGen = new DSAParametersGenerator();
+		pGen.init(createPgpKeyParam.getStrength(), certainty, random);
+		final DSAParameters dsaParameters = pGen.generateParameters();
+		return new DSAKeyGenerationParameters(random, dsaParameters);
+	}
+
+	private ElGamalKeyGenerationParameters createElGamalKeyGenerationParameters(final CreatePgpKeyParam createPgpKeyParam) {
+		/*
+		 * How certain do we want to be that the chosen primes are really primes.
+		 * <p>
+		 * The higher this number, the more tests are done to make sure they are primes (and not composites).
+		 * <p>
+		 * See: <a href="http://crypto.stackexchange.com/questions/3114/what-is-the-correct-value-for-certainty-in-rsa-key-pair-generation">What is the correct value for “certainty” in RSA key pair generation?</a>
+		 * and
+		 * <a href="http://crypto.stackexchange.com/questions/3126/does-a-high-exponent-compensate-for-a-low-degree-of-certainty?lq=1">Does a high exponent compensate for a low degree of certainty?</a>
+		 */
+		final int certainty = 8; // 12 takes ages - and DSA+El-Gamal is anyway a bad idea and discouraged. Reducing this to make it bearable.
+
+		final SecureRandom random = createSecureRandom();
+
+		ElGamalParametersGenerator pGen = new ElGamalParametersGenerator();
+		pGen.init(createPgpKeyParam.getStrength(), certainty, random);
+		ElGamalParameters elGamalParameters = pGen.generateParameters();
+
+		// Maybe we should generate our "DH safe primes" only once and store them somewhere? Or maybe we should provide a long list
+		// of them in the resources? DHParametersHelper.generateSafePrimes(size, certainty, random); takes really really very long.
+		// BUT BEWARE: Attacks on El Gamal can re-use expensively calculated stuff, if p (one of the "safe primes) is the same.
+		// However, it is still not *so* easy. Hmmm... don't know. Security is really important here.
+
+		return new ElGamalKeyGenerationParameters(random, elGamalParameters);
+	}
+
+	private RSAKeyGenerationParameters createRsaKeyGenerationParameters(final CreatePgpKeyParam createPgpKeyParam) {
+		/*
+		 * This value should be a Fermat number. 0x10001 (F4) is current recommended value. 3 (F1) is known to be safe also.
+		 * 3, 5, 17, 257, 65537, 4294967297, 18446744073709551617,
+		 * <p>
+		 * Practically speaking, Windows does not tolerate public exponents which do not fit in a 32-bit unsigned integer.
+		 * Using e=3 or e=65537 works "everywhere".
+		 * <p>
+		 * See: <a href="http://stackoverflow.com/questions/11279595/rsa-public-exponent-defaults-to-65537-what-should-this-value-be-what-are-the">stackoverflow: RSA Public exponent defaults to 65537. ... What are the impacts of my choices?</a>
+		 */
+		final BigInteger publicExponent = BigInteger.valueOf(0x10001);
+
+		/*
+		 * How certain do we want to be that the chosen primes are really primes.
+		 * <p>
+		 * The higher this number, the more tests are done to make sure they are primes (and not composites).
+		 * <p>
+		 * See: <a href="http://crypto.stackexchange.com/questions/3114/what-is-the-correct-value-for-certainty-in-rsa-key-pair-generation">What is the correct value for “certainty” in RSA key pair generation?</a>
+		 * and
+		 * <a href="http://crypto.stackexchange.com/questions/3126/does-a-high-exponent-compensate-for-a-low-degree-of-certainty?lq=1">Does a high exponent compensate for a low degree of certainty?</a>
+		 */
+		final int certainty = 12;
+
+		return new RSAKeyGenerationParameters(
+				publicExponent, createSecureRandom(), createPgpKeyParam.getStrength(), certainty);
+	}
+
+	private SecureRandom createSecureRandom() {
+		return new SecureRandom();
 	}
 }

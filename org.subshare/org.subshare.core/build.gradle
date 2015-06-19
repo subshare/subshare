@@ -1,6 +1,5 @@
 dependencies {
 	compile group: 'co.codewizards.cloudstore', name: 'co.codewizards.cloudstore.core', version: cloudstoreVersion
-	compile group: 'co.codewizards.cloudstore', name: 'co.codewizards.cloudstore.ls.core', version: cloudstoreVersion
 	compile group: 'org.bouncycastle', name: 'bcpg-jdk15on', version: bouncycastleVersion
 	compile project(':org.subshare.crypto')
 }

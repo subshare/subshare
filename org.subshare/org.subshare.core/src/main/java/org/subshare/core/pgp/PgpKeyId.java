@@ -17,6 +17,7 @@ public class PgpKeyId implements Comparable<PgpKeyId>, Serializable {
 
 	private final long pgpKeyId;
 	private transient WeakReference<String> toString;
+	private transient WeakReference<String> toHumanString;
 
 	public PgpKeyId(final long pgpKeyId) {
 		this.pgpKeyId = pgpKeyId;
@@ -69,6 +70,24 @@ public class PgpKeyId implements Comparable<PgpKeyId>, Serializable {
 	}
 
 	public String toHumanString() {
-		return "0x" + toString();
+		String s = toHumanString == null ? null : toHumanString.get();
+		if (s == null) {
+			s = _toHumanString();
+			toHumanString = new WeakReference<String>(s);
+		}
+		return s;
+	}
+
+	private String _toHumanString() {
+		final StringBuilder sb = new StringBuilder();
+		final String string = toString();
+
+		for (int i = 0; i < string.length(); ++i) {
+			if (i > 0 && (i % 4 == 0))
+				sb.append(' ');
+
+			sb.append(string.charAt(i));
+		}
+		return sb.toString();
 	}
 }

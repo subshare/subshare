@@ -220,7 +220,7 @@ public class UserImpl extends AbstractBean<User.Property> implements User {
 			if (k != null)
 				pgpKeys.add(k);
 		}
-		return pgpKeys;
+		return Collections.unmodifiableSet(pgpKeys);
 	}
 
 	@Override

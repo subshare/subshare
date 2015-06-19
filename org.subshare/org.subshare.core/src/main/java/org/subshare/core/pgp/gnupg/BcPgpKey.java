@@ -5,16 +5,21 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.bouncycastle.bcpg.sig.KeyFlags;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.PGPSignatureSubpacketVector;
 import org.subshare.core.pgp.PgpKey;
+import org.subshare.core.pgp.PgpKeyFlag;
 import org.subshare.core.pgp.PgpKeyId;
 
 public class BcPgpKey {
@@ -104,8 +109,7 @@ public class BcPgpKey {
 			final Date validTo = validSeconds < 1 ? null : new Date(created.getTime() + (validSeconds * 1000));
 			this.pgpKey = new PgpKey(
 					pgpKeyId, fingerprint, masterPgpKey, created, validTo,
-					privateKeyAvailable, userIds,
-					publicKey.isEncryptionKey(), publicKey.isRevoked());
+					privateKeyAvailable, userIds, getPgpKeyFlags(), publicKey.isRevoked());
 
 			this.subKeyIds = Collections.unmodifiableSet(new LinkedHashSet<>(this.subKeyIds)); // turn read-only!
 			final List<PgpKey> subKeys = new ArrayList<PgpKey>(this.subKeyIds.size());
@@ -120,4 +124,60 @@ public class BcPgpKey {
 		}
 		return pgpKey;
 	}
+
+	private Set<PgpKeyFlag> getPgpKeyFlags() {
+		final EnumSet<PgpKeyFlag> result = EnumSet.noneOf(PgpKeyFlag.class);
+
+		final PgpKeyId masterKeyId = masterKey == null ? getPgpKeyId() : masterKey.getPgpKeyId();
+
+		final Iterator<?> sigIt = publicKey.getSignatures();
+		while (sigIt.hasNext()) {
+			final PGPSignature signature = (PGPSignature) sigIt.next();
+			if (signature.getKeyID() != masterKeyId.longValue())
+				continue;
+
+			// It seems, the signature type is not always the way it should be (to my understanding).
+			// To look for PGPSignature.SUBKEY_BINDING works fine, but PGPSignature.PRIMARYKEY_BINDING seems to
+			// never be used. I thus do not filter by signature-type at all, anymore, but collect all keyFlags
+			// from all signatures made by the master-key.
+
+			final PGPSignatureSubpacketVector hashedSubPackets = signature.getHashedSubPackets();
+			if (hashedSubPackets != null) {
+				final int keyFlags = hashedSubPackets.getKeyFlags();
+				result.addAll(getPgpKeyFlags(keyFlags));
+			}
+		}
+		return result;
+	}
+
+	private static Set<PgpKeyFlag> getPgpKeyFlags(int keyFlags) {
+		final EnumSet<PgpKeyFlag> result = EnumSet.noneOf(PgpKeyFlag.class);
+
+		// Using org.bouncycastle.bcpg.sig.KeyFlags instead of org.bouncycastle.openpgp.PGPKeyFlags, because
+		// it seems more complete. Seems OpenPGP did not yet standardize all (CAN_AUTHENTICATE / AUTHENTICATION is missing).
+
+		if ((keyFlags & KeyFlags.CERTIFY_OTHER) != 0)
+			result.add(PgpKeyFlag.CAN_CERTIFY);
+
+		if ((keyFlags & KeyFlags.SIGN_DATA) != 0)
+			result.add(PgpKeyFlag.CAN_SIGN);
+
+		if ((keyFlags & KeyFlags.AUTHENTICATION) != 0)
+			result.add(PgpKeyFlag.CAN_AUTHENTICATE);
+
+		if ((keyFlags & KeyFlags.ENCRYPT_COMMS) != 0)
+			result.add(PgpKeyFlag.CAN_ENCRYPT_COMMS);
+
+		if ((keyFlags & KeyFlags.ENCRYPT_STORAGE) != 0)
+			result.add(PgpKeyFlag.CAN_ENCRYPT_STORAGE);
+
+		if ((keyFlags & KeyFlags.SPLIT) != 0)
+			result.add(PgpKeyFlag.MAYBE_SPLIT);
+
+		if ((keyFlags & KeyFlags.SHARED) != 0)
+			result.add(PgpKeyFlag.MAYBE_SHARED);
+
+		return result;
+	}
+
 }

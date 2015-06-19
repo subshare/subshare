@@ -1,20 +1,63 @@
 package org.subshare.core.pgp;
 
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
-import co.codewizards.cloudstore.ls.core.invoke.NoObjectRef;
+import org.subshare.core.observable.ObservableList;
+import org.subshare.core.observable.standard.StandardPostModificationEvent;
+import org.subshare.core.observable.standard.StandardPostModificationListener;
+
+import co.codewizards.cloudstore.core.bean.AbstractBean;
+import co.codewizards.cloudstore.core.bean.PropertyBase;
+import co.codewizards.cloudstore.core.ls.NoObjectRef;
 
 @NoObjectRef
-public class CreatePgpKeyParam implements Serializable {
+public class CreatePgpKeyParam extends AbstractBean<CreatePgpKeyParam.Property> implements Serializable {
 	private static final long serialVersionUID = 1L;
 
-	private final List<String> userIds = new ArrayList<>();
+	public static interface Property extends PropertyBase { }
+
+	public static enum PropertyEnum implements Property {
+		userIds,
+		passphrase,
+		validitySeconds,
+		algorithm,
+		strength
+	}
+
+	private final List<String> _userIds = new ArrayList<String>();
+	private transient ObservableList<String> userIds = ObservableList.decorate(_userIds);
+	{
+		userIds.getHandler().addPostModificationListener(new PostModificationListener());
+	}
+
+	private class PostModificationListener implements StandardPostModificationListener {
+		@Override
+		public void modificationOccurred(StandardPostModificationEvent event) {
+			firePropertyChange(PropertyEnum.userIds, null, getUserIds());
+		}
+	};
 
 	private char[] passphrase;
 
+	private long validitySeconds = 10 * 365 * 24 * 3600;
+
+	private Algorithm algorithm = Algorithm.RSA;
+
+	private int strength = max(algorithm.getSupportedStrengths());
+
 	public CreatePgpKeyParam() {
+	}
+
+	private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
+		in.defaultReadObject();
+		userIds = ObservableList.decorate(_userIds);
+		userIds.getHandler().addPostModificationListener(new PostModificationListener());
 	}
 
 	public List<String> getUserIds() {
@@ -25,6 +68,75 @@ public class CreatePgpKeyParam implements Serializable {
 		return passphrase;
 	}
 	public void setPassphrase(char[] passphrase) {
-		this.passphrase = passphrase;
+		setPropertyValue(PropertyEnum.passphrase, passphrase);
+	}
+
+	/**
+	 * Gets the validity of the newly created key in seconds.
+	 * <p>
+	 * This means, how long after its creation will the new key be valid before it expires. A value of
+	 * 0 means the key is valid forever, i.e. it never expires.
+	 *
+	 * @return the validity of the newly created key in seconds.
+	 */
+	public long getValiditySeconds() {
+		return validitySeconds;
+	}
+	public void setValiditySeconds(long validitySeconds) {
+		if (validitySeconds < 0)
+			throw new IllegalArgumentException("validitySeconds < 0");
+
+		setPropertyValue(PropertyEnum.validitySeconds, validitySeconds);
+	}
+
+	public Algorithm getAlgorithm() {
+		return algorithm;
+	}
+	public void setAlgorithm(final Algorithm algorithm) {
+		setPropertyValue(PropertyEnum.algorithm, assertNotNull("algorithm", algorithm));
+		if (!algorithm.isSupportedStrength(strength))
+			setStrength(max(algorithm.getSupportedStrengths()));
+	}
+
+	public int getStrength() {
+		return strength;
+	}
+	public void setStrength(int strength) {
+		if (!algorithm.isSupportedStrength(strength))
+			throw new IllegalArgumentException(String.format("strength=%s is not supported by algorithm %s!", strength, algorithm));
+
+		setPropertyValue(PropertyEnum.strength, strength);
+	}
+
+	public static enum Algorithm {
+		RSA(1024, 2048, 4096),
+		DSA_AND_EL_GAMAL(1024, 2048, 4096);
+
+		private final List<Integer> supportedStrengths;
+
+		private Algorithm(final int ... supportedStrengths) {
+			final List<Integer> l = new ArrayList<Integer>(supportedStrengths.length);
+			for (final int supportedStrength : assertNotNull("supportedStrengths", supportedStrengths))
+				l.add(supportedStrength);
+
+			this.supportedStrengths = Collections.unmodifiableList(l);
+		}
+
+		public List<Integer> getSupportedStrengths() {
+			return supportedStrengths;
+		}
+
+		public boolean isSupportedStrength(int strength) {
+			return supportedStrengths.contains(strength);
+		}
+	}
+
+	private static int max(List<Integer> values) {
+		int result = Integer.MIN_VALUE;
+		for (int v : values) {
+			if (result < v)
+				result = v;
+		}
+		return result;
 	}
 }

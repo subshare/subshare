@@ -123,9 +123,24 @@
 						<TreeItemPropertyValueFactory property="name"/> 
 					</cellValueFactory>
 				</TreeTableColumn>
-				<TreeTableColumn fx:id="pgpKeyTreeTableColumn" text="Key-ID" prefWidth="150"> 
+				<TreeTableColumn fx:id="pgpKeyTreeTableColumn" text="Key-ID" prefWidth="80"> 
 					<cellValueFactory>
 						<TreeItemPropertyValueFactory property="keyId"/> 
+					</cellValueFactory>
+				</TreeTableColumn>
+				<TreeTableColumn fx:id="createdTreeTableColumn" text="Created" prefWidth="100"> 
+					<cellValueFactory>
+						<TreeItemPropertyValueFactory property="created"/> 
+					</cellValueFactory>
+				</TreeTableColumn>
+				<TreeTableColumn fx:id="validToTreeTableColumn" text="Valid to" prefWidth="100"> 
+					<cellValueFactory>
+						<TreeItemPropertyValueFactory property="validTo"/> 
+					</cellValueFactory>
+				</TreeTableColumn>
+				<TreeTableColumn fx:id="usageTreeTableColumn" text="Usage" prefWidth="250"> 
+					<cellValueFactory>
+						<TreeItemPropertyValueFactory property="usage"/> 
 					</cellValueFactory>
 				</TreeTableColumn>
 			</columns>

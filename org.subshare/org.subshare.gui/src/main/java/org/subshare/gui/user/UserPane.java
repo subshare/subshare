@@ -39,6 +39,7 @@ import org.subshare.core.pgp.Pgp;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.user.User;
 import org.subshare.gui.ls.PgpLs;
+import org.subshare.gui.ls.UserRegistryLs;
 import org.subshare.gui.pgp.createkey.CreatePgpKeyDialog;
 import org.subshare.gui.user.pgpkeytree.PgpKeyPgpKeyTreeItem;
 import org.subshare.gui.user.pgpkeytree.PgpKeyTreeItem;
@@ -260,7 +261,11 @@ public class UserPane extends GridPane {
 
 		final Pgp pgp = getPgp();
 		final PgpKey pgpKey = pgp.createPgpKey(createPgpKeyParam);
-		System.out.println(pgpKey);
+		user.getPgpKeyIds().add(pgpKey.getPgpKeyId());
+		UserRegistryLs.getUserRegistry().writeIfNeeded();
+
+		final PgpKeyPgpKeyTreeItem child = new PgpKeyPgpKeyTreeItem(pgpKey);
+		pgpKeyTreeTableView.getRoot().getChildren().add(child);
 	}
 
 	private CreatePgpKeyParam createCreatePgpKeyParam() {

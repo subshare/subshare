@@ -121,9 +121,44 @@ dynamic component UserPane {
 					},
 					TreeTableColumn < Object, String > id pgpKeyTreeTableColumn {
 						text : "Key-ID",
-						prefWidth : 150,
+						prefWidth : 80,
 						cellValueFactory : TreeItemPropertyValueFactory < PgpKeyTreeItem<?>, String > {
 							property : "keyId"
+						}
+					},
+//					TreeTableColumn < Object, String > id pgpKeyTreeTableColumn {
+//						text : "Key-trust",
+//						prefWidth : 150,
+//						cellValueFactory : TreeItemPropertyValueFactory < PgpKeyTreeItem<?>, String > {
+//							property : "keyTrust"
+//						}
+//					},
+//					TreeTableColumn < Object, String > id pgpKeyTreeTableColumn {
+//						text : "Owner-trust",
+//						prefWidth : 150,
+//						cellValueFactory : TreeItemPropertyValueFactory < PgpKeyTreeItem<?>, String > {
+//							property : "ownerTrust"
+//						}
+//					},
+					TreeTableColumn < Object, String > id createdTreeTableColumn {
+						text : "Created",
+						prefWidth : 100,
+						cellValueFactory : TreeItemPropertyValueFactory < PgpKeyTreeItem<?>, String > {
+							property : "created"
+						}
+					},
+					TreeTableColumn < Object, String > id validToTreeTableColumn {
+						text : "Valid to",
+						prefWidth : 100,
+						cellValueFactory : TreeItemPropertyValueFactory < PgpKeyTreeItem<?>, String > {
+							property : "validTo"
+						}
+					},
+					TreeTableColumn < Object, String > id usageTreeTableColumn {
+						text : "Usage",
+						prefWidth : 250,
+						cellValueFactory : TreeItemPropertyValueFactory < PgpKeyTreeItem<?>, String > {
+							property : "usage"
 						}
 					}
 				],

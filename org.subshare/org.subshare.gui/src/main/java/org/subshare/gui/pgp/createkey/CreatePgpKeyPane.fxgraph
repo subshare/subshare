@@ -138,7 +138,7 @@ dynamic component CreatePgpKeyPane {
 					}
 				],
 				static columnIndex : 0,
-				static rowIndex : 5,
+				static rowIndex : 6,
 				static columnSpan : 2
 			}
 		]
