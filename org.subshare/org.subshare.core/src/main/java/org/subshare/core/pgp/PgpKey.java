@@ -143,70 +143,82 @@ public class PgpKey implements Serializable {
 		this.subKeys = Collections.unmodifiableList(new ArrayList<PgpKey>(assertNotNull("subKeys", subKeys)));
 	}
 
-	public PgpKey getPgpKeyForEncryptionOrFail() {
+	private List<PgpKey> getSubKeysAndMasterKey() {
 		final PgpKey mk = getMasterKey();
+		final List<PgpKey> subKeys = mk.getSubKeys();
+		final List<PgpKey> result = new ArrayList<PgpKey>(subKeys.size() + 1);
+		result.addAll(subKeys);
+		result.add(mk);
+		return result;
+	}
+
+	public PgpKey getPgpKeyForEncryptionOrFail() {
 		final Date now = new Date();
+		final List<PgpKey> allKeys = getSubKeysAndMasterKey();
+
+		int keysSupportingEncryptStorage = 0;
+		int keysSupportingEncryptComms = 0;
 
 		PgpKey result = null;
-		for (final PgpKey subKey : mk.getSubKeys()) {
-			if (subKey.getPgpKeyFlags().contains(CAN_ENCRYPT_STORAGE) && ! subKey.isRevoked() && subKey.isValid(now))
-				result = subKey;
-		}
-
-		if (result == null) {
-			for (final PgpKey subKey : mk.getSubKeys()) {
-				if (subKey.getPgpKeyFlags().contains(CAN_ENCRYPT_COMMS) && ! subKey.isRevoked() && subKey.isValid(now))
-					result = subKey;
+		for (final PgpKey key : allKeys) {
+			if (key.getPgpKeyFlags().contains(CAN_ENCRYPT_STORAGE)) {
+				++keysSupportingEncryptStorage;
+				if (! key.isRevoked() && key.isValid(now))
+					result = key;
 			}
 		}
 
 		if (result == null) {
-			if (mk.isRevoked())
-				throw new IllegalStateException(String.format("The master-key %s was revoked and thus cannot be used for encryption!", mk.getPgpKeyId()));
-
-			if (! mk.isValid(now))
-				throw new IllegalStateException(String.format("The master-key %s is not valid (it expired) and thus cannot be used for encryption!", mk.getPgpKeyId()));
-
-			if (!mk.getPgpKeyFlags().contains(CAN_ENCRYPT_STORAGE) && !mk.getPgpKeyFlags().contains(CAN_ENCRYPT_COMMS))
-				throw new IllegalStateException(String.format("Neither any sub-key nor the master-key %s are suitable for encryption!", mk.getPgpKeyId()));
-
-			result = mk;
+			for (final PgpKey key : allKeys) {
+				if (key.getPgpKeyFlags().contains(CAN_ENCRYPT_COMMS)) {
+					++keysSupportingEncryptComms;
+					if (! key.isRevoked() && key.isValid(now))
+						result = key;
+				}
+			}
 		}
 
+		if (result == null) {
+			final PgpKey mk = getMasterKey();
+			throw new IllegalStateException(String.format(
+					"Neither any sub-key nor the master-key %s are suitable for encryption! There are %s keys with flag 'CAN_ENCRYPT_STORAGE' and %s keys with flag 'CAN_ENCRYPT_COMMS' (all of them revoked or expired).",
+					mk.getPgpKeyId(), keysSupportingEncryptStorage, keysSupportingEncryptComms));
+		}
 		return result;
 	}
 
 	public PgpKey getPgpKeyForSignatureOrFail() {
-		final PgpKey mk = getMasterKey();
 		final Date now = new Date();
+		final List<PgpKey> allKeys = getSubKeysAndMasterKey();
+
+		int keysSupportingSign = 0;
+		int keysSupportingCertify = 0;
 
 		PgpKey result = null;
-		for (final PgpKey subKey : mk.getSubKeys()) {
-			if (! mk.getPgpKeyFlags().contains(CAN_SIGN) && ! subKey.isRevoked() && subKey.isValid(now))
-				result = subKey;
-		}
-
-		if (result == null) {
-			// if it can certify, it technically can sign, too, hence we use it rather than throwing an exception.
-			for (final PgpKey subKey : mk.getSubKeys()) {
-				if (! mk.getPgpKeyFlags().contains(CAN_CERTIFY) && ! subKey.isRevoked() && subKey.isValid(now))
-					result = subKey;
+		for (final PgpKey key : allKeys) {
+			if (key.getPgpKeyFlags().contains(CAN_SIGN)) {
+				++keysSupportingSign;
+				if (! key.isRevoked() && key.isValid(now))
+					result = key;
 			}
 		}
 
 		if (result == null) {
-			if (mk.isRevoked())
-				throw new IllegalStateException(String.format("The master-key %s was revoked and thus cannot be used for signing!", mk.getPgpKeyId()));
+			// if it can certify, it technically can sign, too, hence we use it rather than throwing an exception.
+			for (final PgpKey key : allKeys) {
+				if (key.getPgpKeyFlags().contains(CAN_CERTIFY)) {
+					++keysSupportingCertify;
+					if (! key.isRevoked() && key.isValid(now))
+						result = key;
+				}
+			}
+		}
 
-			if (! mk.isValid(now))
-				throw new IllegalStateException(String.format("The master-key %s is not valid (it expired) and thus cannot be used for signing!", mk.getPgpKeyId()));
-
-			// The master-key *must* technically be able to sign - otherwise sub-keys would be impossible. hence we can use it without any further check.
-			// ... maybe we still check to make sure, everything is consistent and correct.
-			if (!mk.getPgpKeyFlags().contains(CAN_SIGN) && !mk.getPgpKeyFlags().contains(CAN_CERTIFY))
-				throw new IllegalStateException(String.format("Neither any sub-key nor the master-key %s are suitable for signing!", mk.getPgpKeyId()));
-
-			result = mk;
+		if (result == null) {
+			final PgpKey mk = getMasterKey();
+			throw new IllegalStateException(String.format(
+					"Neither any sub-key nor the master-key %s are suitable for signing! There are %s keys with flag 'CAN_SIGN' and %s keys with flag 'CAN_CERTIFY' (all of them revoked or expired).",
+					mk.getPgpKeyId(), keysSupportingSign, keysSupportingCertify));
 		}
 
 		return result;
