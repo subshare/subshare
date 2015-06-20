@@ -194,13 +194,6 @@ public class PgpKey implements Serializable {
 			}
 		}
 
-		if (result == null) { // if no non-encryption sub-key was found, we use any sub-key (the last)
-			for (final PgpKey subKey : mk.getSubKeys()) {
-				if (! subKey.isRevoked() && subKey.isValid(now))
-					result = subKey;
-			}
-		}
-
 		if (result == null) {
 			if (mk.isRevoked())
 				throw new IllegalStateException(String.format("The master-key %s was revoked and thus cannot be used for signing!", mk.getPgpKeyId()));
