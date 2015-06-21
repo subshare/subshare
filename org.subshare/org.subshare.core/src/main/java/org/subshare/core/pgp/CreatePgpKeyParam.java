@@ -30,8 +30,8 @@ public class CreatePgpKeyParam extends AbstractBean<CreatePgpKeyParam.Property> 
 		strength
 	}
 
-	private final List<String> _userIds = new ArrayList<String>();
-	private transient ObservableList<String> userIds = ObservableList.decorate(_userIds);
+	private final List<PgpUserId> _userIds = new ArrayList<>();
+	private transient ObservableList<PgpUserId> userIds = ObservableList.decorate(_userIds);
 	{
 		userIds.getHandler().addPostModificationListener(new PostModificationListener());
 	}
@@ -45,7 +45,7 @@ public class CreatePgpKeyParam extends AbstractBean<CreatePgpKeyParam.Property> 
 
 	private char[] passphrase;
 
-	private long validitySeconds = 10 * 365 * 24 * 3600;
+	private long validitySeconds = 10L * 365 * 24 * 3600;
 
 	private Algorithm algorithm = Algorithm.RSA;
 
@@ -60,7 +60,7 @@ public class CreatePgpKeyParam extends AbstractBean<CreatePgpKeyParam.Property> 
 		userIds.getHandler().addPostModificationListener(new PostModificationListener());
 	}
 
-	public List<String> getUserIds() {
+	public List<PgpUserId> getUserIds() {
 		return userIds;
 	}
 

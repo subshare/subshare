@@ -8,6 +8,7 @@ import static org.subshare.gui.util.FxmlUtil.*;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -41,6 +42,8 @@ import org.subshare.core.user.User;
 import org.subshare.gui.ls.PgpLs;
 import org.subshare.gui.ls.UserRegistryLs;
 import org.subshare.gui.pgp.createkey.CreatePgpKeyDialog;
+import org.subshare.gui.pgp.createkey.FxPgpUserId;
+import org.subshare.gui.pgp.createkey.TimeUnit;
 import org.subshare.gui.user.pgpkeytree.PgpKeyPgpKeyTreeItem;
 import org.subshare.gui.user.pgpkeytree.PgpKeyTreeItem;
 import org.subshare.gui.user.pgpkeytree.RootPgpKeyTreeItem;
@@ -270,24 +273,18 @@ public class UserPane extends GridPane {
 
 	private CreatePgpKeyParam createCreatePgpKeyParam() {
 		final CreatePgpKeyParam createPgpKeyParam = new CreatePgpKeyParam();
+		createPgpKeyParam.setValiditySeconds(TimeUnit.YEAR.getSeconds() * 10);
+
 		final String name = getName();
 
+		Set<String> emails = new HashSet<>();
 		for (final EmailWrapper emailWrapper : emailWrappers) {
 			final String email = trim(emailWrapper.getValue());
 			if (isEmpty(email))
 				continue;
 
-			final StringBuilder sb = new StringBuilder();
-			if (! isEmpty(name))
-				sb.append(name);
-
-			if (sb.length() > 0)
-				sb.append(' ');
-
-			sb.append('<').append(email).append('>');
-
-			final String userId = sb.toString();
-			createPgpKeyParam.getUserIds().add(userId);
+			if (emails.add(email))
+				createPgpKeyParam.getUserIds().add(new FxPgpUserId(name, email));
 		}
 
 		return createPgpKeyParam;

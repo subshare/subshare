@@ -77,22 +77,6 @@ public class LocalRepoPane extends GridPane {
 				if (text.indexOf('/') >= 0)
 					return null;
 
-//				int caretPosition = change.getCaretPosition();
-//
-//				if (text.startsWith("_") && change.getRangeStart() == 0) {
-//					while (text.startsWith("_")) {
-//						text = text.substring(1);
-//						--caretPosition;
-//					}
-//
-//					change.setText(text);
-//					change.setCaretPosition(caretPosition);
-//				}
-//
-//				if (text.indexOf('/') >= 0) {
-//					text = text.replaceAll(Pattern.quote("/"), "");
-//					change.setText(text);
-//				}
 				return change;
 			}
 		}));

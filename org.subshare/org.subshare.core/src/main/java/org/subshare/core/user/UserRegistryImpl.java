@@ -31,6 +31,7 @@ import org.subshare.core.fbor.FileBasedObjectRegistry;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpKeyId;
 import org.subshare.core.pgp.PgpRegistry;
+import org.subshare.core.pgp.PgpUserId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -164,30 +165,17 @@ public class UserRegistryImpl extends FileBasedObjectRegistry implements UserReg
 		}
 	}
 
-	private void populateUserFromPgpUserId(final User user, String pgpUserId) {
+	private void populateUserFromPgpUserId(final User user, final String pgpUserIdStr) {
 		assertNotNull("user", user);
-		pgpUserId = assertNotNull("pgpUserId", pgpUserId).trim();
+		final PgpUserId pgpUserId = new PgpUserId(assertNotNull("pgpUserIdStr", pgpUserIdStr));
+		if (! isEmpty(pgpUserId.getEmail()))
+			user.getEmails().add(pgpUserId.getEmail());
 
-		final int lastLt = pgpUserId.lastIndexOf('<');
-		final int lastGt = pgpUserId.lastIndexOf('>');
-		if (lastLt < 0) {
-			final int lastSpace = pgpUserId.lastIndexOf(' ');
-			if (lastSpace < 0) {
-				final String email = lastGt < 0 ? pgpUserId : pgpUserId.substring(0, lastGt);
-				user.getEmails().add(email);
-			}
-			else {
-				final String email = lastGt < 0 ? pgpUserId.substring(lastSpace + 1) : pgpUserId.substring(lastSpace + 1, lastGt);
-				user.getEmails().add(email);
-			}
-		}
-		else { // this should apply to most or even all
-			final String email = lastGt < 0 ? pgpUserId.substring(lastLt + 1) : pgpUserId.substring(lastLt + 1, lastGt);
-			final String fullName = pgpUserId.substring(0, lastLt).trim();
-
+		final String fullName = pgpUserId.getName();
+		if (! isEmpty(fullName)) {
 			final String[] firstAndLastName = extractFirstAndLastNameFromFullName(fullName);
 
-			user.getEmails().add(email);
+			user.getEmails().add(pgpUserId.getEmail());
 
 			if (isEmpty(user.getFirstName()) && !firstAndLastName[0].isEmpty())
 				user.setFirstName(firstAndLastName[0]);

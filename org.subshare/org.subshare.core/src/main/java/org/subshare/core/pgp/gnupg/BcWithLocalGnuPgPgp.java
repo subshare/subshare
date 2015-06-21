@@ -983,7 +983,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 
 	private Pair<PGPPublicKeyRing, PGPSecretKeyRing> createPGPSecretKeyRing(final CreatePgpKeyParam createPgpKeyParam) throws PGPException, NoSuchAlgorithmException {
 		assertNotNull("createPgpKeyParam", createPgpKeyParam);
-		final String primaryUserId = createPgpKeyParam.getUserIds().get(0);
+		final String primaryUserId = createPgpKeyParam.getUserIds().get(0).toString();
 		logger.info("createPGPSecretKeyRing: Creating PGP key: primaryUserId='{}' algorithm='{}' strength={}",
 				primaryUserId, createPgpKeyParam.getAlgorithm(), createPgpKeyParam.getStrength());
 

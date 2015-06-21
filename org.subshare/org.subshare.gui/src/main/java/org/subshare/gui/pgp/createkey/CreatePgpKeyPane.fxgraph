@@ -11,7 +11,7 @@ import javafx.scene.control.PasswordField
 import javafx.scene.control.Spinner
 import javafx.scene.control.ComboBox
 
-import org.subshare.gui.pgp.createkey.UserId
+import org.subshare.gui.pgp.createkey.FxPgpUserId
 import org.subshare.gui.pgp.createkey.TimeUnit
 import javafx.scene.control.ButtonBar
 import javafx.scene.control.Button
@@ -28,21 +28,21 @@ dynamic component CreatePgpKeyPane {
 				static valignment : "TOP"
 			},
 			
-			TableView < UserId > id emailsTableView {
+			TableView < FxPgpUserId > id emailsTableView {
 				editable : true,
 
 				columns : [
-					TableColumn < UserId, String > id emailTableColumn {
+					TableColumn < FxPgpUserId, String > id nameTableColumn {
 						text : "Name",
 						prefWidth : 200,
-						cellValueFactory : PropertyValueFactory < UserId, String > {
+						cellValueFactory : PropertyValueFactory < FxPgpUserId, String > {
 							property : "name"
 						}
 					},
-					TableColumn < UserId, String > id emailTableColumn {
+					TableColumn < FxPgpUserId, String > id emailTableColumn {
 						text : "E-mail",
 						prefWidth : 200,
-						cellValueFactory : PropertyValueFactory < UserId, String > {
+						cellValueFactory : PropertyValueFactory < FxPgpUserId, String > {
 							property : "email"
 						}
 					}
@@ -88,6 +88,7 @@ dynamic component CreatePgpKeyPane {
 				static rowIndex : 3
 			},
 			Spinner<Integer> id validityNumberSpinner {
+				editable : true,
 				static columnIndex : 1,
 				static rowIndex : 3,
 				static margin : Insets { left : 8 }
