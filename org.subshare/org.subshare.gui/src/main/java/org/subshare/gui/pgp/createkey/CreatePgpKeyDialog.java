@@ -27,7 +27,7 @@ public class CreatePgpKeyDialog extends Stage {
 		this.createPgpKeyParam = assertNotNull("createPgpKeyParam", createPgpKeyParam);
 
 		setTitle("Create PGP key pair");
-		setResizable(false);
+		setResizable(true);
 		initStyle(StageStyle.UTILITY);
 		initModality(Modality.APPLICATION_MODAL);
 		initOwner(owner);

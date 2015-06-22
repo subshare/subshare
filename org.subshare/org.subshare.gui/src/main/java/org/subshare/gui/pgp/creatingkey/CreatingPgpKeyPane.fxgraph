@@ -1,0 +1,38 @@
+package org.subshare.gui.pgp.creatingkey
+
+import javafx.scene.layout.GridPane
+import javafx.scene.control.Label
+import javafx.scene.text.Text
+import javafx.scene.control.ButtonBar
+import javafx.scene.control.Button
+import javafx.scene.image.ImageView
+import javafx.scene.image.Image
+import javafx.geometry.Insets
+
+dynamic component CreatingPgpKeyPane resourcefile "messages.properties" {
+	GridPane {
+		children : [
+			Text id messageText {
+				text : rstring "CreatingPgpKeyPane.messageText.text",
+				static columnIndex : 0,
+				static rowIndex : 0
+			},
+			
+			ButtonBar {
+				buttons : [
+					Button id closeButton {
+						graphic : ImageView { image : Image { url : "@close-24x24.png" } },
+						text : "Close",
+						defaultButton : true,
+						cancelButton : true,
+						onAction : controllermethod closeButtonClicked
+					}
+				],
+				static columnIndex : 0,
+				static rowIndex : 6,
+				static columnSpan : 3,
+				static margin : Insets { top : 8 }
+			}
+		]
+	}
+}

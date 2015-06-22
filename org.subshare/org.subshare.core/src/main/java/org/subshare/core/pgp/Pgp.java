@@ -71,5 +71,20 @@ public interface Pgp {
 	void removePropertyChangeListener(PropertyChangeListener listener);
 	void removePropertyChangeListener(Property property, PropertyChangeListener listener);
 
-	void testPassphrase(PgpKey pgpKey, char[] passphrase) throws IllegalArgumentException, SecurityException;
+	/**
+	 * Tests whether the given {@code pgpKey}'s secret key can be decrypted using the given {@code passphrase}.
+	 * <p>
+	 * This method tries to obtain the <i>private</i> key by decrypting the <i>secret</i> key of the given
+	 * {@code pgpKey}. If this succeeds using the given {@code passphrase}, it returns <code>true</code>,
+	 * otherwise it returns <code>false</code>.
+	 *
+	 * @param pgpKey the key whose secret part is to be decrypted. Must not be <code>null</code>.
+	 * @param passphrase the passphrase used to decrypt. Must not be <code>null</code>, but may be empty (if the
+	 * private key is not protected).
+	 * @return <code>true</code>, if the given passphrase matches the secret key; i.e. the private key can be obtained
+	 * from it. <code>false</code> otherwise.
+	 * @throws IllegalArgumentException if one of the parameters is <code>null</code> or the given {@code pgpKey}
+	 * contains solely the public key - no secret key.
+	 */
+	boolean testPassphrase(PgpKey pgpKey, char[] passphrase) throws IllegalArgumentException;
 }

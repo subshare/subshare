@@ -158,6 +158,11 @@ public class SubShareGui extends Application {
 				executorService.submit(new Runnable() {
 					@Override
 					public void run() {
+						// To prevent log pollution as well as speeding this up (LocalServer-RPC does retries in case of *all* exceptions),
+						//  I first invoke testPassphrase(...) (even though this would not be necessary).
+						if (! pgp.testPassphrase(pgpKey, new char[0]))
+							return;
+
 						// Try an empty password to prevent a dialog from popping up, if the PGP key is not passphrase-protected.
 						try {
 							pgpPrivateKeyPassphraseStore.putPassphrase(pgpKeyId, new char[0]);

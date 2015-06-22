@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -45,7 +46,6 @@ public class UserRegistryImpl extends FileBasedObjectRegistry implements UserReg
 
 	private static final String PAYLOAD_ENTRY_NAME = UserRegistryDto.class.getSimpleName() + ".xml";
 
-	private final Map<PgpKeyId, User> pgpKeyId2User = new HashMap<>();
 	private final Map<Uid, User> userId2User = new LinkedHashMap<>();
 
 	private final List<DeletedUid> deletedUserIds = new ArrayList<>();
@@ -54,7 +54,6 @@ public class UserRegistryImpl extends FileBasedObjectRegistry implements UserReg
 	private List<User> cache_users;
 	private Map<String, Set<User>> cache_email2Users;
 	private Map<Uid, User> cache_userRepoKeyId2User;
-//	private Map<Uid, User> cache_userId2User;
 
 	private final File userRegistryFile;
 	private boolean dirty;
@@ -70,7 +69,6 @@ public class UserRegistryImpl extends FileBasedObjectRegistry implements UserReg
 
 	protected UserRegistryImpl() {
 		userRegistryFile = createFile(ConfigDir.getInstance().getFile(), USER_REGISTRY_FILE_NAME);
-//		readUserRegistryFile();
 		read();
 	}
 
@@ -133,12 +131,23 @@ public class UserRegistryImpl extends FileBasedObjectRegistry implements UserReg
 	}
 
 	protected synchronized void readPgpUsers() {
+		final List<User> newUsers = new ArrayList<>();
+		final Map<PgpKeyId, PgpKey> pgpKeyId2PgpKey = new HashMap<>();
+		final Map<String, List<User>> email2NewUsers = new HashMap<>();
+		final Map<PgpKeyId, List<User>> pgpKeyId2Users = createPgpKeyId2Users();
 		for (final PgpKey pgpKey : PgpRegistry.getInstance().getPgpOrFail().getMasterKeys()) {
-			User user = pgpKeyId2User.get(pgpKey.getPgpKeyId());
+			pgpKeyId2PgpKey.put(pgpKey.getPgpKeyId(), pgpKey);
+
+			List<User> usersByPgpKeyId = pgpKeyId2Users.get(pgpKey.getPgpKeyId());
+			if (usersByPgpKeyId == null) {
+				usersByPgpKeyId = new ArrayList<User>(1);
+				pgpKeyId2Users.put(pgpKey.getPgpKeyId(), usersByPgpKeyId);
+			}
+
+			User user = usersByPgpKeyId.isEmpty() ? null : usersByPgpKeyId.get(0);
 			if (user == null) {
 				boolean newUser = true;
 				user = createUser();
-				user.setUserId(new Uid());
 				for (final String userId : pgpKey.getUserIds())
 					populateUserFromPgpUserId(user, userId);
 
@@ -154,28 +163,81 @@ public class UserRegistryImpl extends FileBasedObjectRegistry implements UserReg
 					}
 				}
 
+				if (newUser) {
+					for (final String email : user.getEmails()) {
+						List<User> l = email2NewUsers.get(email);
+						if (l == null) {
+							l = new ArrayList<>();
+							email2NewUsers.put(email, l);
+						}
+						if (l.isEmpty())
+							l.add(user);
+						else {
+							newUser = false;
+							user = l.get(0);
+
+							for (final String userId : pgpKey.getUserIds())
+								populateUserFromPgpUserId(user, userId);
+						}
+					}
+				}
+
 				if (newUser)
-					addUser(user);
+					newUsers.add(user);
 			}
 
 			if (! user.getPgpKeyIds().contains(pgpKey.getPgpKeyId()))
 				user.getPgpKeyIds().add(pgpKey.getPgpKeyId());
 
-			pgpKeyId2User.put(pgpKey.getPgpKeyId(), user);
+			usersByPgpKeyId.add(user);
+		}
+
+		for (User user : newUsers) {
+			// The order of PgpKeyIds does not say anything - the numbers are random! I only sort
+			// them for the sake of deterministic behaviour.
+			final PgpKeyId pgpKeyId = new TreeSet<>(user.getPgpKeyIds()).iterator().next();
+			final PgpKey pgpKey = pgpKeyId2PgpKey.get(pgpKeyId);
+			assertNotNull("pgpKey", pgpKey);
+			final Uid userId = new Uid(getLast16(pgpKey.getFingerprint()));
+			user.setUserId(userId);
+			addUser(user);
 		}
 	}
 
-	private void populateUserFromPgpUserId(final User user, final String pgpUserIdStr) {
+	private synchronized Map<PgpKeyId, List<User>> createPgpKeyId2Users() {
+		final Map<PgpKeyId, List<User>> result = new HashMap<PgpKeyId, List<User>>();
+		for (final User user : userId2User.values()) {
+			for (final PgpKeyId pgpKeyId : user.getPgpKeyIds()) {
+				List<User> users = result.get(pgpKeyId);
+				if (users == null) {
+					users = new ArrayList<User>(1);
+					result.put(pgpKeyId, users);
+				}
+				users.add(user);
+			}
+		}
+		return result;
+	}
+
+	private static byte[] getLast16(byte[] fingerprint) {
+		final byte[] result = new byte[16];
+
+		if (fingerprint.length < result.length)
+			throw new IllegalArgumentException("fingerprint.length < " + result.length);
+
+		System.arraycopy(fingerprint, fingerprint.length - result.length, result, 0, result.length);
+		return result;
+	}
+
+	private static void populateUserFromPgpUserId(final User user, final String pgpUserIdStr) {
 		assertNotNull("user", user);
 		final PgpUserId pgpUserId = new PgpUserId(assertNotNull("pgpUserIdStr", pgpUserIdStr));
-		if (! isEmpty(pgpUserId.getEmail()))
+		if (! isEmpty(pgpUserId.getEmail()) && ! user.getEmails().contains(pgpUserId.getEmail()))
 			user.getEmails().add(pgpUserId.getEmail());
 
 		final String fullName = pgpUserId.getName();
 		if (! isEmpty(fullName)) {
 			final String[] firstAndLastName = extractFirstAndLastNameFromFullName(fullName);
-
-			user.getEmails().add(pgpUserId.getEmail());
 
 			if (isEmpty(user.getFirstName()) && !firstAndLastName[0].isEmpty())
 				user.setFirstName(firstAndLastName[0]);
@@ -185,7 +247,7 @@ public class UserRegistryImpl extends FileBasedObjectRegistry implements UserReg
 		}
 	}
 
-	private String[] extractFirstAndLastNameFromFullName(String fullName) {
+	private static String[] extractFirstAndLastNameFromFullName(String fullName) {
 		fullName = assertNotNull("fullName", fullName).trim();
 
 		if (fullName.endsWith(")")) {
@@ -222,7 +284,6 @@ public class UserRegistryImpl extends FileBasedObjectRegistry implements UserReg
 		cache_users = null;
 		cache_email2Users = null;
 		cache_userRepoKeyId2User = null;
-//		cache_userId2User = null;
 	}
 
 	@Override
@@ -260,8 +321,8 @@ public class UserRegistryImpl extends FileBasedObjectRegistry implements UserReg
 		// TODO we either need to hook listeners into user and get notified about all changes to update this registry!
 		// OR we need to provide a public write/save/store (or similarly named) method.
 
-		for (final PgpKeyId pgpKeyId : user.getPgpKeyIds())
-			pgpKeyId2User.put(pgpKeyId, user); // TODO what about collisions? remove pgpKeyId from the other user?!
+//		for (final PgpKeyId pgpKeyId : user.getPgpKeyIds())
+//			pgpKeyId2User.put(pgpKeyId, user); // TODO what about collisions? remove pgpKeyId from the other user?!
 
 		user.addPropertyChangeListener(userPropertyChangeListener);
 
@@ -279,8 +340,8 @@ public class UserRegistryImpl extends FileBasedObjectRegistry implements UserReg
 		assertNotNull("user", user);
 		userId2User.remove(user.getUserId());
 
-		for (final PgpKeyId pgpKeyId : user.getPgpKeyIds())
-			pgpKeyId2User.remove(pgpKeyId);
+//		for (final PgpKeyId pgpKeyId : user.getPgpKeyIds())
+//			pgpKeyId2User.remove(pgpKeyId);
 
 		user.removePropertyChangeListener(userPropertyChangeListener);
 

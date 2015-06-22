@@ -938,8 +938,9 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 	}
 
 	@Override
-	public void testPassphrase(final PgpKey pgpKey, final char[] passphrase) throws IllegalArgumentException, SecurityException {
+	public boolean testPassphrase(final PgpKey pgpKey, final char[] passphrase) throws IllegalArgumentException {
 		assertNotNull("pgpKey", pgpKey);
+		assertNotNull("passphrase", passphrase); // empty for no passphrase! never null!
 		final BcPgpKey bcPgpKey = getBcPgpKeyOrFail(pgpKey);
 		final PGPSecretKey secretKey = bcPgpKey.getSecretKey();
 		if (secretKey == null)
@@ -947,8 +948,10 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 
 		try {
 			secretKey.extractPrivateKey(new BcPBESecretKeyDecryptorBuilder(new BcPGPDigestCalculatorProvider()).build(passphrase));
+			return true;
 		} catch (PGPException e) {
-			throw new SecurityException(e);
+			logger.debug("testPassphrase: " + e, e);
+			return false;
 		}
 	}
 

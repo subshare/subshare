@@ -43,7 +43,7 @@ public class CreatePgpKeyParam extends AbstractBean<CreatePgpKeyParam.Property> 
 		}
 	};
 
-	private char[] passphrase;
+	private char[] passphrase = {};
 
 	private long validitySeconds = 10L * 365 * 24 * 3600;
 

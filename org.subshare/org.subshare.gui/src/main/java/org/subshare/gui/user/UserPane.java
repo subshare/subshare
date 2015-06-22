@@ -38,12 +38,15 @@ import javafx.stage.Window;
 import org.subshare.core.pgp.CreatePgpKeyParam;
 import org.subshare.core.pgp.Pgp;
 import org.subshare.core.pgp.PgpKey;
+import org.subshare.core.pgp.man.PgpPrivateKeyPassphraseStore;
 import org.subshare.core.user.User;
 import org.subshare.gui.ls.PgpLs;
+import org.subshare.gui.ls.PgpPrivateKeyPassphraseManagerLs;
 import org.subshare.gui.ls.UserRegistryLs;
 import org.subshare.gui.pgp.createkey.CreatePgpKeyDialog;
 import org.subshare.gui.pgp.createkey.FxPgpUserId;
 import org.subshare.gui.pgp.createkey.TimeUnit;
+import org.subshare.gui.pgp.creatingkey.CreatingPgpKeyDialog;
 import org.subshare.gui.user.pgpkeytree.PgpKeyPgpKeyTreeItem;
 import org.subshare.gui.user.pgpkeytree.PgpKeyTreeItem;
 import org.subshare.gui.user.pgpkeytree.RootPgpKeyTreeItem;
@@ -262,13 +265,32 @@ public class UserPane extends GridPane {
 		if (createPgpKeyParam == null)
 			return;
 
-		final Pgp pgp = getPgp();
-		final PgpKey pgpKey = pgp.createPgpKey(createPgpKeyParam);
-		user.getPgpKeyIds().add(pgpKey.getPgpKeyId());
-		UserRegistryLs.getUserRegistry().writeIfNeeded();
+		final PgpPrivateKeyPassphraseStore pgpPrivateKeyPassphraseStore = PgpPrivateKeyPassphraseManagerLs.getPgpPrivateKeyPassphraseStore();
 
-		final PgpKeyPgpKeyTreeItem child = new PgpKeyPgpKeyTreeItem(pgpKey);
-		pgpKeyTreeTableView.getRoot().getChildren().add(child);
+		final CreatingPgpKeyDialog dialog2 = new CreatingPgpKeyDialog(owner, createPgpKeyParam);
+		final Thread createPgpKeyThread = new Thread("createPgpKeyThread") {
+			@Override
+			public void run() {
+				final Pgp pgp = getPgp();
+				final PgpKey pgpKey = pgp.createPgpKey(createPgpKeyParam);
+				user.getPgpKeyIds().add(pgpKey.getPgpKeyId());
+				UserRegistryLs.getUserRegistry().writeIfNeeded();
+
+				Platform.runLater(new Runnable() {
+					@Override
+					public void run() {
+						dialog2.close();
+
+						final PgpKeyPgpKeyTreeItem child = new PgpKeyPgpKeyTreeItem(pgpKey);
+						pgpKeyTreeTableView.getRoot().getChildren().add(child);
+
+						pgpPrivateKeyPassphraseStore.putPassphrase(pgpKey.getPgpKeyId(), createPgpKeyParam.getPassphrase());
+					}
+				});
+			}
+		};
+		dialog2.show();
+		createPgpKeyThread.start();
 	}
 
 	private CreatePgpKeyParam createCreatePgpKeyParam() {

@@ -68,18 +68,21 @@ public class PgpPrivateKeyPassphraseStoreImpl implements PgpPrivateKeyPassphrase
 		assertNotNull("pgpKeyId", pgpKeyId);
 		assertNotNull("passphrase", passphrase);
 
-		testPassphrase(pgpKeyId, passphrase);
+		assertPassphraseValid(pgpKeyId, passphrase);
 
 		synchronized (this) {
 			pgpKeyId2Passphrase.put(pgpKeyId, passphrase);
 		}
 	}
 
-	private void testPassphrase(final PgpKeyId pgpKeyId, final char[] passphrase) throws SecurityException {
+	private void assertPassphraseValid(final PgpKeyId pgpKeyId, final char[] passphrase) throws SecurityException {
+		assertNotNull("pgpKeyId", pgpKeyId);
+		assertNotNull("passphrase", passphrase); // empty for no passphrase! never null!
 		final Pgp pgp = PgpRegistry.getInstance().getPgpOrFail();
 		final PgpKey pgpKey = pgp.getPgpKey(pgpKeyId);
 		assertNotNull("pgp.getPgpKey(" + pgpKeyId + ")", pgpKey);
-		pgp.testPassphrase(pgpKey, passphrase);
+		if (! pgp.testPassphrase(pgpKey, passphrase))
+			throw new SecurityException("Wrong passphrase!");
 	}
 
 	@Override

@@ -6,6 +6,7 @@ import static org.subshare.gui.util.FxmlUtil.*;
 
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.UnaryOperator;
@@ -20,6 +21,7 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.Spinner;
@@ -54,6 +56,9 @@ public abstract class CreatePgpKeyPane extends GridPane {
 	private final JavaBeanObjectProperty<char[]> passwordProperty;
 
 	@FXML
+	private CheckBox noPasswordCheckBox;
+
+	@FXML
 	private PasswordField passwordField2;
 
 	@FXML
@@ -74,6 +79,7 @@ public abstract class CreatePgpKeyPane extends GridPane {
 
 	private boolean ignoreUpdateValidity;
 
+	private final InvalidationListener updateDisabledInvalidationListener = (InvalidationListener) observable -> updateDisabled();
 
 	private final PropertyChangeListener pgpUserIdsPropertyChangeListener = event -> {
 		Platform.runLater(() -> updateEmailsTableViewItems() );
@@ -95,7 +101,7 @@ public abstract class CreatePgpKeyPane extends GridPane {
 			pgpUserId.addPropertyChangeListener(pgpUserIdsPropertyChangeListener);
 
 		emailsTableView.setItems(FXCollections.observableList(cast(createPgpKeyParam.getUserIds())));
-		emailsTableView.getItems().addListener((InvalidationListener) observable -> updateDisabled());
+		emailsTableView.getItems().addListener(updateDisabledInvalidationListener);
 		nameTableColumn.setCellFactory(cast(TextFieldTableCell.forTableColumn()));
 		emailTableColumn.setCellFactory(cast(TextFieldTableCell.forTableColumn()));
 		updateEmailsTableViewItems();
@@ -103,6 +109,12 @@ public abstract class CreatePgpKeyPane extends GridPane {
 		passwordProperty = createPasswordProperty();
 		Bindings.bindBidirectional(
 				passwordField.textProperty(), passwordProperty, new CharArrayStringConverter());
+		passwordProperty.addListener(updateDisabledInvalidationListener);
+		passwordField2.textProperty().addListener(updateDisabledInvalidationListener);
+
+		noPasswordCheckBox.selectedProperty().addListener(updateDisabledInvalidationListener);
+		passwordField.disableProperty().bind(noPasswordCheckBox.selectedProperty());
+		passwordField2.disableProperty().bind(noPasswordCheckBox.selectedProperty());
 
 		validityNumberSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, Integer.MAX_VALUE));
 		validityNumberSpinner.valueProperty().addListener((InvalidationListener) observable -> {
@@ -154,8 +166,18 @@ public abstract class CreatePgpKeyPane extends GridPane {
 					++nonEmptyPgpUserIdCount;
 			}
 
-			if (nonEmptyPgpUserIdCount == 0)
-				disable = true;
+			disable |= nonEmptyPgpUserIdCount == 0;
+		}
+
+		if (! disable) {
+			if (! noPasswordCheckBox.isSelected()) {
+				final char[] p1 = createPgpKeyParam.getPassphrase();
+				final char[] p2 = passwordField2.getText().toCharArray();
+				disable |= ! Arrays.equals(p1, p2);
+
+				if (! disable && p1.length == 0)
+					disable = true;
+			}
 		}
 		okButton.setDisable(disable);
 	}
@@ -286,21 +308,6 @@ public abstract class CreatePgpKeyPane extends GridPane {
 		strengthComboBox.setValue(createPgpKeyParam.getStrength());
 	}
 
-//	private JavaBeanObjectProperty<Integer> createValiditySecondsProperty() {
-//		try {
-////			return JavaBeanIntegerPropertyBuilder.create()
-////					.bean(createPgpKeyParam)
-////					.name(CreatePgpKeyParam.PropertyEnum.validitySeconds.name())
-////					.build();
-//			return JavaBeanObjectPropertyBuilder.create()
-//					.bean(createPgpKeyParam)
-//					.name(CreatePgpKeyParam.PropertyEnum.validitySeconds.name())
-//					.build();
-//		} catch (NoSuchMethodException e) {
-//			throw new RuntimeException(e);
-//		}
-//	}
-
 	@SuppressWarnings("unchecked")
 	private JavaBeanObjectProperty<CreatePgpKeyParam.Algorithm> createAlgorithmProperty() {
 		try {
@@ -311,6 +318,12 @@ public abstract class CreatePgpKeyPane extends GridPane {
 		} catch (NoSuchMethodException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	@Override
+	public void requestFocus() {
+		super.requestFocus();
+		passwordField.requestFocus();
 	}
 
 	@FXML
