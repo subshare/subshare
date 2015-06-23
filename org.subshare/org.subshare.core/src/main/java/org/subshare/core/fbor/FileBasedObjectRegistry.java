@@ -14,6 +14,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Properties;
 import java.util.SortedMap;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.TreeMap;
 import java.util.zip.CRC32;
 import java.util.zip.ZipEntry;
@@ -28,6 +30,8 @@ import co.codewizards.cloudstore.core.oio.File;
 
 public abstract class FileBasedObjectRegistry {
 
+	private static final long DEFERRED_WRITE_DELAY_MS = 500;
+
 	protected FileBasedObjectRegistry() {
 	}
 
@@ -36,6 +40,10 @@ public abstract class FileBasedObjectRegistry {
 
 	protected abstract File getFile();
 	protected abstract String getContentType();
+
+	private final Timer deferredWriteTimer = new Timer(getClass().getSimpleName() + ".deferredWriteTimer", false); // must *not* be a daemon!
+	private TimerTask deferredWriteTimerTask;
+	private int ignoreDeferredWriteCounter = 0;
 
 	protected int getContentTypeVersion() {
 		return 1;
@@ -55,18 +63,23 @@ public abstract class FileBasedObjectRegistry {
 		zin.close();
 	}
 
-	protected void read() {
-		try (final LockFile lockFile = acquireLockFile();) {
-			try (final InputStream in = lockFile.createInputStream();) {
-				read(in);
+	protected synchronized void read() {
+		enableIgnoreDeferredWrite();
+		try {
+			try (final LockFile lockFile = acquireLockFile();) {
+				try (final InputStream in = lockFile.createInputStream();) {
+					read(in);
+				}
+			} catch (IOException x) {
+				throw new RuntimeException(x);
 			}
-		} catch (IOException x) {
-			throw new RuntimeException(x);
+			markClean();
+		} finally {
+			disableIgnoreDeferredWrite();
 		}
-		markClean();
 	}
 
-	protected void write() {
+	protected synchronized void write() {
 		try (LockFile lockFile = acquireLockFile();) {
 			try (final OutputStream out = lockFile.createOutputStream();) {
 				write(out);
@@ -75,6 +88,41 @@ public abstract class FileBasedObjectRegistry {
 			throw new RuntimeException(x);
 		}
 		markClean();
+	}
+
+
+	protected long getDeferredWriteDelayMs() {
+		return DEFERRED_WRITE_DELAY_MS;
+	}
+
+	protected synchronized void enableIgnoreDeferredWrite() {
+		++ignoreDeferredWriteCounter;
+	}
+
+	protected synchronized void disableIgnoreDeferredWrite() {
+		if (--ignoreDeferredWriteCounter < 0)
+			throw new IllegalStateException("ignoreDeferredWriteCounter < 0");
+	}
+
+	protected synchronized void deferredWrite() {
+		if (ignoreDeferredWriteCounter > 0)
+			return;
+
+		if (deferredWriteTimerTask != null) {
+			deferredWriteTimerTask.cancel();
+			deferredWriteTimerTask = null;
+		}
+
+		deferredWriteTimerTask = new TimerTask() {
+			@Override
+			public void run() {
+				synchronized (FileBasedObjectRegistry.this) {
+					deferredWriteTimerTask = null;
+				}
+				write();
+			}
+		};
+		deferredWriteTimer.schedule(deferredWriteTimerTask, getDeferredWriteDelayMs());
 	}
 
 	protected Properties readManifest(final ZipInputStream zin) throws IOException {

@@ -66,7 +66,6 @@ public class ServerRegistryImpl extends FileBasedObjectRegistry implements Serve
 		}
 	};
 	private final File serverRegistryFile;
-	private boolean dirty;
 	private Uid version;
 
 	private static final class Holder {
@@ -280,7 +279,7 @@ public class ServerRegistryImpl extends FileBasedObjectRegistry implements Serve
 
 	@Override
 	public synchronized void writeIfNeeded() {
-		if (dirty)
+		if (isDirty())
 			write();
 	}
 
@@ -408,8 +407,9 @@ public class ServerRegistryImpl extends FileBasedObjectRegistry implements Serve
 
 	@Override
 	protected void markDirty() {
-		dirty = true;
+		super.markDirty();
 		version = new Uid();
+		deferredWrite();
 	}
 
 	public Uid getVersion() {

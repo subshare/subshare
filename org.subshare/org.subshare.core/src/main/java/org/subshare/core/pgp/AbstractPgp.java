@@ -1,9 +1,15 @@
 package org.subshare.core.pgp;
 
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Set;
+
+import co.codewizards.cloudstore.core.oio.File;
 
 public abstract class AbstractPgp implements Pgp {
 
@@ -48,5 +54,40 @@ public abstract class AbstractPgp implements Pgp {
 
 	protected void firePropertyChange(Property property, Object oldValue, Object newValue) {
 		propertyChangeSupport.firePropertyChange(property.name(), oldValue, newValue);
+	}
+
+	@Override
+	public void exportPublicKeysWithPrivateKeys(final Set<PgpKey> pgpKeys, final File file) {
+		assertNotNull("pgpKeys", pgpKeys);
+		try {
+			try (OutputStream out = assertNotNull("file", file).createOutputStream();) {
+				exportPublicKeysWithPrivateKeys(pgpKeys, out);
+			}
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@Override
+	public void exportPublicKeys(final Set<PgpKey> pgpKeys, final File file) {
+		assertNotNull("pgpKeys", pgpKeys);
+		try {
+			try (OutputStream out = assertNotNull("file", file).createOutputStream();) {
+				exportPublicKeys(pgpKeys, out);
+			}
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@Override
+	public ImportKeysResult importKeys(final File file) {
+		try {
+			try (InputStream in = assertNotNull("file", file).createInputStream();) {
+				return importKeys(in);
+			}
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 }

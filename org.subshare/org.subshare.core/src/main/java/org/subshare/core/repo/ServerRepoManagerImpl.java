@@ -15,7 +15,10 @@ import org.subshare.core.pgp.PgpRegistry;
 import org.subshare.core.repo.transport.CryptreeRestRepoTransport;
 import org.subshare.core.server.Server;
 import org.subshare.core.user.User;
+import org.subshare.core.user.UserRegistry;
 import org.subshare.core.user.UserRegistryImpl;
+import org.subshare.core.user.UserRepoInvitationManager;
+import org.subshare.core.user.UserRepoInvitationToken;
 
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoHelper;
@@ -78,6 +81,21 @@ public class ServerRepoManagerImpl implements ServerRepoManager {
 		final File localRoot = localRootAndRepositoryId.getKey();
 
 		connectLocalRepositoryWithServerRepository(localRoot, server, serverRepo.getRepositoryId());
+	}
+
+	@Override
+	public ServerRepo checkOutRepository(final File localDirectory, final UserRepoInvitationToken userRepoInvitationToken) {
+		final UserRegistry userRegistry = UserRegistryImpl.getInstance();
+
+		final Pair<File, UUID> localRootAndRepositoryId = createLocalRepository(localDirectory);
+		final File localRoot = localRootAndRepositoryId.getKey();
+//		final UUID clientRepositoryId = localRootAndRepositoryId.getValue();
+
+		try (final LocalRepoManager localRepoManager = LocalRepoManagerFactory.Helper.getInstance().createLocalRepoManagerForExistingRepository(localRoot);) {
+			final UserRepoInvitationManager userRepoInvitationManager = UserRepoInvitationManager.Helper.getInstance(userRegistry, localRepoManager);
+			final ServerRepo serverRepo = userRepoInvitationManager.importUserRepoInvitationToken(userRepoInvitationToken);
+			return serverRepo;
+		}
 	}
 
 	private Pair<File, UUID> createLocalRepository(final File localDirectory) {

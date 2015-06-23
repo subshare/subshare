@@ -15,11 +15,13 @@ import java.util.concurrent.ExecutionException;
 import javafx.application.Platform;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
+import javafx.scene.Parent;
 import javafx.scene.control.TreeItem;
 
 import org.subshare.core.repo.LocalRepo;
 import org.subshare.core.repo.LocalRepoRegistry;
 import org.subshare.gui.concurrent.SsTask;
+import org.subshare.gui.localrepolist.LocalRepoListPane;
 import org.subshare.gui.ls.LocalRepoRegistryLs;
 
 public class LocalRepoListMainTreeItem extends MainTreeItem<String> {
@@ -113,8 +115,8 @@ public class LocalRepoListMainTreeItem extends MainTreeItem<String> {
 		super.finalize();
 	}
 
-//	@Override
-//	protected Parent createMainDetailContent() {
-//		return new LocalRepoListPane();
-//	}
+	@Override
+	protected Parent createMainDetailContent() {
+		return new LocalRepoListPane();
+	}
 }

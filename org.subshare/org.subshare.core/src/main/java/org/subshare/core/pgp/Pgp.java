@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.Set;
 
 import co.codewizards.cloudstore.core.bean.PropertyBase;
+import co.codewizards.cloudstore.core.oio.File;
 
 public interface Pgp {
 
@@ -44,11 +45,17 @@ public interface Pgp {
 
 	PgpKeyTrustLevel getKeyTrustLevel(PgpKey pgpKey);
 
+	void exportPublicKeys(Set<PgpKey> pgpKeys, File file);
+
+	void exportPublicKeysWithPrivateKeys(Set<PgpKey> pgpKeys, File file);
+
 	void exportPublicKeys(Set<PgpKey> pgpKeys, OutputStream out);
 
 	void exportPublicKeysWithPrivateKeys(Set<PgpKey> pgpKeys, OutputStream out);
 
-	void importKeys(InputStream in);
+	ImportKeysResult importKeys(InputStream in);
+
+	ImportKeysResult importKeys(File file);
 
 	/**
 	 * Gets the <i>global</i> local-revision.

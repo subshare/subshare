@@ -23,6 +23,8 @@ public interface ServerRepoRegistry {
 
 	ServerRepo createServerRepo(UUID repositoryId);
 
+	ServerRepo getServerRepo(UUID repositoryId);
+
 	void writeIfNeeded();
 
 	void addPropertyChangeListener(PropertyChangeListener listener);

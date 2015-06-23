@@ -56,7 +56,6 @@ public class UserRegistryImpl extends FileBasedObjectRegistry implements UserReg
 	private Map<Uid, User> cache_userRepoKeyId2User;
 
 	private final File userRegistryFile;
-	private boolean dirty;
 	private Uid version;
 
 	private static final class Holder {
@@ -435,13 +434,14 @@ public class UserRegistryImpl extends FileBasedObjectRegistry implements UserReg
 
 	@Override
 	protected void markDirty() {
-		dirty = true;
+		super.markDirty();
 		version = new Uid();
+		deferredWrite();
 	}
 
 	@Override
 	public synchronized void writeIfNeeded() {
-		if (dirty)
+		if (isDirty())
 			write();
 	}
 

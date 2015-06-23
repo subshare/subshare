@@ -62,6 +62,8 @@ import co.codewizards.cloudstore.core.dto.jaxb.CloudStoreJaxbContext;
 import co.codewizards.cloudstore.core.io.NoCloseInputStream;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
+import co.codewizards.cloudstore.core.repo.transport.RepoTransport;
+import co.codewizards.cloudstore.core.repo.transport.RepoTransportFactoryRegistry;
 import co.codewizards.cloudstore.local.persistence.RemoteRepository;
 import co.codewizards.cloudstore.local.persistence.RemoteRepositoryDao;
 
@@ -151,7 +153,7 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 	}
 
 	@Override
-	public void importUserRepoInvitationToken(final UserRepoInvitationToken userRepoInvitationToken) {
+	public ServerRepo importUserRepoInvitationToken(final UserRepoInvitationToken userRepoInvitationToken) {
 		assertNotNull("userRepoInvitationToken", userRepoInvitationToken);
 
 		final EncryptedDataFile edf;
@@ -175,7 +177,25 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 			throw new SignatureException("Missing signature!");
 
 		final UserRepoInvitation userRepoInvitation = fromUserRepoInvitationData(out.toByteArray());
-		importUserRepoInvitation(userRepoInvitation);
+		final ServerRepo serverRepo = importUserRepoInvitation(userRepoInvitation);
+		connectLocalRepoWithServerRepo(userRepoInvitation, serverRepo);
+		return serverRepo;
+	}
+
+	private void connectLocalRepoWithServerRepo(final UserRepoInvitation userRepoInvitation, final ServerRepo serverRepo) {
+		final URL remoteURL = userRepoInvitation.getServerUrl();
+		final UUID localRepositoryId = localRepoManager.getRepositoryId();
+		final byte[] localPublicKey = localRepoManager.getPublicKey();
+		try (
+			final RepoTransport repoTransport = RepoTransportFactoryRegistry.getInstance().getRepoTransportFactory(remoteURL).createRepoTransport(remoteURL, localRepositoryId);
+		) {
+			final UUID remoteRepositoryId = repoTransport.getRepositoryId();
+			final byte[] remotePublicKey = repoTransport.getPublicKey();
+//			remotePathPrefix = repoTransport.getPathPrefix();
+			final String localPathPrefix = ""; // TODO is this always correct?!
+			localRepoManager.putRemoteRepository(remoteRepositoryId, remoteURL, remotePublicKey, localPathPrefix);
+			repoTransport.requestRepoConnection(localPublicKey);
+		}
 	}
 
 	private byte[] toUserRepoInvitationData(final UserRepoInvitation userRepoInvitation) {
@@ -380,12 +400,12 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 		throw new IllegalArgumentException("No User found having a local UserRepoKey allowed to grant access as desired!");
 	}
 
-	protected void importUserRepoInvitation(final UserRepoInvitation userRepoInvitation) {
+	protected ServerRepo importUserRepoInvitation(final UserRepoInvitation userRepoInvitation) {
 		assertNotNull("userRepoInvitation", userRepoInvitation);
 		final PgpKey decryptPgpKey = determineDecryptPgpKey(userRepoInvitation);
 		final User user = findUserWithPgpKeyOrFail(decryptPgpKey);
 
-		registerInServerRepoRegistry(userRepoInvitation, user);
+		final ServerRepo serverRepo = registerInServerRepoRegistry(userRepoInvitation, user);
 
 //		final UUID localRepositoryId = cryptree.getTransaction().getLocalRepoManager().getRepositoryId();
 //		final URL serverUrl = userRepoInvitation.getServerUrl();
@@ -435,6 +455,7 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 		}
 
 		userRegistry.writeIfNeeded();
+		return serverRepo;
 	}
 
 	private Server registerInServerRegistry(final UserRepoInvitation userRepoInvitation) {
@@ -457,13 +478,17 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 		final UUID serverRepositoryId = userRepoInvitation.getInvitationUserRepoKey().getServerRepositoryId();
 
 		final ServerRepoRegistry serverRepoRegistry = ServerRepoRegistryImpl.getInstance();
-		final ServerRepo serverRepo = serverRepoRegistry.createServerRepo(serverRepositoryId);
-		serverRepo.setServerId(server.getServerId());
-		serverRepo.setName(serverRepositoryId.toString());
-		serverRepo.setUserId(user.getUserId());
-		serverRepoRegistry.getServerRepos().add(serverRepo);
-		serverRepoRegistry.writeIfNeeded();
-
+		// Even though it should normally never exist, yet, we check for it's existence as it might exist
+		// in rare cases when a previous import was tried and failed - and the user re-tries now.
+		ServerRepo serverRepo = serverRepoRegistry.getServerRepo(serverRepositoryId);
+		if (serverRepo == null) {
+			serverRepo = serverRepoRegistry.createServerRepo(serverRepositoryId);
+			serverRepo.setServerId(server.getServerId());
+			serverRepo.setName(serverRepositoryId.toString());
+			serverRepo.setUserId(user.getUserId());
+			serverRepoRegistry.getServerRepos().add(serverRepo);
+			serverRepoRegistry.writeIfNeeded();
+		}
 		return serverRepo;
 	}
 

@@ -1,5 +1,6 @@
 package org.subshare.gui.user;
 
+import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
@@ -33,16 +34,20 @@ import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeTableView;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.GridPane;
+import javafx.stage.FileChooser;
 import javafx.stage.Window;
 
 import org.subshare.core.pgp.CreatePgpKeyParam;
+import org.subshare.core.pgp.ImportKeysResult;
+import org.subshare.core.pgp.ImportKeysResult.ImportedMasterKey;
 import org.subshare.core.pgp.Pgp;
 import org.subshare.core.pgp.PgpKey;
+import org.subshare.core.pgp.PgpKeyId;
+import org.subshare.core.pgp.PgpUserId;
 import org.subshare.core.pgp.man.PgpPrivateKeyPassphraseStore;
 import org.subshare.core.user.User;
 import org.subshare.gui.ls.PgpLs;
 import org.subshare.gui.ls.PgpPrivateKeyPassphraseManagerLs;
-import org.subshare.gui.ls.UserRegistryLs;
 import org.subshare.gui.pgp.createkey.CreatePgpKeyDialog;
 import org.subshare.gui.pgp.createkey.FxPgpUserId;
 import org.subshare.gui.pgp.createkey.TimeUnit;
@@ -50,6 +55,8 @@ import org.subshare.gui.pgp.creatingkey.CreatingPgpKeyDialog;
 import org.subshare.gui.user.pgpkeytree.PgpKeyPgpKeyTreeItem;
 import org.subshare.gui.user.pgpkeytree.PgpKeyTreeItem;
 import org.subshare.gui.user.pgpkeytree.RootPgpKeyTreeItem;
+
+import co.codewizards.cloudstore.core.oio.File;
 
 public class UserPane extends GridPane {
 
@@ -274,7 +281,6 @@ public class UserPane extends GridPane {
 				final Pgp pgp = getPgp();
 				final PgpKey pgpKey = pgp.createPgpKey(createPgpKeyParam);
 				user.getPgpKeyIds().add(pgpKey.getPgpKeyId());
-				UserRegistryLs.getUserRegistry().writeIfNeeded();
 
 				Platform.runLater(new Runnable() {
 					@Override
@@ -332,12 +338,68 @@ public class UserPane extends GridPane {
 
 	@FXML
 	private void importPgpKeyButtonClicked(final ActionEvent event) {
+		final File file = showOpenFileDialog("Choose file containing PGP key(s) to import");
+		if (file == null)
+			return;
 
+		final Pgp pgp = getPgp();
+		final ImportKeysResult importKeysResult = pgp.importKeys(file);
+		for (ImportedMasterKey importedMasterKey : importKeysResult.getPgpKeyId2ImportedMasterKey().values()) {
+			final PgpKeyId pgpKeyId = importedMasterKey.getPgpKeyId();
+			final PgpKey pgpKey = pgp.getPgpKey(pgpKeyId);
+			assertNotNull("pgp.getPgpKey(" + pgpKeyId + ")", pgpKey);
+
+			for (final String userId : pgpKey.getUserIds()) {
+				final PgpUserId pgpUserId = new PgpUserId(userId);
+				final String email = pgpUserId.getEmail();
+				if (! isEmpty(email) && ! user.getEmails().contains(email))
+					user.getEmails().add(email);
+			}
+
+			if (! user.getPgpKeyIds().contains(pgpKeyId)) {
+				user.getPgpKeyIds().add(pgpKeyId);
+				final PgpKeyPgpKeyTreeItem child = new PgpKeyPgpKeyTreeItem(pgpKey);
+				pgpKeyTreeTableView.getRoot().getChildren().add(child);
+			}
+		}
 	}
 
 	@FXML
 	private void exportPgpKeyButtonClicked(final ActionEvent event) {
+		final File file = showSaveFileDialog("Choose file to export PGP key(s) into");
+		if (file == null)
+			return;
 
+		final Set<PgpKey> selectedPgpKeys = getSelectedPgpKeys();
+
+		final boolean[] selectionContainsKeyWithPrivateKey = new boolean[] { false };
+		selectedPgpKeys.forEach(pgpKey -> {
+			selectionContainsKeyWithPrivateKey[0] |= pgpKey.isPrivateKeyAvailable();
+		});
+
+		boolean exportPublicKeysWithPrivateKeys = false;
+		if (selectionContainsKeyWithPrivateKey[0]) {
+			// TODO ask whether to include private keys!
+		}
+
+		if (exportPublicKeysWithPrivateKeys)
+			getPgp().exportPublicKeysWithPrivateKeys(selectedPgpKeys, file);
+		else
+			getPgp().exportPublicKeys(selectedPgpKeys, file);
+	}
+
+	private File showSaveFileDialog(final String title) {
+		final FileChooser fileChooser = new FileChooser();
+		fileChooser.setTitle(title);
+		final java.io.File file = fileChooser.showSaveDialog(getScene().getWindow());
+		return file == null ? null : createFile(file).getAbsoluteFile();
+	}
+
+	private File showOpenFileDialog(final String title) {
+		final FileChooser fileChooser = new FileChooser();
+		fileChooser.setTitle(title);
+		final java.io.File file = fileChooser.showOpenDialog(getScene().getWindow());
+		return file == null ? null : createFile(file).getAbsoluteFile();
 	}
 
 	@FXML

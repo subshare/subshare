@@ -2,6 +2,7 @@ package org.subshare.core.repo;
 
 import org.subshare.core.server.Server;
 import org.subshare.core.user.User;
+import org.subshare.core.user.UserRepoInvitationToken;
 
 import co.codewizards.cloudstore.core.oio.File;
 
@@ -34,4 +35,6 @@ public interface ServerRepoManager {
 	 * @param localDirectory the local directory into which the server-repository will be checked out.
 	 */
 	void checkOutRepository(Server server, ServerRepo serverRepo, File localDirectory);
+
+	ServerRepo checkOutRepository(File localDirectory, UserRepoInvitationToken userRepoInvitationToken);
 }

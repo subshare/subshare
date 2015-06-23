@@ -60,14 +60,12 @@ public class ServerRepoRegistryImpl extends FileBasedObjectRegistry implements S
 	private final PropertyChangeListener serverRepoPropertyChangeListener = new PropertyChangeListener() {
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
-			dirty = true;
-			repositoryId2ServerRepo = null;
+			markDirty();
 			final ServerRepo serverRepo = (ServerRepo) evt.getSource();
 			firePropertyChange(PropertyEnum.serverRepos_serverRepo, null, serverRepo);
 		}
 	};
 	private final File serverRepoRegistryFile;
-	private boolean dirty;
 	private Uid version;
 
 	private static final class Holder {
@@ -129,8 +127,7 @@ public class ServerRepoRegistryImpl extends FileBasedObjectRegistry implements S
 	private class PostModificationListener implements StandardPostModificationListener {
 		@Override
 		public void modificationOccurred(StandardPostModificationEvent event) {
-			dirty = true;
-			repositoryId2ServerRepo = null;
+			markDirty();
 			firePropertyChange(PropertyEnum.serverRepos, null, getServerRepos());
 		}
 	};
@@ -142,6 +139,13 @@ public class ServerRepoRegistryImpl extends FileBasedObjectRegistry implements S
 		serverRepoRegistryFile = createFile(ConfigDir.getInstance().getFile(), SERVER_REPO_REGISTRY_FILE_NAME);
 
 		read();
+	}
+
+	@Override
+	protected void markDirty() {
+		super.markDirty();
+		repositoryId2ServerRepo = null;
+		deferredWrite();
 	}
 
 	@Override
@@ -213,6 +217,16 @@ public class ServerRepoRegistryImpl extends FileBasedObjectRegistry implements S
 		return new ServerRepoImpl(repositoryId);
 	}
 
+	@Override
+	public ServerRepo getServerRepo(final UUID repositoryId) {
+		assertNotNull("repositoryId", repositoryId);
+		for (ServerRepo serverRepo : getServerRepos()) {
+			if (repositoryId.equals(serverRepo.getRepositoryId()))
+				return serverRepo;
+		}
+		return null;
+	}
+
 	public static ServerRepoRegistry getInstance() {
 		return Holder.instance;
 	}
@@ -224,7 +238,7 @@ public class ServerRepoRegistryImpl extends FileBasedObjectRegistry implements S
 
 	@Override
 	public synchronized void writeIfNeeded() {
-		if (dirty)
+		if (isDirty())
 			write();
 	}
 

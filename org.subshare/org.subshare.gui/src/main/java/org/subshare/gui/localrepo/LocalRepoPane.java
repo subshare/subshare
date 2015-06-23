@@ -142,6 +142,11 @@ public class LocalRepoPane extends GridPane {
 				}
 			}
 		}
+
+		// We *must* sync immediately to make sure that our invitation-user-repo-keys are known to the server!
+		// Otherwise the invited users cannot connect the repositories (their signature wouldn't be known).
+		final RepoSyncDaemon repoSyncDaemon = RepoSyncDaemonLs.getRepoSyncDaemon();
+		repoSyncDaemon.startSync(localRoot);
 	}
 
 	private static String getFileName(final User invitee) {
