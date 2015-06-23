@@ -49,8 +49,9 @@ public class LocalServerClientIT extends AbstractIT {
 			}
 
 			@Mock
-			void testPassphrase(PgpKey pgpKey, char[] passphrase) throws IllegalArgumentException, SecurityException {
+			boolean testPassphrase(PgpKey pgpKey, char[] passphrase) throws IllegalArgumentException {
 				// nothing ;-)
+				return true;
 			}
 		};
 	}
