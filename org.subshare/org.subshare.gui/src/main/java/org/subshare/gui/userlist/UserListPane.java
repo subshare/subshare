@@ -1,15 +1,21 @@
 package org.subshare.gui.userlist;
 
+import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static org.subshare.gui.util.FxmlUtil.*;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -30,12 +36,23 @@ import javafx.scene.control.TextField;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
+import javafx.stage.FileChooser;
 
+import org.subshare.core.pgp.ImportKeysResult;
+import org.subshare.core.pgp.ImportKeysResult.ImportedMasterKey;
+import org.subshare.core.pgp.Pgp;
+import org.subshare.core.pgp.PgpKey;
+import org.subshare.core.pgp.PgpKeyId;
+import org.subshare.core.user.ImportUsersFromPgpKeysResult;
+import org.subshare.core.user.ImportUsersFromPgpKeysResult.ImportedUser;
 import org.subshare.core.user.User;
 import org.subshare.core.user.UserRegistry;
 import org.subshare.gui.concurrent.SsTask;
+import org.subshare.gui.ls.PgpLs;
 import org.subshare.gui.ls.UserRegistryLs;
 import org.subshare.gui.user.EditUserManager;
+
+import co.codewizards.cloudstore.core.oio.File;
 
 public class UserListPane extends BorderPane {
 
@@ -59,6 +76,8 @@ public class UserListPane extends BorderPane {
 	private final Timer applyFilterLaterTimer = new Timer(true);
 	private TimerTask applyFilterLaterTimerTask;
 
+	private UserRegistry userRegistry;
+
 	private final ListChangeListener<UserListItem> selectionListener = new ListChangeListener<UserListItem>() {
 		@Override
 		public void onChanged(final ListChangeListener.Change<? extends UserListItem> c) {
@@ -73,6 +92,20 @@ public class UserListPane extends BorderPane {
 	            if (event.getClickCount() >= 2)
 	                editSelectedUsers();
 	        }
+		}
+	};
+
+	private final PropertyChangeListener usersPropertyChangeListener = new PropertyChangeListener() {
+		@Override
+		public void propertyChange(PropertyChangeEvent evt) {
+			@SuppressWarnings("unchecked")
+			final Set<User> users = new LinkedHashSet<User>((List<User>) evt.getNewValue());
+			Platform.runLater(new Runnable() {
+				@Override
+				public void run() {
+					addOrRemoveItemTablesViewCallback(users);
+				}
+			});
 		}
 	};
 
@@ -104,7 +137,7 @@ public class UserListPane extends BorderPane {
 				return new SsTask<Collection<User>>() {
 					@Override
 					protected Collection<User> call() throws Exception {
-						return UserRegistryLs.getUserRegistry().getUsers();
+						return getUserRegistry().getUsers();
 					}
 
 					@Override
@@ -131,10 +164,36 @@ public class UserListPane extends BorderPane {
 		return result;
 	}
 
+	private void addOrRemoveItemTablesViewCallback(final Set<User> users) {
+		assertNotNull("users", users);
+		final Map<User, UserListItem> viewUser2UserListItem = new HashMap<>();
+		for (final UserListItem uli : tableView.getItems())
+			viewUser2UserListItem.put(uli.getUser(), uli);
+
+		for (final User user : users) {
+			if (! viewUser2UserListItem.containsKey(user)) {
+				final UserListItem uli = new UserListItem(user);
+				viewUser2UserListItem.put(user, uli);
+				tableView.getItems().add(uli);
+			}
+		}
+
+		if (users.size() < viewUser2UserListItem.size()) {
+			for (final User user : users)
+				viewUser2UserListItem.remove(user);
+
+			for (final UserListItem uli : viewUser2UserListItem.values())
+				tableView.getItems().remove(uli);
+		}
+
+//		tableView.requestLayout();
+	}
+
 	@FXML
 	private void addButtonClicked(final ActionEvent event) {
-		final UserRegistry userRegistry = UserRegistryLs.getUserRegistry();
+		final UserRegistry userRegistry = getUserRegistry();
 		final User user = userRegistry.createUser();
+		user.setFirstName(String.format("New user %s", Long.toString(System.currentTimeMillis(), 36)));
 		userRegistry.addUser(user);
 		final List<UserListItem> userListItems = addTableItemsViewCallback(Collections.singleton(user));
 		tableView.getSelectionModel().clearSelection();
@@ -219,5 +278,60 @@ public class UserListPane extends BorderPane {
 			tableItemIterator.next();
 			tableItemIterator.remove();
 		}
+	}
+
+	@FXML
+	private void importPgpKeyButtonClicked(final ActionEvent event) {
+		final File file = showOpenFileDialog("Choose file containing PGP key(s) to import");
+		if (file == null)
+			return;
+
+		final Pgp pgp = getPgp();
+		final ImportKeysResult importKeysResult = pgp.importKeys(file);
+		final Map<PgpKeyId, PgpKey> pgpKeyId2PgpKey = new HashMap<>();
+
+		for (ImportedMasterKey importedMasterKey : importKeysResult.getPgpKeyId2ImportedMasterKey().values()) {
+			final PgpKeyId pgpKeyId = importedMasterKey.getPgpKeyId();
+			final PgpKey pgpKey = pgp.getPgpKey(pgpKeyId);
+			assertNotNull("pgp.getPgpKey(" + pgpKeyId + ")", pgpKey);
+			pgpKeyId2PgpKey.put(pgpKeyId, pgpKey);
+		}
+
+		final ImportUsersFromPgpKeysResult importUsersFromPgpKeysResult = getUserRegistry().importUsersFromPgpKeys(pgpKeyId2PgpKey.values());
+
+		final List<User> users = new ArrayList<User>();
+		for (List<ImportedUser> importedUsers : importUsersFromPgpKeysResult.getPgpKeyId2ImportedUsers().values()) {
+			for (ImportedUser importedUser : importedUsers)
+				users.add(importedUser.getUser());
+		}
+		editUserManager.edit(users);
+	}
+
+	private File showOpenFileDialog(final String title) {
+		final FileChooser fileChooser = new FileChooser();
+		fileChooser.setTitle(title);
+		final java.io.File file = fileChooser.showOpenDialog(getScene().getWindow());
+		return file == null ? null : createFile(file).getAbsoluteFile();
+	}
+
+	protected synchronized UserRegistry getUserRegistry() {
+		if (userRegistry == null) {
+			userRegistry = UserRegistryLs.getUserRegistry();
+			userRegistry.addPropertyChangeListener(UserRegistry.PropertyEnum.users, usersPropertyChangeListener);
+		}
+		return userRegistry;
+	}
+
+	@Override
+	protected void finalize() throws Throwable {
+		final UserRegistry userRegistry = this.userRegistry;
+		if (userRegistry != null) {
+			userRegistry.removePropertyChangeListener(UserRegistry.PropertyEnum.users, usersPropertyChangeListener);
+		}
+		super.finalize();
+	}
+
+	protected Pgp getPgp() {
+		return PgpLs.getPgpOrFail();
 	}
 }

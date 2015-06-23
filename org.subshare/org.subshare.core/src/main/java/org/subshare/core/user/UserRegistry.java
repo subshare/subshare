@@ -2,15 +2,26 @@ package org.subshare.core.user;
 
 import static org.subshare.core.file.FileConst.*;
 
+import java.beans.PropertyChangeListener;
 import java.util.Collection;
 import java.util.Set;
 
+import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpKeyId;
 
+import co.codewizards.cloudstore.core.bean.PropertyBase;
 import co.codewizards.cloudstore.core.dto.Uid;
 
 public interface UserRegistry {
 	public static final String USER_REGISTRY_FILE_NAME = "userRegistry" + SUBSHARE_FILE_EXTENSION;
+
+	public static interface Property extends PropertyBase {
+	}
+
+	public static enum PropertyEnum implements Property {
+		users,
+		users_user
+	};
 
 	User createUser();
 
@@ -33,4 +44,14 @@ public interface UserRegistry {
 	 * automatically. However, this automatic writing may occur too late in rare situations (e.g. in automated tests).
 	 */
 	void writeIfNeeded();
+
+	ImportUsersFromPgpKeysResult importUsersFromPgpKeys(Collection<PgpKey> pgpKeys);
+
+	void addPropertyChangeListener(PropertyChangeListener listener);
+
+	void addPropertyChangeListener(Property property, PropertyChangeListener listener);
+
+	void removePropertyChangeListener(PropertyChangeListener listener);
+
+	void removePropertyChangeListener(Property property, PropertyChangeListener listener);
 }

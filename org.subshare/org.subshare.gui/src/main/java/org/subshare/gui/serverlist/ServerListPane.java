@@ -211,7 +211,7 @@ public class ServerListPane extends BorderPane {
 		}.start();
 	}
 
-	protected ServerRegistry getServerRegistry() {
+	protected synchronized ServerRegistry getServerRegistry() {
 		if (serverRegistry == null) {
 			serverRegistry = ServerRegistryLs.getServerRegistry();
 			serverRegistry.addPropertyChangeListener(ServerRegistry.PropertyEnum.servers, serversPropertyChangeListener);

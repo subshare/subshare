@@ -6,6 +6,7 @@ import static co.codewizards.cloudstore.core.util.StringUtil.*;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -33,6 +34,7 @@ import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpKeyId;
 import org.subshare.core.pgp.PgpRegistry;
 import org.subshare.core.pgp.PgpUserId;
+import org.subshare.core.user.ImportUsersFromPgpKeysResult.ImportedUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,6 +47,8 @@ public class UserRegistryImpl extends FileBasedObjectRegistry implements UserReg
 	private static final Logger logger = LoggerFactory.getLogger(UserRegistryImpl.class);
 
 	private static final String PAYLOAD_ENTRY_NAME = UserRegistryDto.class.getSimpleName() + ".xml";
+
+	private final PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
 
 	private final Map<Uid, User> userId2User = new LinkedHashMap<>();
 
@@ -129,12 +133,23 @@ public class UserRegistryImpl extends FileBasedObjectRegistry implements UserReg
 		return assertNotNull("version", version);
 	}
 
+
 	protected synchronized void readPgpUsers() {
+		Collection<PgpKey> masterKeys = PgpRegistry.getInstance().getPgpOrFail().getMasterKeys();
+		importUsersFromPgpKeys(masterKeys);
+	}
+
+	@Override
+	public synchronized ImportUsersFromPgpKeysResult importUsersFromPgpKeys(final Collection<PgpKey> pgpKeys) {
 		final List<User> newUsers = new ArrayList<>();
+		final Set<Uid> modifiedUserIds = new HashSet<>();
+
 		final Map<PgpKeyId, PgpKey> pgpKeyId2PgpKey = new HashMap<>();
 		final Map<String, List<User>> email2NewUsers = new HashMap<>();
 		final Map<PgpKeyId, List<User>> pgpKeyId2Users = createPgpKeyId2Users();
-		for (final PgpKey pgpKey : PgpRegistry.getInstance().getPgpOrFail().getMasterKeys()) {
+		for (PgpKey pgpKey : pgpKeys) {
+			pgpKey = pgpKey.getMasterKey();
+
 			pgpKeyId2PgpKey.put(pgpKey.getPgpKeyId(), pgpKey);
 
 			List<User> usersByPgpKeyId = pgpKeyId2Users.get(pgpKey.getPgpKeyId());
@@ -157,8 +172,10 @@ public class UserRegistryImpl extends FileBasedObjectRegistry implements UserReg
 						newUser = false;
 						user = usersByEmail.iterator().next();
 
-						for (final String userId : pgpKey.getUserIds())
-							populateUserFromPgpUserId(user, userId);
+						for (final String userId : pgpKey.getUserIds()) {
+							if (populateUserFromPgpUserId(user, userId) && !newUsers.contains(user))
+								modifiedUserIds.add(user.getUserId());
+						}
 					}
 				}
 
@@ -175,8 +192,10 @@ public class UserRegistryImpl extends FileBasedObjectRegistry implements UserReg
 							newUser = false;
 							user = l.get(0);
 
-							for (final String userId : pgpKey.getUserIds())
-								populateUserFromPgpUserId(user, userId);
+							for (final String userId : pgpKey.getUserIds()) {
+								if (populateUserFromPgpUserId(user, userId) && !newUsers.contains(user))
+									modifiedUserIds.add(user.getUserId());
+							}
 						}
 					}
 				}
@@ -191,6 +210,7 @@ public class UserRegistryImpl extends FileBasedObjectRegistry implements UserReg
 			usersByPgpKeyId.add(user);
 		}
 
+		final Set<Uid> newUserIds = new HashSet<Uid>();
 		for (User user : newUsers) {
 			// The order of PgpKeyIds does not say anything - the numbers are random! I only sort
 			// them for the sake of deterministic behaviour.
@@ -200,7 +220,32 @@ public class UserRegistryImpl extends FileBasedObjectRegistry implements UserReg
 			final Uid userId = new Uid(getLast16(pgpKey.getFingerprint()));
 			user.setUserId(userId);
 			addUser(user);
+			newUserIds.add(user.getUserId());
 		}
+
+		final ImportUsersFromPgpKeysResult result = new ImportUsersFromPgpKeysResult();
+		for (PgpKey pgpKey : pgpKeys) {
+			final PgpKeyId pgpKeyId = pgpKey.getPgpKeyId();
+			final List<User> users = pgpKeyId2Users.get(pgpKeyId);
+			assertNotNull("users", users);
+			for (final User user : users) {
+				final boolean _new = newUserIds.contains(user.getUserId());
+				final boolean modified = modifiedUserIds.contains(user.getUserId());
+
+				if (_new && modified)
+					throw new IllegalStateException("_new && modified :: userId=" + user.getUserId());
+
+				final ImportedUser importedUser = new ImportedUser(user, _new, modified);
+
+				List<ImportedUser> list = result.getPgpKeyId2ImportedUsers().get(pgpKeyId);
+				if (list == null) {
+					list = new ArrayList<>();
+					result.getPgpKeyId2ImportedUsers().put(pgpKeyId, list);
+				}
+				list.add(importedUser);
+			}
+		}
+		return result;
 	}
 
 	private synchronized Map<PgpKeyId, List<User>> createPgpKeyId2Users() {
@@ -228,22 +273,30 @@ public class UserRegistryImpl extends FileBasedObjectRegistry implements UserReg
 		return result;
 	}
 
-	private static void populateUserFromPgpUserId(final User user, final String pgpUserIdStr) {
+	private static boolean populateUserFromPgpUserId(final User user, final String pgpUserIdStr) {
 		assertNotNull("user", user);
+		boolean modified = false;
 		final PgpUserId pgpUserId = new PgpUserId(assertNotNull("pgpUserIdStr", pgpUserIdStr));
-		if (! isEmpty(pgpUserId.getEmail()) && ! user.getEmails().contains(pgpUserId.getEmail()))
+		if (! isEmpty(pgpUserId.getEmail()) && ! user.getEmails().contains(pgpUserId.getEmail())) {
 			user.getEmails().add(pgpUserId.getEmail());
-
-		final String fullName = pgpUserId.getName();
-		if (! isEmpty(fullName)) {
-			final String[] firstAndLastName = extractFirstAndLastNameFromFullName(fullName);
-
-			if (isEmpty(user.getFirstName()) && !firstAndLastName[0].isEmpty())
-				user.setFirstName(firstAndLastName[0]);
-
-			if (isEmpty(user.getLastName()) && !firstAndLastName[1].isEmpty())
-				user.setLastName(firstAndLastName[1]);
+			modified = true;
 		}
+
+		if (isEmpty(user.getFirstName()) && isEmpty(user.getLastName())) {
+			modified = true;
+
+			final String fullName = pgpUserId.getName();
+			if (! isEmpty(fullName)) {
+				final String[] firstAndLastName = extractFirstAndLastNameFromFullName(fullName);
+
+				if (isEmpty(user.getFirstName()) && !firstAndLastName[0].isEmpty())
+					user.setFirstName(firstAndLastName[0]);
+
+				if (isEmpty(user.getLastName()) && !firstAndLastName[1].isEmpty())
+					user.setLastName(firstAndLastName[1]);
+			}
+		}
+		return modified;
 	}
 
 	private static String[] extractFirstAndLastNameFromFullName(String fullName) {
@@ -327,6 +380,8 @@ public class UserRegistryImpl extends FileBasedObjectRegistry implements UserReg
 
 		cleanCache();
 		markDirty();
+
+		firePropertyChange(PropertyEnum.users, null, getUsers()); // TODO refactor to use an ObservableList instead?! all analogue to ServerRegistry?!
 	}
 
 	@Override
@@ -346,6 +401,8 @@ public class UserRegistryImpl extends FileBasedObjectRegistry implements UserReg
 
 		cleanCache();
 		markDirty();
+
+		firePropertyChange(PropertyEnum.users, null, getUsers()); // TODO refactor to use an ObservableList instead?! all analogue to ServerRegistry?!
 	}
 
 	@Override
@@ -429,6 +486,8 @@ public class UserRegistryImpl extends FileBasedObjectRegistry implements UserReg
 
 			markDirty();
 			cleanCache();
+
+			firePropertyChange(PropertyEnum.users_user, null, user);
 		}
 	};
 
@@ -541,5 +600,29 @@ public class UserRegistryImpl extends FileBasedObjectRegistry implements UserReg
 		userRegistryDto.getDeletedUserIds().addAll(deletedUserIds);
 		userRegistryDto.setVersion(version);
 		return userRegistryDto;
+	}
+
+	@Override
+	public void addPropertyChangeListener(PropertyChangeListener listener) {
+		propertyChangeSupport.addPropertyChangeListener(listener);
+	}
+
+	@Override
+	public void addPropertyChangeListener(Property property, PropertyChangeListener listener) {
+		propertyChangeSupport.addPropertyChangeListener(property.name(), listener);
+	}
+
+	@Override
+	public void removePropertyChangeListener(PropertyChangeListener listener) {
+		propertyChangeSupport.removePropertyChangeListener(listener);
+	}
+
+	@Override
+	public void removePropertyChangeListener(Property property, PropertyChangeListener listener) {
+		propertyChangeSupport.removePropertyChangeListener(property.name(), listener);
+	}
+
+	protected void firePropertyChange(Property property, Object oldValue, Object newValue) {
+		propertyChangeSupport.firePropertyChange(property.name(), oldValue, newValue);
 	}
 }

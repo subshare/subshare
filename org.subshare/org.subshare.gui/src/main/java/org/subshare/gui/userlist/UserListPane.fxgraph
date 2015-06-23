@@ -27,6 +27,11 @@ dynamic component UserListPane resourcefile "messages.properties" {
 						tooltip : Tooltip { text : "Add a new user." },
 						onAction : controllermethod addButtonClicked
 					},
+					Button id importPgpKeyButton {
+						graphic : ImageView { image : Image { url : "@import-pgp-key-24x24.png" } },
+						tooltip : Tooltip { text : "Import one or more PGP keys from a file." },
+						onAction : controllermethod importPgpKeyButtonClicked
+					},
 					Button id editButton {
 						graphic : ImageView { image : Image { url : "@edit-24x24.png" } },
 						tooltip : Tooltip { text : "Edit the selected user." },
@@ -37,7 +42,6 @@ dynamic component UserListPane resourcefile "messages.properties" {
 						tooltip : Tooltip { text : "Delete the selected users." },
 						onAction : controllermethod deleteButtonClicked
 					}
-		
 				},
 
 				HBox {
