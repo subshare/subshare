@@ -30,9 +30,15 @@ import co.codewizards.cloudstore.core.oio.File;
 
 public abstract class FileBasedObjectRegistry {
 
-	private static final long DEFERRED_WRITE_DELAY_MS = 500;
+	private static final long DEFERRED_WRITE_DELAY_MS = 30_000;
 
 	protected FileBasedObjectRegistry() {
+		Runtime.getRuntime().addShutdownHook(new Thread(getClass().getSimpleName() + ".shutdownHook") {
+			@Override
+			public void run() {
+				writeIfNeeded();
+			}
+		});
 	}
 
 	private Properties manifestProperties;
@@ -90,6 +96,10 @@ public abstract class FileBasedObjectRegistry {
 		markClean();
 	}
 
+	public synchronized void writeIfNeeded() {
+		if (isDirty())
+			write();
+	}
 
 	protected long getDeferredWriteDelayMs() {
 		return DEFERRED_WRITE_DELAY_MS;

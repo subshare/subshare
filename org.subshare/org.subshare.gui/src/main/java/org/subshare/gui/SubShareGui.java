@@ -28,6 +28,7 @@ import org.subshare.gui.ls.PgpLs;
 import org.subshare.gui.ls.PgpPrivateKeyPassphraseManagerLs;
 import org.subshare.gui.pgp.privatekeypassphrase.PgpPrivateKeyPassphrasePromptDialog;
 import org.subshare.gui.splash.SplashPane;
+import org.subshare.gui.util.PlatformUtil;
 import org.subshare.ls.server.SsLocalServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,6 +42,7 @@ import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.util.DerbyUtil;
 import co.codewizards.cloudstore.core.util.IOUtil;
 import co.codewizards.cloudstore.ls.client.LocalServerClient;
+import co.codewizards.cloudstore.ls.server.LocalServer;
 
 public class SubShareGui extends Application {
 
@@ -126,12 +128,33 @@ public class SubShareGui extends Application {
 
 	@Override
 	public void stop() throws Exception {
-		LocalServerClient.getInstance().close();
-		if (localServer != null) {
-			localServer.stop();
-			localServer = null;
-		}
+		PlatformUtil.notifyExiting();
+
+		final LocalServer _localServer = localServer;
+		localServer = null;
+
 		super.stop();
+
+		new Thread() {
+			{
+				setName(SubShareGui.class.getSimpleName() + ".StopThread");
+				setDaemon(true);
+			}
+
+			@Override
+			public void run() {
+				LocalServerClient.getInstance().close();
+				if (_localServer != null)
+					_localServer.stop();
+
+				try {
+					Thread.sleep(1000L);
+				} catch (InterruptedException e) { doNothing(); }
+
+				System.exit(0);
+			}
+
+		}.start();
 	}
 
 	public static void main(final String[] args) {

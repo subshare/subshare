@@ -22,8 +22,6 @@ public interface ServerRegistry {
 
 	Server createServer();
 
-	void writeIfNeeded();
-
 	void addPropertyChangeListener(PropertyChangeListener listener);
 
 	void addPropertyChangeListener(Property property, PropertyChangeListener listener);
@@ -31,4 +29,12 @@ public interface ServerRegistry {
 	void removePropertyChangeListener(PropertyChangeListener listener);
 
 	void removePropertyChangeListener(Property property, PropertyChangeListener listener);
+
+	/**
+	 * Write the data to file immediately, if this instance is dirty.
+	 * <p>
+	 * <b>Important:</b> You normally do <i>not</i> need to invoke this method, because the data is written
+	 * automatically. However, this automatic writing may occur too late in rare situations (e.g. in automated tests).
+	 */
+	void writeIfNeeded();
 }

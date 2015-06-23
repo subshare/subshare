@@ -144,7 +144,6 @@ public class ServerListPane extends BorderPane {
 			@Override
 			public void handle(CellEditEvent<ServerListItem, String> event) {
 				event.getRowValue().setName(event.getNewValue());
-				getServerRegistry().writeIfNeeded();
 			}
 		});
 
@@ -153,7 +152,6 @@ public class ServerListPane extends BorderPane {
 			@Override
 			public void handle(CellEditEvent<ServerListItem, URL> event) {
 				event.getRowValue().setUrl(event.getNewValue());
-				getServerRegistry().writeIfNeeded();
 			}
 		});
 
@@ -315,7 +313,6 @@ public class ServerListPane extends BorderPane {
 			throw new RuntimeException();
 		}
 		getServerRegistry().getServers().add(server);
-		getServerRegistry().writeIfNeeded();
 	}
 
 	@FXML
@@ -327,6 +324,5 @@ public class ServerListPane extends BorderPane {
 
 		// TODO how to handle servers that are in use?
 		getServerRegistry().getServers().removeAll(selectedServers);
-		getServerRegistry().writeIfNeeded();
 	}
 }

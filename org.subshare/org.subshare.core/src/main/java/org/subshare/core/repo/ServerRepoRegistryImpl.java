@@ -237,12 +237,6 @@ public class ServerRepoRegistryImpl extends FileBasedObjectRegistry implements S
 	}
 
 	@Override
-	public synchronized void writeIfNeeded() {
-		if (isDirty())
-			write();
-	}
-
-	@Override
 	protected void writePayload(ZipOutputStream zout) throws IOException {
 		final ServerRepoRegistryDtoIo serverRepoRegistryDtoIo = new ServerRepoRegistryDtoIo();
 		final ServerRepoRegistryDto serverRepoRegistryDto = createServerRepoListDto();
