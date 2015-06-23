@@ -60,7 +60,7 @@ public class CreatePgpKeyParam extends AbstractBean<CreatePgpKeyParam.Property> 
 		userIds.getHandler().addPostModificationListener(new PostModificationListener());
 	}
 
-	public List<PgpUserId> getUserIds() {
+	public ObservableList<PgpUserId> getUserIds() {
 		return userIds;
 	}
 

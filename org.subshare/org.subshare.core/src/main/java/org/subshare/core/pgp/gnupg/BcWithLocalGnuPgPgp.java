@@ -16,6 +16,7 @@ import java.io.OutputStream;
 import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.security.SignatureException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -49,6 +50,7 @@ import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyRing;
 import org.bouncycastle.openpgp.PGPKeyRingGenerator;
 import org.bouncycastle.openpgp.PGPObjectFactory;
+import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
@@ -56,8 +58,11 @@ import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.PGPSignatureGenerator;
 import org.bouncycastle.openpgp.PGPSignatureSubpacketGenerator;
+import org.bouncycastle.openpgp.PGPSignatureSubpacketVector;
 import org.bouncycastle.openpgp.PGPUtil;
+import org.bouncycastle.openpgp.operator.PGPContentSignerBuilder;
 import org.bouncycastle.openpgp.operator.PGPDigestCalculator;
 import org.bouncycastle.openpgp.operator.bc.BcPBESecretKeyDecryptorBuilder;
 import org.bouncycastle.openpgp.operator.bc.BcPBESecretKeyEncryptorBuilder;
@@ -76,6 +81,7 @@ import org.subshare.core.pgp.PgpKeyId;
 import org.subshare.core.pgp.PgpKeyTrustLevel;
 import org.subshare.core.pgp.PgpSignature;
 import org.subshare.core.pgp.PgpSignatureType;
+import org.subshare.core.pgp.PgpUserId;
 import org.subshare.crypto.CryptoRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -991,12 +997,20 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 			throw new IllegalArgumentException("pgpKey has no secret key!");
 
 		try {
-			secretKey.extractPrivateKey(new BcPBESecretKeyDecryptorBuilder(new BcPGPDigestCalculatorProvider()).build(passphrase));
+//			secretKey.extractPrivateKey(new BcPBESecretKeyDecryptorBuilder(new BcPGPDigestCalculatorProvider()).build(passphrase));
+			extractPrivateKey(secretKey, passphrase);
 			return true;
 		} catch (PGPException e) {
 			logger.debug("testPassphrase: " + e, e);
 			return false;
 		}
+	}
+
+	private static PGPPrivateKey extractPrivateKey(final PGPSecretKey secretKey, final char[] passphrase) throws PGPException {
+		final PGPPrivateKey privateKey = secretKey.extractPrivateKey(
+				new BcPBESecretKeyDecryptorBuilder(new BcPGPDigestCalculatorProvider()).build(passphrase));
+
+		return privateKey;
 	}
 
 	@Override
@@ -1032,7 +1046,18 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 
 	private Pair<PGPPublicKeyRing, PGPSecretKeyRing> createPGPSecretKeyRing(final CreatePgpKeyParam createPgpKeyParam) throws PGPException, NoSuchAlgorithmException {
 		assertNotNull("createPgpKeyParam", createPgpKeyParam);
-		final String primaryUserId = createPgpKeyParam.getUserIds().get(0).toString();
+
+		final List<PgpUserId> secondaryUserIds = new ArrayList<>(createPgpKeyParam.getUserIds());
+		if (secondaryUserIds.isEmpty())
+			throw new IllegalArgumentException("createPgpKeyParam.userIds is empty!");
+
+		for (final PgpUserId pgpUserId : secondaryUserIds) {
+			if (pgpUserId.isEmpty())
+				throw new IllegalArgumentException("createPgpKeyParam.userIds contains empty element!");
+		}
+
+		final String primaryUserId = secondaryUserIds.remove(0).toString();
+
 		logger.info("createPGPSecretKeyRing: Creating PGP key: primaryUserId='{}' algorithm='{}' strength={}",
 				primaryUserId, createPgpKeyParam.getAlgorithm(), createPgpKeyParam.getStrength());
 
@@ -1046,16 +1071,11 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 		// TODO additional user-ids!
 
 		final int[] preferredHashAlgorithms = new int[] { // TODO configurable?!
-				HashAlgorithmTags.SHA512,
-				HashAlgorithmTags.SHA384,
-				HashAlgorithmTags.SHA256,
-				HashAlgorithmTags.SHA1
+				HashAlgorithmTags.SHA512, HashAlgorithmTags.SHA384, HashAlgorithmTags.SHA256, HashAlgorithmTags.SHA1
 		};
 
 		final int[] preferredSymmetricAlgorithms = new int[] { // TODO configurable?!
-				SymmetricKeyAlgorithmTags.TWOFISH,
-				SymmetricKeyAlgorithmTags.AES_256,
-				SymmetricKeyAlgorithmTags.BLOWFISH
+				SymmetricKeyAlgorithmTags.TWOFISH, SymmetricKeyAlgorithmTags.AES_256, SymmetricKeyAlgorithmTags.BLOWFISH
 		};
 
 		// null causes an exception - empty is possible, though
@@ -1105,13 +1125,15 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 		// Tried SHA512 for checksumCalculator => org.bouncycastle.openpgp.PGPException: only SHA1 supported for key checksum calculations.
 		final PGPDigestCalculator checksumCalculator = digestCalculatorProvider.get(HashAlgorithmTags.SHA1);
 
+		final PGPSignatureSubpacketVector hashedSubpackets = masterSubpckGen.generate();
+		final PGPSignatureSubpacketVector unhashedSubpackets = null;
 		PGPKeyRingGenerator keyRingGenerator = new PGPKeyRingGenerator(
 				signatureTypeFromEnum(certificationLevel),
 				masterKeyPair,
 				primaryUserId,
 				checksumCalculator,
-				masterSubpckGen.generate(),
-				null,
+				hashedSubpackets,
+				unhashedSubpackets,
 				signerBuilder,
 				pbeSecretKeyEncryptorBuilder.build(passphrase));
 
@@ -1122,13 +1144,66 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 
 		/* Generate the key ring. */
 		logger.info("createPGPSecretKeyRing: generateSecretKeyRing...");
-		final PGPSecretKeyRing secretKeyRing = keyRingGenerator.generateSecretKeyRing();
+		PGPSecretKeyRing secretKeyRing = keyRingGenerator.generateSecretKeyRing();
 
 		logger.info("createPGPSecretKeyRing: generatePublicKeyRing...");
-		final PGPPublicKeyRing publicKeyRing = keyRingGenerator.generatePublicKeyRing();
+		PGPPublicKeyRing publicKeyRing = keyRingGenerator.generatePublicKeyRing();
+
+		/* Add secondary (additional) user-IDs. */
+		if (! secondaryUserIds.isEmpty()) {
+			for (final PgpUserId pgpUserId : secondaryUserIds)
+				publicKeyRing = addUserId(publicKeyRing, pgpUserId.toString(), secretKeyRing, passphrase, signerBuilder, hashedSubpackets, unhashedSubpackets);
+
+			secretKeyRing = PGPSecretKeyRing.replacePublicKeys(secretKeyRing, publicKeyRing);
+		}
 
 		logger.info("createPGPSecretKeyRing: all done!");
 		return new Pair<>(publicKeyRing,  secretKeyRing);
+	}
+
+	private static PGPPublicKeyRing addUserId(
+			final PGPPublicKeyRing publicKeyRing, final String userId,
+			final PGPSecretKeyRing secretKeyRing,
+			final char[] passphrase,
+			PGPContentSignerBuilder signerBuilder,
+			final PGPSignatureSubpacketVector hashedSubpackets,
+			final PGPSignatureSubpacketVector unhashedSubpackets) throws PGPException {
+		assertNotNull("publicKeyRing", publicKeyRing);
+		assertNotNull("userId", userId);
+
+		final PGPPublicKey masterPublicKey = getMasterKeyOrFail(publicKeyRing);
+		final PGPSecretKey masterSecretKey = secretKeyRing.getSecretKey(masterPublicKey.getKeyID());
+		assertNotNull("masterSecretKey", masterSecretKey);
+		final PGPPrivateKey privateKey = extractPrivateKey(masterSecretKey, passphrase);
+
+		final PGPSignatureGenerator sGen = new PGPSignatureGenerator(signerBuilder);
+
+		sGen.init(PGPSignature.POSITIVE_CERTIFICATION, privateKey);
+
+		sGen.setHashedSubpackets(hashedSubpackets);
+		sGen.setUnhashedSubpackets(unhashedSubpackets);
+
+		final PGPSignature certification;
+		try {
+			certification = sGen.generateCertification(userId, masterPublicKey);
+		} catch (SignatureException e) {
+			throw new PGPException(e.getMessage(), e);
+		}
+		final PGPPublicKey newMasterPublicKey = PGPPublicKey.addCertification(masterPublicKey, userId, certification);
+
+		PGPPublicKeyRing result = PGPPublicKeyRing.removePublicKey(publicKeyRing, masterPublicKey);
+		result = PGPPublicKeyRing.insertPublicKey(result, newMasterPublicKey);
+		return result;
+	}
+
+	private static PGPPublicKey getMasterKeyOrFail(final PGPPublicKeyRing publicKeyRing) {
+		for (Iterator<?> it = publicKeyRing.getPublicKeys(); it.hasNext(); ) {
+			PGPPublicKey pk = (PGPPublicKey) it.next();
+			if (pk.isMasterKey()) {
+				return pk;
+			}
+		}
+		throw new IllegalStateException("No masterKey found!");
 	}
 
 	private int getMasterKeyAlgorithm(final CreatePgpKeyParam createPgpKeyParam) {
