@@ -87,7 +87,9 @@ public class UserListItem {
 		return user;
 	}
 
-	// TODO rewrite this all to JavaBeanStringProperty instances!
+	// TODO rewrite this all to JavaBeanStringProperty instances! Or if this delegates every read operation to the underlying
+	// getter and thus causes an RCP to the LocalServer, then we should at least use SimpleStringProperty in combination
+	// with our PropertyChangeListener.
 	public String getFirstName() {
 		String firstName = this.firstName;
 		if (firstName == null) {
