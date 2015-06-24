@@ -1,5 +1,6 @@
 package org.subshare.gui.maintree;
 
+import static co.codewizards.cloudstore.core.bean.PropertyChangeListenerUtil.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.beans.PropertyChangeEvent;
@@ -69,7 +70,8 @@ public class ServerListMainTreeItem extends MainTreeItem<String> {
 	protected synchronized ServerRegistry getServerRegistry() {
 		if (serverRegistry == null) {
 			serverRegistry = ServerRegistryLs.getServerRegistry();
-			serverRegistry.addPropertyChangeListener(ServerRegistry.PropertyEnum.servers, serversPropertyChangeListener);
+//			serverRegistry.addPropertyChangeListener(ServerRegistry.PropertyEnum.servers, serversPropertyChangeListener);
+			addWeakPropertyChangeListener(serverRegistry, ServerRegistry.PropertyEnum.servers, serversPropertyChangeListener);
 		}
 		return serverRegistry;
 	}
@@ -107,9 +109,9 @@ public class ServerListMainTreeItem extends MainTreeItem<String> {
 
 	@Override
 	protected void finalize() throws Throwable {
-		final ServerRegistry serverRegistry = this.serverRegistry;
-		if (serverRegistry != null)
-			serverRegistry.removePropertyChangeListener(ServerRegistry.PropertyEnum.servers, serversPropertyChangeListener);
+//		final ServerRegistry serverRegistry = this.serverRegistry;
+//		if (serverRegistry != null)
+//			serverRegistry.removePropertyChangeListener(ServerRegistry.PropertyEnum.servers, serversPropertyChangeListener);
 
 		super.finalize();
 	}

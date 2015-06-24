@@ -625,4 +625,9 @@ public class UserRegistryImpl extends FileBasedObjectRegistry implements UserReg
 	protected void firePropertyChange(Property property, Object oldValue, Object newValue) {
 		propertyChangeSupport.firePropertyChange(property.name(), oldValue, newValue);
 	}
+
+	@Override
+	public Object clone() {
+		throw new UnsupportedOperationException();
+	}
 }

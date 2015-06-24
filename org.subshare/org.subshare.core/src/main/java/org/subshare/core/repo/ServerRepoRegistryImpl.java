@@ -347,4 +347,9 @@ public class ServerRepoRegistryImpl extends FileBasedObjectRegistry implements S
 	public Uid getVersion() {
 		return version;
 	}
+
+	@Override
+	public Object clone() {
+		throw new UnsupportedOperationException();
+	}
 }

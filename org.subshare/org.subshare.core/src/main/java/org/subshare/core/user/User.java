@@ -9,10 +9,11 @@ import java.util.UUID;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpKeyId;
 
+import co.codewizards.cloudstore.core.bean.Bean;
 import co.codewizards.cloudstore.core.bean.PropertyBase;
 import co.codewizards.cloudstore.core.dto.Uid;
 
-public interface User extends Cloneable {
+public interface User extends Bean<User.Property> {
 
 	public static interface Property extends PropertyBase {
 	}
@@ -66,12 +67,17 @@ public interface User extends Cloneable {
 	PgpKey getPgpKeyContainingPrivateKey();
 	List<UserRepoKey.PublicKeyWithSignature> getUserRepoKeyPublicKeys();
 
+	@Override
 	void addPropertyChangeListener(PropertyChangeListener listener);
+	@Override
 	void addPropertyChangeListener(Property property, PropertyChangeListener listener);
 
+	@Override
 	void removePropertyChangeListener(PropertyChangeListener listener);
+	@Override
 	void removePropertyChangeListener(Property property, PropertyChangeListener listener);
 
+	@Override
 	User clone();
 	Date getChanged();
 	void setChanged(Date changed);

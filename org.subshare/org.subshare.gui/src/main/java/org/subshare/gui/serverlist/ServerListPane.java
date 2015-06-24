@@ -1,5 +1,6 @@
 package org.subshare.gui.serverlist;
 
+import static co.codewizards.cloudstore.core.bean.PropertyChangeListenerUtil.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
 import static org.subshare.gui.util.FxmlUtil.*;
@@ -214,8 +215,8 @@ public class ServerListPane extends BorderPane {
 	protected synchronized ServerRegistry getServerRegistry() {
 		if (serverRegistry == null) {
 			serverRegistry = ServerRegistryLs.getServerRegistry();
-			serverRegistry.addPropertyChangeListener(ServerRegistry.PropertyEnum.servers, serversPropertyChangeListener);
-			serverRegistry.addPropertyChangeListener(ServerRegistry.PropertyEnum.servers_server, serverPropertyChangeListener);
+			addWeakPropertyChangeListener(serverRegistry, ServerRegistry.PropertyEnum.servers, serversPropertyChangeListener);
+			addWeakPropertyChangeListener(serverRegistry, ServerRegistry.PropertyEnum.servers_server, serverPropertyChangeListener);
 		}
 		return serverRegistry;
 	}
@@ -223,7 +224,7 @@ public class ServerListPane extends BorderPane {
 	protected PgpSyncDaemon getPgpSyncDaemon() {
 		if (pgpSyncDaemon == null) {
 			pgpSyncDaemon = PgpSyncDaemonLs.getPgpSyncDaemon();
-			pgpSyncDaemon.addPropertyChangeListener(syncStatePropertyChangeListener);
+			addWeakPropertyChangeListener(pgpSyncDaemon, syncStatePropertyChangeListener);
 		}
 		return pgpSyncDaemon;
 	}
@@ -231,7 +232,7 @@ public class ServerListPane extends BorderPane {
 	protected LockerSyncDaemon getLockerSyncDaemon() {
 		if (lockerSyncDaemon == null) {
 			lockerSyncDaemon = LockerSyncDaemonLs.getLockerSyncDaemon();
-			lockerSyncDaemon.addPropertyChangeListener(syncStatePropertyChangeListener);
+			addWeakPropertyChangeListener(lockerSyncDaemon, syncStatePropertyChangeListener);
 		}
 		return lockerSyncDaemon;
 	}
@@ -285,19 +286,19 @@ public class ServerListPane extends BorderPane {
 
 	@Override
 	protected void finalize() throws Throwable {
-		final ServerRegistry serverRegistry = this.serverRegistry;
-		if (serverRegistry != null) {
-			serverRegistry.removePropertyChangeListener(ServerRegistry.PropertyEnum.servers, serversPropertyChangeListener);
-			serverRegistry.removePropertyChangeListener(ServerRegistry.PropertyEnum.servers_server, serverPropertyChangeListener);
-		}
+//		final ServerRegistry serverRegistry = this.serverRegistry;
+//		if (serverRegistry != null) {
+//			serverRegistry.removePropertyChangeListener(ServerRegistry.PropertyEnum.servers, serversPropertyChangeListener);
+//			serverRegistry.removePropertyChangeListener(ServerRegistry.PropertyEnum.servers_server, serverPropertyChangeListener);
+//		}
 
-		final LockerSyncDaemon lockerSyncDaemon = this.lockerSyncDaemon;
-		if (lockerSyncDaemon != null)
-			lockerSyncDaemon.removePropertyChangeListener(syncStatePropertyChangeListener);
-
-		final PgpSyncDaemon pgpSyncDaemon = this.pgpSyncDaemon;
-		if (pgpSyncDaemon != null)
-			pgpSyncDaemon.removePropertyChangeListener(syncStatePropertyChangeListener);
+//		final LockerSyncDaemon lockerSyncDaemon = this.lockerSyncDaemon;
+//		if (lockerSyncDaemon != null)
+//			lockerSyncDaemon.removePropertyChangeListener(syncStatePropertyChangeListener);
+//
+//		final PgpSyncDaemon pgpSyncDaemon = this.pgpSyncDaemon;
+//		if (pgpSyncDaemon != null)
+//			pgpSyncDaemon.removePropertyChangeListener(syncStatePropertyChangeListener);
 
 		super.finalize();
 	}

@@ -4,10 +4,11 @@ import java.beans.PropertyChangeListener;
 import java.net.URL;
 import java.util.Date;
 
+import co.codewizards.cloudstore.core.bean.Bean;
 import co.codewizards.cloudstore.core.bean.PropertyBase;
 import co.codewizards.cloudstore.core.dto.Uid;
 
-public interface Server {
+public interface Server extends Bean<Server.Property> {
 
 	public static interface Property extends PropertyBase {
 	}

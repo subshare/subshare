@@ -258,4 +258,9 @@ public class LocalRepoRegistryImpl implements LocalRepoRegistry {
 	public LocalRepo createLocalRepo(final UUID repositoryId) {
 		return new LocalRepoImpl(repositoryId);
 	}
+
+	@Override
+	public Object clone() {
+		throw new UnsupportedOperationException();
+	}
 }

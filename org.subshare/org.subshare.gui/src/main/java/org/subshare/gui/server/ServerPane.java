@@ -1,5 +1,6 @@
 package org.subshare.gui.server;
 
+import static co.codewizards.cloudstore.core.bean.PropertyChangeListenerUtil.*;
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
@@ -191,8 +192,8 @@ public class ServerPane extends BorderPane /* GridPane */ {
 	protected ServerRepoRegistry getServerRepoRegistry() {
 		if (serverRepoRegistry == null) {
 			serverRepoRegistry = ServerRepoRegistryLs.getServerRepoRegistry();
-			serverRepoRegistry.addPropertyChangeListener(ServerRepoRegistry.PropertyEnum.serverRepos, serverReposPropertyChangeListener);
-			serverRepoRegistry.addPropertyChangeListener(ServerRepoRegistry.PropertyEnum.serverRepos_serverRepo, serverRepoPropertyChangeListener);
+			addWeakPropertyChangeListener(serverRepoRegistry, ServerRepoRegistry.PropertyEnum.serverRepos, serverReposPropertyChangeListener);
+			addWeakPropertyChangeListener(serverRepoRegistry, ServerRepoRegistry.PropertyEnum.serverRepos_serverRepo, serverRepoPropertyChangeListener);
 		}
 		return serverRepoRegistry;
 	}
@@ -200,11 +201,11 @@ public class ServerPane extends BorderPane /* GridPane */ {
 
 	@Override
 	protected void finalize() throws Throwable {
-		final ServerRepoRegistry serverRepoRegistry = this.serverRepoRegistry;
-		if (serverRepoRegistry != null) {
-			serverRepoRegistry.removePropertyChangeListener(ServerRepoRegistry.PropertyEnum.serverRepos, serverReposPropertyChangeListener);
-			serverRepoRegistry.removePropertyChangeListener(ServerRepoRegistry.PropertyEnum.serverRepos_serverRepo, serverRepoPropertyChangeListener);
-		}
+//		final ServerRepoRegistry serverRepoRegistry = this.serverRepoRegistry;
+//		if (serverRepoRegistry != null) {
+//			serverRepoRegistry.removePropertyChangeListener(ServerRepoRegistry.PropertyEnum.serverRepos, serverReposPropertyChangeListener);
+//			serverRepoRegistry.removePropertyChangeListener(ServerRepoRegistry.PropertyEnum.serverRepos_serverRepo, serverRepoPropertyChangeListener);
+//		}
 		super.finalize();
 	}
 

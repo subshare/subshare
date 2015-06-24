@@ -409,4 +409,9 @@ public class ServerRegistryImpl extends FileBasedObjectRegistry implements Serve
 	public Uid getVersion() {
 		return version;
 	}
+
+	@Override
+	public Object clone() {
+		throw new UnsupportedOperationException();
+	}
 }

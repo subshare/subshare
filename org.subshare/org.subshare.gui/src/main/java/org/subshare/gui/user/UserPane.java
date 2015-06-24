@@ -1,5 +1,6 @@
 package org.subshare.gui.user;
 
+import static co.codewizards.cloudstore.core.bean.PropertyChangeListenerUtil.*;
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
@@ -122,7 +123,7 @@ public class UserPane extends GridPane {
 				    .build();
 			lastNameTextField.textProperty().bindBidirectional(lastNameProperty);
 
-			this.user.addPropertyChangeListener(User.PropertyEnum.emails, userEmailsPropertyChangeListener);
+			addWeakPropertyChangeListener(this.user, User.PropertyEnum.emails, userEmailsPropertyChangeListener);
 		} catch (NoSuchMethodException e) {
 			throw new RuntimeException(e);
 		}
@@ -419,7 +420,7 @@ public class UserPane extends GridPane {
 
 	@Override
 	protected void finalize() throws Throwable {
-		user.removePropertyChangeListener(User.PropertyEnum.emails, userEmailsPropertyChangeListener);
+//		user.removePropertyChangeListener(User.PropertyEnum.emails, userEmailsPropertyChangeListener);
 		super.finalize();
 	}
 }

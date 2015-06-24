@@ -258,11 +258,12 @@ public abstract class CreatePgpKeyPane extends GridPane {
 
 	@Override
 	protected void finalize() throws Throwable {
-		for (PgpUserId pgpUserId : createPgpKeyParam.getUserIds())
-			pgpUserId.removePropertyChangeListener(pgpUserIdsPropertyChangeListener);
-
-		createPgpKeyParam.removePropertyChangeListener(CreatePgpKeyParam.PropertyEnum.validitySeconds, validitySecondsPropertyChangeListener);
-		createPgpKeyParam.removePropertyChangeListener(CreatePgpKeyParam.PropertyEnum.strength, strengthPropertyChangeListener);
+		// is this necessary? isn't the createPgpKeyParam gc-ed, anyway? if this is necessary, we must use a WeakPropertyChangeListener!
+//		for (PgpUserId pgpUserId : createPgpKeyParam.getUserIds())
+//			pgpUserId.removePropertyChangeListener(pgpUserIdsPropertyChangeListener);
+//
+//		createPgpKeyParam.removePropertyChangeListener(CreatePgpKeyParam.PropertyEnum.validitySeconds, validitySecondsPropertyChangeListener);
+//		createPgpKeyParam.removePropertyChangeListener(CreatePgpKeyParam.PropertyEnum.strength, strengthPropertyChangeListener);
 		super.finalize();
 	}
 

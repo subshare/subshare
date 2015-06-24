@@ -1,9 +1,12 @@
 package org.subshare.gui.maintree;
 
+import static co.codewizards.cloudstore.core.bean.PropertyChangeListenerUtil.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.lang.reflect.Method;
+import java.util.List;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ObjectPropertyBase;
@@ -15,7 +18,7 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
-import co.codewizards.cloudstore.core.util.ExceptionUtil;
+import co.codewizards.cloudstore.core.bean.WeakPropertyChangeListener;
 import co.codewizards.cloudstore.core.util.ReflectionUtil;
 
 public class MainTreeItem<T> extends TreeItem<String> {
@@ -30,6 +33,7 @@ public class MainTreeItem<T> extends TreeItem<String> {
 			setValue(getValueString());
 		}
 	};
+	private WeakPropertyChangeListener valueObjectWeakPropertyChangeListener;
 
 	public MainTreeItem() {
 		this(null);
@@ -68,7 +72,8 @@ public class MainTreeItem<T> extends TreeItem<String> {
 	public final ObjectProperty<T> valueObjectProperty() {
 		if (valueObject == null) {
 			valueObject = new ObjectPropertyBase<T>() {
-				@Override public void set(T newValue) {
+				@Override
+				public void set(T newValue) {
 					final T old = get();
 					if (old != null && old != newValue)
 						unhookPropertyChangeListener(old);
@@ -96,24 +101,15 @@ public class MainTreeItem<T> extends TreeItem<String> {
 	}
 
 	private void hookPropertyChangeListener(final Object object) {
-		try {
-			ReflectionUtil.invoke(object, "addPropertyChangeListener",
-					new Class<?>[] { PropertyChangeListener.class },
-					valueObjectPropertyChangeListener);
-		} catch (RuntimeException x) {
-			if (ExceptionUtil.getCause(x, NoSuchMethodException.class) == null)
-				throw x;
-		}
+		final List<Method> addPropertyChangeListenerMethods = ReflectionUtil.getDeclaredMethods(object.getClass(), "addPropertyChangeListener");
+		if (!addPropertyChangeListenerMethods.isEmpty())
+			valueObjectWeakPropertyChangeListener = addWeakPropertyChangeListener(object, valueObjectPropertyChangeListener);
 	}
 
 	private void unhookPropertyChangeListener(final Object object) {
-		try {
-			ReflectionUtil.invoke(object, "removePropertyChangeListener",
-					new Class<?>[] { PropertyChangeListener.class },
-					valueObjectPropertyChangeListener);
-		} catch (RuntimeException x) {
-			if (ExceptionUtil.getCause(x, NoSuchMethodException.class) == null)
-				throw x;
+		if (valueObjectWeakPropertyChangeListener != null) {
+			valueObjectWeakPropertyChangeListener.removePropertyChangeListener();
+			valueObjectWeakPropertyChangeListener = null;
 		}
 	}
 

@@ -1,12 +1,15 @@
 package org.subshare.gui.userlist;
 
+import static co.codewizards.cloudstore.core.bean.PropertyChangeListenerUtil.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
+
+import javafx.beans.property.adapter.JavaBeanStringProperty;
+import javafx.beans.property.adapter.JavaBeanStringPropertyBuilder;
 
 import org.subshare.core.pgp.Pgp;
 import org.subshare.core.pgp.PgpKey;
@@ -23,22 +26,28 @@ public class UserListItem {
 	private Pgp pgp;
 
 	private volatile String firstName;
+	private final JavaBeanStringProperty firstNameProperty;
 	private volatile String lastName;
 	private volatile List<String> emails;
 	private volatile String email;
 	private volatile String keyTrustLevel;
 
 	public UserListItem(final User user) {
-		this.user = user;
-		user.addPropertyChangeListener(userPropertyChangeListener);
+		this.user = assertNotNull("user", user);
+		addWeakPropertyChangeListener(user, userPropertyChangeListener);
+		try {
+			firstNameProperty = JavaBeanStringPropertyBuilder.create().bean(user).name(User.PropertyEnum.firstName.name()).build();
+		} catch (NoSuchMethodException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	@Override
 	protected void finalize() throws Throwable {
-		user.removePropertyChangeListener(userPropertyChangeListener);
-
-		if (pgp != null)
-			pgp.removePropertyChangeListener(pgpPropertyChangeListener);
+//		user.removePropertyChangeListener(userPropertyChangeListener);
+//
+//		if (pgp != null)
+//			pgp.removePropertyChangeListener(pgpPropertyChangeListener);
 
 		super.finalize();
 	}
@@ -46,47 +55,26 @@ public class UserListItem {
 	protected synchronized Pgp getPgp() {
 		if (pgp == null) {
 			pgp = PgpLs.getPgpOrFail();
-			pgp.addPropertyChangeListener(pgpPropertyChangeListener);
+			addWeakPropertyChangeListener(pgp, pgpPropertyChangeListener);
 		}
 		return pgp;
 	}
 
-	private final PropertyChangeListener userPropertyChangeListener = new UserPropertyChangeListener(this);
-
-	private final PropertyChangeListener pgpPropertyChangeListener = new PgpPropertyChangeListener(this);
-
-	private static class UserPropertyChangeListener implements PropertyChangeListener {
-		private final WeakReference<UserListItem> userListItemRef;
-
-		public UserPropertyChangeListener(final UserListItem userListItem) {
-			userListItemRef = new WeakReference<UserListItem>(assertNotNull("userListItem", userListItem));
-		}
-
+	private final PropertyChangeListener userPropertyChangeListener = new PropertyChangeListener() {
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
-			final UserListItem userListItem = userListItemRef.get();
-			if (userListItem != null) {
-				userListItem.firstName = null;
-				userListItem.lastName = null;
-				userListItem.email = null;
-			}
+			firstName = null;
+			lastName = null;
+			email = null;
 		}
-	}
+	};
 
-	private static class PgpPropertyChangeListener implements PropertyChangeListener {
-		private final WeakReference<UserListItem> userListItemRef;
-
-		public PgpPropertyChangeListener(final UserListItem userListItem) {
-			userListItemRef = new WeakReference<UserListItem>(assertNotNull("userListItem", userListItem));
-		}
-
+	private final PropertyChangeListener pgpPropertyChangeListener = new PropertyChangeListener() {
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
-			final UserListItem userListItem = userListItemRef.get();
-			if (userListItem != null)
-				userListItem.keyTrustLevel = null;
+			keyTrustLevel = null;
 		}
-	}
+	};
 
 	/**
 	 * Gets the {@code User} associated with this {@code UserListItem}.
@@ -99,6 +87,7 @@ public class UserListItem {
 		return user;
 	}
 
+	// TODO rewrite this all to JavaBeanStringProperty instances!
 	public String getFirstName() {
 		String firstName = this.firstName;
 		if (firstName == null) {
@@ -106,6 +95,9 @@ public class UserListItem {
 			this.firstName = firstName == null ? NULL : firstName;
 		}
 		return firstName == NULL ? null : firstName;
+	}
+	public JavaBeanStringProperty firstNameProperty() {
+		return firstNameProperty;
 	}
 
 	public String getLastName() {

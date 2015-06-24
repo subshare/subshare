@@ -1,5 +1,6 @@
 package org.subshare.gui.maintree;
 
+import static co.codewizards.cloudstore.core.bean.PropertyChangeListenerUtil.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.beans.PropertyChangeEvent;
@@ -70,7 +71,8 @@ public class LocalRepoListMainTreeItem extends MainTreeItem<String> {
 	protected synchronized LocalRepoRegistry getLocalRepoRegistry() {
 		if (localRepoRegistry == null) {
 			localRepoRegistry = LocalRepoRegistryLs.getLocalRepoRegistry();
-			localRepoRegistry.addPropertyChangeListener(LocalRepoRegistry.PropertyEnum.localRepos, localReposPropertyChangeListener);
+//			localRepoRegistry.addPropertyChangeListener(LocalRepoRegistry.PropertyEnum.localRepos, localReposPropertyChangeListener);
+			addWeakPropertyChangeListener(localRepoRegistry, LocalRepoRegistry.PropertyEnum.localRepos, localReposPropertyChangeListener);
 		}
 		return localRepoRegistry;
 	}
@@ -108,9 +110,9 @@ public class LocalRepoListMainTreeItem extends MainTreeItem<String> {
 
 	@Override
 	protected void finalize() throws Throwable {
-		final LocalRepoRegistry localRepoRegistry = this.localRepoRegistry;
-		if (localRepoRegistry != null)
-			localRepoRegistry.removePropertyChangeListener(LocalRepoRegistry.PropertyEnum.localRepos, localReposPropertyChangeListener);
+//		final LocalRepoRegistry localRepoRegistry = this.localRepoRegistry;
+//		if (localRepoRegistry != null)
+//			localRepoRegistry.removePropertyChangeListener(LocalRepoRegistry.PropertyEnum.localRepos, localReposPropertyChangeListener);
 
 		super.finalize();
 	}

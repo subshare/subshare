@@ -47,4 +47,9 @@ public class UserMainTreeItem extends MainTreeItem<User> {
 	protected Parent createMainDetailContent() {
 		return new UserPane(editUserManager, getValueObject());
 	}
+
+	@Override
+	protected void finalize() throws Throwable {
+		super.finalize();
+	}
 }

@@ -1,5 +1,6 @@
 package org.subshare.gui.userlist;
 
+import static co.codewizards.cloudstore.core.bean.PropertyChangeListenerUtil.*;
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static org.subshare.gui.util.FxmlUtil.*;
@@ -217,6 +218,7 @@ public class UserListPane extends BorderPane {
 	@FXML
 	private void deleteButtonClicked(final ActionEvent event) {
 		System.out.println("deleteButtonClicked: " + event);
+		System.gc();
 	}
 
 	private void applyFilterLater() {
@@ -317,17 +319,17 @@ public class UserListPane extends BorderPane {
 	protected synchronized UserRegistry getUserRegistry() {
 		if (userRegistry == null) {
 			userRegistry = UserRegistryLs.getUserRegistry();
-			userRegistry.addPropertyChangeListener(UserRegistry.PropertyEnum.users, usersPropertyChangeListener);
+			addWeakPropertyChangeListener(userRegistry, UserRegistry.PropertyEnum.users, usersPropertyChangeListener);
 		}
 		return userRegistry;
 	}
 
 	@Override
 	protected void finalize() throws Throwable {
-		final UserRegistry userRegistry = this.userRegistry;
-		if (userRegistry != null) {
-			userRegistry.removePropertyChangeListener(UserRegistry.PropertyEnum.users, usersPropertyChangeListener);
-		}
+//		final UserRegistry userRegistry = this.userRegistry;
+//		if (userRegistry != null) {
+//			userRegistry.removePropertyChangeListener(UserRegistry.PropertyEnum.users, usersPropertyChangeListener);
+//		}
 		super.finalize();
 	}
 

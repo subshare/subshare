@@ -1,5 +1,6 @@
 package org.subshare.core.sync;
 
+import static co.codewizards.cloudstore.core.bean.PropertyChangeListenerUtil.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.beans.PropertyChangeEvent;
@@ -122,7 +123,8 @@ public abstract class SyncDaemonImpl implements SyncDaemon {
 
 	protected SyncDaemonImpl() {
 		createSyncTimerTask(true);
-		getServerRegistry().addPropertyChangeListener(serverRegistryPropertyChangeListener);
+//		getServerRegistry().addPropertyChangeListener(serverRegistryPropertyChangeListener);
+		addWeakPropertyChangeListener(getServerRegistry(), serverRegistryPropertyChangeListener);
 	}
 
 	private final PropertyChangeListener serverRegistryPropertyChangeListener = new PropertyChangeListener() {

@@ -4,9 +4,10 @@ import java.beans.PropertyChangeListener;
 import java.net.URL;
 import java.util.List;
 
+import co.codewizards.cloudstore.core.bean.Bean;
 import co.codewizards.cloudstore.core.bean.PropertyBase;
 
-public interface ServerRegistry {
+public interface ServerRegistry extends Bean<ServerRegistry.Property> {
 
 	public static interface Property extends PropertyBase {
 	}
@@ -22,12 +23,16 @@ public interface ServerRegistry {
 
 	Server createServer();
 
+	@Override
 	void addPropertyChangeListener(PropertyChangeListener listener);
 
+	@Override
 	void addPropertyChangeListener(Property property, PropertyChangeListener listener);
 
+	@Override
 	void removePropertyChangeListener(PropertyChangeListener listener);
 
+	@Override
 	void removePropertyChangeListener(Property property, PropertyChangeListener listener);
 
 	/**

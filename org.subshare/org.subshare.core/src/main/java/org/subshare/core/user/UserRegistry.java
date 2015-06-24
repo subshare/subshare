@@ -9,10 +9,11 @@ import java.util.Set;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpKeyId;
 
+import co.codewizards.cloudstore.core.bean.Bean;
 import co.codewizards.cloudstore.core.bean.PropertyBase;
 import co.codewizards.cloudstore.core.dto.Uid;
 
-public interface UserRegistry {
+public interface UserRegistry extends Bean<UserRegistry.Property> {
 	public static final String USER_REGISTRY_FILE_NAME = "userRegistry" + SUBSHARE_FILE_EXTENSION;
 
 	public static interface Property extends PropertyBase {
@@ -47,11 +48,15 @@ public interface UserRegistry {
 
 	ImportUsersFromPgpKeysResult importUsersFromPgpKeys(Collection<PgpKey> pgpKeys);
 
+	@Override
 	void addPropertyChangeListener(PropertyChangeListener listener);
 
+	@Override
 	void addPropertyChangeListener(Property property, PropertyChangeListener listener);
 
+	@Override
 	void removePropertyChangeListener(PropertyChangeListener listener);
 
+	@Override
 	void removePropertyChangeListener(Property property, PropertyChangeListener listener);
 }
