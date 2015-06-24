@@ -48,6 +48,7 @@ public class UserIdentity extends Entity implements WriteProtected, AutoTrackLoc
 	private UserRepoKeyPublicKey ofUserRepoKeyPublicKey;
 
 	@Persistent(nullValue=NullValue.EXCEPTION)
+	@Column(jdbcType="BLOB")
 	private byte[] encryptedUserIdentityPayloadDtoData;
 
 	private long localRevision;

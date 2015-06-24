@@ -87,6 +87,7 @@ public class CryptoLink extends Entity implements WriteProtected, AutoTrackLocal
 	private CryptoKeyPart toCryptoKeyPart;
 
 	@Persistent(nullValue=NullValue.EXCEPTION)
+	@Column(jdbcType="BLOB")
 	private byte[] toCryptoKeyData;
 
 	@Persistent(nullValue=NullValue.EXCEPTION)

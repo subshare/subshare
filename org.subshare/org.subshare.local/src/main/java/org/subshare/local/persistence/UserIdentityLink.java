@@ -55,6 +55,7 @@ public class UserIdentityLink extends Entity implements WriteProtected, AutoTrac
 	private UserRepoKeyPublicKey forUserRepoKeyPublicKey;
 
 	@Persistent(nullValue=NullValue.EXCEPTION)
+	@Column(jdbcType="BLOB")
 	private byte[] encryptedUserIdentityKeyData;
 
 	private long localRevision;

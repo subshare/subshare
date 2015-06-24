@@ -29,7 +29,7 @@ public class SignatureImpl implements Signature {
 	private String signingUserRepoKeyId;
 
 	@Persistent(nullValue=NullValue.EXCEPTION, defaultFetchGroup="true")
-	@Column(name="signatureData")
+	@Column(name="signatureData", jdbcType="BLOB")
 	private byte[] signatureData;
 
 	protected SignatureImpl() { }

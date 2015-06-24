@@ -124,7 +124,7 @@ public class LocalRepoPane extends GridPane {
 		try (final LocalRepoManager localRepoManager = LocalRepoManagerFactoryLs.getLocalRepoManagerFactory().createLocalRepoManagerForExistingRepository(localRoot);) {
 			final UserRepoInvitationManager userRepoInvitationManager = UserRepoInvitationManagerLs.getUserRepoInvitationManager(getUserRegistry(), localRepoManager);
 
-			final PermissionType permissionType = PermissionType.read; // TODO select in UI!
+			final PermissionType permissionType = PermissionType.write; // TODO select in UI!
 			final long validityDurationMillis = 5L * 24L * 3600L; // TODO UI!
 
 			final String localPath = "";

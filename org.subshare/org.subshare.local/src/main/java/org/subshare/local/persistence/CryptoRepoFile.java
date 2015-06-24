@@ -96,8 +96,10 @@ public class CryptoRepoFile extends Entity implements WriteProtected, AutoTrackL
 	private CryptoKey cryptoKey;
 
 //	@Persistent(nullValue=NullValue.EXCEPTION) // is temporarily null
+	@Column(jdbcType="BLOB")
 	private byte[] repoFileDtoData;
 
+//	@Column(jdbcType="CLOB")
 	private String localName;
 
 	private boolean directory;
