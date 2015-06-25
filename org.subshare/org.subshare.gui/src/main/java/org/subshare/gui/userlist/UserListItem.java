@@ -8,8 +8,8 @@ import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.List;
 
-import javafx.beans.property.adapter.JavaBeanStringProperty;
-import javafx.beans.property.adapter.JavaBeanStringPropertyBuilder;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 
 import org.subshare.core.pgp.Pgp;
 import org.subshare.core.pgp.PgpKey;
@@ -20,36 +20,31 @@ import org.subshare.gui.ls.PgpLs;
 
 public class UserListItem {
 
-	private static final String NULL = "null";
-
 	private final User user;
 	private Pgp pgp;
 
-	private volatile String firstName;
-	private final JavaBeanStringProperty firstNameProperty;
-	private volatile String lastName;
+	private final StringProperty firstNameProperty;
+	private final StringProperty lastNameProperty;
+	private final StringProperty emailProperty;
+	private final StringProperty keyTrustLevelProperty;
+
 	private volatile List<String> emails;
-	private volatile String email;
 	private volatile String keyTrustLevel;
 
 	public UserListItem(final User user) {
 		this.user = assertNotNull("user", user);
 		addWeakPropertyChangeListener(user, userPropertyChangeListener);
-		try {
-			firstNameProperty = JavaBeanStringPropertyBuilder.create().bean(user).name(User.PropertyEnum.firstName.name()).build();
-		} catch (NoSuchMethodException e) {
-			throw new RuntimeException(e);
-		}
-	}
 
-	@Override
-	protected void finalize() throws Throwable {
-//		user.removePropertyChangeListener(userPropertyChangeListener);
-//
-//		if (pgp != null)
-//			pgp.removePropertyChangeListener(pgpPropertyChangeListener);
+		// We do *not* use JavaBeanStringProperty, but SimpleStringProperty instead, because our User bean is a proxy.
+		// Since there are *many* Users (and thus UserListItems), it would be much slower to use a JavaBeanStringProperty,
+		// which delegates every get() invocation to the underlying bean getter - implying an RPC invocation!
+		firstNameProperty = new SimpleStringProperty(user, User.PropertyEnum.firstName.name());
+		lastNameProperty = new SimpleStringProperty(user, User.PropertyEnum.lastName.name());
+		emailProperty = new SimpleStringProperty();
+		keyTrustLevelProperty = new SimpleStringProperty();
 
-		super.finalize();
+		copyDataFromUser();
+		copyDataFromPgp();
 	}
 
 	protected synchronized Pgp getPgp() {
@@ -63,18 +58,29 @@ public class UserListItem {
 	private final PropertyChangeListener userPropertyChangeListener = new PropertyChangeListener() {
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
-			firstName = null;
-			lastName = null;
-			email = null;
+			emails = null; // clear cache
+			copyDataFromUser();
 		}
 	};
 
 	private final PropertyChangeListener pgpPropertyChangeListener = new PropertyChangeListener() {
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
-			keyTrustLevel = null;
+			keyTrustLevel = null; // clear cache
+			copyDataFromPgp();
 		}
+
 	};
+
+	private void copyDataFromUser() {
+		firstNameProperty.set(user.getFirstName());
+		lastNameProperty.set(user.getLastName());
+		emailProperty.set(getEmail());
+	}
+
+	private void copyDataFromPgp() {
+		keyTrustLevelProperty.set(getKeyTrustLevel());
+	}
 
 	/**
 	 * Gets the {@code User} associated with this {@code UserListItem}.
@@ -87,28 +93,17 @@ public class UserListItem {
 		return user;
 	}
 
-	// TODO rewrite this all to JavaBeanStringProperty instances! Or if this delegates every read operation to the underlying
-	// getter and thus causes an RCP to the LocalServer, then we should at least use SimpleStringProperty in combination
-	// with our PropertyChangeListener.
-	public String getFirstName() {
-		String firstName = this.firstName;
-		if (firstName == null) {
-			firstName = assertNotNull("user", user).getFirstName();
-			this.firstName = firstName == null ? NULL : firstName;
-		}
-		return firstName == NULL ? null : firstName;
-	}
-	public JavaBeanStringProperty firstNameProperty() {
+	public StringProperty firstNameProperty() {
 		return firstNameProperty;
 	}
-
-	public String getLastName() {
-		String lastName = this.lastName;
-		if (lastName == null) {
-			lastName = assertNotNull("user", user).getLastName();
-			this.lastName = lastName == null ? NULL : lastName;
-		}
-		return lastName == NULL ? null : lastName;
+	public StringProperty lastNameProperty() {
+		return lastNameProperty;
+	}
+	public StringProperty emailProperty() {
+		return emailProperty;
+	}
+	public StringProperty keyTrustLevelProperty() {
+		return keyTrustLevelProperty;
 	}
 
 	public List<String> getEmails() {
@@ -119,26 +114,21 @@ public class UserListItem {
 		return emails;
 	}
 
-	public String getEmail() {
-		String email = this.email;
-		if (email == null) {
-			if (getEmails().isEmpty())
-				email = NULL;
-			else {
-				final String firstEmail = getEmails().get(0);
-				if (user.getEmails().size() == 1)
-					email = firstEmail;
-				else
-					email = String.format("%s (%s more)", firstEmail, user.getEmails().size() - 1);
-			}
-			this.email = email;
+	private String getEmail() {
+		if (getEmails().isEmpty())
+			return null;
+		else {
+			final String firstEmail = getEmails().get(0);
+			if (user.getEmails().size() == 1)
+				return firstEmail;
+			else
+				return String.format("%s (%s more)", firstEmail, user.getEmails().size() - 1);
 		}
-		return NULL == email ? null : email;
 	}
 
 	public String getKeyTrustLevel() {
 		String keyTrustLevel = this.keyTrustLevel;
-		if (keyTrustLevel == null) { // TODO we need a mechanism to invalidate this cached value - maybe a listener in Pgp?
+		if (keyTrustLevel == null) {
 			PgpKeyTrustLevel highestKeyTrustLevel = null;
 			for (final PgpKeyId pgpKeyId : user.getPgpKeyIds()) {
 				final PgpKey pgpKey = getPgp().getPgpKey(pgpKeyId);
@@ -157,11 +147,11 @@ public class UserListItem {
 		if (filterText.isEmpty())
 			return true;
 
-		final String firstName = this.getFirstName();
+		final String firstName = firstNameProperty.get();
 		if (firstName != null && firstName.toLowerCase().contains(filterText))
 			return true;
 
-		final String lastName = this.getLastName();
+		final String lastName = lastNameProperty.get();
 		if (lastName != null && lastName.toLowerCase().contains(filterText))
 			return true;
 
@@ -171,5 +161,10 @@ public class UserListItem {
 		}
 
 		return false;
+	}
+
+	@Override
+	protected void finalize() throws Throwable {
+		super.finalize();
 	}
 }
