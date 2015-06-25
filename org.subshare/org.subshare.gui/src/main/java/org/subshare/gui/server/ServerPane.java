@@ -18,17 +18,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
-import javafx.application.Platform;
 import javafx.collections.ListChangeListener;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableColumn.CellEditEvent;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.BorderPane;
@@ -91,21 +88,21 @@ public class ServerPane extends BorderPane /* GridPane */ {
 		}
 	};
 
-	private PropertyChangeListener serverRepoPropertyChangeListener = new PropertyChangeListener() {
-		@Override
-		public void propertyChange(final PropertyChangeEvent evt) {
-			Platform.runLater(new Runnable() {
-				@Override
-				public void run() {
-//					final ServerRepo serverRepo = (ServerRepo) evt.getSource();
-					// workaround for refresh bug
-					List<TableColumn<ServerRepoListItem, ?>> columns = new ArrayList<>(tableView.getColumns());
-					tableView.getColumns().clear();
-					tableView.getColumns().addAll(columns);
-				}
-			});
-		}
-	};
+//	private PropertyChangeListener serverRepoPropertyChangeListener = new PropertyChangeListener() {
+//		@Override
+//		public void propertyChange(final PropertyChangeEvent evt) {
+//			Platform.runLater(new Runnable() {
+//				@Override
+//				public void run() {
+////					final ServerRepo serverRepo = (ServerRepo) evt.getSource();
+//					// workaround for refresh bug
+//					List<TableColumn<ServerRepoListItem, ?>> columns = new ArrayList<>(tableView.getColumns());
+//					tableView.getColumns().clear();
+//					tableView.getColumns().addAll(columns);
+//				}
+//			});
+//		}
+//	};
 
 	public ServerPane(final Server server) {
 		this.server = assertNotNull("server", server);
@@ -116,13 +113,13 @@ public class ServerPane extends BorderPane /* GridPane */ {
 			if ("nameColumn".equals(tableColumn.getId())) {
 				final TableColumn<ServerRepoListItem, String> tc = cast(tableColumn);
 				tc.setCellFactory(cast(TextFieldTableCell.forTableColumn()));
-				tc.setOnEditCommit(new EventHandler<CellEditEvent<ServerRepoListItem, String>>() {
-					@Override
-					public void handle(CellEditEvent<ServerRepoListItem, String> event) {
-						event.getRowValue().setName(event.getNewValue());
-						getServerRepoRegistry().writeIfNeeded();
-					}
-				});
+//				tc.setOnEditCommit(new EventHandler<CellEditEvent<ServerRepoListItem, String>>() { // not needed, anymore, because we use a StringProperty, now - only needed with plain getters+setters.
+//					@Override
+//					public void handle(CellEditEvent<ServerRepoListItem, String> event) {
+//						event.getRowValue().setName(event.getNewValue());
+//						getServerRepoRegistry().writeIfNeeded();
+//					}
+//				});
 			}
 		}
 		populateTableViewAsync();
@@ -193,7 +190,7 @@ public class ServerPane extends BorderPane /* GridPane */ {
 		if (serverRepoRegistry == null) {
 			serverRepoRegistry = ServerRepoRegistryLs.getServerRepoRegistry();
 			addWeakPropertyChangeListener(serverRepoRegistry, ServerRepoRegistry.PropertyEnum.serverRepos, serverReposPropertyChangeListener);
-			addWeakPropertyChangeListener(serverRepoRegistry, ServerRepoRegistry.PropertyEnum.serverRepos_serverRepo, serverRepoPropertyChangeListener);
+//			addWeakPropertyChangeListener(serverRepoRegistry, ServerRepoRegistry.PropertyEnum.serverRepos_serverRepo, serverRepoPropertyChangeListener);
 		}
 		return serverRepoRegistry;
 	}

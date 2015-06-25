@@ -3,6 +3,7 @@ package org.subshare.gui.serverlist;
 import static co.codewizards.cloudstore.core.bean.PropertyChangeListenerUtil.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
+import static javafx.application.Platform.*;
 import static org.subshare.gui.util.FxmlUtil.*;
 
 import java.beans.PropertyChangeEvent;
@@ -19,19 +20,16 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
-import javafx.application.Platform;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableColumn.CellEditEvent;
 import javafx.scene.control.TableView;
 import javafx.scene.control.Tooltip;
 import javafx.scene.control.cell.TextFieldTableCell;
@@ -92,45 +90,32 @@ public class ServerListPane extends BorderPane {
 		public void propertyChange(PropertyChangeEvent evt) {
 			@SuppressWarnings("unchecked")
 			final Set<Server> servers = new LinkedHashSet<Server>((List<Server>) evt.getNewValue());
-			Platform.runLater(new Runnable() {
-				@Override
-				public void run() {
-					addOrRemoveItemTablesViewCallback(servers);
-				}
-			});
+			runLater(() -> addOrRemoveItemTablesViewCallback(servers));
 		}
 	};
 
-	private final PropertyChangeListener serverPropertyChangeListener = new PropertyChangeListener() {
-		@Override
-		public void propertyChange(final PropertyChangeEvent evt) {
-			Platform.runLater(new Runnable() {
-				@Override
-				public void run() {
-//					final Server server = (Server) evt.getSource();
-					// workaround for refresh bug
-					List<TableColumn<ServerListItem, ?>> columns = new ArrayList<>(tableView.getColumns());
-					tableView.getColumns().clear();
-					tableView.getColumns().addAll(columns);
-				}
-			});
-		}
-	};
+//	private final PropertyChangeListener serverPropertyChangeListener = new PropertyChangeListener() {
+//		@Override
+//		public void propertyChange(final PropertyChangeEvent evt) {
+//			Platform.runLater(new Runnable() {
+//				@Override
+//				public void run() {
+////					final Server server = (Server) evt.getSource();
+//					// workaround for refresh bug
+//					List<TableColumn<ServerListItem, ?>> columns = new ArrayList<>(tableView.getColumns());
+//					tableView.getColumns().clear();
+//					tableView.getColumns().addAll(columns);
+//				}
+//			});
+//		}
+//	};
 
 	private final PropertyChangeListener syncStatePropertyChangeListener = new PropertyChangeListener() {
 		@Override
 		public void propertyChange(final PropertyChangeEvent evt) {
-			Platform.runLater(new Runnable() {
-				@Override
-				public void run() {
-					for (ServerListItem serverListItem : tableView.getItems())
-						updateSyncStates(serverListItem);
-
-					// workaround for refresh bug
-					List<TableColumn<ServerListItem, ?>> columns = new ArrayList<>(tableView.getColumns());
-					tableView.getColumns().clear();
-					tableView.getColumns().addAll(columns);
-				}
+			runLater(() -> {
+				for (ServerListItem serverListItem : tableView.getItems())
+					updateSyncStates(serverListItem);
 			});
 		}
 	};
@@ -141,20 +126,20 @@ public class ServerListPane extends BorderPane {
 		tableView.getSelectionModel().getSelectedItems().addListener(selectionListener);
 
 		nameColumn.setCellFactory(cast(TextFieldTableCell.forTableColumn()));
-		nameColumn.setOnEditCommit(new EventHandler<CellEditEvent<ServerListItem, String>>() {
-			@Override
-			public void handle(CellEditEvent<ServerListItem, String> event) {
-				event.getRowValue().setName(event.getNewValue());
-			}
-		});
+//		nameColumn.setOnEditCommit(new EventHandler<CellEditEvent<ServerListItem, String>>() {
+//			@Override
+//			public void handle(CellEditEvent<ServerListItem, String> event) {
+//				event.getRowValue().setName(event.getNewValue());
+//			}
+//		});
 
 		urlColumn.setCellFactory(cast(TextFieldTableCell.forTableColumn(new UrlStringConverter())));
-		urlColumn.setOnEditCommit(new EventHandler<CellEditEvent<ServerListItem, URL>>() {
-			@Override
-			public void handle(CellEditEvent<ServerListItem, URL> event) {
-				event.getRowValue().setUrl(event.getNewValue());
-			}
-		});
+//		urlColumn.setOnEditCommit(new EventHandler<CellEditEvent<ServerListItem, URL>>() {
+//			@Override
+//			public void handle(CellEditEvent<ServerListItem, URL> event) {
+//				event.getRowValue().setUrl(event.getNewValue());
+//			}
+//		});
 
 		severityIconColumn.setCellFactory(l -> new TableCell<ServerListItem, Severity>() {
 			@Override
@@ -216,7 +201,7 @@ public class ServerListPane extends BorderPane {
 		if (serverRegistry == null) {
 			serverRegistry = ServerRegistryLs.getServerRegistry();
 			addWeakPropertyChangeListener(serverRegistry, ServerRegistry.PropertyEnum.servers, serversPropertyChangeListener);
-			addWeakPropertyChangeListener(serverRegistry, ServerRegistry.PropertyEnum.servers_server, serverPropertyChangeListener);
+//			addWeakPropertyChangeListener(serverRegistry, ServerRegistry.PropertyEnum.servers_server, serverPropertyChangeListener);
 		}
 		return serverRegistry;
 	}
@@ -286,20 +271,6 @@ public class ServerListPane extends BorderPane {
 
 	@Override
 	protected void finalize() throws Throwable {
-//		final ServerRegistry serverRegistry = this.serverRegistry;
-//		if (serverRegistry != null) {
-//			serverRegistry.removePropertyChangeListener(ServerRegistry.PropertyEnum.servers, serversPropertyChangeListener);
-//			serverRegistry.removePropertyChangeListener(ServerRegistry.PropertyEnum.servers_server, serverPropertyChangeListener);
-//		}
-
-//		final LockerSyncDaemon lockerSyncDaemon = this.lockerSyncDaemon;
-//		if (lockerSyncDaemon != null)
-//			lockerSyncDaemon.removePropertyChangeListener(syncStatePropertyChangeListener);
-//
-//		final PgpSyncDaemon pgpSyncDaemon = this.pgpSyncDaemon;
-//		if (pgpSyncDaemon != null)
-//			pgpSyncDaemon.removePropertyChangeListener(syncStatePropertyChangeListener);
-
 		super.finalize();
 	}
 

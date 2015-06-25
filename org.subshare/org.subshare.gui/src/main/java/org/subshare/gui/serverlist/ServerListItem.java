@@ -8,53 +8,67 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.StringProperty;
+import javafx.beans.property.adapter.JavaBeanObjectPropertyBuilder;
+import javafx.beans.property.adapter.JavaBeanStringPropertyBuilder;
+
 import org.subshare.core.Severity;
 import org.subshare.core.server.Server;
 import org.subshare.core.sync.SyncState;
 
 public class ServerListItem {
 
-	private Server server;
+	private final Server server;
 	private SyncState pgpSyncState;
 	private SyncState lockerSyncState;
 
-	public ServerListItem() { }
+	private final StringProperty nameProperty;
+	private final ObjectProperty<URL> urlProperty;
+	private final ObjectProperty<Severity> severityProperty = new SimpleObjectProperty<>();
 
 	public ServerListItem(final Server server) {
-		this.server = server;
+		this.server = assertNotNull("server", server);
+		try {
+			nameProperty = JavaBeanStringPropertyBuilder.create()
+					.bean(server)
+					.name(Server.PropertyEnum.name.name()).build();
+
+			urlProperty = JavaBeanObjectPropertyBuilder.create()
+					.bean(server)
+					.name(Server.PropertyEnum.url.name()).build();
+		} catch (NoSuchMethodException e) {
+			throw new RuntimeException(e);
+		}
+		updateSeverity();
 	}
 
 	public Server getServer() {
 		return server;
 	}
-	public void setServer(Server server) {
-		this.server = server;
+
+	public StringProperty nameProperty() {
+		return nameProperty;
 	}
 
-	public String getName() {
-		return assertNotNull("server", server).getName();
-	}
-	public void setName(String name) {
-		assertNotNull("server", server).setName(name);
+	public ObjectProperty<URL> urlProperty() {
+		return urlProperty;
 	}
 
-	public URL getUrl() {
-		return assertNotNull("server", server).getUrl();
-	}
-	public void setUrl(URL url) {
-		assertNotNull("server", server).setUrl(url);
+	public ObjectProperty<Severity> severityProperty() {
+		return severityProperty;
 	}
 
-	public Severity getSeverity() {
+	private void updateSeverity() {
 		// TODO get the highest severity of all - once there are more. The repo-sync-state is still missing ;-)
-
 		final SyncState pgpSyncState = getPgpSyncState();
 		final SyncState lockerSyncState = getLockerSyncState();
 
-		return getHighestSeverity(
+		severityProperty.set(getHighestSeverity(
 				(pgpSyncState == null ? null : pgpSyncState.getSeverity()),
 				(lockerSyncState == null ? null : lockerSyncState.getSeverity())
-				);
+				));
 	}
 
 	private static Severity getHighestSeverity(Severity ... severities) {
@@ -74,6 +88,7 @@ public class ServerListItem {
 	}
 	public void setPgpSyncState(SyncState pgpSyncState) {
 		this.pgpSyncState = pgpSyncState;
+		updateSeverity();
 	}
 
 	public SyncState getLockerSyncState() {
@@ -81,6 +96,7 @@ public class ServerListItem {
 	}
 	public void setLockerSyncState(SyncState lockerSyncState) {
 		this.lockerSyncState = lockerSyncState;
+		updateSeverity();
 	}
 
 	public String getTooltipText() {

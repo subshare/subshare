@@ -8,6 +8,7 @@ import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.List;
 
+import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
@@ -58,18 +59,21 @@ public class UserListItem {
 	private final PropertyChangeListener userPropertyChangeListener = new PropertyChangeListener() {
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
-			emails = null; // clear cache
-			copyDataFromUser();
+			Platform.runLater(() -> {
+				emails = null; // clear cache
+				copyDataFromUser();
+			});
 		}
 	};
 
 	private final PropertyChangeListener pgpPropertyChangeListener = new PropertyChangeListener() {
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
-			keyTrustLevel = null; // clear cache
-			copyDataFromPgp();
+			Platform.runLater(() -> {
+				keyTrustLevel = null; // clear cache
+				copyDataFromPgp();
+			});
 		}
-
 	};
 
 	private void copyDataFromUser() {
