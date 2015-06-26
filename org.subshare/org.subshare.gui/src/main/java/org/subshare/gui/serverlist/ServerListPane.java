@@ -276,7 +276,6 @@ public class ServerListPane extends BorderPane {
 
 	@FXML
 	private void addButtonClicked(final ActionEvent event) {
-		System.out.println("addButtonClicked: " + event);
 		Server server = getServerRegistry().createServer();
 		server.setName("Server " + new DateTime(new Date()));
 		try {
@@ -294,7 +293,12 @@ public class ServerListPane extends BorderPane {
 		for (ServerListItem serverListItem : selectedItems)
 			selectedServers.add(serverListItem.getServer());
 
-		// TODO how to handle servers that are in use?
+		// TODO how to handle servers that are in use? We should check and deny removal of used servers!
 		getServerRegistry().getServers().removeAll(selectedServers);
+	}
+
+	@FXML
+	private void syncButtonClicked(final ActionEvent event) {
+		getLockerSyncDaemon().sync();
 	}
 }

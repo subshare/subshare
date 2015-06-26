@@ -247,6 +247,17 @@ public class ServerRegistryImpl extends FileBasedObjectRegistry implements Serve
 		return null;
 	}
 
+	@Override
+	public Server getServer(final Uid serverId) {
+		assertNotNull("serverId", serverId);
+
+		for (Server server : servers) {
+			if (serverId.equals(server.getServerId()))
+				return server;
+		}
+		return null;
+	}
+
 	private boolean isSubUrl(URL baseUrl, URL subUrl) {
 		assertNotNull("baseUrl", subUrl);
 		String baseUrlStr = canonicalizeURL(baseUrl).toExternalForm();
@@ -335,9 +346,16 @@ public class ServerRegistryImpl extends FileBasedObjectRegistry implements Serve
 	protected synchronized void mergeFrom(final ServerRegistryDto serverRegistryDto) {
 		assertNotNull("serverRegistryDto", serverRegistryDto);
 
+		final Set<Uid> deletedServerIdSet = new HashSet<>(this.deletedServerIds.size());
+		for (DeletedUid deletedUid : this.deletedServerIds)
+			deletedServerIdSet.add(deletedUid.getUid());
+
 		final List<ServerDto> newServerDtos = new ArrayList<>(serverRegistryDto.getServerDtos().size());
 		for (final ServerDto serverDto : serverRegistryDto.getServerDtos()) {
 			final Uid serverId = assertNotNull("serverDto.serverId", serverDto.getServerId());
+			if (deletedServerIdSet.contains(serverId))
+				continue;
+
 			final Server server = getServerByServerId(serverId);
 			if (server == null)
 				newServerDtos.add(serverDto);

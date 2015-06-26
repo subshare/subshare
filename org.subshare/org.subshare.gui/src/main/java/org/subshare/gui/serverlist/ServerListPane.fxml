@@ -19,6 +19,18 @@
 
 	<top>
 		<FlowPane> 
+			<Button fx:id="syncButton" onAction="#syncButtonClicked"> 
+				<graphic>
+					<ImageView> 
+						<image>
+							<Image url="@sync-24x24.png"/> 
+						</image>
+					</ImageView>
+				</graphic>
+				<tooltip>
+					<Tooltip text="%syncButton.tooltip"/> 
+				</tooltip>
+			</Button>
 			<Button fx:id="addButton" onAction="#addButtonClicked"> 
 				<graphic>
 					<ImageView> 
@@ -28,7 +40,7 @@
 					</ImageView>
 				</graphic>
 				<tooltip>
-					<Tooltip text="Add a new server."/> 
+					<Tooltip text="%addButton.tooltip"/> 
 				</tooltip>
 			</Button>
 			<Button fx:id="deleteButton" onAction="#deleteButtonClicked"> 
@@ -40,7 +52,7 @@
 					</ImageView>
 				</graphic>
 				<tooltip>
-					<Tooltip text="Delete the selected servers."/> 
+					<Tooltip text="%deleteButton.tooltip"/> 
 				</tooltip>
 			</Button>
 		</FlowPane>

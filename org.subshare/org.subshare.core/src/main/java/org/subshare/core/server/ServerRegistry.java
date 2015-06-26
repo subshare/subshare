@@ -6,6 +6,7 @@ import java.util.List;
 
 import co.codewizards.cloudstore.core.bean.Bean;
 import co.codewizards.cloudstore.core.bean.PropertyBase;
+import co.codewizards.cloudstore.core.dto.Uid;
 
 public interface ServerRegistry extends Bean<ServerRegistry.Property> {
 
@@ -18,6 +19,8 @@ public interface ServerRegistry extends Bean<ServerRegistry.Property> {
 	}
 
 	Server getServerForRemoteRoot(URL remoteRoot);
+
+	Server getServer(Uid serverId);
 
 	List<Server> getServers();
 
@@ -42,4 +45,5 @@ public interface ServerRegistry extends Bean<ServerRegistry.Property> {
 	 * automatically. However, this automatic writing may occur too late in rare situations (e.g. in automated tests).
 	 */
 	void writeIfNeeded();
+
 }

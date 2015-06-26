@@ -28,6 +28,8 @@ import java.util.zip.ZipOutputStream;
 import org.subshare.core.dto.DeletedUid;
 import org.subshare.core.dto.UserDto;
 import org.subshare.core.dto.UserRegistryDto;
+import org.subshare.core.dto.UserRepoKeyDto;
+import org.subshare.core.dto.UserRepoKeyPublicKeyDto;
 import org.subshare.core.dto.jaxb.UserRegistryDtoIo;
 import org.subshare.core.fbor.FileBasedObjectRegistry;
 import org.subshare.core.pgp.PgpKey;
@@ -35,6 +37,7 @@ import org.subshare.core.pgp.PgpKeyId;
 import org.subshare.core.pgp.PgpRegistry;
 import org.subshare.core.pgp.PgpUserId;
 import org.subshare.core.user.ImportUsersFromPgpKeysResult.ImportedUser;
+import org.subshare.core.user.UserRepoKey.PublicKeyWithSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -520,14 +523,25 @@ public class UserRegistryImpl extends FileBasedObjectRegistry implements UserReg
 	protected synchronized void mergeFrom(final UserRegistryDto userRegistryDto) {
 		assertNotNull("userRegistryDto", userRegistryDto);
 
+		final Set<Uid> deletedUserIdSet = new HashSet<>(this.deletedUserIds.size());
+		for (final DeletedUid deletedUid : this.deletedUserIds)
+			deletedUserIdSet.add(deletedUid.getUid());
+
+		final Set<Uid> deletedUserRepoKeyIdSet = new HashSet<>(this.deletedUserRepoKeyIds.size());
+		for (final DeletedUid deletedUid : this.deletedUserRepoKeyIds)
+			deletedUserRepoKeyIdSet.add(deletedUid.getUid());
+
 		final List<UserDto> newUserDtos = new ArrayList<>(userRegistryDto.getUserDtos().size());
 		for (final UserDto userDto : userRegistryDto.getUserDtos()) {
 			final Uid userId = assertNotNull("userDto.userId", userDto.getUserId());
+			if (deletedUserIdSet.contains(userId))
+				continue;
+
 			final User user = getUserByUserId(userId);
 			if (user == null)
 				newUserDtos.add(userDto);
 			else
-				merge(user, userDto);
+				merge(user, userDto, deletedUserRepoKeyIdSet);
 		}
 
 		final Set<DeletedUid> newDeletedUserIds = new HashSet<>(userRegistryDto.getDeletedUserIds());
@@ -567,9 +581,12 @@ public class UserRegistryImpl extends FileBasedObjectRegistry implements UserReg
 		writeIfNeeded();
 	}
 
-	private void merge(final User toUser, final UserDto fromUserDto) {
+	private void merge(final User toUser, final UserDto fromUserDto, final Set<Uid> deletedUserRepoKeyIdSet) {
 		assertNotNull("toUser", toUser);
 		assertNotNull("fromUserDto", fromUserDto);
+		UserRepoKeyDtoConverter userRepoKeyDtoConverter = null;
+		UserRepoKeyPublicKeyDtoWithSignatureConverter userRepoKeyPublicKeyDtoWithSignatureConverter = null;
+
 		if (toUser.getChanged().before(fromUserDto.getChanged())) {
 			toUser.setFirstName(fromUserDto.getFirstName());
 			toUser.setLastName(fromUserDto.getLastName());
@@ -588,7 +605,49 @@ public class UserRegistryImpl extends FileBasedObjectRegistry implements UserReg
 			if (!toUser.getChanged().equals(fromUserDto.getChanged())) // sanity check - to make sure listeners don't change it again
 				throw new IllegalStateException("toUser.changed != fromUserDto.changed");
 		}
+
+		// We merge the UserRepoKeys outside of the changed-timestamp-controlled area to make sure we never loose any!
+		if (fromUserDto.getUserRepoKeyRingDto() != null) {
+			for (final UserRepoKeyDto userRepoKeyDto : fromUserDto.getUserRepoKeyRingDto().getUserRepoKeyDtos()) {
+				final Uid userRepoKeyId = assertNotNull("userRepoKeyDto.userRepoKeyId", userRepoKeyDto.getUserRepoKeyId());
+				if (deletedUserRepoKeyIdSet.contains(userRepoKeyId))
+					continue;
+
+				UserRepoKey userRepoKey = toUser.getUserRepoKeyRingOrCreate().getUserRepoKey(userRepoKeyId);
+				if (userRepoKey == null) {
+					if (userRepoKeyDtoConverter == null)
+						userRepoKeyDtoConverter = new UserRepoKeyDtoConverter();
+
+					userRepoKey = userRepoKeyDtoConverter.fromUserRepoKeyDto(userRepoKeyDto);
+					toUser.getUserRepoKeyRingOrCreate().addUserRepoKey(assertNotNull("userRepoKey", userRepoKey));
+				}
+			}
+		}
+		else {
+			for (final UserRepoKeyPublicKeyDto userRepoKeyPublicKeyDto : fromUserDto.getUserRepoKeyPublicKeyDtos()) {
+				final Uid userRepoKeyId = assertNotNull("userRepoKeyPublicKeyDto.userRepoKeyId", userRepoKeyPublicKeyDto.getUserRepoKeyId());
+				if (deletedUserRepoKeyIdSet.contains(userRepoKeyId))
+					continue;
+
+				if (! contains(toUser.getUserRepoKeyPublicKeys(), userRepoKeyId)) {
+					if (userRepoKeyPublicKeyDtoWithSignatureConverter == null)
+						userRepoKeyPublicKeyDtoWithSignatureConverter = new UserRepoKeyPublicKeyDtoWithSignatureConverter();
+
+					final PublicKeyWithSignature publicKeyWithSignature = userRepoKeyPublicKeyDtoWithSignatureConverter.fromUserRepoKeyPublicKeyDto(userRepoKeyPublicKeyDto);
+					toUser.getUserRepoKeyPublicKeys().add(assertNotNull("publicKeyWithSignature", publicKeyWithSignature));
+				}
+			}
+		}
 	}
+
+	private static boolean contains(Collection<PublicKeyWithSignature> userRepoKeyPublicKeys, final Uid userRepoKeyId) {
+		for (final PublicKeyWithSignature publicKeyWithSignature : userRepoKeyPublicKeys) {
+			if (userRepoKeyId.equals(publicKeyWithSignature.getUserRepoKeyId()))
+				return true;
+		}
+		return false;
+	}
+
 
 	private synchronized UserRegistryDto createUserRegistryDto() {
 		final UserDtoConverter userDtoConverter = new UserDtoConverter();

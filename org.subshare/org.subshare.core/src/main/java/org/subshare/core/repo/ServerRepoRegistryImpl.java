@@ -34,6 +34,8 @@ import org.subshare.core.observable.standard.StandardPostModificationEvent;
 import org.subshare.core.observable.standard.StandardPostModificationListener;
 import org.subshare.core.observable.standard.StandardPreModificationEvent;
 import org.subshare.core.observable.standard.StandardPreModificationListener;
+import org.subshare.core.server.ServerRegistry;
+import org.subshare.core.server.ServerRegistryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -179,18 +181,26 @@ public class ServerRepoRegistryImpl extends FileBasedObjectRegistry implements S
 			version = new Uid();
 	}
 
+	protected ServerRegistry getServerRegistry() {
+		return ServerRegistryImpl.getInstance();
+	}
+
 	@Override
 	protected void readPayloadEntry(ZipInputStream zin, ZipEntry zipEntry) throws IOException {
 		if (!PAYLOAD_ENTRY_NAME.equals(zipEntry.getName())) {
 			logger.warn("readPayloadEntry: Ignoring unexpected zip-entry: {}", zipEntry.getName());
 			return;
 		}
+		final ServerRegistry serverRegistry = getServerRegistry();
 		final ServerRepoDtoConverter serverRepoDtoConverter = new ServerRepoDtoConverter();
 		final ServerRepoRegistryDtoIo serverRepoRegistryDtoIo = new ServerRepoRegistryDtoIo();
 		final ServerRepoRegistryDto serverRepoRegistryDto = serverRepoRegistryDtoIo.deserialize(zin);
 
 		for (final ServerRepoDto serverRepoDto : serverRepoRegistryDto.getServerRepoDtos()) {
 			final ServerRepo serverRepo = serverRepoDtoConverter.fromServerRepoDto(serverRepoDto);
+//			if (serverRegistry.getServer(serverRepo.getServerId()) == null)
+				// TODO we should restore the deleted server! same for deleted server-repo in case of re-import of invitation.
+
 			serverRepos.add(serverRepo);
 		}
 
@@ -292,9 +302,16 @@ public class ServerRepoRegistryImpl extends FileBasedObjectRegistry implements S
 	protected synchronized void mergeFrom(final ServerRepoRegistryDto serverRepoRegistryDto) {
 		assertNotNull("serverRepoRegistryDto", serverRepoRegistryDto);
 
+		final Set<UUID> deletedServerRepoIdSet = new HashSet<>(this.deletedServerRepoIds.size());
+		for (DeletedUUID deletedUuid : this.deletedServerRepoIds)
+			deletedServerRepoIdSet.add(deletedUuid.getUuid());
+
 		final List<ServerRepoDto> newServerRepoDtos = new ArrayList<>(serverRepoRegistryDto.getServerRepoDtos().size());
 		for (final ServerRepoDto serverRepoDto : serverRepoRegistryDto.getServerRepoDtos()) {
 			final UUID repositoryId = assertNotNull("serverRepoDto.repositoryId", serverRepoDto.getRepositoryId());
+			if (deletedServerRepoIdSet.contains(repositoryId))
+				continue;
+
 			final ServerRepo serverRepo = getRepositoryId2ServerRepo().get(repositoryId);
 			if (serverRepo == null)
 				newServerRepoDtos.add(serverRepoDto);

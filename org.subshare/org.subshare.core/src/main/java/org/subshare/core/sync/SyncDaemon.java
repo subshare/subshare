@@ -4,7 +4,6 @@ import java.beans.PropertyChangeListener;
 import java.util.Set;
 
 import org.subshare.core.server.Server;
-import org.subshare.core.sync.SyncState;
 
 import co.codewizards.cloudstore.core.bean.PropertyBase;
 
@@ -30,4 +29,6 @@ public interface SyncDaemon {
 	void removePropertyChangeListener(PropertyChangeListener listener);
 
 	void removePropertyChangeListener(Property property, PropertyChangeListener listener);
+
+	void sync();
 }

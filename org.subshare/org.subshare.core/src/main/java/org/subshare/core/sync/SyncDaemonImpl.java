@@ -149,6 +149,7 @@ public abstract class SyncDaemonImpl implements SyncDaemon {
 		super.finalize();
 	}
 
+	@Override
 	public void sync() {
 		_sync();
 		createSyncTimerTask(false); // always recreate, if manually invoked (to postpone the period).
