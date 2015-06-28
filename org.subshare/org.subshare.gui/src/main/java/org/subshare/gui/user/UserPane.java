@@ -39,20 +39,19 @@ import javafx.stage.FileChooser;
 import javafx.stage.Window;
 
 import org.subshare.core.pgp.CreatePgpKeyParam;
-import org.subshare.core.pgp.ImportKeysResult;
-import org.subshare.core.pgp.ImportKeysResult.ImportedMasterKey;
 import org.subshare.core.pgp.Pgp;
 import org.subshare.core.pgp.PgpKey;
-import org.subshare.core.pgp.PgpKeyId;
-import org.subshare.core.pgp.PgpUserId;
 import org.subshare.core.pgp.man.PgpPrivateKeyPassphraseStore;
 import org.subshare.core.user.User;
+import org.subshare.core.user.UserRegistry;
 import org.subshare.gui.ls.PgpLs;
 import org.subshare.gui.ls.PgpPrivateKeyPassphraseManagerLs;
+import org.subshare.gui.ls.UserRegistryLs;
 import org.subshare.gui.pgp.createkey.CreatePgpKeyDialog;
 import org.subshare.gui.pgp.createkey.FxPgpUserId;
 import org.subshare.gui.pgp.createkey.TimeUnit;
 import org.subshare.gui.pgp.creatingkey.CreatingPgpKeyDialog;
+import org.subshare.gui.selectuser.SelectUserDialog;
 import org.subshare.gui.user.pgpkeytree.PgpKeyPgpKeyTreeItem;
 import org.subshare.gui.user.pgpkeytree.PgpKeyTreeItem;
 import org.subshare.gui.user.pgpkeytree.RootPgpKeyTreeItem;
@@ -87,11 +86,14 @@ public class UserPane extends GridPane {
 	@FXML
 	private Button createPgpKeyButton;
 
-	@FXML
-	private Button importPgpKeyButton;
+//	@FXML
+//	private Button importPgpKeyButton;
 
 	@FXML
 	private Button exportPgpKeyButton;
+
+	@FXML
+	private Button assignPgpKeyToOtherUserButton;
 
 	@FXML
 	private Button signPgpKeyButton;
@@ -148,6 +150,7 @@ public class UserPane extends GridPane {
 		final int selectedPgpKeysSize = getSelectedPgpKeys().size();
 		exportPgpKeyButton.setDisable(selectedPgpKeysSize == 0);
 		deletePgpKeyButton.setDisable(selectedPgpKeysSize == 0);
+		assignPgpKeyToOtherUserButton.setDisable(selectedPgpKeysSize == 0);
 		signPgpKeyButton.setDisable(selectedPgpKeysSize != 1);
 	}
 
@@ -288,8 +291,8 @@ public class UserPane extends GridPane {
 					public void run() {
 						dialog2.close();
 
-						final PgpKeyPgpKeyTreeItem child = new PgpKeyPgpKeyTreeItem(pgpKey);
-						pgpKeyTreeTableView.getRoot().getChildren().add(child);
+//						final PgpKeyPgpKeyTreeItem child = new PgpKeyPgpKeyTreeItem(pgpKey); // now done by listener
+//						pgpKeyTreeTableView.getRoot().getChildren().add(child);
 
 						pgpPrivateKeyPassphraseStore.putPassphrase(pgpKey.getPgpKeyId(), createPgpKeyParam.getPassphrase());
 					}
@@ -337,33 +340,33 @@ public class UserPane extends GridPane {
 		return sb.toString();
 	}
 
-	@FXML
-	private void importPgpKeyButtonClicked(final ActionEvent event) {
-		final File file = showOpenFileDialog("Choose file containing PGP key(s) to import");
-		if (file == null)
-			return;
-
-		final Pgp pgp = getPgp();
-		final ImportKeysResult importKeysResult = pgp.importKeys(file);
-		for (ImportedMasterKey importedMasterKey : importKeysResult.getPgpKeyId2ImportedMasterKey().values()) {
-			final PgpKeyId pgpKeyId = importedMasterKey.getPgpKeyId();
-			final PgpKey pgpKey = pgp.getPgpKey(pgpKeyId);
-			assertNotNull("pgp.getPgpKey(" + pgpKeyId + ")", pgpKey);
-
-			for (final String userId : pgpKey.getUserIds()) {
-				final PgpUserId pgpUserId = new PgpUserId(userId);
-				final String email = pgpUserId.getEmail();
-				if (! isEmpty(email) && ! user.getEmails().contains(email))
-					user.getEmails().add(email);
-			}
-
-			if (! user.getPgpKeyIds().contains(pgpKeyId)) {
-				user.getPgpKeyIds().add(pgpKeyId);
-				final PgpKeyPgpKeyTreeItem child = new PgpKeyPgpKeyTreeItem(pgpKey);
-				pgpKeyTreeTableView.getRoot().getChildren().add(child);
-			}
-		}
-	}
+//	@FXML
+//	private void importPgpKeyButtonClicked(final ActionEvent event) {
+//		final File file = showOpenFileDialog("Choose file containing PGP key(s) to import");
+//		if (file == null)
+//			return;
+//
+//		final Pgp pgp = getPgp();
+//		final ImportKeysResult importKeysResult = pgp.importKeys(file);
+//		for (ImportedMasterKey importedMasterKey : importKeysResult.getPgpKeyId2ImportedMasterKey().values()) {
+//			final PgpKeyId pgpKeyId = importedMasterKey.getPgpKeyId();
+//			final PgpKey pgpKey = pgp.getPgpKey(pgpKeyId);
+//			assertNotNull("pgp.getPgpKey(" + pgpKeyId + ")", pgpKey);
+//
+//			for (final String userId : pgpKey.getUserIds()) {
+//				final PgpUserId pgpUserId = new PgpUserId(userId);
+//				final String email = pgpUserId.getEmail();
+//				if (! isEmpty(email) && ! user.getEmails().contains(email))
+//					user.getEmails().add(email);
+//			}
+//
+//			if (! user.getPgpKeyIds().contains(pgpKeyId)) {
+//				user.getPgpKeyIds().add(pgpKeyId);
+//				final PgpKeyPgpKeyTreeItem child = new PgpKeyPgpKeyTreeItem(pgpKey);
+//				pgpKeyTreeTableView.getRoot().getChildren().add(child);
+//			}
+//		}
+//	}
 
 	@FXML
 	private void exportPgpKeyButtonClicked(final ActionEvent event) {
@@ -403,6 +406,10 @@ public class UserPane extends GridPane {
 		return file == null ? null : createFile(file).getAbsoluteFile();
 	}
 
+	private UserRegistry getUserRegistry() {
+		return UserRegistryLs.getUserRegistry();
+	}
+
 	@FXML
 	private void signPgpKeyButtonClicked(final ActionEvent event) {
 
@@ -411,6 +418,28 @@ public class UserPane extends GridPane {
 	@FXML
 	private void deletePgpKeyButtonClicked(final ActionEvent event) {
 
+	}
+
+	@FXML
+	private void assignPgpKeyToThisUserButtonClicked(final ActionEvent event) {
+	}
+
+	@FXML
+	private void assignPgpKeyToOtherUserButtonClicked(final ActionEvent event) {
+		final SelectUserDialog dialog = new SelectUserDialog(getScene().getWindow(),
+				new ArrayList<>(getUserRegistry().getUsers()), null, SelectionMode.SINGLE,
+				"Please select the user to whom you want to 'push' the selected PGP key(s).");
+		dialog.showAndWait();
+		final List<User> selectedUsers = dialog.getSelectedUsers();
+		if (selectedUsers == null || selectedUsers.isEmpty())
+			return;
+
+		final User targetUser = selectedUsers.get(0);
+		final Set<PgpKey> selectedPgpKeys = getSelectedPgpKeys();
+		for (final PgpKey pgpKey : selectedPgpKeys) {
+			user.getPgpKeyIds().remove(pgpKey.getPgpKeyId());
+			targetUser.getPgpKeyIds().add(pgpKey.getPgpKeyId());
+		}
 	}
 
 	@FXML

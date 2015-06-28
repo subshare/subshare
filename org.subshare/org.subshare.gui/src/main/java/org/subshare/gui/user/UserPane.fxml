@@ -36,16 +36,16 @@
 					<Tooltip text="Create a new PGP key pair."/> 
 				</tooltip>
 			</Button>
-			<Button fx:id="importPgpKeyButton" onAction="#importPgpKeyButtonClicked"> 
+			<Button fx:id="signPgpKeyButton" onAction="#signPgpKeyButtonClicked"> 
 				<graphic>
 					<ImageView> 
 						<image>
-							<Image url="@import-pgp-key-24x24.png"/> 
+							<Image url="@sign-pgp-key-24x24.png"/> 
 						</image>
 					</ImageView>
 				</graphic>
 				<tooltip>
-					<Tooltip text="Import one or more PGP keys from a file."/> 
+					<Tooltip text="Certify the authenticity of the selected PGP key (sign it)."/> 
 				</tooltip>
 			</Button>
 			<Button fx:id="exportPgpKeyButton" onAction="#exportPgpKeyButtonClicked"> 
@@ -60,16 +60,28 @@
 					<Tooltip text="Export the selected PGP keys into a file."/> 
 				</tooltip>
 			</Button>
-			<Button fx:id="signPgpKeyButton" onAction="#signPgpKeyButtonClicked"> 
+			<Button fx:id="assignPgpKeyToThisUserButton" onAction="#assignPgpKeyToThisUserButtonClicked"> 
 				<graphic>
 					<ImageView> 
 						<image>
-							<Image url="@sign-pgp-key-24x24.png"/> 
+							<Image url="@assign-pgp-key-to-this-user-24x24.png"/> 
 						</image>
 					</ImageView>
 				</graphic>
 				<tooltip>
-					<Tooltip text="Certify the authenticity of the selected PGP key (sign it)."/> 
+					<Tooltip text="Select a PGP key (or multiple) from your PGP key ring and assign it (or them) to this user (instead of the user they're currently associated with)."/> 
+				</tooltip>
+			</Button>
+			<Button fx:id="assignPgpKeyToOtherUserButton" onAction="#assignPgpKeyToOtherUserButtonClicked"> 
+				<graphic>
+					<ImageView> 
+						<image>
+							<Image url="@assign-pgp-key-to-other-user-24x24.png"/> 
+						</image>
+					</ImageView>
+				</graphic>
+				<tooltip>
+					<Tooltip text="Assign the selected PGP key(s) to another user (instead of this one)."/> 
 				</tooltip>
 			</Button>
 			<Button fx:id="deletePgpKeyButton" onAction="#deletePgpKeyButtonClicked"> 
@@ -99,6 +111,9 @@
 					<Insets left="16"/> 
 				</FlowPane.margin>
 			</Button>
+			<GridPane.margin>
+				<Insets bottom="8"/> 
+			</GridPane.margin>
 		</FlowPane>
 		<Label text="First name:" GridPane.columnIndex="0" GridPane.rowIndex="1"/> 
 		<TextField fx:id="firstNameTextField" GridPane.columnIndex="1" GridPane.rowIndex="1" GridPane.fillWidth="true" GridPane.hgrow="ALWAYS"/> 
