@@ -1,0 +1,95 @@
+package org.subshare.gui.pgp.keytree
+
+import javafx.scene.layout.BorderPane
+import javafx.scene.control.TreeTableView
+import javafx.scene.layout.GridPane
+import javafx.scene.layout.FlowPane
+import javafx.scene.control.Button
+import javafx.scene.image.ImageView
+import javafx.scene.image.Image
+import javafx.scene.control.Tooltip
+import javafx.scene.control.Label
+import javafx.scene.control.TextField
+import javafx.scene.control.TableView
+import javafx.scene.control.TableColumn
+import javafx.scene.control.TreeTableView
+import javafx.scene.control.TreeView
+import javafx.scene.control.TreeTableColumn
+import javafx.scene.control.cell.PropertyValueFactory
+import javafx.scene.control.cell.TreeItemPropertyValueFactory
+
+import org.subshare.gui.user.EmailWrapper
+import org.subshare.gui.pgp.keytree.PgpKeyTreeItem
+import javafx.geometry.Insets
+
+dynamic component PgpKeyTreePane {
+	BorderPane {
+		center : TreeTableView < PgpKeyTreeItem<?> > id treeTableView {
+				columns : [
+					TreeTableColumn < Object, String > id pgpKeyTreeTableColumn {
+						text : "PGP key",
+						prefWidth : 300,
+						cellValueFactory : TreeItemPropertyValueFactory < PgpKeyTreeItem<?>, String > {
+							property : "name"
+						}
+					},
+					TreeTableColumn < Object, String > id pgpKeyTreeTableColumn {
+						text : "Key-ID",
+						prefWidth : 80,
+						cellValueFactory : TreeItemPropertyValueFactory < PgpKeyTreeItem<?>, String > {
+							property : "keyId"
+						}
+					},
+//					TreeTableColumn < Object, String > id pgpKeyTreeTableColumn {
+//						text : "Key-trust",
+//						prefWidth : 150,
+//						cellValueFactory : TreeItemPropertyValueFactory < PgpKeyTreeItem<?>, String > {
+//							property : "keyTrust"
+//						}
+//					},
+//					TreeTableColumn < Object, String > id pgpKeyTreeTableColumn {
+//						text : "Owner-trust",
+//						prefWidth : 150,
+//						cellValueFactory : TreeItemPropertyValueFactory < PgpKeyTreeItem<?>, String > {
+//							property : "ownerTrust"
+//						}
+//					},
+					TreeTableColumn < Object, String > id createdTreeTableColumn {
+						text : "Created",
+						prefWidth : 100,
+						cellValueFactory : TreeItemPropertyValueFactory < PgpKeyTreeItem<?>, String > {
+							property : "created"
+						}
+					},
+					TreeTableColumn < Object, String > id validToTreeTableColumn {
+						text : "Valid to",
+						prefWidth : 100,
+						cellValueFactory : TreeItemPropertyValueFactory < PgpKeyTreeItem<?>, String > {
+							property : "validTo"
+						}
+					},
+					TreeTableColumn < Object, String > id algorithmTreeTableColumn {
+						text : "Algorithm",
+						prefWidth : 100,
+						cellValueFactory : TreeItemPropertyValueFactory < PgpKeyTreeItem<?>, String > {
+							property : "algorithm"
+						}
+					},
+					TreeTableColumn < Object, String > id strengthTreeTableColumn {
+						text : "Strength",
+						prefWidth : 100,
+						cellValueFactory : TreeItemPropertyValueFactory < PgpKeyTreeItem<?>, String > {
+							property : "strength"
+						}
+					},
+					TreeTableColumn < Object, String > id usageTreeTableColumn {
+						text : "Usage",
+						prefWidth : 250,
+						cellValueFactory : TreeItemPropertyValueFactory < PgpKeyTreeItem<?>, String > {
+							property : "usage"
+						}
+					}
+				]
+			}
+	}
+}

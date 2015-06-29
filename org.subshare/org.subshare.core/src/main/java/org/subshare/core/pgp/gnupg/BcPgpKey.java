@@ -11,6 +11,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.bouncycastle.bcpg.PublicKeyAlgorithmTags;
 import org.bouncycastle.bcpg.sig.KeyFlags;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
@@ -19,6 +20,7 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureSubpacketVector;
 import org.subshare.core.pgp.PgpKey;
+import org.subshare.core.pgp.PgpKeyAlgorithm;
 import org.subshare.core.pgp.PgpKeyFlag;
 import org.subshare.core.pgp.PgpKeyId;
 
@@ -109,6 +111,7 @@ public class BcPgpKey {
 			final Date validTo = validSeconds < 1 ? null : new Date(created.getTime() + (validSeconds * 1000));
 			this.pgpKey = new PgpKey(
 					pgpKeyId, fingerprint, masterPgpKey, created, validTo,
+					getPgpKeyAlgorithm(publicKey.getAlgorithm()), publicKey.getBitStrength(),
 					privateKeyAvailable, userIds, getPgpKeyFlags(), publicKey.isRevoked());
 
 			this.subKeyIds = Collections.unmodifiableSet(new LinkedHashSet<>(this.subKeyIds)); // turn read-only!
@@ -123,6 +126,34 @@ public class BcPgpKey {
 			this.pgpKey.setSubKeys(subKeys);
 		}
 		return pgpKey;
+	}
+
+	private PgpKeyAlgorithm getPgpKeyAlgorithm(int algorithm) {
+		switch (algorithm) {
+			case PublicKeyAlgorithmTags.RSA_ENCRYPT:
+			case PublicKeyAlgorithmTags.RSA_GENERAL:
+			case PublicKeyAlgorithmTags.RSA_SIGN:
+				return PgpKeyAlgorithm.RSA;
+
+			case PublicKeyAlgorithmTags.DSA:
+				return PgpKeyAlgorithm.DSA;
+
+			case PublicKeyAlgorithmTags.ECDH:
+				return PgpKeyAlgorithm.ECDH;
+
+			case PublicKeyAlgorithmTags.ECDSA:
+				return PgpKeyAlgorithm.ECDSA;
+
+			case PublicKeyAlgorithmTags.ELGAMAL_ENCRYPT:
+			case PublicKeyAlgorithmTags.ELGAMAL_GENERAL:
+				return PgpKeyAlgorithm.EL_GAMAL;
+
+			case PublicKeyAlgorithmTags.DIFFIE_HELLMAN:
+				return PgpKeyAlgorithm.DIFFIE_HELLMAN;
+
+			default:
+				throw new IllegalArgumentException("Unknown algorithm: " + algorithm);
+		}
 	}
 
 	private Set<PgpKeyFlag> getPgpKeyFlags() {

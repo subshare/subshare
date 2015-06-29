@@ -1,4 +1,4 @@
-package org.subshare.gui.user.pgpkeytree;
+package org.subshare.gui.pgp.keytree;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import javafx.collections.ObservableList;

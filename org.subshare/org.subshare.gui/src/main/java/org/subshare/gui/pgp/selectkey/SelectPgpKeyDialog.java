@@ -1,4 +1,4 @@
-package org.subshare.gui.selectuser;
+package org.subshare.gui.pgp.selectkey;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
@@ -15,18 +15,18 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
 
-import org.subshare.core.user.User;
+import org.subshare.core.pgp.PgpKey;
 
-public class SelectUserDialog extends Stage {
+public class SelectPgpKeyDialog extends Stage {
 
-	private final SelectUserPane selectUserPane;
+	private final SelectPgpKeyPane selectPgpKeyPane;
 
-	private List<User> selectedUsers;
+	private List<PgpKey> selectedPgpKeys;
 
-	public SelectUserDialog(final Window owner, final List<User> users, final Collection<User> selectedUsers, final SelectionMode selectionMode, final String headerText) {
+	public SelectPgpKeyDialog(final Window owner, final List<PgpKey> pgpKeys, final Collection<PgpKey> selectedPgpKeys, final SelectionMode selectionMode, final String headerText) {
 		assertNotNull("owner", owner);
-		assertNotNull("users", users);
-		// selectedUsers may be null
+		assertNotNull("pgpKeys", pgpKeys);
+		// selectedPgpKeys may be null
 
 		setResizable(false);
         initStyle(StageStyle.UTILITY);
@@ -34,27 +34,27 @@ public class SelectUserDialog extends Stage {
         initOwner(owner);
         setIconified(false);
 
-        selectUserPane = new SelectUserPane(users, selectedUsers, selectionMode, headerText) {
+        selectPgpKeyPane = new SelectPgpKeyPane(pgpKeys, selectedPgpKeys, selectionMode, headerText) {
 			@Override
 			protected void okButtonClicked(ActionEvent event) {
-				SelectUserDialog.this.okButtonClicked();
+				SelectPgpKeyDialog.this.okButtonClicked();
 			}
 
 			@Override
 			protected void cancelButtonClicked(ActionEvent event) {
-				SelectUserDialog.this.cancelButtonClicked();
+				SelectPgpKeyDialog.this.cancelButtonClicked();
 			}
         };
-        setScene(new Scene(selectUserPane));
+        setScene(new Scene(selectPgpKeyPane));
 
 		setOnShown(event -> {
 			// First, we must make this dialog request the focus. Otherwise, the focus
 			// will stay with the owner-window. IMHO very strange, wrong default behaviour...
-			SelectUserDialog.this.requestFocus();
+			SelectPgpKeyDialog.this.requestFocus();
 
 			// Now, we must make sure the correct field is focused. This causes the passphrase
 			// text-field to be focused.
-			selectUserPane.requestFocus();
+			selectPgpKeyPane.requestFocus();
 		});
 
 		getScene().addEventFilter(KeyEvent.ANY, event -> {
@@ -80,16 +80,16 @@ public class SelectUserDialog extends Stage {
 	}
 
 	protected void okButtonClicked() {
-		selectedUsers = new ArrayList<>(selectUserPane.getSelectedUsers());
+		selectedPgpKeys = new ArrayList<>(selectPgpKeyPane.getSelectedPgpKeys());
 		close();
 	}
 
 	protected void cancelButtonClicked() {
-		selectedUsers = null;
+		selectedPgpKeys = null;
 		close();
 	}
 
-	public List<User> getSelectedUsers() {
-		return selectedUsers;
+	public List<PgpKey> getSelectedPgpKeys() {
+		return selectedPgpKeys;
 	}
 }

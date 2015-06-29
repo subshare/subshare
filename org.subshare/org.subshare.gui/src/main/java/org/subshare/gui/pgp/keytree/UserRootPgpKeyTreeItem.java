@@ -1,4 +1,4 @@
-package org.subshare.gui.user.pgpkeytree;
+package org.subshare.gui.pgp.keytree;
 
 import static co.codewizards.cloudstore.core.bean.PropertyChangeListenerUtil.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
@@ -17,7 +17,7 @@ import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpKeyId;
 import org.subshare.core.user.User;
 
-public class RootPgpKeyTreeItem extends PgpKeyTreeItem<User> {
+public class UserRootPgpKeyTreeItem extends PgpKeyTreeItem<User> {
 
 	private final TreeTableView<PgpKeyTreeItem<?>> treeTableView;
 
@@ -25,7 +25,7 @@ public class RootPgpKeyTreeItem extends PgpKeyTreeItem<User> {
 
 	private final Map<PgpKeyId, PgpKeyPgpKeyTreeItem> pgpKeyId2PgpKeyPgpKeyTreeItem = new HashMap<>();
 
-	public RootPgpKeyTreeItem(final TreeTableView<PgpKeyTreeItem<?>> treeTableView, final User user) {
+	public UserRootPgpKeyTreeItem(final TreeTableView<PgpKeyTreeItem<?>> treeTableView, final User user) {
 		super(assertNotNull("user", user));
 		this.treeTableView = assertNotNull("treeTableView", treeTableView);
 

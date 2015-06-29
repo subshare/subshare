@@ -1,4 +1,4 @@
-package org.subshare.gui.user.pgpkeytree;
+package org.subshare.gui.pgp.keytree;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
@@ -46,6 +46,18 @@ public class SubKeyPgpKeyTreeItem extends PgpKeyTreeItem<PgpKey> {
 			return null;
 
 		return DateFormat.getDateInstance(DateFormat.SHORT).format(validTo);
+	}
+
+	@Override
+	public String getAlgorithm() {
+		final PgpKey subKey = getValueObject();
+		return PgpKeyAlgorithmName.getPgpKeyAlgorithmName(subKey.getAlgorithm());
+	}
+
+	@Override
+	public String getStrength() {
+		final PgpKey subKey = getValueObject();
+		return Integer.toString(subKey.getStrength());
 	}
 
 	@Override

@@ -1,4 +1,4 @@
-package org.subshare.gui.user.pgpkeytree;
+package org.subshare.gui.pgp.keytree;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import javafx.scene.Node;
@@ -38,6 +38,14 @@ public class PgpKeyTreeItem<T> extends TreeItem<PgpKeyTreeItem<?>> {
 	public String getValidTo() {
 		return null;
 	};
+
+	public String getAlgorithm() {
+		return null;
+	}
+
+	public String getStrength() {
+		return null;
+	}
 
 	public String getUsage() {
 		return null;

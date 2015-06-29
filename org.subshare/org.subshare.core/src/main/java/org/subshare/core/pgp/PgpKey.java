@@ -23,6 +23,8 @@ public class PgpKey implements Serializable {
 			null,
 			new Date(), // created
 			null, // validTo
+			PgpKeyAlgorithm.RSA,
+			4096,
 			true,
 			Collections.<String>emptyList(),
 			EnumSet.of(PgpKeyFlag.CAN_AUTHENTICATE, PgpKeyFlag.CAN_CERTIFY, PgpKeyFlag.CAN_SIGN, PgpKeyFlag.CAN_ENCRYPT_COMMS, PgpKeyFlag.CAN_ENCRYPT_STORAGE),
@@ -40,6 +42,10 @@ public class PgpKey implements Serializable {
 
 	private final Date validTo;
 
+	private final PgpKeyAlgorithm algorithm;
+
+	private final int strength;
+
 	private final boolean privateKeyAvailable;
 
 	private final List<String> userIds;
@@ -52,12 +58,15 @@ public class PgpKey implements Serializable {
 
 	private List<PgpKey> subKeys;
 
+
 	public PgpKey(
 			final PgpKeyId pgpKeyId,
 			final byte[] fingerprint,
 			final PgpKey masterKey,
 			final Date created,
 			final Date validTo,
+			final PgpKeyAlgorithm algorithm,
+			final int strength,
 			final boolean privateKeyAvailable,
 			final List<String> userIds,
 			final Set<PgpKeyFlag> pgpKeyFlags,
@@ -67,6 +76,8 @@ public class PgpKey implements Serializable {
 		this.masterKey = masterKey == null ? this : masterKey;
 		this.created = assertNotNull("created", created);
 		this.validTo = validTo; // may be null - null means, it does *not* expire.
+		this.algorithm = assertNotNull("algorithm", algorithm);
+		this.strength = strength;
 		this.privateKeyAvailable = privateKeyAvailable;
 		this.userIds = Collections.unmodifiableList(new ArrayList<String>(assertNotNull("userIds", userIds)));
 
@@ -110,6 +121,14 @@ public class PgpKey implements Serializable {
 			return true;
 
 		return false;
+	}
+
+	public PgpKeyAlgorithm getAlgorithm() {
+		return algorithm;
+	}
+
+	public int getStrength() {
+		return strength;
 	}
 
 	public boolean isRevoked() {

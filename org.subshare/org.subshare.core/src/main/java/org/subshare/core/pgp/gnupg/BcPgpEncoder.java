@@ -10,7 +10,6 @@ import java.security.SignatureException;
 import java.util.Date;
 import java.util.Iterator;
 
-import org.bouncycastle.bcpg.HashAlgorithmTags;
 import org.bouncycastle.bcpg.SymmetricKeyAlgorithmTags;
 import org.bouncycastle.openpgp.PGPCompressedDataGenerator;
 import org.bouncycastle.openpgp.PGPEncryptedDataGenerator;
@@ -136,7 +135,7 @@ public class BcPgpEncoder extends AbstractPgpEncoder {
 
 		final PGPSignatureGenerator signatureGenerator;
 		signatureGenerator = new PGPSignatureGenerator(new BcPGPContentSignerBuilder(
-				signSecretKey.getPublicKey().getAlgorithm(), HashAlgorithmTags.SHA1));
+				signSecretKey.getPublicKey().getAlgorithm(), getHashAlgorithm().getHashAlgorithmTag()));
 
 		signatureGenerator.init(PGPSignature.BINARY_DOCUMENT, pgpPrivKey);
 		final Iterator<?> it = signSecretKey.getPublicKey().getUserIDs();

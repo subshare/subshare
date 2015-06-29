@@ -19,7 +19,8 @@ import javafx.scene.control.cell.PropertyValueFactory
 import javafx.scene.control.cell.TreeItemPropertyValueFactory
 
 import org.subshare.gui.user.EmailWrapper
-import org.subshare.gui.user.pgpkeytree.PgpKeyTreeItem
+import org.subshare.gui.pgp.keytree.PgpKeyTreeItem
+import org.subshare.gui.pgp.keytree.PgpKeyTreePane
 import javafx.geometry.Insets
 
 dynamic component UserPane {
@@ -125,59 +126,7 @@ dynamic component UserPane {
 				static margin : Insets { top : 8 }
 			},
 
-			TreeTableView < PgpKeyTreeItem<?> > id pgpKeyTreeTableView {
-				columns : [
-					TreeTableColumn < Object, String > id pgpKeyTreeTableColumn {
-						text : "PGP key",
-						prefWidth : 300,
-						cellValueFactory : TreeItemPropertyValueFactory < PgpKeyTreeItem<?>, String > {
-							property : "name"
-						}
-					},
-					TreeTableColumn < Object, String > id pgpKeyTreeTableColumn {
-						text : "Key-ID",
-						prefWidth : 80,
-						cellValueFactory : TreeItemPropertyValueFactory < PgpKeyTreeItem<?>, String > {
-							property : "keyId"
-						}
-					},
-//					TreeTableColumn < Object, String > id pgpKeyTreeTableColumn {
-//						text : "Key-trust",
-//						prefWidth : 150,
-//						cellValueFactory : TreeItemPropertyValueFactory < PgpKeyTreeItem<?>, String > {
-//							property : "keyTrust"
-//						}
-//					},
-//					TreeTableColumn < Object, String > id pgpKeyTreeTableColumn {
-//						text : "Owner-trust",
-//						prefWidth : 150,
-//						cellValueFactory : TreeItemPropertyValueFactory < PgpKeyTreeItem<?>, String > {
-//							property : "ownerTrust"
-//						}
-//					},
-					TreeTableColumn < Object, String > id createdTreeTableColumn {
-						text : "Created",
-						prefWidth : 100,
-						cellValueFactory : TreeItemPropertyValueFactory < PgpKeyTreeItem<?>, String > {
-							property : "created"
-						}
-					},
-					TreeTableColumn < Object, String > id validToTreeTableColumn {
-						text : "Valid to",
-						prefWidth : 100,
-						cellValueFactory : TreeItemPropertyValueFactory < PgpKeyTreeItem<?>, String > {
-							property : "validTo"
-						}
-					},
-					TreeTableColumn < Object, String > id usageTreeTableColumn {
-						text : "Usage",
-						prefWidth : 250,
-						cellValueFactory : TreeItemPropertyValueFactory < PgpKeyTreeItem<?>, String > {
-							property : "usage"
-						}
-					}
-				],
-
+			PgpKeyTreePane id pgpKeyTreePane {
 				static columnIndex : 0,
 				static rowIndex : 4,
 				static columnSpan : 2,

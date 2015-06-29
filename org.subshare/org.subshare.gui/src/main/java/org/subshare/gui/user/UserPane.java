@@ -32,7 +32,6 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TreeItem;
-import javafx.scene.control.TreeTableView;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.GridPane;
 import javafx.stage.FileChooser;
@@ -41,6 +40,7 @@ import javafx.stage.Window;
 import org.subshare.core.pgp.CreatePgpKeyParam;
 import org.subshare.core.pgp.Pgp;
 import org.subshare.core.pgp.PgpKey;
+import org.subshare.core.pgp.PgpKeyId;
 import org.subshare.core.pgp.man.PgpPrivateKeyPassphraseStore;
 import org.subshare.core.user.User;
 import org.subshare.core.user.UserRegistry;
@@ -51,10 +51,12 @@ import org.subshare.gui.pgp.createkey.CreatePgpKeyDialog;
 import org.subshare.gui.pgp.createkey.FxPgpUserId;
 import org.subshare.gui.pgp.createkey.TimeUnit;
 import org.subshare.gui.pgp.creatingkey.CreatingPgpKeyDialog;
+import org.subshare.gui.pgp.keytree.PgpKeyPgpKeyTreeItem;
+import org.subshare.gui.pgp.keytree.PgpKeyTreeItem;
+import org.subshare.gui.pgp.keytree.PgpKeyTreePane;
+import org.subshare.gui.pgp.keytree.UserRootPgpKeyTreeItem;
+import org.subshare.gui.pgp.selectkey.SelectPgpKeyDialog;
 import org.subshare.gui.selectuser.SelectUserDialog;
-import org.subshare.gui.user.pgpkeytree.PgpKeyPgpKeyTreeItem;
-import org.subshare.gui.user.pgpkeytree.PgpKeyTreeItem;
-import org.subshare.gui.user.pgpkeytree.RootPgpKeyTreeItem;
 
 import co.codewizards.cloudstore.core.oio.File;
 
@@ -81,7 +83,8 @@ public class UserPane extends GridPane {
 	private TableColumn<EmailWrapper, String> emailTableColumn;
 
 	@FXML
-	private TreeTableView<PgpKeyTreeItem<?>> pgpKeyTreeTableView;
+//	private TreeTableView<PgpKeyTreeItem<?>> pgpKeyTreeTableView;
+	private PgpKeyTreePane pgpKeyTreePane;
 
 	@FXML
 	private Button createPgpKeyButton;
@@ -138,11 +141,9 @@ public class UserPane extends GridPane {
 
 		emailTableColumn.prefWidthProperty().bind(emailsTableView.widthProperty().subtract(10)); // TODO we should find out the scroll-bar-width and subtract this!
 
-		final RootPgpKeyTreeItem root = new RootPgpKeyTreeItem(pgpKeyTreeTableView, user);
-		pgpKeyTreeTableView.setShowRoot(false);
-		pgpKeyTreeTableView.setRoot(root);
-		pgpKeyTreeTableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-		pgpKeyTreeTableView.getSelectionModel().getSelectedItems().addListener((InvalidationListener) observable -> updateDisable());
+		final UserRootPgpKeyTreeItem root = new UserRootPgpKeyTreeItem(pgpKeyTreePane.getTreeTableView(), user);
+		pgpKeyTreePane.getTreeTableView().setRoot(root);
+		pgpKeyTreePane.getTreeTableView().getSelectionModel().getSelectedItems().addListener((InvalidationListener) observable -> updateDisable());
 		updateDisable();
 	}
 
@@ -156,7 +157,7 @@ public class UserPane extends GridPane {
 
 	private Set<PgpKey> getSelectedPgpKeys() {
 		final Set<PgpKey> result = new LinkedHashSet<PgpKey>();
-		for (final TreeItem<PgpKeyTreeItem<?>> treeItem : pgpKeyTreeTableView.getSelectionModel().getSelectedItems()) {
+		for (final TreeItem<PgpKeyTreeItem<?>> treeItem : pgpKeyTreePane.getTreeTableView().getSelectionModel().getSelectedItems()) {
 			final PgpKeyTreeItem<?> pgpKeyTreeItem = treeItem.getValue();
 			final PgpKeyPgpKeyTreeItem pgpKeyPgpKeyTreeItem = pgpKeyTreeItem.getThisOrParentPgpKeyTreeItemOfType(PgpKeyPgpKeyTreeItem.class);
 			assertNotNull("pgpKeyPgpKeyTreeItem", pgpKeyPgpKeyTreeItem);
@@ -422,6 +423,22 @@ public class UserPane extends GridPane {
 
 	@FXML
 	private void assignPgpKeyToThisUserButtonClicked(final ActionEvent event) {
+		final SelectPgpKeyDialog dialog = new SelectPgpKeyDialog(getScene().getWindow(),
+				new ArrayList<>(getPgp().getMasterKeys()), null, SelectionMode.MULTIPLE,
+				"Please select one or more PGP keys you want to 'pull' here.");
+		dialog.showAndWait();
+		final List<PgpKey> selectedPgpKeys = dialog.getSelectedPgpKeys();
+		if (selectedPgpKeys == null || selectedPgpKeys.isEmpty())
+			return;
+
+		final Set<PgpKeyId> selectedPgpKeyIds = new HashSet<>(selectedPgpKeys.size());
+		for (final PgpKey pgpKey : selectedPgpKeys)
+			selectedPgpKeyIds.add(pgpKey.getPgpKeyId());
+
+		for (User user : getUserRegistry().getUsersByPgpKeyIds(selectedPgpKeyIds))
+			user.getPgpKeyIds().removeAll(selectedPgpKeyIds);
+
+		user.getPgpKeyIds().addAll(selectedPgpKeyIds);
 	}
 
 	@FXML

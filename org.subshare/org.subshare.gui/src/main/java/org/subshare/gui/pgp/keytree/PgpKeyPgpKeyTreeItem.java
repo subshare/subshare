@@ -1,10 +1,10 @@
-package org.subshare.gui.user.pgpkeytree;
+package org.subshare.gui.pgp.keytree;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.text.DateFormat;
 import java.util.Date;
-import java.util.EnumSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -12,6 +12,7 @@ import javafx.collections.ObservableList;
 import javafx.scene.control.TreeItem;
 
 import org.subshare.core.pgp.PgpKey;
+import org.subshare.core.pgp.PgpKeyAlgorithm;
 import org.subshare.core.pgp.PgpKeyFlag;
 
 public class PgpKeyPgpKeyTreeItem extends PgpKeyTreeItem<PgpKey> {
@@ -72,8 +73,48 @@ public class PgpKeyPgpKeyTreeItem extends PgpKeyTreeItem<PgpKey> {
 	}
 
 	@Override
+	public String getAlgorithm() {
+		final Set<PgpKeyAlgorithm> allPgpKeyAlgorithms = new LinkedHashSet<>();
+
+		final PgpKey pgpKey = getPgpKey();
+		allPgpKeyAlgorithms.add(pgpKey.getAlgorithm());
+		for (final PgpKey subKey : pgpKey.getSubKeys())
+			allPgpKeyAlgorithms.add(subKey.getAlgorithm());
+
+		final StringBuilder sb = new StringBuilder();
+		for (final PgpKeyAlgorithm algorithm : allPgpKeyAlgorithms) {
+			if (sb.length() > 0)
+				sb.append(", ");
+
+			sb.append(PgpKeyAlgorithmName.getPgpKeyAlgorithmName(algorithm));
+		}
+
+		return sb.toString();
+	}
+
+	@Override
+	public String getStrength() {
+		final Set<Integer> allPgpKeyStrengths = new LinkedHashSet<>();
+
+		final PgpKey pgpKey = getPgpKey();
+		allPgpKeyStrengths.add(pgpKey.getStrength());
+		for (final PgpKey subKey : pgpKey.getSubKeys())
+			allPgpKeyStrengths.add(subKey.getStrength());
+
+		final StringBuilder sb = new StringBuilder();
+		for (final Integer strength : allPgpKeyStrengths) {
+			if (sb.length() > 0)
+				sb.append(", ");
+
+			sb.append(strength);
+		}
+
+		return sb.toString();
+	}
+
+	@Override
 	public String getUsage() {
-		final Set<PgpKeyFlag> allPgpKeyFlags = EnumSet.noneOf(PgpKeyFlag.class);
+		final Set<PgpKeyFlag> allPgpKeyFlags = new LinkedHashSet<>();
 
 		final PgpKey pgpKey = getPgpKey();
 		allPgpKeyFlags.addAll(pgpKey.getPgpKeyFlags());
