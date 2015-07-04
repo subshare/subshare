@@ -1,6 +1,50 @@
+import org.apache.tools.ant.filters.*
+
 dependencies {
 	compile group: 'co.codewizards.cloudstore', name: 'co.codewizards.cloudstore.server', version: cloudstoreVersion
 	compile project(':org.subshare.rest.server')
 	compile project(':org.subshare.local')
 	compile project(':org.subshare.ls.server')
 }
+
+jar {
+	manifest {
+		attributes(
+			'Main-Class': 'org.subshare.server.SubShareServer',
+			'Class-Path': configurations.compile.collect { it.getName() }.join(' '))
+	}
+}
+
+task copyDependencies(type: Copy) {
+	into "$buildDir/assembly/lib"
+	from configurations.compile
+}
+
+task copyJar(type: Copy) {
+	into "$buildDir/assembly/lib"
+	from "$buildDir/libs"
+}
+
+task zipAssembly(type: Zip) {
+	includeEmptyDirs true
+	from "$buildDir/assembly"
+}
+
+task filterFiles(type: Copy) {
+	
+	from 'src/assembly/installation.properties'
+
+	into "$buildDir/assembly"
+
+	// Use ANT filter ReplaceTokens.
+	filter(ReplaceTokens,
+		tokens: [
+			'project.artifactId' : project.name,
+			'project.version' : project.version
+		])
+}
+
+build.dependsOn(copyDependencies)
+build.dependsOn(copyJar)
+build.dependsOn(filterFiles)
+build.dependsOn(zipAssembly)

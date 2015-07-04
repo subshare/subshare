@@ -50,7 +50,7 @@ subprojects {
     }
 
     jar {
-        manifest.attributes provider: 'CodeWizards GmbH / SubShare Team'
+        manifest.attributes Provider: 'CodeWizards GmbH + blackbytes GmbH'
     }
 
 	tasks.withType(Test) {

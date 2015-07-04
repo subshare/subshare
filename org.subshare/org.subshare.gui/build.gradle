@@ -1,3 +1,5 @@
+import org.apache.tools.ant.filters.*
+
 sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
 
@@ -26,9 +28,14 @@ sourceSets {
 dependencies {
 	compile project(':org.subshare.ls.client')
 	compile project(':org.subshare.ls.server')
-	
+
 	// the following is needed only to configure the SSL certificate check callback - maybe not needed in the future, anymore
 	compile project(':org.subshare.rest.client')
+
+	// We cannot use the nio stuff on Android, AFAIK. Hence, we either must move the assembly of this gui stuff for ordinary
+	// desktop PCs into a separate project or override this somehow for Android (exclude the dependency). Need to deal with
+	// this later.
+	compile "co.codewizards.cloudstore:co.codewizards.cloudstore.core.oio.nio:$cloudstoreVersion"
 
 	compile "org.slf4j:log4j-over-slf4j:$slf4jVersion", "ch.qos.logback:logback-classic:$logbackVersion"
 
@@ -36,3 +43,45 @@ dependencies {
 	runtime project(':org.subshare.local')
 //	runtime project(':org.subshare.rest.client')
 }
+
+jar {
+	manifest {
+		attributes(
+			'Main-Class': 'org.subshare.gui.SubShareGui',
+			'Class-Path': configurations.compile.collect { it.getName() }.join(' '))
+	}
+}
+
+task copyDependencies(type: Copy) {
+	into "$buildDir/assembly/lib"
+	from configurations.compile
+}
+
+task copyJar(type: Copy) {
+	into "$buildDir/assembly/lib"
+	from "$buildDir/libs"
+}
+
+task filterFiles(type: Copy) {
+
+	from 'src/assembly/installation.properties'
+
+	into "$buildDir/assembly"
+
+	// Use ANT filter ReplaceTokens.
+	filter(ReplaceTokens,
+		tokens: [
+			'project.artifactId' : project.name,
+			'project.version' : project.version
+		])
+}
+
+task zipAssembly(type: Zip) {
+	includeEmptyDirs true
+	from "$buildDir/assembly"
+}
+
+build.dependsOn(copyDependencies)
+build.dependsOn(copyJar)
+build.dependsOn(filterFiles)
+build.dependsOn(zipAssembly)
