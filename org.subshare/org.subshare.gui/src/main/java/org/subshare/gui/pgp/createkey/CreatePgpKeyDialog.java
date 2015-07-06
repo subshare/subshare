@@ -1,10 +1,6 @@
 package org.subshare.gui.pgp.createkey;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import javafx.event.ActionEvent;
 import javafx.scene.Scene;
 import javafx.stage.Modality;
@@ -13,7 +9,6 @@ import javafx.stage.StageStyle;
 import javafx.stage.Window;
 
 import org.subshare.core.pgp.CreatePgpKeyParam;
-import org.subshare.core.pgp.PgpUserId;
 
 public class CreatePgpKeyDialog extends Stage {
 
@@ -61,19 +56,20 @@ public class CreatePgpKeyDialog extends Stage {
 
 	protected void okButtonClicked(final ActionEvent event) {
 		okPressed = true;
-		removeEmptyUserIds();
+//		removeEmptyUserIds();
+		createPgpKeyParam.getUserIds().removeIf(pgpUserId -> pgpUserId.isEmpty());
 		close();
 	}
 
-	private void removeEmptyUserIds() {
-		List<PgpUserId> emptyUserIds = new ArrayList<>();
-		for (PgpUserId pgpUserId : createPgpKeyParam.getUserIds()) {
-			if (pgpUserId.isEmpty())
-				emptyUserIds.add(pgpUserId);
-		}
-
-		createPgpKeyParam.getUserIds().removeAll(emptyUserIds);
-	}
+//	private void removeEmptyUserIds() {
+//		List<PgpUserId> emptyUserIds = new ArrayList<>();
+//		for (PgpUserId pgpUserId : createPgpKeyParam.getUserIds()) {
+//			if (pgpUserId.isEmpty())
+//				emptyUserIds.add(pgpUserId);
+//		}
+//
+//		createPgpKeyParam.getUserIds().removeAll(emptyUserIds);
+//	}
 
 	protected void cancelButtonClicked(final ActionEvent event) {
 		okPressed = false;

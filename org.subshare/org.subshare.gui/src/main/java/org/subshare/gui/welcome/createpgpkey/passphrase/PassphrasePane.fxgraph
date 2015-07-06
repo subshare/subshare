@@ -1,0 +1,56 @@
+package org.subshare.gui.welcome.createpgpkey.passphrase
+
+import javafx.scene.layout.GridPane
+import javafx.scene.text.Text
+import javafx.geometry.Insets
+import javafx.scene.control.Label
+import javafx.scene.control.PasswordField
+import javafx.scene.control.CheckBox
+
+dynamic component PassphrasePane resourcefile 'messages.properties' {
+	GridPane {
+		prefWidth : 400,
+		prefHeight : 300,
+
+		children : [
+			Text id headerText {
+				text : rstring 'PassphrasePane.headerText.text',
+				static columnIndex : 0,
+				static rowIndex : 0,
+				static columnSpan : 2,
+				static margin : Insets { bottom : 16 }
+			},
+
+			Label id passwordLabel {
+				text : "Passphrase:",
+				static columnIndex : 0,
+				static rowIndex : 1
+			},
+			PasswordField id passwordField {
+				static columnIndex : 1,
+				static rowIndex : 1,
+				static margin : Insets { left : 8 }
+			},
+
+			Label id passwordLabel2 {
+				text : "Passphrase (again):",
+				static columnIndex : 0,
+				static rowIndex : 2
+				
+			},
+			PasswordField id passwordField2 {
+				static columnIndex : 1,
+				static rowIndex : 2,
+				static margin : Insets { left : 8 }
+			},
+			
+			CheckBox id noPasswordCheckBox {
+				text : "No passphrase! I know it's insecure.",
+				static columnIndex : 0,
+				static rowIndex : 3,
+				static margin : Insets { top : 8 },
+				static columnSpan : 2
+			}
+		]
+	}
+}

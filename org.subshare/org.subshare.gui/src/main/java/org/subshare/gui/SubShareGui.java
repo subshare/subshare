@@ -6,9 +6,6 @@ import static org.subshare.gui.util.ResourceBundleUtil.*;
 
 import java.io.IOException;
 import java.util.Date;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -29,6 +26,7 @@ import org.subshare.gui.ls.PgpPrivateKeyPassphraseManagerLs;
 import org.subshare.gui.pgp.privatekeypassphrase.PgpPrivateKeyPassphrasePromptDialog;
 import org.subshare.gui.splash.SplashPane;
 import org.subshare.gui.util.PlatformUtil;
+import org.subshare.gui.welcome.Welcome;
 import org.subshare.ls.server.SsLocalServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -98,6 +96,7 @@ public class SubShareGui extends Application {
 						@Override
 						public void run() {
 							try {
+								new Welcome(primaryStage.getScene().getWindow()).welcome();
 								promptPgpKeyPassphrases(primaryStage.getScene().getWindow());
 
 								final Parent root = FXMLLoader.load(
@@ -166,10 +165,10 @@ public class SubShareGui extends Application {
 		final PgpPrivateKeyPassphraseStore pgpPrivateKeyPassphraseStore = PgpPrivateKeyPassphraseManagerLs.getPgpPrivateKeyPassphraseStore();
 		final Date now = new Date();
 
-		// Trying to submit the empty passphrases takes a while, because the exceptions cause our
-		// LocalServerClient to perform a retry. We therefore simply use multiple threads.
-		final ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
-		try {
+//		// Trying to submit the empty passphrases takes a while, because the exceptions cause our
+//		// LocalServerClient to perform a retry. We therefore simply use multiple threads.
+//		final ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
+//		try {
 			for (final PgpKey pgpKey : pgp.getMasterKeysWithPrivateKey()) {
 				if (pgpKey.isRevoked() || !pgpKey.isValid(now))
 					continue;
@@ -178,28 +177,28 @@ public class SubShareGui extends Application {
 				if (pgpPrivateKeyPassphraseStore.hasPassphrase(pgpKeyId))
 					continue;
 
-				executorService.submit(new Runnable() {
-					@Override
-					public void run() {
-						// To prevent log pollution as well as speeding this up (LocalServer-RPC does retries in case of *all* exceptions),
-						//  I first invoke testPassphrase(...) (even though this would not be necessary).
-						if (! pgp.testPassphrase(pgpKey, new char[0]))
-							return;
+//				executorService.submit(new Runnable() {
+//					@Override
+//					public void run() {
+						// We try an empty password to prevent a dialog from popping up, if the PGP key is not passphrase-protected.
 
-						// Try an empty password to prevent a dialog from popping up, if the PGP key is not passphrase-protected.
-						try {
-							pgpPrivateKeyPassphraseStore.putPassphrase(pgpKeyId, new char[0]);
-							// successful => next PGP key
-						} catch (Exception x) {
-							doNothing();
+						// To prevent log pollution as well as speeding this up (LocalServer-RPC does retries in case of *all* exceptions),
+						// I first invoke testPassphrase(...) (even though this would not be necessary).
+						if (pgp.testPassphrase(pgpKey, new char[0])) {
+							try {
+								pgpPrivateKeyPassphraseStore.putPassphrase(pgpKeyId, new char[0]);
+								// successful => next PGP key
+							} catch (Exception x) {
+								doNothing();
+							}
 						}
-					}
-				});
+//					}
+//				});
 			}
-		} finally {
-			executorService.shutdown();
-			executorService.awaitTermination(10, TimeUnit.MINUTES);
-		}
+//		} finally {
+//			executorService.shutdown();
+//			executorService.awaitTermination(10, TimeUnit.MINUTES);
+//		}
 	}
 
 	private void promptPgpKeyPassphrases(Window owner) {

@@ -23,6 +23,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
@@ -52,11 +53,17 @@ public abstract class CreatePgpKeyPane extends GridPane {
 	private TableColumn<FxPgpUserId, String> emailTableColumn;
 
 	@FXML
+	private Label passwordLabel;
+
+	@FXML
 	private PasswordField passwordField;
 	private final JavaBeanObjectProperty<char[]> passwordProperty;
 
 	@FXML
 	private CheckBox noPasswordCheckBox;
+
+	@FXML
+	private Label passwordLabel2;
 
 	@FXML
 	private PasswordField passwordField2;
@@ -115,6 +122,8 @@ public abstract class CreatePgpKeyPane extends GridPane {
 		noPasswordCheckBox.selectedProperty().addListener(updateDisabledInvalidationListener);
 		passwordField.disableProperty().bind(noPasswordCheckBox.selectedProperty());
 		passwordField2.disableProperty().bind(noPasswordCheckBox.selectedProperty());
+		passwordLabel.disableProperty().bind(noPasswordCheckBox.selectedProperty());
+		passwordLabel2.disableProperty().bind(noPasswordCheckBox.selectedProperty());
 
 		validityNumberSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, Integer.MAX_VALUE));
 		validityNumberSpinner.valueProperty().addListener((InvalidationListener) observable -> {
@@ -156,30 +165,35 @@ public abstract class CreatePgpKeyPane extends GridPane {
 		updateDisabled();
 	}
 
-	private void updateDisabled() {
-		boolean disable = validityNumberSpinner.getValue() == null;
+	protected boolean isComplete() {
+		boolean complete = validityNumberSpinner.getValue() != null;
 
-		if (! disable) {
+		if (complete) {
 			int nonEmptyPgpUserIdCount = 0;
 			for (PgpUserId pgpUserId : createPgpKeyParam.getUserIds()) {
 				if (! pgpUserId.isEmpty())
 					++nonEmptyPgpUserIdCount;
 			}
 
-			disable |= nonEmptyPgpUserIdCount == 0;
+			complete &= nonEmptyPgpUserIdCount > 0;
 		}
 
-		if (! disable) {
+		if (complete) {
 			if (! noPasswordCheckBox.isSelected()) {
 				final char[] p1 = createPgpKeyParam.getPassphrase();
 				final char[] p2 = passwordField2.getText().toCharArray();
-				disable |= ! Arrays.equals(p1, p2);
+				complete &= Arrays.equals(p1, p2);
 
-				if (! disable && p1.length == 0)
-					disable = true;
+				if (complete && p1.length == 0)
+					complete = false;
 			}
 		}
-		okButton.setDisable(disable);
+
+		return complete;
+	}
+
+	protected void updateDisabled() {
+		okButton.setDisable(! isComplete());
 	}
 
 	private void updateValidityNumberSpinner() {

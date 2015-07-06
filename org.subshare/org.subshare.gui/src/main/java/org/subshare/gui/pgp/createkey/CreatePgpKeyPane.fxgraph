@@ -57,7 +57,7 @@ dynamic component CreatePgpKeyPane {
 				static margin : Insets { left : 8 }
 			},
 
-			Label {
+			Label id passwordLabel {
 				text : "Passphrase:",
 				static columnIndex : 0,
 				static rowIndex : 1
@@ -74,7 +74,7 @@ dynamic component CreatePgpKeyPane {
 				static margin : Insets { left : 8 }
 			},
 
-			Label {
+			Label id passwordLabel2 {
 				text : "Passphrase (again):",
 				static columnIndex : 0,
 				static rowIndex : 2
@@ -132,7 +132,7 @@ dynamic component CreatePgpKeyPane {
 				static margin : Insets { left : 8 }
 			},
 			
-			ButtonBar {
+			ButtonBar id buttonBar {
 				buttons : [
 					Button id okButton {
 						graphic : ImageView { image : Image { url : "@ok-24x24.png" } },
