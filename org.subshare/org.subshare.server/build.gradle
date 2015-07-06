@@ -25,26 +25,42 @@ task copyJar(type: Copy) {
 	from "$buildDir/libs"
 }
 
-task zipAssembly(type: Zip) {
+def filterTokenMap = [
+			'project.artifactId' : project.name,
+			'project.version' : project.version
+		]
+
+task copyFilesFromAssembly(type: Copy) {
+	into "$buildDir/assembly"
+	from 'src/assembly/installation.properties'
+
+	// Use ANT filter ReplaceTokens.
+	filter(ReplaceTokens, tokens: filterTokenMap)
+}
+
+task copyFilesFromBin(type: Copy) {
+	into "$buildDir/assembly/bin"
+	from 'src/bin'
+
+	// Use ANT filter ReplaceTokens.
+	filter(ReplaceTokens, tokens: filterTokenMap)
+}
+
+task chmodMainExecutable(type:Exec, dependsOn: [ copyFilesFromBin, copyFilesFromAssembly ]) {
+	commandLine = ['chmod', 'a+x', 'csx-server']
+	workingDir = file("$buildDir/assembly/bin")
+}
+
+task tarGzAssembly(type: Tar, dependsOn: [ chmodMainExecutable, copyJar, copyDependencies ]) {
+	compression = Compression.GZIP
+	extension = 'tar.gz' // default is 'tgz'
 	includeEmptyDirs true
 	from "$buildDir/assembly"
 }
 
-task filterFiles(type: Copy) {
-	
-	from 'src/assembly/installation.properties'
-
-	into "$buildDir/assembly"
-
-	// Use ANT filter ReplaceTokens.
-	filter(ReplaceTokens,
-		tokens: [
-			'project.artifactId' : project.name,
-			'project.version' : project.version
-		])
+task zipAssembly(type: Zip, dependsOn: tarGzAssembly) {
+	includeEmptyDirs true
+	from "$buildDir/assembly"
 }
 
-build.dependsOn(copyDependencies)
-build.dependsOn(copyJar)
-build.dependsOn(filterFiles)
 build.dependsOn(zipAssembly)
