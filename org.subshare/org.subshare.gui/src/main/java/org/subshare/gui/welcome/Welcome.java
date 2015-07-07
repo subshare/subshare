@@ -5,6 +5,7 @@ import javafx.stage.Window;
 
 import org.subshare.gui.util.PlatformUtil;
 import org.subshare.gui.wizard.WizardDialog;
+import org.subshare.gui.wizard.WizardState;
 
 public class Welcome {
 
@@ -15,14 +16,21 @@ public class Welcome {
 		this.owner = assertNotNull("owner", owner);
 	}
 
-	public void welcome() {
+	public boolean welcome() {
+		final boolean[] result = new boolean[1];
 		PlatformUtil.runAndWait(new Runnable() {
 			@Override
 			public void run() {
 				WelcomeWizard welcomeWizard = new WelcomeWizard(welcomeData);
-				WizardDialog wizardDialog = new WizardDialog(owner, welcomeWizard);
-				wizardDialog.showAndWait();
+				if (welcomeWizard.isNeeded()) {
+					WizardDialog wizardDialog = new WizardDialog(owner, welcomeWizard);
+					wizardDialog.showAndWait();
+					result[0] = WizardState.FINISHED == welcomeWizard.stateProperty().get();
+				}
+				else
+					result[0] = true;
 			}
 		});
+		return result[0];
 	}
 }

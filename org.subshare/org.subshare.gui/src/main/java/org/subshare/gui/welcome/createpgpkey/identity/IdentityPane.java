@@ -15,10 +15,16 @@ public class IdentityPane extends GridPane {
 	private final WelcomeData welcomeData;
 
 	@FXML
-	protected Label nameLabel;
+	protected Label firstNameLabel;
 
 	@FXML
-	protected TextField nameTextField;
+	protected TextField firstNameTextField;
+
+	@FXML
+	protected Label lastNameLabel;
+
+	@FXML
+	protected TextField lastNameTextField;
 
 	@FXML
 	protected Label emailLabel;
@@ -33,13 +39,24 @@ public class IdentityPane extends GridPane {
 		this.welcomeData = assertNotNull("welcomeData", welcomeData);
 		loadDynamicComponentFxml(IdentityPane.class, this);
 
-		nameTextField.textProperty().bindBidirectional(welcomeData.getPgpUserId().nameProperty());
+		firstNameTextField.textProperty().bindBidirectional(welcomeData.firstNameProperty());
+		lastNameTextField.textProperty().bindBidirectional(welcomeData.lastNameProperty());
 		emailTextField.textProperty().bindBidirectional(welcomeData.getPgpUserId().emailProperty());
 		importBackupCheckBox.selectedProperty().bindBidirectional(welcomeData.importBackupProperty());
 
-		nameLabel.disableProperty().bind(importBackupCheckBox.selectedProperty());
-		nameTextField.disableProperty().bind(importBackupCheckBox.selectedProperty());
+		firstNameLabel.disableProperty().bind(importBackupCheckBox.selectedProperty());
+		firstNameTextField.disableProperty().bind(importBackupCheckBox.selectedProperty());
+
+		lastNameLabel.disableProperty().bind(importBackupCheckBox.selectedProperty());
+		lastNameTextField.disableProperty().bind(importBackupCheckBox.selectedProperty());
+
 		emailLabel.disableProperty().bind(importBackupCheckBox.selectedProperty());
 		emailTextField.disableProperty().bind(importBackupCheckBox.selectedProperty());
+	}
+
+	@Override
+	public void requestFocus() {
+		super.requestFocus();
+		firstNameTextField.requestFocus();
 	}
 }

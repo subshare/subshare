@@ -49,6 +49,7 @@ public class SubShareGui extends Application {
 	private SsLocalServer localServer;
 	private Stage primaryStage;
 	private SplashPane splashPane;
+	private int exitCode = 0;
 
 	@Override
 	public void start(final Stage primaryStage) throws Exception {
@@ -96,7 +97,12 @@ public class SubShareGui extends Application {
 						@Override
 						public void run() {
 							try {
-								new Welcome(primaryStage.getScene().getWindow()).welcome();
+								if (! new Welcome(primaryStage.getScene().getWindow()).welcome()) {
+									exitCode = 1;
+									SubShareGui.this.stop();
+									return;
+								}
+
 								promptPgpKeyPassphrases(primaryStage.getScene().getWindow());
 
 								final Parent root = FXMLLoader.load(
@@ -113,13 +119,19 @@ public class SubShareGui extends Application {
 								LocalServerInitLs.initFinish();
 							} catch (Exception x) {
 								ErrorHandler.handleError(x);
-								System.exit(666);
+								try {
+									exitCode = 666;
+									SubShareGui.this.stop();
+								} catch (Exception e) { doNothing(); }
 							}
 						}
 					});
 				} catch (Exception x) {
 					ErrorHandler.handleError(x);
-					System.exit(666);
+					try {
+						exitCode = 666;
+						SubShareGui.this.stop();
+					} catch (Exception e) { doNothing(); }
 				}
 			}
 		}.start();
@@ -150,7 +162,7 @@ public class SubShareGui extends Application {
 					Thread.sleep(1000L);
 				} catch (InterruptedException e) { doNothing(); }
 
-				System.exit(0);
+				System.exit(exitCode);
 			}
 
 		}.start();

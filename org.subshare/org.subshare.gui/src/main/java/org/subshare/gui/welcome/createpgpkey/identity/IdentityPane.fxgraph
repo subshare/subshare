@@ -23,30 +23,43 @@ dynamic component IdentityPane resourcefile 'messages.properties' {
 				static margin : Insets { bottom : 16 }
 			},
 			
-			Label id nameLabel {
-				text : rstring 'IdentityPane.nameLabel.text',
+			Label id firstNameLabel {
+				text : rstring 'IdentityPane.firstNameLabel.text',
 				static columnIndex : 0,
 				static rowIndex : 1
 			},
-			TextField id nameTextField {
+			TextField id firstNameTextField {
 				static columnIndex : 1,
-				static rowIndex : 1
+				static rowIndex : 1,
+				static margin : Insets { left : 8 }
+			},
+
+			Label id lastNameLabel {
+				text : rstring 'IdentityPane.lastNameLabel.text',
+				static columnIndex : 0,
+				static rowIndex : 2
+			},
+			TextField id lastNameTextField {
+				static columnIndex : 1,
+				static rowIndex : 2,
+				static margin : Insets { left : 8 }
 			},
 			
 			Label id emailLabel {
 				text : rstring 'IdentityPane.emailLabel.text',
 				static columnIndex : 0,
-				static rowIndex : 2
+				static rowIndex : 3
 			},
 			TextField id emailTextField {
 				static columnIndex : 1,
-				static rowIndex : 2
+				static rowIndex : 3,
+				static margin : Insets { left : 8 }
 			},
 			
 			CheckBox id importBackupCheckBox {
 				text : rstring 'IdentityPane.importBackupCheckBox.text',				
 				static columnIndex : 0,
-				static rowIndex : 3,
+				static rowIndex : 4,
 				static columnSpan : 2,
 				static margin : Insets { top : 8 }
 			}

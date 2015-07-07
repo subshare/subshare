@@ -8,31 +8,60 @@
 <?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.text.Text?>
 <?scenebuilder-preview-i18n-resource messages.properties?>
 
 <fx:root xmlns:fx="http://javafx.com/fxml" type="GridPane" prefWidth="400" prefHeight="300">
 
 	<children>
-		<Text fx:id="headerText" text="%PassphrasePane.headerText.text" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="2"> 
+		<Text fx:id="headerText" text="%PassphrasePane.headerText.text" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="3"> 
 			<GridPane.margin>
 				<Insets bottom="16"/> 
 			</GridPane.margin>
 		</Text>
-		<Label fx:id="passwordLabel" text="Passphrase:" GridPane.columnIndex="0" GridPane.rowIndex="1"/> 
-		<PasswordField fx:id="passwordField" GridPane.columnIndex="1" GridPane.rowIndex="1"> 
+		<Label fx:id="passphrase1Label" text="Passphrase:" GridPane.columnIndex="0" GridPane.rowIndex="1"/> 
+		<PasswordField fx:id="passphrase1PasswordField" GridPane.columnIndex="1" GridPane.rowIndex="1" GridPane.hgrow="NEVER"> 
 			<GridPane.margin>
 				<Insets left="8"/> 
 			</GridPane.margin>
 		</PasswordField>
-		<Label fx:id="passwordLabel2" text="Passphrase (again):" GridPane.columnIndex="0" GridPane.rowIndex="2"/> 
-		<PasswordField fx:id="passwordField2" GridPane.columnIndex="1" GridPane.rowIndex="2"> 
+		<HBox fx:id="passphrase1StatusMessageBox" GridPane.columnIndex="2" GridPane.rowIndex="1" GridPane.hgrow="ALWAYS"> 
+			<children>
+				<ImageView fx:id="passphrase1StatusImageView"> 
+					<image>
+						<Image url="@../../../severity/ERROR-16x16.png"/> 
+					</image>
+				</ImageView>
+				<Label fx:id="passphrase1StatusMessageLabel" text="Empty!"/> 
+			</children>
+			<GridPane.margin>
+				<Insets left="8"/> 
+			</GridPane.margin>
+		</HBox>
+		<Label fx:id="passphrase2Label" text="Passphrase (again):" GridPane.columnIndex="0" GridPane.rowIndex="2"/> 
+		<PasswordField fx:id="passphrase2PasswordField" GridPane.columnIndex="1" GridPane.rowIndex="2" GridPane.hgrow="NEVER"> 
 			<GridPane.margin>
 				<Insets left="8"/> 
 			</GridPane.margin>
 		</PasswordField>
-		<CheckBox fx:id="noPasswordCheckBox" text="No passphrase! I know it's insecure." GridPane.columnIndex="0" GridPane.rowIndex="3" GridPane.columnSpan="2"> 
+		<HBox fx:id="passphrase2StatusMessageBox" GridPane.columnIndex="2" GridPane.rowIndex="2" GridPane.hgrow="ALWAYS"> 
+			<children>
+				<ImageView fx:id="passphrase2StatusImageView"> 
+					<image>
+						<Image url="@../../../severity/ERROR-16x16.png"/> 
+					</image>
+				</ImageView>
+				<Label fx:id="passphrase2StatusMessageLabel" text="Does not match the first!"/> 
+			</children>
+			<GridPane.margin>
+				<Insets left="8"/> 
+			</GridPane.margin>
+		</HBox>
+		<CheckBox fx:id="noPassphraseCheckBox" text="No passphrase! I know this is insecure, but I have good reasons to leave my key unprotected." GridPane.columnIndex="0" GridPane.rowIndex="3" GridPane.columnSpan="3"> 
 			<GridPane.margin>
 				<Insets top="8"/> 
 			</GridPane.margin>

@@ -3,9 +3,12 @@ package org.subshare.gui.wizard;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.event.EventHandler;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
@@ -16,10 +19,10 @@ import javafx.scene.layout.VBox;
  */
 public abstract class WizardPage extends VBox {
 	private Wizard wizard;
-	private Button priorButton = new Button("_Previous");
-	private Button nextButton = new Button("N_ext");
-	private Button cancelButton = new Button("Cancel");
-	private Button finishButton = new Button("_Finish");
+	protected final Button previousButton = new Button("P_revious");
+	protected final Button nextButton = new Button("N_ext");
+	protected final Button cancelButton = new Button("Cancel");
+	protected final Button finishButton = new Button("_Finish");
 
 	private final BooleanProperty completeProperty = new SimpleBooleanProperty(this, "complete", true) {
 		@Override
@@ -35,19 +38,62 @@ public abstract class WizardPage extends VBox {
 		setSpacing(5);
 		setStyle("-fx-padding:10; -fx-background-color: honeydew; -fx-border-color: derive(honeydew, -30%); -fx-border-width: 3;");
 
-		priorButton.setOnAction(event -> getWizard().navToPreviousPage());
+		previousButton.setOnAction(event -> getWizard().navToPreviousPage());
+		previousButton.setGraphic(new ImageView(WizardPage.class.getResource("left-24x24.png").toExternalForm()));
+
 		nextButton.setOnAction(event -> getWizard().navToNextPage());
+		nextButton.setGraphic(new ImageView(WizardPage.class.getResource("right-24x24.png").toExternalForm()));
+
 		cancelButton.setOnAction(event -> getWizard().cancel());
+		cancelButton.setGraphic(new ImageView(WizardPage.class.getResource("cancel-24x24.png").toExternalForm()));
+
 		finishButton.setOnAction(event -> getWizard().finish());
+		finishButton.setGraphic(new ImageView(WizardPage.class.getResource("ok-24x24.png").toExternalForm()));
+
+		finishButton.disabledProperty().addListener(observable -> {
+			if (finishButton.disabledProperty().get()) {
+				finishButton.setDefaultButton(false);
+				nextButton.setDefaultButton(true);
+			}
+			else {
+				nextButton.setDefaultButton(false);
+				finishButton.setDefaultButton(true);
+			}
+		});
+
+		addEventFilter(KeyEvent.KEY_PRESSED, new EventHandler<KeyEvent>() {
+			@Override
+			public void handle(KeyEvent event) {
+				if (! event.isAltDown())
+					return;
+
+				switch (event.getCode()) {
+					case LEFT:
+						if (!previousButton.isDisabled())
+							getWizard().navToPreviousPage();
+
+						event.consume();
+						break;
+					case RIGHT:
+						if (!nextButton.isDisabled())
+							getWizard().navToNextPage();
+
+						event.consume();
+						break;
+					default:
+						; // nothing
+				}
+			}
+		});
 	}
 
-	private HBox getButtons() {
+	private HBox createButtonBar() {
 		Region spring = new Region();
 		HBox.setHgrow(spring, Priority.ALWAYS);
 		HBox buttonBar = new HBox(5);
 		cancelButton.setCancelButton(true);
 		finishButton.setDefaultButton(true);
-		buttonBar.getChildren().addAll(spring, priorButton, nextButton, cancelButton, finishButton);
+		buttonBar.getChildren().addAll(spring, previousButton, nextButton, cancelButton, finishButton);
 		return buttonBar;
 	}
 
@@ -63,11 +109,11 @@ public abstract class WizardPage extends VBox {
 		Region spring = new Region();
 		VBox.setVgrow(spring, Priority.ALWAYS);
 
-		final Parent content = getContent();
+		final Parent content = createContent();
 		if (content != null)
 			getChildren().add(content);
 
-		getChildren().addAll(spring, getButtons());
+		getChildren().addAll(spring, createButtonBar());
 		finishButton.disableProperty().bind(wizard.canFinishProperty().not());
 	}
 
@@ -85,7 +131,7 @@ public abstract class WizardPage extends VBox {
 		finishButton.disableProperty().unbind();
 	}
 
-	protected abstract Parent getContent();
+	protected abstract Parent createContent();
 
 	protected boolean hasNextPage() {
 		if (getWizard() == null)
@@ -108,10 +154,6 @@ public abstract class WizardPage extends VBox {
 		return getWizard().getNextPageFromPages(this);
 	}
 
-//	protected WizardPage getPriorPage() {
-//		return getWizard().getPreviousPageFromPages();
-//	}
-
 	protected void navTo(String id) {
 		getWizard().navTo(id);
 	}
@@ -125,7 +167,7 @@ public abstract class WizardPage extends VBox {
 	}
 
 	public void manageButtons() {
-		priorButton.setDisable(! hasPreviousPage());
+		previousButton.setDisable(! hasPreviousPage());
 		nextButton.setDisable(! (hasNextPage() && completeProperty.get()));
 	}
 }

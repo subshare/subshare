@@ -6,6 +6,9 @@ import javafx.geometry.Insets
 import javafx.scene.control.Label
 import javafx.scene.control.PasswordField
 import javafx.scene.control.CheckBox
+import javafx.scene.layout.HBox
+import javafx.scene.image.ImageView
+import javafx.scene.image.Image
 
 dynamic component PassphrasePane resourcefile 'messages.properties' {
 	GridPane {
@@ -17,39 +20,67 @@ dynamic component PassphrasePane resourcefile 'messages.properties' {
 				text : rstring 'PassphrasePane.headerText.text',
 				static columnIndex : 0,
 				static rowIndex : 0,
-				static columnSpan : 2,
+				static columnSpan : 3,
 				static margin : Insets { bottom : 16 }
 			},
 
-			Label id passwordLabel {
+			Label id passphrase1Label {
 				text : "Passphrase:",
 				static columnIndex : 0,
 				static rowIndex : 1
 			},
-			PasswordField id passwordField {
+			PasswordField id passphrase1PasswordField {
+//				promptText : "Please enter at least 15 characters!",
 				static columnIndex : 1,
 				static rowIndex : 1,
+				static margin : Insets { left : 8 },
+				static hgrow : "NEVER"
+			},
+			HBox id passphrase1StatusMessageBox {
+				children : [
+					ImageView id passphrase1StatusImageView { image : Image { url : "@../../../severity/ERROR-16x16.png" } },
+					Label id passphrase1StatusMessageLabel {
+						text : "Empty!"
+					}
+				],
+				static columnIndex : 2,
+				static rowIndex : 1,
+				static hgrow : "ALWAYS",
 				static margin : Insets { left : 8 }
 			},
 
-			Label id passwordLabel2 {
+			Label id passphrase2Label {
 				text : "Passphrase (again):",
 				static columnIndex : 0,
 				static rowIndex : 2
 				
 			},
-			PasswordField id passwordField2 {
+			PasswordField id passphrase2PasswordField {
+//				promptText : "Please repeat the passphrase (to make sure you didn't type it wrongly).",
 				static columnIndex : 1,
 				static rowIndex : 2,
+				static margin : Insets { left : 8 },
+				static hgrow : "NEVER"
+			},
+			HBox id passphrase2StatusMessageBox {
+				children : [
+					ImageView id passphrase2StatusImageView { image : Image { url : "@../../../severity/ERROR-16x16.png" } },
+					Label id passphrase2StatusMessageLabel {
+						text : "Does not match the first!"
+					}
+				],
+				static columnIndex : 2,
+				static rowIndex : 2,
+				static hgrow : "ALWAYS",
 				static margin : Insets { left : 8 }
 			},
 			
-			CheckBox id noPasswordCheckBox {
-				text : "No passphrase! I know it's insecure.",
+			CheckBox id noPassphraseCheckBox {
+				text : "No passphrase! I know this is insecure, but I have good reasons to leave my key unprotected.",
 				static columnIndex : 0,
 				static rowIndex : 3,
 				static margin : Insets { top : 8 },
-				static columnSpan : 2
+				static columnSpan : 3
 			}
 		]
 	}

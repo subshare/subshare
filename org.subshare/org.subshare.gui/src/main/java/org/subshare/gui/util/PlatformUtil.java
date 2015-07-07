@@ -85,4 +85,10 @@ public final class PlatformUtil {
 
 	private PlatformUtil() {
 	}
+
+	public static void assertFxApplicationThread() {
+		if (! Platform.isFxApplicationThread())
+			throw new IllegalStateException(String.format("Thread mismatch! This thread (%s) is not the Java FX application thread! UI methods must not be invoked on other threads!",
+					Thread.currentThread().toString()));
+	}
 }

@@ -1,4 +1,4 @@
-package org.subshare.gui.welcome.createpgpkey.passphrase;
+package org.subshare.gui.welcome.createpgpkey.advanced;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import javafx.scene.Parent;
@@ -6,33 +6,33 @@ import javafx.scene.Parent;
 import org.subshare.core.pgp.CreatePgpKeyParam;
 import org.subshare.gui.wizard.WizardPage;
 
-public class PassphraseWizardPage extends WizardPage {
+public class AdvancedWizardPage extends WizardPage {
 
 	private final CreatePgpKeyParam createPgpKeyParam;
 
-	private PassphrasePane passphrasePane;
+	private AdvancedPane advancedPane;
 
-	public PassphraseWizardPage(final CreatePgpKeyParam createPgpKeyParam) {
-		super("Passphrase");
+	public AdvancedWizardPage(final CreatePgpKeyParam createPgpKeyParam) {
+		super("Advanced");
 		this.createPgpKeyParam = assertNotNull("createPgpKeyParam", createPgpKeyParam);
 	}
 
 	@Override
 	protected Parent createContent() {
-		passphrasePane = new PassphrasePane(createPgpKeyParam) {
+		advancedPane = new AdvancedPane(createPgpKeyParam) {
 			@Override
 			protected void updateComplete() {
-				PassphraseWizardPage.this.completeProperty().set(isComplete());
+				AdvancedWizardPage.this.completeProperty().set(isComplete());
 			}
 		};
-		return passphrasePane;
+		return advancedPane;
 	}
 
 	@Override
 	public void requestFocus() {
 		super.requestFocus();
 
-		if (passphrasePane != null)
-			passphrasePane.requestFocus();
+		if (advancedPane != null)
+			advancedPane.requestFocus();
 	}
 }

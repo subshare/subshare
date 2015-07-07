@@ -1,0 +1,19 @@
+package org.subshare.gui.wizard
+
+import javafx.scene.layout.GridPane
+import javafx.scene.text.Text
+import javafx.geometry.Insets
+
+dynamic component DefaultFinishingPage resourcefile 'messages.properties' {
+	GridPane {
+		children : [
+			Text id headerText {
+				text : rstring 'DefaultFinishingPage.headerText.text',
+				static columnIndex : 0,
+				static rowIndex : 0,
+				static columnSpan : 3,
+				static margin : Insets { bottom : 16 }
+			}
+		]
+	}
+}

@@ -1,0 +1,53 @@
+package org.subshare.gui.welcome.createpgpkey.validity
+
+import javafx.scene.layout.GridPane
+import javafx.scene.text.Text
+import javafx.geometry.Insets
+import javafx.scene.control.Label
+import javafx.scene.control.Spinner
+import javafx.scene.control.ComboBox
+
+import org.subshare.gui.pgp.createkey.TimeUnit
+import javafx.scene.layout.HBox
+
+dynamic component ValidityPane resourcefile 'messages.properties' {
+	GridPane {
+		prefWidth : 400,
+		prefHeight : 300,
+
+		children : [
+			Text id headerText {
+				text : rstring 'ValidityPane.headerText.text',
+				static columnIndex : 0,
+				static rowIndex : 0,
+				static columnSpan : 3,
+				static margin : Insets { bottom : 16 }
+			},
+
+			Label {
+				text : "Validity:",
+				static columnIndex : 0,
+				static rowIndex : 3
+			},
+			Spinner<Integer> id validityNumberSpinner {
+				editable : true,
+				static columnIndex : 1,
+				static rowIndex : 3,
+//				static hgrow : "ALWAYS",				
+				static margin : Insets { left : 8 }
+			},
+			ComboBox<TimeUnit> id validityTimeUnitComboBox {
+				static columnIndex : 2,
+				static rowIndex : 3,
+//				static hgrow : "ALWAYS",				
+				static margin : Insets { left : 8 }
+			}
+//			,
+//			HBox {
+//				static columnIndex : 3,
+//				static rowIndex : 3,
+//				static hgrow : "ALWAYS"
+//			}
+		]
+	}
+}

@@ -1,0 +1,50 @@
+package org.subshare.gui.welcome.createpgpkey.advanced
+
+import javafx.scene.layout.GridPane
+import javafx.scene.text.Text
+import javafx.geometry.Insets
+import javafx.scene.control.Label
+import javafx.scene.control.ComboBox
+
+dynamic component AdvancedPane resourcefile 'messages.properties' {
+	GridPane {
+		prefWidth : 400,
+		prefHeight : 300,
+
+		children : [
+			Text id headerText {
+				text : rstring 'AdvancedPane.headerText.text',
+				static columnIndex : 0,
+				static rowIndex : 0,
+				static columnSpan : 2,
+				static margin : Insets { bottom : 16 }
+			},
+
+			Label {
+				text : "Algorithm:",
+				static columnIndex : 0,
+				static rowIndex : 4
+			},
+			ComboBox<String> id algorithmComboBox {
+				static columnIndex : 1,
+				static rowIndex : 4,
+				static columnSpan : 2,
+				static hgrow : "ALWAYS",
+				static margin : Insets { left : 8 }
+			},
+
+			Label {
+				text : "Strength (bits):",
+				static columnIndex : 0,
+				static rowIndex : 5
+			},
+			ComboBox<Integer> id strengthComboBox {
+				static columnIndex : 1,
+				static rowIndex : 5,
+				static columnSpan : 2,
+				static hgrow : "ALWAYS",				
+				static margin : Insets { left : 8 }
+			}
+		]
+	}
+}

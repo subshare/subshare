@@ -1,6 +1,7 @@
 package org.subshare.gui.wizard;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import javafx.beans.InvalidationListener;
 import javafx.scene.Scene;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -19,10 +20,28 @@ public class WizardDialog extends Stage {
 		initOwner(owner);
 		setIconified(false);
 
-		wizard.setOnCancel(event -> close());
-		wizard.setOnFinish(event -> close());
+		wizard.stateProperty().addListener((InvalidationListener) observable -> {
+			switch (wizard.stateProperty().get()) {
+				case FINISHED:
+				case CANCELLED:
+					close();
+					break;
+				default:
+					; // nothing
+			}
+		});
+		wizard.init();
 
 		setScene(new Scene(wizard));
-	}
 
+		setOnShown(event -> {
+			// First, we must make this dialog request the focus. Otherwise, the focus
+			// will stay with the owner-window. IMHO very strange, wrong default behaviour...
+			WizardDialog.this.requestFocus();
+
+			// Now, we must make sure the correct field is focused. This causes the passphrase
+			// text-field to be focused.
+			wizard.getCurrentPage().requestFocus();
+		});
+	}
 }
