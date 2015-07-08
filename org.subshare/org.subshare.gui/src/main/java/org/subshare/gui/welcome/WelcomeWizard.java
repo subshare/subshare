@@ -74,9 +74,7 @@ public class WelcomeWizard extends Wizard {
 
 	@Override
 	protected void preFinish() {
-
 		welcomeData.getCreatePgpKeyParam().getUserIds().removeIf(pgpUserId -> pgpUserId.isEmpty());
-
 	}
 
 	@Override
@@ -125,11 +123,6 @@ public class WelcomeWizard extends Wizard {
 	}
 
 	private void setHeaderText(final String text) {
-		PlatformUtil.runAndWait(new Runnable() {
-			@Override
-			public void run() {
-				((DefaultFinishingPage) getFinishingPage()).getHeaderText().setText(text);
-			}
-		});
+		PlatformUtil.runAndWait(() -> ((DefaultFinishingPage) getFinishingPage()).getHeaderText().setText(text));
 	}
 }

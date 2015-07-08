@@ -44,7 +44,7 @@ public abstract class Wizard extends StackPane {
     	this((WizardPage[]) null);
     }
 
-	protected Wizard(WizardPage... nodes) {
+	protected Wizard(WizardPage... wizardPages) {
 		pages.addListener((ListChangeListener<WizardPage>) c -> {
 			while (c.next()) {
 				for (WizardPage wizardPage : c.getAddedSubList()) {
@@ -67,8 +67,8 @@ public abstract class Wizard extends StackPane {
 				wizardPage.manageButtons();
 		});
 
-		if (nodes != null)
-			pages.addAll(nodes);
+		if (wizardPages != null)
+			pages.addAll(wizardPages);
 
 		setStyle("-fx-padding: 10; -fx-background-color: cornsilk;");
 
@@ -259,6 +259,10 @@ public abstract class Wizard extends StackPane {
 
 	public ReadOnlyObjectProperty<WizardState> stateProperty() {
 		return stateProperty;
+	}
+
+	public WizardState getState() {
+		return stateProperty.get();
 	}
 
 	public abstract String getTitle();

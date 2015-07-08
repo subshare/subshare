@@ -47,7 +47,7 @@ import org.subshare.core.user.UserRegistry;
 import org.subshare.gui.ls.PgpLs;
 import org.subshare.gui.ls.PgpPrivateKeyPassphraseManagerLs;
 import org.subshare.gui.ls.UserRegistryLs;
-import org.subshare.gui.pgp.createkey.CreatePgpKeyDialog;
+import org.subshare.gui.pgp.createkey.CreatePgpKeyWizard;
 import org.subshare.gui.pgp.createkey.FxPgpUserId;
 import org.subshare.gui.pgp.createkey.TimeUnit;
 import org.subshare.gui.pgp.creatingkey.CreatingPgpKeyDialog;
@@ -57,8 +57,11 @@ import org.subshare.gui.pgp.keytree.PgpKeyTreePane;
 import org.subshare.gui.pgp.keytree.UserRootPgpKeyTreeItem;
 import org.subshare.gui.pgp.selectkey.SelectPgpKeyDialog;
 import org.subshare.gui.selectuser.SelectUserDialog;
+import org.subshare.gui.wizard.WizardDialog;
+import org.subshare.gui.wizard.WizardState;
 
 import co.codewizards.cloudstore.core.oio.File;
+import co.codewizards.cloudstore.core.progress.ProgressMonitor;
 
 public class UserPane extends GridPane {
 
@@ -271,10 +274,23 @@ public class UserPane extends GridPane {
 	@FXML
 	private void createPgpKeyButtonClicked(final ActionEvent event) {
 		final Window owner = getScene().getWindow();
-		final CreatePgpKeyDialog dialog = new CreatePgpKeyDialog(owner, createCreatePgpKeyParam());
+//		final CreatePgpKeyDialog dialog = new CreatePgpKeyDialog(owner, createCreatePgpKeyParam());
+//		dialog.showAndWait();
+//		final CreatePgpKeyParam createPgpKeyParam = dialog.getCreatePgpKeyParam();
+//		if (createPgpKeyParam == null)
+//			return;
+
+		final CreatePgpKeyParam createPgpKeyParam = createCreatePgpKeyParam();
+		final CreatePgpKeyWizard wizard = new CreatePgpKeyWizard(createPgpKeyParam) {
+			@Override
+			protected void finish(ProgressMonitor monitor) throws Exception {
+				// doing nothing here, because we create it in the background after closing this wizard
+				// (showing a separate status dialog) see below.
+			}
+		};
+		final WizardDialog dialog = new WizardDialog(owner, wizard);
 		dialog.showAndWait();
-		final CreatePgpKeyParam createPgpKeyParam = dialog.getCreatePgpKeyParam();
-		if (createPgpKeyParam == null)
+		if (wizard.getState() != WizardState.FINISHED)
 			return;
 
 		final PgpPrivateKeyPassphraseStore pgpPrivateKeyPassphraseStore = PgpPrivateKeyPassphraseManagerLs.getPgpPrivateKeyPassphraseStore();
@@ -286,18 +302,8 @@ public class UserPane extends GridPane {
 				final Pgp pgp = getPgp();
 				final PgpKey pgpKey = pgp.createPgpKey(createPgpKeyParam);
 				user.getPgpKeyIds().add(pgpKey.getPgpKeyId());
-
-				Platform.runLater(new Runnable() {
-					@Override
-					public void run() {
-						dialog2.close();
-
-//						final PgpKeyPgpKeyTreeItem child = new PgpKeyPgpKeyTreeItem(pgpKey); // now done by listener
-//						pgpKeyTreeTableView.getRoot().getChildren().add(child);
-
-						pgpPrivateKeyPassphraseStore.putPassphrase(pgpKey.getPgpKeyId(), createPgpKeyParam.getPassphrase());
-					}
-				});
+				pgpPrivateKeyPassphraseStore.putPassphrase(pgpKey.getPgpKeyId(), createPgpKeyParam.getPassphrase());
+				Platform.runLater(() -> dialog2.close());
 			}
 		};
 		dialog2.show();
