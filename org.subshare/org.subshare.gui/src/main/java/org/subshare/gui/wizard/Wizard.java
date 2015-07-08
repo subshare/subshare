@@ -54,6 +54,9 @@ public abstract class Wizard extends StackPane {
 				}
 
 				for (WizardPage wizardPage : c.getRemoved()) {
+					if (currentPage == wizardPage)
+						currentPage = null;
+
 					wizardPage.onRemoved(this);
 					wizardPage.completeProperty().removeListener(updateCanFinishInvalidationListener);
 					getChildren().remove(wizardPage);

@@ -172,13 +172,16 @@ public class ServerRepoRegistryImpl extends FileBasedObjectRegistry implements S
 	}
 
 	@Override
-	protected void read(InputStream in) throws IOException {
+	protected void preRead() {
 		version = null;
+	}
 
-		super.read(in);
-
-		if (version == null)
+	@Override
+	protected void postRead() {
+		if (version == null) {
 			version = new Uid();
+			markDirty();
+		}
 	}
 
 	protected ServerRegistry getServerRegistry() {

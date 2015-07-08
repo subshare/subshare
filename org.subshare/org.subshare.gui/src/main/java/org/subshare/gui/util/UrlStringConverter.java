@@ -25,7 +25,8 @@ public class UrlStringConverter extends StringConverter<URL> {
 		try {
 			return new URL(string);
 		} catch (MalformedURLException e) {
-			throw new IllegalArgumentException(e);
+//			throw new IllegalArgumentException(e);
+			return null;
 		}
 	}
 }

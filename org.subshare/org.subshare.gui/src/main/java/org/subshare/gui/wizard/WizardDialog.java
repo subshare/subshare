@@ -12,6 +12,7 @@ public class WizardDialog extends Stage {
 
 	public WizardDialog(final Window owner, final Wizard wizard) {
 		assertNotNull("owner", owner);
+		assertNotNull("wizard", wizard);
 
 		setTitle(wizard.getTitle());
 		setResizable(true);

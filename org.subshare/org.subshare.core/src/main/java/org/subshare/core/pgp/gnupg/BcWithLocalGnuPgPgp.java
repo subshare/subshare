@@ -1068,8 +1068,6 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 		final int secretKeyEncryptionAlgorithm = SymmetricKeyAlgorithmTags.TWOFISH;
 		final PgpSignatureType certificationLevel = PgpSignatureType.POSITIVE_CERTIFICATION;
 
-		// TODO additional user-ids!
-
 		final int[] preferredHashAlgorithms = new int[] { // TODO configurable?!
 				HashAlgorithmTags.SHA512, HashAlgorithmTags.SHA384, HashAlgorithmTags.SHA256, HashAlgorithmTags.SHA1
 		};

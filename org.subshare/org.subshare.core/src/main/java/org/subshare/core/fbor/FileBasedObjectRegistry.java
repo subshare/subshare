@@ -83,6 +83,13 @@ public abstract class FileBasedObjectRegistry {
 		} finally {
 			disableIgnoreDeferredWrite();
 		}
+		postRead();
+	}
+
+	protected void preRead() {
+	}
+
+	protected void postRead() {
 	}
 
 	protected synchronized void write() {

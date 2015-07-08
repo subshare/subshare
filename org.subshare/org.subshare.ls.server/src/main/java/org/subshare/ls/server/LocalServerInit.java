@@ -49,9 +49,18 @@ public class LocalServerInit {
 
 	public static synchronized void initFinish() {
 		if (! initFinishDone) {
-			// *Now* we start the daemons (if they don't run, yet).
-			PgpSyncDaemonImpl.getInstance();
-			LockerSyncDaemonImpl.getInstance();
+			// *Now* we start the daemons (if they don't run, yet). We perform a sync *now* in the background
+			// to make sure the PGP stuff is synced, before the Locker stuff. If the daemons simply run in the
+			// background on their own, we don't have any control over the order. This is not essentially necessary,
+			// but it reduces error-log-messages ;-)
+			final Thread localServerInitFinishThread = new Thread() {
+				@Override
+				public void run() {
+					PgpSyncDaemonImpl.getInstance().sync();
+					LockerSyncDaemonImpl.getInstance().sync();
+				}
+			};
+			localServerInitFinishThread.start();
 
 			initFinishDone = true;
 		}

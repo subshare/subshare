@@ -75,7 +75,7 @@ dynamic component PassphrasePane resourcefile 'messages.properties' {
 				static hgrow : "ALWAYS",
 				static margin : Insets { left : 8 }
 			},
-			
+
 			CheckBox id noPassphraseCheckBox {
 				text : "No passphrase! I know this is insecure, but I have good reasons.",
 				static columnIndex : 0,

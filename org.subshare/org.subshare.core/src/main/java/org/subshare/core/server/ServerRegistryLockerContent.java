@@ -11,6 +11,7 @@ public class ServerRegistryLockerContent extends FileLockerContent {
 
 	@Override
 	public File getFile() {
+		getServerRegistry().writeIfNeeded();
 		return getServerRegistry().getFile();
 	}
 
@@ -18,24 +19,6 @@ public class ServerRegistryLockerContent extends FileLockerContent {
 		final ServerRegistryImpl userRegistry = (ServerRegistryImpl) ServerRegistryImpl.getInstance();
 		return userRegistry;
 	}
-
-//	@Override
-//	protected LockFile acquireLockFile() {
-//		return getServerRegistry().acquireLockFile();
-//	}
-//
-//	@Override
-//	protected byte[] getData(File file, LockFile lockFile) throws IOException {
-////		return super.getData(file, lockFile);
-//		if (! file.exists())
-//			return new byte[0];
-//
-//		try (final InputStream in = file.createInputStream();) {
-//			final ByteArrayOutputStream out = new ByteArrayOutputStream();
-//			Streams.pipeAll(in, out);
-//			return out.toByteArray();
-//		}
-//	}
 
 	@Override
 	public void mergeFrom(byte[] serverData) throws IOException {

@@ -3,16 +3,16 @@ package org.subshare.gui.welcome.importbackup;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import javafx.scene.Parent;
 
-import org.subshare.gui.welcome.WelcomeData;
+import org.subshare.gui.welcome.IdentityData;
 import org.subshare.gui.wizard.WizardPage;
 
 public class ImportBackupWizardPage extends WizardPage {
 
-	private final WelcomeData welcomeData;
+	private final IdentityData identityData;
 
-	public ImportBackupWizardPage(final WelcomeData welcomeData) {
+	public ImportBackupWizardPage(final IdentityData identityData) {
 		super("Import OpenPGP key from backup");
-		this.welcomeData = assertNotNull("welcomeData", welcomeData);
+		this.identityData = assertNotNull("identityData", identityData);
 		completeProperty().set(false);
 	}
 

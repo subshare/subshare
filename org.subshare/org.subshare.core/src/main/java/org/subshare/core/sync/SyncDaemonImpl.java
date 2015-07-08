@@ -17,6 +17,7 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.subshare.core.Severity;
 import org.subshare.core.observable.ModificationEventType;
@@ -155,7 +156,12 @@ public abstract class SyncDaemonImpl implements SyncDaemon {
 		createSyncTimerTask(false); // always recreate, if manually invoked (to postpone the period).
 	}
 
+	private final AtomicBoolean syncRunning = new AtomicBoolean();
+
 	private void _sync() {
+		if (! syncRunning.compareAndSet(false, true))
+			return;
+
 		try {
 			final Set<Server> oldServers = new HashSet<Server>(server2State.keySet());
 
@@ -188,6 +194,8 @@ public abstract class SyncDaemonImpl implements SyncDaemon {
 				getStates().removeAll(oldStates);
 		} catch (final Exception x) { // catch all exceptions to make sure the timer does not stop!
 			logger.error("_sync: " + x, x);
+		} finally {
+			syncRunning.set(false);
 		}
 	}
 

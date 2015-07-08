@@ -1,0 +1,45 @@
+package org.subshare.gui.welcome.server
+
+import javafx.scene.layout.GridPane
+import javafx.scene.text.Text
+import javafx.geometry.Insets
+import javafx.scene.control.Label
+import javafx.scene.control.TextField
+
+dynamic component ServerPane resourcefile 'messages.properties' {
+	GridPane {
+		children : [
+			Text id headerText {
+				text : rstring 'ServerPane.headerText.text',
+				wrappingWidth : 500,
+				static columnIndex : 0,
+				static rowIndex : 0,
+				static columnSpan : 2,
+				static hgrow : "ALWAYS",
+				static margin : Insets { bottom : 16 }
+			},
+
+			Label id urlLabel {
+				text : rstring 'ServerPane.urlLabel.text',
+				static columnIndex : 0,
+				static rowIndex : 1
+			},
+			TextField id urlTextField {
+				static columnIndex : 1,
+				static rowIndex : 1,
+				static margin : Insets { left : 8 }
+			},
+
+			Label id nameLabel {
+				text : rstring 'ServerPane.nameLabel.text',
+				static columnIndex : 0,
+				static rowIndex : 2
+			},
+			TextField id nameTextField {
+				static columnIndex : 1,
+				static rowIndex : 2,
+				static margin : Insets { left : 8 }
+			}
+		]
+	}
+}

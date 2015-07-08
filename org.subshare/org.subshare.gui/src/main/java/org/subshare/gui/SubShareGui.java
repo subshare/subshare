@@ -49,7 +49,7 @@ public class SubShareGui extends Application {
 	private SsLocalServer localServer;
 	private Stage primaryStage;
 	private SplashPane splashPane;
-	private int exitCode = 0;
+	private volatile int exitCode = 0;
 
 	@Override
 	public void start(final Stage primaryStage) throws Exception {
@@ -93,18 +93,23 @@ public class SubShareGui extends Application {
 
 					tryPgpKeysNoPassphrase();
 
+					PlatformUtil.runAndWait(new Runnable() {
+						@Override
+						public void run() {
+							promptPgpKeyPassphrases(primaryStage.getScene().getWindow());
+						}
+					});
+
+					if (! new Welcome(primaryStage.getScene().getWindow()).welcome()) {
+						exitCode = 1;
+						stopLater();
+						return;
+					}
+
 					Platform.runLater(new Runnable() {
 						@Override
 						public void run() {
 							try {
-								if (! new Welcome(primaryStage.getScene().getWindow()).welcome()) {
-									exitCode = 1;
-									SubShareGui.this.stop();
-									return;
-								}
-
-								promptPgpKeyPassphrases(primaryStage.getScene().getWindow());
-
 								final Parent root = FXMLLoader.load(
 										SubShareGui.class.getResource("MainPane.fxml"),
 										getMessages(SubShareGui.class));
@@ -119,26 +124,33 @@ public class SubShareGui extends Application {
 								LocalServerInitLs.initFinish();
 							} catch (Exception x) {
 								ErrorHandler.handleError(x);
-								try {
-									exitCode = 666;
-									SubShareGui.this.stop();
-								} catch (Exception e) { doNothing(); }
+								exitCode = 666;
+								stopLater();
 							}
 						}
 					});
 				} catch (Exception x) {
 					ErrorHandler.handleError(x);
-					try {
-						exitCode = 666;
-						SubShareGui.this.stop();
-					} catch (Exception e) { doNothing(); }
+					exitCode = 666;
+					stopLater();
 				}
 			}
 		}.start();
 	}
 
+	protected void stopLater() {
+		Platform.runLater(() -> {
+			try {
+				stop();
+			} catch (Exception x) {
+				logger.error("stopLater: " + x, x);
+			}
+		});
+	}
+
 	@Override
 	public void stop() throws Exception {
+		PlatformUtil.assertFxApplicationThread();
 		PlatformUtil.notifyExiting();
 
 		final LocalServer _localServer = localServer;

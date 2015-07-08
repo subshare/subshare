@@ -1,4 +1,4 @@
-package org.subshare.gui.welcome.createpgpkey.identity;
+package org.subshare.gui.welcome.identity;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static org.subshare.gui.util.FxmlUtil.*;
@@ -9,11 +9,11 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.text.Text;
 
-import org.subshare.gui.welcome.WelcomeData;
+import org.subshare.gui.welcome.IdentityData;
 
 public class IdentityPane extends GridPane {
 
-	private final WelcomeData welcomeData;
+	private final IdentityData identityData;
 
 	@FXML
 	private Text headerText;
@@ -39,14 +39,14 @@ public class IdentityPane extends GridPane {
 	@FXML
 	protected CheckBox importBackupCheckBox;
 
-	public IdentityPane(final WelcomeData welcomeData) {
-		this.welcomeData = assertNotNull("welcomeData", welcomeData);
+	public IdentityPane(final IdentityData identityData) {
+		this.identityData = assertNotNull("identityData", identityData);
 		loadDynamicComponentFxml(IdentityPane.class, this);
 
-		firstNameTextField.textProperty().bindBidirectional(welcomeData.firstNameProperty());
-		lastNameTextField.textProperty().bindBidirectional(welcomeData.lastNameProperty());
-		emailTextField.textProperty().bindBidirectional(welcomeData.getPgpUserId().emailProperty());
-		importBackupCheckBox.selectedProperty().bindBidirectional(welcomeData.importBackupProperty());
+		firstNameTextField.textProperty().bindBidirectional(identityData.firstNameProperty());
+		lastNameTextField.textProperty().bindBidirectional(identityData.lastNameProperty());
+		emailTextField.textProperty().bindBidirectional(identityData.getPgpUserId().emailProperty());
+		importBackupCheckBox.selectedProperty().bindBidirectional(identityData.importBackupProperty());
 
 		firstNameLabel.disableProperty().bind(importBackupCheckBox.selectedProperty());
 		firstNameTextField.disableProperty().bind(importBackupCheckBox.selectedProperty());

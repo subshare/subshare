@@ -8,7 +8,6 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -96,13 +95,16 @@ public class UserRegistryImpl extends FileBasedObjectRegistry implements UserReg
 	}
 
 	@Override
-	protected void read(InputStream in) throws IOException {
+	protected void preRead() {
 		version = null;
+	}
 
-		super.read(in);
-
-		if (version == null)
+	@Override
+	protected void postRead() {
+		if (version == null) {
 			version = new Uid();
+			markDirty();
+		}
 	}
 
 	@Override

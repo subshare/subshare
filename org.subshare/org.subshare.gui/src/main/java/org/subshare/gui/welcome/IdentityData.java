@@ -13,7 +13,7 @@ import org.subshare.core.pgp.PgpUserId;
 import org.subshare.gui.pgp.createkey.FxPgpUserId;
 import org.subshare.gui.pgp.createkey.TimeUnit;
 
-public class WelcomeData {
+public class IdentityData {
 
 	private final CreatePgpKeyParam createPgpKeyParam = new CreatePgpKeyParam();
 
@@ -30,7 +30,7 @@ public class WelcomeData {
 		lastNameProperty.addListener((InvalidationListener) observable -> updatePgpUserIdName());
 	}
 
-	public WelcomeData() {
+	public IdentityData() {
 	}
 
 	private void updatePgpUserIdName() {

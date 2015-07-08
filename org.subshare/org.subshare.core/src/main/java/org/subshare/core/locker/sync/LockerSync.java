@@ -31,6 +31,8 @@ import org.subshare.core.pgp.PgpRegistry;
 import org.subshare.core.pgp.man.PgpPrivateKeyPassphraseStoreImpl;
 import org.subshare.core.server.Server;
 import org.subshare.core.sync.Sync;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import co.codewizards.cloudstore.core.config.ConfigDir;
 import co.codewizards.cloudstore.core.dto.Uid;
@@ -39,6 +41,8 @@ import co.codewizards.cloudstore.core.io.LockFileFactory;
 import co.codewizards.cloudstore.core.oio.File;
 
 public class LockerSync implements Sync {
+
+	private static final Logger logger = LoggerFactory.getLogger(LockerSync.class);
 
 	private final Uid serverId;
 	private final Server server;
@@ -71,6 +75,8 @@ public class LockerSync implements Sync {
 
 	@Override
 	public void sync() {
+		logger.info("sync: serverId='{}' serverName='{}'", server.getServerId(), server.getName());
+
 		lockerContent = null;
 		pgpKey = null;
 		final Set<PgpKeyId> pgpKeyIds = PgpPrivateKeyPassphraseStoreImpl.getInstance().getPgpKeyIdsHavingPassphrase();
@@ -93,12 +99,13 @@ public class LockerSync implements Sync {
 					throw new IllegalStateException("localVersions.size() != 1");
 
 				final Uid localVersion = localVersions.get(0);
+				final Uid lastSyncLocalVersion = getLastSyncLocalVersion();
 
 				boolean syncDownDone = false;
 				boolean syncUpNeeded = false;
 
 				List<Uid> serverVersions = getServerLockerTransport().getVersions();
-				if (serverVersions.size() > 1) {
+				if (serverVersions.size() > 1) { // multiple server versions must be merged!
 					syncUpNeeded = true;
 					serverVersions = syncDown(); // replace serverVersions by the ones actually synced (might have changed in the meantime).
 					syncDownDone = true;
@@ -111,13 +118,13 @@ public class LockerSync implements Sync {
 					final Set<Uid> lastSyncServerVersions = new HashSet<>(getLastSyncServerVersions());
 					final Set<Uid> serverVersionsSet = new HashSet<>(serverVersions);
 					if (!serverVersionsSet.equals(lastSyncServerVersions)) {
-						syncUpNeeded = true;
+//						syncUpNeeded = true; // NO!
 						serverVersions = syncDown(); // replace serverVersions by the ones actually synced (might have changed in the meantime).
 						syncDownDone = true;
 					}
 
 					if (!syncUpNeeded)
-						syncUpNeeded = !localVersion.equals(serverVersions.get(0));
+						syncUpNeeded = !localVersion.equals(lastSyncLocalVersion); // serverVersions.get(0));
 				}
 
 				if (syncUpNeeded) {
@@ -136,6 +143,30 @@ public class LockerSync implements Sync {
 		final PgpKeyId pgpKeyId = assertNotNull("pgpKey", pgpKey).getPgpKeyId();
 		final String lockerContentName = assertNotNull("lockerContent", lockerContent).getName();
 		return String.format("server[%s].pgpKey[%s].lockerContent[%s].lastSyncServerVersions", serverId, pgpKeyId, lockerContentName);
+	}
+
+	public String getLastSyncLocalVersionPropertyKey() {
+		final PgpKeyId pgpKeyId = assertNotNull("pgpKey", pgpKey).getPgpKeyId();
+		final String lockerContentName = assertNotNull("lockerContent", lockerContent).getName();
+		return String.format("server[%s].pgpKey[%s].lockerContent[%s].lastSyncLocalVersion", serverId, pgpKeyId, lockerContentName);
+	}
+
+	/**
+	 * Gets the last local {@linkplain LockerTransport#getVersions() version} (locally, there is never more than 1) that was last
+	 * synced up to the server.
+	 */
+	private Uid getLastSyncLocalVersion() {
+		final String value = getLockerSyncProperties().getProperty(getLastSyncLocalVersionPropertyKey());
+		if (isEmpty(value))
+			return null;
+
+		final Uid result = new Uid(value);
+		return result;
+	}
+
+	private void setLastSyncLocalVersion(Uid version) {
+		getLockerSyncProperties().setProperty(getLastSyncLocalVersionPropertyKey(), version.toString());
+		writeLockerSyncProperties();
 	}
 
 	/**
@@ -171,11 +202,25 @@ public class LockerSync implements Sync {
 	}
 
 	private List<Uid> syncDown() {
+		logger.info("syncDown: serverId='{}' serverName='{}' pgpKeyId={} lockerContentName='{}'",
+				server.getServerId(), server.getName(), pgpKey.getPgpKeyId(), lockerContent.getName());
+
 		return sync(getServerLockerTransport(), getLocalLockerTransport());
 	}
 
 	private void syncUp() {
+		logger.info("syncUp: serverId='{}' serverName='{}' pgpKeyId={} lockerContentName='{}'",
+				server.getServerId(), server.getName(), pgpKey.getPgpKeyId(), lockerContent.getName());
+
+		// first obtaining the version, so that if it changes in the mean-time, while we sync up, we'd have to sync up again.
+		final List<Uid> localVersions = getLocalLockerTransport().getVersions();
+
 		sync(getLocalLockerTransport(), getServerLockerTransport());
+
+		if (localVersions.size() != 1)
+			throw new IllegalStateException("localVersions.size() != 1");
+
+		setLastSyncLocalVersion(localVersions.get(0));
 	}
 
 	private List<Uid> sync(final LockerTransport fromLockerTransport, final LockerTransport toLockerTransport) {
