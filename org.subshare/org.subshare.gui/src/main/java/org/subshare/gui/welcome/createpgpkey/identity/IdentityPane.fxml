@@ -12,10 +12,10 @@
 <?import javafx.scene.text.Text?>
 <?scenebuilder-preview-i18n-resource messages.properties?>
 
-<fx:root xmlns:fx="http://javafx.com/fxml" type="GridPane" prefWidth="400" prefHeight="300">
+<fx:root xmlns:fx="http://javafx.com/fxml" type="GridPane">
 
 	<children>
-		<Text fx:id="headerText" text="%IdentityPane.headerText.text" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="2"> 
+		<Text fx:id="headerText" text="%IdentityPane.headerText.text" wrappingWidth="500" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="2" GridPane.hgrow="ALWAYS"> 
 			<GridPane.margin>
 				<Insets bottom="16"/> 
 			</GridPane.margin>

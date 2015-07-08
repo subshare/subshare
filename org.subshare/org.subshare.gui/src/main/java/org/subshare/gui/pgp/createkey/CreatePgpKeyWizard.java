@@ -20,12 +20,12 @@ public abstract class CreatePgpKeyWizard extends Wizard {
 				new UserIdWizardPage(createPgpKeyParam),
 				new AdvancedWizardPage(createPgpKeyParam));
 
-		this.createPgpKeyParam = assertNotNull("createPgpKeyParam", createPgpKeyParam);
+		this.createPgpKeyParam = assertNotNull("createPgpKeyParam", createPgpKeyParam); //$NON-NLS-1$
 	}
 
 	@Override
 	public String getTitle() {
-		return "Create OpenPGP key";
+		return Messages.getString("CreatePgpKeyWizard.title"); //$NON-NLS-1$
 	}
 
 	@Override

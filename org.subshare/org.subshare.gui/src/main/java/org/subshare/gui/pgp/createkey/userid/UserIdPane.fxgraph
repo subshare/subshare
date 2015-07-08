@@ -11,12 +11,13 @@ import org.subshare.gui.pgp.createkey.FxPgpUserId
 
 dynamic component UserIdPane resourcefile 'messages.properties' {
 	GridPane {
-		prefWidth : 400,
-		prefHeight : 300,
+//		prefWidth : 400,
+//		prefHeight : 300,
 
 		children : [
 			Text id headerText {
 				text : rstring 'UserIdPane.headerText.text',
+				wrappingWidth : 500,
 				static columnIndex : 0,
 				static rowIndex : 0,
 				static margin : Insets { bottom : 16 }

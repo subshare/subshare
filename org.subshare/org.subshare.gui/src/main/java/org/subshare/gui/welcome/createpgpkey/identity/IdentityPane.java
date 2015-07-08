@@ -7,12 +7,16 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
+import javafx.scene.text.Text;
 
 import org.subshare.gui.welcome.WelcomeData;
 
 public class IdentityPane extends GridPane {
 
 	private final WelcomeData welcomeData;
+
+	@FXML
+	private Text headerText;
 
 	@FXML
 	protected Label firstNameLabel;
@@ -52,6 +56,11 @@ public class IdentityPane extends GridPane {
 
 		emailLabel.disableProperty().bind(importBackupCheckBox.selectedProperty());
 		emailTextField.disableProperty().bind(importBackupCheckBox.selectedProperty());
+
+//		// TODO this works, but I don't like this solution, yet (hard-code 32?! why?!) - no it does not yet really work :-(
+//		boundsInLocalProperty().addListener(observable -> {
+//			headerText.setWrappingWidth(Math.max(getBoundsInLocal().getWidth() - 32, 500));
+//		});
 	}
 
 	@Override

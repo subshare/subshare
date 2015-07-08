@@ -8,15 +8,17 @@ import javafx.scene.control.ComboBox
 
 dynamic component AdvancedPane resourcefile 'messages.properties' {
 	GridPane {
-		prefWidth : 400,
-		prefHeight : 300,
+//		prefWidth : 600,
+//		prefHeight : 300,
 
 		children : [
 			Text id headerText {
 				text : rstring 'AdvancedPane.headerText.text',
+				wrappingWidth : 500,
 				static columnIndex : 0,
 				static rowIndex : 0,
 				static columnSpan : 2,
+				static hgrow : "ALWAYS",
 				static margin : Insets { bottom : 16 }
 			},
 

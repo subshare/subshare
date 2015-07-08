@@ -79,6 +79,12 @@ public abstract class Wizard extends StackPane {
 				hideFinishingPage();
 		});
 		getChildren().add(0, finishingPage);
+
+		// The sizing strategy is really strange: It seems to somehow take the following 2 values into account, but
+		// so does it with all the individual pages. The final size is not really predictable - at least I didn't find
+		// a precise pattern, yet.
+		setPrefWidth(500);
+		setPrefHeight(300);
 	}
 
 	public void init() {

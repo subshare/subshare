@@ -12,12 +12,13 @@ import javafx.scene.image.Image
 
 dynamic component PassphrasePane resourcefile 'messages.properties' {
 	GridPane {
-		prefWidth : 400,
-		prefHeight : 300,
+//		prefWidth : 600,
+//		prefHeight : 300,
 
 		children : [
 			Text id headerText {
 				text : rstring 'PassphrasePane.headerText.text',
+				wrappingWidth : 500,
 				static columnIndex : 0,
 				static rowIndex : 0,
 				static columnSpan : 3,
@@ -76,7 +77,7 @@ dynamic component PassphrasePane resourcefile 'messages.properties' {
 			},
 			
 			CheckBox id noPassphraseCheckBox {
-				text : "No passphrase! I know this is insecure, but I have good reasons to leave my key unprotected.",
+				text : "No passphrase! I know this is insecure, but I have good reasons.",
 				static columnIndex : 0,
 				static rowIndex : 3,
 				static margin : Insets { top : 8 },
