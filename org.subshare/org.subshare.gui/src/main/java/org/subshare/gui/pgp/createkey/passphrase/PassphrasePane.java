@@ -1,4 +1,4 @@
-package org.subshare.gui.welcome.createpgpkey.passphrase;
+package org.subshare.gui.pgp.createkey.passphrase;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;

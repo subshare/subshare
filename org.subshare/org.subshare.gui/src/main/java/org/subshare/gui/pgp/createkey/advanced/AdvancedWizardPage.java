@@ -1,4 +1,4 @@
-package org.subshare.gui.welcome.createpgpkey.advanced;
+package org.subshare.gui.pgp.createkey.advanced;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import javafx.scene.Parent;

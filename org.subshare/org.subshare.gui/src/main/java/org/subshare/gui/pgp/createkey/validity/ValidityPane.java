@@ -1,4 +1,4 @@
-package org.subshare.gui.welcome.createpgpkey.validity;
+package org.subshare.gui.pgp.createkey.validity;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static org.subshare.gui.util.FxmlUtil.*;

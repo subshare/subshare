@@ -1,4 +1,4 @@
-package org.subshare.gui.welcome.createpgpkey.validity
+package org.subshare.gui.pgp.createkey.validity
 
 import javafx.scene.layout.GridPane
 import javafx.scene.text.Text
