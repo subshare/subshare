@@ -139,6 +139,9 @@ public abstract class Wizard extends StackPane {
 		assertNotNull("wizardPage", wizardPage);
 		PlatformUtil.assertFxApplicationThread();
 
+		if (currentPage != null)
+			currentPage.onHidden();
+
 		if (currentPage != null && addToHistory)
 			history.addLast(currentPage);
 
@@ -167,6 +170,7 @@ public abstract class Wizard extends StackPane {
 
 				Wizard.this.requestFocus();
 				wizardPage.requestFocus();
+				wizardPage.onShown();
 			}
 		});
 	}

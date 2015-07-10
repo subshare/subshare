@@ -19,6 +19,7 @@ import org.subshare.core.pgp.Pgp;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpKeyId;
 import org.subshare.core.pgp.man.PgpPrivateKeyPassphraseStore;
+import org.subshare.gui.backup.export.ExportBackupWizard;
 import org.subshare.gui.error.ErrorHandler;
 import org.subshare.gui.ls.LocalServerInitLs;
 import org.subshare.gui.ls.PgpLs;
@@ -27,6 +28,8 @@ import org.subshare.gui.pgp.privatekeypassphrase.PgpPrivateKeyPassphrasePromptDi
 import org.subshare.gui.splash.SplashPane;
 import org.subshare.gui.util.PlatformUtil;
 import org.subshare.gui.welcome.Welcome;
+import org.subshare.gui.wizard.WizardDialog;
+import org.subshare.gui.wizard.WizardState;
 import org.subshare.ls.server.SsLocalServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,6 +72,14 @@ public class SubShareGui extends Application {
 		primaryStage.setScene(scene);
 		primaryStage.setTitle("SubShare");
 		primaryStage.show();
+
+		// TODO REMOVE THE ExportBackupWizard-stuff again!
+		ExportBackupWizard wizard = new ExportBackupWizard();
+		WizardDialog wizardDialog = new WizardDialog(primaryStage.getScene().getWindow(), wizard);
+		wizardDialog.showAndWait();
+		if (wizard.getState() != WizardState.FINISHED)
+			System.exit(999);
+		// END TO DO
 	}
 
 	private void startInitThread() {

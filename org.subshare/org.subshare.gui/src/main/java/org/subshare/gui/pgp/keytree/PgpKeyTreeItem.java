@@ -84,4 +84,9 @@ public class PgpKeyTreeItem<T> extends TreeItem<PgpKeyTreeItem<?>> {
 
 		return parent.getThisOrParentPgpKeyTreeItemOfType(type);
 	}
+
+	@Override
+	public String toString() {
+		return String.format("%s[%s]", getClass().getName(), valueObject);
+	}
 }

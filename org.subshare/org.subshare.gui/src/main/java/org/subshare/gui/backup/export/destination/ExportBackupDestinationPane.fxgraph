@@ -1,9 +1,37 @@
 package org.subshare.gui.backup.export.destination
 
 import javafx.scene.layout.GridPane
+import javafx.scene.text.Text
+import javafx.geometry.Insets
+import org.subshare.gui.filetree.FileTreePane
+import javafx.scene.control.SelectionMode
 
-dynamic component ExportBackupDestinationPane {
+dynamic component ExportBackupDestinationPane resourcefile 'messages.properties' {
 	GridPane {
-		//TODO Add Nodes
+//		minWidth : 550,
+//		prefWidth : 550,
+//		prefHeight : 600,
+////		minHeight : 600,
+		
+		children : [
+			Text id headerText {
+				text : rstring 'ExportBackupDestinationPane.headerText.text',
+				wrappingWidth : 500,
+				static columnIndex : 0,
+				static rowIndex : 0,
+				static hgrow : "ALWAYS",
+				static margin : Insets { bottom : 16 }
+			},
+
+			FileTreePane id fileTreePane {
+				useCase : "backup",
+				selectionMode: "SINGLE",
+
+				static columnIndex : 0,
+				static rowIndex : 1,
+				static hgrow : "ALWAYS",
+				static vgrow : "ALWAYS"
+			}			
+		]
 	}
 }

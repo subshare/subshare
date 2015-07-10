@@ -6,15 +6,30 @@ import org.subshare.gui.wizard.WizardPage;
 
 public class ExportBackupDestinationWizardPage extends WizardPage {
 
-	public ExportBackupDestinationWizardPage(String title) {
-		super(title);
-		// TODO Auto-generated constructor stub
+	private ExportBackupDestinationPane exportBackupDestinationPane;
+	private boolean shownAtLeastOnce;
+
+	public ExportBackupDestinationWizardPage() {
+		super("Export backup");
+		setMinSize(550, 550);
+//		setPrefSize(600, 600);
 	}
 
 	@Override
 	protected Parent createContent() {
-		// TODO Auto-generated method stub
-		return null;
+		exportBackupDestinationPane = new ExportBackupDestinationPane() {
+			@Override
+			protected void updateComplete() {
+				ExportBackupDestinationWizardPage.this.completeProperty().set(shownAtLeastOnce && isComplete());
+			}
+		};
+		return exportBackupDestinationPane;
 	}
 
+	@Override
+	protected void onShown() {
+		super.onShown();
+		shownAtLeastOnce = true;
+		exportBackupDestinationPane.updateComplete();
+	}
 }

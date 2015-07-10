@@ -131,6 +131,15 @@ public abstract class WizardPage extends VBox {
 		finishButton.disableProperty().unbind();
 	}
 
+	/**
+	 * Callback-method telling this page that it is now shown to the user.
+	 */
+	protected void onShown() {
+	}
+
+	protected void onHidden() {
+	}
+
 	protected abstract Parent createContent();
 
 	protected boolean hasNextPage() {

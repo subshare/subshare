@@ -14,12 +14,12 @@
 	<center>
 		<TreeTableView fx:id="treeTableView"> 
 			<columns>
-				<TreeTableColumn fx:id="pgpKeyTreeTableColumn" text="PGP key" prefWidth="300"> 
+				<TreeTableColumn fx:id="nameTreeTableColumn" text="PGP key" prefWidth="300"> 
 					<cellValueFactory>
 						<TreeItemPropertyValueFactory property="name"/> 
 					</cellValueFactory>
 				</TreeTableColumn>
-				<TreeTableColumn fx:id="pgpKeyTreeTableColumn" text="Key-ID" prefWidth="80"> 
+				<TreeTableColumn fx:id="keyIdTreeTableColumn" text="Key-ID" prefWidth="80"> 
 					<cellValueFactory>
 						<TreeItemPropertyValueFactory property="keyId"/> 
 					</cellValueFactory>

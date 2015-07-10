@@ -10,12 +10,9 @@ import javafx.scene.image.Image
 import javafx.scene.control.Tooltip
 import javafx.scene.control.Label
 import javafx.scene.control.TextField
-import javafx.scene.control.TableView
-import javafx.scene.control.TableColumn
 import javafx.scene.control.TreeTableView
 import javafx.scene.control.TreeView
 import javafx.scene.control.TreeTableColumn
-import javafx.scene.control.cell.PropertyValueFactory
 import javafx.scene.control.cell.TreeItemPropertyValueFactory
 
 import org.subshare.gui.user.EmailWrapper
@@ -26,28 +23,28 @@ dynamic component PgpKeyTreePane {
 	BorderPane {
 		center : TreeTableView < PgpKeyTreeItem<?> > id treeTableView {
 				columns : [
-					TreeTableColumn < Object, String > id pgpKeyTreeTableColumn {
+					TreeTableColumn < Object, String > id nameTreeTableColumn {
 						text : "PGP key",
 						prefWidth : 300,
 						cellValueFactory : TreeItemPropertyValueFactory < PgpKeyTreeItem<?>, String > {
 							property : "name"
 						}
 					},
-					TreeTableColumn < Object, String > id pgpKeyTreeTableColumn {
+					TreeTableColumn < Object, String > id keyIdTreeTableColumn {
 						text : "Key-ID",
 						prefWidth : 80,
 						cellValueFactory : TreeItemPropertyValueFactory < PgpKeyTreeItem<?>, String > {
 							property : "keyId"
 						}
 					},
-//					TreeTableColumn < Object, String > id pgpKeyTreeTableColumn {
+//					TreeTableColumn < Object, String > id keyTrustTreeTableColumn {
 //						text : "Key-trust",
 //						prefWidth : 150,
 //						cellValueFactory : TreeItemPropertyValueFactory < PgpKeyTreeItem<?>, String > {
 //							property : "keyTrust"
 //						}
 //					},
-//					TreeTableColumn < Object, String > id pgpKeyTreeTableColumn {
+//					TreeTableColumn < Object, String > id ownerTrustTreeTableColumn {
 //						text : "Owner-trust",
 //						prefWidth : 150,
 //						cellValueFactory : TreeItemPropertyValueFactory < PgpKeyTreeItem<?>, String > {

@@ -1,0 +1,71 @@
+package org.subshare.gui.filetree
+
+import javafx.scene.layout.BorderPane
+import javafx.scene.control.TreeTableView
+import javafx.scene.control.TreeTableColumn
+
+import org.subshare.gui.filetree.FileTreeItem
+import javafx.scene.control.cell.TreeItemPropertyValueFactory
+import javafx.scene.layout.HBox
+import javafx.scene.layout.VBox
+import javafx.scene.control.CheckBox
+import javafx.geometry.Insets
+import javafx.scene.control.Button
+import javafx.scene.image.ImageView
+import javafx.scene.image.Image
+
+dynamic component FileTreePane resourcefile 'messages.properties' {
+	BorderPane {
+		prefWidth : 520,
+		
+		center : TreeTableView < FileTreeItem<?> > id treeTableView {
+				columns : [
+					TreeTableColumn < Object, String > id nameTreeTableColumn {
+						text : "Name",
+						prefWidth : 300,
+						cellValueFactory : TreeItemPropertyValueFactory < FileTreeItem<?>, String > {
+							property : "name"
+						}
+					},
+					TreeTableColumn < Object, String > id sizeTreeTableColumn {
+						text : "Size",
+						prefWidth : 100,
+						cellValueFactory : TreeItemPropertyValueFactory < FileTreeItem<?>, String > {
+							property : "size"
+						}
+					},
+//					TreeTableColumn < Object, String > id createdTreeTableColumn {
+//						text : "Created",
+//						prefWidth : 100,
+//						cellValueFactory : TreeItemPropertyValueFactory < FileTreeItem<?>, String > {
+//							property : "created"
+//						}
+//					},
+					TreeTableColumn < Object, String > id lastModifiedTreeTableColumn {
+						text : "Modified",
+						prefWidth : 120,
+						cellValueFactory : TreeItemPropertyValueFactory < FileTreeItem<?>, String > {
+							property : "lastModified"
+						}
+					}
+				]
+			},
+		bottom : HBox {
+			children : [
+				CheckBox id showHiddenFilesCheckBox {
+					text : rstring 'FileTreePane.showHiddenFilesCheckBox.text'
+				},
+				Button id refreshButton {
+					graphic : ImageView { image : Image { url : "@refresh_16x16.png" } },
+					text : "Refresh",
+					static margin : Insets {
+						left : 16
+					}
+				}
+			],
+			static margin : Insets {
+				top : 8
+			}
+		}
+	}
+}

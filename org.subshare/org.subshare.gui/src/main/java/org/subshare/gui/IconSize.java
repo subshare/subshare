@@ -34,11 +34,11 @@ public enum IconSize {
 		return height;
 	}
 
-	public static void main(String[] args) {
-		for (IconSize iconSize : IconSize.values()) {
-			System.out.println(iconSize.getWidth());
-			System.out.println(iconSize.getHeight());
-			System.out.println();
-		}
-	}
+//	public static void main(String[] args) {
+//		for (IconSize iconSize : IconSize.values()) {
+//			System.out.println(iconSize.getWidth());
+//			System.out.println(iconSize.getHeight());
+//			System.out.println();
+//		}
+//	}
 }
