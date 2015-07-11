@@ -280,4 +280,10 @@ public class FileTreePane extends BorderPane {
 	public StringProperty useCaseProperty() {
 		return useCaseProperty;
 	}
+
+	@Override
+	public void requestFocus() {
+		super.requestFocus();
+		treeTableView.requestFocus();
+	}
 }

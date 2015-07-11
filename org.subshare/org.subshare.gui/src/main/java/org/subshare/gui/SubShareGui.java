@@ -69,14 +69,6 @@ public class SubShareGui extends Application {
 		primaryStage.setScene(scene);
 		primaryStage.setTitle("SubShare");
 		primaryStage.show();
-
-//		// TODO REMOVE THE ExportBackupWizard-stuff again!
-//		ExportBackupWizard wizard = new ExportBackupWizard();
-//		WizardDialog wizardDialog = new WizardDialog(primaryStage.getScene().getWindow(), wizard);
-//		wizardDialog.showAndWait();
-//		if (wizard.getState() != WizardState.FINISHED)
-//			System.exit(999);
-//		// END TO DO
 	}
 
 	private void startInitThread() {
@@ -104,6 +96,15 @@ public class SubShareGui extends Application {
 					PlatformUtil.runAndWait(new Runnable() {
 						@Override
 						public void run() {
+//							// TODO REMOVE THE ExportBackupWizard-stuff again!
+//							ExportBackupWizard wizard = new ExportBackupWizard();
+//							WizardDialog wizardDialog = new WizardDialog(primaryStage.getScene().getWindow(), wizard);
+//							wizardDialog.showAndWait();
+//							if (wizard.getState() != WizardState.FINISHED)
+//								System.exit(999);
+//							// END TO DO
+
+
 							promptPgpKeyPassphrases(primaryStage.getScene().getWindow());
 						}
 					});

@@ -95,7 +95,7 @@ public class LockerSyncIT extends AbstractIT {
 				Config config = location2Config.get(location);
 				if (config == null) {
 					config = invokeConstructor(Config.class,
-							null, null,
+							(Object) null, null,
 							new File[] { createFile(ConfigDir.getInstance().getFile(), "cloudstore.properties") });
 					location2Config.put(location, config);
 				}
