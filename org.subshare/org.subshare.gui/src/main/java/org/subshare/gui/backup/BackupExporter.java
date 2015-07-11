@@ -81,7 +81,7 @@ public class BackupExporter {
 		backupDataFile.getManifestProperties().put(MANIFEST_PROPERTY_NAME_TIMESTAMP, ISO8601.formatDate(new Date()));
 
 		registerPgpKeyRelatedBackupProperties();
-		backupDataFile.putData(ENTRY_NAME_PGP_KEYS, pgp.exportPublicKeysWithPrivateKeys(masterKeysWithPrivateKey));
+		backupDataFile.putData(ENTRY_NAME_PGP_KEYS, pgp.exportPublicKeysWithSecretKeys(masterKeysWithPrivateKey));
 
 		registerServerRegistryRelatedBackupProperties();
 		LockerContent serverRegistryLockerContent = localServerClient.invokeConstructor(ServerRegistryLockerContent.class);

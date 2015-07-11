@@ -151,7 +151,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 	}
 
 	@Override
-	public synchronized void exportPublicKeysWithPrivateKeys(final Set<PgpKey> pgpKeys, OutputStream out) {
+	public synchronized void exportPublicKeysWithSecretKeys(final Set<PgpKey> pgpKeys, OutputStream out) {
 		assertNotNull("pgpKeys", pgpKeys);
 		assertNotNull("out", out);
 
@@ -174,9 +174,9 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 	}
 
 	@Override
-	public byte[] exportPublicKeysWithPrivateKeys(Set<PgpKey> pgpKeys) {
+	public byte[] exportPublicKeysWithSecretKeys(Set<PgpKey> pgpKeys) {
 		final ByteArrayOutputStream bout = new ByteArrayOutputStream();
-		exportPublicKeysWithPrivateKeys(pgpKeys, bout);
+		exportPublicKeysWithSecretKeys(pgpKeys, bout);
 		return bout.toByteArray();
 	}
 
@@ -653,7 +653,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 		final List<PgpKey> result = new ArrayList<PgpKey>();
 		final Collection<PgpKey> masterKeys = getMasterKeys();
 		for (final PgpKey pgpKey : masterKeys) {
-			if (pgpKey.isPrivateKeyAvailable())
+			if (pgpKey.isSecretKeyAvailable())
 				result.add(pgpKey);
 		}
 		return Collections.unmodifiableList(result);

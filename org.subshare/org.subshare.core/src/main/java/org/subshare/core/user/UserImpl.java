@@ -261,7 +261,7 @@ public class UserImpl extends AbstractBean<User.Property> implements User {
 		PgpKey pgpKey = null;
 		for (final PgpKeyId pgpKeyId : pgpKeyIds) {
 			final PgpKey k = pgp.getPgpKey(pgpKeyId);
-			if (k != null && k.isPrivateKeyAvailable()) {
+			if (k != null && k.isSecretKeyAvailable()) {
 				pgpKey = k;
 				break;
 			}

@@ -146,7 +146,7 @@ public class ServerRepoManagerImpl implements ServerRepoManager {
 		final Pgp pgp = PgpRegistry.getInstance().getPgpOrFail();
 		for (final PgpKeyId pgpKeyId : user.getPgpKeyIds()) {
 			final PgpKey pgpKey = pgp.getPgpKey(pgpKeyId);
-			if (pgpKey.isPrivateKeyAvailable())
+			if (pgpKey.isSecretKeyAvailable())
 				return pgpKey;
 		}
 		throw new IllegalStateException("There is no PGP key with a private key available for this user: " + user);

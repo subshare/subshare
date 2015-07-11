@@ -385,7 +385,7 @@ public class UserPane extends GridPane {
 
 		final boolean[] selectionContainsKeyWithPrivateKey = new boolean[] { false };
 		selectedPgpKeys.forEach(pgpKey -> {
-			selectionContainsKeyWithPrivateKey[0] |= pgpKey.isPrivateKeyAvailable();
+			selectionContainsKeyWithPrivateKey[0] |= pgpKey.isSecretKeyAvailable();
 		});
 
 		boolean exportPublicKeysWithPrivateKeys = false;

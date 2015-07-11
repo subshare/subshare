@@ -48,7 +48,7 @@ public class PgpKey implements Serializable {
 
 	private final int strength;
 
-	private final boolean privateKeyAvailable;
+	private final boolean secretKeyAvailable;
 
 	private final List<String> userIds;
 
@@ -69,7 +69,7 @@ public class PgpKey implements Serializable {
 			final Date validTo,
 			final PgpKeyAlgorithm algorithm,
 			final int strength,
-			final boolean privateKeyAvailable,
+			final boolean secretKeyAvailable,
 			final List<String> userIds,
 			final Set<PgpKeyFlag> pgpKeyFlags,
 			final boolean revoked) {
@@ -80,7 +80,7 @@ public class PgpKey implements Serializable {
 		this.validTo = validTo; // may be null - null means, it does *not* expire.
 		this.algorithm = assertNotNull("algorithm", algorithm);
 		this.strength = strength;
-		this.privateKeyAvailable = privateKeyAvailable;
+		this.secretKeyAvailable = secretKeyAvailable;
 		this.userIds = Collections.unmodifiableList(new ArrayList<String>(assertNotNull("userIds", userIds)));
 
 		final Set<PgpKeyFlag> tmpPgpKeyFlags = EnumSet.noneOf(PgpKeyFlag.class);
@@ -137,8 +137,18 @@ public class PgpKey implements Serializable {
 		return revoked;
 	}
 
-	public boolean isPrivateKeyAvailable() {
-		return privateKeyAvailable;
+	/**
+	 * Is there a private key available in this key ring, corresponding to the public key?
+	 * <p>
+	 * Even though it makes no difference for this method, you should note the difference between <i>secret</i> and <i>private</i>:
+	 * The <i>private</i> key is the unprotected, decrypted key itself. The <i>secret</i> key, however, is the passphrase-protected
+	 * form of the <i>private</i> key. Thus, if you have a secret key available, you also have the private key, if you know the
+	 * passphrase.
+	 * @return <code>true</code>, if there is a secret key in this key ring. <code>false</code>, if only the public key
+	 * is available.
+	 */
+	public boolean isSecretKeyAvailable() {
+		return secretKeyAvailable;
 	}
 
 	public List<String> getUserIds() {

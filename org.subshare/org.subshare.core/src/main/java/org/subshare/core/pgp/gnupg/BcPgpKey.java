@@ -100,7 +100,7 @@ public class BcPgpKey {
 
 		if (pgpKey == null) {
 			final byte[] fingerprint = assertNotNull("publicKey", publicKey).getFingerprint();
-			final boolean privateKeyAvailable = secretKey != null && ! secretKey.isPrivateKeyEmpty();
+			final boolean secretKeyAvailable = secretKey != null && ! secretKey.isPrivateKeyEmpty();
 
 			final List<String> userIds = new ArrayList<String>();
 			for (final Iterator<?> itUserIDs = publicKey.getUserIDs(); itUserIDs.hasNext(); )
@@ -112,7 +112,7 @@ public class BcPgpKey {
 			this.pgpKey = new PgpKey(
 					pgpKeyId, fingerprint, masterPgpKey, created, validTo,
 					getPgpKeyAlgorithm(publicKey.getAlgorithm()), publicKey.getBitStrength(),
-					privateKeyAvailable, userIds, getPgpKeyFlags(), publicKey.isRevoked());
+					secretKeyAvailable, userIds, getPgpKeyFlags(), publicKey.isRevoked());
 
 			this.subKeyIds = Collections.unmodifiableSet(new LinkedHashSet<>(this.subKeyIds)); // turn read-only!
 			final List<PgpKey> subKeys = new ArrayList<PgpKey>(this.subKeyIds.size());

@@ -61,7 +61,7 @@ public abstract class AbstractPgp implements Pgp {
 		assertNotNull("pgpKeys", pgpKeys);
 		try {
 			try (OutputStream out = assertNotNull("file", file).createOutputStream();) {
-				exportPublicKeysWithPrivateKeys(pgpKeys, out);
+				exportPublicKeysWithSecretKeys(pgpKeys, out);
 			}
 		} catch (IOException e) {
 			throw new RuntimeException(e);

@@ -182,7 +182,7 @@ public class AbstractUserRegistryIT extends AbstractRepoToRepoSyncIT {
 		for (final User user : userRegistry.getUsers()) {
 			for (final PgpKeyId pgpKeyId : user.getPgpKeyIds()) {
 				final PgpKey k = pgp.getPgpKey(pgpKeyId);
-				if (k != null && k.isPrivateKeyAvailable()) {
+				if (k != null && k.isSecretKeyAvailable()) {
 					return user;
 				}
 			}

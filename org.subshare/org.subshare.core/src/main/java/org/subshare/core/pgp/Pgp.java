@@ -53,9 +53,19 @@ public interface Pgp {
 
 	byte[] exportPublicKeys(Set<PgpKey> pgpKeys);
 
-	void exportPublicKeysWithPrivateKeys(Set<PgpKey> pgpKeys, OutputStream out);
+	/**
+	 * Export the keys identified by {@code pgpKeys} to the given stream.
+	 * <p>
+	 * In contrast to {@link #exportPublicKeys(Set, OutputStream)}, this method also includes the secret keys.
+	 * Please note the difference between <i>secret</i> and <i>private</i>: The <i>private</i> key is the unprotected,
+	 * decrypted key itself. The <i>secret</i> key, however, is the passphrase-protected form of the <i>private</i>
+	 * key.
+	 * @param pgpKeys the keys to be exported. Must not be <code>null</code>.
+	 * @param out the stream to write to. Must not be <code>null</code>.
+	 */
+	void exportPublicKeysWithSecretKeys(Set<PgpKey> pgpKeys, OutputStream out);
 
-	byte[] exportPublicKeysWithPrivateKeys(Set<PgpKey> pgpKeys);
+	byte[] exportPublicKeysWithSecretKeys(Set<PgpKey> pgpKeys);
 
 	ImportKeysResult importKeys(InputStream in);
 
