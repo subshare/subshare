@@ -13,7 +13,6 @@ import org.subshare.gui.ls.UserRegistryLs;
 import org.subshare.gui.pgp.createkey.advanced.AdvancedWizardPage;
 import org.subshare.gui.pgp.createkey.passphrase.PassphraseWizardPage;
 import org.subshare.gui.pgp.createkey.validity.ValidityWizardPage;
-import org.subshare.gui.util.PlatformUtil;
 import org.subshare.gui.welcome.first.FirstWizardPage;
 import org.subshare.gui.welcome.identity.IdentityWizardPage;
 import org.subshare.gui.welcome.importbackup.ImportBackupWizardPage;
@@ -61,14 +60,17 @@ public class IdentityWizard extends Wizard {
 	}
 
 	@Override
-	protected void preFinish() {
+	protected void finishing() {
 		identityData.getCreatePgpKeyParam().getUserIds().removeIf(pgpUserId -> pgpUserId.isEmpty());
+		((DefaultFinishingPage) getFinishingPage()).getHeaderText().setText(
+				String.format(Messages.getString("IdentityWizard.finishingPage.headerText.text"), identityData.getPgpUserId())); //$NON-NLS-1$
+		super.finishing();
 	}
 
 	@Override
 	protected void finish(ProgressMonitor monitor) throws Exception {
-		PlatformUtil.runAndWait(() -> ((DefaultFinishingPage) getFinishingPage()).getHeaderText().setText(
-				String.format(Messages.getString("IdentityWizard.finishingPage.headerText.text"), identityData.getPgpUserId()))); //$NON-NLS-1$
+//		PlatformUtil.runAndWait(() -> ((DefaultFinishingPage) getFinishingPage()).getHeaderText().setText(
+//				String.format(Messages.getString("IdentityWizard.finishingPage.headerText.text"), identityData.getPgpUserId()))); //$NON-NLS-1$
 
 		createUserIfNeeded();
 		createPgpKey();

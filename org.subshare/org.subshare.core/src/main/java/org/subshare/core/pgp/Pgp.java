@@ -51,7 +51,11 @@ public interface Pgp {
 
 	void exportPublicKeys(Set<PgpKey> pgpKeys, OutputStream out);
 
+	byte[] exportPublicKeys(Set<PgpKey> pgpKeys);
+
 	void exportPublicKeysWithPrivateKeys(Set<PgpKey> pgpKeys, OutputStream out);
+
+	byte[] exportPublicKeysWithPrivateKeys(Set<PgpKey> pgpKeys);
 
 	ImportKeysResult importKeys(InputStream in);
 

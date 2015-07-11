@@ -18,7 +18,7 @@ public class ServerImpl extends AbstractBean<Server.Property> implements Cloneab
 		this.serverId = serverId == null ? new Uid() : serverId;
 	}
 
-	private Uid serverId;
+	private final Uid serverId;
 
 	private String name;
 

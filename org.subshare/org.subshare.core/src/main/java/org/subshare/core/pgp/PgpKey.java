@@ -12,6 +12,8 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
+import co.codewizards.cloudstore.core.collection.ReverseListView;
+
 public class PgpKey implements Serializable {
 	private static final long serialVersionUID = 1L;
 
@@ -162,18 +164,23 @@ public class PgpKey implements Serializable {
 		this.subKeys = Collections.unmodifiableList(new ArrayList<PgpKey>(assertNotNull("subKeys", subKeys)));
 	}
 
-	private List<PgpKey> getSubKeysAndMasterKey() {
+	/**
+	 * Gets a {@code List} containing first the master-key followed by the sub-keys.
+	 * @return a {@code List} with master-key and sub-keys. Never <code>null</code>.
+	 */
+	public List<PgpKey> getMasterKeyAndSubKeys() {
 		final PgpKey mk = getMasterKey();
 		final List<PgpKey> subKeys = mk.getSubKeys();
 		final List<PgpKey> result = new ArrayList<PgpKey>(subKeys.size() + 1);
-		result.addAll(subKeys);
 		result.add(mk);
-		return result;
+		result.addAll(subKeys); // keys are not recursive, i.e. a sub-key does not have subs of their own => no need for recursion
+		return Collections.unmodifiableList(result);
 	}
 
 	public PgpKey getPgpKeyForEncryptionOrFail() {
 		final Date now = new Date();
-		final List<PgpKey> allKeys = getSubKeysAndMasterKey();
+		// Reversing in order to favour a sub-key over the master-key! ...and probably even the last added (?) sub-key, which would be what we likely want.
+		final List<PgpKey> allKeys = new ReverseListView<>(getMasterKeyAndSubKeys());
 
 		int keysSupportingEncryptStorage = 0;
 		int keysSupportingEncryptComms = 0;
@@ -208,7 +215,8 @@ public class PgpKey implements Serializable {
 
 	public PgpKey getPgpKeyForSignatureOrFail() {
 		final Date now = new Date();
-		final List<PgpKey> allKeys = getSubKeysAndMasterKey();
+		// Reversing in order to favour a sub-key over the master-key! ...and probably even the last added (?) sub-key, which would be what we likely want.
+		final List<PgpKey> allKeys = new ReverseListView<>(getMasterKeyAndSubKeys());
 
 		int keysSupportingSign = 0;
 		int keysSupportingCertify = 0;

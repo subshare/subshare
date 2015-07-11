@@ -10,6 +10,7 @@ import static co.codewizards.cloudstore.core.util.Util.*;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -154,7 +155,29 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 		assertNotNull("pgpKeys", pgpKeys);
 		assertNotNull("out", out);
 
-		throw new UnsupportedOperationException("NYI");
+		if (! (out instanceof BCPGOutputStream))
+			out = new BCPGOutputStream(out); // seems not necessary, but maybe better (faster for sure, since it doesn't need to be created again and again).
+
+		try {
+			for (final PgpKey pgpKey : pgpKeys) {
+				final BcPgpKey bcPgpKey = getBcPgpKeyOrFail(pgpKey);
+				bcPgpKey.getPublicKeyRing().encode(out);
+
+				final PGPSecretKeyRing secretKeyRing = bcPgpKey.getSecretKeyRing();
+				if (secretKeyRing != null)
+					secretKeyRing.encode(out);
+			}
+			out.flush();
+		} catch (IOException x) {
+			throw new RuntimeException(x);
+		}
+	}
+
+	@Override
+	public byte[] exportPublicKeysWithPrivateKeys(Set<PgpKey> pgpKeys) {
+		final ByteArrayOutputStream bout = new ByteArrayOutputStream();
+		exportPublicKeysWithPrivateKeys(pgpKeys, bout);
+		return bout.toByteArray();
 	}
 
 	@Override
@@ -174,6 +197,13 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 		} catch (IOException x) {
 			throw new RuntimeException(x);
 		}
+	}
+
+	@Override
+	public byte[] exportPublicKeys(Set<PgpKey> pgpKeys) {
+		final ByteArrayOutputStream bout = new ByteArrayOutputStream();
+		exportPublicKeys(pgpKeys, bout);
+		return bout.toByteArray();
 	}
 
 	@Override

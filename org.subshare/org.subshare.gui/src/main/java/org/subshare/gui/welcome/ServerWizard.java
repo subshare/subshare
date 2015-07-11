@@ -9,7 +9,6 @@ import org.subshare.core.sync.Sync;
 import org.subshare.gui.ls.LockerSyncLs;
 import org.subshare.gui.ls.PgpSyncLs;
 import org.subshare.gui.ls.ServerRegistryLs;
-import org.subshare.gui.util.PlatformUtil;
 import org.subshare.gui.welcome.first.FirstWizardPage;
 import org.subshare.gui.welcome.server.ServerWizardPage;
 import org.subshare.gui.wizard.DefaultFinishingPage;
@@ -55,15 +54,20 @@ public class ServerWizard extends Wizard {
 	}
 
 	@Override
-	protected void preFinish() {
+	protected void finishing() {
 		if (isEmpty(trim(serverData.getServer().getName())))
 			serverData.getServer().setName(serverData.getServer().getUrl().getHost());
+
+		((DefaultFinishingPage) getFinishingPage()).getHeaderText().setText(
+				Messages.getString("ServerWizard.finishingPage.headerText.text")); //$NON-NLS-1$
+
+		super.finishing();
 	}
 
 	@Override
 	protected void finish(ProgressMonitor monitor) throws Exception {
-		PlatformUtil.runAndWait(() -> ((DefaultFinishingPage) getFinishingPage()).getHeaderText().setText(
-				Messages.getString("ServerWizard.finishingPage.headerText.text")));
+//		PlatformUtil.runAndWait(() -> ((DefaultFinishingPage) getFinishingPage()).getHeaderText().setText(
+//				Messages.getString("ServerWizard.finishingPage.headerText.text")));
 
 		final Server server = assertNotNull("serverData.server", serverData.getServer());
 		if (syncLocker) {

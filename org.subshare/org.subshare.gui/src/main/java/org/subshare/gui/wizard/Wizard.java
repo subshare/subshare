@@ -28,7 +28,11 @@ import co.codewizards.cloudstore.core.progress.NullProgressMonitor;
 import co.codewizards.cloudstore.core.progress.ProgressMonitor;
 
 /**
- * basic wizard infrastructure class
+ * Abstract wizard base class.
+ * <p>
+ * Concrete wizard implementations are supposed to sub-class, add at least one {@link WizardPage}
+ * (either via constructor or via {@link #getPages() pages}) and implement the abstract methods -
+ * most importantly {@link #finish(ProgressMonitor)}.
  */
 public abstract class Wizard extends StackPane {
 	protected final ObservableList<WizardPage> pages = FXCollections.observableArrayList();
@@ -190,12 +194,12 @@ public abstract class Wizard extends StackPane {
 	 * Finish this wizard.
 	 * <p>
 	 * Do not override this method! Override the following callback-methods instead:
-	 * <ul>
-	 * <li>{@link #preFinish()}
+	 * <ol>
+	 * <li>{@link #finishing()}
 	 * <li>{@link #finish(ProgressMonitor)}
 	 * <li>{@link #failed(Throwable)}
 	 * <li>{@link #finished()}
-	 * </ul>
+	 * </ol>
 	 */
 	public void finish() {
 		PlatformUtil.assertFxApplicationThread();
@@ -207,12 +211,14 @@ public abstract class Wizard extends StackPane {
 					finish(new NullProgressMonitor()); // reserving the progress-monitor stuff for later ;-)
 
 					Platform.runLater(() -> {
+						preFinished();
 						stateProperty.set(WizardState.FINISHED);
 						finished();
 					});
 				} catch (final Throwable x) {
 					Platform.runLater(() -> {
 						error = x;
+						preFailed(x);
 						stateProperty.set(WizardState.FAILED);
 						failed(x);
 					});
@@ -222,16 +228,22 @@ public abstract class Wizard extends StackPane {
 
 		error = null;
 		stateProperty.set(WizardState.FINISHING);
-		preFinish();
+		finishing();
 		finishThread.start();
 	}
 
 	/**
-	 * Callback-method notifying the concrete wizard that the wizard is currently finishing.
+	 * Callback-method notifying the concrete wizard-implementation about this wizard currently finishing.
 	 * <p>
 	 * This method is called on the JavaFX UI thread, before {@link #finish(ProgressMonitor)} is invoked.
+	 * <p>
+	 * This method is invoked immediately after the {@link #getState() state} was set to {@link WizardState#FINISHING}.
+	 * @see #finish(ProgressMonitor)
+	 * @see #finished()
+	 * @see #failed(Throwable)
+	 * @see WizardState#FINISHING
 	 */
-	protected void preFinish() {
+	protected void finishing() {
 	}
 
 	/**
@@ -242,11 +254,63 @@ public abstract class Wizard extends StackPane {
 	 */
 	protected abstract void finish(ProgressMonitor monitor) throws Exception;
 
+	/**
+	 * Callback-method notifying the concrete wizard-implementation about this wizard having successfully finished.
+	 * <p>
+	 * This method is called on the JavaFX UI thread, after {@link #finish(ProgressMonitor)} was invoked - and
+	 * returned without throwing an exception.
+	 * <p>
+	 * This method is invoked immediately <i>before</i> the {@link #getState() state} is set to {@link WizardState#FINISHED}.
+	 * @see #finish(ProgressMonitor)
+	 * @see #finished()
+	 * @see WizardState#FINISHED
+	 */
+	protected void preFinished() {
+	}
+
+	/**
+	 * Callback-method notifying the concrete wizard-implementation about this wizard having failed.
+	 * <p>
+	 * This method is called on the JavaFX UI thread, after {@link #finish(ProgressMonitor)} was invoked - and
+	 * threw an exception.
+	 * <p>
+	 * This method is invoked immediately <i>before</i> the {@link #getState() state} is set to {@link WizardState#FAILED}.
+	 * @param error the exception thrown by {@link #finish(ProgressMonitor)}. Never <code>null</code>.
+	 * @see #finish(ProgressMonitor)
+	 * @see #finished()
+	 * @see WizardState#FAILED
+	 */
+	protected void preFailed(final Throwable error) {
+		ErrorHandler.handleError(error);
+	}
+
+	/**
+	 * Callback-method notifying the concrete wizard-implementation about this wizard having successfully finished.
+	 * <p>
+	 * This method is called on the JavaFX UI thread, after {@link #finish(ProgressMonitor)} was invoked - and
+	 * returned without throwing an exception.
+	 * <p>
+	 * This method is invoked immediately after the {@link #getState() state} was set to {@link WizardState#FINISHED}.
+	 * @see #finish(ProgressMonitor)
+	 * @see #failed(Throwable)
+	 * @see WizardState#FINISHED
+	 */
 	protected void finished() {
 	}
 
+	/**
+	 * Callback-method notifying the concrete wizard-implementation about this wizard having failed.
+	 * <p>
+	 * This method is called on the JavaFX UI thread, after {@link #finish(ProgressMonitor)} was invoked - and
+	 * threw an exception.
+	 * <p>
+	 * This method is invoked immediately after the {@link #getState() state} was set to {@link WizardState#FAILED}.
+	 * @param error the exception thrown by {@link #finish(ProgressMonitor)}. Never <code>null</code>.
+	 * @see #finish(ProgressMonitor)
+	 * @see #finished()
+	 * @see WizardState#FAILED
+	 */
 	protected void failed(final Throwable error) {
-		ErrorHandler.handleError(error);
 	}
 
 	/**
@@ -260,7 +324,7 @@ public abstract class Wizard extends StackPane {
 	}
 
 	/**
-	 * Gets the error occurred when finishing this wizard.
+	 * Gets the error that occurred when finishing this wizard (thrown by {@link #finish(ProgressMonitor)}).
 	 * <p>
 	 * If this wizard's {@link #stateProperty() state} is not {@link WizardState#FAILED FAILED}, this method
 	 * returns <code>null</code>.
@@ -274,6 +338,19 @@ public abstract class Wizard extends StackPane {
 		return stateProperty;
 	}
 
+	/**
+	 * Gets the state of this wizard.
+	 * <p>
+	 * In order to react on changes of this state, you may hook a listener onto the corresponding
+	 * {@link #stateProperty() stateProperty}. Implementors of concrete wizards can also override the callback-methods:
+	 * <ol>
+	 * <li>{@link #finishing()}
+	 * <li>{@link #finish(ProgressMonitor)}
+	 * <li>{@link #failed(Throwable)}
+	 * <li>{@link #finished()}
+	 * </ol>
+	 * @return the state of this wizard. Never <code>null</code>.
+	 */
 	public WizardState getState() {
 		return stateProperty.get();
 	}

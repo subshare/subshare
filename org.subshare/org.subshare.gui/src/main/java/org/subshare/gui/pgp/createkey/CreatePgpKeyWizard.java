@@ -29,7 +29,8 @@ public abstract class CreatePgpKeyWizard extends Wizard {
 	}
 
 	@Override
-	protected void preFinish() {
+	protected void finishing() {
 		createPgpKeyParam.getUserIds().removeIf(pgpUserId -> pgpUserId.isEmpty());
+		super.finishing();
 	}
 }
