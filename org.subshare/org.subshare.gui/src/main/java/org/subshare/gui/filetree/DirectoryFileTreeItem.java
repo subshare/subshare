@@ -3,7 +3,6 @@ package org.subshare.gui.filetree;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.ReflectionUtil.*;
 
-import java.io.FileFilter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -14,6 +13,7 @@ import javafx.beans.InvalidationListener;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.control.TreeItem;
 import co.codewizards.cloudstore.core.oio.File;
+import co.codewizards.cloudstore.core.oio.FileFilter;
 
 public class DirectoryFileTreeItem extends FileFileTreeItem {
 
@@ -234,7 +234,7 @@ public class DirectoryFileTreeItem extends FileFileTreeItem {
 		}
 
 		@Override
-		public boolean accept(java.io.File file) {
+		public boolean accept(File file) {
 			for (final FileFilter fileFilter : fileFilters) {
 				if (! fileFilter.accept(file))
 					return false;
@@ -245,11 +245,11 @@ public class DirectoryFileTreeItem extends FileFileTreeItem {
 
 	private static final class HideHiddenFilesFileFilter implements FileFilter {
 		@Override
-		public boolean accept(java.io.File file) {
+		public boolean accept(File file) {
 			return ! isHidden(file);
 		}
 
-		protected boolean isHidden(java.io.File file) {
+		protected boolean isHidden(File file) {
 			// TODO take DOS/Windows flags into account => extend OioFileFactory?!
 			return file.getName().startsWith(".");
 		}

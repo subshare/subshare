@@ -50,7 +50,7 @@ public class RootFileTreeItem extends FileTreeItem<String> {
 		final File homeDir = IOUtil.getUserHome();
 		result.add(new FsHomeFileTreeItem(homeDir));
 
-		final File[] roots = listRoots();
+		final File[] roots = listRootFiles();
 		for (File root : roots) {
 			FsRootFileTreeItem treeItem = new FsRootFileTreeItem(root);
 			result.add(treeItem);
