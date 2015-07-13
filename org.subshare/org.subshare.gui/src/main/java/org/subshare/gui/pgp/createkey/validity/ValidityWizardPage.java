@@ -4,6 +4,7 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import javafx.scene.Parent;
 
 import org.subshare.core.pgp.CreatePgpKeyParam;
+import org.subshare.gui.pgp.createkey.advanced.AdvancedWizardPage;
 import org.subshare.gui.wizard.WizardPage;
 
 public class ValidityWizardPage extends WizardPage {
@@ -15,6 +16,7 @@ public class ValidityWizardPage extends WizardPage {
 	public ValidityWizardPage(CreatePgpKeyParam createPgpKeyParam) {
 		super("OpenPGP key validity");
 		this.createPgpKeyParam = assertNotNull("createPgpKeyParam", createPgpKeyParam);
+		setNextPage(new AdvancedWizardPage(createPgpKeyParam));
 	}
 
 	@Override

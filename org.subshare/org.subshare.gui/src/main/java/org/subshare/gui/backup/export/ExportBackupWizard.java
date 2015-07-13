@@ -14,7 +14,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.text.Text;
 
 import org.subshare.gui.backup.BackupExporter;
-import org.subshare.gui.backup.export.destination.ExportBackupDestinationWizardPage;
 import org.subshare.gui.backup.export.first.FirstWizardPage;
 import org.subshare.gui.wizard.Wizard;
 
@@ -30,8 +29,7 @@ public class ExportBackupWizard extends Wizard {
 	private boolean needed;
 
 	public ExportBackupWizard() {
-		super(new FirstWizardPage());
-		pages.add(new ExportBackupDestinationWizardPage(exportBackupData));
+		setFirstPage(new FirstWizardPage(exportBackupData));
 
 		backupExporter = new BackupExporter();
 		needed = backupExporter.isBackupNeeded();

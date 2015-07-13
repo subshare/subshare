@@ -29,14 +29,16 @@ public class ServerWizard extends Wizard {
 		this.syncLocker = syncLocker;
 
 		if (showFirstPage)
-			pages.add(new FirstWizardPage());
-
+			setFirstPage(new FirstWizardPage());
 
 		serverRegistry = ServerRegistryLs.getServerRegistry();
 		if (serverRegistry.getServers().isEmpty()) {
 			needed = true;
 			serverData.setServer(serverRegistry.createServer());
-			pages.add(new ServerWizardPage(serverData));
+			if (getFirstPage() == null)
+				setFirstPage(new ServerWizardPage(serverData));
+			else
+				getFirstPage().setNextPage(new ServerWizardPage(serverData));
 		}
 	}
 

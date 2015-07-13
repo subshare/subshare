@@ -59,6 +59,10 @@ public class Welcome {
 			if (identityWizardNeeded) {
 				WizardDialog dialog = new WizardDialog(owner, identityWizard);
 				dialog.showAndWait();
+
+				if (WizardState.FINISHED != serverWizard.getState())
+					serverWizardNeeded = false; // if identityWizard was cancelled, we do not wait for the serverWizard, which was probably not even started!
+
 				determineServerWizardCompleted();
 			}
 			else if (serverWizardNeeded) {
@@ -94,6 +98,9 @@ public class Welcome {
 	}
 
 	private void determineServerWizardCompleted() {
+		if (!serverWizardNeeded)
+			return;
+
 		PlatformUtil.runAndWait(() -> {
 			serverWizardCompleted = WizardState.CANCELLED == serverWizard.getState()
 					|| WizardState.FINISHED == serverWizard.getState();

@@ -10,12 +10,8 @@ import org.subshare.core.user.UserRegistry;
 import org.subshare.gui.ls.PgpLs;
 import org.subshare.gui.ls.PgpPrivateKeyPassphraseManagerLs;
 import org.subshare.gui.ls.UserRegistryLs;
-import org.subshare.gui.pgp.createkey.advanced.AdvancedWizardPage;
-import org.subshare.gui.pgp.createkey.passphrase.PassphraseWizardPage;
-import org.subshare.gui.pgp.createkey.validity.ValidityWizardPage;
 import org.subshare.gui.welcome.first.FirstWizardPage;
 import org.subshare.gui.welcome.identity.IdentityWizardPage;
-import org.subshare.gui.welcome.importbackup.ImportBackupWizardPage;
 import org.subshare.gui.wizard.DefaultFinishingPage;
 import org.subshare.gui.wizard.Wizard;
 
@@ -31,18 +27,20 @@ public class IdentityWizard extends Wizard {
 	private User user;
 
 	public IdentityWizard() {
-		pages.add(new FirstWizardPage());
+		super(new FirstWizardPage());
 
 		pgp = PgpLs.getPgpOrFail();
 		if (pgp.getMasterKeysWithPrivateKey().isEmpty()) {
 			needed = true;
-			pages.addAll(
-					new IdentityWizardPage(identityData),
-					new ImportBackupWizardPage(identityData),
-					new PassphraseWizardPage(identityData.getCreatePgpKeyParam()),
-					new ValidityWizardPage(identityData.getCreatePgpKeyParam()),
-					new AdvancedWizardPage(identityData.getCreatePgpKeyParam())
-					);
+			getFirstPage().setNextPage(new IdentityWizardPage(identityData));
+
+//			pages.addAll(
+//					new IdentityWizardPage(identityData),
+//					new ImportBackupWizardPage(identityData),
+//					new PassphraseWizardPage(identityData.getCreatePgpKeyParam()),
+//					new ValidityWizardPage(identityData.getCreatePgpKeyParam()),
+//					new AdvancedWizardPage(identityData.getCreatePgpKeyParam())
+//					);
 		}
 	}
 

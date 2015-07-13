@@ -156,7 +156,9 @@ public class SubShareGui extends Application {
 	@Override
 	public void stop() throws Exception {
 		PlatformUtil.assertFxApplicationThread();
-		backupIfNeeded();
+
+		if (exitCode == 0)
+			backupIfNeeded();
 
 		PlatformUtil.notifyExiting();
 

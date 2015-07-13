@@ -3,6 +3,7 @@ package org.subshare.gui.wizard;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.util.Deque;
+import java.util.IdentityHashMap;
 import java.util.LinkedList;
 
 import javafx.application.Platform;
@@ -14,9 +15,6 @@ import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
-import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
-import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.layout.StackPane;
@@ -31,11 +29,37 @@ import co.codewizards.cloudstore.core.progress.ProgressMonitor;
  * Abstract wizard base class.
  * <p>
  * Concrete wizard implementations are supposed to sub-class, add at least one {@link WizardPage}
- * (either via constructor or via {@link #getPages() pages}) and implement the abstract methods -
+ * (either via constructor or via {@link #setFirstPage(WizardPage)}) and implement the abstract methods -
  * most importantly {@link #finish(ProgressMonitor)}.
  */
 public abstract class Wizard extends StackPane {
-	protected final ObservableList<WizardPage> pages = FXCollections.observableArrayList();
+	private final IdentityHashMap<WizardPage, Void> knownPages = new IdentityHashMap<WizardPage, Void>();
+
+	protected final ObjectProperty<WizardPage> firstPageProperty = new SimpleObjectProperty<WizardPage>(this, "firstPage") {
+		@Override
+		public void set(final WizardPage newValue) {
+			final WizardPage oldValue = get();
+			super.set(newValue);
+
+			if (currentPage == oldValue)
+				currentPage = null;
+
+			if (oldValue != null) {
+				oldValue.completeProperty().removeListener(updateCanFinishInvalidationListener);
+				getChildren().remove(oldValue);
+			}
+
+			if (newValue != null) {
+				newValue.completeProperty().addListener(updateCanFinishInvalidationListener);
+				newValue.setWizard(Wizard.this);
+				newValue.updateButtonsDisable();
+
+				if (currentPage == null)
+					navTo(newValue, false);
+			}
+		}
+	};
+
 	protected final Deque<WizardPage> history = new LinkedList<>();
 	private WizardPage currentPage;
 	private final BooleanProperty canFinishProperty = new SimpleBooleanProperty(this, "canFinish");
@@ -45,37 +69,11 @@ public abstract class Wizard extends StackPane {
 	private Throwable error;
 
     protected Wizard() {
-    	this((WizardPage[]) null);
+    	this((WizardPage) null);
     }
 
-	protected Wizard(WizardPage... wizardPages) {
-		pages.addListener((ListChangeListener<WizardPage>) c -> {
-			while (c.next()) {
-				for (WizardPage wizardPage : c.getAddedSubList()) {
-					getChildren().add(0, wizardPage);
-					wizardPage.completeProperty().addListener(updateCanFinishInvalidationListener);
-					wizardPage.onAdded(this);
-				}
-
-				for (WizardPage wizardPage : c.getRemoved()) {
-					if (currentPage == wizardPage)
-						currentPage = null;
-
-					wizardPage.onRemoved(this);
-					wizardPage.completeProperty().removeListener(updateCanFinishInvalidationListener);
-					getChildren().remove(wizardPage);
-				}
-
-				if (currentPage == null && !pages.isEmpty())
-					navTo(pages.get(0), false);
-			}
-
-			for (WizardPage wizardPage : pages)
-				wizardPage.manageButtons();
-		});
-
-		if (wizardPages != null)
-			pages.addAll(wizardPages);
+	protected Wizard(final WizardPage firstPage) {
+		setFirstPage(firstPage);
 
 		setStyle("-fx-padding: 10; -fx-background-color: cornsilk;");
 
@@ -93,6 +91,19 @@ public abstract class Wizard extends StackPane {
 		setPrefWidth(500);
 		setPrefHeight(300);
 	}
+
+	public void registerWizardPage(WizardPage wizardPage) {
+		if (knownPages.containsKey(wizardPage))
+			return;
+
+		knownPages.put(wizardPage, null);
+		wizardPage.setVisible(false);
+		getChildren().add(0, wizardPage);
+	}
+
+	public ObjectProperty<WizardPage> firstPageProperty() { return firstPageProperty; }
+	public WizardPage getFirstPage() { return firstPageProperty.get(); }
+	public void setFirstPage(WizardPage wizardPage) { firstPageProperty.set(wizardPage); }
 
 	public void init() {
 		PlatformUtil.assertFxApplicationThread();
@@ -133,12 +144,6 @@ public abstract class Wizard extends StackPane {
 		return !history.isEmpty();
 	}
 
-	protected void navTo(int nextPageIdx) {
-		if (nextPageIdx < 0 || nextPageIdx >= pages.size()) return;
-		final WizardPage nextPage = pages.get(nextPageIdx);
-		navTo(nextPage, true);
-	}
-
 	protected void navTo(final WizardPage wizardPage, boolean addToHistory) {
 		assertNotNull("wizardPage", wizardPage);
 		PlatformUtil.assertFxApplicationThread();
@@ -157,7 +162,7 @@ public abstract class Wizard extends StackPane {
 		getChildren().remove(wizardPage); // remove from z-order wherever it is (it might be missing!).
 		getChildren().add(wizardPage); // re-add as last, which means top-most z-order.
 
-		wizardPage.manageButtons();
+		wizardPage.updateButtonsDisable();
 		updateCanFinish();
 
 		if (getParent() != null)
@@ -177,17 +182,6 @@ public abstract class Wizard extends StackPane {
 				wizardPage.onShown();
 			}
 		});
-	}
-
-	protected void navTo(String id) {
-		if (id == null) {
-			return;
-		}
-
-		pages.stream()
-		.filter(page -> id.equals(page.getId()))
-		.findFirst()
-		.ifPresent(page -> navTo(pages.indexOf(page)));
 	}
 
 	/**
@@ -382,58 +376,58 @@ public abstract class Wizard extends StackPane {
 		canFinishProperty.set(canFinish);
 	}
 
-	public ObservableList<WizardPage> getPages() {
-		return pages;
-	}
-
-	public WizardPage getNextPageFromPages(final WizardPage wizardPage) {
-		assertNotNull("wizardPage", wizardPage);
-		int index = pages.indexOf(wizardPage);
-		if (index < 0)
-			return null;
-
-		++index;
-		if (index >= pages.size())
-			return null;
-
-		return pages.get(index);
-	}
-
-	public <P extends WizardPage> P getPageOrFail(final Class<P> type) {
-		P page = getPage(type);
-		if (page == null)
-			throw new IllegalArgumentException("There is no page with this type: " + type.getName());
-
-		return page;
-	}
-
-	public <P extends WizardPage> P getPage(final Class<P> type) {
-		assertNotNull("type", type);
-
-		for (WizardPage wizardPage : pages) {
-			if (type.isInstance(wizardPage))
-				return type.cast(wizardPage);
-		}
-		return null;
-	}
-
-	public WizardPage getPageOrFail(final String id) {
-		WizardPage page = getPage(id);
-		if (page == null)
-			throw new IllegalArgumentException("There is no page with this id: " + id);
-
-		return page;
-	}
-
-	public WizardPage getPage(final String id) {
-		assertNotNull("id", id);
-
-		for (WizardPage wizardPage : pages) {
-			if (id.equals(wizardPage.getId()))
-				return wizardPage;
-		}
-		return null;
-	}
+//	public ObservableList<WizardPage> getPages() {
+//		return pages;
+//	}
+//
+//	public WizardPage getNextPageFromPages(final WizardPage wizardPage) {
+//		assertNotNull("wizardPage", wizardPage);
+//		int index = pages.indexOf(wizardPage);
+//		if (index < 0)
+//			return null;
+//
+//		++index;
+//		if (index >= pages.size())
+//			return null;
+//
+//		return pages.get(index);
+//	}
+//
+//	public <P extends WizardPage> P getPageOrFail(final Class<P> type) {
+//		P page = getPage(type);
+//		if (page == null)
+//			throw new IllegalArgumentException("There is no page with this type: " + type.getName());
+//
+//		return page;
+//	}
+//
+//	public <P extends WizardPage> P getPage(final Class<P> type) {
+//		assertNotNull("type", type);
+//
+//		for (WizardPage wizardPage : pages) {
+//			if (type.isInstance(wizardPage))
+//				return type.cast(wizardPage);
+//		}
+//		return null;
+//	}
+//
+//	public WizardPage getPageOrFail(final String id) {
+//		WizardPage page = getPage(id);
+//		if (page == null)
+//			throw new IllegalArgumentException("There is no page with this id: " + id);
+//
+//		return page;
+//	}
+//
+//	public WizardPage getPage(final String id) {
+//		assertNotNull("id", id);
+//
+//		for (WizardPage wizardPage : pages) {
+//			if (id.equals(wizardPage.getId()))
+//				return wizardPage;
+//		}
+//		return null;
+//	}
 
 	public Parent getFinishingPage() {
 		return finishingPage;
