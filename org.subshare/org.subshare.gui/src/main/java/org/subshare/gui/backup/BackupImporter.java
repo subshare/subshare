@@ -7,21 +7,13 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.subshare.core.locker.LockerContent;
-import org.subshare.core.pgp.Pgp;
 import org.subshare.core.server.ServerRegistryLockerContent;
-import org.subshare.gui.ls.PgpLs;
 
 import co.codewizards.cloudstore.core.oio.File;
-import co.codewizards.cloudstore.ls.client.LocalServerClient;
 
-public class BackupImporter {
-
-	private final LocalServerClient localServerClient;
-	private final Pgp pgp;
+public class BackupImporter extends AbstractBackupImExporter {
 
 	public BackupImporter() {
-		localServerClient = LocalServerClient.getInstance();
-		pgp = PgpLs.getPgpOrFail();
 	}
 
 	public void importBackup(final File backupFile) throws IOException {
@@ -41,5 +33,9 @@ public class BackupImporter {
 		final byte[] serverRegistryData = backupDataFile.getData(ENTRY_NAME_SERVER_REGISTRY_FILE);
 		assertNotNull("backupDataFile.getData(ENTRY_NAME_SERVER_REGISTRY_FILE)", serverRegistryData);
 		serverRegistryLockerContent.mergeFrom(serverRegistryData);
+
+		registerPgpKeyRelatedBackupProperties(backupDataFile.getManifestTimestamp());
+		registerServerRegistryRelatedBackupProperties(backupDataFile.getManifestTimestamp());
+		writeBackupProperties();
 	}
 }

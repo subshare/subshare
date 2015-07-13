@@ -177,7 +177,7 @@ public class UserImpl extends AbstractBean<User.Property> implements User {
 	public UserRepoKey createUserRepoKey(final UUID serverRepositoryId) {
 		assertNotNull("serverRepositoryId", serverRepositoryId);
 
-		final PgpKey pgpKey = getPgpKeyContainingPrivateKeyOrFail();
+		final PgpKey pgpKey = getPgpKeyContainingSecretKeyOrFail();
 
 		final AsymmetricCipherKeyPair keyPair = KeyFactory.getInstance().createAsymmetricKeyPair();
 		final UserRepoKey userRepoKey = new UserRepoKey(serverRepositoryId, keyPair, Collections.singleton(pgpKey), pgpKey, null);
@@ -192,7 +192,7 @@ public class UserImpl extends AbstractBean<User.Property> implements User {
 		assertNotNull("invitedUser", invitedUser);
 		assertNotNull("serverRepositoryId", serverRepositoryId);
 
-		final PgpKey ownPgpKey = getPgpKeyContainingPrivateKeyOrFail();
+		final PgpKey ownPgpKey = getPgpKeyContainingSecretKeyOrFail();
 
 		if (invitedUser.getPgpKeyIds().isEmpty())
 			throw new IllegalStateException("There is no PGP key associated with the invited user!");
@@ -241,8 +241,8 @@ public class UserImpl extends AbstractBean<User.Property> implements User {
 	}
 
 	@Override
-	public PgpKey getPgpKeyContainingPrivateKeyOrFail() {
-		final PgpKey pgpKey = getPgpKeyContainingPrivateKey();
+	public PgpKey getPgpKeyContainingSecretKeyOrFail() {
+		final PgpKey pgpKey = getPgpKeyContainingSecretKey();
 
 		if (pgpKey == null)
 			throw new IllegalStateException(String.format("None of the PGP keys associated with %s has a private key available!", this));
@@ -251,7 +251,7 @@ public class UserImpl extends AbstractBean<User.Property> implements User {
 	}
 
 	@Override
-	public PgpKey getPgpKeyContainingPrivateKey() {
+	public PgpKey getPgpKeyContainingSecretKey() {
 		final List<PgpKeyId> pgpKeyIds = getPgpKeyIds();
 
 		if (pgpKeyIds.isEmpty())

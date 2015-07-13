@@ -394,7 +394,7 @@ public class UserPane extends GridPane {
 		}
 
 		if (exportPublicKeysWithPrivateKeys)
-			getPgp().exportPublicKeysWithPrivateKeys(selectedPgpKeys, file);
+			getPgp().exportPublicKeysWithSecretKeys(selectedPgpKeys, file);
 		else
 			getPgp().exportPublicKeys(selectedPgpKeys, file);
 	}

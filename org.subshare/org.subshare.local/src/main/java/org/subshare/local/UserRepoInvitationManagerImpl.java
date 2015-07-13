@@ -130,7 +130,7 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 //			e.printStackTrace();
 //		}
 
-		final PgpKey signPgpKey = grantingUser.getPgpKeyContainingPrivateKeyOrFail();
+		final PgpKey signPgpKey = grantingUser.getPgpKeyContainingSecretKeyOrFail();
 
 		final ByteArrayOutputStream out = new ByteArrayOutputStream();
 		final PgpEncoder encoder = getPgpOrFail().createEncoder(new ByteArrayInputStream(userRepoInvitationData), out);
@@ -382,7 +382,7 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 
 		for (final User user : userRegistry.getUsers()) {
 			final UserRepoKeyRing userRepoKeyRing = user.getUserRepoKeyRing();
-			if (userRepoKeyRing == null || user.getPgpKeyContainingPrivateKey() == null)
+			if (userRepoKeyRing == null || user.getPgpKeyContainingSecretKey() == null)
 				continue;
 
 			cryptree = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail().getCryptreeOrCreate(

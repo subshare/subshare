@@ -24,6 +24,8 @@ import org.subshare.core.pgp.transport.PgpTransportFactoryRegistry;
 import org.subshare.core.pgp.transport.local.LocalPgpTransportFactory;
 import org.subshare.core.server.Server;
 import org.subshare.core.sync.Sync;
+import org.subshare.core.user.User;
+import org.subshare.core.user.UserRegistryImpl;
 
 import co.codewizards.cloudstore.core.config.ConfigDir;
 import co.codewizards.cloudstore.core.dto.Uid;
@@ -88,6 +90,11 @@ public class PgpSync implements Sync {
 	private void sync(final PgpTransport from, final long fromLastSyncLocalRevision, final PgpTransport to) {
 		// we always sync all keys that are *locally* known - TODO maybe add a constraint to this later?
 		final Set<PgpKeyId> allMasterKeyIds = getLocalPgpTransport().getMasterKeyIds();
+
+		// Especially after a restore, when our key-ring is empty (except for our own keys), we must down-sync
+		// these keys!
+		for (User user : UserRegistryImpl.getInstance().getUsers())
+			allMasterKeyIds.addAll(user.getPgpKeyIds());
 
 		for (Set<PgpKeyId> masterKeyIds : split(allMasterKeyIds, 1000)) {
 			final ByteArrayOutputStream out = new ByteArrayOutputStream();

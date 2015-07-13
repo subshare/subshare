@@ -96,12 +96,6 @@ public class FileTreePane extends BorderPane {
 			assertFxApplicationThread();
 
 			if (c.getElementRemoved() != null)
-				System.out.println("selectedFileRemoved: " + c.getElementRemoved());
-
-			if (c.getElementAdded() != null)
-				System.out.println("selectedFileAdded: " + c.getElementAdded());
-
-			if (c.getElementRemoved() != null)
 				unselectTreeItemForUnselectedFile(c.getElementRemoved());
 
 			if (c.getElementAdded() != null)

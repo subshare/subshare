@@ -59,7 +59,7 @@ public abstract class AbstractPgp implements Pgp {
 	}
 
 	@Override
-	public void exportPublicKeysWithPrivateKeys(final Set<PgpKey> pgpKeys, final File file) {
+	public void exportPublicKeysWithSecretKeys(final Set<PgpKey> pgpKeys, final File file) {
 		assertNotNull("pgpKeys", pgpKeys);
 		try {
 			try (OutputStream out = assertNotNull("file", file).createOutputStream();) {

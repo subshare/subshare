@@ -39,7 +39,7 @@ public interface Pgp {
 	 */
 	Collection<PgpSignature> getCertifications(PgpKey pgpKey);
 
-	Collection<PgpKey> getMasterKeysWithPrivateKey();
+	Collection<PgpKey> getMasterKeysWithSecretKey();
 
 	boolean isTrusted(PgpKey pgpKey);
 
@@ -47,7 +47,7 @@ public interface Pgp {
 
 	void exportPublicKeys(Set<PgpKey> pgpKeys, File file);
 
-	void exportPublicKeysWithPrivateKeys(Set<PgpKey> pgpKeys, File file);
+	void exportPublicKeysWithSecretKeys(Set<PgpKey> pgpKeys, File file);
 
 	void exportPublicKeys(Set<PgpKey> pgpKeys, OutputStream out);
 

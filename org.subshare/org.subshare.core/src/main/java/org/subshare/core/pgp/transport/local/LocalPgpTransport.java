@@ -40,9 +40,11 @@ public class LocalPgpTransport extends AbstractPgpTransport {
 		final HashSet<PgpKey> masterKeys = new HashSet<PgpKey>(pgpKeyIds.size());
 		for (final PgpKeyId pgpKeyId : pgpKeyIds) {
 			final PgpKey masterKey = pgp.getPgpKey(pgpKeyId);
-			final long localRevision = pgp.getLocalRevision(masterKey);
-			if (localRevision > changedAfterLocalRevision)
-				masterKeys.add(masterKey);
+			if (masterKey != null) {
+				final long localRevision = pgp.getLocalRevision(masterKey);
+				if (localRevision > changedAfterLocalRevision)
+					masterKeys.add(masterKey);
+			}
 		}
 
 		pgp.exportPublicKeys(masterKeys, out);

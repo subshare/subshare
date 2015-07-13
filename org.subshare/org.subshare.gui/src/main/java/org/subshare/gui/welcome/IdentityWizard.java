@@ -33,7 +33,7 @@ public class IdentityWizard extends Wizard {
 		super(new FirstWizardPage());
 
 		pgp = PgpLs.getPgpOrFail();
-		if (pgp.getMasterKeysWithPrivateKey().isEmpty()) {
+		if (pgp.getMasterKeysWithSecretKey().isEmpty()) {
 			needed = true;
 			getFirstPage().setNextPage(new IdentityWizardPage(identityData));
 

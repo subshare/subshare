@@ -63,8 +63,8 @@ public interface User extends Bean<User.Property> {
 	 */
 	Set<PgpKey> getValidPgpKeys();
 
-	PgpKey getPgpKeyContainingPrivateKeyOrFail();
-	PgpKey getPgpKeyContainingPrivateKey();
+	PgpKey getPgpKeyContainingSecretKeyOrFail();
+	PgpKey getPgpKeyContainingSecretKey();
 	List<UserRepoKey.PublicKeyWithSignature> getUserRepoKeyPublicKeys();
 
 	@Override

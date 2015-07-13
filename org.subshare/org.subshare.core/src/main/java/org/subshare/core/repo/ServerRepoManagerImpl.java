@@ -8,10 +8,7 @@ import java.util.UUID;
 
 import javafx.util.Pair;
 
-import org.subshare.core.pgp.Pgp;
 import org.subshare.core.pgp.PgpKey;
-import org.subshare.core.pgp.PgpKeyId;
-import org.subshare.core.pgp.PgpRegistry;
 import org.subshare.core.repo.transport.CryptreeRestRepoTransport;
 import org.subshare.core.server.Server;
 import org.subshare.core.user.User;
@@ -143,9 +140,7 @@ public class ServerRepoManagerImpl implements ServerRepoManager {
 		// TODO ask the user to select one, if there are multiple?!
 //		final PgpPrivateKeyPassphraseStore pgpPrivateKeyPassphraseStore = PgpPrivateKeyPassphraseStoreImpl.getInstance();
 
-		final Pgp pgp = PgpRegistry.getInstance().getPgpOrFail();
-		for (final PgpKeyId pgpKeyId : user.getPgpKeyIds()) {
-			final PgpKey pgpKey = pgp.getPgpKey(pgpKeyId);
+		for (final PgpKey pgpKey : user.getPgpKeys()) {
 			if (pgpKey.isSecretKeyAvailable())
 				return pgpKey;
 		}

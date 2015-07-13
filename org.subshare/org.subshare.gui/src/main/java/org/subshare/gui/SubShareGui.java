@@ -5,7 +5,10 @@ import static co.codewizards.cloudstore.core.util.Util.*;
 import static org.subshare.gui.util.ResourceBundleUtil.*;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -93,14 +96,20 @@ public class SubShareGui extends Application {
 
 					LocalServerInitLs.initPrepare();
 
+					final Set<PgpKeyId> pgpKeyIdsHavingPrivateKeyBeforeRestore = getIdsOfMasterKeysWithPrivateKey();
 					tryPgpKeysNoPassphrase();
-
 					PlatformUtil.runAndWait(() -> promptPgpKeyPassphrases(primaryStage.getScene().getWindow()));
 
 					if (! new Welcome(primaryStage.getScene().getWindow()).welcome()) {
 						exitCode = 1;
 						stopLater();
 						return;
+					}
+
+					// If private keys were restored in the Welcome process, we must redo PGP passphrase handling.
+					if (!getIdsOfMasterKeysWithPrivateKey().equals(pgpKeyIdsHavingPrivateKeyBeforeRestore)) {
+						tryPgpKeysNoPassphrase();
+						PlatformUtil.runAndWait(() -> promptPgpKeyPassphrases(primaryStage.getScene().getWindow()));
 					}
 
 					PlatformUtil.runAndWait(() -> backupIfNeeded());
@@ -135,6 +144,15 @@ public class SubShareGui extends Application {
 				}
 			}
 		}.start();
+	}
+
+	private Set<PgpKeyId> getIdsOfMasterKeysWithPrivateKey() {
+		final Collection<PgpKey> masterKeysWithPrivateKey = PgpLs.getPgpOrFail().getMasterKeysWithSecretKey();
+		final Set<PgpKeyId> pgpKeyIds = new HashSet<>(masterKeysWithPrivateKey.size());
+		for (PgpKey pgpKey : masterKeysWithPrivateKey)
+			pgpKeyIds.add(pgpKey.getPgpKeyId());
+
+		return pgpKeyIds;
 	}
 
 	protected void stopLater() {
@@ -202,7 +220,7 @@ public class SubShareGui extends Application {
 //		// LocalServerClient to perform a retry. We therefore simply use multiple threads.
 //		final ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
 //		try {
-			for (final PgpKey pgpKey : pgp.getMasterKeysWithPrivateKey()) {
+			for (final PgpKey pgpKey : pgp.getMasterKeysWithSecretKey()) {
 				if (pgpKey.isRevoked() || !pgpKey.isValid(now))
 					continue;
 
@@ -239,7 +257,7 @@ public class SubShareGui extends Application {
 		final PgpPrivateKeyPassphraseStore pgpPrivateKeyPassphraseStore = PgpPrivateKeyPassphraseManagerLs.getPgpPrivateKeyPassphraseStore();
 		final Date now = new Date();
 
-		for (final PgpKey pgpKey : pgp.getMasterKeysWithPrivateKey()) {
+		for (final PgpKey pgpKey : pgp.getMasterKeysWithSecretKey()) {
 			if (pgpKey.isRevoked() || !pgpKey.isValid(now))
 				continue;
 

@@ -642,7 +642,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 	}
 
 	@Override
-	public Collection<PgpKey> getMasterKeysWithPrivateKey() {
+	public Collection<PgpKey> getMasterKeysWithSecretKey() {
 		final List<PgpKey> result = new ArrayList<PgpKey>();
 		final Collection<PgpKey> masterKeys = getMasterKeys();
 		for (final PgpKey pgpKey : masterKeys) {
@@ -664,7 +664,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 		// TODO we should improve this algorithm and store the results in a database, too!
 		// TODO is it expired?!
 		// For now, we take only direct trust relations into account.
-		final Set<PgpKey> masterKeysWithPrivateKey = new HashSet<PgpKey>(getMasterKeysWithPrivateKey());
+		final Set<PgpKey> masterKeysWithPrivateKey = new HashSet<PgpKey>(getMasterKeysWithSecretKey());
 		if (masterKeysWithPrivateKey.contains(pgpKey))
 			return PgpKeyTrustLevel.ULTIMATE;
 

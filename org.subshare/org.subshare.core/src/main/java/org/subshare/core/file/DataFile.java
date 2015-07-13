@@ -11,7 +11,9 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
+import java.util.AbstractMap;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -37,6 +39,7 @@ import co.codewizards.cloudstore.core.io.NoCloseInputStream;
 import co.codewizards.cloudstore.core.io.NoCloseOutputStream;
 
 public abstract class DataFile {
+	private Date manifestTimestamp;
 	private Properties manifestProperties;
 	private final Map<String, byte[]> name2ByteArray = new HashMap<>();
 
@@ -51,6 +54,10 @@ public abstract class DataFile {
 
 	public DataFile() {
 		initManifestProperties();
+	}
+
+	public Date getManifestTimestamp() {
+		return manifestTimestamp;
 	}
 
 	public Properties getManifestProperties() {
@@ -75,7 +82,9 @@ public abstract class DataFile {
 	protected void read(final InputStream in) throws IOException {
 		final ZipInputStream zin = new ZipInputStream(new NoCloseInputStream(assertNotNull("in", in)));
 
-		manifestProperties = readManifest(zin);
+		final Map.Entry<Date, Properties> me = readManifest(zin);
+		manifestTimestamp = me == null ? null : assertNotNull("me.key", me.getKey());
+		manifestProperties = me == null ? null : me.getValue();
 		if (manifestProperties == null) { // be fault-tolerant on *empty* input.
 			initManifestProperties();
 			return;
@@ -86,6 +95,9 @@ public abstract class DataFile {
 	}
 
 	private void initManifestProperties() {
+		if (manifestTimestamp == null)
+			manifestTimestamp = new Date();
+
 		manifestProperties = new Properties();
 		manifestProperties.setProperty(MANIFEST_PROPERTY_CONTENT_TYPE, getContentTypeValue());
 		manifestProperties.setProperty(MANIFEST_PROPERTY_CONTENT_TYPE_VERSION, Integer.toString(1));
@@ -93,7 +105,7 @@ public abstract class DataFile {
 
 	protected abstract String getContentTypeValue();
 
-	protected Properties readManifest(final ZipInputStream zin) throws IOException {
+	protected Map.Entry<Date, Properties> readManifest(final ZipInputStream zin) throws IOException {
 		assertNotNull("zin", zin);
 
 		final ZipEntry ze = zin.getNextEntry();
@@ -108,7 +120,7 @@ public abstract class DataFile {
 		properties.load(zin);
 
 		assertValidContentType(properties);
-		return properties;
+		return new AbstractMap.SimpleEntry<Date, Properties>(new Date(ze.getTime()), properties);
 	}
 
 	protected void assertValidContentType(Properties manifestProperties) {
