@@ -4,6 +4,8 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -81,6 +83,13 @@ public abstract class AbstractPgp implements Pgp {
 	}
 
 	@Override
+	public byte[] exportPublicKeys(Set<PgpKey> pgpKeys) {
+		final ByteArrayOutputStream bout = new ByteArrayOutputStream();
+		exportPublicKeys(pgpKeys, bout);
+		return bout.toByteArray();
+	}
+
+	@Override
 	public ImportKeysResult importKeys(final File file) {
 		try {
 			try (InputStream in = assertNotNull("file", file).createInputStream();) {
@@ -89,5 +98,10 @@ public abstract class AbstractPgp implements Pgp {
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	@Override
+	public ImportKeysResult importKeys(byte[] data) {
+		return importKeys(new ByteArrayInputStream(data));
 	}
 }

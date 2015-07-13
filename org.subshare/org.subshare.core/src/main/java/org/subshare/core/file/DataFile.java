@@ -72,7 +72,7 @@ public abstract class DataFile {
 		return name2ByteArray.get(name);
 	}
 
-	private void read(final InputStream in) throws IOException {
+	protected void read(final InputStream in) throws IOException {
 		final ZipInputStream zin = new ZipInputStream(new NoCloseInputStream(assertNotNull("in", in)));
 
 		manifestProperties = readManifest(zin);
@@ -81,14 +81,7 @@ public abstract class DataFile {
 			return;
 		}
 
-		ZipEntry zipEntry;
-		while (null != (zipEntry = zin.getNextEntry())) {
-			final String name = zipEntry.getName();
-			final ByteArrayOutputStream out = new ByteArrayOutputStream();
-			Streams.pipeAll(zin, out);
-			name2ByteArray.put(name, out.toByteArray());
-		}
-
+		readPayload(zin);
 		zin.close();
 	}
 
@@ -100,7 +93,7 @@ public abstract class DataFile {
 
 	protected abstract String getContentTypeValue();
 
-	private Properties readManifest(final ZipInputStream zin) throws IOException {
+	protected Properties readManifest(final ZipInputStream zin) throws IOException {
 		assertNotNull("zin", zin);
 
 		final ZipEntry ze = zin.getNextEntry();
@@ -114,11 +107,24 @@ public abstract class DataFile {
 		final Properties properties = new Properties();
 		properties.load(zin);
 
-		final String contentType = properties.getProperty(MANIFEST_PROPERTY_CONTENT_TYPE);
+		assertValidContentType(properties);
+		return properties;
+	}
+
+	protected void assertValidContentType(Properties manifestProperties) {
+		final String contentType = manifestProperties.getProperty(MANIFEST_PROPERTY_CONTENT_TYPE);
 		if (!getContentTypeValue().equals(contentType))
 			throw new IllegalArgumentException(String.format("Input data is not valid: The manifest indicates the content-type '%s', but '%s' is expected!", contentType, getContentTypeValue()));
+	}
 
-		return properties;
+	protected void readPayload(final ZipInputStream zin) throws IOException {
+		ZipEntry zipEntry;
+		while (null != (zipEntry = zin.getNextEntry())) {
+			final String name = zipEntry.getName();
+			final ByteArrayOutputStream out = new ByteArrayOutputStream();
+			Streams.pipeAll(zin, out);
+			name2ByteArray.put(name, out.toByteArray());
+		}
 	}
 
 	public byte[] write() throws IOException {

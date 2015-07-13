@@ -10,12 +10,14 @@ import javafx.beans.property.StringProperty;
 import org.subshare.core.observable.ObservableList;
 import org.subshare.core.pgp.CreatePgpKeyParam;
 import org.subshare.core.pgp.PgpUserId;
+import org.subshare.gui.backup.imp.ImportBackupData;
 import org.subshare.gui.pgp.createkey.FxPgpUserId;
 import org.subshare.gui.pgp.createkey.TimeUnit;
 
 public class IdentityData {
 
 	private final CreatePgpKeyParam createPgpKeyParam = new CreatePgpKeyParam();
+	private final ImportBackupData importBackupData = new ImportBackupData();
 
 	private final StringProperty firstNameProperty = new SimpleStringProperty(this, "firstName");
 	private final StringProperty lastNameProperty = new SimpleStringProperty(this, "lastName");
@@ -53,6 +55,10 @@ public class IdentityData {
 
 	public CreatePgpKeyParam getCreatePgpKeyParam() {
 		return createPgpKeyParam;
+	}
+
+	public ImportBackupData getImportBackupData() {
+		return importBackupData;
 	}
 
 	public FxPgpUserId getPgpUserId() {

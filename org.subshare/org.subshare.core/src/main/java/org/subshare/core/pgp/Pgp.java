@@ -71,6 +71,8 @@ public interface Pgp {
 
 	ImportKeysResult importKeys(File file);
 
+	ImportKeysResult importKeys(byte[] data);
+
 	/**
 	 * Gets the <i>global</i> local-revision.
 	 * <p>

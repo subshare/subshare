@@ -1,4 +1,4 @@
-package org.subshare.gui.backup.export;
+package org.subshare.gui.backup.exp;
 
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
@@ -14,7 +14,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.text.Text;
 
 import org.subshare.gui.backup.BackupExporter;
-import org.subshare.gui.backup.export.first.FirstWizardPage;
+import org.subshare.gui.backup.exp.first.FirstWizardPage;
 import org.subshare.gui.wizard.Wizard;
 
 import co.codewizards.cloudstore.core.oio.File;

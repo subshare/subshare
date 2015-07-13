@@ -1,9 +1,9 @@
-package org.subshare.gui.backup.export.destination;
+package org.subshare.gui.backup.exp.destination;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import javafx.scene.Parent;
 
-import org.subshare.gui.backup.export.ExportBackupData;
+import org.subshare.gui.backup.exp.ExportBackupData;
 import org.subshare.gui.wizard.WizardPage;
 
 public class ExportBackupDestinationWizardPage extends WizardPage {

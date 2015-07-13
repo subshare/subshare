@@ -113,7 +113,18 @@ public abstract class WizardPage extends VBox {
 		return buttonBar;
 	}
 
-	protected void setWizard(final Wizard wizard) {
+	/**
+	 * Callback-method associating this {@code WizardPage} with the given {@code wizard}.
+	 * <p>
+	 * Implementors should <i>not</i> override this method, but instead initialise their {@code WizardPage}-sub-class
+	 * via overriding {@link #init()}!
+	 * <p>
+	 * Please note that a {@code WizardPage} cannot be re-used in another {@code Wizard}. Therefore, this method is
+	 * only invoked with one single wizard. It may be invoked multiple times, but it makes sure {@link #init()} is
+	 * only called once.
+	 * @param wizard the {@link Wizard} this {@code WizardPage} is used in. Must not be <code>null</code>.
+	 */
+	public void setWizard(final Wizard wizard) {
 		assertNotNull("wizard", wizard); //$NON-NLS-1$
 		if (this.wizard == wizard)
 			return;
@@ -137,11 +148,20 @@ public abstract class WizardPage extends VBox {
 		getChildren().addAll(spring, createButtonBar());
 		finishButton.disableProperty().bind(wizard.canFinishProperty().not());
 
+		init();
 		wizard.registerWizardPage(this);
 
 		final WizardPage nextPage = getNextPage();
 		if (nextPage != null)
 			nextPage.setWizard(wizard);
+	}
+
+	/**
+	 * Initialisation method to be overridden by sub-classes.
+	 * <p>
+	 * This method is called once and may be used for initialisation instead of the constructor - which is recommended.
+	 */
+	protected void init() {
 	}
 
 	/**

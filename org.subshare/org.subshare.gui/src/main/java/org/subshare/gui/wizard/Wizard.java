@@ -28,9 +28,20 @@ import co.codewizards.cloudstore.core.progress.ProgressMonitor;
 /**
  * Abstract wizard base class.
  * <p>
- * Concrete wizard implementations are supposed to sub-class, add at least one {@link WizardPage}
+ * Concrete wizard implementations are supposed to sub-class, add a {@link WizardPage} as their starting point
  * (either via constructor or via {@link #setFirstPage(WizardPage)}) and implement the abstract methods -
  * most importantly {@link #finish(ProgressMonitor)}.
+ * <p>
+ * It is not possible to directly add more than one page to a wizard. Instead, the wizard can either
+ * set the following pages from the outside via each {@code WizardPage}'s
+ * {@link WizardPage#nextPageProperty() nextPage} property or the concrete {@code WizardPage}
+ * sets its {@code nextPage} itself - it likely might do this depending on the situation.
+ * <p>
+ * If a {@code WizardPage} forks, i.e. there is more than one possible {@code nextPage} in the work-flow, it is recommended
+ * that it initialises all possible pages by invoking {@link WizardPage#setWizard(Wizard) setWizard(Wizard)}
+ * in its overridden {@link WizardPage#init() init()} method. Not doing so might cause the wizard to layout itself too
+ * small, as it can only properly layout, if it knows all its possible children. Apart from this, the wizard should function
+ * perfectly.
  */
 public abstract class Wizard extends StackPane {
 	private final IdentityHashMap<WizardPage, Void> knownPages = new IdentityHashMap<WizardPage, Void>();
@@ -44,13 +55,10 @@ public abstract class Wizard extends StackPane {
 			if (currentPage == oldValue)
 				currentPage = null;
 
-			if (oldValue != null) {
-				oldValue.completeProperty().removeListener(updateCanFinishInvalidationListener);
-				getChildren().remove(oldValue);
-			}
+//			if (oldValue != null)
+//				getChildren().remove(oldValue); // TODO is this really needed? and if so, shouldn't we remove all other pages?
 
 			if (newValue != null) {
-				newValue.completeProperty().addListener(updateCanFinishInvalidationListener);
 				newValue.setWizard(Wizard.this);
 				newValue.updateButtonsDisable();
 
@@ -92,10 +100,16 @@ public abstract class Wizard extends StackPane {
 		setPrefHeight(300);
 	}
 
-	public void registerWizardPage(WizardPage wizardPage) {
+	public void registerWizardPage(final WizardPage wizardPage) {
+		assertNotNull("wizardPage", wizardPage);
+
+		if (wizardPage.getWizard() != null)
+			wizardPage.setWizard(this);
+
 		if (knownPages.containsKey(wizardPage))
 			return;
 
+		wizardPage.completeProperty().addListener(updateCanFinishInvalidationListener);
 		knownPages.put(wizardPage, null);
 		wizardPage.setVisible(false);
 		getChildren().add(0, wizardPage);

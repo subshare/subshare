@@ -46,6 +46,12 @@ public class Welcome {
 			if (identityWizardNeeded && serverWizardNeeded) {
 				identityWizard.stateProperty().addListener((InvalidationListener) observable -> {
 					if (WizardState.FINISHING == identityWizard.getState()) {
+						if (identityWizard.getIdentityData().importBackupProperty().get()) {
+							// The backup contains the ServerRegistry. Hence, we do not need the ServerWizard.
+							serverWizardNeeded = false;
+							return;
+						}
+
 						Platform.runLater(() -> {
 							WizardDialog dialog = new WizardDialog(owner, serverWizard);
 							dialog.show();

@@ -1,4 +1,4 @@
-package org.subshare.gui.backup.export.destination
+package org.subshare.gui.backup.exp.destination
 
 import javafx.scene.layout.GridPane
 import javafx.scene.text.Text
@@ -31,7 +31,7 @@ dynamic component ExportBackupDestinationPane resourcefile 'messages.properties'
 				static rowIndex : 1,
 				static hgrow : "ALWAYS",
 				static vgrow : "ALWAYS"
-			}			
+			}
 		]
 	}
 }

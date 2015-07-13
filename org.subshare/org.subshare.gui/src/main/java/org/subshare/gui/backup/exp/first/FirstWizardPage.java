@@ -1,10 +1,10 @@
-package org.subshare.gui.backup.export.first;
+package org.subshare.gui.backup.exp.first;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import javafx.scene.Parent;
 
-import org.subshare.gui.backup.export.ExportBackupData;
-import org.subshare.gui.backup.export.destination.ExportBackupDestinationWizardPage;
+import org.subshare.gui.backup.exp.ExportBackupData;
+import org.subshare.gui.backup.exp.destination.ExportBackupDestinationWizardPage;
 import org.subshare.gui.wizard.WizardPage;
 
 public class FirstWizardPage extends WizardPage {

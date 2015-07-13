@@ -200,13 +200,6 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 	}
 
 	@Override
-	public byte[] exportPublicKeys(Set<PgpKey> pgpKeys) {
-		final ByteArrayOutputStream bout = new ByteArrayOutputStream();
-		exportPublicKeys(pgpKeys, bout);
-		return bout.toByteArray();
-	}
-
-	@Override
 	public synchronized ImportKeysResult importKeys(InputStream in) {
 		assertNotNull("in", in);
 

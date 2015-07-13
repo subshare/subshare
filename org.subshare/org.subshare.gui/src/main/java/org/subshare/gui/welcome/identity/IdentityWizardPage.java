@@ -6,10 +6,9 @@ import javafx.beans.InvalidationListener;
 import javafx.beans.WeakInvalidationListener;
 import javafx.scene.Parent;
 
+import org.subshare.gui.backup.imp.source.ImportBackupSourceWizardPage;
 import org.subshare.gui.pgp.createkey.passphrase.PassphraseWizardPage;
 import org.subshare.gui.welcome.IdentityData;
-import org.subshare.gui.welcome.importbackup.ImportBackupWizardPage;
-import org.subshare.gui.wizard.Wizard;
 import org.subshare.gui.wizard.WizardPage;
 
 public class IdentityWizardPage extends WizardPage {
@@ -20,14 +19,14 @@ public class IdentityWizardPage extends WizardPage {
 	private final InvalidationListener _updateCompleteInvalidationListener = observable -> updateComplete();
 	private WeakInvalidationListener updateCompleteInvalidationListener = new WeakInvalidationListener(_updateCompleteInvalidationListener);
 
-	private final ImportBackupWizardPage importBackupWizardPage;
+	private final ImportBackupSourceWizardPage importBackupSourceWizardPage;
 	private final PassphraseWizardPage passphraseWizardPage;
 
 	public IdentityWizardPage(final IdentityData identityData) {
 		super("Identity");
 		this.identityData = assertNotNull("identityData", identityData);
 
-		importBackupWizardPage = new ImportBackupWizardPage(identityData);
+		importBackupSourceWizardPage = new ImportBackupSourceWizardPage(identityData.getImportBackupData());
 		passphraseWizardPage = new PassphraseWizardPage(identityData.getCreatePgpKeyParam());
 
 		identityData.importBackupProperty().addListener((InvalidationListener) observable -> updateNextPage());
@@ -36,35 +35,20 @@ public class IdentityWizardPage extends WizardPage {
 
 	protected void updateNextPage() {
 		if (identityData.importBackupProperty().get())
-			setNextPage(importBackupWizardPage);
+			setNextPage(importBackupSourceWizardPage);
 		else
 			setNextPage(passphraseWizardPage);
 	}
 
-//	@Override
-//	protected void onAdded(Wizard wizard) {
-//		super.onAdded(wizard);
-//		identityData.getPgpUserId().nameProperty().addListener(updateCompleteInvalidationListener);
-//		identityData.importBackupProperty().addListener(updateCompleteInvalidationListener);
-//		updateComplete();
-//	}
-//
-//	@Override
-//	protected void onRemoved(Wizard wizard) {
-//		identityData.getPgpUserId().nameProperty().removeListener(updateCompleteInvalidationListener);
-//		identityData.importBackupProperty().removeListener(updateCompleteInvalidationListener);
-//		super.onRemoved(wizard);
-//	}
-
 	@Override
-	protected void setWizard(Wizard wizard) {
-		super.setWizard(wizard);
+	protected void init() {
+		super.init();
 		identityData.getPgpUserId().nameProperty().addListener(updateCompleteInvalidationListener);
 		identityData.importBackupProperty().addListener(updateCompleteInvalidationListener);
 		updateComplete();
 
-		wizard.registerWizardPage(importBackupWizardPage);
-		wizard.registerWizardPage(passphraseWizardPage);
+		importBackupSourceWizardPage.setWizard(getWizard());
+		passphraseWizardPage.setWizard(getWizard());
 	}
 
 	@Override

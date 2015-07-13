@@ -19,7 +19,7 @@ import org.subshare.core.pgp.Pgp;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpKeyId;
 import org.subshare.core.pgp.man.PgpPrivateKeyPassphraseStore;
-import org.subshare.gui.backup.export.ExportBackupWizard;
+import org.subshare.gui.backup.exp.ExportBackupWizard;
 import org.subshare.gui.error.ErrorHandler;
 import org.subshare.gui.ls.LocalServerInitLs;
 import org.subshare.gui.ls.PgpLs;
