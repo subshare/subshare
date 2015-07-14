@@ -1,4 +1,4 @@
-package org.subshare.gui.localrepo;
+package org.subshare.gui.localrepo.directory;
 
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
@@ -10,20 +10,11 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.UnaryOperator;
 
-import javafx.beans.binding.Bindings;
-import javafx.beans.property.adapter.JavaBeanObjectProperty;
-import javafx.beans.property.adapter.JavaBeanObjectPropertyBuilder;
-import javafx.beans.property.adapter.JavaBeanStringProperty;
-import javafx.beans.property.adapter.JavaBeanStringPropertyBuilder;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TextField;
-import javafx.scene.control.TextFormatter;
-import javafx.scene.control.TextFormatter.Change;
 import javafx.scene.layout.GridPane;
 import javafx.stage.DirectoryChooser;
 
@@ -33,74 +24,60 @@ import org.subshare.core.user.User;
 import org.subshare.core.user.UserRegistry;
 import org.subshare.core.user.UserRepoInvitationManager;
 import org.subshare.core.user.UserRepoInvitationToken;
+import org.subshare.gui.filetree.DirectoryFileTreeItem;
+import org.subshare.gui.filetree.FileFileTreeItem;
+import org.subshare.gui.filetree.FileTreeItem;
+import org.subshare.gui.filetree.FileTreePane;
 import org.subshare.gui.ls.LocalRepoManagerFactoryLs;
 import org.subshare.gui.ls.RepoSyncDaemonLs;
 import org.subshare.gui.ls.UserRegistryLs;
 import org.subshare.gui.ls.UserRepoInvitationManagerLs;
 import org.subshare.gui.selectuser.SelectUserDialog;
-import org.subshare.gui.util.FileStringConverter;
 
 import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import co.codewizards.cloudstore.core.repo.sync.RepoSyncDaemon;
+import co.codewizards.cloudstore.core.util.IOUtil;
 
-public class LocalRepoPane extends GridPane {
+public class LocalRepoDirectoryPane extends GridPane {
+
 	private final LocalRepo localRepo;
+	private final File file;
 
 	@FXML
-	private Button syncButton;
-
+	private TextField pathTextField;
 	@FXML
-	private Button inviteButton;
+	private FileTreePane fileTreePane;
 
-	@FXML
-	private TextField nameTextField;
-
-	@FXML
-	private TextField localRootTextField;
-
-	private JavaBeanStringProperty nameProperty;
-
-	private JavaBeanObjectProperty<File> localRootProperty;
-
-	public LocalRepoPane(final LocalRepo localRepo) {
+	public LocalRepoDirectoryPane(final LocalRepo localRepo, final File file) {
 		this.localRepo = assertNotNull("localRepo", localRepo);
-		loadDynamicComponentFxml(LocalRepoPane.class, this);
-		nameTextField.setTextFormatter(new TextFormatter<String>(new UnaryOperator<Change>() {
-			@Override
-			public Change apply(Change change) {
-				String text = change.getText();
-				if (text.startsWith("_") && change.getRangeStart() == 0)
-					return null;
+		this.file = assertNotNull("file", file);
+		loadDynamicComponentFxml(LocalRepoDirectoryPane.class, this);
 
-				if (text.indexOf('/') >= 0)
-					return null;
+		final String path = file.getAbsolutePath();
+		pathTextField.setText(path);
 
-				return change;
+		fileTreePane.setUseCase(path);
+		fileTreePane.setRootFileTreeItem(new DirectoryFileTreeItem(file) {
+			{
+				hookUpdateInvalidationListener(fileTreePane);
 			}
-		}));
-		bind();
-	}
 
-	private void bind() {
-		try {
-			// nameProperty must be kept as field to prevent garbage-collection!
-			nameProperty = JavaBeanStringPropertyBuilder.create()
-				    .bean(localRepo)
-				    .name(LocalRepo.PropertyEnum.name.name())
-				    .build();
-			nameTextField.textProperty().bindBidirectional(nameProperty);
+			@Override
+			protected FileTreePane getFileTreePane() {
+				return fileTreePane;
+			}
 
-			localRootProperty = JavaBeanObjectPropertyBuilder.create()
-					.bean(localRepo)
-					.name(LocalRepo.PropertyEnum.localRoot.name())
-					.build();
-
-			Bindings.bindBidirectional(localRootTextField.textProperty(), localRootProperty, new FileStringConverter());
-		} catch (NoSuchMethodException e) {
-			throw new RuntimeException(e);
-		}
+			@Override
+			protected List<FileTreeItem<?>> loadChildren() {
+				final List<FileTreeItem<?>> children = super.loadChildren();
+				children.removeIf(fti
+						-> (fti instanceof FileFileTreeItem)
+						&& ((FileFileTreeItem) fti).getFile().getName().equals(LocalRepoManager.META_DIR_NAME));
+				return children;
+			}
+		});
 	}
 
 	@FXML
@@ -127,7 +104,12 @@ public class LocalRepoPane extends GridPane {
 			final PermissionType permissionType = PermissionType.write; // TODO select in UI!
 			final long validityDurationMillis = 5L * 24L * 3600L; // TODO UI!
 
-			final String localPath = "";
+			final String localPath;
+			try {
+				localPath = IOUtil.getRelativePath(localRoot, file).replace(java.io.File.separatorChar, '/');
+			} catch (IOException e1) {
+				throw new RuntimeException(e1);
+			}
 			for (final User invitee : invitees) {
 				final UserRepoInvitationToken userRepoInvitationToken = userRepoInvitationManager.createUserRepoInvitationToken(localPath, invitee, permissionType, validityDurationMillis);
 				final byte[] data = userRepoInvitationToken.getSignedEncryptedUserRepoInvitationData();

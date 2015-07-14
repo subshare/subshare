@@ -63,7 +63,7 @@ public class FileTreePane extends BorderPane {
 
 	private final BooleanProperty showHiddenFilesProperty = new SimpleBooleanProperty(this, "showHiddenFiles", false);
 
-	private final RootFileTreeItem rootFileTreeItem;
+	private FileTreeItem<?> rootFileTreeItem;
 
 	private final ObservableSet<File> selectedFiles = FXCollections.observableSet(new HashSet<File>());
 
@@ -239,8 +239,13 @@ public class FileTreePane extends BorderPane {
 		return treeTableView;
 	}
 
-	public RootFileTreeItem getRootFileTreeItem() {
+	public FileTreeItem<?> getRootFileTreeItem() {
 		return rootFileTreeItem;
+	}
+
+	public void setRootFileTreeItem(FileTreeItem<?> rootFileTreeItem) {
+		this.rootFileTreeItem = rootFileTreeItem;
+		treeTableView.setRoot(rootFileTreeItem);
 	}
 
 	public BooleanProperty showHiddenFilesProperty() {

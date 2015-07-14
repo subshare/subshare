@@ -14,6 +14,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.scene.control.TreeItem;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.oio.FileFilter;
+import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 
 public class DirectoryFileTreeItem extends FileFileTreeItem {
 
@@ -30,17 +31,23 @@ public class DirectoryFileTreeItem extends FileFileTreeItem {
 			final FileTreePane oldFileTreePane = oldValue == null ? null : oldValue.getValue().getFileTreePane();
 			final FileTreePane newFileTreePane = newValue == null ? null : newValue.getValue().getFileTreePane();
 			if (oldFileTreePane != newFileTreePane) {
-				if (oldFileTreePane != null) {
-					oldFileTreePane.showHiddenFilesProperty().removeListener(updateInvalidationListener);
-					oldFileTreePane.fileFilterProperty().removeListener(updateInvalidationListener);
-				}
+				if (oldFileTreePane != null)
+					unhookUpdateInvalidationListener(oldFileTreePane);
 
-				if (newFileTreePane != null) {
-					newFileTreePane.showHiddenFilesProperty().addListener(updateInvalidationListener);
-					newFileTreePane.fileFilterProperty().addListener(updateInvalidationListener);
-				}
+				if (newFileTreePane != null)
+					hookUpdateInvalidationListener(newFileTreePane);
 			}
 		});
+	}
+
+	protected void unhookUpdateInvalidationListener(FileTreePane fileTreePane) {
+		fileTreePane.showHiddenFilesProperty().removeListener(updateInvalidationListener);
+		fileTreePane.fileFilterProperty().removeListener(updateInvalidationListener);
+	}
+
+	protected void hookUpdateInvalidationListener(FileTreePane fileTreePane) {
+		fileTreePane.showHiddenFilesProperty().addListener(updateInvalidationListener);
+		fileTreePane.fileFilterProperty().addListener(updateInvalidationListener);
 	}
 
 	@Override
@@ -218,7 +225,9 @@ public class DirectoryFileTreeItem extends FileFileTreeItem {
 
 	private File[] listChildFiles() {
 		final FileFilter fileFilter = getCombinedFileFilter();
-		final File[] children = fileFilter == null ? getFile().listFiles() : getFile().listFiles(fileFilter);
+		final File[] children = fileFilter == null
+				? getFile().listFiles(new HideCloudStoreMetaDirFileFilter())
+						: getFile().listFiles(fileFilter);
 
 		if (children != null)
 			Arrays.sort(children, (o1, o2) -> o1.getName().compareTo(o2.getName()));
@@ -255,8 +264,17 @@ public class DirectoryFileTreeItem extends FileFileTreeItem {
 		}
 	}
 
+	private static final class HideCloudStoreMetaDirFileFilter implements FileFilter {
+		@Override
+		public boolean accept(File file) {
+			return ! LocalRepoManager.META_DIR_NAME.equals(file.getName());
+		}
+	}
+
 	private FileFilter getCombinedFileFilter() {
 		final List<FileFilter> fileFilters = new LinkedList<>();
+
+		fileFilters.add(new HideCloudStoreMetaDirFileFilter());
 
 		final boolean showHiddenFiles = getFileTreePane().showHiddenFilesProperty().get();
 		if (! showHiddenFiles)

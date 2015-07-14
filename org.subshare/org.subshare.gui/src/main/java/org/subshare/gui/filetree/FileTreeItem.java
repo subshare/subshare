@@ -85,7 +85,7 @@ public class FileTreeItem<T> extends TreeItem<FileTreeItem<?>> {
 	public ObservableList<TreeItem<FileTreeItem<?>>> getChildren() {
 		final ObservableList<TreeItem<FileTreeItem<?>>> children = super.getChildren();
 		if (!childrenLoaded) {
-			childrenLoaded = true;
+			childrenLoaded = true; // *must* be set before clear()/addAll(...), because of events being fired.
 			final List<FileTreeItem<?>> c = loadChildren();
 
 			if (!children.isEmpty())

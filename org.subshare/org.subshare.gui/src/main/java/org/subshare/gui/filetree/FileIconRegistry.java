@@ -25,6 +25,13 @@ public class FileIconRegistry {
 		return instance;
 	}
 
+	/**
+	 * Gets an icon representing the given {@code file}, having the size specified by {@code iconSize}-
+	 *
+	 * @param file the file for which to return an appropriate icon. Must not be <code>null</code>.
+	 * @param iconSize the size of the desired icon. Must not be <code>null</code>.
+	 * @return the icon. Never <code>null</code>.
+	 */
 	public Image getIcon(final File file, final IconSize iconSize) {
 		assertNotNull("file", file);
 		assertNotNull("iconSize", iconSize);
