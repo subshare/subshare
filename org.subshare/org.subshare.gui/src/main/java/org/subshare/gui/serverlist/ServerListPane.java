@@ -299,6 +299,7 @@ public class ServerListPane extends BorderPane {
 
 	@FXML
 	private void syncButtonClicked(final ActionEvent event) {
+		getPgpSyncDaemon().sync();
 		getLockerSyncDaemon().sync();
 	}
 }

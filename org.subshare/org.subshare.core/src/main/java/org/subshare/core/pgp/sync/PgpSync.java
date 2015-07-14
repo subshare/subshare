@@ -2,6 +2,7 @@ package org.subshare.core.pgp.sync;
 
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static co.codewizards.cloudstore.core.util.CollectionUtil.*;
 import static co.codewizards.cloudstore.core.util.PropertiesUtil.*;
 
 import java.io.ByteArrayInputStream;
@@ -10,9 +11,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
@@ -88,33 +87,38 @@ public class PgpSync implements Sync {
 	}
 
 	private void sync(final PgpTransport from, final long fromLastSyncLocalRevision, final PgpTransport to) {
-		// we always sync all keys that are *locally* known - TODO maybe add a constraint to this later?
-		final Set<PgpKeyId> allMasterKeyIds = getLocalPgpTransport().getMasterKeyIds();
+		// We always sync all keys that are *locally* known - TODO maybe add a constraint to this later?
+		// From these keys, only the ones having changed after the last sync are up/downloaded.
+		final Set<PgpKeyId> knownMasterKeyIds = getLocalPgpTransport().getMasterKeyIds();
 
-		// Especially after a restore, when our key-ring is empty (except for our own keys), we must down-sync
-		// these keys!
-		for (User user : UserRegistryImpl.getInstance().getUsers())
-			allMasterKeyIds.addAll(user.getPgpKeyIds());
-
-		for (Set<PgpKeyId> masterKeyIds : split(allMasterKeyIds, 1000)) {
+		for (Set<PgpKeyId> masterKeyIds : splitSet(knownMasterKeyIds, 1000)) {
 			final ByteArrayOutputStream out = new ByteArrayOutputStream();
 			from.exportPublicKeys(masterKeyIds, fromLastSyncLocalRevision, out);
 			to.importKeys(new ByteArrayInputStream(out.toByteArray()));
 		}
-	}
 
-	private static <E> List<Set<E>> split(final Set<E> inputSet, final int maxSize) {
-		assertNotNull("inputSet", inputSet);
-		final List<Set<E>> result = new ArrayList<Set<E>>(inputSet.size() / maxSize + 1);
-		Set<E> current = null;
-		for (final E element : inputSet) {
-			if (current == null || current.size() >= maxSize) {
-				current = new HashSet<E>(maxSize);
-				result.add(current);
+		// Additionally, we sync *all keys *down* that are referenced by our Users and not yet in our local key ring.
+		// These are synced without a limit on the lastSyncLocalRevision.
+		if (to == getLocalPgpTransport()) { // DOWN!
+			// Especially after a restore, when our key-ring is empty (except for our own keys), we must down-sync
+			// these keys!
+			final Set<PgpKeyId> missingMasterKeyIds = new HashSet<PgpKeyId>();
+			for (final User user : UserRegistryImpl.getInstance().getUsers()) {
+				for (final PgpKeyId pgpKeyId : user.getPgpKeyIds()) {
+					if (! knownMasterKeyIds.contains(pgpKeyId))
+						missingMasterKeyIds.add(pgpKeyId);
+				}
 			}
-			current.add(element);
+
+			if (! missingMasterKeyIds.isEmpty()) {
+				for (Set<PgpKeyId> masterKeyIds : splitSet(missingMasterKeyIds, 1000)) {
+					final ByteArrayOutputStream out = new ByteArrayOutputStream();
+					from.exportPublicKeys(masterKeyIds, -1, out);
+					to.importKeys(new ByteArrayInputStream(out.toByteArray()));
+				}
+				// TODO those keys that are neither locally known nor by any server should be removed ;-)
+			}
 		}
-		return result;
 	}
 
 	private PgpTransport getLocalPgpTransport() {
