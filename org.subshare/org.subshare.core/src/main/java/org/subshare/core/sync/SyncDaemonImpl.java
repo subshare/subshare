@@ -19,7 +19,6 @@ import java.util.TimerTask;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.subshare.core.Severity;
 import org.subshare.core.observable.ModificationEventType;
 import org.subshare.core.observable.ObservableSet;
 import org.subshare.core.observable.standard.StandardPostModificationEvent;
@@ -32,6 +31,7 @@ import org.subshare.core.server.ServerRegistryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import co.codewizards.cloudstore.core.Severity;
 import co.codewizards.cloudstore.core.config.Config;
 import co.codewizards.cloudstore.core.dto.Error;
 
@@ -46,6 +46,7 @@ public abstract class SyncDaemonImpl implements SyncDaemon {
 	private Timer syncTimer;
 	private TimerTask syncTimerTask;
 	private volatile long syncPeriod;
+	private final AtomicBoolean syncRunning = new AtomicBoolean();
 
 	private ServerRegistry serverRegistry;
 
@@ -124,7 +125,6 @@ public abstract class SyncDaemonImpl implements SyncDaemon {
 
 	protected SyncDaemonImpl() {
 		createSyncTimerTask(true);
-//		getServerRegistry().addPropertyChangeListener(serverRegistryPropertyChangeListener);
 		addWeakPropertyChangeListener(getServerRegistry(), serverRegistryPropertyChangeListener);
 	}
 
@@ -141,22 +141,10 @@ public abstract class SyncDaemonImpl implements SyncDaemon {
 	};
 
 	@Override
-	protected void finalize() throws Throwable {
-		final ServerRegistry sr = this.serverRegistry;
-		this.serverRegistry = null;
-		if (sr != null)
-			sr.removePropertyChangeListener(serverRegistryPropertyChangeListener);
-
-		super.finalize();
-	}
-
-	@Override
 	public void sync() {
 		_sync();
 		createSyncTimerTask(false); // always recreate, if manually invoked (to postpone the period).
 	}
-
-	private final AtomicBoolean syncRunning = new AtomicBoolean();
 
 	private void _sync() {
 		if (! syncRunning.compareAndSet(false, true))

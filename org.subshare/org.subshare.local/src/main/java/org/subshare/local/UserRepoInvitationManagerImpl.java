@@ -37,6 +37,7 @@ import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpKeyId;
 import org.subshare.core.pgp.PgpRegistry;
 import org.subshare.core.repo.ServerRepo;
+import org.subshare.core.repo.ServerRepoManagerImpl;
 import org.subshare.core.repo.ServerRepoRegistry;
 import org.subshare.core.repo.ServerRepoRegistryImpl;
 import org.subshare.core.server.Server;
@@ -62,8 +63,6 @@ import co.codewizards.cloudstore.core.dto.jaxb.CloudStoreJaxbContext;
 import co.codewizards.cloudstore.core.io.NoCloseInputStream;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
-import co.codewizards.cloudstore.core.repo.transport.RepoTransport;
-import co.codewizards.cloudstore.core.repo.transport.RepoTransportFactoryRegistry;
 import co.codewizards.cloudstore.local.persistence.RemoteRepository;
 import co.codewizards.cloudstore.local.persistence.RemoteRepositoryDao;
 
@@ -178,25 +177,27 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 
 		final UserRepoInvitation userRepoInvitation = fromUserRepoInvitationData(out.toByteArray());
 		final ServerRepo serverRepo = importUserRepoInvitation(userRepoInvitation);
-		connectLocalRepoWithServerRepo(userRepoInvitation, serverRepo);
+//		connectLocalRepoWithServerRepo(userRepoInvitation, serverRepo);
+		final URL remoteURL = userRepoInvitation.getServerUrl();
+		ServerRepoManagerImpl.connectLocalRepositoryWithServerRepository(localRepoManager, serverRepo.getRepositoryId(), remoteURL);
 		return serverRepo;
 	}
 
-	private void connectLocalRepoWithServerRepo(final UserRepoInvitation userRepoInvitation, final ServerRepo serverRepo) {
-		final URL remoteURL = userRepoInvitation.getServerUrl();
-		final UUID localRepositoryId = localRepoManager.getRepositoryId();
-		final byte[] localPublicKey = localRepoManager.getPublicKey();
-		try (
-			final RepoTransport repoTransport = RepoTransportFactoryRegistry.getInstance().getRepoTransportFactory(remoteURL).createRepoTransport(remoteURL, localRepositoryId);
-		) {
-			final UUID remoteRepositoryId = repoTransport.getRepositoryId();
-			final byte[] remotePublicKey = repoTransport.getPublicKey();
-//			remotePathPrefix = repoTransport.getPathPrefix();
-			final String localPathPrefix = ""; // TODO is this always correct?!
-			localRepoManager.putRemoteRepository(remoteRepositoryId, remoteURL, remotePublicKey, localPathPrefix);
-			repoTransport.requestRepoConnection(localPublicKey);
-		}
-	}
+//	private void connectLocalRepoWithServerRepo(final UserRepoInvitation userRepoInvitation, final ServerRepo serverRepo) {
+//		final URL remoteURL = userRepoInvitation.getServerUrl();
+//		final UUID localRepositoryId = localRepoManager.getRepositoryId();
+//		final byte[] localPublicKey = localRepoManager.getPublicKey();
+//		try (
+//			final RepoTransport repoTransport = RepoTransportFactoryRegistry.getInstance().getRepoTransportFactory(remoteURL).createRepoTransport(remoteURL, localRepositoryId);
+//		) {
+//			final UUID remoteRepositoryId = repoTransport.getRepositoryId();
+//			final byte[] remotePublicKey = repoTransport.getPublicKey();
+////			remotePathPrefix = repoTransport.getPathPrefix();
+//			final String localPathPrefix = ""; // TODO is this always correct?!
+//			localRepoManager.putRemoteRepository(remoteRepositoryId, remoteURL, remotePublicKey, localPathPrefix);
+//			repoTransport.requestRepoConnection(localPublicKey);
+//		}
+//	}
 
 	private byte[] toUserRepoInvitationData(final UserRepoInvitation userRepoInvitation) {
 		assertNotNull("userRepoInvitation", userRepoInvitation);

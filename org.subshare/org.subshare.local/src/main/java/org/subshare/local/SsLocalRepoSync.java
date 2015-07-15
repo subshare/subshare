@@ -18,7 +18,6 @@ import co.codewizards.cloudstore.core.progress.ProgressMonitor;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
 import co.codewizards.cloudstore.local.LocalRepoSync;
 import co.codewizards.cloudstore.local.persistence.DeleteModification;
-import co.codewizards.cloudstore.local.persistence.LocalRepository;
 import co.codewizards.cloudstore.local.persistence.LocalRepositoryDao;
 import co.codewizards.cloudstore.local.persistence.RemoteRepository;
 import co.codewizards.cloudstore.local.persistence.RepoFile;
@@ -26,17 +25,40 @@ import co.codewizards.cloudstore.local.persistence.RepoFile;
 public class SsLocalRepoSync extends LocalRepoSync {
 
 	private boolean repoFileContextWasApplied;
+	private SsLocalRepository localRepository;
 
 	protected SsLocalRepoSync(final LocalRepoTransaction transaction) {
 		super(transaction);
 	}
 
 	@Override
+	public void sync(ProgressMonitor monitor) {
+		if (isMetaOnly())
+			return;
+
+		super.sync(monitor);
+	}
+
+	private SsLocalRepository getLocalRepository() {
+		if (localRepository == null)
+			localRepository = (SsLocalRepository) transaction.getDao(LocalRepositoryDao.class).getLocalRepositoryOrFail();
+
+		return localRepository;
+	}
+
+	private boolean isMetaOnly() {
+		return getLocalRepository().getLocalRepositoryType() == LocalRepositoryType.CLIENT_META_ONLY;
+	}
+
+	@Override
 	protected RepoFile sync(final RepoFile parentRepoFile, final File file, final ProgressMonitor monitor, boolean resursiveChildren) {
+		if (isMetaOnly()) {
+			final RepoFile repoFile = repoFileDao.getRepoFile(localRoot, file);
+			return repoFile; // might be null!
+		}
+
 		if (resursiveChildren) {
-			final LocalRepository lr = transaction.getDao(LocalRepositoryDao.class).getLocalRepositoryOrFail();
-			final SsLocalRepository localRepository = (SsLocalRepository) lr;
-			if (localRepository.getLocalRepositoryType() == LocalRepositoryType.SERVER)
+			if (getLocalRepository().getLocalRepositoryType() == LocalRepositoryType.SERVER)
 				resursiveChildren = false;
 		}
 

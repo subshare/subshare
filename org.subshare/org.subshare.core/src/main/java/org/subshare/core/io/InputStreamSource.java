@@ -1,7 +1,6 @@
 package org.subshare.core.io;
 
-import static co.codewizards.cloudstore.core.util.IOUtil.intToBytes;
-import static co.codewizards.cloudstore.core.util.IOUtil.longToBytes;
+import static co.codewizards.cloudstore.core.util.IOUtil.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;

@@ -1,7 +1,7 @@
 package org.subshare.local;
 
+import static co.codewizards.cloudstore.core.objectfactory.ObjectFactoryUtil.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
-import static co.codewizards.cloudstore.core.util.Util.*;
 import static org.subshare.local.CryptreeNodeUtil.*;
 
 import java.util.ArrayList;
@@ -23,6 +23,9 @@ import org.subshare.core.PermissionCollisionException;
 import org.subshare.core.ReadAccessDeniedException;
 import org.subshare.core.ReadUserIdentityAccessDeniedException;
 import org.subshare.core.WriteAccessDeniedException;
+import org.subshare.core.dto.SsNormalFileDto;
+import org.subshare.core.dto.SsRepoFileDto;
+import org.subshare.core.dto.SsSymlinkDto;
 import org.subshare.core.dto.CryptoChangeSetDto;
 import org.subshare.core.dto.CryptoKeyDeactivationDto;
 import org.subshare.core.dto.CryptoKeyDto;
@@ -52,8 +55,12 @@ import org.subshare.local.dto.UserIdentityLinkDtoConverter;
 import org.subshare.local.dto.UserRepoKeyPublicKeyDtoConverter;
 import org.subshare.local.dto.UserRepoKeyPublicKeyReplacementRequestDeletionDtoConverter;
 import org.subshare.local.dto.UserRepoKeyPublicKeyReplacementRequestDtoConverter;
+import org.subshare.local.persistence.SsDirectory;
 import org.subshare.local.persistence.SsLocalRepository;
+import org.subshare.local.persistence.SsNormalFile;
 import org.subshare.local.persistence.SsRemoteRepository;
+import org.subshare.local.persistence.SsRepoFile;
+import org.subshare.local.persistence.SsSymlink;
 import org.subshare.local.persistence.CryptoKey;
 import org.subshare.local.persistence.CryptoKeyDao;
 import org.subshare.local.persistence.CryptoKeyDeactivation;
@@ -89,7 +96,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import co.codewizards.cloudstore.core.auth.SignatureException;
+import co.codewizards.cloudstore.core.dto.DirectoryDto;
+import co.codewizards.cloudstore.core.dto.NormalFileDto;
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
+import co.codewizards.cloudstore.core.dto.SymlinkDto;
 import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
 import co.codewizards.cloudstore.core.util.StringUtil;
@@ -98,6 +108,7 @@ import co.codewizards.cloudstore.local.persistence.LocalRepositoryDao;
 import co.codewizards.cloudstore.local.persistence.RemoteRepository;
 import co.codewizards.cloudstore.local.persistence.RemoteRepositoryDao;
 import co.codewizards.cloudstore.local.persistence.RepoFile;
+import co.codewizards.cloudstore.local.persistence.RepoFileDao;
 
 public class CryptreeImpl extends AbstractCryptree {
 
@@ -290,14 +301,25 @@ public class CryptreeImpl extends AbstractCryptree {
 		}
 
 		if (! isOnServer()) {
+			final SsLocalRepository localRepository = (SsLocalRepository) transaction.getDao(LocalRepositoryDao.class).getLocalRepositoryOrFail();
+			final Map<CryptoRepoFile, RepoFileDto> cryptoRepoFile2DecryptedRepoFileDto =
+					localRepository.getLocalRepositoryType() == LocalRepositoryType.CLIENT_META_ONLY ? new HashMap<CryptoRepoFile, RepoFileDto>() : null;
+
 			for (final CryptoRepoFile cryptoRepoFile : cryptoRepoFileDto2CryptoRepoFile.values()) {
+				final RepoFileDto decryptedRepoFileDto;
 				try {
-					final RepoFileDto decryptedRepoFileDto = getDecryptedRepoFileDtoOrFail(cryptoRepoFile.getCryptoRepoFileId());
-					cryptoRepoFile.setLocalName(decryptedRepoFileDto.getName());
+					decryptedRepoFileDto = getDecryptedRepoFileDtoOrFail(cryptoRepoFile.getCryptoRepoFileId());
 				} catch (final AccessDeniedException x) {
-					doNothing();
+					continue;
 				}
+				if (cryptoRepoFile2DecryptedRepoFileDto != null)
+					cryptoRepoFile2DecryptedRepoFileDto.put(cryptoRepoFile, decryptedRepoFileDto);
+
+				cryptoRepoFile.setLocalName(decryptedRepoFileDto.getName());
 			}
+
+			if (cryptoRepoFile2DecryptedRepoFileDto != null)
+				putDecryptedRepoFiles(cryptoRepoFile2DecryptedRepoFileDto);
 		}
 
 		final RepositoryOwnerDto repositoryOwnerDto = cryptoChangeSetDto.getRepositoryOwnerDto();
@@ -335,6 +357,86 @@ public class CryptreeImpl extends AbstractCryptree {
 			putUserRepoKeyPublicKeyReplacementRequestDeletionDto(requestDeletionDto);
 
 		getCryptreeContext().getUserRegistry().writeIfNeeded();
+	}
+
+	private void putDecryptedRepoFiles(final Map<CryptoRepoFile, RepoFileDto> cryptoRepoFile2DecryptedRepoFileDto) {
+		assertNotNull("cryptoRepoFile2DecryptedRepoFileDto", cryptoRepoFile2DecryptedRepoFileDto);
+		final Map<CryptoRepoFile, RepoFileDto> cache = new HashMap<>(cryptoRepoFile2DecryptedRepoFileDto);
+		for (final Map.Entry<CryptoRepoFile, RepoFileDto> me : cryptoRepoFile2DecryptedRepoFileDto.entrySet())
+			putDecryptedRepoFile(cache, me.getKey(), me.getValue());
+	}
+
+	private RepoFile putDecryptedRepoFile(final Map<CryptoRepoFile, RepoFileDto> cryptoRepoFile2DecryptedRepoFileDto, final CryptoRepoFile cryptoRepoFile, final RepoFileDto decryptedRepoFileDto) {
+		assertNotNull("cryptoRepoFile2DecryptedRepoFileDto", cryptoRepoFile2DecryptedRepoFileDto);
+		assertNotNull("cryptoRepoFile", cryptoRepoFile);
+		assertNotNull("decryptedRepoFileDto", decryptedRepoFileDto);
+
+		RepoFile decryptedRepoFile = cryptoRepoFile.getRepoFile();
+		if (decryptedRepoFile == null) {
+			final CryptoRepoFile parentCryptoRepoFile = cryptoRepoFile.getParent();
+			RepoFile parentRepoFile = null;
+			if (parentCryptoRepoFile != null) {
+				parentRepoFile = parentCryptoRepoFile.getRepoFile();
+				if (parentRepoFile == null) {
+					RepoFileDto parentRepoFileDto = cryptoRepoFile2DecryptedRepoFileDto.get(parentCryptoRepoFile);
+					if (parentRepoFileDto == null) // we should *always* be able to decrypt the parent, if we succeeded in decrypting a child.
+						parentRepoFileDto = getDecryptedRepoFileDtoOrFail(parentCryptoRepoFile.getCryptoRepoFileId());
+
+					parentRepoFile = putDecryptedRepoFile(cryptoRepoFile2DecryptedRepoFileDto, parentCryptoRepoFile, parentRepoFileDto);
+				}
+			}
+
+			decryptedRepoFile = putDecryptedRepoFile(cryptoRepoFile, decryptedRepoFileDto, parentRepoFile);
+		}
+		return decryptedRepoFile;
+	}
+
+	private RepoFile putDecryptedRepoFile(final CryptoRepoFile cryptoRepoFile, final RepoFileDto decryptedRepoFileDto, final RepoFile parentRepoFile) {
+		assertNotNull("cryptoRepoFile", cryptoRepoFile);
+		assertNotNull("decryptedRepoFileDto", decryptedRepoFileDto);
+		// parentRepoFile might be null!
+
+		final LocalRepoTransaction transaction = getTransactionOrFail();
+		final RepoFileDao repoFileDao = transaction.getDao(RepoFileDao.class);
+
+//		final String parentName = parentRepoFile == null ? null : parentRepoFile.getName();
+//		if (! equal(parentName, ((SsRepoFileDto) decryptedRepoFileDto).getParentName()))
+//			throw new IllegalArgumentException(String.format(
+//					"parentRepoFile.name != decryptedRepoFileDto.parentName :: %s != %s",
+//					parentName, ((SsRepoFileDto) decryptedRepoFileDto).getParentName()));
+
+		RepoFile result = repoFileDao.getChildRepoFile(parentRepoFile, decryptedRepoFileDto.getName());
+		if (result == null) {
+			if (decryptedRepoFileDto instanceof NormalFileDto) {
+				final SsNormalFileDto normalFileDto = (SsNormalFileDto) decryptedRepoFileDto;
+				final SsNormalFile normalFile = createObject(SsNormalFile.class);
+				result = normalFile;
+				normalFile.setLength(normalFileDto.getLength());
+				normalFile.setSha1(normalFileDto.getSha1());
+			}
+			else if (decryptedRepoFileDto instanceof DirectoryDto) {
+//				final SsDirectoryDto directoryDto = (SsDirectoryDto) decryptedRepoFileDto;
+				final SsDirectory directory = createObject(SsDirectory.class);
+				result = directory;
+			}
+			else if (decryptedRepoFileDto instanceof SymlinkDto) {
+				final SsSymlinkDto symlinkDto = (SsSymlinkDto) decryptedRepoFileDto;
+				final SsSymlink symlink = createObject(SsSymlink.class);
+				result = symlink;
+				symlink.setTarget(symlinkDto.getTarget());
+			}
+			else
+				throw new IllegalStateException("Unknown RepoFileDto type: " + decryptedRepoFileDto);
+
+			result.setName(decryptedRepoFileDto.getName());
+			result.setLastModified(decryptedRepoFileDto.getLastModified());
+			result.setParent(parentRepoFile);
+			result.setLastSyncFromRepositoryId(getServerRepositoryIdOrFail());
+
+			((SsRepoFile) result).setSignature(((SsRepoFileDto) decryptedRepoFileDto).getSignature());
+		}
+		cryptoRepoFile.setRepoFile(result);
+		return result;
 	}
 
 	private void processUserRepoKeyPublicKeyReplacementRequests() {
@@ -1488,8 +1590,9 @@ public class CryptreeImpl extends AbstractCryptree {
 				localRepository.setLocalRepositoryType(isOnServer() ? LocalRepositoryType.SERVER : LocalRepositoryType.CLIENT);
 				break;
 			case CLIENT:
+			case CLIENT_META_ONLY:
 				if (isOnServer())
-					throw new IllegalStateException("SsLocalRepository.localRepositoryType is already initialised to CLIENT! Cannot switch to SERVER!");
+					throw new IllegalStateException("SsLocalRepository.localRepositoryType is already initialised to " + localRepositoryType + "! Cannot switch to SERVER!");
 				break;
 			case SERVER:
 				if (! isOnServer())
@@ -1565,5 +1668,22 @@ public class CryptreeImpl extends AbstractCryptree {
 	@Override
 	public Uid getCryptoRepoFileIdForRemotePathPrefixOrFail() {
 		return getCryptreeContext().getCryptoRepoFileIdForRemotePathPrefixOrFail();
+	}
+
+	@Override
+	public void makeMetaOnly() {
+		final LocalRepoTransaction transaction = getTransactionOrFail();
+		final SsLocalRepository localRepository = (SsLocalRepository) transaction.getDao(LocalRepositoryDao.class).getLocalRepositoryOrFail();
+		if (localRepository.getLocalRepositoryType() != LocalRepositoryType.UNINITIALISED)
+			throw new IllegalStateException("localRepositoryType is already initialised: " + localRepository.getLocalRepositoryType());
+
+		localRepository.setLocalRepositoryType(LocalRepositoryType.CLIENT_META_ONLY);
+	}
+
+	@Override
+	public boolean isMetaOnly() {
+		final LocalRepoTransaction transaction = getTransactionOrFail();
+		final SsLocalRepository localRepository = (SsLocalRepository) transaction.getDao(LocalRepositoryDao.class).getLocalRepositoryOrFail();
+		return localRepository.getLocalRepositoryType() == LocalRepositoryType.CLIENT_META_ONLY;
 	}
 }

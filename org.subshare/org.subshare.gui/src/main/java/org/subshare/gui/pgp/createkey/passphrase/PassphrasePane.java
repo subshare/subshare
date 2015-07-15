@@ -25,11 +25,12 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 
-import org.subshare.core.Severity;
 import org.subshare.core.pgp.CreatePgpKeyParam;
 import org.subshare.gui.IconSize;
 import org.subshare.gui.severity.SeverityImageRegistry;
 import org.subshare.gui.util.CharArrayStringConverter;
+
+import co.codewizards.cloudstore.core.Severity;
 
 public abstract class PassphrasePane extends GridPane {
 

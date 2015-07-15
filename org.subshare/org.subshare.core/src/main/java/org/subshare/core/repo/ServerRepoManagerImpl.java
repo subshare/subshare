@@ -172,24 +172,37 @@ public class ServerRepoManagerImpl implements ServerRepoManager {
 		return ServerRepoRegistryImpl.getInstance();
 	}
 
-	private void connectLocalRepositoryWithServerRepository(final File localRoot, final Server server, final UUID serverRepositoryId) {
+	public static void connectLocalRepositoryWithServerRepository(final File localRoot, final Server server, final UUID serverRepositoryId) {
 		assertNotNull("localRoot", localRoot);
 		assertNotNull("server", server);
 		assertNotNull("serverRepositoryId", serverRepositoryId);
+
 		final URL remoteRoot = UrlUtil.appendNonEncodedPath(server.getUrl(), serverRepositoryId.toString());
-
 		try (final LocalRepoManager localRepoManager = LocalRepoManagerFactory.Helper.getInstance().createLocalRepoManagerForExistingRepository(localRoot);) {
-			final UUID clientRepositoryId = localRepoManager.getRepositoryId();
-			final byte[] clientRepositoryPublicKey = localRepoManager.getPublicKey();
+			connectLocalRepositoryWithServerRepository(localRepoManager, serverRepositoryId, remoteRoot);
+		}
+	}
 
-			try (final RepoTransport repoTransport = RepoTransportFactoryRegistry.getInstance().getRepoTransportFactory(remoteRoot).createRepoTransport(remoteRoot, clientRepositoryId);) {
-				// *first* make the remote repository known locally.
-				final byte[] remoteRepositoryPublicKey = repoTransport.getPublicKey();
-				final String localPathPrefix = ""; // connected to root
-				localRepoManager.putRemoteRepository(serverRepositoryId, remoteRoot, remoteRepositoryPublicKey, localPathPrefix);
+	public static void connectLocalRepositoryWithServerRepository(final LocalRepoManager localRepoManager, final UUID serverRepositoryId, final URL remoteRoot) {
+		assertNotNull("localRepoManager", localRepoManager);
+		assertNotNull("serverRepositoryId", serverRepositoryId);
+		assertNotNull("remoteRoot", remoteRoot);
 
-				// *then* request the connection (this accesses the RemoteRepository object we persisted in the previous step).
+		final UUID clientRepositoryId = localRepoManager.getRepositoryId();
+		final byte[] clientRepositoryPublicKey = localRepoManager.getPublicKey();
+
+		try (final RepoTransport repoTransport = RepoTransportFactoryRegistry.getInstance().getRepoTransportFactory(remoteRoot).createRepoTransport(remoteRoot, clientRepositoryId);) {
+			// *first* make the remote repository known locally.
+			final byte[] remoteRepositoryPublicKey = repoTransport.getPublicKey();
+			final String localPathPrefix = ""; // connected to root
+			localRepoManager.putRemoteRepository(serverRepositoryId, remoteRoot, remoteRepositoryPublicKey, localPathPrefix);
+
+			// *then* request the connection (this accesses the RemoteRepository object we persisted in the previous step).
+			try {
 				repoTransport.requestRepoConnection(clientRepositoryPublicKey);
+			} catch (Exception x) { // revert to clean state without this remote repo, if we cannot connect it.
+				localRepoManager.deleteRemoteRepository(serverRepositoryId);
+				throw x;
 			}
 		}
 	}

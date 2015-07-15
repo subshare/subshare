@@ -54,7 +54,7 @@ jar {
 
 task copyDependencies(type: Copy) {
 	into "$buildDir/assembly/lib"
-	from configurations.compile
+	from configurations.runtime
 }
 
 task copyJar(type: Copy) {

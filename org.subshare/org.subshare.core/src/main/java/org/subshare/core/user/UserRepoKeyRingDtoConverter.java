@@ -1,6 +1,6 @@
 package org.subshare.core.user;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import org.subshare.core.dto.UserRepoKeyDto;
 import org.subshare.core.dto.UserRepoKeyRingDto;

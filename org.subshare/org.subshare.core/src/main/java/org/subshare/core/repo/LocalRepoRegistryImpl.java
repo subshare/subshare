@@ -23,6 +23,7 @@ import org.subshare.core.observable.standard.StandardPostModificationListener;
 import org.subshare.core.observable.standard.StandardPreModificationEvent;
 import org.subshare.core.observable.standard.StandardPreModificationListener;
 
+import co.codewizards.cloudstore.core.config.ConfigDir;
 import co.codewizards.cloudstore.core.oio.File;
 
 public class LocalRepoRegistryImpl implements LocalRepoRegistry {
@@ -76,7 +77,16 @@ public class LocalRepoRegistryImpl implements LocalRepoRegistry {
 	}
 
 	private void read() {
+		final String configDirStr = ConfigDir.getInstance().getFile().getAbsolutePath() + java.io.File.separatorChar;
 		for (final UUID repositoryId : getBackendLocalRepoRegistry().getRepositoryIds()) {
+			final File localRoot = getBackendLocalRepoRegistry().getLocalRoot(repositoryId);
+			if (localRoot == null)
+				continue;
+
+			// Exclude the meta-only repos, which are all inside our config-dir.
+			if (localRoot.getAbsolutePath().startsWith(configDirStr))
+				continue;
+
 			final LocalRepo localRepo = createPopulatedLocalRepo(repositoryId);
 
 			if (localRepo != null)

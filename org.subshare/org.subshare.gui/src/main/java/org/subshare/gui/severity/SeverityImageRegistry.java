@@ -9,8 +9,9 @@ import java.util.Map;
 
 import javafx.scene.image.Image;
 
-import org.subshare.core.Severity;
 import org.subshare.gui.IconSize;
+
+import co.codewizards.cloudstore.core.Severity;
 
 public class SeverityImageRegistry {
 

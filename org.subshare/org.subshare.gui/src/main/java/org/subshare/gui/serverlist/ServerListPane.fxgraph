@@ -3,7 +3,7 @@ package org.subshare.gui.serverlist
 import javafx.scene.layout.BorderPane
 import java.net.URL
 import javafx.util.converter.DefaultStringConverter
-import org.subshare.core.Severity
+import co.codewizards.cloudstore.core.Severity
 import org.subshare.gui.serverlist.ServerListPane
 import org.subshare.gui.serverlist.ServerListItem
 import javafx.util.Callback

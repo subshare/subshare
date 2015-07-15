@@ -36,7 +36,6 @@ import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 
-import org.subshare.core.Severity;
 import org.subshare.core.locker.sync.LockerSyncDaemon;
 import org.subshare.core.pgp.sync.PgpSyncDaemon;
 import org.subshare.core.server.Server;
@@ -50,6 +49,7 @@ import org.subshare.gui.ls.ServerRegistryLs;
 import org.subshare.gui.severity.SeverityImageRegistry;
 import org.subshare.gui.util.UrlStringConverter;
 
+import co.codewizards.cloudstore.core.Severity;
 import co.codewizards.cloudstore.core.dto.DateTime;
 import co.codewizards.cloudstore.core.util.StringUtil;
 

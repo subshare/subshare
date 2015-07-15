@@ -14,9 +14,10 @@ import javafx.beans.property.StringProperty;
 import javafx.beans.property.adapter.JavaBeanObjectPropertyBuilder;
 import javafx.beans.property.adapter.JavaBeanStringPropertyBuilder;
 
-import org.subshare.core.Severity;
 import org.subshare.core.server.Server;
 import org.subshare.core.sync.SyncState;
+
+import co.codewizards.cloudstore.core.Severity;
 
 public class ServerListItem {
 

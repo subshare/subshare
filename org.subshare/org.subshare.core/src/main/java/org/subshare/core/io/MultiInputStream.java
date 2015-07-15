@@ -1,6 +1,6 @@
 package org.subshare.core.io;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.io.IOException;
 import java.io.InputStream;

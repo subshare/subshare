@@ -145,4 +145,7 @@ public interface Cryptree {
 
 	void sign(WriteProtected writeProtected) throws AccessDeniedException;
 	void assertSignatureOk(WriteProtected writeProtected) throws SignatureException, AccessDeniedException;
+
+	void makeMetaOnly();
+	boolean isMetaOnly();
 }

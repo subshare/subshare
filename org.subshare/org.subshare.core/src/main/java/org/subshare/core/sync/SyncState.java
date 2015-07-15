@@ -2,33 +2,21 @@ package org.subshare.core.sync;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
-import java.io.Serializable;
 import java.net.URL;
 
-import org.subshare.core.Severity;
 import org.subshare.core.server.Server;
 
+import co.codewizards.cloudstore.core.Severity;
 import co.codewizards.cloudstore.core.dto.Error;
 
-public class SyncState implements Serializable {
+public class SyncState extends co.codewizards.cloudstore.core.sync.SyncState {
 	private static final long serialVersionUID = 1L;
 
 	private final Server server;
 
-	private final URL url;
-
-	private final Severity severity;
-
-	private final String message;
-
-	private final Error error;
-
 	public SyncState(final Server server, final URL url, final Severity severity, final String message, final Error error) {
+		super(url, severity, message, error);
 		this.server = assertNotNull("server", server);
-		this.url = assertNotNull("url", url);
-		this.severity = assertNotNull("severity", severity);
-		this.message = message;
-		this.error = error;
 	}
 
 	public Server getServer() {
@@ -40,19 +28,8 @@ public class SyncState implements Serializable {
 	 * {@link Server#getUrl() Server.url}, anymore.
 	 * @return the URL that was used for the sync.
 	 */
+	@Override
 	public URL getUrl() {
-		return url;
-	}
-
-	public Severity getSeverity() {
-		return severity;
-	}
-
-	public String getMessage() {
-		return message;
-	}
-
-	public Error getError() {
-		return error;
+		return super.getUrl();
 	}
 }

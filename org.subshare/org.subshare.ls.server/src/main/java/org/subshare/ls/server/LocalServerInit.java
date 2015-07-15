@@ -7,6 +7,7 @@ import org.subshare.core.pgp.PgpRegistry;
 import org.subshare.core.pgp.man.PgpPrivateKeyPassphraseStoreImpl;
 import org.subshare.core.pgp.sync.PgpSyncDaemonImpl;
 import org.subshare.core.pgp.transport.PgpTransportFactoryRegistry;
+import org.subshare.core.repo.metaonly.MetaOnlyRepoSyncDaemonImpl;
 import org.subshare.core.user.UserRepoKeyRingLookupImpl;
 import org.subshare.ls.server.ssl.AcceptAllDynamicX509TrustManagerCallback;
 import org.subshare.rest.client.locker.transport.RestLockerTransportFactory;
@@ -58,6 +59,7 @@ public class LocalServerInit {
 				public void run() {
 					PgpSyncDaemonImpl.getInstance().sync();
 					LockerSyncDaemonImpl.getInstance().sync();
+					MetaOnlyRepoSyncDaemonImpl.getInstance().sync();
 				}
 			};
 			localServerInitFinishThread.start();
