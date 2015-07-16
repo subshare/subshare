@@ -140,10 +140,16 @@ public class ServerRepoManagerImpl implements ServerRepoManager {
 		// TODO ask the user to select one, if there are multiple?!
 //		final PgpPrivateKeyPassphraseStore pgpPrivateKeyPassphraseStore = PgpPrivateKeyPassphraseStoreImpl.getInstance();
 
-		for (final PgpKey pgpKey : user.getPgpKeys()) {
-			if (pgpKey.isSecretKeyAvailable())
-				return pgpKey;
+		PgpKey result = null;
+		for (final PgpKey pgpKey : user.getValidPgpKeys()) {
+			if (pgpKey.isSecretKeyAvailable()) {
+				if (result == null || result.getValidTo().compareTo(pgpKey.getValidTo()) < 0)
+					result = pgpKey;
+			}
 		}
+		if (result != null)
+			return result;
+
 		throw new IllegalStateException("There is no PGP key with a private key available for this user: " + user);
 
 //		final Collection<PgpKey> masterKeysWithPrivateKey = pgp.getMasterKeysWithPrivateKey();

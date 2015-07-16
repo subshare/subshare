@@ -33,7 +33,7 @@ public abstract class WizardPage extends VBox {
 			super.set(newValue);
 
 			final Wizard wizard = WizardPage.this.getWizard();
-			if (wizard != null && wizard != newValue.getWizard())
+			if (wizard != null && newValue != null && wizard != newValue.getWizard())
 				newValue.setWizard(wizard);
 
 			updateButtonsDisable();

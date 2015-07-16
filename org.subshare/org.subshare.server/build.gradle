@@ -11,17 +11,17 @@ jar {
 	manifest {
 		attributes(
 			'Main-Class': 'org.subshare.server.SubShareServer',
-			'Class-Path': configurations.compile.collect { it.getName() }.join(' '))
+			'Class-Path': configurations.runtime.collect { it.getName() }.join(' '))
 	}
 }
 
 task copyDependencies(type: Copy) {
-	into "$buildDir/assembly/lib"
+	into "$buildDir/assembly/csx-server/lib"
 	from configurations.runtime
 }
 
 task copyJar(type: Copy) {
-	into "$buildDir/assembly/lib"
+	into "$buildDir/assembly/csx-server/lib"
 	from "$buildDir/libs"
 }
 
@@ -31,7 +31,7 @@ def filterTokenMap = [
 		]
 
 task copyFilesFromAssembly(type: Copy) {
-	into "$buildDir/assembly"
+	into "$buildDir/assembly/csx-server"
 	from 'src/assembly/installation.properties'
 
 	// Use ANT filter ReplaceTokens.
@@ -39,7 +39,7 @@ task copyFilesFromAssembly(type: Copy) {
 }
 
 task copyFilesFromBin(type: Copy) {
-	into "$buildDir/assembly/bin"
+	into "$buildDir/assembly/csx-server/bin"
 	from 'src/bin'
 
 	// Use ANT filter ReplaceTokens.
@@ -48,7 +48,7 @@ task copyFilesFromBin(type: Copy) {
 
 task chmodMainExecutable(type:Exec, dependsOn: [ copyFilesFromBin, copyFilesFromAssembly ]) {
 	commandLine = ['chmod', 'a+x', 'csx-server']
-	workingDir = file("$buildDir/assembly/bin")
+	workingDir = file("$buildDir/assembly/csx-server/bin")
 }
 
 task tarGzAssembly(type: Tar, dependsOn: [ chmodMainExecutable, copyJar, copyDependencies ]) {

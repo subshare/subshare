@@ -1,0 +1,9 @@
+package org.subshare.gui.invitation.accept.source
+
+import javafx.scene.layout.GridPane
+
+dynamic component AcceptInvitationSourcePane {
+	GridPane {
+		//TODO Add Nodes
+	}
+}

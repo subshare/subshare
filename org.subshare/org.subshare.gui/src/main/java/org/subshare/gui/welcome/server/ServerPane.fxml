@@ -5,6 +5,7 @@
 
 <?import java.lang.*?>
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.GridPane?>
@@ -31,5 +32,10 @@
 				<Insets left="8"/> 
 			</GridPane.margin>
 		</TextField>
+		<CheckBox fx:id="acceptInvitationCheckBox" text="I've got an invitation! Import it instead of asking me these questions!" GridPane.columnIndex="0" GridPane.rowIndex="3" GridPane.columnSpan="2"> 
+			<GridPane.margin>
+				<Insets top="8"/> 
+			</GridPane.margin>
+		</CheckBox>
 	</children>
 </fx:root>

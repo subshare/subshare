@@ -1,39 +1,41 @@
 package org.subshare.gui.welcome.server;
 
-import static co.codewizards.cloudstore.core.bean.PropertyChangeListenerUtil.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
-
-import java.beans.PropertyChangeListener;
-import java.net.URL;
-
+import javafx.beans.InvalidationListener;
+import javafx.beans.WeakInvalidationListener;
 import javafx.scene.Parent;
 
-import org.subshare.core.server.Server;
+import org.subshare.gui.invitation.accept.source.AcceptInvitationSourceWizardPage;
 import org.subshare.gui.welcome.ServerData;
 import org.subshare.gui.wizard.WizardPage;
 
 public class ServerWizardPage extends WizardPage {
 
-	private final PropertyChangeListener updateCompletePropertyChangeListener = event -> updateComplete();
-
 	private final ServerData serverData;
 	private ServerPane serverPane;
+	private final AcceptInvitationSourceWizardPage acceptInvitationSourceWizardPage;
+	private final InvalidationListener acceptInvitationInvalidationListener = observable -> {
+		if (serverData.acceptInvitationProperty().get())
+			nextPageProperty().set(acceptInvitationSourceWizardPage);
+		else
+			nextPageProperty().set(null);
+	};
 
 	public ServerWizardPage(ServerData serverData) {
 		super("Server");
 		this.serverData = assertNotNull("serverData", serverData);
-		addWeakPropertyChangeListener(serverData.getServer(), Server.PropertyEnum.url, updateCompletePropertyChangeListener);
-		updateComplete();
+		acceptInvitationSourceWizardPage = new AcceptInvitationSourceWizardPage(serverData.getAcceptInvitationData());
+		serverData.acceptInvitationProperty().addListener(new WeakInvalidationListener(acceptInvitationInvalidationListener));
 	}
 
 	@Override
 	protected Parent createContent() {
-		serverPane = new ServerPane(serverData.getServer());
+		serverPane = new ServerPane(serverData) {
+			@Override
+			protected void updateComplete() {
+				ServerWizardPage.this.completeProperty().set(isComplete());
+			}
+		};
 		return serverPane;
-	}
-
-	private void updateComplete() {
-		final URL url = serverData.getServer().getUrl();
-		completeProperty().set(url != null);
 	}
 }

@@ -5,6 +5,7 @@ import javafx.scene.text.Text
 import javafx.geometry.Insets
 import javafx.scene.control.Label
 import javafx.scene.control.TextField
+import javafx.scene.control.CheckBox
 
 dynamic component ServerPane resourcefile 'messages.properties' {
 	GridPane {
@@ -39,6 +40,14 @@ dynamic component ServerPane resourcefile 'messages.properties' {
 				static columnIndex : 1,
 				static rowIndex : 2,
 				static margin : Insets { left : 8 }
+			},
+			
+			CheckBox id acceptInvitationCheckBox {
+				text : "I've got an invitation! Import it instead of asking me these questions!",
+				static columnIndex : 0,
+				static rowIndex : 3,
+				static columnSpan : 2,
+				static margin : Insets { top : 8 }
 			}
 		]
 	}
