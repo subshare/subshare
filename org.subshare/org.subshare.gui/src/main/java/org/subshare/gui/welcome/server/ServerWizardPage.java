@@ -13,7 +13,7 @@ public class ServerWizardPage extends WizardPage {
 
 	private final ServerData serverData;
 	private ServerPane serverPane;
-	private final AcceptInvitationSourceWizardPage acceptInvitationSourceWizardPage;
+	private AcceptInvitationSourceWizardPage acceptInvitationSourceWizardPage; // must not be final - otherwise getting compilation error with javac, while Eclipse works fine :-(
 	private final InvalidationListener acceptInvitationInvalidationListener = observable -> {
 		if (serverData.acceptInvitationProperty().get())
 			nextPageProperty().set(acceptInvitationSourceWizardPage);
