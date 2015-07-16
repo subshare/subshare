@@ -11,7 +11,7 @@ import org.subshare.gui.wizard.WizardPage;
 
 public class ServerWizardPage extends WizardPage {
 
-	private final ServerData serverData;
+	private ServerData serverData; // must not be final - otherwise getting compilation error with javac, while Eclipse works fine :-(
 	private ServerPane serverPane;
 	private AcceptInvitationSourceWizardPage acceptInvitationSourceWizardPage; // must not be final - otherwise getting compilation error with javac, while Eclipse works fine :-(
 	private final InvalidationListener acceptInvitationInvalidationListener = observable -> {
