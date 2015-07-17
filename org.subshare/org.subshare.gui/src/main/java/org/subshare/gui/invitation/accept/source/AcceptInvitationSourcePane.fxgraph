@@ -21,25 +21,25 @@ dynamic component AcceptInvitationSourcePane resourcefile 'messages.properties' 
 				static margin : Insets { bottom : 16 }
 			},
 
-			HBox id errorMessageBox {
-				children : [
-					ImageView id errorMessageImageView { image : Image { url : "@../../../severity/ERROR-24x24.png" } },
-					Label id errorMessageLabel { text : "ERROR" }
-				],
-				static columnIndex : 0,
-				static rowIndex : 1,
-				static margin : Insets { bottom : 16 }
-			},		
-
 			FileTreePane id fileTreePane {
 				useCase : "invitation.in",
 				selectionMode: "SINGLE",
 
 				static columnIndex : 0,
-				static rowIndex : 2,
+				static rowIndex : 1,
 				static hgrow : "ALWAYS",
-				static vgrow : "ALWAYS"
-			}	
+				static vgrow : "ALWAYS",
+				static margin : Insets { bottom : 16 }
+			},
+			
+			HBox id errorMessageBox {
+				children : [
+					ImageView id errorMessageImageView { image : Image { url : "@../../../severity/ERROR-24x24.png" } },
+					Label id errorMessageLabel { text : "This is an error description" }
+				],
+				static columnIndex : 0,
+				static rowIndex : 2
+			}
 		]
 	}
 }

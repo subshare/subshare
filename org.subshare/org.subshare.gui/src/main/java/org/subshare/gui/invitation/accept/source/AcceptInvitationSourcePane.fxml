@@ -22,19 +22,20 @@
 				<Insets bottom="16"/> 
 			</GridPane.margin>
 		</Text>
-		<HBox fx:id="errorMessageBox" GridPane.columnIndex="0" GridPane.rowIndex="1"> 
+		<FileTreePane fx:id="fileTreePane" useCase="invitation.in" selectionMode="SINGLE" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.hgrow="ALWAYS" GridPane.vgrow="ALWAYS"> 
+			<GridPane.margin>
+				<Insets bottom="16"/> 
+			</GridPane.margin>
+		</FileTreePane>
+		<HBox fx:id="errorMessageBox" GridPane.columnIndex="0" GridPane.rowIndex="2"> 
 			<children>
 				<ImageView fx:id="errorMessageImageView"> 
 					<image>
 						<Image url="@../../../severity/ERROR-24x24.png"/> 
 					</image>
 				</ImageView>
-				<Label fx:id="errorMessageLabel" text="ERROR"/> 
+				<Label fx:id="errorMessageLabel" text="This is an error description"/> 
 			</children>
-			<GridPane.margin>
-				<Insets bottom="16"/> 
-			</GridPane.margin>
 		</HBox>
-		<FileTreePane fx:id="fileTreePane" useCase="invitation.in" selectionMode="SINGLE" GridPane.columnIndex="0" GridPane.rowIndex="2" GridPane.hgrow="ALWAYS" GridPane.vgrow="ALWAYS"/> 
 	</children>
 </fx:root>
