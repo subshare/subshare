@@ -157,7 +157,7 @@ public class UserImpl extends AbstractBean<User.Property> implements User {
 		UserRepoKeyRing userRepoKeyRing;
 		synchronized (this) {
 			if (! getUserRepoKeyPublicKeys().isEmpty())
-				throw new IllegalStateException("There are public keys! Either there is a userRepoKeyRing or there are public keys! There cannot be both!");
+				throw new IllegalStateException(String.format("%s has public keys! Either there is a userRepoKeyRing or there are public keys! There cannot be both!", this));
 
 			userRepoKeyRing = getUserRepoKeyRing();
 			if (userRepoKeyRing == null) {

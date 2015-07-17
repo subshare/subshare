@@ -66,7 +66,7 @@ public class Welcome {
 				WizardDialog dialog = new WizardDialog(owner, identityWizard);
 				dialog.showAndWait();
 
-				if (WizardState.FINISHED != serverWizard.getState())
+				if (WizardState.FINISHED != identityWizard.getState())
 					serverWizardNeeded = false; // if identityWizard was cancelled, we do not wait for the serverWizard, which was probably not even started!
 
 				determineServerWizardCompleted();
@@ -96,8 +96,12 @@ public class Welcome {
 			else
 				result[0] = true;
 
-			if (serverWizardNeeded)
-				result[0] &= WizardState.FINISHED == serverWizard.getState();
+			// It should be OK to cancel the serverWizard, because (1) we can add the server later,
+			// (2) maybe we do not want to add a server at all, because we want to instead export
+			// our public key (maybe just created) and wait for an invitation token. This workflow
+			// is not covered by the wizards - and maybe it does not need to be.
+//			if (serverWizardNeeded)
+//				result[0] &= WizardState.FINISHED == serverWizard.getState();
 		});
 
 		return result[0];

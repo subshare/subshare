@@ -24,7 +24,7 @@ public class ValidityWizardPage extends WizardPage {
 		validityPane = new ValidityPane(createPgpKeyParam) {
 			@Override
 			protected void updateComplete() {
-				ValidityWizardPage.this.completeProperty().set(isComplete());
+				ValidityWizardPage.this.setComplete(isComplete());
 			}
 		};
 		return validityPane;

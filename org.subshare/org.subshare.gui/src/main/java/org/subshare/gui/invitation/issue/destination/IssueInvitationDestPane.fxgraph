@@ -1,15 +1,15 @@
-package org.subshare.gui.invitation.accept.source
+package org.subshare.gui.invitation.issue.destination
 
 import javafx.scene.layout.GridPane
 import org.subshare.gui.filetree.FileTreePane
 import javafx.scene.text.Text
 import javafx.geometry.Insets
 
-dynamic component AcceptInvitationSourcePane resourcefile 'messages.properties' {
+dynamic component IssueInvitationDestPane resourcefile 'messages.properties' {
 	GridPane {
 		children : [
 			Text id headerText {
-				text : rstring 'AcceptInvitationSourcePane.headerText.text',
+				text : rstring 'IssueInvitationDestPane.headerText.text',
 				wrappingWidth : 500,
 				static columnIndex : 0,
 				static rowIndex : 0,
@@ -19,7 +19,7 @@ dynamic component AcceptInvitationSourcePane resourcefile 'messages.properties' 
 			},
 
 			FileTreePane id fileTreePane {
-				useCase : "invitation.in",
+				useCase : "invitation.out",
 				selectionMode: "SINGLE",
 
 				static columnIndex : 0,

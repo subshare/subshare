@@ -11,7 +11,9 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -121,34 +123,52 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 
 		final byte[] userRepoInvitationData = toUserRepoInvitationData(userRepoInvitation);
 
-//		try {
-//			FileOutputStream fout = new FileOutputStream(File.createTempFile("xxx-", ".zip"));
-//			fout.write(userRepoInvitationData);
-//			fout.close();
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
-
 		final PgpKey signPgpKey = grantingUser.getPgpKeyContainingSecretKeyOrFail();
+		final Set<PgpKey> encryptPgpKeys = new HashSet<PgpKey>(inviteePgpKeys.size() + 1);
+		encryptPgpKeys.addAll(inviteePgpKeys);
+		encryptPgpKeys.add(signPgpKey); // We want to be able to decrypt our own invitations, too ;-)
 
-		final ByteArrayOutputStream out = new ByteArrayOutputStream();
-		final PgpEncoder encoder = getPgpOrFail().createEncoder(new ByteArrayInputStream(userRepoInvitationData), out);
-		encoder.setSignPgpKey(signPgpKey);
-		encoder.getEncryptPgpKeys().add(signPgpKey); // We want to be able to decrypt our own invitations, too ;-)
-		encoder.getEncryptPgpKeys().addAll(inviteePgpKeys);
-		try {
-			encoder.encode();
-		} catch (final IOException x) {
-			throw new RuntimeException(x);
-		}
+		final byte[] signPgpKeyData = getPgpOrFail().exportPublicKeys(Collections.singleton(signPgpKey));
+
+		// Even though it is visible for whom a message was encrypted (without decrypting), we still encrypt the
+		// signing key (public), because the it contains signatures and other meta-data, revealing information about
+		// the relationships this person might have with others.
+		final byte[] encryptedSignPgpKeyData = encrypt(signPgpKeyData, encryptPgpKeys);
+		final byte[] encryptedUserRepoInvitationData = signAndEncrypt(userRepoInvitationData, signPgpKey, encryptPgpKeys);
 
 		final EncryptedDataFile edf = new EncryptedDataFile();
-		edf.putDefaultData(out.toByteArray());
+		edf.putSigningKeyData(encryptedSignPgpKeyData);
+		edf.putDefaultData(encryptedUserRepoInvitationData);
 		try {
 			return new UserRepoInvitationToken(edf.write());
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	private byte[] encrypt(byte[] plainData, Set<PgpKey> encryptPgpKeys) {
+		final ByteArrayOutputStream out = new ByteArrayOutputStream();
+		final PgpEncoder encoder = getPgpOrFail().createEncoder(new ByteArrayInputStream(plainData), out);
+		encoder.getEncryptPgpKeys().addAll(encryptPgpKeys);
+		try {
+			encoder.encode();
+		} catch (final IOException x) {
+			throw new RuntimeException(x);
+		}
+		return out.toByteArray();
+	}
+
+	private byte[] signAndEncrypt(byte[] plainData, PgpKey signPgpKey, Set<PgpKey> encryptPgpKeys) {
+		final ByteArrayOutputStream out = new ByteArrayOutputStream();
+		final PgpEncoder encoder = getPgpOrFail().createEncoder(new ByteArrayInputStream(plainData), out);
+		encoder.setSignPgpKey(signPgpKey);
+		encoder.getEncryptPgpKeys().addAll(encryptPgpKeys);
+		try {
+			encoder.encode();
+		} catch (final IOException x) {
+			throw new RuntimeException(x);
+		}
+		return out.toByteArray();
 	}
 
 	@Override
@@ -161,11 +181,25 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
-		byte[] defaultData = edf.getDefaultData();
+		final byte[] defaultData = edf.getDefaultData();
 		if (defaultData == null)
 			throw new IllegalArgumentException("Container does not contain defaultData!");
 
 		final ByteArrayOutputStream out = new ByteArrayOutputStream();
+		final byte[] encryptedSignPgpKeyData = edf.getSigningKeyData();
+		final byte[] signPgpKeyData;
+		if (encryptedSignPgpKeyData != null) { // should always be the case since 2015-07-17, but still we better check...
+			final PgpDecoder pgpDecoder = getPgpOrFail().createDecoder(new ByteArrayInputStream(encryptedSignPgpKeyData), out);
+			try {
+				pgpDecoder.decode();
+			} catch (final IOException e) {
+				throw new RuntimeException(e);
+			}
+			signPgpKeyData = out.toByteArray(); // only encrypted - not signed! thus not checking signature!
+			getPgpOrFail().importKeys(signPgpKeyData);
+		}
+
+		out.reset();
 		final PgpDecoder pgpDecoder = getPgpOrFail().createDecoder(new ByteArrayInputStream(defaultData), out);
 		try {
 			pgpDecoder.decode();
@@ -360,6 +394,8 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 //					invitationUserRepoKey.getPublicKey().getSignature().getSigningUserRepoKeyId());
 
 			userRepoInvitation = new UserRepoInvitation(completeUrl, invitationUserRepoKey); // signingUserRepoKeyPublicKey.getPublicKey());
+			logger.info("createUserRepoInvitation: grantingUser={} grantingUserRepoKeyIds={} invitedUser={} invitationUserRepoKey={}",
+					grantingUser, grantingUser.getUserRepoKeyRing().getUserRepoKeys(), user, invitationUserRepoKey);
 
 			transaction.commit();
 		} finally {
@@ -441,6 +477,8 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 
 //			cryptree.replaceInvitationUserRepoKey(userRepoInvitation.getInvitationUserRepoKey(), userRepoKey);
 			cryptree.requestReplaceInvitationUserRepoKey(userRepoInvitation.getInvitationUserRepoKey(), userRepoKey.getPublicKey());
+			logger.info("importUserRepoInvitation: invitationUserRepoKey={} realUserRepoKey={}",
+					userRepoInvitation.getInvitationUserRepoKey(), userRepoKey);
 
 			final InvitationUserRepoKeyPublicKey invitationUserRepoKeyPublicKey =
 					(InvitationUserRepoKeyPublicKey) userRepoKeyPublicKeyDao.getUserRepoKeyPublicKeyOrFail(userRepoInvitation.getInvitationUserRepoKey().getUserRepoKeyId());

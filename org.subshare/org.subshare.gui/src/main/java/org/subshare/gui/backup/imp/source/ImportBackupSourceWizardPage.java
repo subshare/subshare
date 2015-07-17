@@ -21,7 +21,7 @@ public class ImportBackupSourceWizardPage extends WizardPage {
 		importBackupSourcePane = new ImportBackupSourcePane(importBackupData) {
 			@Override
 			protected void updateComplete() {
-				ImportBackupSourceWizardPage.this.completeProperty().set(isComplete());
+				ImportBackupSourceWizardPage.this.setComplete(isComplete());
 			}
 		};
 		return importBackupSourcePane;

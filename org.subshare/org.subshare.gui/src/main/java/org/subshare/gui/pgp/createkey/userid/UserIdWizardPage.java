@@ -22,7 +22,7 @@ public class UserIdWizardPage extends WizardPage {
 		userIdPane = new UserIdPane(createPgpKeyParam) {
 			@Override
 			protected void updateComplete() {
-				UserIdWizardPage.this.completeProperty().set(isComplete());
+				UserIdWizardPage.this.setComplete(isComplete());
 			}
 		};
 		return userIdPane;

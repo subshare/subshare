@@ -167,7 +167,7 @@ public class BcPgpDecoder extends AbstractPgpDecoder {
 			actualOutput.close();
 			final byte[] output = actualOutput.toByteArray();
 
-			if (onePassSignatureList == null || signatureList == null)
+			if (onePassSignatureList == null || signatureList == null) // if it's not encrypted, it really should be signed!
 				throw new PGPException("Poor PGP. Signatures not found.");
 
 			verifySignature(onePassSignatureList, signatureList, new ByteArrayInputStream(output), getOutputStreamOrFail());
@@ -254,10 +254,10 @@ public class BcPgpDecoder extends AbstractPgpDecoder {
 			actualOutput.close();
 			final byte[] output = actualOutput.toByteArray();
 
-			if (onePassSignatureList == null || signatureList == null)
-				throw new PGPException("Poor PGP. Signatures not found.");
-
-			verifySignature(onePassSignatureList, signatureList, new ByteArrayInputStream(output), getOutputStreamOrFail());
+			if (onePassSignatureList != null && signatureList != null) // It might be encrypted, but not signed!
+				verifySignature(onePassSignatureList, signatureList, new ByteArrayInputStream(output), getOutputStreamOrFail());
+			else
+				getOutputStreamOrFail().write(output);
 
 			if (pbe.isIntegrityProtected() && !pbe.verify())
 				throw new PGPException("Data is integrity protected but integrity is lost.");

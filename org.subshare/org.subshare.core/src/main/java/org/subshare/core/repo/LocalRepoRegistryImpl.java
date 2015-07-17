@@ -77,21 +77,20 @@ public class LocalRepoRegistryImpl implements LocalRepoRegistry {
 	}
 
 	private void read() {
-		final String configDirStr = ConfigDir.getInstance().getFile().getAbsolutePath() + java.io.File.separatorChar;
 		for (final UUID repositoryId : getBackendLocalRepoRegistry().getRepositoryIds()) {
 			final File localRoot = getBackendLocalRepoRegistry().getLocalRoot(repositoryId);
 			if (localRoot == null)
 				continue;
 
-			// Exclude the meta-only repos, which are all inside our config-dir.
-			if (localRoot.getAbsolutePath().startsWith(configDirStr))
-				continue;
-
 			final LocalRepo localRepo = createPopulatedLocalRepo(repositoryId);
-
 			if (localRepo != null)
 				localRepos.add(localRepo);
 		}
+	}
+
+	private boolean isMetaOnly(File localRoot) {
+		final String configDirStr = ConfigDir.getInstance().getFile().getAbsolutePath() + java.io.File.separatorChar;
+		return localRoot.getAbsolutePath().startsWith(configDirStr);
 	}
 
 	private LocalRepo createPopulatedLocalRepo(final UUID repositoryId) {
@@ -100,6 +99,10 @@ public class LocalRepoRegistryImpl implements LocalRepoRegistry {
 
 		final File localRoot = backendLocalRepoRegistry.getLocalRoot(repositoryId);
 		if (localRoot == null)
+			return null;
+
+		// Exclude the meta-only repos, which are all inside our config-dir.
+		if (isMetaOnly(localRoot))
 			return null;
 
 		localRepo.setLocalRoot(localRoot);

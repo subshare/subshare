@@ -6,6 +6,7 @@ import static co.codewizards.cloudstore.core.util.StringUtil.*;
 import org.subshare.core.server.Server;
 import org.subshare.core.server.ServerRegistry;
 import org.subshare.core.sync.Sync;
+import org.subshare.gui.invitation.accept.AcceptInvitationManager;
 import org.subshare.gui.ls.LockerSyncLs;
 import org.subshare.gui.ls.PgpSyncLs;
 import org.subshare.gui.ls.ServerRegistryLs;
@@ -42,6 +43,16 @@ public class ServerWizard extends Wizard {
 		}
 	}
 
+	@Override
+	public void init() {
+		super.init();
+		setPrefSize(500, 500);
+//		getScene().getWindow().setOnShown(event -> {
+//			getScene().getWindow().setWidth(500);
+//			getScene().getWindow().setHeight(500);
+//		});
+	}
+
 	public ServerData getServerData() {
 		return serverData;
 	}
@@ -57,33 +68,49 @@ public class ServerWizard extends Wizard {
 
 	@Override
 	protected void finishing() {
-		if (isEmpty(trim(serverData.getServer().getName())))
-			serverData.getServer().setName(serverData.getServer().getUrl().getHost());
+		if (serverData.acceptInvitationProperty().get()) {
+			((DefaultFinishingPage) getFinishingPage()).getHeaderText().setText(
+					Messages.getString("ServerWizard.finishingPage.headerText.text[acceptInvitation]")); //$NON-NLS-1$
+		}
+		else {
+			if (isEmpty(trim(serverData.getServer().getName())))
+				serverData.getServer().setName(serverData.getServer().getUrl().getHost());
 
-		((DefaultFinishingPage) getFinishingPage()).getHeaderText().setText(
-				Messages.getString("ServerWizard.finishingPage.headerText.text")); //$NON-NLS-1$
-
+			((DefaultFinishingPage) getFinishingPage()).getHeaderText().setText(
+					Messages.getString("ServerWizard.finishingPage.headerText.text[registerServer]")); //$NON-NLS-1$
+		}
 		super.finishing();
 	}
 
 	@Override
 	protected void finish(ProgressMonitor monitor) throws Exception {
-//		PlatformUtil.runAndWait(() -> ((DefaultFinishingPage) getFinishingPage()).getHeaderText().setText(
-//				Messages.getString("ServerWizard.finishingPage.headerText.text")));
+		if (serverData.acceptInvitationProperty().get())
+			finish_acceptInvitation(monitor);
+		else
+			finish_registerServer(monitor);
+	}
 
+	protected void finish_acceptInvitation(ProgressMonitor monitor) throws Exception {
+		new AcceptInvitationManager().acceptInvitation(serverData.getAcceptInvitationData());
+	}
+
+	protected void finish_registerServer(ProgressMonitor monitor) throws Exception {
 		final Server server = assertNotNull("serverData.server", serverData.getServer());
 		if (syncLocker) {
 			// We must first sync the PGP keys, because the server doesn't accept a locker that's signed
 			// by an unknown key.
-			Sync pgpSync = PgpSyncLs.createPgpSync(server);
-			pgpSync.sync();
+			try (Sync pgpSync = PgpSyncLs.createPgpSync(server);) {
+				pgpSync.sync();
+			}
 
 			// We must not (yet) add the server to the ServerRegistry, because we maybe already
 			// used this server before, in this case, a Server entry will be down-synced (=> Locker),
 			// anyway.
-			Sync lockerSync = LockerSyncLs.createLockerSync(server);
-			lockerSync.sync();
+			try (Sync lockerSync = LockerSyncLs.createLockerSync(server);) {
+				lockerSync.sync();
+			}
 
+			// And now we register it, if the server's URL hasn't become known by the lockerSync's down-sync, before.
 			Server server2 = serverRegistry.getServerForRemoteRoot(server.getUrl());
 			if (server2 == null)
 				serverRegistry.getServers().add(server);

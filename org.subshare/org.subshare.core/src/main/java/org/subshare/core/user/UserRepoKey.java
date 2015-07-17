@@ -302,4 +302,9 @@ public class UserRepoKey {
 				this.signature = SignatureDto.copyIfNeeded(signature);
 		}
 	}
+
+	@Override
+	public String toString() {
+		return String.format("%s[userRepoKeyId=%s, invitation=%s]", this.getClass().getSimpleName(), userRepoKeyId, invitation);
+	}
 }

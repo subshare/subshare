@@ -24,7 +24,7 @@ public class ExportBackupDestinationWizardPage extends WizardPage {
 		exportBackupDestinationPane = new ExportBackupDestinationPane(exportBackupData) {
 			@Override
 			protected void updateComplete() {
-				ExportBackupDestinationWizardPage.this.completeProperty().set(shownAtLeastOnce && isComplete());
+				ExportBackupDestinationWizardPage.this.setComplete(shownAtLeastOnce && isComplete());
 			}
 		};
 		return exportBackupDestinationPane;

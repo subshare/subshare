@@ -58,7 +58,7 @@ public class LocalRepoDirectoryPane extends GridPane {
 		final String path = file.getAbsolutePath();
 		pathTextField.setText(path);
 
-		fileTreePane.setUseCase(path);
+		fileTreePane.setUseCase(String.format("localRepo:%s:%s", localRepo.getRepositoryId(), path)); //$NON-NLS-1$
 		fileTreePane.setRootFileTreeItem(new DirectoryFileTreeItem(file) {
 			{
 				hookUpdateInvalidationListener(fileTreePane);

@@ -60,7 +60,7 @@ public class IdentityWizardPage extends WizardPage {
 	private void updateComplete() {
 		final String name = identityData.getPgpUserId().nameProperty().get();
 		final boolean importBackup = identityData.importBackupProperty().get();
-		completeProperty().set(importBackup || ! isEmpty(name));
+		setComplete(importBackup || ! isEmpty(name));
 	}
 
 	@Override

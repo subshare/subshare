@@ -24,7 +24,7 @@ public class PassphraseWizardPage extends WizardPage {
 		passphrasePane = new PassphrasePane(createPgpKeyParam) {
 			@Override
 			protected void updateComplete() {
-				PassphraseWizardPage.this.completeProperty().set(isComplete());
+				PassphraseWizardPage.this.setComplete(isComplete());
 			}
 		};
 		return passphrasePane;

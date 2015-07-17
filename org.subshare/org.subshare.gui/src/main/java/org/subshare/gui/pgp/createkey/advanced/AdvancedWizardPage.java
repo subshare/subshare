@@ -22,7 +22,7 @@ public class AdvancedWizardPage extends WizardPage {
 		advancedPane = new AdvancedPane(createPgpKeyParam) {
 			@Override
 			protected void updateComplete() {
-				AdvancedWizardPage.this.completeProperty().set(isComplete());
+				AdvancedWizardPage.this.setComplete(isComplete());
 			}
 		};
 		return advancedPane;

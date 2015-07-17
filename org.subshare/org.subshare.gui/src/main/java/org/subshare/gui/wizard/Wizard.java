@@ -76,10 +76,23 @@ public abstract class Wizard extends StackPane {
 	private final ObjectProperty<WizardState> stateProperty = new SimpleObjectProperty<>(this, "state", WizardState.NEW);
 	private Throwable error;
 
+	/**
+	 * Create an instance of a {@code Wizard} without a first page. The first page must be
+	 * set via {@link #setFirstPage(WizardPage)} or the {@link #firstPageProperty() firstPageProperty} before the
+	 * wizard can be used.
+	 * @see #Wizard(WizardPage)
+	 */
     protected Wizard() {
     	this((WizardPage) null);
     }
 
+    /**
+     * Create an instance of a {@code Wizard} with the specified first page. If {@code firstPage} is
+     * <code>null</code>, it must be set later via {@link #setFirstPage(WizardPage)} or the
+     * {@link #firstPageProperty() firstPageProperty} before the wizard can be used.
+     * @param firstPage the first page to be shown by this wizard. May be <code>null</code> - in this
+     * case it must be set via the {@code firstPageProperty}, before the wizard is usable.
+     */
 	protected Wizard(final WizardPage firstPage) {
 		setFirstPage(firstPage);
 
@@ -115,8 +128,31 @@ public abstract class Wizard extends StackPane {
 		getChildren().add(0, wizardPage);
 	}
 
+	/**
+	 * The first page.
+	 * <p>
+	 * When the wizard is opened (e.g. in a {@link WizardDialog}), this page is initially shown to the user.
+	 * A wizard is only usable, if there's a non-<code>null</code> value assigned to this property. It is
+	 * up to this page to define the wizard's further path: Depending on the value of its
+	 * {@link WizardPage#nextPageProperty() nextPageProperty}, which may be <code>null</code>, the user may
+	 * continue his way through the workflow.
+	 * @return property holding the first page, being the starting point of the wizard's workflow. Never <code>null</code>,
+	 * but maybe holding a <code>null</code> value.
+	 * @see #getFirstPage()
+	 * @see #setFirstPage(WizardPage)
+	 */
 	public ObjectProperty<WizardPage> firstPageProperty() { return firstPageProperty; }
+	/**
+	 * Gets the first page.
+	 * @return the first page. May be <code>null</code>.
+	 * @see #firstPageProperty()
+	 */
 	public WizardPage getFirstPage() { return firstPageProperty.get(); }
+	/**
+	 * Sets the first page.
+	 * @param wizardPage the first page. May be <code>null</code>.
+	 * @see #firstPageProperty()
+	 */
 	public void setFirstPage(WizardPage wizardPage) { firstPageProperty.set(wizardPage); }
 
 	public void init() {

@@ -159,7 +159,8 @@ public abstract class WizardPage extends VBox {
 	/**
 	 * Initialisation method to be overridden by sub-classes.
 	 * <p>
-	 * This method is called once and may be used for initialisation instead of the constructor - which is recommended.
+	 * This method is called once and may be used for initialisation instead of the constructor. Performing initialisations
+	 * here is recommended over the constructor.
 	 */
 	protected void init() {
 	}
@@ -170,6 +171,9 @@ public abstract class WizardPage extends VBox {
 	protected void onShown() {
 	}
 
+	/**
+	 * Callback-method telling this page that it is not shown to the user, anymore.
+	 */
 	protected void onHidden() {
 	}
 
@@ -186,17 +190,81 @@ public abstract class WizardPage extends VBox {
 		return getWizard().hasPreviousPage();
 	}
 
+	/**
+	 * The next page after this page.
+	 * <p>
+	 * If this page is the wizard's current page, this property decides, whether and how the user can continue
+	 * his walk through the wizard's workflow: If this property contains a <code>null</code> value, the
+	 * wizard's "Next" button is disabled. Otherwise, clicking the "Next" button advances the current
+	 * state in the workflow, making this page the wizard's current page.
+	 * <p>
+	 * Please note, that the user is not forced to switch to the next page: Even if there is one, a user
+	 * might directly click the "Finish" button, if all pages from the current page over all the next
+	 * pages till the last page are {@linkplain #completeProperty() complete}.
+	 * <p>
+	 * Depending on the user input, the value of this property might be changed at any time while the user
+	 * interacts with the wizard. However, only the values of the current page and its following pages are
+	 * supposed to change. Wizard pages of the past, i.e. before the current page, should not change - though
+	 * their changes do not impose any technical problem (they would silently be ignored, because a separate history
+	 * is maintained for all the past wizard pages) their changes make semantically no sense.
+	 * @return property holding the next page following this page. Never <code>null</code>, but maybe holding
+	 * a <code>null</code> value.
+	 * @see #getNextPage()
+	 * @see #setNextPage(WizardPage)
+	 */
 	public ObjectProperty<WizardPage> nextPageProperty() { return nextPageProperty; }
+	/**
+	 * Gets the next page after this page.
+	 * @return the next page following this page. May be <code>null</code>.
+	 * @see #nextPageProperty()
+	 */
 	public WizardPage getNextPage() { return nextPageProperty.get(); }
+	/**
+	 * Set the next page after this page.
+	 * @param wizardPage the next page after this page. May be <code>null</code>.
+	 * @see #nextPageProperty()
+	 */
 	public void setNextPage(final WizardPage wizardPage) { nextPageProperty.set(wizardPage); }
 
 	protected Wizard getWizard() {
 		return wizard;
 	}
 
+	/**
+	 * Property indicating whether this page is complete.
+	 * <p>
+	 * A page is complete, when the user entered all the minimum required data. A page may be complete
+	 * already before being shown to the user (if there are meaningful default values or the collected
+	 * data is optional). In this case, the page may be skipped (i.e. the user may click "Finish"
+	 * instead of proceeding through all pages via the "Next" button).
+	 * <p>
+	 * <b>Important:</b> The default value of this property is <code>true</code>. That means, every page is
+	 * considered optional, if it does not explicitly change this value in its constructor or {@link #init()}
+	 * method.
+	 * <p>
+	 * <b>Note:</b> If your page implementation has meaningful default values or the data is optional, but
+	 * you still want the user to at least see the page once, you may do so easily by initially setting
+	 * the {@code completeProperty} to <code>false</code> (e.g. in {@link #init()}) and change this to
+	 * <code>true</code> in {@link #onShown()}.
+	 * @return the property indicating whether this page is complete. Never <code>null</code>.
+	 * @see #isComplete()
+	 * @see #setComplete(boolean)
+	 */
 	public BooleanProperty completeProperty() {
 		return completeProperty;
 	}
+	/**
+	 * Is this page complete?
+	 * @return whether this page is complete.
+	 * @see #completeProperty()
+	 */
+	public boolean isComplete() { return completeProperty.get(); }
+	/**
+	 * Sets whether this page is complete.
+	 * @param complete whether this page is complete.
+	 * @see #completeProperty()
+	 */
+	public void setComplete(boolean complete) { completeProperty.set(complete); }
 
 	public void updateButtonsDisable() {
 		previousButton.setDisable(! hasPreviousPage());

@@ -11,20 +11,18 @@ import org.subshare.gui.wizard.WizardPage;
 
 public class ServerWizardPage extends WizardPage {
 
-	private ServerData serverData; // must not be final - otherwise getting compilation error with javac, while Eclipse works fine :-(
+	private final ServerData serverData;
 	private ServerPane serverPane;
-	private AcceptInvitationSourceWizardPage acceptInvitationSourceWizardPage; // must not be final - otherwise getting compilation error with javac, while Eclipse works fine :-(
-	private final InvalidationListener acceptInvitationInvalidationListener = observable -> {
-		if (serverData.acceptInvitationProperty().get())
-			nextPageProperty().set(acceptInvitationSourceWizardPage);
-		else
-			nextPageProperty().set(null);
-	};
+	private final AcceptInvitationSourceWizardPage acceptInvitationSourceWizardPage;
+	private final InvalidationListener acceptInvitationInvalidationListener;
 
-	public ServerWizardPage(ServerData serverData) {
+	public ServerWizardPage(final ServerData serverData) {
 		super("Server");
 		this.serverData = assertNotNull("serverData", serverData);
 		acceptInvitationSourceWizardPage = new AcceptInvitationSourceWizardPage(serverData.getAcceptInvitationData());
+		acceptInvitationInvalidationListener = observable -> {
+			nextPageProperty().set(serverData.acceptInvitationProperty().get() ? acceptInvitationSourceWizardPage : null);
+		};
 		serverData.acceptInvitationProperty().addListener(new WeakInvalidationListener(acceptInvitationInvalidationListener));
 	}
 
@@ -33,7 +31,7 @@ public class ServerWizardPage extends WizardPage {
 		serverPane = new ServerPane(serverData) {
 			@Override
 			protected void updateComplete() {
-				ServerWizardPage.this.completeProperty().set(isComplete());
+				ServerWizardPage.this.setComplete(isComplete());
 			}
 		};
 		return serverPane;
