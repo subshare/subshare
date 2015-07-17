@@ -13,6 +13,12 @@ public class AcceptInvitationWizard extends Wizard {
 	}
 
 	@Override
+	public void init() {
+		super.init();
+		setPrefSize(500, 500);
+	}
+
+	@Override
 	protected void finish(ProgressMonitor monitor) throws Exception {
 		new AcceptInvitationManager().acceptInvitation(acceptInvitationData);
 	}

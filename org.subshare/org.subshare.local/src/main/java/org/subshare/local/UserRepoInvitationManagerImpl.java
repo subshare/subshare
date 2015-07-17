@@ -389,10 +389,6 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 			final String serverPath = cryptree.getServerPath(localPath);
 			final URL completeUrl = appendNonEncodedPath(remoteRoot, serverPath);
 
-//			final UserRepoKeyPublicKeyDao userRepoKeyPublicKeyDao = transaction.getDao(UserRepoKeyPublicKeyDao.class);
-//			final UserRepoKeyPublicKey signingUserRepoKeyPublicKey = userRepoKeyPublicKeyDao.getUserRepoKeyPublicKeyOrFail(
-//					invitationUserRepoKey.getPublicKey().getSignature().getSigningUserRepoKeyId());
-
 			userRepoInvitation = new UserRepoInvitation(completeUrl, invitationUserRepoKey); // signingUserRepoKeyPublicKey.getPublicKey());
 			logger.info("createUserRepoInvitation: grantingUser={} grantingUserRepoKeyIds={} invitedUser={} invitationUserRepoKey={}",
 					grantingUser, grantingUser.getUserRepoKeyRing().getUserRepoKeys(), user, invitationUserRepoKey);
@@ -443,13 +439,6 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 		final User user = findUserWithPgpKeyOrFail(decryptPgpKey);
 
 		final ServerRepo serverRepo = registerInServerRepoRegistry(userRepoInvitation, user);
-
-//		final UUID localRepositoryId = cryptree.getTransaction().getLocalRepoManager().getRepositoryId();
-//		final URL serverUrl = userRepoInvitation.getServerUrl();
-//		try (final RepoTransport repoTransport = RepoTransportFactoryRegistry.getInstance().getRepoTransportFactory(serverUrl).createRepoTransport(serverUrl, localRepositoryId);)
-//		{
-//			CryptreeRep
-//		}
 
 		// We throw the temporary key away *LATER*. We keep it in our local key ring for a while to be able to decrypt
 		// CryptoLinks that were encrypted with it, after the initial invitation. This allows the granting user to grant

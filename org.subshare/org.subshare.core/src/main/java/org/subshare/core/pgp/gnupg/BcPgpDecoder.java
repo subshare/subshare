@@ -1,8 +1,6 @@
 package org.subshare.core.pgp.gnupg;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
-import static co.codewizards.cloudstore.core.util.HashUtil.*;
-import static co.codewizards.cloudstore.core.util.IOUtil.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -10,8 +8,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.bouncycastle.bcpg.SymmetricKeyAlgorithmTags;
 import org.bouncycastle.openpgp.PGPCompressedData;
@@ -53,6 +53,7 @@ public class BcPgpDecoder extends AbstractPgpDecoder {
 		setDecryptPgpKey(null);
 		setSignPgpKey(null);
 		setPgpSignature(null);
+		setSignPgpKeyIds(null);
 
 		InputStream in = getInputStreamOrFail();
 		InputStream signIn = getSignInputStream();
@@ -186,10 +187,13 @@ public class BcPgpDecoder extends AbstractPgpDecoder {
 			PGPPrivateKey sKey = null;
 			PGPPublicKeyEncryptedData pbe = null;
 
+			final List<PgpKeyId> encryptPgpKeyIds = new ArrayList<PgpKeyId>();
 			char[] passphrase;
 			while (sKey == null && it.hasNext()) {
 				pbe = (PGPPublicKeyEncryptedData) it.next();
-				final BcPgpKey bcPgpKey = pgp.getBcPgpKey(new PgpKeyId(pbe.getKeyID()));
+				final PgpKeyId pgpKeyId = new PgpKeyId(pbe.getKeyID());
+				encryptPgpKeyIds.add(pgpKeyId);
+				final BcPgpKey bcPgpKey = pgp.getBcPgpKey(pgpKeyId);
 				if (bcPgpKey != null) {
 					PGPSecretKey secretKey = bcPgpKey.getSecretKey();
 					if (secretKey != null && ! secretKey.isPrivateKeyEmpty()) {
@@ -211,8 +215,12 @@ public class BcPgpDecoder extends AbstractPgpDecoder {
 				}
 			}
 
-			if (sKey == null)
-				throw new IllegalArgumentException("secret key for message not found.");
+			if (sKey == null) {
+				if (! encryptPgpKeyIds.isEmpty())
+					throw new IllegalArgumentException(String.format("Data is encrypted for the PGP keys %s, which we do not have a private key for!", encryptPgpKeyIds));
+
+				throw new IllegalArgumentException("message not found.");
+			}
 
 			setDecryptPgpKey(decryptPgpKey);
 
@@ -256,7 +264,8 @@ public class BcPgpDecoder extends AbstractPgpDecoder {
 
 			if (onePassSignatureList != null && signatureList != null) // It might be encrypted, but not signed!
 				verifySignature(onePassSignatureList, signatureList, new ByteArrayInputStream(output), getOutputStreamOrFail());
-			else
+
+			if (getPgpSignature() == null) // either it had no signature, or we don't have the signing key (and failOnMissingSignPgpKey is false).
 				getOutputStreamOrFail().write(output);
 
 			if (pbe.isIntegrityProtected() && !pbe.verify())
@@ -273,16 +282,19 @@ public class BcPgpDecoder extends AbstractPgpDecoder {
 
 		setSignPgpKey(null);
 		setPgpSignature(null);
+		setSignPgpKeyIds(null);
 
 		if (onePassSignatureList.size() == 0)
 			return; // there is no signature
 
-		final List<String> pgpKeyIds = new ArrayList<>();
+		final Set<PgpKeyId> pgpKeyIds = new HashSet<>();
 		try {
 			PGPPublicKey publicKey = null;
 			for (int i = 0; i < onePassSignatureList.size(); i++) {
 				final PGPOnePassSignature ops = onePassSignatureList.get(i);
-				pgpKeyIds.add(encodeHexStr(longToBytes(ops.getKeyID())));
+				pgpKeyIds.add(new PgpKeyId(ops.getKeyID()));
+				if (getPgpSignature() != null)
+					continue;
 
 				final BcPgpKey bcPgpKey = pgp.getBcPgpKey(new PgpKeyId(ops.getKeyID()));
 				if (bcPgpKey != null) {
@@ -301,7 +313,6 @@ public class BcPgpDecoder extends AbstractPgpDecoder {
 					if (ops.verify(signature)) {
 						setSignPgpKey(bcPgpKey.getPgpKey());
 						setPgpSignature(pgp.createPgpSignature(signature));
-						return;
 					} else
 						throw new SignatureException("Signature verification failed!");
 				}
@@ -311,17 +322,9 @@ public class BcPgpDecoder extends AbstractPgpDecoder {
 		} catch (final PGPException x) {
 			throw new IOException(x);
 		}
-		throw new SignatureException("The data was signed using the following PGP-keys, of which none could be found in the local key-ring: " + pgpKeyIds);
-	}
+		setSignPgpKeyIds(pgpKeyIds);
 
-	private void rethrow(final Exception x) throws SignatureException, IOException {
-		if (x instanceof RuntimeException)
-			throw (SignatureException)x;
-		else if (x instanceof SignatureException)
-			throw (IOException)x;
-		else if (x instanceof IOException)
-			throw (IOException)x;
-		else
-			throw new RuntimeException(x);
+		if (getPgpSignature() == null && isFailOnMissingSignPgpKey())
+			throw new SignatureException("The data was signed using the following PGP-keys, of which none could be found in the local key-ring: " + pgpKeyIds);
 	}
 }

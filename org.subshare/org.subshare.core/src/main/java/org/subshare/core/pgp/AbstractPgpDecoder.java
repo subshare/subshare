@@ -2,6 +2,8 @@ package org.subshare.core.pgp;
 
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Collections;
+import java.util.Set;
 
 public abstract class AbstractPgpDecoder implements PgpDecoder {
 
@@ -10,7 +12,9 @@ public abstract class AbstractPgpDecoder implements PgpDecoder {
 	private InputStream signInputStream;
 	private PgpKey decryptPgpKey;
 	private PgpKey signPgpKey;
+	private Set<PgpKeyId> signPgpKeyIds = Collections.emptySet();
 	private PgpSignature pgpSignature;
+	private boolean failOnMissingSignPgpKey = true;
 
 	@Override
 	public InputStream getInputStream() {
@@ -74,11 +78,28 @@ public abstract class AbstractPgpDecoder implements PgpDecoder {
 		this.decryptPgpKey = decryptPgpKey;
 	}
 
+	@Override
+	public Set<PgpKeyId> getSignPgpKeyIds() {
+		return signPgpKeyIds;
+	}
+	protected void setSignPgpKeyIds(final Set<PgpKeyId> signPgpKeyIds) {
+		this.signPgpKeyIds = signPgpKeyIds == null ? Collections.<PgpKeyId>emptySet() : Collections.unmodifiableSet(signPgpKeyIds);
+	}
+
 	public PgpKey getSignPgpKey() {
 		return signPgpKey;
 	}
 	protected void setSignPgpKey(final PgpKey signPgpKey) {
 		this.signPgpKey = signPgpKey;
+	}
+
+	@Override
+	public boolean isFailOnMissingSignPgpKey() {
+		return failOnMissingSignPgpKey;
+	}
+	@Override
+	public void setFailOnMissingSignPgpKey(boolean failOnMissingSignPgpKey) {
+		this.failOnMissingSignPgpKey = failOnMissingSignPgpKey;
 	}
 
 	@Override

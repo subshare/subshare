@@ -4,6 +4,10 @@ import javafx.scene.layout.GridPane
 import org.subshare.gui.filetree.FileTreePane
 import javafx.scene.text.Text
 import javafx.geometry.Insets
+import javafx.scene.layout.HBox
+import javafx.scene.image.ImageView
+import javafx.scene.image.Image
+import javafx.scene.control.Label
 
 dynamic component AcceptInvitationSourcePane resourcefile 'messages.properties' {
 	GridPane {
@@ -13,17 +17,26 @@ dynamic component AcceptInvitationSourcePane resourcefile 'messages.properties' 
 				wrappingWidth : 500,
 				static columnIndex : 0,
 				static rowIndex : 0,
-				static columnSpan : 3,
 				static hgrow : "ALWAYS",
 				static margin : Insets { bottom : 16 }
 			},
+
+			HBox id errorMessageBox {
+				children : [
+					ImageView id errorMessageImageView { image : Image { url : "@../../../severity/ERROR-24x24.png" } },
+					Label id errorMessageLabel { text : "ERROR" }
+				],
+				static columnIndex : 0,
+				static rowIndex : 1,
+				static margin : Insets { bottom : 16 }
+			},		
 
 			FileTreePane id fileTreePane {
 				useCase : "invitation.in",
 				selectionMode: "SINGLE",
 
 				static columnIndex : 0,
-				static rowIndex : 1,
+				static rowIndex : 2,
 				static hgrow : "ALWAYS",
 				static vgrow : "ALWAYS"
 			}	
