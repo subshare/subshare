@@ -19,7 +19,7 @@ import org.subshare.core.user.User;
 
 public class SelectUserDialog extends Stage {
 
-	private final SelectUserPane selectUserPane;
+	private final SelectUserPaneWithButtonBar selectUserPane;
 
 	private List<User> selectedUsers;
 
@@ -34,7 +34,7 @@ public class SelectUserDialog extends Stage {
         initOwner(owner);
         setIconified(false);
 
-        selectUserPane = new SelectUserPane(users, selectedUsers, selectionMode, headerText) {
+        selectUserPane = new SelectUserPaneWithButtonBar(users, selectedUsers, selectionMode, headerText) {
 			@Override
 			protected void okButtonClicked(ActionEvent event) {
 				SelectUserDialog.this.okButtonClicked();

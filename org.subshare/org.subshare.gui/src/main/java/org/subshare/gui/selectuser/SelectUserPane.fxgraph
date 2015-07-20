@@ -18,11 +18,12 @@ import javafx.geometry.Insets
 
 dynamic component SelectUserPane resourcefile 'messages.properties' {
 	GridPane {
-		prefWidth : 400,
-		prefHeight : 300,
-		
+//		prefWidth : 400,
+//		prefHeight : 300,
+
 		children : [
 			Text id headerText {
+				wrappingWidth : 500,
 				static columnIndex : 0,
 				static rowIndex : 0
 			},
@@ -77,26 +78,6 @@ dynamic component SelectUserPane resourcefile 'messages.properties' {
 				static hgrow : "ALWAYS",
 				static columnIndex : 0,
 				static rowIndex : 2
-			},
-			ButtonBar {
-				buttons : [
-					Button id okButton {
-						graphic : ImageView { image : Image { url : "@ok-24x24.png" } },
-						text : "OK",
-						defaultButton : true,
-						onAction : controllermethod okButtonClicked
-					},
-					Button id cancelButton {
-						graphic : ImageView { image : Image { url : "@cancel-24x24.png" } },
-						text : "Cancel",
-						cancelButton : true,
-						onAction : controllermethod cancelButtonClicked
-					}
-				],
-				static vgrow : "NEVER",
-				static columnIndex : 0,
-				static rowIndex : 3,
-				static columnSpan : 1
 			}
 		]
 	}

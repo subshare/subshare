@@ -21,9 +21,7 @@ import javafx.beans.InvalidationListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableSet;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
@@ -33,9 +31,7 @@ import javafx.scene.text.Text;
 import org.subshare.core.user.User;
 import org.subshare.gui.userlist.UserListItem;
 
-public abstract class SelectUserPane extends GridPane {
-
-	private final List<User> users;
+public class SelectUserPane extends GridPane {
 
 	private final ObservableSet<User> selectedUsers;
 
@@ -53,11 +49,9 @@ public abstract class SelectUserPane extends GridPane {
 	@FXML
 	private TableView<UserListItem> tableView;
 
-	@FXML
-	private Button okButton;
-
-	@FXML
-	private Button cancelButton;
+	public SelectUserPane() {
+		this(Collections.emptyList(), Collections.emptyList(), SelectionMode.SINGLE, "Bla bla header");
+	}
 
 	public SelectUserPane(final List<User> users, final Collection<User> selectedUsers, final SelectionMode selectionMode, final String headerText) {
 		assertNotNull("users", users);
@@ -67,7 +61,6 @@ public abstract class SelectUserPane extends GridPane {
 
 		this.headerText.setText(headerText);
 
-		this.users = users;
 		userListItems = new ArrayList<>(users.size());
 
 		final Map<User, UserListItem> user2UserListItem = new IdentityHashMap<>();
@@ -81,7 +74,10 @@ public abstract class SelectUserPane extends GridPane {
 		}
 		tableView.getItems().addAll(userListItems);
 
-		this.selectedUsers = FXCollections.observableSet(new HashSet<>(selectedUsers != null ? selectedUsers : Collections.<User>emptyList()));
+		if (selectedUsers instanceof ObservableSet<?>)
+			this.selectedUsers = (ObservableSet<User>) selectedUsers;
+		else
+			this.selectedUsers = FXCollections.observableSet(new HashSet<>(selectedUsers != null ? selectedUsers : Collections.<User>emptyList()));
 
 		for (final User user : this.selectedUsers) {
 			final UserListItem userListItem = user2UserListItem.get(user);
@@ -189,16 +185,9 @@ public abstract class SelectUserPane extends GridPane {
 	};
 
 	protected void updateDisable() {
-		okButton.setDisable(selectedUsers.isEmpty());
 	}
 
 	public ObservableSet<User> getSelectedUsers() {
 		return selectedUsers;
 	}
-
-	@FXML
-	protected abstract void okButtonClicked(final ActionEvent event);
-
-	@FXML
-	protected abstract void cancelButtonClicked(final ActionEvent event);
 }
