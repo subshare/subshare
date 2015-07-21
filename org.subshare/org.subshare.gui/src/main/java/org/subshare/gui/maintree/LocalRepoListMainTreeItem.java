@@ -18,6 +18,8 @@ import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.scene.Parent;
 import javafx.scene.control.TreeItem;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 
 import org.subshare.core.repo.LocalRepo;
 import org.subshare.core.repo.LocalRepoRegistry;
@@ -27,6 +29,7 @@ import org.subshare.gui.ls.LocalRepoRegistryLs;
 
 public class LocalRepoListMainTreeItem extends MainTreeItem<String> {
 
+	private static final Image icon = new Image(ServerListMainTreeItem.class.getResource("local-repo-list-16x16.png").toExternalForm());
 	private LocalRepoRegistry localRepoRegistry;
 
 	private PropertyChangeListener localReposPropertyChangeListener = new PropertyChangeListener() {
@@ -45,6 +48,7 @@ public class LocalRepoListMainTreeItem extends MainTreeItem<String> {
 
 	public LocalRepoListMainTreeItem() {
 		super("Local repositories");
+		setGraphic(new ImageView(icon));
 
 		new Service<List<LocalRepo>>() {
 			@Override

@@ -3,6 +3,8 @@ package org.subshare.gui.maintree;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
 import javafx.scene.Parent;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 
 import org.subshare.core.user.User;
 import org.subshare.gui.user.EditUserManager;
@@ -10,10 +12,12 @@ import org.subshare.gui.user.UserPane;
 
 public class UserMainTreeItem extends MainTreeItem<User> {
 
+	private static final Image icon = new Image(UserMainTreeItem.class.getResource("user-16x16.png").toExternalForm());
 	private final EditUserManager editUserManager;
 
 	public UserMainTreeItem(final EditUserManager editUserManager, final User user) {
 		super(user);
+		setGraphic(new ImageView(icon));
 		this.editUserManager = assertNotNull("editUserManager", editUserManager);
 		assertNotNull("user", user);
 	}

@@ -13,6 +13,8 @@ import java.util.Set;
 import javafx.collections.SetChangeListener;
 import javafx.scene.Parent;
 import javafx.scene.control.TreeItem;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 
 import org.subshare.core.user.User;
 import org.subshare.gui.user.EditUserManager;
@@ -20,6 +22,7 @@ import org.subshare.gui.userlist.UserListPane;
 
 public class UserListMainTreeItem extends MainTreeItem<String> {
 
+	private static final Image icon = new Image(UserListMainTreeItem.class.getResource("user-list-16x16.png").toExternalForm());
 	private final EditUserManager editUserManager = new EditUserManager();
 
 	private final SetChangeListener<User> editedUsersListener = new SetChangeListener<User>() {
@@ -39,6 +42,7 @@ public class UserListMainTreeItem extends MainTreeItem<String> {
 
 	public UserListMainTreeItem() {
 		super("Users");
+		setGraphic(new ImageView(icon));
 
 		editUserManager.getEditedUsers().addListener(editedUsersListener);
 		editUserManager.addEditUserListener(event -> {

@@ -10,23 +10,25 @@ import java.util.List;
 import javafx.collections.ObservableList;
 import javafx.scene.Parent;
 import javafx.scene.control.TreeItem;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
 import org.subshare.core.repo.ServerRepo;
 import org.subshare.core.repo.metaonly.ServerRepoFile;
 import org.subshare.core.repo.metaonly.ServerRepoFileType;
 import org.subshare.core.server.Server;
-import org.subshare.gui.IconSize;
-import org.subshare.gui.filetree.FileIconRegistry;
 import org.subshare.gui.serverrepo.directory.ServerRepoDirectoryPane;
 
 public class ServerRepoDirectoryMainTreeItem extends MainTreeItem<ServerRepoFile> {
+
+	private static final Image icon = new Image(ServerRepoDirectoryMainTreeItem.class.getResource("server-repo-directory-16x16.png").toExternalForm());
 
 	private boolean childrenLoaded;
 
 	public ServerRepoDirectoryMainTreeItem(final ServerRepoFile serverRepoFile) {
 		super(assertNotNull("serverRepoFile", serverRepoFile));
-		setGraphic(new ImageView(FileIconRegistry.getInstance().getIcon(FileIconRegistry.ICON_ID_DIRECTORY, IconSize._16x16)));
+		setGraphic(new ImageView(icon));
+//		setGraphic(new ImageView(FileIconRegistry.getInstance().getIcon(FileIconRegistry.ICON_ID_DIRECTORY, IconSize._16x16)));
 	}
 
 	public Server getServer() {

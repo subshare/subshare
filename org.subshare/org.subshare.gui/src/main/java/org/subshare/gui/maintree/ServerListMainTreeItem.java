@@ -18,6 +18,8 @@ import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.scene.Parent;
 import javafx.scene.control.TreeItem;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 
 import org.subshare.core.server.Server;
 import org.subshare.core.server.ServerRegistry;
@@ -27,6 +29,7 @@ import org.subshare.gui.serverlist.ServerListPane;
 
 public class ServerListMainTreeItem extends MainTreeItem<String> {
 
+	private static final Image icon = new Image(ServerListMainTreeItem.class.getResource("server-list-16x16.png").toExternalForm());
 	private ServerRegistry serverRegistry;
 
 	private PropertyChangeListener serversPropertyChangeListener = new PropertyChangeListener() {
@@ -45,6 +48,7 @@ public class ServerListMainTreeItem extends MainTreeItem<String> {
 
 	public ServerListMainTreeItem() {
 		super("Servers");
+		setGraphic(new ImageView(icon));
 
 		new Service<List<Server>>() {
 			@Override

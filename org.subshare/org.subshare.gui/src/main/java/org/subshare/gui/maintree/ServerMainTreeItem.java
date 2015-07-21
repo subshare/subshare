@@ -16,6 +16,8 @@ import java.util.Set;
 import javafx.collections.ObservableList;
 import javafx.scene.Parent;
 import javafx.scene.control.TreeItem;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 
 import org.subshare.core.repo.ServerRepo;
 import org.subshare.core.repo.ServerRepoRegistry;
@@ -25,12 +27,13 @@ import org.subshare.gui.server.ServerPane;
 
 public class ServerMainTreeItem extends MainTreeItem<Server> {
 
+	private static final Image icon = new Image(ServerListMainTreeItem.class.getResource("server-16x16.png").toExternalForm());
 	private ServerRepoRegistry serverRepoRegistry;
 	private boolean childrenLoaded;
 
 	public ServerMainTreeItem(final Server server) {
-		super(server);
-		assertNotNull("server", server);
+		super(assertNotNull("server", server));
+		setGraphic(new ImageView(icon));
 	}
 
 	private PropertyChangeListener serverReposPropertyChangeListener = new PropertyChangeListener() {

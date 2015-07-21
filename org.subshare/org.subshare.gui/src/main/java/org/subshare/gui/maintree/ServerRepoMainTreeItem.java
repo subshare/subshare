@@ -5,6 +5,8 @@ import static co.codewizards.cloudstore.core.util.StringUtil.*;
 import javafx.collections.ObservableList;
 import javafx.scene.Parent;
 import javafx.scene.control.TreeItem;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 
 import org.subshare.core.repo.ServerRepo;
 import org.subshare.core.repo.metaonly.ServerRepoFile;
@@ -14,10 +16,12 @@ import org.subshare.gui.serverrepo.ServerRepoPane;
 
 public class ServerRepoMainTreeItem extends MainTreeItem<ServerRepo> {
 
+	private static final Image icon = new Image(UserListMainTreeItem.class.getResource("server-repo-16x16.png").toExternalForm());
 	private boolean childrenLoaded;
 
 	public ServerRepoMainTreeItem(final ServerRepo serverRepo) {
 		super(assertNotNull("serverRepo", serverRepo));
+		setGraphic(new ImageView(icon));
 	}
 
 	public Server getServer() {
