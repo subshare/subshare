@@ -34,7 +34,7 @@ public interface ServerRepoManager {
 	 * @param serverRepo the remote repository on the server to be checked-out. Must not be <code>null</code>.
 	 * @param localDirectory the local directory into which the server-repository will be checked out.
 	 */
-	void checkOutRepository(Server server, ServerRepo serverRepo, File localDirectory);
+	void checkOutRepository(Server server, ServerRepo serverRepo, String serverPath, File localDirectory);
 
 	ServerRepo checkOutRepository(File localDirectory, UserRepoInvitationToken userRepoInvitationToken);
 }

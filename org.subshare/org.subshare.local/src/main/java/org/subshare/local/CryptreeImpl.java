@@ -50,6 +50,7 @@ import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKeyPublicKeyDtoWithSignatureConverter;
 import org.subshare.core.user.UserRepoKeyPublicKeyLookup;
 import org.subshare.core.user.UserRepoKeyRing;
+import org.subshare.local.dto.CryptoRepoFileDtoConverter;
 import org.subshare.local.dto.UserIdentityDtoConverter;
 import org.subshare.local.dto.UserIdentityLinkDtoConverter;
 import org.subshare.local.dto.UserRepoKeyPublicKeyDtoConverter;
@@ -1251,7 +1252,7 @@ public class CryptreeImpl extends AbstractCryptree {
 		lastCryptoKeySyncToRemoteRepo.setLocalRepositoryRevisionInProgress(localRepository.getRevision());
 
 		final CryptoChangeSetDto cryptoChangeSetDto = new CryptoChangeSetDto();
-		cryptoChangeSetDto.getCryptoRepoFileDtos().add(toCryptoRepoFileDto(cryptoRepoFile));
+		cryptoChangeSetDto.getCryptoRepoFileDtos().add(CryptoRepoFileDtoConverter.create().toCryptoRepoFileDto(cryptoRepoFile));
 		populateChangedUserRepoKeyPublicKeyDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 		populateChangedCryptoLinkDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 		populateChangedCryptoKeyDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
@@ -1288,8 +1289,9 @@ public class CryptreeImpl extends AbstractCryptree {
 		final Collection<CryptoRepoFile> cryptoRepoFiles = cryptoRepoFileDao.getCryptoRepoFilesChangedAfterExclLastSyncFromRepositoryId(
 				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced(), getRemoteRepositoryIdOrFail());
 
+		final CryptoRepoFileDtoConverter cryptoRepoFileDtoConverter = CryptoRepoFileDtoConverter.create();
 		for (final CryptoRepoFile cryptoRepoFile : cryptoRepoFiles)
-			cryptoChangeSetDto.getCryptoRepoFileDtos().add(toCryptoRepoFileDto(cryptoRepoFile));
+			cryptoChangeSetDto.getCryptoRepoFileDtos().add(cryptoRepoFileDtoConverter.toCryptoRepoFileDto(cryptoRepoFile));
 	}
 
 	private void populateChangedCryptoLinkDtos(final CryptoChangeSetDto cryptoChangeSetDto, final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {
@@ -1455,28 +1457,6 @@ public class CryptreeImpl extends AbstractCryptree {
 
 		for (UserIdentityLink userIdentityLink : userIdentityLinks)
 			cryptoChangeSetDto.getUserIdentityLinkDtos().add(converter.toUserIdentityLinkDto(userIdentityLink));
-	}
-
-	private CryptoRepoFileDto toCryptoRepoFileDto(final CryptoRepoFile cryptoRepoFile) {
-		assertNotNull("cryptoRepoFile", cryptoRepoFile);
-		final CryptoRepoFileDto cryptoRepoFileDto = new CryptoRepoFileDto();
-
-		cryptoRepoFileDto.setCryptoRepoFileId(cryptoRepoFile.getCryptoRepoFileId());
-
-		final CryptoRepoFile parent = cryptoRepoFile.getParent();
-		cryptoRepoFileDto.setParentCryptoRepoFileId(parent == null ? null : parent.getCryptoRepoFileId());
-
-		final CryptoKey cryptoKey = assertNotNull("cryptoRepoFile.cryptoKey", cryptoRepoFile.getCryptoKey());
-		cryptoRepoFileDto.setCryptoKeyId(cryptoKey.getCryptoKeyId());
-
-		cryptoRepoFileDto.setDirectory(cryptoRepoFile.isDirectory());
-
-		final byte[] repoFileDtoData = assertNotNull("cryptoRepoFile.repoFileDtoData", cryptoRepoFile.getRepoFileDtoData());
-		cryptoRepoFileDto.setRepoFileDtoData(repoFileDtoData);
-
-		cryptoRepoFileDto.setSignature(assertNotNull("cryptoRepoFile.signature", cryptoRepoFile.getSignature()));
-
-		return cryptoRepoFileDto;
 	}
 
 	private CryptoLinkDto toCryptoLinkDto(final CryptoLink cryptoLink) {

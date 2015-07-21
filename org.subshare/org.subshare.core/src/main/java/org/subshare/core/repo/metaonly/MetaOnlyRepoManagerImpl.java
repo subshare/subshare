@@ -19,6 +19,7 @@ import org.subshare.core.repo.ServerRepo;
 import org.subshare.core.repo.ServerRepoManagerImpl;
 import org.subshare.core.repo.ServerRepoRegistry;
 import org.subshare.core.repo.ServerRepoRegistryImpl;
+import org.subshare.core.repo.local.SsLocalRepoMetaData;
 import org.subshare.core.server.Server;
 import org.subshare.core.server.ServerRegistry;
 import org.subshare.core.server.ServerRegistryImpl;
@@ -30,7 +31,6 @@ import co.codewizards.cloudstore.core.Severity;
 import co.codewizards.cloudstore.core.config.ConfigDir;
 import co.codewizards.cloudstore.core.dto.Error;
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
-import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.progress.LoggerProgressMonitor;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoHelper;
@@ -45,6 +45,8 @@ public class MetaOnlyRepoManagerImpl implements MetaOnlyRepoManager {
 	private static final Logger logger = LoggerFactory.getLogger(MetaOnlyRepoManagerImpl.class);
 	private static final UUID NULL_UUID = new UUID(0, 0);
 	private final Map<File, UUID> localRoot2LocalRepositoryId = Collections.synchronizedMap(new HashMap<File, UUID>());
+
+	private final static int REPO_FILE_DTO_DEPTH = 0;
 
 	private MetaOnlyRepoManagerImpl() { }
 
@@ -175,36 +177,49 @@ public class MetaOnlyRepoManagerImpl implements MetaOnlyRepoManager {
 	@Override
 	public ServerRepoFile getRootServerRepoFile(final ServerRepo serverRepo) {
 		assertNotNull("serverRepo", serverRepo);
-		// TODO implement!
-		final CryptoRepoFileDto cryptoRepoFileDto;
-		final RepoFileDto repoFileDto;
+		final Server server = ServerRegistryImpl.getInstance().getServer(serverRepo.getServerId());
+		assertNotNull("serverRegistry.getServer(" + serverRepo.getServerId() + ")", server); // or should we better return null?!
+
 		try (final LocalRepoManager localRepoManager = createLocalRepoManager(serverRepo);) {
-//			repoFileDto = localRepoManager.getRepoFileDto("");
-//			cryptoRepoFileDto = localRepoManager.adapt(CcLocalRepoManager.class).getCryptoRepoFileDto("");
+			SsLocalRepoMetaData localRepoMetaData = (SsLocalRepoMetaData) localRepoManager.getLocalRepoMetaData();
+			final RepoFileDto repoFileDto = localRepoMetaData.getRepoFileDto("", REPO_FILE_DTO_DEPTH);
+			if (repoFileDto == null)
+				return null;
 
-			// I think the following is bullshit. We better introduce some new API like drafted above.
+			final CryptoRepoFileDto cryptoRepoFileDto = localRepoMetaData.getCryptoRepoFileDto(repoFileDto.getId());
+			if (cryptoRepoFileDto == null)
+				return null;
 
-//			try (final LocalRepoTransaction transaction = localRepoManager.beginReadTransaction();) {
-////				final UserRepoKeyRingLookup userRepoKeyRingLookup = assertNotNull("cryptreeRestRepoTransportFactoryImpl.userRepoKeyRingLookup", repoTransportFactory.getUserRepoKeyRingLookup());
-////				userRepoKeyRingLookup.getUserRepoKeyRing(new UserRepoKeyRingLookupContext(clientRepositoryId, serverRepositoryId));
-//				final Cryptree cryptree = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail()
-//						.getCryptreeOrCreate(transaction, serverRepo.getRepositoryId());
-//
-//
-//				// We must remove the Cryptree from the transaction, because this Cryptree thinks, it was on the server-side.
-//				// It does this, because we do not provide a UserRepoKeyRing (which usually never happens on the client-side).
-//				// This wrong assumption causes the VerifySignableAndWriteProtectedEntityListener to fail.
-//				transaction.removeContextObject(cryptree);
-//			}
+			return new ServerRepoFileImpl(server, serverRepo, cryptoRepoFileDto, repoFileDto);
 		}
-//		return new ServerRepoFileImpl(serverRepo, cryptoRepoFileDto, repoFileDto);
-		throw new UnsupportedOperationException("NYI");
 	}
 
-	public List<ServerRepoFile> getChildServerRepoFiles(final Uid cryptoRepoFileId) {
-		assertNotNull("cryptoRepoFileId", cryptoRepoFileId);
+	protected List<ServerRepoFile> getChildServerRepoFiles(final ServerRepoFileImpl serverRepoFile) {
+		assertNotNull("serverRepoFile", serverRepoFile);
 
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("NYI");
+		final ServerRepo serverRepo = serverRepoFile.getServerRepo();
+		final long repoFileId = serverRepoFile.getRepoFileId();
+
+		try (final LocalRepoManager localRepoManager = createLocalRepoManager(serverRepo);) {
+			SsLocalRepoMetaData localRepoMetaData = (SsLocalRepoMetaData) localRepoManager.getLocalRepoMetaData();
+
+			final List<RepoFileDto> childRepoFileDtos = localRepoMetaData.getChildRepoFileDtos(repoFileId, REPO_FILE_DTO_DEPTH);
+			if (childRepoFileDtos == null)
+				return null; // parent doesn't exist (anymore)
+
+			final List<Long> repoFileIds = new ArrayList<>(childRepoFileDtos.size());
+			for (final RepoFileDto repoFileDto : childRepoFileDtos)
+				repoFileIds.add(repoFileDto.getId());
+
+			final Map<Long, CryptoRepoFileDto> repoFileId2CryptoRepoFileDto = localRepoMetaData.getCryptoRepoFileDtos(repoFileIds);
+
+			final List<ServerRepoFile> result = new ArrayList<>(repoFileId2CryptoRepoFileDto.size());
+			for (final RepoFileDto repoFileDto : childRepoFileDtos) {
+				final CryptoRepoFileDto cryptoRepoFileDto = repoFileId2CryptoRepoFileDto.get(repoFileDto.getId());
+				if (cryptoRepoFileDto != null)
+					result.add(new ServerRepoFileImpl(serverRepoFile, cryptoRepoFileDto, repoFileDto));
+			}
+			return result;
+		}
 	}
 }

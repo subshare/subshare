@@ -4,14 +4,21 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import javafx.collections.ObservableList;
+import javafx.scene.Parent;
 import javafx.scene.control.TreeItem;
+import javafx.scene.image.ImageView;
 
 import org.subshare.core.repo.ServerRepo;
 import org.subshare.core.repo.metaonly.ServerRepoFile;
 import org.subshare.core.repo.metaonly.ServerRepoFileType;
+import org.subshare.core.server.Server;
+import org.subshare.gui.IconSize;
+import org.subshare.gui.filetree.FileIconRegistry;
+import org.subshare.gui.serverrepo.directory.ServerRepoDirectoryPane;
 
 public class ServerRepoDirectoryMainTreeItem extends MainTreeItem<ServerRepoFile> {
 
@@ -19,6 +26,11 @@ public class ServerRepoDirectoryMainTreeItem extends MainTreeItem<ServerRepoFile
 
 	public ServerRepoDirectoryMainTreeItem(final ServerRepoFile serverRepoFile) {
 		super(assertNotNull("serverRepoFile", serverRepoFile));
+		setGraphic(new ImageView(FileIconRegistry.getInstance().getIcon(FileIconRegistry.ICON_ID_DIRECTORY, IconSize._16x16)));
+	}
+
+	public Server getServer() {
+		return getServerRepoFile().getServer();
 	}
 
 	@Override
@@ -45,22 +57,6 @@ public class ServerRepoDirectoryMainTreeItem extends MainTreeItem<ServerRepoFile
 		throw new IllegalStateException("parent is an instance of an unexpected type: " + parent.getClass().getName());
 	}
 
-//	/**
-//	 * Gets the local clear-text name (decrypted from encrypted meta-data).
-//	 * @return the local clear-text name. Never <code>null</code>.
-//	 */
-//	public String getLocalName() {
-//		return localName;
-//	}
-//
-//	/**
-//	 * Gets the random name used on the server.
-//	 * @return the random name used on the server. Never <code>null</code>.
-//	 */
-//	public String getServerName() {
-//		return serverName;
-//	}
-
 	@Override
 	public ObservableList<TreeItem<String>> getChildren() {
 		final ObservableList<TreeItem<String>> children = super.getChildren();
@@ -73,16 +69,33 @@ public class ServerRepoDirectoryMainTreeItem extends MainTreeItem<ServerRepoFile
 		return children;
 	}
 
+	@Override
+	public boolean isLeaf() {
+		return false;
+	}
+
 	private List<MainTreeItem<?>> loadChildren() {
 		final List<ServerRepoFile> childServerRepoFiles = getServerRepoFile().getChildren();
 		if (childServerRepoFiles == null)
 			return null;
 
-		final ArrayList<MainTreeItem<?>> result = new ArrayList<>(childServerRepoFiles.size());
-		for (final ServerRepoFile childServerRepoFile : childServerRepoFiles) {
+		final List<ServerRepoFile> filtered = new ArrayList<ServerRepoFile>(childServerRepoFiles.size());
+		for (ServerRepoFile childServerRepoFile : childServerRepoFiles) {
 			if (childServerRepoFile.getType() == ServerRepoFileType.DIRECTORY)
-				result.add(new ServerRepoDirectoryMainTreeItem(childServerRepoFile));
+				filtered.add(childServerRepoFile);
 		}
+
+		Collections.sort(filtered, (o1, o2) -> o1.getLocalName().compareTo(o2.getLocalName()));
+
+		final ArrayList<MainTreeItem<?>> result = new ArrayList<>(filtered.size());
+		for (final ServerRepoFile childServerRepoFile : filtered)
+				result.add(new ServerRepoDirectoryMainTreeItem(childServerRepoFile));
+
 		return result;
+	}
+
+	@Override
+	protected Parent createMainDetailContent() {
+		return new ServerRepoDirectoryPane(getServerRepoFile());
 	}
 }

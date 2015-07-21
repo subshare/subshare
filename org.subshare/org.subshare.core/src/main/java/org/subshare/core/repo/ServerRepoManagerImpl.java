@@ -1,6 +1,7 @@
 package org.subshare.core.repo;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static co.codewizards.cloudstore.core.util.StringUtil.*;
 
 import java.net.URL;
 import java.util.Map;
@@ -59,13 +60,13 @@ public class ServerRepoManagerImpl implements ServerRepoManager {
 		owner.createUserRepoKey(serverRepositoryId);
 		UserRegistryImpl.getInstance().writeIfNeeded(); // it's definitely needed because we just created a userRepoKey ;-)
 
-		connectLocalRepositoryWithServerRepository(localRoot, server, serverRepositoryId);
+		connectLocalRepositoryWithServerRepository(localRoot, server, serverRepositoryId, "");
 
 		return serverRepo;
 	}
 
 	@Override
-	public void checkOutRepository(final Server server, final ServerRepo serverRepo, final File localDirectory) {
+	public void checkOutRepository(final Server server, final ServerRepo serverRepo, String serverPath, final File localDirectory) {
 		assertNotNull("server", server);
 		assertNotNull("serverRepo", serverRepo);
 		assertNotNull("localDirectory", localDirectory);
@@ -77,7 +78,7 @@ public class ServerRepoManagerImpl implements ServerRepoManager {
 		final Pair<File, UUID> localRootAndRepositoryId = createLocalRepository(localDirectory);
 		final File localRoot = localRootAndRepositoryId.getKey();
 
-		connectLocalRepositoryWithServerRepository(localRoot, server, serverRepo.getRepositoryId());
+		connectLocalRepositoryWithServerRepository(localRoot, server, serverRepo.getRepositoryId(), serverPath);
 	}
 
 	@Override
@@ -178,12 +179,16 @@ public class ServerRepoManagerImpl implements ServerRepoManager {
 		return ServerRepoRegistryImpl.getInstance();
 	}
 
-	public static void connectLocalRepositoryWithServerRepository(final File localRoot, final Server server, final UUID serverRepositoryId) {
+	public static void connectLocalRepositoryWithServerRepository(final File localRoot, final Server server, final UUID serverRepositoryId, final String serverPath) {
 		assertNotNull("localRoot", localRoot);
 		assertNotNull("server", server);
 		assertNotNull("serverRepositoryId", serverRepositoryId);
 
-		final URL remoteRoot = UrlUtil.appendNonEncodedPath(server.getUrl(), serverRepositoryId.toString());
+		URL remoteRoot = UrlUtil.appendNonEncodedPath(server.getUrl(), serverRepositoryId.toString());
+
+		if (! isEmpty(serverPath))
+			remoteRoot = UrlUtil.appendEncodedPath(remoteRoot, serverPath);
+
 		try (final LocalRepoManager localRepoManager = LocalRepoManagerFactory.Helper.getInstance().createLocalRepoManagerForExistingRepository(localRoot);) {
 			connectLocalRepositoryWithServerRepository(localRepoManager, serverRepositoryId, remoteRoot);
 		}

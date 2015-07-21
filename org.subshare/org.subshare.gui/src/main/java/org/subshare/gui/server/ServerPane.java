@@ -37,6 +37,7 @@ import org.subshare.core.repo.ServerRepoRegistry;
 import org.subshare.core.server.Server;
 import org.subshare.core.user.User;
 import org.subshare.core.user.UserRegistry;
+import org.subshare.gui.checkout.CheckOutWizard;
 import org.subshare.gui.concurrent.SsTask;
 import org.subshare.gui.ls.PgpPrivateKeyPassphraseManagerLs;
 import org.subshare.gui.ls.RepoSyncDaemonLs;
@@ -247,17 +248,7 @@ public class ServerPane extends BorderPane /* GridPane */ {
 	private void checkOutButtonClicked(final ActionEvent event) {
 		final ServerRepoListItem serverRepoListItem = tableView.getSelectionModel().getSelectedItems().get(0);
 		final ServerRepo serverRepo = serverRepoListItem.getServerRepo();
-
-		final File directory = selectLocalDirectory("Select local directory for check-out (download).");
-		if (directory == null)
-			return;
-
-		// TODO do this in the background!
-		ServerRepoManagerLs.getServerRepoManager().checkOutRepository(server, serverRepo, directory);
-
-		// ...immediately sync after check-out. This happens in the background (this method is non-blocking).
-		final RepoSyncDaemon repoSyncDaemon = RepoSyncDaemonLs.getRepoSyncDaemon();
-		repoSyncDaemon.startSync(directory);
+		new CheckOutWizard(server, serverRepo).checkOut(getScene().getWindow());
 	}
 
 	@FXML
