@@ -16,6 +16,7 @@ import org.subshare.core.dto.DeletedUUID;
 import org.subshare.core.dto.DeletedUid;
 import org.subshare.core.dto.InvitationUserRepoKeyPublicKeyDto;
 import org.subshare.core.dto.LongDto;
+import org.subshare.core.dto.RepoFileDtoWithCryptoRepoFileOnServerDto;
 import org.subshare.core.dto.ServerRegistryDto;
 import org.subshare.core.dto.ServerRepoDto;
 import org.subshare.core.dto.ServerRepoRegistryDto;
@@ -53,6 +54,7 @@ public class CloudStoreJaxbContextProviderImpl extends AbstractCloudStoreJaxbCon
 				DeletedUUID.class,
 				InvitationUserRepoKeyPublicKeyDto.class,
 				LongDto.class,
+				RepoFileDtoWithCryptoRepoFileOnServerDto.class,
 				ServerRegistryDto.class,
 				ServerRepoDto.class,
 				ServerRepoRegistryDto.class,

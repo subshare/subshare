@@ -31,6 +31,7 @@ import org.subshare.core.dto.CryptoKeyDeactivationDto;
 import org.subshare.core.dto.CryptoKeyDto;
 import org.subshare.core.dto.CryptoLinkDto;
 import org.subshare.core.dto.CryptoRepoFileDto;
+import org.subshare.core.dto.CryptoRepoFileOnServerDto;
 import org.subshare.core.dto.InvitationUserRepoKeyPublicKeyDto;
 import org.subshare.core.dto.PermissionDto;
 import org.subshare.core.dto.PermissionSetDto;
@@ -51,6 +52,7 @@ import org.subshare.core.user.UserRepoKeyPublicKeyDtoWithSignatureConverter;
 import org.subshare.core.user.UserRepoKeyPublicKeyLookup;
 import org.subshare.core.user.UserRepoKeyRing;
 import org.subshare.local.dto.CryptoRepoFileDtoConverter;
+import org.subshare.local.dto.CryptoRepoFileOnServerDtoConverter;
 import org.subshare.local.dto.UserIdentityDtoConverter;
 import org.subshare.local.dto.UserIdentityLinkDtoConverter;
 import org.subshare.local.dto.UserRepoKeyPublicKeyDtoConverter;
@@ -69,6 +71,8 @@ import org.subshare.local.persistence.CryptoLink;
 import org.subshare.local.persistence.CryptoLinkDao;
 import org.subshare.local.persistence.CryptoRepoFile;
 import org.subshare.local.persistence.CryptoRepoFileDao;
+import org.subshare.local.persistence.CryptoRepoFileOnServer;
+import org.subshare.local.persistence.CryptoRepoFileOnServerDao;
 import org.subshare.local.persistence.InvitationUserRepoKeyPublicKey;
 import org.subshare.local.persistence.LastCryptoKeySyncToRemoteRepo;
 import org.subshare.local.persistence.LastCryptoKeySyncToRemoteRepoDao;
@@ -140,6 +144,27 @@ public class CryptreeImpl extends AbstractCryptree {
 
 		final CryptoChangeSetDto cryptoChangeSetDto = getCryptoChangeSetDto(cryptoRepoFile);
 		return cryptoChangeSetDto;
+	}
+
+	@Override
+	public CryptoRepoFileOnServerDto getCryptoRepoFileOnServerDto(String localPath) {
+		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(localPath);
+		final CryptoRepoFileOnServer cryptoRepoFileOnServer = cryptreeNode.getCryptoRepoFileOnServer();
+		if (cryptoRepoFileOnServer == null)
+			return null;
+
+		final CryptoRepoFileOnServerDtoConverter converter = CryptoRepoFileOnServerDtoConverter.create(getTransactionOrFail());
+		final CryptoRepoFileOnServerDto result = converter.toCryptoRepoFileOnServerDto(cryptoRepoFileOnServer);
+		return result;
+	}
+
+	@Override
+	public CryptoRepoFileOnServerDto createOrUpdateCryptoRepoFileOnServerDto(String localPath) {
+		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(localPath);
+		final CryptoRepoFileOnServer cryptoRepoFileOnServer = cryptreeNode.createOrUpdateCryptoRepoFileOnServer();
+		final CryptoRepoFileOnServerDtoConverter converter = CryptoRepoFileOnServerDtoConverter.create(getTransactionOrFail());
+		final CryptoRepoFileOnServerDto result = converter.toCryptoRepoFileOnServerDto(cryptoRepoFileOnServer);
+		return result;
 	}
 
 	@Override
@@ -351,6 +376,10 @@ public class CryptreeImpl extends AbstractCryptree {
 			putPermissionSetInheritanceDto(permissionSetInheritanceDto);
 
 		transaction.flush();
+
+		final CryptoRepoFileOnServerDtoConverter cryptoRepoFileOnServerDtoConverter = CryptoRepoFileOnServerDtoConverter.create(getTransactionOrFail());
+		for (CryptoRepoFileOnServerDto cryptoRepoFileOnServerDto : cryptoChangeSetDto.getCryptoRepoFileOnServerDtos())
+			cryptoRepoFileOnServerDtoConverter.putCryptoRepoFileOnServer(cryptoRepoFileOnServerDto);
 
 		processUserRepoKeyPublicKeyReplacementRequests();
 
@@ -751,6 +780,22 @@ public class CryptreeImpl extends AbstractCryptree {
 		assertNotNull("localPath", localPath);
 		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(localPath);
 		return cryptreeNode.getRepoFileDto();
+	}
+
+	@Override
+	public RepoFileDto getDecryptedRepoFileOnServerDtoOrFail(Uid cryptoRepoFileId) throws AccessDeniedException {
+		assertNotNull("cryptoRepoFileId", cryptoRepoFileId);
+		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(cryptoRepoFileId);
+		final RepoFileDto repoFileDto = cryptreeNode.getRepoFileDtoOnServer();
+		assertNotNull("cryptreeNode.getRepoFileDtoOnServer()", repoFileDto); // The cryptoRepoFile is present, thus this should never be null!
+		return repoFileDto;
+	}
+
+	@Override
+	public RepoFileDto getDecryptedRepoFileOnServerDto(final String localPath) {
+		assertNotNull("localPath", localPath);
+		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(localPath);
+		return cryptreeNode.getRepoFileDtoOnServer();
 	}
 
 	@Override
@@ -1270,6 +1315,18 @@ public class CryptreeImpl extends AbstractCryptree {
 		populateChangedUserRepoKeyPublicKeyReplacementRequestDeletionDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 		populateChangedUserIdentityLinkDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 		populateChangedUserIdentityDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
+		populateChangedCryptoRepoFileOnServerDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
+	}
+
+	private void populateChangedCryptoRepoFileOnServerDtos(final CryptoChangeSetDto cryptoChangeSetDto, final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {
+		final CryptoRepoFileOnServerDtoConverter converter = CryptoRepoFileOnServerDtoConverter.create(getTransactionOrFail());
+		final CryptoRepoFileOnServerDao dao = getTransactionOrFail().getDao(CryptoRepoFileOnServerDao.class);
+
+		final Collection<CryptoRepoFileOnServer> entities = dao.getCryptoRepoFileOnServersChangedAfter(
+				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced()); // , getRemoteRepositoryIdOrFail());
+
+		for (final CryptoRepoFileOnServer entity : entities)
+			cryptoChangeSetDto.getCryptoRepoFileOnServerDtos().add(converter.toCryptoRepoFileOnServerDto(entity));
 	}
 
 	private void populateChangedUserRepoKeyPublicKeyDtos(final CryptoChangeSetDto cryptoChangeSetDto, final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {

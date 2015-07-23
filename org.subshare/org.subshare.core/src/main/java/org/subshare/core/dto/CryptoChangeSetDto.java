@@ -11,6 +11,8 @@ public class CryptoChangeSetDto {
 
 	private List<CryptoRepoFileDto> cryptoRepoFileDtos;
 
+	private List<CryptoRepoFileOnServerDto> cryptoRepoFileOnServerDtos; // should only be used for DOWN-syncs! ensure this?! how?!
+
 	private List<CryptoKeyDto> cryptoKeyDtos;
 
 	private List<CryptoLinkDto> cryptoLinkDtos;
@@ -41,6 +43,16 @@ public class CryptoChangeSetDto {
 	}
 	public void setCryptoRepoFileDtos(final List<CryptoRepoFileDto> cryptoRepoFileDtos) {
 		this.cryptoRepoFileDtos = cryptoRepoFileDtos;
+	}
+
+	public List<CryptoRepoFileOnServerDto> getCryptoRepoFileOnServerDtos() {
+		if (cryptoRepoFileOnServerDtos == null)
+			cryptoRepoFileOnServerDtos = new ArrayList<>();
+
+		return cryptoRepoFileOnServerDtos;
+	}
+	public void setCryptoRepoFileOnServerDtos(List<CryptoRepoFileOnServerDto> cryptoRepoFileOnServerDtos) {
+		this.cryptoRepoFileOnServerDtos = cryptoRepoFileOnServerDtos;
 	}
 
 	public List<CryptoKeyDto> getCryptoKeyDtos() {
@@ -154,6 +166,7 @@ public class CryptoChangeSetDto {
 	@Override
 	public String toString() {
 		return "CryptoChangeSetDto[cryptoRepoFileDtos=" + cryptoRepoFileDtos
+				+ ", cryptoRepoFileOnServerDtos=" + cryptoRepoFileOnServerDtos
 				+ ", cryptoKeyDtos=" + cryptoKeyDtos + ", cryptoLinkDtos=" + cryptoLinkDtos
 				+ ", userRepoKeyPublicKeyDtos=" + userRepoKeyPublicKeyDtos
 				+ ", userRepoKeyPublicKeyReplacementRequestDtos=" + userRepoKeyPublicKeyReplacementRequestDtos
@@ -164,6 +177,7 @@ public class CryptoChangeSetDto {
 
 	public boolean isEmpty() {
 		return isEmpty(cryptoRepoFileDtos)
+				&& isEmpty(cryptoRepoFileOnServerDtos)
 				&& isEmpty(cryptoKeyDtos)
 				&& isEmpty(cryptoLinkDtos)
 				&& isEmpty(userRepoKeyPublicKeyDtos)

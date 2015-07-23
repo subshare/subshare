@@ -11,7 +11,10 @@ import javax.ws.rs.core.MediaType;
 
 import org.subshare.core.context.RepoFileContext;
 import org.subshare.core.dto.SsDirectoryDto;
+import org.subshare.core.dto.CryptoRepoFileOnServerDto;
+import org.subshare.core.dto.RepoFileDtoWithCryptoRepoFileOnServerDto;
 
+import co.codewizards.cloudstore.core.dto.RepoFileDto;
 import co.codewizards.cloudstore.rest.server.service.MakeDirectoryService;
 
 @Path("_makeDirectory/{repositoryName}") // need to redeclare - seems not to be inherited
@@ -20,19 +23,28 @@ import co.codewizards.cloudstore.rest.server.service.MakeDirectoryService;
 public class SsMakeDirectoryService extends MakeDirectoryService {
 
 	@POST
-	public void makeDirectory(final SsDirectoryDto directoryDto)
+	public void makeDirectory(final RepoFileDtoWithCryptoRepoFileOnServerDto repoFileDtoWithCryptoRepoFileOnServerDto)
 	{
-		makeDirectory("", directoryDto);
+		makeDirectory("", repoFileDtoWithCryptoRepoFileOnServerDto);
 	}
 
 	@POST
 	@Path("{path:.*}")
-	public void makeDirectory(@PathParam("path") final String path, final SsDirectoryDto directoryDto)
+	public void makeDirectory(@PathParam("path") final String path, final RepoFileDtoWithCryptoRepoFileOnServerDto repoFileDtoWithCryptoRepoFileOnServerDto)
 	{
 		assertNotNull("path", path);
-		assertNotNull("directoryDto", directoryDto);
+		assertNotNull("repoFileDtoWithCryptoRepoFileOnServerDto", repoFileDtoWithCryptoRepoFileOnServerDto);
 
-		RepoFileContext.setContext(new RepoFileContext(path, directoryDto));
+		CryptoRepoFileOnServerDto cryptoRepoFileOnServerDto = assertNotNull("repoFileDtoWithCryptoRepoFileOnServerDto.cryptoRepoFileOnServerDto",
+				repoFileDtoWithCryptoRepoFileOnServerDto.getCryptoRepoFileOnServerDto());
+
+		RepoFileDto rfdto = assertNotNull("repoFileDtoWithCryptoRepoFileOnServerDto.repoFileDto",
+				repoFileDtoWithCryptoRepoFileOnServerDto.getRepoFileDto());
+
+		if (! (rfdto instanceof SsDirectoryDto))
+			throw new IllegalArgumentException("repoFileDtoWithCryptoRepoFileOnServerDto.repoFileDto is not an instance of SsDirectoryDto, but: " + rfdto.getClass().getName());
+
+		RepoFileContext.setContext(new RepoFileContext(path, rfdto, cryptoRepoFileOnServerDto));
 		try {
 			super.makeDirectory(path);
 		} finally {

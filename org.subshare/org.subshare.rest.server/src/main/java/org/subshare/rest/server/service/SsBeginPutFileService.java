@@ -26,7 +26,7 @@ public class SsBeginPutFileService extends BeginPutFileService {
 		assertNotNull("path", path);
 		assertNotNull("normalFileDto", normalFileDto);
 
-		RepoFileContext.setContext(new RepoFileContext(path, normalFileDto));
+		RepoFileContext.setContext(new RepoFileContext(path, normalFileDto, null));
 		try {
 			super.beginPutFile(path);
 		} finally {

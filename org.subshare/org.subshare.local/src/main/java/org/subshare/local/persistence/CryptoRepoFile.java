@@ -104,9 +104,12 @@ public class CryptoRepoFile extends Entity implements WriteProtected, AutoTrackL
 
 	private boolean directory;
 
-	@Persistent(nullValue=NullValue.EXCEPTION)
-	@Embedded(nullIndicatorColumn="signatureCreated")
+	@Persistent(nullValue = NullValue.EXCEPTION)
+	@Embedded(nullIndicatorColumn = "signatureCreated")
 	private SignatureImpl signature;
+
+	@Persistent(mappedBy = "cryptoRepoFile")
+	private CryptoRepoFileOnServer cryptoRepoFileOnServer;
 
 	public CryptoRepoFile() { }
 
@@ -120,10 +123,6 @@ public class CryptoRepoFile extends Entity implements WriteProtected, AutoTrackL
 
 		return new Uid(cryptoRepoFileId);
 	}
-
-//	public static Uid getCryptoRepoFileId(final CryptoRepoFile cryptoRepoFile) {
-//		return cryptoRepoFile == null ? null : cryptoRepoFile.getCryptoRepoFileId();
-//	}
 
 	public CryptoRepoFile getParent() {
 		return parent;
@@ -157,7 +156,7 @@ public class CryptoRepoFile extends Entity implements WriteProtected, AutoTrackL
 	 * <p>
 	 * If this is the server side, the file referenced here is encrypted and has no useful meta-data, anymore:
 	 * <ul>
-	 * <li>Its {@link RepoFile#getName() name} is a hash code (unique per server-repository and real name).
+	 * <li>Its {@link RepoFile#getName() name} is a random name.
 	 * <li>Its {@link RepoFile#getLastModified() lastModified} is always 0 (1970-01-01 00:00:00 UTC).
 	 * </ul>
 	 * <p>
@@ -327,6 +326,13 @@ public class CryptoRepoFile extends Entity implements WriteProtected, AutoTrackL
 	@Override
 	public int getSignedDataVersion() {
 		return 0;
+	}
+
+	public CryptoRepoFileOnServer getCryptoRepoFileOnServer() {
+		return cryptoRepoFileOnServer;
+	}
+	public void setCryptoRepoFileOnServer(final CryptoRepoFileOnServer cryptoRepoFileOnServer) {
+		this.cryptoRepoFileOnServer = cryptoRepoFileOnServer;
 	}
 
 	/**

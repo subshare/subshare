@@ -15,8 +15,11 @@ import javax.ws.rs.core.MediaType;
 
 import org.subshare.core.context.RepoFileContext;
 import org.subshare.core.dto.SsNormalFileDto;
+import org.subshare.core.dto.CryptoRepoFileOnServerDto;
+import org.subshare.core.dto.RepoFileDtoWithCryptoRepoFileOnServerDto;
 
 import co.codewizards.cloudstore.core.dto.DateTime;
+import co.codewizards.cloudstore.core.dto.RepoFileDto;
 import co.codewizards.cloudstore.rest.server.service.EndPutFileService;
 
 @Path("_endPutFile/{repositoryName}") // need to redeclare - seems not to be inherited
@@ -26,12 +29,24 @@ public class SsEndPutFileService extends EndPutFileService {
 
 	@PUT
 	@Path("{path:.*}")
-	public void endPutFile(@PathParam("path") final String path, final SsNormalFileDto normalFileDto)
+	public void endPutFile(@PathParam("path") final String path, final RepoFileDtoWithCryptoRepoFileOnServerDto repoFileDtoWithCryptoRepoFileOnServerDto)
 	{
 		assertNotNull("path", path);
-		assertNotNull("normalFileDto", normalFileDto);
+		assertNotNull("repoFileDtoWithCryptoRepoFileOnServerDto", repoFileDtoWithCryptoRepoFileOnServerDto);
 
-		RepoFileContext.setContext(new RepoFileContext(path, normalFileDto));
+		CryptoRepoFileOnServerDto cryptoRepoFileOnServerDto = assertNotNull("repoFileDtoWithCryptoRepoFileOnServerDto.cryptoRepoFileOnServerDto",
+				repoFileDtoWithCryptoRepoFileOnServerDto.getCryptoRepoFileOnServerDto());
+
+		RepoFileDto rfdto = assertNotNull("repoFileDtoWithCryptoRepoFileOnServerDto.repoFileDto",
+				repoFileDtoWithCryptoRepoFileOnServerDto.getRepoFileDto());
+
+		if (! (rfdto instanceof SsNormalFileDto))
+			throw new IllegalArgumentException("repoFileDtoWithCryptoRepoFileOnServerDto.repoFileDto is not an instance of SsNormalFileDto, but: " + rfdto.getClass().getName());
+
+		final SsNormalFileDto normalFileDto = (SsNormalFileDto) rfdto;
+
+		// TODO need to persist CryptoRepoFileOnServer instance, too!
+		RepoFileContext.setContext(new RepoFileContext(path, normalFileDto, cryptoRepoFileOnServerDto));
 		try {
 			final String sha1 = null; // no need
 			final Date lastModified = normalFileDto.getLastModified();

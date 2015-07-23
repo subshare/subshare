@@ -30,7 +30,9 @@ import org.subshare.core.dto.SsRepoFileDto;
 import org.subshare.core.dto.SsRequestRepoConnectionRepositoryDto;
 import org.subshare.core.dto.CreateRepositoryRequestDto;
 import org.subshare.core.dto.CryptoChangeSetDto;
+import org.subshare.core.dto.CryptoRepoFileOnServerDto;
 import org.subshare.core.dto.PermissionType;
+import org.subshare.core.dto.RepoFileDtoWithCryptoRepoFileOnServerDto;
 import org.subshare.core.io.LimitedInputStream;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.repo.transport.CryptreeRestRepoTransport;
@@ -206,7 +208,7 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 						continue;
 					}
 
-					final RepoFileDto decryptedRepoFileDto = decryptRepoFileDto(cryptree, repoFileDto);
+					final RepoFileDto decryptedRepoFileDto = decryptRepoFileDtoOnServer(cryptree, repoFileDto);
 					// TODO we should remove the superfluous data to make sure the result looks exactly as it would do in a normal CloudStore sync!
 
 					// if it's null, it could not be decrypted (missing access rights?!) and should be ignored.
@@ -360,7 +362,7 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 		return modificationDto;
 	}
 
-	private RepoFileDto decryptRepoFileDto(final Cryptree cryptree, final RepoFileDto repoFileDto) {
+	private RepoFileDto decryptRepoFileDtoOnServer(final Cryptree cryptree, final RepoFileDto repoFileDto) {
 		assertNotNull("cryptree", cryptree);
 		final String name = assertNotNull("repoFileDto", repoFileDto).getName();
 
@@ -373,7 +375,7 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 
 		final RepoFileDto decryptedRepoFileDto;
 		try {
-			decryptedRepoFileDto = cryptree.getDecryptedRepoFileDtoOrFail(cryptoRepoFileId);
+			decryptedRepoFileDto = cryptree.getDecryptedRepoFileOnServerDtoOrFail(cryptoRepoFileId);
 		} catch (final AccessDeniedException x) {
 			return null;
 		}
@@ -390,25 +392,34 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 			final CryptoChangeSetDto cryptoChangeSetDto = cryptree.createOrUpdateCryptoRepoFile(path);
 			putCryptoChangeSetDto(cryptoChangeSetDto);
 			cryptree.updateLastCryptoKeySyncToRemoteRepo();
-			final UserRepoKey userRepoKey = cryptree.getUserRepoKeyOrFail(path, PermissionType.write);
 
 			final String serverPath = cryptree.getServerPath(path);
+			SsDirectoryDto directoryDto = createDirectoryDtoForMakeDirectory(cryptree, path, serverPath);
+			CryptoRepoFileOnServerDto cryptoRepoFileOnServerDto = cryptree.createOrUpdateCryptoRepoFileOnServerDto(path);
 
-			final SsDirectoryDto directoryDto = new SsDirectoryDto();
+			RepoFileDtoWithCryptoRepoFileOnServerDto rfdwcrfosd = new RepoFileDtoWithCryptoRepoFileOnServerDto();
+			rfdwcrfosd.setRepoFileDto(directoryDto);
+			rfdwcrfosd.setCryptoRepoFileOnServerDto(cryptoRepoFileOnServerDto);
 
-			final File f = createFile(serverPath);
-			directoryDto.setName(f.getName());
-
-			final File pf = f.getParentFile();
-			directoryDto.setParentName(pf == null ? null : pf.getName());
-
-			final SignableSigner signableSigner = new SignableSigner(userRepoKey);
-			signableSigner.sign(directoryDto);
-
-			getClient().execute(new SsMakeDirectory(getRepositoryId().toString(), serverPath, new Date(0), directoryDto));
+			getClient().execute(new SsMakeDirectory(getRepositoryId().toString(), serverPath, rfdwcrfosd));
 
 			transaction.commit();
 		}
+	}
+
+	protected SsDirectoryDto createDirectoryDtoForMakeDirectory(final Cryptree cryptree, final String path, final String serverPath) {
+		final UserRepoKey userRepoKey = cryptree.getUserRepoKeyOrFail(path, PermissionType.write);
+		final SsDirectoryDto directoryDto = new SsDirectoryDto();
+
+		final File f = createFile(serverPath);
+		directoryDto.setName(f.getName());
+
+		final File pf = f.getParentFile();
+		directoryDto.setParentName(pf == null ? null : pf.getName());
+
+		final SignableSigner signableSigner = new SignableSigner(userRepoKey);
+		signableSigner.sign(directoryDto);
+		return directoryDto;
 	}
 
 	protected CryptreeFactory getCryptreeFactory() {
@@ -472,7 +483,7 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 		final LocalRepoManager localRepoManager = getLocalRepoManager();
 		try (final LocalRepoTransaction transaction = localRepoManager.beginReadTransaction();) {
 			final Cryptree cryptree = getCryptree(transaction);
-			decryptedRepoFileDto = cryptree.getDecryptedRepoFileDto(path);
+			decryptedRepoFileDto = cryptree.getDecryptedRepoFileOnServerDto(path);
 
 			transaction.commit();
 		}
@@ -580,7 +591,14 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 //			getRestRepoTransport().endPutFile(unprefixedServerPath, new Date(0), serverLength, null);
 			final String serverPath = cryptree.getServerPath(path);
 			final SsNormalFileDto serverNormalFileDto = createNormalFileDtoForPutFile(cryptree, path, serverPath, fromNormalFileDto.getLength());
-			getClient().execute(new SsEndPutFile(getRepositoryId().toString(), serverPath, serverNormalFileDto));
+
+			RepoFileDtoWithCryptoRepoFileOnServerDto rfdwcrfosd = new RepoFileDtoWithCryptoRepoFileOnServerDto();
+
+			final CryptoRepoFileOnServerDto cryptoRepoFileOnServerDto = cryptree.createOrUpdateCryptoRepoFileOnServerDto(path);
+			rfdwcrfosd.setRepoFileDto(serverNormalFileDto);
+			rfdwcrfosd.setCryptoRepoFileOnServerDto(cryptoRepoFileOnServerDto);
+
+			getClient().execute(new SsEndPutFile(getRepositoryId().toString(), serverPath, rfdwcrfosd));
 
 			transaction.commit();
 		}

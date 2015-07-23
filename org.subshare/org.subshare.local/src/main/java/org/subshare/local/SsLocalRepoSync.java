@@ -6,6 +6,8 @@ import static co.codewizards.cloudstore.core.util.Util.*;
 import org.subshare.core.Cryptree;
 import org.subshare.core.CryptreeFactoryRegistry;
 import org.subshare.core.context.RepoFileContext;
+import org.subshare.core.dto.CryptoRepoFileOnServerDto;
+import org.subshare.local.dto.CryptoRepoFileOnServerDtoConverter;
 import org.subshare.local.persistence.SsDeleteModification;
 import org.subshare.local.persistence.SsLocalRepository;
 import org.subshare.local.persistence.SsRepoFile;
@@ -97,6 +99,10 @@ public class SsLocalRepoSync extends LocalRepoSync {
 						parentName, repoFileContext.getSsRepoFileDto().getParentName()));
 
 			ccRepoFile.setSignature(repoFileContext.getSsRepoFileDto().getSignature());
+
+			final CryptoRepoFileOnServerDto cryptoRepoFileOnServerDto = repoFileContext.getCryptoRepoFileOnServerDto();
+			if (cryptoRepoFileOnServerDto != null)
+				CryptoRepoFileOnServerDtoConverter.create(transaction).putCryptoRepoFileOnServer(cryptoRepoFileOnServerDto);
 		}
 	}
 

@@ -43,6 +43,7 @@ import org.subshare.local.persistence.CryptoLink;
 import org.subshare.local.persistence.CryptoLinkDao;
 import org.subshare.local.persistence.CryptoRepoFile;
 import org.subshare.local.persistence.CryptoRepoFileDao;
+import org.subshare.local.persistence.CryptoRepoFileOnServer;
 import org.subshare.local.persistence.InvitationUserRepoKeyPublicKey;
 import org.subshare.local.persistence.Permission;
 import org.subshare.local.persistence.PermissionDao;
@@ -87,7 +88,7 @@ public class CryptreeNode {
 	private RepoFile repoFile; // maybe null - lazily loaded
 	private CryptoRepoFile cryptoRepoFile; // maybe null - lazily loaded
 	private PermissionSet permissionSet; // maybe null - lazily loaded, if there is one
-	private final RepoFileDtoConverter repoFileDtoConverter; // never null
+	private RepoFileDtoConverter repoFileDtoConverter; // maybe null - lazily loaded
 	private final List<CryptreeNode> children = new ArrayList<CryptreeNode>(0);
 	private boolean childrenLoaded = false;
 
@@ -119,7 +120,6 @@ public class CryptreeNode {
 
 		this.repoFile = repoFile != null ? repoFile : cryptoRepoFile.getRepoFile();
 		this.cryptoRepoFile = cryptoRepoFile;
-		this.repoFileDtoConverter = RepoFileDtoConverter.create(context.transaction);
 
 		if (child != null)
 			children.add(child);
@@ -157,6 +157,27 @@ public class CryptreeNode {
 					cryptoRepoFile.getCryptoRepoFileId()));
 
 		final byte[] plainRepoFileDtoData = assertNotNull("decrypt(...)", decrypt(cryptoRepoFile.getRepoFileDtoData(), plainCryptoKey));
+		try {
+			final InputStream in = new GZIPInputStream(new ByteArrayInputStream(plainRepoFileDtoData));
+			final RepoFileDto repoFileDto = context.repoFileDtoIo.deserialize(in);
+			in.close();
+			return repoFileDto;
+		} catch (final IOException x) {
+			throw new RuntimeException(x);
+		}
+	}
+
+	public RepoFileDto getRepoFileDtoOnServer() throws AccessDeniedException {
+		final CryptoRepoFileOnServer cryptoRepoFileOnServer = getCryptoRepoFileOnServer();
+		if (cryptoRepoFileOnServer == null)
+			return null;
+
+		final PlainCryptoKey plainCryptoKey = getPlainCryptoKeyForDecrypting(cryptoRepoFileOnServer.getCryptoKey());
+		if (plainCryptoKey == null)
+			throw new ReadAccessDeniedException(String.format("The CryptoRepoFileOnServer with cryptoRepoFileId=%s could not be decrypted! Access rights missing?!",
+					cryptoRepoFileOnServer.getCryptoRepoFile().getCryptoRepoFileId()));
+
+		final byte[] plainRepoFileDtoData = assertNotNull("decrypt(...)", decrypt(cryptoRepoFileOnServer.getRepoFileDtoData(), plainCryptoKey));
 		try {
 			final InputStream in = new GZIPInputStream(new ByteArrayInputStream(plainRepoFileDtoData));
 			final RepoFileDto repoFileDto = context.repoFileDtoIo.deserialize(in);
@@ -211,39 +232,53 @@ public class CryptreeNode {
 			final CryptreeNode parent = getParent();
 			cryptoRepoFile.setParent(parent == null ? null : parent.getCryptoRepoFile());
 
-			// TODO can we assert here, that this code is invoked on the client-side with the plain-text RepoFile?!
-
-			// No need for local IDs. Because this DTO is shared across all repositories, local IDs make no sense.
-			repoFileDtoConverter.setExcludeLocalIds(true);
-			final RepoFileDto repoFileDto = repoFileDtoConverter.toRepoFileDto(repoFile, Integer.MAX_VALUE);
-
-			((SsRepoFileDto) repoFileDto).setParentName(null); // only needed for uploading to the server.
-			if (((SsRepoFileDto) repoFileDto).getSignature() != null) // must be null on the client - and this method is never called on the server.
-				throw new IllegalStateException("repoFileDto.signature != null");
-
-			// Prevent overriding the real name with "", if we checked out a sub-directory. In this case, we cannot
-			// change the localName locally and must make sure, it is preserved.
-			if (cryptoRepoFile.getLocalName() == null || repoFile.getParent() != null)
-				cryptoRepoFile.setLocalName(repoFileDto.getName());
-			else
-				repoFileDto.setName(cryptoRepoFile.getLocalName());
-
-			// Serialise to XML and compress.
-			final ByteArrayOutputStream out = new ByteArrayOutputStream();
-			try {
-				final GZIPOutputStream gzOut = new GZIPOutputStream(out);
-				context.repoFileDtoIo.serialize(repoFileDto, gzOut);
-				gzOut.close();
-			} catch (final IOException e) {
-				throw new RuntimeException(e);
-			}
-
-			cryptoRepoFile.setRepoFileDtoData(assertNotNull("encrypt(...)", encrypt(out.toByteArray(), plainCryptoKey)));
+			final byte[] repoFileDtoData = createRepoFileDtoDataForCryptoRepoFile(false);
+			cryptoRepoFile.setRepoFileDtoData(assertNotNull("encrypt(...)", encrypt(repoFileDtoData, plainCryptoKey)));
 			cryptoRepoFile.setLastSyncFromRepositoryId(null);
 
 			sign(cryptoRepoFile);
 		}
 		return cryptoRepoFile;
+	}
+
+	public CryptoRepoFileOnServer getCryptoRepoFileOnServer() {
+		final CryptoRepoFile cryptoRepoFile = getCryptoRepoFile();
+		if (cryptoRepoFile == null)
+			return null;
+
+		return cryptoRepoFile.getCryptoRepoFileOnServer();
+	}
+
+	/**
+	 * Gets the current, freshly updated (!) {@link CryptoRepoFileOnServer}.
+	 */
+	public CryptoRepoFileOnServer createOrUpdateCryptoRepoFileOnServer() {
+		final CryptoRepoFile cryptoRepoFile = getCryptoRepoFileOrCreate(false);
+		assertNotNull("cryptoRepoFile", cryptoRepoFile);
+		CryptoRepoFileOnServer cryptoRepoFileOnServer = cryptoRepoFile.getCryptoRepoFileOnServer();
+		if (cryptoRepoFileOnServer == null) {
+			cryptoRepoFileOnServer = new CryptoRepoFileOnServer();
+			cryptoRepoFileOnServer.setCryptoRepoFile(cryptoRepoFile);
+		}
+
+		final PlainCryptoKey plainCryptoKey = getActivePlainCryptoKeyOrCreate(CryptoKeyRole.dataKey, CipherOperationMode.ENCRYPT);
+		final CryptoKey cryptoKey = assertNotNull("plainCryptoKey", plainCryptoKey).getCryptoKey();
+		cryptoRepoFileOnServer.setCryptoKey(assertNotNull("plainCryptoKey.cryptoKey", cryptoKey));
+
+		if (! cryptoKey.equals(cryptoRepoFile.getCryptoKey())) // sanity check: the key should not have changed inbetween! otherwise we might need a new CryptoChangeSet-upload to the server!!!
+			throw new IllegalStateException(String.format("cryptoKey != cryptoRepoFile.cryptoKey :: %s != %s",
+					cryptoKey, cryptoRepoFile.getCryptoKey()));
+
+		final byte[] repoFileDtoData = createRepoFileDtoDataForCryptoRepoFile(true);
+		cryptoRepoFileOnServer.setRepoFileDtoData(assertNotNull("encrypt(...)", encrypt(repoFileDtoData, plainCryptoKey)));
+
+		sign(cryptoRepoFileOnServer);
+
+		if (cryptoRepoFile.getCryptoRepoFileOnServer() != cryptoRepoFileOnServer) {
+			cryptoRepoFile.setCryptoRepoFileOnServer(cryptoRepoFileOnServer); // should persist it.
+			context.transaction.flush(); // for early detection of an error
+		}
+		return cryptoRepoFileOnServer;
 	}
 
 	private void grantReadPermission(final UserRepoKey.PublicKey publicKey) {
@@ -263,6 +298,50 @@ public class CryptreeNode {
 
 		final PlainCryptoKey plainCryptoKey = getActivePlainCryptoKeyOrCreate(CryptoKeyRole.clearanceKey, CipherOperationMode.DECRYPT);
 		createCryptoLink(this, getUserRepoKeyPublicKeyOrCreate(publicKey), plainCryptoKey);
+	}
+
+	private RepoFileDtoConverter getRepoFileDtoConverter() {
+		if (repoFileDtoConverter == null)
+			repoFileDtoConverter = RepoFileDtoConverter.create(context.transaction);
+
+		repoFileDtoConverter.setExcludeLocalIds(false);
+		repoFileDtoConverter.setExcludeMutableData(false);
+		return repoFileDtoConverter;
+	}
+
+	private byte[] createRepoFileDtoDataForCryptoRepoFile(final boolean onServer) {
+		// TODO can we assert here, that this code is invoked on the client-side with the plain-text RepoFile?!
+
+		final RepoFileDtoConverter repoFileDtoConverter = getRepoFileDtoConverter();
+		// No need for local IDs. Because this DTO is shared across all repositories, local IDs make no sense.
+		repoFileDtoConverter.setExcludeLocalIds(true);
+
+		// Erase information like last-modified, hash and length, if not used in CryptoRepoFileOnServer!
+		repoFileDtoConverter.setExcludeMutableData(! onServer);
+		final RepoFileDto repoFileDto = repoFileDtoConverter.toRepoFileDto(repoFile, onServer ? Integer.MAX_VALUE : 0);
+
+		((SsRepoFileDto) repoFileDto).setParentName(null); // only needed for uploading to the server.
+		if (((SsRepoFileDto) repoFileDto).getSignature() != null) // must be null on the client - and this method is never called on the server.
+			throw new IllegalStateException("repoFileDto.signature != null");
+
+		// Prevent overriding the real name with "", if we checked out a sub-directory. In this case, we cannot
+		// change the localName locally and must make sure, it is preserved.
+		if (cryptoRepoFile.getLocalName() == null || repoFile.getParent() != null)
+			cryptoRepoFile.setLocalName(repoFileDto.getName());
+		else
+			repoFileDto.setName(cryptoRepoFile.getLocalName());
+
+		// Serialise to XML and compress.
+		final ByteArrayOutputStream out = new ByteArrayOutputStream();
+		try {
+			try (final GZIPOutputStream gzOut = new GZIPOutputStream(out);) {
+				context.repoFileDtoIo.serialize(repoFileDto, gzOut);
+			}
+		} catch (final IOException e) {
+			throw new RuntimeException(e);
+		}
+
+		return out.toByteArray();
 	}
 
 	private void revokeReadPermission(final Set<Uid> userRepoKeyIds) {

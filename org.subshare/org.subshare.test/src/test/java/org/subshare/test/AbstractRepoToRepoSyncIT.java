@@ -172,7 +172,7 @@ public abstract class AbstractRepoToRepoSyncIT extends AbstractIT {
 	}
 
 	protected void syncFromLocalSrcToRemote() throws Exception {
-		try (final RepoToRepoSync repoToRepoSync = RepoToRepoSync.create(getLocalRootWithPathPrefix(), remoteRootURLWithPathPrefixForLocalSrc);)
+		try (final RepoToRepoSync repoToRepoSync = createRepoToRepoSync(getLocalRootWithPathPrefix(), remoteRootURLWithPathPrefixForLocalSrc);)
 		{
 			repoToRepoSync.sync(new LoggerProgressMonitor(logger));
 		}
@@ -183,7 +183,7 @@ public abstract class AbstractRepoToRepoSyncIT extends AbstractIT {
 	}
 
 	protected void syncFromRemoteToLocalDest(final boolean assertLocalSrcAndDestDirectoriesAreEqual) throws Exception {
-		try (final RepoToRepoSync repoToRepoSync = RepoToRepoSync.create(localDestRoot, remoteRootURLWithPathPrefixForLocalDest);) {
+		try (final RepoToRepoSync repoToRepoSync = createRepoToRepoSync(localDestRoot, remoteRootURLWithPathPrefixForLocalDest);) {
 			repoToRepoSync.sync(new LoggerProgressMonitor(logger));
 		}
 
@@ -192,6 +192,10 @@ public abstract class AbstractRepoToRepoSyncIT extends AbstractIT {
 					(remotePathPrefix2Plain.isEmpty() ? getLocalRootWithPathPrefix() : createFile(getLocalRootWithPathPrefix(), remotePathPrefix2Plain)),
 					localDestRoot);
 		}
+	}
+
+	protected RepoToRepoSync createRepoToRepoSync(final File localRoot, final URL remoteRoot) {
+		return RepoToRepoSync.create(localRoot, remoteRoot);
 	}
 
 	protected void createLocalDestinationRepo() throws Exception {
