@@ -1319,6 +1319,9 @@ public class CryptreeImpl extends AbstractCryptree {
 	}
 
 	private void populateChangedCryptoRepoFileOnServerDtos(final CryptoChangeSetDto cryptoChangeSetDto, final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {
+		if (! isOnServer())
+			return; // We *up*load them exclusively individually. The CryptoChangeSet is only used for *down*load.
+
 		final CryptoRepoFileOnServerDtoConverter converter = CryptoRepoFileOnServerDtoConverter.create(getTransactionOrFail());
 		final CryptoRepoFileOnServerDao dao = getTransactionOrFail().getDao(CryptoRepoFileOnServerDao.class);
 
