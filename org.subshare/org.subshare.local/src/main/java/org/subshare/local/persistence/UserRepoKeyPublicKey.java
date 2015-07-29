@@ -24,6 +24,7 @@ import javax.jdo.annotations.Unique;
 import org.subshare.core.io.InputStreamSource;
 import org.subshare.core.io.MultiInputStream;
 import org.subshare.core.user.UserRepoKey;
+import org.subshare.core.user.UserRepoKeyImpl;
 import org.subshare.crypto.CryptoRegistry;
 
 import co.codewizards.cloudstore.core.dto.Uid;
@@ -139,7 +140,7 @@ public class UserRepoKeyPublicKey extends Entity implements AutoTrackLocalRevisi
 
 	protected UserRepoKey.PublicKey createPublicKey() {
 		try {
-			return new UserRepoKey.PublicKey(
+			return new UserRepoKeyImpl.PublicKeyImpl(
 					getUserRepoKeyId(), getServerRepositoryId(),
 					CryptoRegistry.getInstance().decodePublicKey(getPublicKeyData()),
 					null, false);

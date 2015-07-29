@@ -8,7 +8,6 @@ import org.subshare.core.pgp.man.PgpPrivateKeyPassphraseStoreImpl;
 import org.subshare.core.pgp.sync.PgpSyncDaemonImpl;
 import org.subshare.core.pgp.transport.PgpTransportFactoryRegistry;
 import org.subshare.core.repo.metaonly.MetaOnlyRepoSyncDaemonImpl;
-import org.subshare.core.user.UserRepoKeyRingLookupImpl;
 import org.subshare.ls.server.ssl.AcceptAllDynamicX509TrustManagerCallback;
 import org.subshare.rest.client.locker.transport.RestLockerTransportFactory;
 import org.subshare.rest.client.pgp.transport.RestPgpTransportFactory;
@@ -35,7 +34,7 @@ public class LocalServerInit {
 
 			final CryptreeRestRepoTransportFactoryImpl cryptreeRestRepoTransportFactoryImpl = RepoTransportFactoryRegistry.getInstance().getRepoTransportFactoryOrFail(CryptreeRestRepoTransportFactoryImpl.class);
 			cryptreeRestRepoTransportFactoryImpl.setDynamicX509TrustManagerCallbackClass(AcceptAllDynamicX509TrustManagerCallback.class);
-			cryptreeRestRepoTransportFactoryImpl.setUserRepoKeyRingLookup(new UserRepoKeyRingLookupImpl());
+//			cryptreeRestRepoTransportFactoryImpl.setUserRepoKeyRingLookup(new UserRepoKeyRingLookupImpl());
 
 			final PgpAuthenticationCallback pgpAuthenticationCallback = PgpPrivateKeyPassphraseStoreImpl.getInstance().getPgpAuthenticationCallback();
 			PgpRegistry.getInstance().setPgpAuthenticationCallback(pgpAuthenticationCallback);

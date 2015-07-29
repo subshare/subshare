@@ -32,6 +32,8 @@ public interface LocalRepo {
 
 	void setLocalRoot(File localRoot);
 
+	String getLocalPath(File file);
+
 	void addPropertyChangeListener(PropertyChangeListener listener);
 
 	void addPropertyChangeListener(Property property, PropertyChangeListener listener);

@@ -110,8 +110,13 @@ public class UserListPane extends BorderPane {
 		}
 	};
 
-	protected UserListPane() {
-		this(new EditUserManager());
+	/**
+	 * @deprecated This constructor is solely to be used by the UI designer! It must not be invoked programmatically!
+	 */
+	@Deprecated
+	public UserListPane() {
+		this.editUserManager = null;
+		loadDynamicComponentFxml(UserListPane.class, this);
 	}
 
 	public UserListPane(final EditUserManager editUserManager) {

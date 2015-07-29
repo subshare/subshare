@@ -61,7 +61,7 @@ public class UserRepoKeyPublicKeyDtoWithSignatureConverter {
 		InvitationUserRepoKeyPublicKeyDto invPublicKeyDto = (InvitationUserRepoKeyPublicKeyDto)
 				(publicKeyDto instanceof InvitationUserRepoKeyPublicKeyDto ? publicKeyDto : null);
 
-		final UserRepoKey.PublicKeyWithSignature publicKey = new UserRepoKey.PublicKeyWithSignature(
+		final UserRepoKey.PublicKeyWithSignature publicKey = new UserRepoKeyImpl.PublicKeyWithSignatureImpl(
 				publicKeyDto.getUserRepoKeyId(), publicKeyDto.getRepositoryId(), publicKeyDto.getSignedPublicKeyData(),
 				(invPublicKeyDto != null ? invPublicKeyDto.getValidTo() : null),
 				invPublicKeyDto != null);

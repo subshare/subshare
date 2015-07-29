@@ -35,8 +35,10 @@ public enum PermissionType {
 	 * <p>
 	 * Granting a <i>grant</i> permission automatically causes a <i>write</i> permission to be granted, too.
 	 * <p>
-	 * Though this is technically not required, it makes semantically no sense at all to grant permissions without knowing
-	 * users. Therefore, granting at least
+	 * Furthermore, granting a <i>grant</i> permission on at least one directory/file causes a global
+	 * <i>readUserIdentity</i> permission to be granted, too. Though this is technically not required,
+	 * it makes semantically no sense at all to manage permissions without knowing users. The UI therefore
+	 * relies on being able to know and display users.
 	 */
 	grant,
 

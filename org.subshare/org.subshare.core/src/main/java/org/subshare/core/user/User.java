@@ -81,4 +81,6 @@ public interface User extends Bean<User.Property> {
 	User clone();
 	Date getChanged();
 	void setChanged(Date changed);
+
+	List<UserRepoKey.PublicKeyWithSignature> getUserRepoKeyPublicKeys(UUID serverRepositoryId);
 }

@@ -4,6 +4,7 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -162,7 +163,7 @@ public class UserImpl extends AbstractBean<User.Property> implements User {
 			userRepoKeyRing = getUserRepoKeyRing();
 			if (userRepoKeyRing == null) {
 				created = true;
-				userRepoKeyRing = new UserRepoKeyRing();
+				userRepoKeyRing = new UserRepoKeyRingImpl();
 				_setUserRepoKeyRing(userRepoKeyRing);
 			}
 		}
@@ -180,7 +181,7 @@ public class UserImpl extends AbstractBean<User.Property> implements User {
 		final PgpKey pgpKey = getPgpKeyContainingSecretKeyOrFail();
 
 		final AsymmetricCipherKeyPair keyPair = KeyFactory.getInstance().createAsymmetricKeyPair();
-		final UserRepoKey userRepoKey = new UserRepoKey(serverRepositoryId, keyPair, Collections.singleton(pgpKey), pgpKey, null);
+		final UserRepoKey userRepoKey = new UserRepoKeyImpl(serverRepositoryId, keyPair, Collections.singleton(pgpKey), pgpKey, null);
 
 		final UserRepoKeyRing userRepoKeyRing = getUserRepoKeyRingOrCreate();
 		userRepoKeyRing.addUserRepoKey(userRepoKey);
@@ -205,7 +206,7 @@ public class UserImpl extends AbstractBean<User.Property> implements User {
 			throw new IllegalStateException("All PGP keys associated with the invited user and available in our PGP key ring are revoked or expired!");
 
 		final AsymmetricCipherKeyPair keyPair = KeyFactory.getInstance().createAsymmetricKeyPair();
-		final UserRepoKey userRepoKey = new UserRepoKey(serverRepositoryId, keyPair, invitedUserPgpKeys, ownPgpKey, new Date(System.currentTimeMillis() + validityDurationMillis));
+		final UserRepoKey userRepoKey = new UserRepoKeyImpl(serverRepositoryId, keyPair, invitedUserPgpKeys, ownPgpKey, new Date(System.currentTimeMillis() + validityDurationMillis));
 		UserRepoKey signingUserRepoKey = getUserRepoKeyRing().getPermanentUserRepoKeys(serverRepositoryId).get(0);
 		new SignableSigner(signingUserRepoKey).sign(userRepoKey.getPublicKey());
 		return userRepoKey;
@@ -277,6 +278,17 @@ public class UserImpl extends AbstractBean<User.Property> implements User {
 			userRepoKeyPublicKeys.getHandler().addPostModificationListener(new PostModificationListener(PropertyEnum.userRepoKeyPublicKeys));
 		}
 		return userRepoKeyPublicKeys;
+	}
+
+	@Override
+	public List<UserRepoKey.PublicKeyWithSignature> getUserRepoKeyPublicKeys(final UUID serverRepositoryId) {
+		List<UserRepoKey.PublicKeyWithSignature> result = new ArrayList<>();
+		for (final UserRepoKey.PublicKeyWithSignature publicKey : getUserRepoKeyPublicKeys()) {
+			if (serverRepositoryId == null || serverRepositoryId.equals(publicKey.getServerRepositoryId()))
+				result.add(publicKey);
+		}
+		result = Collections.unmodifiableList(result);
+		return result;
 	}
 
 	@Override

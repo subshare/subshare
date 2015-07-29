@@ -22,6 +22,7 @@ import org.subshare.core.io.MultiInputStream;
 import org.subshare.core.sign.Signable;
 import org.subshare.core.sign.Signature;
 import org.subshare.core.user.UserRepoKey;
+import org.subshare.core.user.UserRepoKeyImpl;
 import org.subshare.crypto.CryptoRegistry;
 
 import co.codewizards.cloudstore.core.dto.Uid;
@@ -58,7 +59,7 @@ public class InvitationUserRepoKeyPublicKey extends UserRepoKeyPublicKey impleme
 	@Override
 	protected UserRepoKey.PublicKey createPublicKey() {
 		try {
-			return new UserRepoKey.PublicKey(
+			return new UserRepoKeyImpl.PublicKeyImpl(
 					getUserRepoKeyId(), getServerRepositoryId(),
 					CryptoRegistry.getInstance().decodePublicKey(getPublicKeyData()),
 					getValidTo(), true);

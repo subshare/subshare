@@ -21,64 +21,61 @@ dynamic component SelectUserPane resourcefile 'messages.properties' {
 //		prefWidth : 400,
 //		prefHeight : 300,
 
-		children : [
-			Text id headerText {
-				wrappingWidth : 500,
-				static columnIndex : 0,
-				static rowIndex : 0
-			},
+		Text id headerText {
+			wrappingWidth : 500,
+			static columnIndex : 0,
+			static rowIndex : 0
+		},
 
-			HBox {
-				children : [
-					Label {
-						text : "Filter: "
-					},
-					TextField id filterTextField {
-						static hgrow : "ALWAYS",
-						static margin : Insets {
-							left : 4
-						}
-					}
-				],
-				static margin : Insets {
-					top : 4,
-					bottom : 4
-				},
-				static columnIndex : 0,
-				static rowIndex : 1
+		HBox {
+			Label {
+				text : "Filter: "
 			},
-
-			TableView < UserListItem > id tableView {
-				columns : [
-					TableColumn < UserListItem, String > id firstNameColumn {
-						text : "First name",
-						prefWidth : 100,
-						cellValueFactory : PropertyValueFactory < UserListItem, String > {
-							property : "firstName"
-						}
-					},
-					TableColumn < UserListItem, String > id lastNameColumn {
-						text : "Last name",
-						prefWidth : 100,
-						cellValueFactory : PropertyValueFactory < UserListItem, String > {
-							property : "lastName"
-						}
-					},
-					TableColumn < UserListItem, String > id emailColumn {
-						text : "E-mail",
-						prefWidth : 200,
-						cellValueFactory : PropertyValueFactory < UserListItem, String > {
-							property : "email"
-						}
-					}
-				],
-				static fillHeight : true,
-				static fillWidth : true,
-				static vgrow : "ALWAYS",
+			TextField id filterTextField {
 				static hgrow : "ALWAYS",
-				static columnIndex : 0,
-				static rowIndex : 2
-			}
-		]
+				static margin : Insets {
+					left : 4
+				}
+			},
+
+			static margin : Insets {
+				top : 4,
+				bottom : 4
+			},
+			static columnIndex : 0,
+			static rowIndex : 1
+		},
+
+		TableView < UserListItem > id tableView {
+			columns : [
+				TableColumn < UserListItem, String > id firstNameColumn {
+					text : "First name",
+					prefWidth : 100,
+					cellValueFactory : PropertyValueFactory < UserListItem, String > {
+						property : "firstName"
+					}
+				},
+				TableColumn < UserListItem, String > id lastNameColumn {
+					text : "Last name",
+					prefWidth : 100,
+					cellValueFactory : PropertyValueFactory < UserListItem, String > {
+						property : "lastName"
+					}
+				},
+				TableColumn < UserListItem, String > id emailColumn {
+					text : "E-mail",
+					prefWidth : 200,
+					cellValueFactory : PropertyValueFactory < UserListItem, String > {
+						property : "email"
+					}
+				}
+			],
+			static fillHeight : true,
+			static fillWidth : true,
+			static vgrow : "ALWAYS",
+			static hgrow : "ALWAYS",
+			static columnIndex : 0,
+			static rowIndex : 2
+		}
 	}
 }

@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -24,6 +25,7 @@ import org.bouncycastle.crypto.params.KeyParameter;
 import org.subshare.core.AccessDeniedException;
 import org.subshare.core.GrantAccessDeniedException;
 import org.subshare.core.ReadAccessDeniedException;
+import org.subshare.core.ReadUserIdentityAccessDeniedException;
 import org.subshare.core.WriteAccessDeniedException;
 import org.subshare.core.crypto.CryptoConfigUtil;
 import org.subshare.core.dto.SsRepoFileDto;
@@ -658,6 +660,20 @@ public class CryptreeNode {
 		return new UserRepoKeyPublicKeyHelper(getContext()).getUserRepoKeyPublicKeyOrCreate(publicKey);
 	}
 
+	/**
+	 * Grant a permission on the directory/file represented by this node.
+	 * <p>
+	 * <p>
+	 * If there is nothing to be granted, this method is a noop.
+	 * <p>
+	 * Or in other words:
+	 * If the user (more specifically, his repository-dependent {@code publicKey}) already has the permission
+	 * which is to be granted, this method returns silently without any effect.
+	 * @param permissionType the type of the permission to be granted. Must not be <code>null</code>.
+	 * @param publicKey the user's repository-dependent public-key. Must not be <code>null</code>.
+	 * @see #getGrantedPermissionTypes(Uid)
+	 * @see #revokePermission(PermissionType, Set)
+	 */
 	public void grantPermission(final PermissionType permissionType, final UserRepoKey.PublicKey publicKey) {
 		assertNotNull("permissionType", permissionType);
 		assertNotNull("publicKey", publicKey);
@@ -798,6 +814,21 @@ public class CryptreeNode {
 			parent.getActivePlainCryptoKeyOrCreate(CryptoKeyRole.subdirKey, CipherOperationMode.DECRYPT);
 	}
 
+	/**
+	 * Revoke a permission on the directory/file represented by this node.
+	 * <p>
+	 * If there is nothing to be revoked, this method is a noop.
+	 * <p>
+	 * Or in other words:
+	 * If none of the users (more specifically, their repository-dependent keys) have the permission which is
+	 * to be revoked, this method returns silently without any effect. The same happens when the {@code userRepoKeyIds}
+	 * is empty.
+	 * @param permissionType the type of the permission to be revoked. Must not be <code>null</code>.
+	 * @param userRepoKeyIds identifiers of all those keys from which to revoke the permission. Must not be <code>null</code>.
+	 * May be empty, which causes this method to return without any effect.
+	 * @see #getGrantedPermissionTypes(Uid)
+	 * @see #grantPermission(PermissionType, PublicKey)
+	 */
 	public void revokePermission(final PermissionType permissionType, final Set<Uid> userRepoKeyIds) {
 		assertNotNull("permissionType", permissionType);
 		assertNotNull("userRepoKeyIds", userRepoKeyIds);
@@ -846,6 +877,65 @@ public class CryptreeNode {
 			if (existsAtLeastOneUserIdentityLinkFor(userRepoKeyIds))
 				new UserRepoKeyPublicKeyHelper(getContext()).removeUserIdentityLinksAfterRevokingReadUserIdentityPermission();
 		}
+	}
+
+	/**
+	 * Gets the {@link PermissionType}s granted to the directory/file represented by this node.
+	 * <p>
+	 * <b>Important:</b> In contrast to {@link #assertHasPermission(boolean, Uid, PermissionType, Date) assertHasPermission(...)} this
+	 * method operates on the current node, only! It does not take parents / inheritance into account.
+	 * <p>
+	 * <b>Important:</b> If the specified user has {@link PermissionType#readUserIdentity readUserIdentity}, this
+	 * {@code PermissionType} is always part of the result, no matter on which node this method is invoked! This is,
+	 * because {@code readUserIdentity} is not associated with a directory - it's global! Technically, it is assigned
+	 * to the root (at least right now - this might change later), but semantically, it is not associated with any.
+	 *
+	 * @param userRepoKeyId the user-key's identifier for which to determine the permissions granted.
+	 * @return the {@link PermissionType}s assigned to this node. Never <code>null</code>, but maybe empty!
+	 * @see #grantPermission(PermissionType, PublicKey)
+	 * @see #revokePermission(PermissionType, Set)
+	 * @see #assertHasPermission(boolean, Uid, PermissionType, Date)
+	 */
+	public Set<PermissionType> getGrantedPermissionTypes(final Uid userRepoKeyId) {
+		assertNotNull("userRepoKeyId", userRepoKeyId);
+		final Set<PermissionType> result = EnumSet.noneOf(PermissionType.class);
+		final Date now = new Date();
+
+		final PermissionDao pDao = context.transaction.getDao(PermissionDao.class);
+		if (! pDao.getNonRevokedPermissions(PermissionType.readUserIdentity, userRepoKeyId).isEmpty())
+			result.add(PermissionType.readUserIdentity);
+
+		final PermissionSet permissionSet = getPermissionSet();
+		if (permissionSet != null) {
+			if (! pDao.getValidPermissions(permissionSet, PermissionType.grant, userRepoKeyId, now).isEmpty())
+				result.add(PermissionType.grant);
+
+			if (! pDao.getValidPermissions(permissionSet, PermissionType.write, userRepoKeyId, now).isEmpty())
+				result.add(PermissionType.write);
+		}
+
+		if (hasReadPermission(userRepoKeyId))
+			result.add(PermissionType.read);
+
+		return result;
+	}
+
+	private boolean hasReadPermission(Uid userRepoKeyId) {
+		final CryptoRepoFile cryptoRepoFile = getCryptoRepoFile();
+		if (cryptoRepoFile != null) { // If there is no CryptoRepoFile, there can be no read-access.
+			final UserRepoKeyPublicKeyDao urkpkDao = context.transaction.getDao(UserRepoKeyPublicKeyDao.class);
+			final UserRepoKeyPublicKey userRepoKeyPublicKey = urkpkDao.getUserRepoKeyPublicKey(userRepoKeyId);
+
+			if (userRepoKeyPublicKey != null) { // if there is no UserRepoKeyPublicKey, there can be no read-access!
+				final CryptoLinkDao cryptoLinkDao = context.transaction.getDao(CryptoLinkDao.class);
+				final Collection<CryptoLink> cryptoLinks = cryptoLinkDao.getActiveCryptoLinks(
+						cryptoRepoFile, CryptoKeyRole.clearanceKey, CryptoKeyPart.privateKey, userRepoKeyPublicKey);
+
+				if (! cryptoLinks.isEmpty())
+					return true;
+			}
+		}
+		return false;
 	}
 
 	private void createUserIdentityLinksVisibleFor(final UserRepoKeyPublicKey userRepoKeyPublicKey) {
@@ -909,7 +999,7 @@ public class CryptreeNode {
 				// This reduces the potential to abuse this possibility (to grant access to other people).
 				final UserRepoKeyPublicKeyReplacementRequestDao dao = context.transaction.getDao(UserRepoKeyPublicKeyReplacementRequestDao.class);
 				if (dao.getUserRepoKeyPublicKeyReplacementRequestsForOldKey(invUserRepoKeyPublicKey).isEmpty())
-					throw new IllegalStateException("There is no UserRepoKeyPublicKeyReplacementRequest for " + invUserRepoKeyPublicKey);
+					throwAccessDeniedException(permissionType, "There is no UserRepoKeyPublicKeyReplacementRequest for " + invUserRepoKeyPublicKey);
 
 				final Uid signingUserRepoKeyId = invUserRepoKeyPublicKey.getSignature().getSigningUserRepoKeyId();
 				assertHasPermission(anyCryptoRepoFile, signingUserRepoKeyId, permissionType, invUserRepoKeyPublicKey.getSignature().getSignatureCreated());
@@ -921,30 +1011,43 @@ public class CryptreeNode {
 		}
 
 		final Set<Permission> permissions = new HashSet<Permission>();
-		collectPermissions(permissions, anyCryptoRepoFile, permissionType, userRepoKeyId, timestamp);
-		final Set<Permission> permissionsIndicatingBackdatedSignature = extractPermissionsIndicatingBackdatedSignature(permissions);
 
-		if (! permissions.isEmpty())
-			return; // all is fine => silently return.
+		if (PermissionType.read == permissionType) {
+			long timeDifferenceToNow = Math.abs(System.currentTimeMillis() - timestamp.getTime());
+			if (timeDifferenceToNow > 5 * 60 * 1000)
+				throw new UnsupportedOperationException("assertHasPermission(...) does not yet support permissionType 'read' combined with a timestamp that is not *now*!");
 
-		if (! permissionsIndicatingBackdatedSignature.isEmpty()) {
-			final String exceptionMsg = String.format("Found '%s' permission(s) for userRepoKeyId=%s and timestamp=%s, but it (or they) indicates backdating outside of allowed range!", permissionType, userRepoKeyId, timestamp);
-			switch (permissionType) {
-				case grant:
-					throw new GrantAccessDeniedException(exceptionMsg);
-				case write:
-					throw new WriteAccessDeniedException(exceptionMsg);
-				default:
-					throw new IllegalArgumentException("Unknown permissionType: " + permissionType);
+			if (hasReadPermission(userRepoKeyId))
+				return;
+		}
+		else {
+			collectPermissions(permissions, anyCryptoRepoFile, permissionType, userRepoKeyId, timestamp);
+
+			final Set<Permission> permissionsIndicatingBackdatedSignature = extractPermissionsIndicatingBackdatedSignature(permissions);
+
+			if (! permissions.isEmpty())
+				return; // all is fine => silently return.
+
+			if (! permissionsIndicatingBackdatedSignature.isEmpty()) {
+				final String exceptionMsg = String.format("Found '%s' permission(s) for userRepoKeyId=%s and timestamp=%s, but it (or they) indicates backdating outside of allowed range!", permissionType, userRepoKeyId, timestamp);
+				throwAccessDeniedException(permissionType, exceptionMsg);
 			}
 		}
 
 		final String exceptionMsg = String.format("No '%s' permission found for userRepoKeyId=%s and timestamp=%s!", permissionType, userRepoKeyId, timestamp);
+		throwAccessDeniedException(permissionType, exceptionMsg);
+	}
+
+	private void throwAccessDeniedException(final PermissionType permissionType, final String exceptionMessage) throws AccessDeniedException {
 		switch (permissionType) {
 			case grant:
-				throw new GrantAccessDeniedException(exceptionMsg);
+				throw new GrantAccessDeniedException(exceptionMessage);
 			case write:
-				throw new WriteAccessDeniedException(exceptionMsg);
+				throw new WriteAccessDeniedException(exceptionMessage);
+			case read:
+				throw new ReadAccessDeniedException(exceptionMessage);
+			case readUserIdentity:
+				throw new ReadUserIdentityAccessDeniedException(exceptionMessage);
 			default:
 				throw new IllegalArgumentException("Unknown permissionType: " + permissionType);
 		}
@@ -964,7 +1067,7 @@ public class CryptreeNode {
 	 * @param timestamp
 	 * @return
 	 */
-	private void collectPermissions(final Set<Permission> permissions, final boolean anyCryptoRepoFile, final PermissionType permissionType, final Uid userRepoKeyId, final Date timestamp) {
+	private void collectPermissions(final Set<Permission> permissions, boolean anyCryptoRepoFile, final PermissionType permissionType, final Uid userRepoKeyId, final Date timestamp) {
 		assertNotNull("permissionType", permissionType);
 		assertNotNull("userRepoKeyId", userRepoKeyId);
 		assertNotNull("timestamp", timestamp);
@@ -974,6 +1077,9 @@ public class CryptreeNode {
 		switch (permissionType) {
 			case grant:
 			case write:
+				break;
+			case readUserIdentity:
+				anyCryptoRepoFile = true; // it's global!!! it cannot be assigned on a directory/file level!
 				break;
 			default:
 				throw new IllegalArgumentException("PermissionType unknown or not allowed here: " + permissionType);

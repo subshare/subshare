@@ -24,6 +24,7 @@ import org.subshare.core.dto.CryptoKeyType;
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.user.UserRepoKey.PublicKey;
 import org.subshare.core.user.UserRepoKeyRing;
+import org.subshare.core.user.UserRepoKeyRingLookup;
 import org.subshare.local.UserRepoKeyPublicKeyHelper;
 import org.subshare.local.persistence.CryptoKey;
 import org.subshare.local.persistence.CryptoLink;
@@ -119,7 +120,7 @@ public class PermissionIT extends AbstractRepoToRepoSyncIT {
 		final UserRepoKeyRing ownerUserRepoKeyRing = getUserRepoKeyRing(cryptreeRepoTransportFactory);
 		assertThat(ownerUserRepoKeyRing).isNotNull();
 		try {
-			cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(otherUserRepoKeyRing1));
+			UserRepoKeyRingLookup.Helper.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(otherUserRepoKeyRing1));
 			createLocalDestinationRepo();
 			syncFromRemoteToLocalDest();
 
@@ -137,13 +138,13 @@ public class PermissionIT extends AbstractRepoToRepoSyncIT {
 
 			syncFromRemoteToLocalDest();
 		} finally {
-			cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(ownerUserRepoKeyRing));
+			UserRepoKeyRingLookup.Helper.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(ownerUserRepoKeyRing));
 		}
 
 		final File localDestRoot1 = localDestRoot;
 
 		try {
-			cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(otherUserRepoKeyRing2));
+			UserRepoKeyRingLookup.Helper.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(otherUserRepoKeyRing2));
 			createLocalDestinationRepo();
 			syncFromRemoteToLocalDest();
 
@@ -157,14 +158,14 @@ public class PermissionIT extends AbstractRepoToRepoSyncIT {
 				doNothing();
 			}
 		} finally {
-			cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(ownerUserRepoKeyRing));
+			UserRepoKeyRingLookup.Helper.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(ownerUserRepoKeyRing));
 		}
 
 		final File localDestRoot2 = localDestRoot;
 		localDestRoot = localDestRoot1;
 
 		try {
-			cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(otherUserRepoKeyRing1));
+			UserRepoKeyRingLookup.Helper.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(otherUserRepoKeyRing1));
 			grantPermission(localDestRoot, "/", PermissionType.write, publicKey2);
 
 			// We already granted read access before, hence granting write access should not have any effect.
@@ -173,13 +174,13 @@ public class PermissionIT extends AbstractRepoToRepoSyncIT {
 
 			syncFromRemoteToLocalDest();
 		} finally {
-			cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(ownerUserRepoKeyRing));
+			UserRepoKeyRingLookup.Helper.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(ownerUserRepoKeyRing));
 		}
 
 		localDestRoot = localDestRoot2;
 
 		try {
-			cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(otherUserRepoKeyRing2));
+			UserRepoKeyRingLookup.Helper.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(otherUserRepoKeyRing2));
 			createLocalDestinationRepo();
 			syncFromRemoteToLocalDest();
 
@@ -187,16 +188,16 @@ public class PermissionIT extends AbstractRepoToRepoSyncIT {
 
 			syncFromRemoteToLocalDest(false);
 		} finally {
-			cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(ownerUserRepoKeyRing));
+			UserRepoKeyRingLookup.Helper.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(ownerUserRepoKeyRing));
 		}
 
 		syncFromLocalSrcToRemote();
 
 		try {
-			cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(otherUserRepoKeyRing2));
+			UserRepoKeyRingLookup.Helper.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(otherUserRepoKeyRing2));
 			syncFromRemoteToLocalDest();
 		} finally {
-			cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(ownerUserRepoKeyRing));
+			UserRepoKeyRingLookup.Helper.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(ownerUserRepoKeyRing));
 		}
 	}
 
@@ -238,7 +239,7 @@ public class PermissionIT extends AbstractRepoToRepoSyncIT {
 		final UserRepoKeyRing ownerUserRepoKeyRing = getUserRepoKeyRing(cryptreeRepoTransportFactory);
 		assertThat(ownerUserRepoKeyRing).isNotNull();
 		try {
-			cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(otherUserRepoKeyRing1));
+			UserRepoKeyRingLookup.Helper.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(otherUserRepoKeyRing1));
 			createLocalDestinationRepo();
 			syncFromRemoteToLocalDest();
 
@@ -246,7 +247,7 @@ public class PermissionIT extends AbstractRepoToRepoSyncIT {
 
 			syncFromRemoteToLocalDest(false);
 		} finally {
-			cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(ownerUserRepoKeyRing));
+			UserRepoKeyRingLookup.Helper.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(ownerUserRepoKeyRing));
 		}
 
 		final Date timestampBeforeRevokingWritePermission = new Date();
@@ -257,7 +258,7 @@ public class PermissionIT extends AbstractRepoToRepoSyncIT {
 		Thread.sleep(10);
 
 		try {
-			cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(otherUserRepoKeyRing1));
+			UserRepoKeyRingLookup.Helper.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(otherUserRepoKeyRing1));
 			syncFromRemoteToLocalDest(false);
 
 			final File file = createFileWithRandomContent(localDestRoot, "new-file2");
@@ -290,7 +291,7 @@ public class PermissionIT extends AbstractRepoToRepoSyncIT {
 				doNothing();
 			}
 		} finally {
-			cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(ownerUserRepoKeyRing));
+			UserRepoKeyRingLookup.Helper.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(ownerUserRepoKeyRing));
 		}
 	}
 
@@ -324,22 +325,22 @@ public class PermissionIT extends AbstractRepoToRepoSyncIT {
 		final UserRepoKeyRing ownerUserRepoKeyRing = getUserRepoKeyRing(cryptreeRepoTransportFactory);
 		assertThat(ownerUserRepoKeyRing).isNotNull();
 		try {
-			cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(otherUserRepoKeyRing1));
+			UserRepoKeyRingLookup.Helper.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(otherUserRepoKeyRing1));
 			createLocalDestinationRepo();
 			syncFromRemoteToLocalDest();
 		} finally {
-			cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(ownerUserRepoKeyRing));
+			UserRepoKeyRingLookup.Helper.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(ownerUserRepoKeyRing));
 		}
 
 		try {
-			cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(otherUserRepoKeyRing2));
+			UserRepoKeyRingLookup.Helper.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(otherUserRepoKeyRing2));
 			createLocalDestinationRepo();
 			syncFromRemoteToLocalDest(false);
 
 			final File dir = createFile(localDestRoot, testSubdirPath);
 			assertThat(dir.exists()).isFalse();
 		} finally {
-			cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(ownerUserRepoKeyRing));
+			UserRepoKeyRingLookup.Helper.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(ownerUserRepoKeyRing));
 		}
 	}
 

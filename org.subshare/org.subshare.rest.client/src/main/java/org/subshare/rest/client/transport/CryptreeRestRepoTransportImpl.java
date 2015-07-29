@@ -435,7 +435,7 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 
 	protected UserRepoKeyRing getUserRepoKeyRing() {
 		if (userRepoKeyRing == null) {
-			final UserRepoKeyRingLookup lookup = assertNotNull("cryptreeRepoTransportFactory.userRepoKeyRingLookup", getRepoTransportFactory().getUserRepoKeyRingLookup());
+			final UserRepoKeyRingLookup lookup = UserRepoKeyRingLookup.Helper.getUserRepoKeyRingLookup();
 			final UserRepoKeyRingLookupContext context = new UserRepoKeyRingLookupContext(getClientRepositoryIdOrFail(), getRepositoryId());
 			userRepoKeyRing = lookup.getUserRepoKeyRing(context);
 			if (userRepoKeyRing == null)

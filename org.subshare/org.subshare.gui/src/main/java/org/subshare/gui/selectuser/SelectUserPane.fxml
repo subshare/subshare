@@ -17,39 +17,35 @@
 
 <fx:root xmlns:fx="http://javafx.com/fxml" type="GridPane">
 
-	<children>
-		<Text fx:id="headerText" wrappingWidth="500" GridPane.columnIndex="0" GridPane.rowIndex="0"/> 
-		<HBox GridPane.columnIndex="0" GridPane.rowIndex="1"> 
-			<children>
-				<Label text="Filter: "/> 
-				<TextField fx:id="filterTextField" HBox.hgrow="ALWAYS"> 
-					<HBox.margin>
-						<Insets left="4"/> 
-					</HBox.margin>
-				</TextField>
-			</children>
-			<GridPane.margin>
-				<Insets top="4" bottom="4"/> 
-			</GridPane.margin>
-		</HBox>
-		<TableView fx:id="tableView" GridPane.fillHeight="true" GridPane.fillWidth="true" GridPane.vgrow="ALWAYS" GridPane.hgrow="ALWAYS" GridPane.columnIndex="0" GridPane.rowIndex="2"> 
-			<columns>
-				<TableColumn fx:id="firstNameColumn" text="First name" prefWidth="100"> 
-					<cellValueFactory>
-						<PropertyValueFactory property="firstName"/> 
-					</cellValueFactory>
-				</TableColumn>
-				<TableColumn fx:id="lastNameColumn" text="Last name" prefWidth="100"> 
-					<cellValueFactory>
-						<PropertyValueFactory property="lastName"/> 
-					</cellValueFactory>
-				</TableColumn>
-				<TableColumn fx:id="emailColumn" text="E-mail" prefWidth="200"> 
-					<cellValueFactory>
-						<PropertyValueFactory property="email"/> 
-					</cellValueFactory>
-				</TableColumn>
-			</columns>
-		</TableView>
-	</children>
+	<Text fx:id="headerText" wrappingWidth="500" GridPane.columnIndex="0" GridPane.rowIndex="0"/> 
+	<HBox GridPane.columnIndex="0" GridPane.rowIndex="1"> 
+		<Label text="Filter: "/> 
+		<TextField fx:id="filterTextField" HBox.hgrow="ALWAYS"> 
+			<HBox.margin>
+				<Insets left="4"/> 
+			</HBox.margin>
+		</TextField>
+		<GridPane.margin>
+			<Insets top="4" bottom="4"/> 
+		</GridPane.margin>
+	</HBox>
+	<TableView fx:id="tableView" GridPane.fillHeight="true" GridPane.fillWidth="true" GridPane.vgrow="ALWAYS" GridPane.hgrow="ALWAYS" GridPane.columnIndex="0" GridPane.rowIndex="2"> 
+		<columns>
+			<TableColumn fx:id="firstNameColumn" text="First name" prefWidth="100"> 
+				<cellValueFactory>
+					<PropertyValueFactory property="firstName"/> 
+				</cellValueFactory>
+			</TableColumn>
+			<TableColumn fx:id="lastNameColumn" text="Last name" prefWidth="100"> 
+				<cellValueFactory>
+					<PropertyValueFactory property="lastName"/> 
+				</cellValueFactory>
+			</TableColumn>
+			<TableColumn fx:id="emailColumn" text="E-mail" prefWidth="200"> 
+				<cellValueFactory>
+					<PropertyValueFactory property="email"/> 
+				</cellValueFactory>
+			</TableColumn>
+		</columns>
+	</TableView>
 </fx:root>

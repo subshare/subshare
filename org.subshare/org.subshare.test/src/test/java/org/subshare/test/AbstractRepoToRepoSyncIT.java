@@ -22,7 +22,9 @@ import org.subshare.local.persistence.CryptoRepoFile;
 import org.subshare.local.persistence.CryptoRepoFileDao;
 import org.subshare.rest.client.transport.CryptreeRestRepoTransportFactoryImpl;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,6 +56,18 @@ public abstract class AbstractRepoToRepoSyncIT extends AbstractIT {
 	protected URL remoteRootURLWithPathPrefixForLocalSrc;
 	protected URL remoteRootURLWithPathPrefixForLocalDest;
 	protected UserRepoKeyRing ownerUserRepoKeyRing;
+
+	private static UserRepoKeyRingLookup originalUserRepoKeyRingLookup;
+
+	@BeforeClass
+	public static void beforeAbstractRepoToRepoSyncIT() {
+		originalUserRepoKeyRingLookup = UserRepoKeyRingLookup.Helper.getUserRepoKeyRingLookup();
+	}
+
+	@AfterClass
+	public static void afterAbstractRepoToRepoSyncIT() {
+		UserRepoKeyRingLookup.Helper.setUserRepoKeyRingLookup(originalUserRepoKeyRingLookup);
+	}
 
 	@Before
 	public void before() throws Exception {
@@ -133,7 +147,7 @@ public abstract class AbstractRepoToRepoSyncIT extends AbstractIT {
 		localRepoManagerRemote.close();
 
 		ownerUserRepoKeyRing = createUserRepoKeyRing();
-		cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(ownerUserRepoKeyRing));
+		UserRepoKeyRingLookup.Helper.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(ownerUserRepoKeyRing));
 
 		new CloudStoreClient("requestRepoConnection", getLocalRootWithPathPrefix().getPath(), remoteRootURLWithPathPrefixForLocalSrc.toExternalForm()).execute();
 		//	acceptRepoConnection is not needed, because already accepted implicitly by *signed* request
@@ -217,7 +231,7 @@ public abstract class AbstractRepoToRepoSyncIT extends AbstractIT {
 	}
 
 	protected static UserRepoKeyRing getUserRepoKeyRing(CryptreeRestRepoTransportFactoryImpl factory) {
-		UserRepoKeyRingLookup lookup = factory.getUserRepoKeyRingLookup();
+		UserRepoKeyRingLookup lookup = UserRepoKeyRingLookup.Helper.getUserRepoKeyRingLookup();
 		if (lookup == null)
 			return null;
 

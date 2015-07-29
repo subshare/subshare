@@ -24,7 +24,7 @@ public class UserRepoKeyDtoConverter {
 	public UserRepoKey fromUserRepoKeyDto(final UserRepoKeyDto userRepoKeyDto) {
 		assertNotNull("userRepoKeyDto", userRepoKeyDto);
 
-		final UserRepoKey userRepoKey = new UserRepoKey(
+		final UserRepoKey userRepoKey = new UserRepoKeyImpl(
 				userRepoKeyDto.getUserRepoKeyId(),
 				userRepoKeyDto.getServerRepositoryId(),
 				userRepoKeyDto.getEncryptedSignedPrivateKeyData(),

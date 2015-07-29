@@ -22,7 +22,7 @@ public class UserRepoKeyRingDtoConverter {
 	public UserRepoKeyRing fromUserRepoKeyRingDto(final UserRepoKeyRingDto userRepoKeyRingDto) {
 		assertNotNull("userRepoKeyRingDto", userRepoKeyRingDto);
 
-		final UserRepoKeyRing userRepoKeyRing = new UserRepoKeyRing();
+		final UserRepoKeyRing userRepoKeyRing = new UserRepoKeyRingImpl();
 		for (final UserRepoKeyDto userRepoKeyDto : userRepoKeyRingDto.getUserRepoKeyDtos()) {
 			final UserRepoKey userRepoKey = userRepoKeyDtoConverter.fromUserRepoKeyDto(userRepoKeyDto);
 			userRepoKeyRing.addUserRepoKey(userRepoKey);

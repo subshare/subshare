@@ -25,6 +25,7 @@ import org.subshare.core.user.UserRegistryImpl;
 import org.subshare.core.user.UserRepoInvitationManager;
 import org.subshare.core.user.UserRepoInvitationToken;
 import org.subshare.core.user.UserRepoKeyRing;
+import org.subshare.core.user.UserRepoKeyRingLookup;
 import org.subshare.local.persistence.SsRemoteRepository;
 import org.subshare.local.persistence.UserIdentityLinkDao;
 import org.subshare.local.persistence.UserRepoKeyPublicKey;
@@ -96,14 +97,14 @@ public class AbstractUserRegistryIT extends AbstractRepoToRepoSyncIT {
 		userRegistry = ownerUserRegistry;
 		assignOwnerAndFriendFromCurrentUserRegistry();
 		setupPgp("marco", "test12345");
-		cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(owner.getUserRepoKeyRingOrCreate()));
+		UserRepoKeyRingLookup.Helper.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(owner.getUserRepoKeyRingOrCreate()));
 	}
 
 	protected void switchLocationToFriend() throws Exception {
 		userRegistry = friendUserRegistry;
 		assignOwnerAndFriendFromCurrentUserRegistry();
 		setupPgp("khaled", "test678");
-		cryptreeRepoTransportFactory.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(friend.getUserRepoKeyRingOrCreate()));
+		UserRepoKeyRingLookup.Helper.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(friend.getUserRepoKeyRingOrCreate()));
 	}
 
 	private void assignOwnerAndFriendFromCurrentUserRegistry() {

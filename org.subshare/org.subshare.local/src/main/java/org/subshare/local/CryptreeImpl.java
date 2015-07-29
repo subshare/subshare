@@ -1680,6 +1680,12 @@ public class CryptreeImpl extends AbstractCryptree {
 	}
 
 	@Override
+	public Set<PermissionType> getGrantedPermissionTypes(final String localPath, final Uid userRepoKeyId) {
+		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(localPath);
+		return cryptreeNode.getGrantedPermissionTypes(userRepoKeyId);
+	}
+
+	@Override
 	public void assertHasPermission(
 			final Uid cryptoRepoFileId,
 			final Uid userRepoKeyId,
@@ -1711,6 +1717,26 @@ public class CryptreeImpl extends AbstractCryptree {
 	}
 
 	@Override
+	public Uid getCryptoRepoFileId(final String localPath) {
+		assertNotNull("localPath", localPath);
+		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(localPath);
+		final CryptoRepoFile cryptoRepoFile = cryptreeNode.getCryptoRepoFile();
+		return cryptoRepoFile == null ? null : cryptoRepoFile.getCryptoRepoFileId();
+	}
+
+	@Override
+	public Uid getParentCryptoRepoFileId(final Uid cryptoRepoFileId) {
+		assertNotNull("cryptoRepoFileId", cryptoRepoFileId);
+		if (getRootCryptoRepoFileId().equals(cryptoRepoFileId))
+			return null;
+
+		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(cryptoRepoFileId);
+		final CryptoRepoFile parent = assertNotNull("cryptreeNode.cryptoRepoFile", cryptreeNode.getCryptoRepoFile()).getParent();
+		assertNotNull("cryptreeNode.cryptoRepoFile.parent", parent);
+		return parent.getCryptoRepoFileId();
+	}
+
+	@Override
 	public void makeMetaOnly() {
 		final LocalRepoTransaction transaction = getTransactionOrFail();
 		final SsLocalRepository localRepository = (SsLocalRepository) transaction.getDao(LocalRepositoryDao.class).getLocalRepositoryOrFail();
@@ -1725,5 +1751,14 @@ public class CryptreeImpl extends AbstractCryptree {
 		final LocalRepoTransaction transaction = getTransactionOrFail();
 		final SsLocalRepository localRepository = (SsLocalRepository) transaction.getDao(LocalRepositoryDao.class).getLocalRepositoryOrFail();
 		return localRepository.getLocalRepositoryType() == LocalRepositoryType.CLIENT_META_ONLY;
+	}
+
+	@Override
+	public Uid getOwnerUserRepoKeyId() {
+		final RepositoryOwner repositoryOwner = getCryptreeContext().getRepositoryOwner();
+		if (repositoryOwner == null)
+			return null;
+
+		return repositoryOwner.getUserRepoKeyPublicKey().getUserRepoKeyId();
 	}
 }

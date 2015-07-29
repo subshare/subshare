@@ -116,6 +116,29 @@ public interface Cryptree {
 	void grantPermission(Uid cryptoRepoFileId, PermissionType permissionType, PublicKey userRepoKeyPublicKey);
 	void revokePermission(Uid cryptoRepoFileId, PermissionType permissionType, Set<Uid> userRepoKeyIds);
 
+	/**
+	 * Gets the {@link PermissionType}s granted to the specified user on the level of the specified directory/file.
+	 * <p>
+	 * <b>Important:</b> In contrast to {@link #assertHasPermission(String, Uid, PermissionType, Date) assertHasPermission(...)} this
+	 * method operates on the current node, only! It does not take parents / inheritance into account.
+	 * <p>
+	 * <b>Important:</b> If the specified user has {@link PermissionType#readUserIdentity readUserIdentity}, this
+	 * {@code PermissionType} is always part of the result, no matter on which node this method is invoked! This is,
+	 * because {@code readUserIdentity} is not associated with a directory - it's global! Technically, it is assigned
+	 * to the root (at least right now - this might change later), but semantically, it is not associated with any.
+	 *
+	 * @param localPath the directory/file whose permissions to query. Must not be <code>null</code>.
+	 * @param userRepoKeyId the user-key's identifier for which to determine the permissions granted. Must not be <code>null</code>.
+	 * @return the {@link PermissionType}s granted. Never <code>null</code>, but maybe empty!
+	 * @see #grantPermission(String, PermissionType, PublicKey)
+	 * @see #revokePermission(String, PermissionType, Set)
+	 * @see #assertHasPermission(String, Uid, PermissionType, Date)
+	 */
+	Set<PermissionType> getGrantedPermissionTypes(String localPath, Uid userRepoKeyId);
+
+	Uid getCryptoRepoFileId(String localPath);
+	Uid getParentCryptoRepoFileId(Uid cryptoRepoFileId);
+
 	void assertHasPermission(Uid cryptoRepoFileId, Uid userRepoKeyId, PermissionType permissionType, Date timestamp) throws AccessDeniedException;
 	void assertHasPermission(String localPath, Uid userRepoKeyId, PermissionType permissionType, Date timestamp) throws AccessDeniedException;
 
@@ -154,4 +177,5 @@ public interface Cryptree {
 	CryptoRepoFileOnServerDto getCryptoRepoFileOnServerDto(String localPath);
 	RepoFileDto getDecryptedRepoFileOnServerDtoOrFail(Uid cryptoRepoFileId) throws AccessDeniedException;
 	RepoFileDto getDecryptedRepoFileOnServerDto(String localPath);
+	Uid getOwnerUserRepoKeyId();
 }

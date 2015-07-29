@@ -19,6 +19,8 @@ import org.subshare.core.user.UserRepoKeyPublicKeyLookup;
 import org.subshare.core.user.UserRepoKeyRing;
 import org.subshare.core.user.UserRepoKeyRingLookup;
 import org.subshare.core.user.UserRepoKeyRingLookupContext;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import co.codewizards.cloudstore.core.dto.Uid;
@@ -30,6 +32,18 @@ public class CryptreeRepoTransportTest {
 
 	private static Random random = new Random();
 
+	private static UserRepoKeyRingLookup originalUserRepoKeyRingLookup;
+
+	@BeforeClass
+	public static void beforeCryptreeRepoTransportTest() {
+		originalUserRepoKeyRingLookup = UserRepoKeyRingLookup.Helper.getUserRepoKeyRingLookup();
+	}
+
+	@AfterClass
+	public static void afterCryptreeRepoTransportTest() {
+		UserRepoKeyRingLookup.Helper.setUserRepoKeyRingLookup(originalUserRepoKeyRingLookup);
+	}
+
 	@Test
 	public void encryptAndSignAndVerifyAndDecrypt() throws Exception {
 		final CryptreeRestRepoTransportFactoryImpl factory = new CryptreeRestRepoTransportFactoryImpl();
@@ -37,7 +51,7 @@ public class CryptreeRepoTransportTest {
 		final UUID serverRepositoryId = UUID.randomUUID();
 		final UUID clientRepositoryId = UUID.randomUUID();
 		final UserRepoKeyRing userRepoKeyRing = createUserRepoKeyRing(serverRepositoryId);
-		factory.setUserRepoKeyRingLookup(new UserRepoKeyRingLookup() {
+		UserRepoKeyRingLookup.Helper.setUserRepoKeyRingLookup(new UserRepoKeyRingLookup() {
 			@Override
 			public UserRepoKeyRing getUserRepoKeyRing(UserRepoKeyRingLookupContext context) {
 				return userRepoKeyRing;

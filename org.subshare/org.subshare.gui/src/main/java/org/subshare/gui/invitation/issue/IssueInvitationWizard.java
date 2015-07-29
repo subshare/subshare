@@ -27,7 +27,6 @@ import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.progress.ProgressMonitor;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import co.codewizards.cloudstore.core.repo.sync.RepoSyncDaemon;
-import co.codewizards.cloudstore.core.util.IOUtil;
 
 public class IssueInvitationWizard extends Wizard {
 
@@ -84,18 +83,7 @@ public class IssueInvitationWizard extends Wizard {
 
 	private String getLocalPath() {
 		final LocalRepo localRepo = assertNotNull("issueInvitationData.localRepo", issueInvitationData.getLocalRepo());
-		final File localRoot = assertNotNull("issueInvitationData.localRepo.localRoot", localRepo.getLocalRoot());
-		final File invitationTargetFile = assertNotNull("issueInvitationData.invitationTargetFile", issueInvitationData.getInvitationTargetFile());
-		if (localRoot.equals(invitationTargetFile))
-			return "";
-
-		final String localPath;
-		try {
-			localPath = IOUtil.getRelativePath(localRoot, invitationTargetFile).replace(java.io.File.separatorChar, '/');
-		} catch (IOException e1) {
-			throw new RuntimeException(e1);
-		}
-		return localPath;
+		return localRepo.getLocalPath(assertNotNull("issueInvitationData.invitationTargetFile", issueInvitationData.getInvitationTargetFile()));
 	}
 
 	private String getFileName(final User invitee) {

@@ -6,56 +6,156 @@
 <?import java.lang.*?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.Tooltip?>
+<?import javafx.scene.control.cell.PropertyValueFactory?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
 <?import org.subshare.gui.filetree.FileTreePane?>
 <?scenebuilder-preview-i18n-resource messages.properties?>
 
-<fx:root xmlns:fx="http://javafx.com/fxml" type="GridPane">
+<fx:root xmlns:fx="http://javafx.com/fxml" type="VBox">
 
-	<children>
-		<FlowPane GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="2"> 
-			<Button fx:id="syncButton" onAction="#syncButtonClicked"> 
-				<graphic>
-					<ImageView> 
-						<image>
-							<Image url="@sync-24x24.png"/> 
-						</image>
-					</ImageView>
-				</graphic>
-				<tooltip>
-					<Tooltip text="Synchronize this repository now."/> 
-				</tooltip>
-			</Button>
-			<Button fx:id="inviteButton" onAction="#inviteButtonClicked"> 
-				<graphic>
-					<ImageView> 
-						<image>
-							<Image url="@invite-24x24.png"/> 
-						</image>
-					</ImageView>
-				</graphic>
-				<tooltip>
-					<Tooltip text="Invite someone to share this repository at this sub-directory.&#010;&#010;You'll select another user and an invitation token is going to be created for this user."/> 
-				</tooltip>
-			</Button>
-			<GridPane.margin>
-				<Insets left="8" right="8" top="8" bottom="8"/> 
-			</GridPane.margin>
-		</FlowPane>
-		<TextField fx:id="pathTextField" editable="false" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.hgrow="ALWAYS"> 
-			<GridPane.margin>
-				<Insets left="8" right="8" bottom="8"/> 
-			</GridPane.margin>
-		</TextField>
-		<FileTreePane fx:id="fileTreePane" selectionMode="MULTIPLE" GridPane.columnIndex="0" GridPane.rowIndex="2" GridPane.hgrow="ALWAYS" GridPane.vgrow="ALWAYS"> 
-			<GridPane.margin>
-				<Insets left="8" right="8" bottom="8"/> 
-			</GridPane.margin>
-		</FileTreePane>
-	</children>
+	<FlowPane> 
+		<Button fx:id="syncButton" onAction="#syncButtonClicked"> 
+			<graphic>
+				<ImageView> 
+					<image>
+						<Image url="@sync-24x24.png"/> 
+					</image>
+				</ImageView>
+			</graphic>
+			<tooltip>
+				<Tooltip text="Synchronize this repository now."/> 
+			</tooltip>
+		</Button>
+		<Button fx:id="inviteButton" onAction="#inviteButtonClicked"> 
+			<graphic>
+				<ImageView> 
+					<image>
+						<Image url="@invite-24x24.png"/> 
+					</image>
+				</ImageView>
+			</graphic>
+			<tooltip>
+				<Tooltip text="Invite someone to share this repository at this sub-directory.&#010;&#010;You'll select another user and an invitation token is going to be created for this user."/> 
+			</tooltip>
+		</Button>
+		<VBox.margin>
+			<Insets left="8" right="8" top="8" bottom="8"/> 
+		</VBox.margin>
+	</FlowPane>
+	<TabPane tabClosingPolicy="UNAVAILABLE"> 
+		<Tab text="Content"> 
+			<content>
+				<GridPane> 
+					<TextField fx:id="pathTextField" editable="false" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.hgrow="ALWAYS"> 
+						<GridPane.margin>
+							<Insets left="8" top="8" right="8" bottom="8"/> 
+						</GridPane.margin>
+					</TextField>
+					<FileTreePane fx:id="fileTreePane" selectionMode="MULTIPLE" GridPane.columnIndex="0" GridPane.rowIndex="2" GridPane.hgrow="ALWAYS" GridPane.vgrow="ALWAYS"> 
+						<GridPane.margin>
+							<Insets left="8" right="8" bottom="8"/> 
+						</GridPane.margin>
+					</FileTreePane>
+				</GridPane>
+			</content>
+		</Tab>
+		<Tab text="Security"> 
+			<content>
+				<GridPane> 
+					<CheckBox fx:id="permissionsInheritedCheckBox" text="Permissions are inherited." GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.hgrow="ALWAYS" GridPane.columnSpan="2"> 
+						<tooltip>
+							<Tooltip text="Inherit the permissions from the parent directory. Permissions granted here are added to the inherited permissions."/> 
+						</tooltip>
+						<GridPane.margin>
+							<Insets left="8" top="8" right="8" bottom="8"/> 
+						</GridPane.margin>
+					</CheckBox>
+					<HBox GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.columnSpan="2"> 
+						<Label text="Filter: "> 
+							<HBox.margin>
+								<Insets left="8"/> 
+							</HBox.margin>
+						</Label>
+						<TextField fx:id="filterTextField" HBox.hgrow="ALWAYS"> 
+							<HBox.margin>
+								<Insets left="4"/> 
+							</HBox.margin>
+						</TextField>
+						<GridPane.margin>
+							<Insets top="4" bottom="4"/> 
+						</GridPane.margin>
+					</HBox>
+					<TableView fx:id="userTableView" GridPane.fillHeight="true" GridPane.fillWidth="true" GridPane.vgrow="ALWAYS" GridPane.hgrow="ALWAYS" GridPane.columnIndex="0" GridPane.rowIndex="2" GridPane.columnSpan="2"> 
+						<columns>
+							<TableColumn fx:id="firstNameColumn" text="First name" prefWidth="100"> 
+								<cellValueFactory>
+									<PropertyValueFactory property="firstName"/> 
+								</cellValueFactory>
+							</TableColumn>
+							<TableColumn fx:id="lastNameColumn" text="Last name" prefWidth="100"> 
+								<cellValueFactory>
+									<PropertyValueFactory property="lastName"/> 
+								</cellValueFactory>
+							</TableColumn>
+							<TableColumn fx:id="emailColumn" text="E-mail" prefWidth="200"> 
+								<cellValueFactory>
+									<PropertyValueFactory property="email"/> 
+								</cellValueFactory>
+							</TableColumn>
+							<TableColumn fx:id="effectivePermissionStringColumn" text="Effective permission" prefWidth="100"> 
+								<cellValueFactory>
+									<PropertyValueFactory property="effectivePermissionString"/> 
+								</cellValueFactory>
+							</TableColumn>
+							<TableColumn fx:id="grantedPermissionStringColumn" text="Granted permission" prefWidth="100"> 
+								<cellValueFactory>
+									<PropertyValueFactory property="grantedPermissionString"/> 
+								</cellValueFactory>
+							</TableColumn>
+							<TableColumn fx:id="inheritedPermissionStringColumn" text="Inherited permission" prefWidth="100"> 
+								<cellValueFactory>
+									<PropertyValueFactory property="inheritedPermissionString"/> 
+								</cellValueFactory>
+							</TableColumn>
+						</columns>
+						<GridPane.margin>
+							<Insets left="8" right="8"/> 
+						</GridPane.margin>
+					</TableView>
+					<Label fx:id="permissionTypeLabel" text="Permission of selected users:" GridPane.columnIndex="0" GridPane.rowIndex="3"> 
+						<GridPane.margin>
+							<Insets left="8" top="8"/> 
+						</GridPane.margin>
+					</Label>
+					<ComboBox fx:id="permissionTypeComboBox" GridPane.fillHeight="true" GridPane.fillWidth="true" GridPane.hgrow="ALWAYS" GridPane.columnIndex="1" GridPane.rowIndex="3"> 
+						<GridPane.margin>
+							<Insets left="8" right="8" top="8"/> 
+						</GridPane.margin>
+					</ComboBox>
+					<CheckBox fx:id="readUserIdentityPermissionCheckBox" text="%LocalRepoDirectoryPane.readUserIdentityPermissionCheckBox.text" allowIndeterminate="true" GridPane.hgrow="ALWAYS" GridPane.columnSpan="2" GridPane.columnIndex="0" GridPane.rowIndex="4"> 
+						<tooltip>
+							<Tooltip text="%LocalRepoDirectoryPane.readUserIdentityPermissionCheckBox.tooltip.text"/> 
+						</tooltip>
+						<GridPane.margin>
+							<Insets left="8" top="8" right="8" bottom="8"/> 
+						</GridPane.margin>
+					</CheckBox>
+				</GridPane>
+			</content>
+		</Tab>
+	</TabPane>
 </fx:root>

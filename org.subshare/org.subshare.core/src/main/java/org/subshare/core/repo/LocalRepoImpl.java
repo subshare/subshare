@@ -4,9 +4,11 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.io.IOException;
 import java.util.UUID;
 
 import co.codewizards.cloudstore.core.oio.File;
+import co.codewizards.cloudstore.core.util.IOUtil;
 
 public class LocalRepoImpl implements LocalRepo {
 	private PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
@@ -44,6 +46,27 @@ public class LocalRepoImpl implements LocalRepo {
 		final File old = this.localRoot;
 		this.localRoot = localRoot;
 		firePropertyChange(PropertyEnum.localRoot, old, localRoot);
+	}
+
+	@Override
+	public String getLocalPath(final File file) {
+		assertNotNull("file", file);
+		assertNotNull("localRoot", localRoot);
+
+		if (file.equals(localRoot))
+			return "";
+
+		final String relativePath;
+		try {
+			relativePath = IOUtil.getRelativePath(localRoot, file);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+
+		if (relativePath.startsWith("..") || relativePath.startsWith("/"))
+			throw new IllegalArgumentException(String.format("file '%s' is not located inside repository's root '%s'!", file.getPath(), localRoot.getPath()));
+
+		return '/' + relativePath.replace(java.io.File.separatorChar, '/');
 	}
 
 	@Override

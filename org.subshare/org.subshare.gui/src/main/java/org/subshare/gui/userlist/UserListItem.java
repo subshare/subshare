@@ -24,10 +24,10 @@ public class UserListItem {
 	private final User user;
 	private Pgp pgp;
 
-	private final StringProperty firstNameProperty;
-	private final StringProperty lastNameProperty;
-	private final StringProperty emailProperty;
-	private final StringProperty keyTrustLevelProperty;
+	private final StringProperty firstName = new SimpleStringProperty(this, "firstName");
+	private final StringProperty lastName = new SimpleStringProperty(this, "lastName");
+	private final StringProperty email = new SimpleStringProperty(this, "email");
+	private final StringProperty keyTrustLevelProperty = new SimpleStringProperty(this, "keyTrustLevel");
 
 	private volatile List<String> emails;
 	private volatile String keyTrustLevel;
@@ -39,10 +39,10 @@ public class UserListItem {
 		// We do *not* use JavaBeanStringProperty, but SimpleStringProperty instead, because our User bean is a proxy.
 		// Since there are *many* Users (and thus UserListItems), it would be much slower to use a JavaBeanStringProperty,
 		// which delegates every get() invocation to the underlying bean getter - implying an RPC invocation!
-		firstNameProperty = new SimpleStringProperty(user, User.PropertyEnum.firstName.name());
-		lastNameProperty = new SimpleStringProperty(user, User.PropertyEnum.lastName.name());
-		emailProperty = new SimpleStringProperty();
-		keyTrustLevelProperty = new SimpleStringProperty();
+//		firstName = new SimpleStringProperty(user, User.PropertyEnum.firstName.name());
+//		lastName = new SimpleStringProperty(user, User.PropertyEnum.lastName.name());
+//		email = new SimpleStringProperty();
+//		keyTrustLevelProperty = new SimpleStringProperty();
 
 		copyDataFromUser();
 		copyDataFromPgp();
@@ -76,13 +76,13 @@ public class UserListItem {
 		}
 	};
 
-	private void copyDataFromUser() {
-		firstNameProperty.set(user.getFirstName());
-		lastNameProperty.set(user.getLastName());
-		emailProperty.set(getEmail());
+	protected void copyDataFromUser() {
+		firstName.set(user.getFirstName());
+		lastName.set(user.getLastName());
+		email.set(getEmail());
 	}
 
-	private void copyDataFromPgp() {
+	protected void copyDataFromPgp() {
 		keyTrustLevelProperty.set(getKeyTrustLevel());
 	}
 
@@ -98,13 +98,21 @@ public class UserListItem {
 	}
 
 	public StringProperty firstNameProperty() {
-		return firstNameProperty;
+		return firstName;
 	}
+	public String getFirstName() {
+		return firstName.get();
+	}
+
 	public StringProperty lastNameProperty() {
-		return lastNameProperty;
+		return lastName;
 	}
+	public String getLastName() {
+		return lastName.get();
+	}
+
 	public StringProperty emailProperty() {
-		return emailProperty;
+		return email;
 	}
 	public StringProperty keyTrustLevelProperty() {
 		return keyTrustLevelProperty;
@@ -151,11 +159,11 @@ public class UserListItem {
 		if (filterText.isEmpty())
 			return true;
 
-		final String firstName = firstNameProperty.get();
+		final String firstName = this.firstName.get();
 		if (firstName != null && firstName.toLowerCase().contains(filterText))
 			return true;
 
-		final String lastName = lastNameProperty.get();
+		final String lastName = this.lastName.get();
 		if (lastName != null && lastName.toLowerCase().contains(filterText))
 			return true;
 

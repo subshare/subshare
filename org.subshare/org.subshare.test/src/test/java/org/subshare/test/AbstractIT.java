@@ -96,7 +96,7 @@ public abstract class AbstractIT {
 			cryptreeRepoTransportFactory = null;
 			if (f != null) {
 				f.setDynamicX509TrustManagerCallbackClass(null);
-				f.setUserRepoKeyRingLookup(null);
+//				f.setUserRepoKeyRingLookup(null);
 			}
 
 			RestPgpTransportFactory p = restPgpTransportFactory;
