@@ -18,6 +18,8 @@ import javafx.collections.ObservableSet;
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.user.User;
 
+import co.codewizards.cloudstore.core.dto.Uid;
+
 public class UserListItem extends org.subshare.gui.userlist.UserListItem {
 
 	private final BooleanProperty owner = new SimpleBooleanProperty(this, "owner") { //$NON-NLS-1$
@@ -35,6 +37,8 @@ public class UserListItem extends org.subshare.gui.userlist.UserListItem {
 	private final StringProperty effectivePermissionString = new SimpleStringProperty(this, "effectivePermissionString"); //$NON-NLS-1$
 	private final StringProperty grantedPermissionString = new SimpleStringProperty(this, "grantedPermissionString"); //$NON-NLS-1$
 	private final StringProperty inheritedPermissionString = new SimpleStringProperty(this, "inheritedPermissionString"); //$NON-NLS-1$
+
+	private final ObservableSet<Uid> userRepoKeyIds = FXCollections.observableSet(new HashSet<Uid>());
 
 	public UserListItem(User user) {
 		super(user);
@@ -136,6 +140,10 @@ public class UserListItem extends org.subshare.gui.userlist.UserListItem {
 		this.inheritedPermissionStringProperty().set(string);
 	}
 
+	public ObservableSet<Uid> getUserRepoKeyIds() {
+		return userRepoKeyIds;
+	}
+
 	public void copyFrom(UserListItem other) {
 		this.setOwner(other.isOwner());
 
@@ -147,5 +155,8 @@ public class UserListItem extends org.subshare.gui.userlist.UserListItem {
 
 		this.inheritedPermissionTypes.retainAll(other.inheritedPermissionTypes);
 		this.inheritedPermissionTypes.addAll(other.inheritedPermissionTypes);
+
+		this.userRepoKeyIds.retainAll(other.userRepoKeyIds);
+		this.userRepoKeyIds.addAll(other.userRepoKeyIds);
 	}
 }

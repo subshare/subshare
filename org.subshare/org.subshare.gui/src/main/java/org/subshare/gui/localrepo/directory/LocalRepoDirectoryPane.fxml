@@ -32,7 +32,7 @@
 			<graphic>
 				<ImageView> 
 					<image>
-						<Image url="@sync-24x24.png"/> 
+						<Image url="@sync_24x24.png"/> 
 					</image>
 				</ImageView>
 			</graphic>
@@ -44,12 +44,24 @@
 			<graphic>
 				<ImageView> 
 					<image>
-						<Image url="@invite-24x24.png"/> 
+						<Image url="@invite_24x24.png"/> 
 					</image>
 				</ImageView>
 			</graphic>
 			<tooltip>
 				<Tooltip text="Invite someone to share this repository at this sub-directory.&#010;&#010;You'll select another user and an invitation token is going to be created for this user."/> 
+			</tooltip>
+		</Button>
+		<Button fx:id="refreshButton" onAction="#refreshButtonClicked"> 
+			<graphic>
+				<ImageView> 
+					<image>
+						<Image url="@refresh_24x24.png"/> 
+					</image>
+				</ImageView>
+			</graphic>
+			<tooltip>
+				<Tooltip text="Refresh all data shown here."/> 
 			</tooltip>
 		</Button>
 		<VBox.margin>
@@ -65,7 +77,7 @@
 							<Insets left="8" top="8" right="8" bottom="8"/> 
 						</GridPane.margin>
 					</TextField>
-					<FileTreePane fx:id="fileTreePane" selectionMode="MULTIPLE" GridPane.columnIndex="0" GridPane.rowIndex="2" GridPane.hgrow="ALWAYS" GridPane.vgrow="ALWAYS"> 
+					<FileTreePane fx:id="fileTreePane" selectionMode="MULTIPLE" refreshButtonVisible="false" GridPane.columnIndex="0" GridPane.rowIndex="2" GridPane.hgrow="ALWAYS" GridPane.vgrow="ALWAYS"> 
 						<GridPane.margin>
 							<Insets left="8" right="8" bottom="8"/> 
 						</GridPane.margin>

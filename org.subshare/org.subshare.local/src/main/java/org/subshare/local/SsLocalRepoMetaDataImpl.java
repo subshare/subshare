@@ -19,6 +19,7 @@ import org.subshare.core.CryptreeFactoryRegistry;
 import org.subshare.core.dto.CryptoRepoFileDto;
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.repo.local.SsLocalRepoMetaData;
+import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKeyRing;
 import org.subshare.core.user.UserRepoKeyRingLookup;
 import org.subshare.core.user.UserRepoKeyRingLookupContext;
@@ -169,6 +170,24 @@ public class SsLocalRepoMetaDataImpl extends LocalRepoMetaDataImpl implements Ss
 			tx.commit();
 		}
 		return Collections.unmodifiableSet(result);
+	}
+
+	@Override
+	public void revokePermission(String localPath, PermissionType permissionType, final Set<Uid> userRepoKeyIds) {
+		try (final LocalRepoTransaction tx = beginWriteTransaction();) {
+			final Cryptree cryptree = getCryptree(tx);
+			cryptree.revokePermission(localPath, permissionType, userRepoKeyIds);
+			tx.commit();
+		}
+	}
+
+	@Override
+	public void grantPermission(String localPath, PermissionType permissionType, UserRepoKey.PublicKey publicKey) {
+		try (final LocalRepoTransaction tx = beginWriteTransaction();) {
+			final Cryptree cryptree = getCryptree(tx);
+			cryptree.grantPermission(localPath, permissionType, publicKey);
+			tx.commit();
+		}
 	}
 
 //	@Override

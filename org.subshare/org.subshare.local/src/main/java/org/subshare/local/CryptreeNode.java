@@ -8,6 +8,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -678,6 +679,9 @@ public class CryptreeNode {
 		assertNotNull("permissionType", permissionType);
 		assertNotNull("publicKey", publicKey);
 
+		if (isOwner(publicKey.getUserRepoKeyId()))
+			return; // the owner always has all permissions - no need to grant anything!
+
 		if (PermissionType.readUserIdentity == permissionType) {
 			final CryptreeNode parent = getParent();
 			if (parent != null) {
@@ -848,7 +852,7 @@ public class CryptreeNode {
 			// Since it is technically required to have read permission, when having write or grant permission, we
 			// revoke grant and write permission, too.
 			revokePermission(PermissionType.write, userRepoKeyIds);
-			revokePermission(PermissionType.grant, userRepoKeyIds);
+//			revokePermission(PermissionType.grant, userRepoKeyIds); // is implicitly done by revoking 'write' permission.
 
 			revokeReadPermission(userRepoKeyIds);
 			return;
@@ -899,24 +903,26 @@ public class CryptreeNode {
 	public Set<PermissionType> getGrantedPermissionTypes(final Uid userRepoKeyId) {
 		assertNotNull("userRepoKeyId", userRepoKeyId);
 		final Set<PermissionType> result = EnumSet.noneOf(PermissionType.class);
-		final Date now = new Date();
 
-		final PermissionDao pDao = context.transaction.getDao(PermissionDao.class);
-		if (! pDao.getNonRevokedPermissions(PermissionType.readUserIdentity, userRepoKeyId).isEmpty())
-			result.add(PermissionType.readUserIdentity);
+		if (isOwner(userRepoKeyId)) // the owner has *all* permissions - always!
+			result.addAll(Arrays.asList(PermissionType.values()));
+		else {
+			final PermissionDao pDao = context.transaction.getDao(PermissionDao.class);
+			if (! pDao.getNonRevokedPermissions(PermissionType.readUserIdentity, userRepoKeyId).isEmpty())
+				result.add(PermissionType.readUserIdentity);
 
-		final PermissionSet permissionSet = getPermissionSet();
-		if (permissionSet != null) {
-			if (! pDao.getValidPermissions(permissionSet, PermissionType.grant, userRepoKeyId, now).isEmpty())
-				result.add(PermissionType.grant);
+			final PermissionSet permissionSet = getPermissionSet();
+			if (permissionSet != null) {
+				if (! pDao.getNonRevokedPermissions(permissionSet, PermissionType.grant, userRepoKeyId).isEmpty())
+					result.add(PermissionType.grant);
 
-			if (! pDao.getValidPermissions(permissionSet, PermissionType.write, userRepoKeyId, now).isEmpty())
-				result.add(PermissionType.write);
+				if (! pDao.getNonRevokedPermissions(permissionSet, PermissionType.write, userRepoKeyId).isEmpty())
+					result.add(PermissionType.write);
+			}
+
+			if (hasReadPermission(userRepoKeyId))
+				result.add(PermissionType.read);
 		}
-
-		if (hasReadPermission(userRepoKeyId))
-			result.add(PermissionType.read);
-
 		return result;
 	}
 

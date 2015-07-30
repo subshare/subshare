@@ -1,5 +1,10 @@
 package org.subshare.core.dto;
 
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+
+import java.util.EnumSet;
+import java.util.Set;
+
 public enum PermissionType {
 
 	/**
@@ -12,7 +17,7 @@ public enum PermissionType {
 	 * Revoking a <i>read</i> permission automatically causes all other permissions to be revoked, too, because
 	 * it is technically required to read data when writing data.
 	 */
-	read,
+	read(),
 
 	/**
 	 * A <i>write</i> permission allows a user to write a directory's or file's meta-data (name, time-stamp and more)
@@ -25,7 +30,7 @@ public enum PermissionType {
 	 * <p>
 	 * Revoking a <i>write</i> permission automatically causes a <i>grant</i> permission to be revoked, too.
 	 */
-	write,
+	write("read"),
 
 	/**
 	 * A <i>grant</i> permission allows a user to grant permissions to other users.
@@ -40,7 +45,7 @@ public enum PermissionType {
 	 * it makes semantically no sense at all to manage permissions without knowing users. The UI therefore
 	 * relies on being able to know and display users.
 	 */
-	grant,
+	grant("write", "read", "readUserIdentity"),
 
 	/**
 	 * A <i>readUserIdentity</i> permission allows a user to see all other users of the current repository.
@@ -55,6 +60,25 @@ public enum PermissionType {
 	 * readUserIdentity - which is actually not necessary, if the user has grant-permission on a sub-directory
 	 * and wants to grant readUserIdentity - this should work!
 	 */
-	readUserIdentity
+	readUserIdentity()
+	;
 
+	private String[] includedPermissionTypeNames;
+	private Set<PermissionType> includedPermissionTypes;
+
+	private PermissionType(final String... includedPermissionTypeNames) {
+		this.includedPermissionTypeNames = assertNotNull("includedPermissionTypeNames", includedPermissionTypeNames);
+	}
+
+	public synchronized Set<PermissionType> getIncludedPermissionTypes() {
+		if (includedPermissionTypes == null) {
+			EnumSet<PermissionType> pts = EnumSet.of(this);
+			for (String n : assertNotNull("includedPermissionTypeNames", includedPermissionTypeNames))
+				pts.add(PermissionType.valueOf(n));
+
+			includedPermissionTypes = pts;
+			includedPermissionTypeNames = null;
+		}
+		return includedPermissionTypes;
+	}
 }

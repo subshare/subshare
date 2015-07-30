@@ -4,7 +4,11 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static org.subshare.gui.util.FxmlUtil.*;
 
 import java.net.URL;
+import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
@@ -88,6 +92,8 @@ public class LocalRepoDirectoryPane extends VBox {
 
 	private final IntegerProperty backgroundWorkCounter = new SimpleIntegerProperty(this, "backgroundWorkCounter");
 
+	private SecureRandom random;
+
 	public LocalRepoDirectoryPane(final LocalRepo localRepo, final File file) {
 		this.localRepo = assertNotNull("localRepo", localRepo);
 		this.file = assertNotNull("file", file);
@@ -124,7 +130,7 @@ public class LocalRepoDirectoryPane extends VBox {
 		try {
 			permissionTypeComboBox.getItems().remove(PermissionTypeItem.MIXED);
 
-			final List<UserListItem> userListItems = removeOwner(userTableView.getSelectionModel().getSelectedItems());
+			final List<UserListItem> userListItems = filterOutOwner(userTableView.getSelectionModel().getSelectedItems());
 			permissionTypeLabel.setDisable(userListItems.isEmpty());
 			permissionTypeComboBox.setDisable(userListItems.isEmpty());
 			readUserIdentityPermissionCheckBox.setDisable(userListItems.isEmpty());
@@ -141,9 +147,9 @@ public class LocalRepoDirectoryPane extends VBox {
 			final Set<Boolean> allUsersReadUserIdentityPermissionTypes = new HashSet<>();
 			final Set<Set<PermissionType>> allUsersGrantedPermissionTypes = new HashSet<>();
 			for (final UserListItem userListItem : userListItems) {
-				final Set<PermissionType> grantedPermissionTypes = new HashSet<>(userListItem.getGrantedPermissionTypes());
+				Set<PermissionType> grantedPermissionTypes = userListItem.getGrantedPermissionTypes();
 				allUsersReadUserIdentityPermissionTypes.add(grantedPermissionTypes.contains(PermissionType.readUserIdentity));
-				grantedPermissionTypes.remove(PermissionType.readUserIdentity);
+				grantedPermissionTypes = filterOutReadUserIdentity(grantedPermissionTypes);
 				allUsersGrantedPermissionTypes.add(grantedPermissionTypes);
 			}
 
@@ -174,6 +180,13 @@ public class LocalRepoDirectoryPane extends VBox {
 		}
 	}
 
+	private Set<PermissionType> filterOutReadUserIdentity(final Set<PermissionType> permissionTypes) {
+		assertNotNull("permissionTypes", permissionTypes);
+		final EnumSet<PermissionType> result = permissionTypes.isEmpty() ? EnumSet.noneOf(PermissionType.class) : EnumSet.copyOf(permissionTypes);
+		result.remove(PermissionType.readUserIdentity);
+		return result;
+	}
+
 	private PermissionTypeItem getPermissionTypeItem(final Set<PermissionType> permissionTypes) {
 		if (permissionTypes.isEmpty())
 			return PermissionTypeItem.NONE;
@@ -198,7 +211,7 @@ public class LocalRepoDirectoryPane extends VBox {
 		return null;
 	}
 
-	private List<UserListItem> removeOwner(final List<UserListItem> userListItems) {
+	private List<UserListItem> filterOutOwner(final List<UserListItem> userListItems) {
 		assertNotNull("userListItems", userListItems);
 		final List<UserListItem> result = new ArrayList<>(userListItems.size());
 		for (final UserListItem userListItem : userListItems) {
@@ -218,6 +231,8 @@ public class LocalRepoDirectoryPane extends VBox {
 		if (PermissionTypeItem.MIXED == permissionTypeItem)
 			return;
 
+		final List<User> users = getSelectedUsers();
+
 		incBackgroundWorkCounter();
 		final Runnable runnable = new Runnable() { // must *not* be converted to lambda! using this!
 			@Override
@@ -228,9 +243,9 @@ public class LocalRepoDirectoryPane extends VBox {
 
 					try (final LocalRepoManager localRepoManager = createLocalRepoManager(localRepo);) {
 						final SsLocalRepoMetaData localRepoMetaData = (SsLocalRepoMetaData) localRepoManager.getLocalRepoMetaData();
-						applySelectedPermissionTypeItem(localRepoManager, localRepoMetaData, permissionTypeItem);
+						applySelectedPermissionTypeItem(localRepoManager, localRepoMetaData, users, permissionTypeItem);
 					}
-					Platform.runLater(() -> updatePermissionsInheritedCheckBox());
+					Platform.runLater(() -> updateUi()); // TODO replace by listeners surveilling meta-data-changes!
 				} finally {
 					decBackgroundWorkCounter();
 				}
@@ -238,6 +253,15 @@ public class LocalRepoDirectoryPane extends VBox {
 		};
 		grantOrRevokeNormalPermissionRunnable = runnable;
 		executorService.execute(runnable);
+	}
+
+	protected List<User> getSelectedUsers() {
+		PlatformUtil.assertFxApplicationThread();
+		final List<User> result = new ArrayList<>();
+		for (final UserListItem userListItem : userTableView.getSelectionModel().getSelectedItems())
+			result.add(userListItem.getUser());
+
+		return result;
 	}
 
 	protected void onReadUserIdentityPermissionCheckBoxChange() {
@@ -248,6 +272,8 @@ public class LocalRepoDirectoryPane extends VBox {
 
 		if (readUserIdentityPermissionCheckBox.isIndeterminate())
 			return;
+
+		final List<User> users = getSelectedUsers();
 
 		final boolean readUserIdentityPermissionIsGranted = readUserIdentityPermissionCheckBox.isSelected();
 
@@ -261,9 +287,9 @@ public class LocalRepoDirectoryPane extends VBox {
 
 					try (final LocalRepoManager localRepoManager = createLocalRepoManager(localRepo);) {
 						final SsLocalRepoMetaData localRepoMetaData = (SsLocalRepoMetaData) localRepoManager.getLocalRepoMetaData();
-						applyReadUserIdentityPermission(localRepoManager, localRepoMetaData, readUserIdentityPermissionIsGranted);
+						applyReadUserIdentityPermission(localRepoManager, localRepoMetaData, users, readUserIdentityPermissionIsGranted);
 					}
-					Platform.runLater(() -> updatePermissionsInheritedCheckBox());
+					Platform.runLater(() -> updateUi()); // TODO replace by listeners surveilling meta-data-changes!
 				} finally {
 					decBackgroundWorkCounter();
 				}
@@ -273,15 +299,119 @@ public class LocalRepoDirectoryPane extends VBox {
 		executorService.execute(runnable);
 	}
 
-	protected void applySelectedPermissionTypeItem(final LocalRepoManager localRepoManager, final SsLocalRepoMetaData localRepoMetaData, final PermissionTypeItem permissionTypeItem) {
-		try { Thread.sleep(3000); } catch (InterruptedException e) { }
-		// TODO implement this!
-//		localRepoMetaData.getGrantedPermissionTypes(localPath, userRepoKeyId);
+	protected void applySelectedPermissionTypeItem(final LocalRepoManager localRepoManager, final SsLocalRepoMetaData localRepoMetaData, final List<User> users, final PermissionTypeItem permissionTypeItem) {
+		if (PermissionTypeItem.NONE == permissionTypeItem) {
+			revokePermission(localRepoManager, localRepoMetaData, PermissionType.read, users);
+			return;
+		}
+
+		final PermissionType permissionType = assertNotNull("permissionTypeItem.permissionType", permissionTypeItem.getPermissionType());
+		final Set<PermissionType> includedPermissionTypes = filterOutReadUserIdentity(permissionType.getIncludedPermissionTypes());
+
+		final UUID serverRepositoryId = getServerRepositoryId(localRepoManager);
+		boolean needSync = false;
+
+		for (final User user : users) {
+			final Set<Uid> userRepoKeyIds = getUserRepoKeyIds(user, serverRepositoryId);
+			final Set<PermissionType> permissionTypesToRevoke = EnumSet.noneOf(PermissionType.class);
+
+			boolean needGrant = true;
+			for (final Uid userRepoKeyId : userRepoKeyIds) {
+				final Set<PermissionType> grantedPermissionTypes = filterOutReadUserIdentity(
+						localRepoMetaData.getGrantedPermissionTypes(localPath, userRepoKeyId));
+
+				if (grantedPermissionTypes.contains(permissionType))
+					needGrant = false;
+
+				for (final PermissionType pt : grantedPermissionTypes) {
+					if (! includedPermissionTypes.contains(pt))
+						permissionTypesToRevoke.add(pt);
+				}
+			}
+
+			if (needGrant) {
+				needSync = true;
+				for (UserRepoKey.PublicKey publicKey : getUserRepoKeyPublicKeysForGrant(localRepoManager, user))
+					localRepoMetaData.grantPermission(localPath, permissionType, publicKey);
+			}
+
+			for (PermissionType permissionTypeToRevoke : permissionTypesToRevoke) {
+				needSync = true;
+				localRepoMetaData.revokePermission(localPath, permissionTypeToRevoke, userRepoKeyIds);
+			}
+		}
+
+		if (needSync)
+			startSync();
 	}
 
-	protected void applyReadUserIdentityPermission(final LocalRepoManager localRepoManager, final SsLocalRepoMetaData localRepoMetaData, final boolean readUserIdentityPermissionIsGranted) {
-		try { Thread.sleep(3000); } catch (InterruptedException e) { }
-		// TODO implement this!
+	protected void applyReadUserIdentityPermission(final LocalRepoManager localRepoManager, final SsLocalRepoMetaData localRepoMetaData, final List<User> users, final boolean readUserIdentityPermissionIsGranted) {
+		if (readUserIdentityPermissionIsGranted)
+			grantReadUserIdentityPermission(localRepoManager, localRepoMetaData, users);
+		else
+			revokePermission(localRepoManager, localRepoMetaData, PermissionType.readUserIdentity, users);
+	}
+
+	protected void grantReadUserIdentityPermission(final LocalRepoManager localRepoManager, final SsLocalRepoMetaData localRepoMetaData, final List<User> users) {
+		final UUID serverRepositoryId = getServerRepositoryId(localRepoManager);
+
+		iterateUsers: for (final User user : users) {
+			for (final Uid userRepoKeyId : getUserRepoKeyIds(user, serverRepositoryId)) {
+				final Set<PermissionType> grantedPermissionTypes = localRepoMetaData.getGrantedPermissionTypes(localPath, userRepoKeyId);
+				if (grantedPermissionTypes.contains(PermissionType.readUserIdentity))
+					continue iterateUsers;
+			}
+
+			for (UserRepoKey.PublicKey publicKey : getUserRepoKeyPublicKeysForGrant(localRepoManager, user))
+				localRepoMetaData.grantPermission(localPath, PermissionType.readUserIdentity, publicKey);
+		}
+
+		startSync();
+	}
+
+	protected Collection<UserRepoKey.PublicKey> getUserRepoKeyPublicKeysForGrant(final LocalRepoManager localRepoManager, User user) {
+		final UUID serverRepositoryId = getServerRepositoryId(localRepoManager);
+
+		final List<UserRepoKey.PublicKey> permanentUserRepoKeyPublicKeys = new ArrayList<>();
+		final List<UserRepoKey.PublicKey> invitationUserRepoKeyPublicKeys = new ArrayList<>();
+
+		if (user.getUserRepoKeyRing() == null) {
+			final List<? extends UserRepoKey.PublicKey> userRepoKeyPublicKeys = user.getUserRepoKeyPublicKeys(serverRepositoryId);
+			for (UserRepoKey.PublicKey publicKey : userRepoKeyPublicKeys) {
+				if (publicKey.isInvitation())
+					invitationUserRepoKeyPublicKeys.add(publicKey);
+				else
+					permanentUserRepoKeyPublicKeys.add(publicKey);
+			}
+		}
+		else {
+			for (UserRepoKey userRepoKey : user.getUserRepoKeyRing().getPermanentUserRepoKeys(serverRepositoryId))
+				permanentUserRepoKeyPublicKeys.add(userRepoKey.getPublicKey());
+
+			for (UserRepoKey userRepoKey : user.getUserRepoKeyRing().getInvitationUserRepoKeys(serverRepositoryId))
+				invitationUserRepoKeyPublicKeys.add(userRepoKey.getPublicKey());
+		}
+
+		if (! permanentUserRepoKeyPublicKeys.isEmpty()) {
+			final int index = getRandom().nextInt(permanentUserRepoKeyPublicKeys.size());
+			return Collections.singletonList(permanentUserRepoKeyPublicKeys.get(index));
+		}
+
+		if (invitationUserRepoKeyPublicKeys.isEmpty())
+			throw new IllegalStateException("Neither permanent nor invitation-key found!");
+
+		return invitationUserRepoKeyPublicKeys;
+	}
+
+	protected void revokePermission(final LocalRepoManager localRepoManager, final SsLocalRepoMetaData localRepoMetaData, PermissionType permissionType, final List<User> users) {
+		final UUID serverRepositoryId = getServerRepositoryId(localRepoManager);
+		final Set<Uid> userRepoKeyIds = new HashSet<Uid>();
+		for (final User user : users) {
+			for (final Uid userRepoKeyId : getUserRepoKeyIds(user, serverRepositoryId))
+				userRepoKeyIds.add(userRepoKeyId);
+		}
+		localRepoMetaData.revokePermission(localPath, permissionType, userRepoKeyIds);
+		startSync();
 	}
 
 	protected void hookListeners() {
@@ -326,6 +456,7 @@ public class LocalRepoDirectoryPane extends VBox {
 					final User user = me.getKey();
 					final Set<Uid> userRepoKeyIds = me.getValue();
 					final UserListItem uli = new UserListItem(user);
+					uli.getUserRepoKeyIds().addAll(userRepoKeyIds);
 
 					if (userRepoKeyIds.contains(localRepoMetaData.getOwnerUserRepoKeyId()))
 						uli.setOwner(true);
@@ -376,6 +507,7 @@ public class LocalRepoDirectoryPane extends VBox {
 			else
 				userListItemView.copyFrom(userListItemModel);
 		}
+		onUserTableViewSelectionChange();
 	}
 
 	private Map<User, Set<Uid>> getUsersHavingUserRepoKey(final LocalRepoManager localRepoManager) {
@@ -383,23 +515,27 @@ public class LocalRepoDirectoryPane extends VBox {
 		final Map<User, Set<Uid>> result = new LinkedHashMap<>();
 
 		for (final User user : UserRegistryLs.getUserRegistry().getUsers()) {
-			final UserRepoKeyRing userRepoKeyRing = user.getUserRepoKeyRing();
-			final Set<Uid> userRepoKeyIds = new HashSet<>();
-			if (userRepoKeyRing != null) {
-				final List<UserRepoKey> userRepoKeys = userRepoKeyRing.getUserRepoKeys(serverRepositoryId);
-				for (UserRepoKey userRepoKey : userRepoKeys)
-					userRepoKeyIds.add(userRepoKey.getUserRepoKeyId());
-			}
-			else {
-				final List<UserRepoKey.PublicKeyWithSignature> userRepoKeyPublicKeys = user.getUserRepoKeyPublicKeys(serverRepositoryId);
-				for (UserRepoKey.PublicKeyWithSignature publicKey : userRepoKeyPublicKeys)
-					userRepoKeyIds.add(publicKey.getUserRepoKeyId());
-			}
-
+			Set<Uid> userRepoKeyIds = getUserRepoKeyIds(user, serverRepositoryId);
 			if (! userRepoKeyIds.isEmpty())
 				result.put(user, userRepoKeyIds);
 		}
 		return result;
+	}
+
+	private Set<Uid> getUserRepoKeyIds(User user, final UUID serverRepositoryId) {
+		final UserRepoKeyRing userRepoKeyRing = user.getUserRepoKeyRing();
+		final Set<Uid> userRepoKeyIds = new HashSet<>();
+		if (userRepoKeyRing != null) {
+			final List<UserRepoKey> userRepoKeys = userRepoKeyRing.getUserRepoKeys(serverRepositoryId);
+			for (UserRepoKey userRepoKey : userRepoKeys)
+				userRepoKeyIds.add(userRepoKey.getUserRepoKeyId());
+		}
+		else {
+			final List<UserRepoKey.PublicKeyWithSignature> userRepoKeyPublicKeys = user.getUserRepoKeyPublicKeys(serverRepositoryId);
+			for (UserRepoKey.PublicKeyWithSignature publicKey : userRepoKeyPublicKeys)
+				userRepoKeyIds.add(publicKey.getUserRepoKeyId());
+		}
+		return userRepoKeyIds;
 	}
 
 	private UUID getServerRepositoryId(final LocalRepoManager localRepoManager) {
@@ -453,7 +589,7 @@ public class LocalRepoDirectoryPane extends VBox {
 						final SsLocalRepoMetaData localRepoMetaData = (SsLocalRepoMetaData) localRepoManager.getLocalRepoMetaData();
 						localRepoMetaData.setPermissionsInherited(localPath, newInherited);
 					}
-					Platform.runLater(() -> updatePermissionsInheritedCheckBox());
+					Platform.runLater(() -> updateUi()); // TODO replace by listeners surveilling meta-data-changes!
 				} finally {
 					decBackgroundWorkCounter();
 				}
@@ -469,6 +605,10 @@ public class LocalRepoDirectoryPane extends VBox {
 
 	@FXML
 	private void syncButtonClicked(final ActionEvent event) {
+		startSync();
+	}
+
+	private void startSync() {
 		final RepoSyncDaemon repoSyncDaemon = RepoSyncDaemonLs.getRepoSyncDaemon();
 		repoSyncDaemon.startSync(localRepo.getLocalRoot());
 	}
@@ -478,6 +618,12 @@ public class LocalRepoDirectoryPane extends VBox {
 		final IssueInvitationWizard wizard = new IssueInvitationWizard(new IssueInvitationData(localRepo, file));
 		final WizardDialog dialog = new WizardDialog(getScene().getWindow(), wizard);
 		dialog.show(); // no need to wait ;-)
+	}
+
+	@FXML
+	private void refreshButtonClicked(final ActionEvent event) {
+		fileTreePane.refresh();
+		updateUi();
 	}
 
 	private static class RootDirectoryFileTreeItem extends DirectoryFileTreeItem {
@@ -502,5 +648,12 @@ public class LocalRepoDirectoryPane extends VBox {
 					&& ((FileFileTreeItem) fti).getFile().getName().equals(LocalRepoManager.META_DIR_NAME));
 			return children;
 		}
+	}
+
+	public synchronized SecureRandom getRandom() {
+		if (random != null)
+			random = new SecureRandom();
+
+		return random;
 	}
 }

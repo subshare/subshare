@@ -30,14 +30,19 @@ dynamic component LocalRepoDirectoryPane resourcefile 'messages.properties' {
 	VBox {
 		FlowPane {
 			Button id syncButton {
-				graphic : ImageView { image : Image { url : "@sync-24x24.png" } },
+				graphic : ImageView { image : Image { url : "@sync_24x24.png" } },
 				tooltip : Tooltip { text : "Synchronize this repository now." },
 				onAction : controllermethod syncButtonClicked
 			},
 			Button id inviteButton {
-				graphic : ImageView { image : Image { url : "@invite-24x24.png" } },
+				graphic : ImageView { image : Image { url : "@invite_24x24.png" } },
 				tooltip : Tooltip { text : "Invite someone to share this repository at this sub-directory.&#010;&#010;You'll select another user and an invitation token is going to be created for this user." },
 				onAction : controllermethod inviteButtonClicked
+			},
+			Button id refreshButton { // TODO replace by or at least add automatic refresh via listeners!
+				graphic : ImageView { image : Image { url : "@refresh_24x24.png" } },
+				tooltip : Tooltip { text : "Refresh all data shown here." },
+				onAction : controllermethod refreshButtonClicked
 			},
 			static margin : Insets { left : 8, right : 8, top : 8, bottom : 8 }
 		},
@@ -58,6 +63,7 @@ dynamic component LocalRepoDirectoryPane resourcefile 'messages.properties' {
 
 					FileTreePane id fileTreePane {
 						selectionMode: "MULTIPLE",
+						refreshButtonVisible : false,
 		
 						static columnIndex : 0,
 						static rowIndex : 2,

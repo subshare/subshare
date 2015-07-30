@@ -124,11 +124,19 @@ public class FileTreePane extends BorderPane {
 
 		selectedFiles.addListener(selectedFilesChangeListener);
 		showHiddenFilesCheckBox.selectedProperty().bindBidirectional(showHiddenFilesProperty);
-		refreshButton.setOnAction(event -> fireRefreshListeners());
+		refreshButton.setOnAction(event -> fireRefreshEvent());
 
 		// TODO remove the following line - preferably replace by proper, use-case-dependent management!
 //		selectedFiles.add(createFile("/home/mn/Desktop/Bilder_Juergen/Bilder Indien 2007"));
 		selectedFiles.add(IOUtil.getUserHome());
+	}
+
+	public boolean isRefreshButtonVisible() {
+		return refreshButton.isVisible();
+	}
+
+	public void setRefreshButtonVisible(boolean visible) {
+		refreshButton.setVisible(visible);
 	}
 
 	private void updateSelectedFiles() {
@@ -200,7 +208,11 @@ public class FileTreePane extends BorderPane {
 		return selectedFiles;
 	}
 
-	private void fireRefreshListeners() {
+	public void refresh() {
+		fireRefreshEvent();
+	}
+
+	private void fireRefreshEvent() {
 		final RefreshEvent event = new RefreshEvent(this);
 		expungeRefreshListeners();
 		for (final Reference<RefreshListener> reference : refreshListeners) {

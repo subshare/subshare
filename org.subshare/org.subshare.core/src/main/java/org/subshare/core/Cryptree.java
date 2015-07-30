@@ -14,7 +14,6 @@ import org.subshare.core.dto.PermissionType;
 import org.subshare.core.dto.UserIdentityPayloadDto;
 import org.subshare.core.sign.WriteProtected;
 import org.subshare.core.user.UserRepoKey;
-import org.subshare.core.user.UserRepoKey.PublicKey;
 import org.subshare.core.user.UserRepoKeyPublicKeyLookup;
 import org.subshare.core.user.UserRepoKeyRing;
 
@@ -110,10 +109,10 @@ public interface Cryptree {
 	UserRepoKey getUserRepoKey(String localPath, PermissionType permissionType);
 	UserRepoKey getUserRepoKeyOrFail(String localPath, PermissionType permissionType) throws AccessDeniedException;
 
-	void grantPermission(String localPath, PermissionType permissionType, PublicKey userRepoKeyPublicKey);
+	void grantPermission(String localPath, PermissionType permissionType, UserRepoKey.PublicKey userRepoKeyPublicKey);
 	void revokePermission(String localPath, PermissionType permissionType, Set<Uid> userRepoKeyIds);
 
-	void grantPermission(Uid cryptoRepoFileId, PermissionType permissionType, PublicKey userRepoKeyPublicKey);
+	void grantPermission(Uid cryptoRepoFileId, PermissionType permissionType, UserRepoKey.PublicKey userRepoKeyPublicKey);
 	void revokePermission(Uid cryptoRepoFileId, PermissionType permissionType, Set<Uid> userRepoKeyIds);
 
 	/**
@@ -130,7 +129,7 @@ public interface Cryptree {
 	 * @param localPath the directory/file whose permissions to query. Must not be <code>null</code>.
 	 * @param userRepoKeyId the user-key's identifier for which to determine the permissions granted. Must not be <code>null</code>.
 	 * @return the {@link PermissionType}s granted. Never <code>null</code>, but maybe empty!
-	 * @see #grantPermission(String, PermissionType, PublicKey)
+	 * @see #grantPermission(String, PermissionType, UserRepoKey.PublicKey)
 	 * @see #revokePermission(String, PermissionType, Set)
 	 * @see #assertHasPermission(String, Uid, PermissionType, Date)
 	 */
