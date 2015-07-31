@@ -920,13 +920,25 @@ public class CryptreeNode {
 					result.add(PermissionType.write);
 			}
 
-			if (hasReadPermission(userRepoKeyId))
+			if (hasReadPermissionHere(userRepoKeyId))
 				result.add(PermissionType.read);
 		}
 		return result;
 	}
 
-	private boolean hasReadPermission(Uid userRepoKeyId) {
+	private boolean hasReadPermissionHereOrInherited(final Uid userRepoKeyId) {
+		if (hasReadPermissionHere(userRepoKeyId))
+			return true;
+
+		if (isPermissionsInherited()) {
+			final CryptreeNode parent = getParent();
+			if (parent != null)
+				return parent.hasReadPermissionHereOrInherited(userRepoKeyId);
+		}
+		return false;
+	}
+
+	private boolean hasReadPermissionHere(final Uid userRepoKeyId) {
 		final CryptoRepoFile cryptoRepoFile = getCryptoRepoFile();
 		if (cryptoRepoFile != null) { // If there is no CryptoRepoFile, there can be no read-access.
 			final UserRepoKeyPublicKeyDao urkpkDao = context.transaction.getDao(UserRepoKeyPublicKeyDao.class);
@@ -1023,7 +1035,7 @@ public class CryptreeNode {
 			if (timeDifferenceToNow > 5 * 60 * 1000)
 				throw new UnsupportedOperationException("assertHasPermission(...) does not yet support permissionType 'read' combined with a timestamp that is not *now*!");
 
-			if (hasReadPermission(userRepoKeyId))
+			if (hasReadPermissionHereOrInherited(userRepoKeyId))
 				return;
 		}
 		else {

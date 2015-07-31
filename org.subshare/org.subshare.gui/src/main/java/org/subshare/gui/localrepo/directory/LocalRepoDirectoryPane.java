@@ -33,6 +33,7 @@ import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
 
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.repo.LocalRepo;
@@ -49,6 +50,7 @@ import org.subshare.gui.invitation.issue.IssueInvitationWizard;
 import org.subshare.gui.ls.LocalRepoManagerFactoryLs;
 import org.subshare.gui.ls.RepoSyncDaemonLs;
 import org.subshare.gui.ls.UserRegistryLs;
+import org.subshare.gui.statusdialog.StatusDialog;
 import org.subshare.gui.util.PlatformUtil;
 import org.subshare.gui.wizard.WizardDialog;
 
@@ -93,6 +95,7 @@ public class LocalRepoDirectoryPane extends VBox {
 	private final IntegerProperty backgroundWorkCounter = new SimpleIntegerProperty(this, "backgroundWorkCounter");
 
 	private SecureRandom random;
+	private StatusDialog statusDialog;
 
 	public LocalRepoDirectoryPane(final LocalRepo localRepo, final File file) {
 		this.localRepo = assertNotNull("localRepo", localRepo);
@@ -110,11 +113,34 @@ public class LocalRepoDirectoryPane extends VBox {
 		userTableView.getSelectionModel().getSelectedItems().addListener((InvalidationListener) observable -> onUserTableViewSelectionChange());
 
 		// TODO instead of disabling - which looks very ugly -, we should show a modal dialog explaining that the change is currently applied.
-		this.disableProperty().bind(backgroundWorkCounter.greaterThan(0));
+//		this.disableProperty().bind(backgroundWorkCounter.greaterThan(0));
+		backgroundWorkCounter.addListener((InvalidationListener) observable -> showOrHideStatusDialog());
+
 		initPermissionTypeComboBox();
 		hookListeners();
 		updateUi();
 		onUserTableViewSelectionChange();
+	}
+
+	private void showOrHideStatusDialog() {
+		if (backgroundWorkCounter.get() > 0)
+			showStatusDialog();
+		else
+			hideStatusDialog();
+	}
+
+	private void showStatusDialog() {
+		if (statusDialog == null) {
+			statusDialog = new StatusDialog(getScene().getWindow(), Modality.APPLICATION_MODAL, null, null);
+			statusDialog.show();
+		}
+	}
+
+	private void hideStatusDialog() {
+		if (statusDialog != null) {
+			statusDialog.hide();
+			statusDialog = null;
+		}
 	}
 
 	private void initPermissionTypeComboBox() {
@@ -234,7 +260,7 @@ public class LocalRepoDirectoryPane extends VBox {
 		final List<User> users = getSelectedUsers();
 
 		incBackgroundWorkCounter();
-		final Runnable runnable = new Runnable() { // must *not* be converted to lambda! using this!
+		final Runnable runnable = new Runnable() { // must *not* be converted to lambda! using 'this'!
 			@Override
 			public void run() {
 				try {
