@@ -1,3 +1,4 @@
 org.subshare.local.persistence.AssignCryptoRepoFileRepoFileListener
 org.subshare.local.persistence.VerifySignableAndWriteProtectedEntityListener
 org.subshare.local.persistence.DeleteRepoFileListener
+org.subshare.local.persistence.LocalRepoCommitEventManagerNotifyingListener

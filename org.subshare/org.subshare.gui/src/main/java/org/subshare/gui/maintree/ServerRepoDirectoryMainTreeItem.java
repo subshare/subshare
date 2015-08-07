@@ -2,10 +2,12 @@ package org.subshare.gui.maintree;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
+import static javafx.application.Platform.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 import javafx.collections.ObservableList;
 import javafx.scene.Parent;
@@ -14,9 +16,11 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
 import org.subshare.core.repo.ServerRepo;
+import org.subshare.core.repo.listener.LocalRepoCommitEventListener;
 import org.subshare.core.repo.metaonly.ServerRepoFile;
 import org.subshare.core.repo.metaonly.ServerRepoFileType;
 import org.subshare.core.server.Server;
+import org.subshare.gui.ls.LocalRepoCommitEventManagerLs;
 import org.subshare.gui.serverrepo.directory.ServerRepoDirectoryPane;
 
 public class ServerRepoDirectoryMainTreeItem extends MainTreeItem<ServerRepoFile> {
@@ -25,10 +29,16 @@ public class ServerRepoDirectoryMainTreeItem extends MainTreeItem<ServerRepoFile
 
 	private boolean childrenLoaded;
 
+	private final LocalRepoCommitEventListener localRepoCommitEventListener = event -> runLater(() -> {
+		childrenLoaded = false;
+		getChildren();
+	});
+
 	public ServerRepoDirectoryMainTreeItem(final ServerRepoFile serverRepoFile) {
 		super(assertNotNull("serverRepoFile", serverRepoFile));
 		setGraphic(new ImageView(icon));
-//		setGraphic(new ImageView(FileIconRegistry.getInstance().getIcon(FileIconRegistry.ICON_ID_DIRECTORY, IconSize._16x16)));
+		final UUID localRepositoryId = serverRepoFile.getLocalRepositoryId();
+		LocalRepoCommitEventManagerLs.getLocalRepoCommitEventManager().addLocalRepoCommitEventListener(localRepositoryId, localRepoCommitEventListener);
 	}
 
 	public Server getServer() {
@@ -65,7 +75,7 @@ public class ServerRepoDirectoryMainTreeItem extends MainTreeItem<ServerRepoFile
 		if (! childrenLoaded) {
 			childrenLoaded = true; // *must* be set before clear()/addAll(...), because of events being fired.
 			final List<MainTreeItem<?>> c = loadChildren();
-			if (c != null)
+			if (c != null) // TODO need to remove stuff that disappeared => real update instead of simple add!
 				children.addAll(c);
 		}
 		return children;
@@ -99,5 +109,10 @@ public class ServerRepoDirectoryMainTreeItem extends MainTreeItem<ServerRepoFile
 	@Override
 	protected Parent createMainDetailContent() {
 		return new ServerRepoDirectoryPane(getServerRepoFile());
+	}
+
+	@Override
+	protected void finalize() throws Throwable {
+		super.finalize();
 	}
 }

@@ -41,7 +41,7 @@ public class CryptoRepoFileOnServerDtoConverter {
 		return result;
 	}
 
-	public void putCryptoRepoFileOnServer(final CryptoRepoFileOnServerDto cryptoRepoFileOnServerDto) {
+	public CryptoRepoFileOnServer putCryptoRepoFileOnServer(final CryptoRepoFileOnServerDto cryptoRepoFileOnServerDto) {
 		assertNotNull("cryptoRepoFileOnServerDto", cryptoRepoFileOnServerDto);
 		final CryptoRepoFileDao cryptoRepoFileDao = transaction.getDao(CryptoRepoFileDao.class);
 		final CryptoKeyDao cryptoKeyDao = transaction.getDao(CryptoKeyDao.class);
@@ -62,5 +62,6 @@ public class CryptoRepoFileOnServerDtoConverter {
 			cryptoRepoFile.setCryptoRepoFileOnServer(cryptoRepoFileOnServer);
 
 		transaction.flush();
+		return cryptoRepoFileOnServer;
 	}
 }

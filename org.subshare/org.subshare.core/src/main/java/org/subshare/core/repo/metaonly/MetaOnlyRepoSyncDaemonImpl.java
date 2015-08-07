@@ -19,7 +19,8 @@ import co.codewizards.cloudstore.core.config.Config;
 public class MetaOnlyRepoSyncDaemonImpl implements MetaOnlyRepoSyncDaemon {
 
 	public static final String CONFIG_KEY_READ_ONLY_META_REPO_SYNC_PERIOD = "readOnlyMetaRepoSyncPeriod";
-	public static final long CONFIG_DEFAULT_VALUE_READ_ONLY_META_REPO_SYNC_PERIOD = 3600 * 1000; // 1 hour
+//	public static final long CONFIG_DEFAULT_VALUE_READ_ONLY_META_REPO_SYNC_PERIOD = 3600 * 1000; // 1 hour
+	public static final long CONFIG_DEFAULT_VALUE_READ_ONLY_META_REPO_SYNC_PERIOD = 5 * 60 * 1000; // 5 minutes
 
 	private static final Logger logger = LoggerFactory.getLogger(MetaOnlyRepoSyncDaemonImpl.class);
 

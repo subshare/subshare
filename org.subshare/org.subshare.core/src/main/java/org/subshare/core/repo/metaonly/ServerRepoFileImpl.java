@@ -4,6 +4,7 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.net.URL;
 import java.util.List;
+import java.util.UUID;
 
 import org.subshare.core.dto.CryptoRepoFileDto;
 import org.subshare.core.repo.ServerRepo;
@@ -23,12 +24,14 @@ public class ServerRepoFileImpl implements ServerRepoFile {
 	private final RepoFileDto repoFileDto;
 	private final Server server;
 	private final ServerRepo serverRepo;
+	private final UUID localRepositoryId;
 	private List<ServerRepoFile> children;
 
-	public ServerRepoFileImpl(final Server server, final ServerRepo serverRepo, final CryptoRepoFileDto cryptoRepoFileDto, final RepoFileDto repoFileDto) {
+	public ServerRepoFileImpl(final Server server, final ServerRepo serverRepo, final UUID localRepositoryId, final CryptoRepoFileDto cryptoRepoFileDto, final RepoFileDto repoFileDto) {
 		parent = null;
 		this.server = assertNotNull("server", server);
 		this.serverRepo = assertNotNull("serverRepo", serverRepo);
+		this.localRepositoryId = assertNotNull("localRepositoryId", localRepositoryId);
 		this.cryptoRepoFileDto = assertNotNull("cryptoRepoFileDto", cryptoRepoFileDto);
 		this.repoFileDto = assertNotNull("repoFileDto", repoFileDto);
 	}
@@ -37,6 +40,7 @@ public class ServerRepoFileImpl implements ServerRepoFile {
 		this.parent = assertNotNull("parent", parent);
 		this.server = parent.getServer();
 		this.serverRepo = parent.getServerRepo();
+		this.localRepositoryId = parent.getLocalRepositoryId();
 		this.cryptoRepoFileDto = assertNotNull("cryptoRepoFileDto", cryptoRepoFileDto);
 		this.repoFileDto = assertNotNull("repoFileDto", repoFileDto);
 	}
@@ -49,6 +53,11 @@ public class ServerRepoFileImpl implements ServerRepoFile {
 	@Override
 	public ServerRepo getServerRepo() {
 		return serverRepo;
+	}
+
+	@Override
+	public UUID getLocalRepositoryId() {
+		return localRepositoryId;
 	}
 
 	@Override

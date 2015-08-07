@@ -327,10 +327,6 @@ public class CryptreeImpl extends AbstractCryptree {
 		}
 
 		if (! isOnServer()) {
-			final SsLocalRepository localRepository = (SsLocalRepository) transaction.getDao(LocalRepositoryDao.class).getLocalRepositoryOrFail();
-			final Map<CryptoRepoFile, RepoFileDto> cryptoRepoFile2DecryptedRepoFileDto =
-					localRepository.getLocalRepositoryType() == LocalRepositoryType.CLIENT_META_ONLY ? new HashMap<CryptoRepoFile, RepoFileDto>() : null;
-
 			for (final CryptoRepoFile cryptoRepoFile : cryptoRepoFileDto2CryptoRepoFile.values()) {
 				final RepoFileDto decryptedRepoFileDto;
 				try {
@@ -338,14 +334,8 @@ public class CryptreeImpl extends AbstractCryptree {
 				} catch (final AccessDeniedException x) {
 					continue;
 				}
-				if (cryptoRepoFile2DecryptedRepoFileDto != null)
-					cryptoRepoFile2DecryptedRepoFileDto.put(cryptoRepoFile, decryptedRepoFileDto);
-
 				cryptoRepoFile.setLocalName(decryptedRepoFileDto.getName());
 			}
-
-			if (cryptoRepoFile2DecryptedRepoFileDto != null)
-				putDecryptedRepoFiles(cryptoRepoFile2DecryptedRepoFileDto);
 		}
 
 		final RepositoryOwnerDto repositoryOwnerDto = cryptoChangeSetDto.getRepositoryOwnerDto();
@@ -378,8 +368,31 @@ public class CryptreeImpl extends AbstractCryptree {
 		transaction.flush();
 
 		final CryptoRepoFileOnServerDtoConverter cryptoRepoFileOnServerDtoConverter = CryptoRepoFileOnServerDtoConverter.create(getTransactionOrFail());
+
+		final Map<CryptoRepoFileOnServerDto, CryptoRepoFileOnServer> cryptoRepoFileOnServerDto2CryptoRepoFileOnServer =
+				new HashMap<>();
+
 		for (CryptoRepoFileOnServerDto cryptoRepoFileOnServerDto : cryptoChangeSetDto.getCryptoRepoFileOnServerDtos())
-			cryptoRepoFileOnServerDtoConverter.putCryptoRepoFileOnServer(cryptoRepoFileOnServerDto);
+			cryptoRepoFileOnServerDto2CryptoRepoFileOnServer.put(cryptoRepoFileOnServerDto, cryptoRepoFileOnServerDtoConverter.putCryptoRepoFileOnServer(cryptoRepoFileOnServerDto));
+
+		if (! isOnServer()) {
+			final SsLocalRepository localRepository = (SsLocalRepository) transaction.getDao(LocalRepositoryDao.class).getLocalRepositoryOrFail();
+
+			if (localRepository.getLocalRepositoryType() == LocalRepositoryType.CLIENT_META_ONLY) {
+				final Map<CryptoRepoFile, RepoFileDto> cryptoRepoFile2DecryptedRepoFileDto = new HashMap<>();
+
+				for (final CryptoRepoFileOnServer cryptoRepoFileOnServer : cryptoRepoFileOnServerDto2CryptoRepoFileOnServer.values()) {
+					final RepoFileDto decryptedRepoFileDto;
+					try {
+						decryptedRepoFileDto = getDecryptedRepoFileOnServerDtoOrFail(cryptoRepoFileOnServer.getCryptoRepoFile().getCryptoRepoFileId());
+					} catch (final AccessDeniedException x) {
+						continue;
+					}
+					cryptoRepoFile2DecryptedRepoFileDto.put(cryptoRepoFileOnServer.getCryptoRepoFile(), decryptedRepoFileDto);
+				}
+				putDecryptedRepoFiles(cryptoRepoFile2DecryptedRepoFileDto);
+			}
+		}
 
 		processUserRepoKeyPublicKeyReplacementRequests();
 

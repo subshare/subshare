@@ -80,6 +80,7 @@ public class MetaOnlyRepoManagerImpl implements MetaOnlyRepoManager {
 						serverRepo, server, localRoot, remoteRoot,
 						Severity.INFO, String.format("Sync took %s ms.", durationMs), null));
 			} catch (Exception x) {
+				logger.warn("sync: " + x, x);
 				repoSyncStates.add(new RepoSyncState(getLocalRepositoryId(localRoot, NULL_UUID),
 						serverRepo, server, localRoot, remoteRoot,
 						Severity.ERROR, x.getMessage(), new Error(x)));
@@ -190,7 +191,9 @@ public class MetaOnlyRepoManagerImpl implements MetaOnlyRepoManager {
 			if (cryptoRepoFileDto == null)
 				return null;
 
-			return new ServerRepoFileImpl(server, serverRepo, cryptoRepoFileDto, repoFileDto);
+			final UUID localRepositoryId = localRepoManager.getRepositoryId();
+
+			return new ServerRepoFileImpl(server, serverRepo, localRepositoryId, cryptoRepoFileDto, repoFileDto);
 		}
 	}
 
