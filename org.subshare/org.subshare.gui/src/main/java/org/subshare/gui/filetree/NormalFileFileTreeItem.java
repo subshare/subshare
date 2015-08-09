@@ -4,6 +4,11 @@ import co.codewizards.cloudstore.core.oio.File;
 
 public class NormalFileFileTreeItem extends FileFileTreeItem {
 
+	private static final long KIB = 1024L;
+	private static final long MIB = KIB * 1024;
+	private static final long GIB = MIB * 1024;
+	private static final long TIB = GIB * 1024;
+
 	public NormalFileFileTreeItem(final File file) {
 		super(file);
 		if (file.isDirectory())
@@ -23,17 +28,17 @@ public class NormalFileFileTreeItem extends FileFileTreeItem {
 	private String _getSize() {
 		long length = getFile().length();
 
-		if (length >= 1024L * 1024 * 1024 * 1024)
-			return String.format("%d TiB", length / (1024L * 1204 * 1024 * 1024));
+		if (length >= TIB)
+			return String.format("%.1f TiB", (double) length / TIB);
 
-		if (length >= 1024L * 1024 * 1024)
-			return String.format("%d GiB", length / (1024L * 1204 * 1024));
+		if (length >= GIB)
+			return String.format("%.1f GiB", (double) length / GIB);
 
-		if (length >= 1024L * 1024)
-			return String.format("%d MiB", length / (1024L * 1204));
+		if (length >= MIB)
+			return String.format("%.1f MiB", (double) length / MIB);
 
-		if (length >= 1024L)
-			return String.format("%d KiB", length / 1024L);
+		if (length >= KIB)
+			return String.format("%.1f KiB", (double) length / KIB);
 
 		return String.format("%d B", length);
 	}

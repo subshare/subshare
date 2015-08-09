@@ -2,8 +2,6 @@ package org.subshare.core.repo.listener;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
-import java.lang.ref.Reference;
-import java.lang.ref.ReferenceQueue;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -14,7 +12,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
-import co.codewizards.cloudstore.core.ref.IdentityWeakReference;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 
 public class LocalRepoCommitEventManagerImpl implements LocalRepoCommitEventManager {
@@ -25,8 +22,7 @@ public class LocalRepoCommitEventManagerImpl implements LocalRepoCommitEventMana
 
 	private final Map<UUID, ExecutorService> localRepositoryId2ExecutorService = new HashMap<>();
 
-	private Map<UUID, List<IdentityWeakReference<LocalRepoCommitEventListener>>> localRepositoryId2Listeners = new HashMap<>();
-	private Map<UUID, RefQueue> localRepositoryId2ReferenceQueue = new HashMap<>();
+	private Map<UUID, List<LocalRepoCommitEventListener>> localRepositoryId2Listeners = new HashMap<>();
 
 	protected LocalRepoCommitEventManagerImpl() {
 	}
@@ -52,11 +48,8 @@ public class LocalRepoCommitEventManagerImpl implements LocalRepoCommitEventMana
 		assertNotNull("modifications", modifications);
 		final UUID localRepositoryId = localRepoManager.getRepositoryId();
 
-		expunge(null);
-		expunge(localRepositoryId);
-
-		final Iterator<IdentityWeakReference<LocalRepoCommitEventListener>> globalListenerIterator = getListenerRefs(null).iterator();
-		final Iterator<IdentityWeakReference<LocalRepoCommitEventListener>> specificListenerIterator = getListenerRefs(localRepositoryId).iterator();
+		final Iterator<LocalRepoCommitEventListener> globalListenerIterator = getListeners(null).iterator();
+		final Iterator<LocalRepoCommitEventListener> specificListenerIterator = getListeners(localRepositoryId).iterator();
 
 		if (! (globalListenerIterator.hasNext() || specificListenerIterator.hasNext()))
 			return;
@@ -66,32 +59,18 @@ public class LocalRepoCommitEventManagerImpl implements LocalRepoCommitEventMana
 			@Override
 			public void run() {
 				while (specificListenerIterator.hasNext()) {
-					final IdentityWeakReference<LocalRepoCommitEventListener> ref = specificListenerIterator.next();
-					final LocalRepoCommitEventListener listener = ref.get();
+					final LocalRepoCommitEventListener listener = specificListenerIterator.next();
 					if (listener != null)
 						listener.postCommit(event);
 				}
 
 				while (globalListenerIterator.hasNext()) {
-					final IdentityWeakReference<LocalRepoCommitEventListener> ref = globalListenerIterator.next();
-					final LocalRepoCommitEventListener listener = ref.get();
+					final LocalRepoCommitEventListener listener = globalListenerIterator.next();
 					if (listener != null)
 						listener.postCommit(event);
 				}
 			}
 		});
-	}
-
-	private void expunge(final UUID localRepositoryId) {
-		final RefQueue referenceQueue = getReferenceQueue(localRepositoryId);
-		List<IdentityWeakReference<LocalRepoCommitEventListener>> listenerRefs = null;
-		Reference<? extends LocalRepoCommitEventListener> ref;
-		while (null != (ref = referenceQueue.poll())) {
-			if (listenerRefs == null)
-				listenerRefs = getListenerRefs(localRepositoryId);
-
-			listenerRefs.remove(ref);
-		}
 	}
 
 	@Override
@@ -102,9 +81,7 @@ public class LocalRepoCommitEventManagerImpl implements LocalRepoCommitEventMana
 	@Override
 	public void addLocalRepoCommitEventListener(final UUID localRepositoryId, final LocalRepoCommitEventListener listener) {
 		assertNotNull("listener", listener);
-		expunge(localRepositoryId);
-		final RefQueue referenceQueue = getReferenceQueue(localRepositoryId);
-		getListenerRefs(localRepositoryId).add(new IdentityWeakReference<LocalRepoCommitEventListener>(listener, referenceQueue));
+		getListeners(localRepositoryId).add(listener);
 	}
 
 	@Override
@@ -115,26 +92,13 @@ public class LocalRepoCommitEventManagerImpl implements LocalRepoCommitEventMana
 	@Override
 	public void removeLocalRepoCommitEventListener(final UUID localRepositoryId, LocalRepoCommitEventListener listener) {
 		assertNotNull("listener", listener);
-		expunge(localRepositoryId);
-		getListenerRefs(localRepositoryId).remove(new IdentityWeakReference<LocalRepoCommitEventListener>(listener));
+		getListeners(localRepositoryId).remove(listener);
 	}
 
-	private RefQueue getReferenceQueue(final UUID localRepositoryId) {
-		// localRepositoryId may be null!
-		synchronized (localRepositoryId2ReferenceQueue) {
-			RefQueue referenceQueue = localRepositoryId2ReferenceQueue.get(localRepositoryId);
-			if (referenceQueue == null) {
-				referenceQueue = new RefQueue();
-				localRepositoryId2ReferenceQueue.get(localRepositoryId);
-			}
-			return referenceQueue;
-		}
-	}
-
-	private List<IdentityWeakReference<LocalRepoCommitEventListener>> getListenerRefs(final UUID localRepositoryId) {
+	private List<LocalRepoCommitEventListener> getListeners(final UUID localRepositoryId) {
 		// localRepositoryId may be null!
 		synchronized (localRepositoryId2Listeners) {
-			List<IdentityWeakReference<LocalRepoCommitEventListener>> listeners = localRepositoryId2Listeners.get(localRepositoryId);
+			List<LocalRepoCommitEventListener> listeners = localRepositoryId2Listeners.get(localRepositoryId);
 			if (listeners == null) {
 				listeners = new CopyOnWriteArrayList<>();
 				localRepositoryId2Listeners.put(localRepositoryId, listeners);
@@ -164,6 +128,4 @@ public class LocalRepoCommitEventManagerImpl implements LocalRepoCommitEventMana
 			return executorService;
 		}
 	}
-
-	private static class RefQueue extends ReferenceQueue<LocalRepoCommitEventListener> { }
 }

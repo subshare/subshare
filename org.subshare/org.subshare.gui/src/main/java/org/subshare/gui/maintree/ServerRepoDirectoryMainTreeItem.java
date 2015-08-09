@@ -17,11 +17,15 @@ import javafx.scene.image.ImageView;
 
 import org.subshare.core.repo.ServerRepo;
 import org.subshare.core.repo.listener.LocalRepoCommitEventListener;
+import org.subshare.core.repo.listener.LocalRepoCommitEventManager;
+import org.subshare.core.repo.listener.WeakLocalRepoCommitEventListener;
 import org.subshare.core.repo.metaonly.ServerRepoFile;
 import org.subshare.core.repo.metaonly.ServerRepoFileType;
 import org.subshare.core.server.Server;
 import org.subshare.gui.ls.LocalRepoCommitEventManagerLs;
 import org.subshare.gui.serverrepo.directory.ServerRepoDirectoryPane;
+
+import co.codewizards.cloudstore.core.collection.ListMerger;
 
 public class ServerRepoDirectoryMainTreeItem extends MainTreeItem<ServerRepoFile> {
 
@@ -34,11 +38,16 @@ public class ServerRepoDirectoryMainTreeItem extends MainTreeItem<ServerRepoFile
 		getChildren();
 	});
 
+	private final WeakLocalRepoCommitEventListener weakLocalRepoCommitEventListener;
+
 	public ServerRepoDirectoryMainTreeItem(final ServerRepoFile serverRepoFile) {
 		super(assertNotNull("serverRepoFile", serverRepoFile));
 		setGraphic(new ImageView(icon));
 		final UUID localRepositoryId = serverRepoFile.getLocalRepositoryId();
-		LocalRepoCommitEventManagerLs.getLocalRepoCommitEventManager().addLocalRepoCommitEventListener(localRepositoryId, localRepoCommitEventListener);
+
+		final LocalRepoCommitEventManager localRepoCommitEventManager = LocalRepoCommitEventManagerLs.getLocalRepoCommitEventManager();
+		weakLocalRepoCommitEventListener = new WeakLocalRepoCommitEventListener(localRepoCommitEventManager, localRepositoryId, localRepoCommitEventListener);
+		weakLocalRepoCommitEventListener.addLocalRepoCommitEventListener();
 	}
 
 	public Server getServer() {
@@ -74,11 +83,28 @@ public class ServerRepoDirectoryMainTreeItem extends MainTreeItem<ServerRepoFile
 		final ObservableList<TreeItem<String>> children = super.getChildren();
 		if (! childrenLoaded) {
 			childrenLoaded = true; // *must* be set before clear()/addAll(...), because of events being fired.
-			final List<MainTreeItem<?>> c = loadChildren();
-			if (c != null) // TODO need to remove stuff that disappeared => real update instead of simple add!
-				children.addAll(c);
+			final List<TreeItem<String>> c = loadChildren();
+			new ChildrenListMerger().merge(c, children);
+//			if (c != null) // TODO need to remove stuff that disappeared => real update instead of simple add!
+//				children.addAll(c);
 		}
 		return children;
+	}
+
+	private class ChildrenListMerger extends ListMerger<TreeItem<String>, String> {
+		@Override
+		protected String getKey(TreeItem<String> element) {
+			final ServerRepoDirectoryMainTreeItem item = (ServerRepoDirectoryMainTreeItem) element;
+			final ServerRepoFile serverRepoFile = item.getServerRepoFile();
+			return serverRepoFile.getLocalName();
+		}
+
+		@Override
+		protected void update(List<TreeItem<String>> dest, int index, TreeItem<String> sourceElement, TreeItem<String> destElement) {
+			final ServerRepoDirectoryMainTreeItem sourceItem = (ServerRepoDirectoryMainTreeItem) sourceElement;
+			final ServerRepoDirectoryMainTreeItem destItem = (ServerRepoDirectoryMainTreeItem) destElement;
+			destItem.setValueObject(sourceItem.getValueObject());
+		}
 	}
 
 	@Override
@@ -86,7 +112,7 @@ public class ServerRepoDirectoryMainTreeItem extends MainTreeItem<ServerRepoFile
 		return false;
 	}
 
-	private List<MainTreeItem<?>> loadChildren() {
+	private List<TreeItem<String>> loadChildren() {
 		final List<ServerRepoFile> childServerRepoFiles = getServerRepoFile().getChildren();
 		if (childServerRepoFiles == null)
 			return null;
@@ -99,7 +125,7 @@ public class ServerRepoDirectoryMainTreeItem extends MainTreeItem<ServerRepoFile
 
 		Collections.sort(filtered, (o1, o2) -> o1.getLocalName().compareTo(o2.getLocalName()));
 
-		final ArrayList<MainTreeItem<?>> result = new ArrayList<>(filtered.size());
+		final ArrayList<TreeItem<String>> result = new ArrayList<>(filtered.size());
 		for (final ServerRepoFile childServerRepoFile : filtered)
 				result.add(new ServerRepoDirectoryMainTreeItem(childServerRepoFile));
 

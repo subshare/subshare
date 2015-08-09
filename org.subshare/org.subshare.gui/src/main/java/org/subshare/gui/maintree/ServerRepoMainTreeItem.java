@@ -13,6 +13,7 @@ import javafx.scene.image.ImageView;
 import org.subshare.core.repo.ServerRepo;
 import org.subshare.core.repo.listener.LocalRepoCommitEventListener;
 import org.subshare.core.repo.listener.LocalRepoCommitEventManager;
+import org.subshare.core.repo.listener.WeakLocalRepoCommitEventListener;
 import org.subshare.core.repo.metaonly.ServerRepoFile;
 import org.subshare.core.server.Server;
 import org.subshare.gui.ls.LocalRepoCommitEventManagerLs;
@@ -24,8 +25,8 @@ public class ServerRepoMainTreeItem extends MainTreeItem<ServerRepo> {
 	private static final Image icon = new Image(UserListMainTreeItem.class.getResource("server-repo-16x16.png").toExternalForm());
 	private boolean childrenLoaded;
 
-	private LocalRepoCommitEventManager localRepoCommitEventManager;
 	private LocalRepoCommitEventListener localRepoCommitEventListener;
+	private WeakLocalRepoCommitEventListener weakLocalRepoCommitEventListener;
 
 	public ServerRepoMainTreeItem(final ServerRepo serverRepo) {
 		super(assertNotNull("serverRepo", serverRepo));
@@ -59,6 +60,7 @@ public class ServerRepoMainTreeItem extends MainTreeItem<ServerRepo> {
 				hookLocalRepoCommitEventListener();
 			else {
 				unhookLocalRepoCommitEventListenerIfNeeded();
+//				children.clear(); // not needed - should always be empty.
 				children.add(new ServerRepoDirectoryMainTreeItem(rootServerRepoFile));
 			}
 		}
@@ -86,7 +88,7 @@ public class ServerRepoMainTreeItem extends MainTreeItem<ServerRepo> {
 	private void hookLocalRepoCommitEventListener() {
 		assertFxApplicationThread();
 
-		if (localRepoCommitEventListener != null)
+		if (weakLocalRepoCommitEventListener != null)
 			throw new IllegalStateException("Already hooked!");
 
 		// TODO we should check, if a ServerRepository was created (i.e. a connection between a local repo and a server repo established)
@@ -96,20 +98,19 @@ public class ServerRepoMainTreeItem extends MainTreeItem<ServerRepo> {
 			getChildren();
 		});
 
-		localRepoCommitEventManager = LocalRepoCommitEventManagerLs.getLocalRepoCommitEventManager();
-		localRepoCommitEventManager.addLocalRepoCommitEventListener(localRepoCommitEventListener);
+		final LocalRepoCommitEventManager localRepoCommitEventManager = LocalRepoCommitEventManagerLs.getLocalRepoCommitEventManager();
+		weakLocalRepoCommitEventListener = new WeakLocalRepoCommitEventListener(localRepoCommitEventManager, localRepoCommitEventListener);
+		weakLocalRepoCommitEventListener.addLocalRepoCommitEventListener();
 	}
 
 	private void unhookLocalRepoCommitEventListenerIfNeeded() {
 		assertFxApplicationThread();
 
-		if (localRepoCommitEventListener == null)
+		if (weakLocalRepoCommitEventListener == null)
 			return;
 
-		final LocalRepoCommitEventManager manager = assertNotNull("localRepoCommitEventManager", localRepoCommitEventManager);
-		manager.removeLocalRepoCommitEventListener(localRepoCommitEventListener);
-
+		weakLocalRepoCommitEventListener.removeLocalRepoCommitEventListener();
 		localRepoCommitEventListener = null;
-		localRepoCommitEventManager = null;
+		weakLocalRepoCommitEventListener = null;
 	}
 }
