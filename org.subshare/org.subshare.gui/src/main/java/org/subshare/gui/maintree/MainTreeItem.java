@@ -113,13 +113,13 @@ public class MainTreeItem<T> extends TreeItem<String> {
 		}
 	}
 
-	public static class MainTreeItemEvent extends Event {
+	public static class MainTreeItemEvent extends TreeModificationEvent<String> {
 		private static final long serialVersionUID = 1L;
 
 		private final MainTreeItem<?> mainTreeItem;
 
 		public MainTreeItemEvent(EventType<? extends Event> eventType, MainTreeItem<?> mainTreeItem) {
-			super(eventType);
+			super(eventType, mainTreeItem);
 			this.mainTreeItem = mainTreeItem;
 		}
 

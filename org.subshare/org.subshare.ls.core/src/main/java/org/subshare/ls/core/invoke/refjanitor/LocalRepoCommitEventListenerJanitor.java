@@ -2,7 +2,6 @@ package org.subshare.ls.core.invoke.refjanitor;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
-import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -181,21 +180,19 @@ public class LocalRepoCommitEventListenerJanitor extends AbstractReferenceJanito
 	private static class FaultTolerantLocalRepoCommitEventListener implements LocalRepoCommitEventListener {
 		private static final Logger logger = LoggerFactory.getLogger(LocalRepoCommitEventListenerJanitor.FaultTolerantLocalRepoCommitEventListener.class);
 
-		private final WeakReference<LocalRepoCommitEventListener> delegateRef;
+		private final LocalRepoCommitEventListener delegate;
 
 		public FaultTolerantLocalRepoCommitEventListener(final LocalRepoCommitEventListener delegate) {
-			this.delegateRef = new WeakReference<LocalRepoCommitEventListener>(assertNotNull("delegate", delegate));
+			this.delegate = assertNotNull("delegate", delegate);
 		}
 
 		@Override
 		public void postCommit(LocalRepoCommitEvent event) {
-			final LocalRepoCommitEventListener delegate = delegateRef.get();
-			if (delegate != null)
-				try {
-					delegate.postCommit(event);
-				} catch (final Exception x) {
-					logger.error("postCommit: " + x, x);
-				}
+			try {
+				delegate.postCommit(event);
+			} catch (final Exception x) {
+				logger.error("postCommit: " + x, x);
+			}
 		}
 
 		@Override

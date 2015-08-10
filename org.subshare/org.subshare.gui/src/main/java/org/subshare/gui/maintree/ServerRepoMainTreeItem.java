@@ -4,7 +4,12 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
 import static javafx.application.Platform.*;
 import static org.subshare.gui.util.PlatformUtil.*;
+
+import java.util.concurrent.ExecutionException;
+
 import javafx.collections.ObservableList;
+import javafx.concurrent.Service;
+import javafx.concurrent.Task;
 import javafx.scene.Parent;
 import javafx.scene.control.TreeItem;
 import javafx.scene.image.Image;
@@ -55,14 +60,31 @@ public class ServerRepoMainTreeItem extends MainTreeItem<ServerRepo> {
 		final ObservableList<TreeItem<String>> children = super.getChildren();
 		if (! childrenLoaded) {
 			childrenLoaded = true;
-			final ServerRepoFile rootServerRepoFile = MetaOnlyRepoManagerLs.getMetaOnlyRepoManager().getRootServerRepoFile(getServerRepo());
-			if (rootServerRepoFile == null) // not checked out, yet
-				hookLocalRepoCommitEventListener();
-			else {
-				unhookLocalRepoCommitEventListenerIfNeeded();
-//				children.clear(); // not needed - should always be empty.
-				children.add(new ServerRepoDirectoryMainTreeItem(rootServerRepoFile));
-			}
+
+			new Service<ServerRepoFile>() {
+				@Override
+				protected Task<ServerRepoFile> createTask() {
+					return new Task<ServerRepoFile>() {
+						@Override
+						protected ServerRepoFile call() throws Exception {
+							return MetaOnlyRepoManagerLs.getMetaOnlyRepoManager().getRootServerRepoFile(getServerRepo());
+						}
+
+						@Override
+						protected void succeeded() {
+							final ServerRepoFile rootServerRepoFile;
+							try { rootServerRepoFile = get(); } catch (InterruptedException | ExecutionException e) { throw new RuntimeException(e); }
+							if (rootServerRepoFile == null) // not checked out, yet
+								hookLocalRepoCommitEventListener();
+							else {
+								unhookLocalRepoCommitEventListenerIfNeeded();
+//								children.clear(); // not needed - should always be empty.
+								children.add(new ServerRepoDirectoryMainTreeItem(rootServerRepoFile));
+							}
+						}
+					};
+				}
+			}.start();
 		}
 		return children;
 	}

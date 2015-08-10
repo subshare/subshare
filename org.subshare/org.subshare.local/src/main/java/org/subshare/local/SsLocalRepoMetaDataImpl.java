@@ -237,4 +237,28 @@ public class SsLocalRepoMetaDataImpl extends LocalRepoMetaDataImpl implements Ss
 		}
 		return result;
 	}
+
+	@Override
+	public boolean isMetaOnly() {
+		try (final LocalRepoTransaction tx = getLocalRepoManagerOrFail().beginReadTransaction();) {
+			final UUID serverRepositoryId = getRemoteRepositoryId(tx);
+			final Cryptree cryptree = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail().getCryptreeOrCreate(tx, serverRepositoryId);
+			return cryptree.isMetaOnly();
+		}
+	}
+
+	@Override
+	public void makeMetaOnly() {
+		try (final LocalRepoTransaction tx = getLocalRepoManagerOrFail().beginWriteTransaction();) {
+			final UUID serverRepositoryId = getRemoteRepositoryId(tx);
+			final Cryptree cryptree = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail().getCryptreeOrCreate(tx, serverRepositoryId);
+			cryptree.makeMetaOnly();
+
+			// We must remove the Cryptree from the transaction, because this Cryptree thinks, it was on the server-side.
+			// It does this, because we do not provide a UserRepoKeyRing (which usually never happens on the client-side).
+			// This wrong assumption causes the VerifySignableAndWriteProtectedEntityListener to fail.
+			tx.removeContextObject(cryptree);
+			tx.commit();
+		}
+	}
 }

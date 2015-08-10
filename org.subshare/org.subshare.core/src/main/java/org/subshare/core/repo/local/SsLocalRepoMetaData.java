@@ -57,4 +57,7 @@ public interface SsLocalRepoMetaData extends LocalRepoMetaData {
 
 	void revokePermission(String localPath, PermissionType permissionType, Set<Uid> userRepoKeyIds);
 
+	boolean isMetaOnly();
+
+	void makeMetaOnly();
 }

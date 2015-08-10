@@ -12,8 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.subshare.core.Cryptree;
-import org.subshare.core.CryptreeFactoryRegistry;
 import org.subshare.core.dto.CryptoRepoFileDto;
 import org.subshare.core.repo.ServerRepo;
 import org.subshare.core.repo.ServerRepoManagerImpl;
@@ -36,7 +34,6 @@ import co.codewizards.cloudstore.core.progress.LoggerProgressMonitor;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoHelper;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManagerFactory;
-import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
 import co.codewizards.cloudstore.core.repo.sync.RepoToRepoSync;
 import co.codewizards.cloudstore.core.util.UrlUtil;
 
@@ -157,16 +154,8 @@ public class MetaOnlyRepoManagerImpl implements MetaOnlyRepoManager {
 		boolean successful = false;
 		final LocalRepoManager localRepoManager = LocalRepoManagerFactory.Helper.getInstance().createLocalRepoManagerForNewRepository(localRoot);
 		try {
-			try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
-				final Cryptree cryptree = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail().getCryptreeOrCreate(transaction, serverRepo.getRepositoryId());
-				cryptree.makeMetaOnly();
-
-				// We must remove the Cryptree from the transaction, because this Cryptree thinks, it was on the server-side.
-				// It does this, because we do not provide a UserRepoKeyRing (which usually never happens on the client-side).
-				// This wrong assumption causes the VerifySignableAndWriteProtectedEntityListener to fail.
-				transaction.removeContextObject(cryptree);
-				transaction.commit();
-			}
+			SsLocalRepoMetaData localRepoMetaData = (SsLocalRepoMetaData) localRepoManager.getLocalRepoMetaData();
+			localRepoMetaData.makeMetaOnly();
 			successful = true;
 		} finally {
 			if (! successful)

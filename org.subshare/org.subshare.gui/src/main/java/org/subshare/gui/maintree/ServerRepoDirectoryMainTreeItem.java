@@ -7,9 +7,14 @@ import static javafx.application.Platform.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 
 import javafx.collections.ObservableList;
+import javafx.concurrent.Service;
+import javafx.concurrent.Task;
 import javafx.scene.Parent;
 import javafx.scene.control.TreeItem;
 import javafx.scene.image.Image;
@@ -33,12 +38,13 @@ public class ServerRepoDirectoryMainTreeItem extends MainTreeItem<ServerRepoFile
 
 	private boolean childrenLoaded;
 
-	private final LocalRepoCommitEventListener localRepoCommitEventListener = event -> runLater(() -> {
-		childrenLoaded = false;
-		getChildren();
-	});
+	private final LocalRepoCommitEventListener localRepoCommitEventListener = event -> scheduleDeferredGetChildrenTimerTask();
 
 	private final WeakLocalRepoCommitEventListener weakLocalRepoCommitEventListener;
+
+	private static final Timer deferredGetChildrenTimer = new Timer(true);
+
+	private TimerTask deferredGetChildrenTimerTask;
 
 	public ServerRepoDirectoryMainTreeItem(final ServerRepoFile serverRepoFile) {
 		super(assertNotNull("serverRepoFile", serverRepoFile));
@@ -48,6 +54,31 @@ public class ServerRepoDirectoryMainTreeItem extends MainTreeItem<ServerRepoFile
 		final LocalRepoCommitEventManager localRepoCommitEventManager = LocalRepoCommitEventManagerLs.getLocalRepoCommitEventManager();
 		weakLocalRepoCommitEventListener = new WeakLocalRepoCommitEventListener(localRepoCommitEventManager, localRepositoryId, localRepoCommitEventListener);
 		weakLocalRepoCommitEventListener.addLocalRepoCommitEventListener();
+	}
+
+	private synchronized void scheduleDeferredGetChildrenTimerTask() {
+		if (deferredGetChildrenTimerTask != null) {
+			deferredGetChildrenTimerTask.cancel();
+			deferredGetChildrenTimerTask = null;
+		}
+
+		deferredGetChildrenTimerTask = new TimerTask() {
+			@Override
+			public void run() {
+				synchronized (ServerRepoDirectoryMainTreeItem.this) {
+					deferredGetChildrenTimerTask = null;
+				}
+				runLater(() -> {
+					if (childrenLoaded) { // only *re*load, if it already was loaded before
+						childrenLoaded = false;
+						if (isExpanded()) // only reload, if currently expanded. otherwise defer until next expansion.
+							getChildren();
+					}
+				});
+			}
+		};
+
+		deferredGetChildrenTimer.schedule(deferredGetChildrenTimerTask, 500);
 	}
 
 	public Server getServer() {
@@ -83,10 +114,25 @@ public class ServerRepoDirectoryMainTreeItem extends MainTreeItem<ServerRepoFile
 		final ObservableList<TreeItem<String>> children = super.getChildren();
 		if (! childrenLoaded) {
 			childrenLoaded = true; // *must* be set before clear()/addAll(...), because of events being fired.
-			final List<TreeItem<String>> c = loadChildren();
-			new ChildrenListMerger().merge(c, children);
-//			if (c != null) // TODO need to remove stuff that disappeared => real update instead of simple add!
-//				children.addAll(c);
+
+			new Service<List<TreeItem<String>>>() {
+				@Override
+				protected Task<List<TreeItem<String>>> createTask() {
+					return new Task<List<TreeItem<String>>>() {
+						@Override
+						protected List<TreeItem<String>> call() throws Exception {
+							return loadChildren();
+						}
+
+						@Override
+						protected void succeeded() {
+							final List<TreeItem<String>> c;
+							try { c = get(); } catch (InterruptedException | ExecutionException e) { throw new RuntimeException(e); }
+							new ChildrenListMerger().merge(c, children);
+						}
+					};
+				}
+			}.start();
 		}
 		return children;
 	}

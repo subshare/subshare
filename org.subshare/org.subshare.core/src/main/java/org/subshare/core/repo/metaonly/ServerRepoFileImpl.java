@@ -8,6 +8,10 @@ import java.util.UUID;
 
 import org.subshare.core.dto.CryptoRepoFileDto;
 import org.subshare.core.repo.ServerRepo;
+import org.subshare.core.repo.listener.LocalRepoCommitEvent;
+import org.subshare.core.repo.listener.LocalRepoCommitEventListener;
+import org.subshare.core.repo.listener.LocalRepoCommitEventManagerImpl;
+import org.subshare.core.repo.listener.WeakLocalRepoCommitEventListener;
 import org.subshare.core.server.Server;
 
 import co.codewizards.cloudstore.core.dto.DirectoryDto;
@@ -27,6 +31,15 @@ public class ServerRepoFileImpl implements ServerRepoFile {
 	private final UUID localRepositoryId;
 	private List<ServerRepoFile> children;
 
+	private final LocalRepoCommitEventListener localRepoCommitEventListener = new LocalRepoCommitEventListener() {
+		@Override
+		public void postCommit(LocalRepoCommitEvent event) {
+			resetChildren();
+		}
+	};
+
+	private final WeakLocalRepoCommitEventListener weakLocalRepoCommitEventListener;
+
 	public ServerRepoFileImpl(final Server server, final ServerRepo serverRepo, final UUID localRepositoryId, final CryptoRepoFileDto cryptoRepoFileDto, final RepoFileDto repoFileDto) {
 		parent = null;
 		this.server = assertNotNull("server", server);
@@ -34,6 +47,10 @@ public class ServerRepoFileImpl implements ServerRepoFile {
 		this.localRepositoryId = assertNotNull("localRepositoryId", localRepositoryId);
 		this.cryptoRepoFileDto = assertNotNull("cryptoRepoFileDto", cryptoRepoFileDto);
 		this.repoFileDto = assertNotNull("repoFileDto", repoFileDto);
+
+		weakLocalRepoCommitEventListener = new WeakLocalRepoCommitEventListener(
+				LocalRepoCommitEventManagerImpl.getInstance(), localRepositoryId, localRepoCommitEventListener);
+		weakLocalRepoCommitEventListener.addLocalRepoCommitEventListener();
 	}
 
 	public ServerRepoFileImpl(final ServerRepoFileImpl parent, final CryptoRepoFileDto cryptoRepoFileDto, final RepoFileDto repoFileDto) {
@@ -43,6 +60,10 @@ public class ServerRepoFileImpl implements ServerRepoFile {
 		this.localRepositoryId = parent.getLocalRepositoryId();
 		this.cryptoRepoFileDto = assertNotNull("cryptoRepoFileDto", cryptoRepoFileDto);
 		this.repoFileDto = assertNotNull("repoFileDto", repoFileDto);
+
+		weakLocalRepoCommitEventListener = new WeakLocalRepoCommitEventListener(
+				LocalRepoCommitEventManagerImpl.getInstance(), localRepositoryId, localRepoCommitEventListener);
+		weakLocalRepoCommitEventListener.addLocalRepoCommitEventListener();
 	}
 
 	@Override
@@ -140,11 +161,15 @@ public class ServerRepoFileImpl implements ServerRepoFile {
 	}
 
 	@Override
-	public List<ServerRepoFile> getChildren() {
+	public synchronized List<ServerRepoFile> getChildren() {
 		if (children == null)
 			children = getReadOnlyMetaRepoManager().getChildServerRepoFiles(this);
 
 		return children;
+	}
+
+	protected synchronized void resetChildren() {
+		children = null;
 	}
 
 	protected MetaOnlyRepoManagerImpl getReadOnlyMetaRepoManager() {
