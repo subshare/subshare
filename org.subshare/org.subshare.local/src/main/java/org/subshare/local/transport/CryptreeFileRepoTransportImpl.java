@@ -3,6 +3,7 @@ package org.subshare.local.transport;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.UUID;
 
 import org.subshare.core.Cryptree;
@@ -35,6 +36,8 @@ import co.codewizards.cloudstore.local.transport.TempChunkFileManager;
 public class CryptreeFileRepoTransportImpl extends FileRepoTransport implements CryptreeFileRepoTransport {
 
 	private static final Logger logger = LoggerFactory.getLogger(CryptreeFileRepoTransportImpl.class);
+
+	private Boolean metaOnly;
 
 	@Override
 	public void delete(final SsDeleteModificationDto deleteModificationDto) {
@@ -70,6 +73,49 @@ public class CryptreeFileRepoTransportImpl extends FileRepoTransport implements 
 
 			transaction.commit();
 		}
+	}
+
+	@Override
+	public void delete(String path) {
+		if (isMetaOnly()) {
+			path = prefixPath(path);
+			final File localRoot = getLocalRepoManager().getLocalRoot();
+			try (final LocalRepoTransaction transaction = getLocalRepoManager().beginWriteTransaction();) {
+				final RepoFileDao repoFileDao = transaction.getDao(RepoFileDao.class);
+				final File file = getFile(path);
+				final RepoFile repoFile = repoFileDao.getRepoFile(localRoot, file);
+				if (repoFile != null)
+					deleteRepoFileRecursively(transaction, repoFile);
+
+				transaction.commit();
+			}
+		}
+		else
+			super.delete(path);
+	}
+
+	private void deleteRepoFileRecursively(final LocalRepoTransaction transaction, final RepoFile repoFile) {
+		final RepoFileDao repoFileDao = transaction.getDao(RepoFileDao.class);
+		for (final RepoFile childRepoFile : repoFileDao.getChildRepoFiles(repoFile))
+			deleteRepoFileRecursively(transaction, childRepoFile);
+
+		repoFileDao.deletePersistent(repoFile);
+	}
+
+	private boolean isMetaOnly() {
+		if (metaOnly == null) {
+			final Iterator<UUID> repoIdIt = getLocalRepoManager().getRemoteRepositoryId2RemoteRootMap().keySet().iterator();
+			if (! repoIdIt.hasNext())
+				throw new IllegalStateException("There is no remote-repository!");
+
+			final UUID serverRepositoryId = repoIdIt.next();
+			try (final LocalRepoTransaction transaction = getLocalRepoManager().beginReadTransaction();) {
+				final Cryptree cryptree = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail().getCryptreeOrCreate(transaction, serverRepositoryId);
+				metaOnly = cryptree.isMetaOnly();
+				transaction.commit();
+			}
+		}
+		return metaOnly;
 	}
 
 	private void createAndPersistDeleteModifications(final LocalRepoTransaction transaction, final SsDeleteModificationDto deleteModificationDto) {
