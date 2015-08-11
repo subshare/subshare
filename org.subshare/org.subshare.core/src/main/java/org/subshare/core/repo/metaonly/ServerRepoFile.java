@@ -10,6 +10,7 @@ import org.subshare.core.server.Server;
 import co.codewizards.cloudstore.core.dto.Uid;
 
 public interface ServerRepoFile {
+	long getRepoFileId();
 
 	ServerRepoFile getParent();
 
@@ -30,5 +31,4 @@ public interface ServerRepoFile {
 	ServerRepoFileType getType();
 
 	URL getServerUrl();
-
 }

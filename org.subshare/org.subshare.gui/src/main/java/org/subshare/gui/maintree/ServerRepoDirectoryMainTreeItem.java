@@ -137,12 +137,12 @@ public class ServerRepoDirectoryMainTreeItem extends MainTreeItem<ServerRepoFile
 		return children;
 	}
 
-	private class ChildrenListMerger extends ListMerger<TreeItem<String>, String> {
+	private class ChildrenListMerger extends ListMerger<TreeItem<String>, Long> {
 		@Override
-		protected String getKey(TreeItem<String> element) {
+		protected Long getKey(TreeItem<String> element) {
 			final ServerRepoDirectoryMainTreeItem item = (ServerRepoDirectoryMainTreeItem) element;
 			final ServerRepoFile serverRepoFile = item.getServerRepoFile();
-			return serverRepoFile.getLocalName();
+			return serverRepoFile.getRepoFileId();
 		}
 
 		@Override

@@ -119,6 +119,9 @@ public class MetaOnlyRepoManagerImpl implements MetaOnlyRepoManager {
 		if (localRepoManager.getRemoteRepositoryId2RemoteRootMap().isEmpty()) {
 			final URL remoteRoot = getRemoteRoot(server, serverRepo);
 			ServerRepoManagerImpl.connectLocalRepositoryWithServerRepository(localRepoManager, serverRepo.getRepositoryId(), remoteRoot);
+
+			SsLocalRepoMetaData localRepoMetaData = (SsLocalRepoMetaData) localRepoManager.getLocalRepoMetaData();
+			localRepoMetaData.makeMetaOnly();
 		}
 	}
 
@@ -142,7 +145,8 @@ public class MetaOnlyRepoManagerImpl implements MetaOnlyRepoManager {
 
 		final LocalRepoManager localRepoManager;
 		if (LocalRepoHelper.getLocalRootContainingFile(localRoot) == null)
-			localRepoManager = createLocalRepoManagerForNewRepository(serverRepo, localRoot);
+//			localRepoManager = createLocalRepoManagerForNewRepository(serverRepo, localRoot);
+			localRepoManager = LocalRepoManagerFactory.Helper.getInstance().createLocalRepoManagerForNewRepository(localRoot);
 		else
 			localRepoManager = LocalRepoManagerFactory.Helper.getInstance().createLocalRepoManagerForExistingRepository(localRoot);
 
@@ -150,18 +154,39 @@ public class MetaOnlyRepoManagerImpl implements MetaOnlyRepoManager {
 		return localRepoManager;
 	}
 
-	private LocalRepoManager createLocalRepoManagerForNewRepository(final ServerRepo serverRepo, final File localRoot) {
-		boolean successful = false;
-		final LocalRepoManager localRepoManager = LocalRepoManagerFactory.Helper.getInstance().createLocalRepoManagerForNewRepository(localRoot);
-		try {
+//	private LocalRepoManager createLocalRepoManagerForNewRepository(final ServerRepo serverRepo, final File localRoot) {
+//		boolean successful = false;
+//		final LocalRepoManager localRepoManager = LocalRepoManagerFactory.Helper.getInstance().createLocalRepoManagerForNewRepository(localRoot);
+//		try {
+//			SsLocalRepoMetaData localRepoMetaData = (SsLocalRepoMetaData) localRepoManager.getLocalRepoMetaData();
+//			localRepoMetaData.makeMetaOnly();
+//			successful = true;
+//		} finally {
+//			if (! successful)
+//				localRepoManager.close();
+//		}
+//		return localRepoManager;
+//	}
+
+	public ServerRepoFile getServerRepoFile(final ServerRepo serverRepo, long repoFileId) {
+		assertNotNull("serverRepo", serverRepo);
+		final Server server = ServerRegistryImpl.getInstance().getServer(serverRepo.getServerId());
+		assertNotNull("serverRegistry.getServer(" + serverRepo.getServerId() + ")", server); // or should we better return null?!
+
+		try (final LocalRepoManager localRepoManager = createLocalRepoManager(serverRepo);) {
 			SsLocalRepoMetaData localRepoMetaData = (SsLocalRepoMetaData) localRepoManager.getLocalRepoMetaData();
-			localRepoMetaData.makeMetaOnly();
-			successful = true;
-		} finally {
-			if (! successful)
-				localRepoManager.close();
+			final RepoFileDto repoFileDto = localRepoMetaData.getRepoFileDto(repoFileId, REPO_FILE_DTO_DEPTH);
+			if (repoFileDto == null)
+				return null;
+
+			final CryptoRepoFileDto cryptoRepoFileDto = localRepoMetaData.getCryptoRepoFileDto(repoFileDto.getId());
+			if (cryptoRepoFileDto == null)
+				return null;
+
+			final UUID localRepositoryId = localRepoManager.getRepositoryId();
+
+			return new ServerRepoFileImpl(server, serverRepo, localRepositoryId, cryptoRepoFileDto, repoFileDto);
 		}
-		return localRepoManager;
 	}
 
 	@Override

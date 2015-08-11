@@ -14,6 +14,7 @@ import org.subshare.core.repo.listener.LocalRepoCommitEventManagerImpl;
 import org.subshare.core.repo.listener.WeakLocalRepoCommitEventListener;
 import org.subshare.core.server.Server;
 
+import co.codewizards.cloudstore.core.collection.ListMerger;
 import co.codewizards.cloudstore.core.dto.DirectoryDto;
 import co.codewizards.cloudstore.core.dto.NormalFileDto;
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
@@ -24,17 +25,19 @@ import co.codewizards.cloudstore.core.util.UrlUtil;
 public class ServerRepoFileImpl implements ServerRepoFile {
 
 	private final ServerRepoFileImpl parent;
-	private final CryptoRepoFileDto cryptoRepoFileDto;
-	private final RepoFileDto repoFileDto;
+	private final long repoFileId;
+	private CryptoRepoFileDto cryptoRepoFileDto;
+	private RepoFileDto repoFileDto;
 	private final Server server;
 	private final ServerRepo serverRepo;
 	private final UUID localRepositoryId;
 	private List<ServerRepoFile> children;
+	private boolean childrenInvalid;
 
 	private final LocalRepoCommitEventListener localRepoCommitEventListener = new LocalRepoCommitEventListener() {
 		@Override
 		public void postCommit(LocalRepoCommitEvent event) {
-			resetChildren();
+			invalidate();
 		}
 	};
 
@@ -47,6 +50,7 @@ public class ServerRepoFileImpl implements ServerRepoFile {
 		this.localRepositoryId = assertNotNull("localRepositoryId", localRepositoryId);
 		this.cryptoRepoFileDto = assertNotNull("cryptoRepoFileDto", cryptoRepoFileDto);
 		this.repoFileDto = assertNotNull("repoFileDto", repoFileDto);
+		this.repoFileId = repoFileDto.getId();
 
 		weakLocalRepoCommitEventListener = new WeakLocalRepoCommitEventListener(
 				LocalRepoCommitEventManagerImpl.getInstance(), localRepositoryId, localRepoCommitEventListener);
@@ -60,6 +64,7 @@ public class ServerRepoFileImpl implements ServerRepoFile {
 		this.localRepositoryId = parent.getLocalRepositoryId();
 		this.cryptoRepoFileDto = assertNotNull("cryptoRepoFileDto", cryptoRepoFileDto);
 		this.repoFileDto = assertNotNull("repoFileDto", repoFileDto);
+		this.repoFileId = repoFileDto.getId();
 
 		weakLocalRepoCommitEventListener = new WeakLocalRepoCommitEventListener(
 				LocalRepoCommitEventManagerImpl.getInstance(), localRepositoryId, localRepoCommitEventListener);
@@ -88,6 +93,8 @@ public class ServerRepoFileImpl implements ServerRepoFile {
 
 	@Override
 	public ServerRepoFileType getType() {
+		final RepoFileDto repoFileDto = getRepoFileDto();
+
 		if (repoFileDto instanceof NormalFileDto)
 			return ServerRepoFileType.FILE;
 
@@ -103,7 +110,7 @@ public class ServerRepoFileImpl implements ServerRepoFile {
 
 	@Override
 	public String getLocalName() {
-		return repoFileDto.getName();
+		return getRepoFileDto().getName();
 	}
 
 	@Override
@@ -148,28 +155,67 @@ public class ServerRepoFileImpl implements ServerRepoFile {
 		return url;
 	}
 
-	public CryptoRepoFileDto getCryptoRepoFileDto() {
+	public synchronized CryptoRepoFileDto getCryptoRepoFileDto() {
+		if (cryptoRepoFileDto == null) {
+			getRepoFileDto();
+			assertNotNull("cryptoRepoFileDto", cryptoRepoFileDto);
+		}
 		return cryptoRepoFileDto;
 	}
 
-	public RepoFileDto getRepoFileDto() {
+	public synchronized RepoFileDto getRepoFileDto() {
+		if (repoFileDto == null) {
+			final ServerRepoFileImpl serverRepoFile = (ServerRepoFileImpl) getReadOnlyMetaRepoManager().getServerRepoFile(serverRepo, repoFileId);
+			copyFrom(assertNotNull("serverRepoFile", serverRepoFile));
+		}
 		return repoFileDto;
 	}
 
+	protected void copyFrom(final ServerRepoFileImpl serverRepoFile) {
+		assertNotNull("serverRepoFile", serverRepoFile);
+		repoFileDto = serverRepoFile.getRepoFileDto();
+		cryptoRepoFileDto = serverRepoFile.getCryptoRepoFileDto();
+	}
+
+	@Override
 	public long getRepoFileId() {
-		return repoFileDto.getId();
+		return repoFileId;
 	}
 
 	@Override
 	public synchronized List<ServerRepoFile> getChildren() {
-		if (children == null)
-			children = getReadOnlyMetaRepoManager().getChildServerRepoFiles(this);
+		if (children == null || childrenInvalid) {
+			final List<ServerRepoFile> c = getReadOnlyMetaRepoManager().getChildServerRepoFiles(this);
+			if (children == null || c == null)
+				children = c;
+			else
+				new ChildrenListMerger().merge(c, children);
+
+			childrenInvalid = false;
+		}
 
 		return children;
 	}
 
-	protected synchronized void resetChildren() {
-		children = null;
+	protected static class ChildrenListMerger extends ListMerger<ServerRepoFile, Long> {
+		@Override
+		protected Long getKey(ServerRepoFile element) {
+			return element.getRepoFileId();
+		}
+
+		@Override
+		protected void update(List<ServerRepoFile> dest, int index,
+				ServerRepoFile sourceElement, ServerRepoFile destElement) {
+			final ServerRepoFileImpl se = (ServerRepoFileImpl) sourceElement;
+			final ServerRepoFileImpl de = (ServerRepoFileImpl) destElement;
+			de.copyFrom(se);
+		}
+	}
+
+	protected synchronized void invalidate() {
+		childrenInvalid = true;
+		cryptoRepoFileDto = null;
+		repoFileDto = null;
 	}
 
 	protected MetaOnlyRepoManagerImpl getReadOnlyMetaRepoManager() {

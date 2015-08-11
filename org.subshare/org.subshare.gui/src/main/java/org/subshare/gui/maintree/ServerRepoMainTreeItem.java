@@ -111,7 +111,7 @@ public class ServerRepoMainTreeItem extends MainTreeItem<ServerRepo> {
 		assertFxApplicationThread();
 
 		if (weakLocalRepoCommitEventListener != null)
-			throw new IllegalStateException("Already hooked!");
+			return;
 
 		// TODO we should check, if a ServerRepository was created (i.e. a connection between a local repo and a server repo established)
 		// and only do this then! Or can we somehow otherwise reduce unnecessary work? And if possible only do this when a new repository was checked out?!

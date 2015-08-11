@@ -60,4 +60,5 @@ public interface SsLocalRepoMetaData extends LocalRepoMetaData {
 	boolean isMetaOnly();
 
 	void makeMetaOnly();
+
 }
