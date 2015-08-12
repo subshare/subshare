@@ -23,7 +23,7 @@
 				<graphic>
 					<ImageView> 
 						<image>
-							<Image url="@sync-24x24.png"/> 
+							<Image url="@sync_24x24.png"/> 
 						</image>
 					</ImageView>
 				</graphic>
@@ -35,7 +35,7 @@
 				<graphic>
 					<ImageView> 
 						<image>
-							<Image url="@add-24x24.png"/> 
+							<Image url="@add_24x24.png"/> 
 						</image>
 					</ImageView>
 				</graphic>
@@ -47,7 +47,7 @@
 				<graphic>
 					<ImageView> 
 						<image>
-							<Image url="@delete-24x24.png"/> 
+							<Image url="@delete_24x24.png"/> 
 						</image>
 					</ImageView>
 				</graphic>

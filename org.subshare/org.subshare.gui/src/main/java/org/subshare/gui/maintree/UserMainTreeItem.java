@@ -12,7 +12,7 @@ import org.subshare.gui.user.UserPane;
 
 public class UserMainTreeItem extends MainTreeItem<User> {
 
-	private static final Image icon = new Image(UserMainTreeItem.class.getResource("user-16x16.png").toExternalForm());
+	private static final Image icon = new Image(UserMainTreeItem.class.getResource("user_16x16.png").toExternalForm());
 	private final EditUserManager editUserManager;
 
 	public UserMainTreeItem(final EditUserManager editUserManager, final User user) {

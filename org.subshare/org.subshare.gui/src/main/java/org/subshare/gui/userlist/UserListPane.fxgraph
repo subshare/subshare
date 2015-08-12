@@ -23,22 +23,22 @@ dynamic component UserListPane resourcefile "messages.properties" {
 			children : [
 				FlowPane {
 					Button id addButton {
-						graphic : ImageView { image : Image { url : "@add-24x24.png" } },
+						graphic : ImageView { image : Image { url : "@add_24x24.png" } },
 						tooltip : Tooltip { text : "Add a new user." },
 						onAction : controllermethod addButtonClicked
 					},
 					Button id importPgpKeyButton {
-						graphic : ImageView { image : Image { url : "@import-pgp-key-24x24.png" } },
+						graphic : ImageView { image : Image { url : "@import-pgp-key_24x24.png" } },
 						tooltip : Tooltip { text : "Import one or more PGP keys from a file." },
 						onAction : controllermethod importPgpKeyButtonClicked
 					},
 					Button id editButton {
-						graphic : ImageView { image : Image { url : "@edit-24x24.png" } },
+						graphic : ImageView { image : Image { url : "@edit_24x24.png" } },
 						tooltip : Tooltip { text : "Edit the selected user." },
 						onAction : controllermethod editButtonClicked
 					},
 					Button id deleteButton {
-						graphic : ImageView { image : Image { url : "@delete-24x24.png" } },
+						graphic : ImageView { image : Image { url : "@delete_24x24.png" } },
 						tooltip : Tooltip { text : "Delete the selected users." },
 						onAction : controllermethod deleteButtonClicked
 					}

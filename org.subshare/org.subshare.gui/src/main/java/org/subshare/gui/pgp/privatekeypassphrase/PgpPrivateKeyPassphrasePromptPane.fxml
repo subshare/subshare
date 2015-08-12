@@ -22,7 +22,7 @@
 			<children>
 				<ImageView> 
 					<image>
-						<Image url="@../../severity/ERROR-24x24.png"/> 
+						<Image url="@../../severity/ERROR_24x24.png"/> 
 					</image>
 				</ImageView>
 				<Label fx:id="errorMessageLabel"/> 
@@ -41,7 +41,7 @@
 					<graphic>
 						<ImageView> 
 							<image>
-								<Image url="@ok-24x24.png"/> 
+								<Image url="@ok_24x24.png"/> 
 							</image>
 						</ImageView>
 					</graphic>
@@ -50,7 +50,7 @@
 					<graphic>
 						<ImageView> 
 							<image>
-								<Image url="@cancel-24x24.png"/> 
+								<Image url="@cancel_24x24.png"/> 
 							</image>
 						</ImageView>
 					</graphic>

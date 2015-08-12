@@ -20,7 +20,7 @@
 				<graphic>
 					<ImageView> 
 						<image>
-							<Image url="@acceptInvitation-24x24.png"/> 
+							<Image url="@acceptInvitation_24x24.png"/> 
 						</image>
 					</ImageView>
 				</graphic>

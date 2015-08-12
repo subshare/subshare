@@ -29,7 +29,7 @@ import org.subshare.gui.ls.LocalRepoRegistryLs;
 
 public class LocalRepoListMainTreeItem extends MainTreeItem<String> {
 
-	private static final Image icon = new Image(ServerListMainTreeItem.class.getResource("local-repo-list-16x16.png").toExternalForm());
+	private static final Image icon = new Image(ServerListMainTreeItem.class.getResource("local-repo-list_16x16.png").toExternalForm());
 	private LocalRepoRegistry localRepoRegistry;
 
 	private PropertyChangeListener localReposPropertyChangeListener = new PropertyChangeListener() {

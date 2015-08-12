@@ -27,7 +27,7 @@ import org.subshare.gui.serverrepo.ServerRepoPane;
 
 public class ServerRepoMainTreeItem extends MainTreeItem<ServerRepo> {
 
-	private static final Image icon = new Image(UserListMainTreeItem.class.getResource("server-repo-16x16.png").toExternalForm());
+	private static final Image icon = new Image(UserListMainTreeItem.class.getResource("server-repo_16x16.png").toExternalForm());
 	private boolean childrenLoaded;
 
 	private LocalRepoCommitEventListener localRepoCommitEventListener;

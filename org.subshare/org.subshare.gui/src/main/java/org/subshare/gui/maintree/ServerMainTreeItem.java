@@ -27,7 +27,7 @@ import org.subshare.gui.server.ServerPane;
 
 public class ServerMainTreeItem extends MainTreeItem<Server> {
 
-	private static final Image icon = new Image(ServerListMainTreeItem.class.getResource("server-16x16.png").toExternalForm());
+	private static final Image icon = new Image(ServerListMainTreeItem.class.getResource("server_16x16.png").toExternalForm());
 	private ServerRepoRegistry serverRepoRegistry;
 	private boolean childrenLoaded;
 

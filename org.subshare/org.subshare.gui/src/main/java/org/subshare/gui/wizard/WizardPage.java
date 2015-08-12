@@ -55,16 +55,16 @@ public abstract class WizardPage extends VBox {
 		setStyle("-fx-padding:10; -fx-background-color: honeydew; -fx-border-color: derive(honeydew, -30%); -fx-border-width: 3;"); //$NON-NLS-1$
 
 		previousButton.setOnAction(event -> getWizard().navToPreviousPage());
-		previousButton.setGraphic(new ImageView(WizardPage.class.getResource("left-24x24.png").toExternalForm())); //$NON-NLS-1$
+		previousButton.setGraphic(new ImageView(WizardPage.class.getResource("left_24x24.png").toExternalForm())); //$NON-NLS-1$
 
 		nextButton.setOnAction(event -> getWizard().navToNextPage());
-		nextButton.setGraphic(new ImageView(WizardPage.class.getResource("right-24x24.png").toExternalForm())); //$NON-NLS-1$
+		nextButton.setGraphic(new ImageView(WizardPage.class.getResource("right_24x24.png").toExternalForm())); //$NON-NLS-1$
 
 		cancelButton.setOnAction(event -> getWizard().cancel());
-		cancelButton.setGraphic(new ImageView(WizardPage.class.getResource("cancel-24x24.png").toExternalForm())); //$NON-NLS-1$
+		cancelButton.setGraphic(new ImageView(WizardPage.class.getResource("cancel_24x24.png").toExternalForm())); //$NON-NLS-1$
 
 		finishButton.setOnAction(event -> getWizard().finish());
-		finishButton.setGraphic(new ImageView(WizardPage.class.getResource("ok-24x24.png").toExternalForm())); //$NON-NLS-1$
+		finishButton.setGraphic(new ImageView(WizardPage.class.getResource("ok_24x24.png").toExternalForm())); //$NON-NLS-1$
 
 		finishButton.disabledProperty().addListener(observable -> {
 			if (finishButton.disabledProperty().get()) {

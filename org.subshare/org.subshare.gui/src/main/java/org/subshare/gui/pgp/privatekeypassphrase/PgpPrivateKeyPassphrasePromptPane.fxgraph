@@ -17,7 +17,7 @@ dynamic component PgpPrivateKeyPassphrasePromptPane {
 		children : [
 			HBox id errorMessageBox {
 				children : [
-					ImageView { image : Image { url : "@../../severity/ERROR-24x24.png" } },
+					ImageView { image : Image { url : "@../../severity/ERROR_24x24.png" } },
 					Label id errorMessageLabel
 				],
 				static columnIndex : 0,
@@ -69,13 +69,13 @@ dynamic component PgpPrivateKeyPassphrasePromptPane {
 			ButtonBar {
 				buttons : [
 					Button id okButton {
-						graphic : ImageView { image : Image { url : "@ok-24x24.png" } },
+						graphic : ImageView { image : Image { url : "@ok_24x24.png" } },
 						text : "OK",
 						defaultButton : true,
 						onAction : controllermethod okButtonClicked
 					},
 					Button id cancelButton {
-						graphic : ImageView { image : Image { url : "@cancel-24x24.png" } },
+						graphic : ImageView { image : Image { url : "@cancel_24x24.png" } },
 						text : "Cancel",
 						cancelButton : true,
 						onAction : controllermethod cancelButtonClicked

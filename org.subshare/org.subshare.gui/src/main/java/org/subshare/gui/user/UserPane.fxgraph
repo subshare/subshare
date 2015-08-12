@@ -28,39 +28,39 @@ dynamic component UserPane {
 		children : [
 			FlowPane {
 				Button id createPgpKeyButton {
-					graphic : ImageView { image : Image { url : "@create-pgp-key-24x24.png" } },
+					graphic : ImageView { image : Image { url : "@create-pgp-key_24x24.png" } },
 					tooltip : Tooltip { text : "Create a new PGP key pair." },
 					onAction : controllermethod createPgpKeyButtonClicked
 				},
 				Button id signPgpKeyButton {
-					graphic : ImageView { image : Image { url : "@sign-pgp-key-24x24.png" } },
+					graphic : ImageView { image : Image { url : "@sign-pgp-key_24x24.png" } },
 					tooltip : Tooltip { text : "Certify the authenticity of the selected PGP key (sign it)." },
 					onAction : controllermethod signPgpKeyButtonClicked
 				},
 //				Button id importPgpKeyButton {
-//					graphic : ImageView { image : Image { url : "@import-pgp-key-24x24.png" } },
+//					graphic : ImageView { image : Image { url : "@import-pgp-key_24x24.png" } },
 //					tooltip : Tooltip { text : "Import one or more PGP keys from a file." },
 //					onAction : controllermethod importPgpKeyButtonClicked
 //				},
 				Button id exportPgpKeyButton {
-					graphic : ImageView { image : Image { url : "@export-pgp-key-24x24.png" } },
+					graphic : ImageView { image : Image { url : "@export-pgp-key_24x24.png" } },
 					tooltip : Tooltip { text : "Export the selected PGP keys into a file." },
 					onAction : controllermethod exportPgpKeyButtonClicked
 //					,
 //					static margin : Insets { left : 8 }
 				},
 				Button id assignPgpKeyToThisUserButton {
-					graphic : ImageView { image : Image { url : "@assign-pgp-key-to-this-user-24x24.png" } },
+					graphic : ImageView { image : Image { url : "@assign-pgp-key-to-this-user_24x24.png" } },
 					tooltip : Tooltip { text : "Select a PGP key (or multiple) from your PGP key ring and assign it (or them) to this user (instead of the user they're currently associated with)." },
 					onAction : controllermethod assignPgpKeyToThisUserButtonClicked
 				},
 				Button id assignPgpKeyToOtherUserButton {
-					graphic : ImageView { image : Image { url : "@assign-pgp-key-to-other-user-24x24.png" } },
+					graphic : ImageView { image : Image { url : "@assign-pgp-key-to-other-user_24x24.png" } },
 					tooltip : Tooltip { text : "Assign the selected PGP key(s) to another user (instead of this one)." },
 					onAction : controllermethod assignPgpKeyToOtherUserButtonClicked
 				},
 				Button id deletePgpKeyButton {
-					graphic : ImageView { image : Image { url : "@delete-pgp-key-24x24.png" } },
+					graphic : ImageView { image : Image { url : "@delete-pgp-key_24x24.png" } },
 					tooltip : Tooltip { text : "Delete the selected PGP keys." },
 					onAction : controllermethod deletePgpKeyButtonClicked
 //					,
@@ -68,7 +68,7 @@ dynamic component UserPane {
 				},
 
 				Button id closeButton {
-					graphic : ImageView { image : Image { url : "@close-24x24.png" } },
+					graphic : ImageView { image : Image { url : "@close_24x24.png" } },
 					tooltip : Tooltip { text : "Close this user (end editing)." },
 					onAction : controllermethod closeButtonClicked,
 					static margin : Insets { left : 16 }

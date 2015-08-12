@@ -22,7 +22,7 @@ import org.subshare.gui.userlist.UserListPane;
 
 public class UserListMainTreeItem extends MainTreeItem<String> {
 
-	private static final Image icon = new Image(UserListMainTreeItem.class.getResource("user-list-16x16.png").toExternalForm());
+	private static final Image icon = new Image(UserListMainTreeItem.class.getResource("user-list_16x16.png").toExternalForm());
 	private final EditUserManager editUserManager = new EditUserManager();
 
 	private final SetChangeListener<User> editedUsersListener = new SetChangeListener<User>() {

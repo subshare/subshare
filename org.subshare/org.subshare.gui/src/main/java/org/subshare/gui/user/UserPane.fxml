@@ -26,7 +26,7 @@
 				<graphic>
 					<ImageView> 
 						<image>
-							<Image url="@create-pgp-key-24x24.png"/> 
+							<Image url="@create-pgp-key_24x24.png"/> 
 						</image>
 					</ImageView>
 				</graphic>
@@ -38,7 +38,7 @@
 				<graphic>
 					<ImageView> 
 						<image>
-							<Image url="@sign-pgp-key-24x24.png"/> 
+							<Image url="@sign-pgp-key_24x24.png"/> 
 						</image>
 					</ImageView>
 				</graphic>
@@ -50,7 +50,7 @@
 				<graphic>
 					<ImageView> 
 						<image>
-							<Image url="@export-pgp-key-24x24.png"/> 
+							<Image url="@export-pgp-key_24x24.png"/> 
 						</image>
 					</ImageView>
 				</graphic>
@@ -62,7 +62,7 @@
 				<graphic>
 					<ImageView> 
 						<image>
-							<Image url="@assign-pgp-key-to-this-user-24x24.png"/> 
+							<Image url="@assign-pgp-key-to-this-user_24x24.png"/> 
 						</image>
 					</ImageView>
 				</graphic>
@@ -74,7 +74,7 @@
 				<graphic>
 					<ImageView> 
 						<image>
-							<Image url="@assign-pgp-key-to-other-user-24x24.png"/> 
+							<Image url="@assign-pgp-key-to-other-user_24x24.png"/> 
 						</image>
 					</ImageView>
 				</graphic>
@@ -86,7 +86,7 @@
 				<graphic>
 					<ImageView> 
 						<image>
-							<Image url="@delete-pgp-key-24x24.png"/> 
+							<Image url="@delete-pgp-key_24x24.png"/> 
 						</image>
 					</ImageView>
 				</graphic>
@@ -98,7 +98,7 @@
 				<graphic>
 					<ImageView> 
 						<image>
-							<Image url="@close-24x24.png"/> 
+							<Image url="@close_24x24.png"/> 
 						</image>
 					</ImageView>
 				</graphic>

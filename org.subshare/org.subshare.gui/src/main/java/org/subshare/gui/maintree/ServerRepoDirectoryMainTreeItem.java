@@ -34,7 +34,7 @@ import co.codewizards.cloudstore.core.collection.ListMerger;
 
 public class ServerRepoDirectoryMainTreeItem extends MainTreeItem<ServerRepoFile> {
 
-	private static final Image icon = new Image(ServerRepoDirectoryMainTreeItem.class.getResource("server-repo-directory-16x16.png").toExternalForm());
+	private static final Image icon = new Image(ServerRepoDirectoryMainTreeItem.class.getResource("server-repo-directory_16x16.png").toExternalForm());
 
 	private boolean childrenLoaded;
 

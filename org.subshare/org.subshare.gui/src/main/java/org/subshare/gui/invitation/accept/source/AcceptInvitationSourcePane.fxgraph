@@ -34,7 +34,7 @@ dynamic component AcceptInvitationSourcePane resourcefile 'messages.properties' 
 			
 			HBox id errorMessageBox {
 				children : [
-					ImageView id errorMessageImageView { image : Image { url : "@../../../severity/ERROR-24x24.png" } },
+					ImageView id errorMessageImageView { image : Image { url : "@../../../severity/ERROR_24x24.png" } },
 					Label id errorMessageLabel { text : "This is an error description" }
 				],
 				static columnIndex : 0,

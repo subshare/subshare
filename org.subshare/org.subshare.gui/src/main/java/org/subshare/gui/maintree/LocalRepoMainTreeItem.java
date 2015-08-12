@@ -11,7 +11,7 @@ import org.subshare.gui.localrepo.LocalRepoPane;
 
 public class LocalRepoMainTreeItem extends MainTreeItem<LocalRepo> {
 
-	private static final Image icon = new Image(ServerListMainTreeItem.class.getResource("local-repo-16x16.png").toExternalForm());
+	private static final Image icon = new Image(ServerListMainTreeItem.class.getResource("local-repo_16x16.png").toExternalForm());
 
 	public LocalRepoMainTreeItem(final LocalRepo localRepo) {
 		super(assertNotNull("localRepo", localRepo));

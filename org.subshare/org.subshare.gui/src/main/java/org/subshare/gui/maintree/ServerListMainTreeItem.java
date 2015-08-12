@@ -29,7 +29,7 @@ import org.subshare.gui.serverlist.ServerListPane;
 
 public class ServerListMainTreeItem extends MainTreeItem<String> {
 
-	private static final Image icon = new Image(ServerListMainTreeItem.class.getResource("server-list-16x16.png").toExternalForm());
+	private static final Image icon = new Image(ServerListMainTreeItem.class.getResource("server-list_16x16.png").toExternalForm());
 	private ServerRegistry serverRegistry;
 
 	private PropertyChangeListener serversPropertyChangeListener = new PropertyChangeListener() {

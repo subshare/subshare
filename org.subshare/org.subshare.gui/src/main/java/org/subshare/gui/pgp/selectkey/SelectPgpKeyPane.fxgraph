@@ -60,13 +60,13 @@ dynamic component SelectPgpKeyPane {
 			ButtonBar {
 				buttons : [
 					Button id okButton {
-						graphic : ImageView { image : Image { url : "@ok-24x24.png" } },
+						graphic : ImageView { image : Image { url : "@ok_24x24.png" } },
 						text : "OK",
 						defaultButton : true,
 						onAction : controllermethod okButtonClicked
 					},
 					Button id cancelButton {
-						graphic : ImageView { image : Image { url : "@cancel-24x24.png" } },
+						graphic : ImageView { image : Image { url : "@cancel_24x24.png" } },
 						text : "Cancel",
 						cancelButton : true,
 						onAction : controllermethod cancelButtonClicked

@@ -39,7 +39,7 @@ dynamic component PassphrasePane resourcefile 'messages.properties' {
 			},
 			HBox id passphrase1StatusMessageBox {
 				children : [
-					ImageView id passphrase1StatusImageView { image : Image { url : "@../../../severity/ERROR-16x16.png" } },
+					ImageView id passphrase1StatusImageView { image : Image { url : "@../../../severity/ERROR_16x16.png" } },
 					Label id passphrase1StatusMessageLabel {
 						text : "Empty!"
 					}
@@ -65,7 +65,7 @@ dynamic component PassphrasePane resourcefile 'messages.properties' {
 			},
 			HBox id passphrase2StatusMessageBox {
 				children : [
-					ImageView id passphrase2StatusImageView { image : Image { url : "@../../../severity/ERROR-16x16.png" } },
+					ImageView id passphrase2StatusImageView { image : Image { url : "@../../../severity/ERROR_16x16.png" } },
 					Label id passphrase2StatusMessageLabel {
 						text : "Does not match the first!"
 					}

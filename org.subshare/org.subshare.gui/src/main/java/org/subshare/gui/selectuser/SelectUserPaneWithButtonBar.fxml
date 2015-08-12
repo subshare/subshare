@@ -19,7 +19,7 @@
 				<graphic>
 					<ImageView> 
 						<image>
-							<Image url="@ok-24x24.png"/> 
+							<Image url="@ok_24x24.png"/> 
 						</image>
 					</ImageView>
 				</graphic>
@@ -28,7 +28,7 @@
 				<graphic>
 					<ImageView> 
 						<image>
-							<Image url="@cancel-24x24.png"/> 
+							<Image url="@cancel_24x24.png"/> 
 						</image>
 					</ImageView>
 				</graphic>

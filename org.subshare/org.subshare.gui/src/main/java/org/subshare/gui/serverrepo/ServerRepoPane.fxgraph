@@ -15,7 +15,7 @@ dynamic component ServerRepoPane resourcefile 'messages.properties' {
 		children : [
 			FlowPane {
 				Button id checkOutButton {
-					graphic : ImageView { image : Image { url : "@check-out-24x24.png" } },
+					graphic : ImageView { image : Image { url : "@check-out_24x24.png" } },
 					tooltip : Tooltip { text : "Check-out this repository.&#010;&#010;You'll select a local directory into which the selected server-repository is going to be downloaded (and kept in-sync with, afterwards)." },
 					onAction : controllermethod checkOutButtonClicked
 				},

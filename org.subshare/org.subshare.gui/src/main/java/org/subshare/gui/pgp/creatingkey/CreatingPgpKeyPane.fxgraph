@@ -21,7 +21,7 @@ dynamic component CreatingPgpKeyPane resourcefile "messages.properties" {
 			ButtonBar {
 				buttons : [
 					Button id closeButton {
-						graphic : ImageView { image : Image { url : "@close-24x24.png" } },
+						graphic : ImageView { image : Image { url : "@close_24x24.png" } },
 						text : "Close",
 						defaultButton : true,
 						cancelButton : true,

@@ -33,7 +33,7 @@
 			<children>
 				<ImageView fx:id="passphrase1StatusImageView"> 
 					<image>
-						<Image url="@../../../severity/ERROR-16x16.png"/> 
+						<Image url="@../../../severity/ERROR_16x16.png"/> 
 					</image>
 				</ImageView>
 				<Label fx:id="passphrase1StatusMessageLabel" text="Empty!"/> 
@@ -52,7 +52,7 @@
 			<children>
 				<ImageView fx:id="passphrase2StatusImageView"> 
 					<image>
-						<Image url="@../../../severity/ERROR-16x16.png"/> 
+						<Image url="@../../../severity/ERROR_16x16.png"/> 
 					</image>
 				</ImageView>
 				<Label fx:id="passphrase2StatusMessageLabel" text="Does not match the first!"/> 
