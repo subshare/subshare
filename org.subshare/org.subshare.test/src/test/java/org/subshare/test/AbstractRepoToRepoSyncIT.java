@@ -12,9 +12,14 @@ import java.util.UUID;
 import javax.jdo.PersistenceManager;
 import javax.jdo.PersistenceManagerFactory;
 
+import mockit.Mock;
+import mockit.MockUp;
+
 import org.subshare.core.Cryptree;
 import org.subshare.core.CryptreeFactoryRegistry;
 import org.subshare.core.dto.PermissionType;
+import org.subshare.core.user.UserRegistry;
+import org.subshare.core.user.UserRegistryImpl;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKeyRing;
 import org.subshare.core.user.UserRepoKeyRingLookup;
@@ -57,6 +62,8 @@ public abstract class AbstractRepoToRepoSyncIT extends AbstractIT {
 	protected URL remoteRootURLWithPathPrefixForLocalDest;
 	protected UserRepoKeyRing ownerUserRepoKeyRing;
 
+	protected MockUp<UserRegistryImpl> userRegistryImplMockUp;
+
 	private static UserRepoKeyRingLookup originalUserRepoKeyRingLookup;
 
 	@BeforeClass
@@ -76,10 +83,31 @@ public abstract class AbstractRepoToRepoSyncIT extends AbstractIT {
 		remotePathPrefix1Encrypted = "";
 		remotePathPrefix2Plain = "";
 		remotePathPrefix2Encrypted = "";
+
+		// Make sure, we get a clean new instance for every test - not one that might already be initialised statically with the wrong directory + data. Skip, if sub-class already initialised!
+		if (userRegistryImplMockUp == null) {
+			final UserRegistry userRegistry = new UserRegistryImpl() {
+				@Override
+				protected void read() {
+					// do nothing!
+				}
+			};
+			userRegistryImplMockUp = new MockUp<UserRegistryImpl>() {
+				@Mock
+				UserRegistry getInstance() {
+					return userRegistry;
+				}
+			};
+		}
 	}
 
 	@After
 	public void after() throws Exception {
+		if (userRegistryImplMockUp != null) {
+			userRegistryImplMockUp.tearDown(); // should be done automatically, but since we need to manage the reference, anyway, we do this explicitly here, too.
+			userRegistryImplMockUp = null;
+		}
+
 		if (localRepoManagerLocal != null) {
 			localRepoManagerLocal.close();
 			localRepoManagerLocal = null;
@@ -93,23 +121,23 @@ public abstract class AbstractRepoToRepoSyncIT extends AbstractIT {
 		return createFile(localSrcRoot, localPathPrefix);
 	}
 
-	private File getRemoteRootWithPathPrefix1() {
-		assertNotNull("remotePathPrefix1Encrypted", remotePathPrefix1Encrypted);
-		if (remotePathPrefix1Encrypted.isEmpty())
-			return remoteRoot;
-
-		final File file = createFile(remoteRoot, remotePathPrefix1Encrypted);
-		return file;
-	}
-
-	private File getRemoteRootWithPathPrefix2() {
-		assertNotNull("remotePathPrefix2Encrypted", remotePathPrefix2Encrypted);
-		if (remotePathPrefix2Encrypted.isEmpty())
-			return remoteRoot;
-
-		final File file = createFile(remoteRoot, remotePathPrefix2Encrypted);
-		return file;
-	}
+//	private File getRemoteRootWithPathPrefix1() {
+//		assertNotNull("remotePathPrefix1Encrypted", remotePathPrefix1Encrypted);
+//		if (remotePathPrefix1Encrypted.isEmpty())
+//			return remoteRoot;
+//
+//		final File file = createFile(remoteRoot, remotePathPrefix1Encrypted);
+//		return file;
+//	}
+//
+//	private File getRemoteRootWithPathPrefix2() {
+//		assertNotNull("remotePathPrefix2Encrypted", remotePathPrefix2Encrypted);
+//		if (remotePathPrefix2Encrypted.isEmpty())
+//			return remoteRoot;
+//
+//		final File file = createFile(remoteRoot, remotePathPrefix2Encrypted);
+//		return file;
+//	}
 
 	private URL getRemoteRootURLWithPathPrefixForLocalSrc(final UUID remoteRepositoryId)
 			throws MalformedURLException {
@@ -117,7 +145,7 @@ public abstract class AbstractRepoToRepoSyncIT extends AbstractIT {
 				return remoteRootURL;
 			}
 
-	private URL getRemoteRootURLWithPathPrefixForLocalDest(final UUID remoteRepositoryId)
+	protected URL getRemoteRootURLWithPathPrefixForLocalDest(final UUID remoteRepositoryId)
 			throws MalformedURLException {
 				final URL remoteRootURL = UrlUtil.appendNonEncodedPath(new URL(getSecureUrl() + "/" + remoteRepositoryId),  remotePathPrefix2Encrypted);
 				return remoteRootURL;

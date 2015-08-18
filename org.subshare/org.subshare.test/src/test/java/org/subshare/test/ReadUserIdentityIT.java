@@ -1,6 +1,6 @@
 package org.subshare.test;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.*;
 
 import java.util.LinkedList;
 
@@ -34,7 +34,7 @@ public class ReadUserIdentityIT extends AbstractUserRegistryIT {
 		createLocalSourceAndRemoteRepo();
 		populateLocalSourceRepo();
 		syncFromLocalSrcToRemote();
-		determineRemotePathPrefix2Encrypted();
+//		determineRemotePathPrefix2Encrypted(); // handled differently inside importUserRepoInvitationToken(...)
 
 		assertUserIdentityInRepoIs(localSrcRoot, 1);
 		assertUserIdentityInRepoIs(remoteRoot, 1);

@@ -4,7 +4,9 @@ import static co.codewizards.cloudstore.core.util.Util.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.subshare.test.PgpTestUtil.*;
 
+import java.net.URL;
 import java.util.Collection;
+import java.util.Map;
 import java.util.UUID;
 
 import mockit.Mock;
@@ -27,6 +29,8 @@ import org.subshare.core.user.UserRepoInvitationToken;
 import org.subshare.core.user.UserRepoKeyRing;
 import org.subshare.core.user.UserRepoKeyRingLookup;
 import org.subshare.local.persistence.SsRemoteRepository;
+import org.subshare.local.persistence.CryptoRepoFile;
+import org.subshare.local.persistence.CryptoRepoFileDao;
 import org.subshare.local.persistence.UserIdentityLinkDao;
 import org.subshare.local.persistence.UserRepoKeyPublicKey;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyDao;
@@ -34,6 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import co.codewizards.cloudstore.core.config.ConfigDir;
+import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
@@ -55,7 +60,7 @@ public class AbstractUserRegistryIT extends AbstractRepoToRepoSyncIT {
 		logger.info("*** >>>>>>>>>>>>>> ***");
 		logger.info("*** >>> before >>> ***");
 
-		new MockUp<UserRegistryImpl>() {
+		userRegistryImplMockUp = new MockUp<UserRegistryImpl>() {
 		    @Mock
 		    UserRegistry getInstance() {
 		    	UserRegistry ur = userRegistry;
@@ -216,8 +221,53 @@ public class AbstractUserRegistryIT extends AbstractRepoToRepoSyncIT {
 			userRepoInvitationManager.importUserRepoInvitationToken(userRepoInvitationToken);
 		}
 
+		determineRemotePathPrefix2PlainAndEncrypted();
 //		// TO DO should the UserRepoInvitationManager already do this? implicitly? or explicitly? ... ALREADY IMPLICITLY DONE (since 2015-06-23)
 //		new CloudStoreClient("requestRepoConnection", localDestRoot.getPath(), remoteRootURLWithPathPrefixForLocalDest.toExternalForm()).execute();
+	}
+
+	@Override
+	protected void determineRemotePathPrefix2Encrypted() {
+		throw new UnsupportedOperationException(); // handled differently inside importUserRepoInvitationToken(...)
+	}
+
+	private void determineRemotePathPrefix2PlainAndEncrypted() throws Exception {
+		try (final LocalRepoManager localRepoManager = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(localDestRoot);)
+		{
+			Map<UUID, URL> remoteRepositoryId2RemoteRootMap = localRepoManager.getRemoteRepositoryId2RemoteRootMap();
+			assertThat(remoteRepositoryId2RemoteRootMap).isNotEmpty();
+			assertThat(remoteRepositoryId2RemoteRootMap).hasSize(1);
+
+			UUID remoteRepositoryId = remoteRepositoryId2RemoteRootMap.keySet().iterator().next();
+			URL remoteUrl = remoteRepositoryId2RemoteRootMap.values().iterator().next();
+			String path = remoteUrl.toString();
+			int index = path.indexOf(remoteRepositoryId.toString());
+			assertThat(index).isGreaterThanOrEqualTo(0);
+			path = path.substring(index + remoteRepositoryId.toString().length());
+			remotePathPrefix2Encrypted = path;
+		}
+
+		if (remotePathPrefix2Encrypted.isEmpty())
+			remotePathPrefix2Plain = "";
+		else {
+			String cryptoRepoFileIdStr = remotePathPrefix2Encrypted;
+			int lastSlashIndex = cryptoRepoFileIdStr.lastIndexOf('/');
+			assertThat(lastSlashIndex).isGreaterThanOrEqualTo(0);
+			cryptoRepoFileIdStr = cryptoRepoFileIdStr.substring(lastSlashIndex + 1);
+			Uid cryptoRepoFileId = new Uid(cryptoRepoFileIdStr);
+
+			try (final LocalRepoManager localRepoManagerLocal = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(localSrcRoot);)
+			{
+				try (final LocalRepoTransaction transaction = localRepoManagerLocal.beginReadTransaction();)
+				{
+					final CryptoRepoFile cryptoRepoFile = transaction.getDao(CryptoRepoFileDao.class).getCryptoRepoFileOrFail(cryptoRepoFileId);
+					remotePathPrefix2Plain = cryptoRepoFile.getLocalPathOrFail();
+					transaction.commit();
+				}
+			}
+		}
+
+		remoteRootURLWithPathPrefixForLocalDest = getRemoteRootURLWithPathPrefixForLocalDest(remoteRepositoryId);
 	}
 
 	@Override
