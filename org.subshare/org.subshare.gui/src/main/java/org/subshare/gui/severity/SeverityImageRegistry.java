@@ -41,7 +41,7 @@ public class SeverityImageRegistry {
 		Image image = iconSize2Image.get(iconSize);
 		if (image == null) {
 			try {
-				final String fileName = String.format("%s-%sx%s.png", severity.name(), iconSize.getWidth(), iconSize.getHeight());
+				final String fileName = String.format("%s%s.png", severity.name(), iconSize.name());
 				try(InputStream in = SeverityImageRegistry.class.getResourceAsStream(fileName);) {
 					if (in == null)
 						throw new IllegalArgumentException("There is no resource named: " + fileName);

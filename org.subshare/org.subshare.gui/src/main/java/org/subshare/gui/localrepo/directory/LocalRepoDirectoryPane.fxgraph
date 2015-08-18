@@ -47,9 +47,9 @@ dynamic component LocalRepoDirectoryPane resourcefile 'messages.properties' {
 			static margin : Insets { left : 8, right : 8, top : 8, bottom : 8 }
 		},
 
-		TabPane {
+		TabPane id tabPane {
 			tabClosingPolicy : "UNAVAILABLE",
-			Tab {
+			Tab id contentTab {
 				text : "Content",
 				content : GridPane {
 
@@ -74,121 +74,8 @@ dynamic component LocalRepoDirectoryPane resourcefile 'messages.properties' {
 				}
 			},
 
-			Tab {
-				text : "Security",
-				content : GridPane {
-					CheckBox id permissionsInheritedCheckBox {
-						text : "Permissions are inherited.",
-						tooltip : Tooltip { text : "Inherit the permissions from the parent directory. Permissions granted here are added to the inherited permissions." },
-						static columnIndex : 0,
-						static rowIndex : 0,
-						static margin : Insets { left: 8, top : 8, right: 8, bottom : 8 },
-						static hgrow : "ALWAYS",
-						static columnSpan : 2
-					},
-
-					HBox {
-						Label {
-							text : "Filter: ",
-							static margin : Insets { left : 8}
-						},
-						TextField id filterTextField {
-							static hgrow : "ALWAYS",
-							static margin : Insets {
-								left : 4
-							}
-						},
-			
-						static margin : Insets {
-							top : 4,
-							bottom : 4
-						},
-						static columnIndex : 0,
-						static rowIndex : 1,
-						static columnSpan : 2
-					},
-
-					TableView < UserListItem > id userTableView {
-						columns : [
-							TableColumn < UserListItem, String > id firstNameColumn {
-								text : "First name",
-								prefWidth : 100,
-								cellValueFactory : PropertyValueFactory < UserListItem, String > {
-									property : "firstName"
-								}
-							},
-							TableColumn < UserListItem, String > id lastNameColumn {
-								text : "Last name",
-								prefWidth : 100,
-								cellValueFactory : PropertyValueFactory < UserListItem, String > {
-									property : "lastName"
-								}
-							},
-							TableColumn < UserListItem, String > id emailColumn {
-								text : "E-mail",
-								prefWidth : 200,
-								cellValueFactory : PropertyValueFactory < UserListItem, String > {
-									property : "email"
-								}
-							},
-							TableColumn < UserListItem, String > id effectivePermissionStringColumn {
-								text : "Effective permission",
-								prefWidth : 100,
-								cellValueFactory : PropertyValueFactory < UserListItem, String > {
-									property : "effectivePermissionString"
-								}
-							},
-							TableColumn < UserListItem, String > id grantedPermissionStringColumn {
-								text : "Granted permission",
-								prefWidth : 100,
-								cellValueFactory : PropertyValueFactory < UserListItem, String > {
-									property : "grantedPermissionString"
-								}
-							},
-							TableColumn < UserListItem, String > id inheritedPermissionStringColumn {
-								text : "Inherited permission",
-								prefWidth : 100,
-								cellValueFactory : PropertyValueFactory < UserListItem, String > {
-									property : "inheritedPermissionString"
-								}
-							}
-						],
-						static fillHeight : true,
-						static fillWidth : true,
-						static vgrow : "ALWAYS",
-						static hgrow : "ALWAYS",
-						static columnIndex : 0,
-						static rowIndex : 2,
-						static columnSpan : 2,
-						static margin : Insets { left : 8, right : 8 }
-					},
-
-					Label id permissionTypeLabel {
-						text : "Permission of selected users:",
-						static columnIndex : 0,
-						static rowIndex : 3,
-						static margin : Insets { left : 8, top : 8 }
-					},
-					ComboBox<PermissionTypeItem> id permissionTypeComboBox {
-						static fillHeight : true,
-						static fillWidth : true,
-						static hgrow : "ALWAYS",
-						static columnIndex : 1,
-						static rowIndex : 3,
-						static margin : Insets { left: 8, right : 8, top : 8 }
-					},
-
-					CheckBox id readUserIdentityPermissionCheckBox {
-						text : rstring 'LocalRepoDirectoryPane.readUserIdentityPermissionCheckBox.text',
-						tooltip : Tooltip { text : rstring 'LocalRepoDirectoryPane.readUserIdentityPermissionCheckBox.tooltip.text' },
-						allowIndeterminate : true,
-						static hgrow : "ALWAYS",
-						static columnSpan : 2,
-						static columnIndex : 0,
-						static rowIndex : 4,
-						static margin : Insets { left : 8, top : 8, right : 8, bottom : 8 }
-					} 
-				}
+			Tab id securityTab {
+				text : "Security"
 			}
 		}
 	}
