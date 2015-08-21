@@ -1,7 +1,7 @@
 package org.subshare.local;
 
-import static co.codewizards.cloudstore.core.util.Util.doNothing;
-import static org.assertj.core.api.Assertions.fail;
+import static co.codewizards.cloudstore.core.util.Util.*;
+import static org.assertj.core.api.Assertions.*;
 
 import org.subshare.core.Cryptree;
 import org.subshare.core.GrantAccessDeniedException;

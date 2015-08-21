@@ -1,9 +1,8 @@
 package org.subshare.local;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
-import static co.codewizards.cloudstore.core.util.IOUtil.transferStreamData;
-import static org.subshare.core.crypto.CryptoConfigUtil.getAsymmetricCipherTransformation;
-import static org.subshare.core.crypto.CryptoConfigUtil.getSymmetricCipherTransformation;
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static co.codewizards.cloudstore.core.util.IOUtil.*;
+import static org.subshare.core.crypto.CryptoConfigUtil.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

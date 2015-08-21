@@ -11,8 +11,7 @@ import javax.jdo.annotations.NullValue;
 import javax.jdo.annotations.PersistenceCapable;
 import javax.jdo.annotations.Persistent;
 
-import org.subshare.core.repo.CreateRepositoryContext;
-
+import co.codewizards.cloudstore.core.repo.local.CreateRepositoryContext;
 import co.codewizards.cloudstore.local.persistence.LocalRepository;
 
 @PersistenceCapable
@@ -23,6 +22,12 @@ public class SsLocalRepository extends LocalRepository {
 	@Persistent(nullValue=NullValue.EXCEPTION)
 	@Column(jdbcType="INTEGER")
 	private LocalRepositoryType localRepositoryType = LocalRepositoryType.UNINITIALISED;
+
+	public SsLocalRepository() { }
+
+	public SsLocalRepository(UUID repositoryId) {
+		super(repositoryId);
+	}
 
 	private boolean assertedAllRepoFilesAreSigned;
 

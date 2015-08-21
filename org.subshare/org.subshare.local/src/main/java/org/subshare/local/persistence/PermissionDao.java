@@ -1,6 +1,6 @@
 package org.subshare.local.persistence;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.util.ArrayList;
 import java.util.Collection;

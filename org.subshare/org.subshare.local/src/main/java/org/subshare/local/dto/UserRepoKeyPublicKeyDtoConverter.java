@@ -1,6 +1,6 @@
 package org.subshare.local.dto;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import org.subshare.core.dto.InvitationUserRepoKeyPublicKeyDto;
 import org.subshare.core.dto.UserRepoKeyPublicKeyDto;

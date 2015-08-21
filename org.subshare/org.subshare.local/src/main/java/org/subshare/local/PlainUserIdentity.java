@@ -1,6 +1,6 @@
 package org.subshare.local;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.subshare.local.persistence.UserIdentity;

@@ -13,11 +13,11 @@ import javax.ws.rs.core.MediaType;
 
 import org.subshare.core.dto.CreateRepositoryRequestDto;
 import org.subshare.core.pgp.PgpSignature;
-import org.subshare.core.repo.CreateRepositoryContext;
 import org.subshare.core.sign.PgpSignableVerifier;
 
 import co.codewizards.cloudstore.core.config.Config;
 import co.codewizards.cloudstore.core.oio.File;
+import co.codewizards.cloudstore.core.repo.local.CreateRepositoryContext;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoHelper;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManagerFactory;

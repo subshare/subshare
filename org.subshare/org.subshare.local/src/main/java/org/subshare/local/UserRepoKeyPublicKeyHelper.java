@@ -1,8 +1,7 @@
 package org.subshare.local;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
-import static org.subshare.local.CryptreeNodeUtil.decrypt;
-import static org.subshare.local.CryptreeNodeUtil.encrypt;
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static org.subshare.local.CryptreeNodeUtil.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
