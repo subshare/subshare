@@ -1,6 +1,7 @@
 package org.subshare.local;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static co.codewizards.cloudstore.core.util.StringUtil.*;
 import static org.subshare.local.CryptreeNodeUtil.*;
 
 import java.io.ByteArrayInputStream;
@@ -66,6 +67,7 @@ import co.codewizards.cloudstore.core.auth.SignatureException;
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
 import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.oio.File;
+import co.codewizards.cloudstore.core.util.ISO8601;
 import co.codewizards.cloudstore.local.dto.RepoFileDtoConverter;
 import co.codewizards.cloudstore.local.persistence.Directory;
 import co.codewizards.cloudstore.local.persistence.RepoFile;
@@ -1009,6 +1011,7 @@ public class CryptreeNode {
 		if (isOwner(userRepoKeyId))
 			return; // The owner always has all permissions.
 
+		String additionalExceptionMsg = null;
 		final UserRepoKeyPublicKey userRepoKeyPublicKey = context.transaction.getDao(UserRepoKeyPublicKeyDao.class).getUserRepoKeyPublicKeyOrFail(userRepoKeyId);
 		if (userRepoKeyPublicKey instanceof InvitationUserRepoKeyPublicKey) {
 			final InvitationUserRepoKeyPublicKey invUserRepoKeyPublicKey = (InvitationUserRepoKeyPublicKey) userRepoKeyPublicKey;
@@ -1026,6 +1029,10 @@ public class CryptreeNode {
 				// to use the timestamp of the invitation? This is what we do now.
 				return;
 			}
+			else
+				additionalExceptionMsg = String.format(
+						"userRepoKeyPublicKey is an InvitationUserRepoKeyPublicKey, but it expired on '%s', which is before the given timestamp '%s'!",
+						ISO8601.formatDate(invUserRepoKeyPublicKey.getValidTo()), ISO8601.formatDate(timestamp));
 		}
 
 		final Set<Permission> permissions = new HashSet<Permission>();
@@ -1052,7 +1059,8 @@ public class CryptreeNode {
 			}
 		}
 
-		final String exceptionMsg = String.format("No '%s' permission found for userRepoKeyId=%s and timestamp=%s!", permissionType, userRepoKeyId, timestamp);
+		final String exceptionMsg = String.format("No '%s' permission found for userRepoKeyId=%s and timestamp=%s!", permissionType, userRepoKeyId, ISO8601.formatDate(timestamp))
+				+ (isEmpty(additionalExceptionMsg) ? "" : (" " + additionalExceptionMsg));
 		throwAccessDeniedException(permissionType, exceptionMsg);
 	}
 
