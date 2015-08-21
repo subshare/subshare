@@ -12,23 +12,16 @@ import java.util.UUID;
 import javax.jdo.PersistenceManager;
 import javax.jdo.PersistenceManagerFactory;
 
-import mockit.Mock;
-import mockit.MockUp;
-
 import org.subshare.core.Cryptree;
 import org.subshare.core.CryptreeFactoryRegistry;
 import org.subshare.core.dto.PermissionType;
-import org.subshare.core.user.UserRegistry;
-import org.subshare.core.user.UserRegistryImpl;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKeyRing;
 import org.subshare.core.user.UserRepoKeyRingLookup;
 import org.subshare.local.persistence.CryptoRepoFile;
 import org.subshare.local.persistence.CryptoRepoFileDao;
 import org.subshare.rest.client.transport.CryptreeRestRepoTransportFactoryImpl;
-import org.junit.After;
 import org.junit.AfterClass;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,8 +55,6 @@ public abstract class AbstractRepoToRepoSyncIT extends AbstractIT {
 	protected URL remoteRootURLWithPathPrefixForLocalDest;
 	protected UserRepoKeyRing ownerUserRepoKeyRing;
 
-	protected MockUp<UserRegistryImpl> userRegistryImplMockUp;
-
 	private static UserRepoKeyRingLookup originalUserRepoKeyRingLookup;
 
 	@BeforeClass
@@ -76,42 +67,23 @@ public abstract class AbstractRepoToRepoSyncIT extends AbstractIT {
 		UserRepoKeyRingLookup.Helper.setUserRepoKeyRingLookup(originalUserRepoKeyRingLookup);
 	}
 
-	@Before
+	@Override
 	public void before() throws Exception {
+		super.before();
 		localPathPrefix = "";
 		remotePathPrefix1Plain = "";
 		remotePathPrefix1Encrypted = "";
 		remotePathPrefix2Plain = "";
 		remotePathPrefix2Encrypted = "";
-
-		// Make sure, we get a clean new instance for every test - not one that might already be initialised statically with the wrong directory + data. Skip, if sub-class already initialised!
-		if (userRegistryImplMockUp == null) {
-			final UserRegistry userRegistry = new UserRegistryImpl() {
-				@Override
-				protected void read() {
-					// do nothing!
-				}
-			};
-			userRegistryImplMockUp = new MockUp<UserRegistryImpl>() {
-				@Mock
-				UserRegistry getInstance() {
-					return userRegistry;
-				}
-			};
-		}
 	}
 
-	@After
+	@Override
 	public void after() throws Exception {
 		if (userRegistryImplMockUp != null) {
 			userRegistryImplMockUp.tearDown(); // should be done automatically, but since we need to manage the reference, anyway, we do this explicitly here, too.
 			userRegistryImplMockUp = null;
 		}
-
-		if (localRepoManagerLocal != null) {
-			localRepoManagerLocal.close();
-			localRepoManagerLocal = null;
-		}
+		super.after();
 	}
 
 	protected File getLocalRootWithPathPrefix() {

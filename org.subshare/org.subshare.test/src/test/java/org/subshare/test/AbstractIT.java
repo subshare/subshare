@@ -13,6 +13,9 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
 
+import mockit.Mock;
+import mockit.MockUp;
+
 import org.subshare.core.locker.transport.LockerTransportFactoryRegistry;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.gnupg.GnuPgDir;
@@ -24,7 +27,9 @@ import org.subshare.core.user.UserRepoKeyRing;
 import org.subshare.rest.client.locker.transport.RestLockerTransportFactory;
 import org.subshare.rest.client.pgp.transport.RestPgpTransportFactory;
 import org.subshare.rest.client.transport.CryptreeRestRepoTransportFactoryImpl;
+import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,6 +78,8 @@ public abstract class AbstractIT {
 	protected static RestPgpTransportFactory restPgpTransportFactory;
 	protected static RestLockerTransportFactory restLockerTransportFactory;
 
+	protected MockUp<UserRegistryImpl> userRegistryImplMockUp;
+
 	@BeforeClass
 	public static void abstractIT_beforeClass() {
 		if (subShareServerTestSupport.beforeClass()) {
@@ -103,6 +110,33 @@ public abstract class AbstractIT {
 			restPgpTransportFactory = null;
 			if (p != null)
 				p.setDynamicX509TrustManagerCallbackClass(null);
+		}
+	}
+
+	@Before
+	public void before() throws Exception {
+		// Make sure, we get a clean new instance for every test - not one that might already be initialised statically with the wrong directory + data. Skip, if sub-class already initialised!
+		if (userRegistryImplMockUp == null) {
+			final UserRegistry userRegistry = new UserRegistryImpl() {
+				@Override
+				protected void read() {
+					// do nothing!
+				}
+			};
+			userRegistryImplMockUp = new MockUp<UserRegistryImpl>() {
+				@Mock
+				UserRegistry getInstance() {
+					return userRegistry;
+				}
+			};
+		}
+	}
+
+	@After
+	public void after() throws Exception {
+		if (userRegistryImplMockUp != null) {
+			userRegistryImplMockUp.tearDown(); // should be done automatically, but since we need to manage the reference, anyway, we do this explicitly here, too.
+			userRegistryImplMockUp = null;
 		}
 	}
 
