@@ -30,8 +30,6 @@ import org.subshare.core.pgp.gnupg.GnuPgDir;
 import org.subshare.core.pgp.sync.PgpSync;
 import org.subshare.core.server.Server;
 import org.subshare.core.server.ServerImpl;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ComparisonFailure;
 import org.junit.Test;
@@ -98,8 +96,10 @@ public class PgpSyncIT extends AbstractIT {
 		};
 	}
 
-	@Before
+	@Override
 	public void before() throws Exception {
+		super.before();
+
 		clientGnuPgDirFile.deleteRecursively();
 		serverGnuPgDirFile.deleteRecursively();
 		deleteGpgFiles(clientConfigDir);
@@ -128,10 +128,11 @@ public class PgpSyncIT extends AbstractIT {
 		createFile(configDir, "gpgLocalRevision").deleteRecursively();
 	}
 
-	@After
+	@Override
 	public void after() throws Exception {
 		clientPgp = null;
 		serverPgp = null;
+		super.after();
 	}
 
 	public static final String PUBRING_FILE_NAME = "pubring.gpg";
