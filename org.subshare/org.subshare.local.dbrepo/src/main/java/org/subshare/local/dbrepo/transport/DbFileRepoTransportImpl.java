@@ -1,54 +1,83 @@
 package org.subshare.local.dbrepo.transport;
 
+import static co.codewizards.cloudstore.core.objectfactory.ObjectFactoryUtil.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static co.codewizards.cloudstore.core.util.StringUtil.*;
 
-import java.io.IOException;
-import java.util.Iterator;
+import java.util.Collection;
+import java.util.Date;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.UUID;
 
 import org.subshare.core.Cryptree;
 import org.subshare.core.CryptreeFactoryRegistry;
 import org.subshare.core.context.RepoFileContext;
 import org.subshare.core.dto.SsDeleteModificationDto;
+import org.subshare.core.dto.SsDirectoryDto;
 import org.subshare.core.dto.SsNormalFileDto;
+import org.subshare.core.dto.SsRepoFileDto;
+import org.subshare.core.dto.CryptoRepoFileOnServerDto;
 import org.subshare.core.repo.transport.CryptreeFileRepoTransport;
+import org.subshare.local.dbrepo.persistence.FileChunkPayload;
+import org.subshare.local.dbrepo.persistence.FileChunkPayloadDao;
+import org.subshare.local.dbrepo.persistence.TempFileChunk;
+import org.subshare.local.dbrepo.persistence.TempFileChunkDao;
+import org.subshare.local.dto.CryptoRepoFileOnServerDtoConverter;
 import org.subshare.local.persistence.SsDeleteModification;
+import org.subshare.local.persistence.SsDirectory;
+import org.subshare.local.persistence.SsNormalFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import co.codewizards.cloudstore.core.dto.ChangeSetDto;
 import co.codewizards.cloudstore.core.oio.File;
-import co.codewizards.cloudstore.core.progress.NullProgressMonitor;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
 import co.codewizards.cloudstore.core.repo.transport.DeleteModificationCollisionException;
-import co.codewizards.cloudstore.core.util.IOUtil;
 import co.codewizards.cloudstore.local.LocalRepoSync;
 import co.codewizards.cloudstore.local.persistence.DeleteModificationDao;
+import co.codewizards.cloudstore.local.persistence.Directory;
+import co.codewizards.cloudstore.local.persistence.FileChunk;
 import co.codewizards.cloudstore.local.persistence.NormalFile;
 import co.codewizards.cloudstore.local.persistence.RemoteRepository;
 import co.codewizards.cloudstore.local.persistence.RemoteRepositoryDao;
 import co.codewizards.cloudstore.local.persistence.RepoFile;
 import co.codewizards.cloudstore.local.persistence.RepoFileDao;
 import co.codewizards.cloudstore.local.transport.FileRepoTransport;
-import co.codewizards.cloudstore.local.transport.ParentFileLastModifiedManager;
-import co.codewizards.cloudstore.local.transport.TempChunkFileManager;
 
 public class DbFileRepoTransportImpl extends FileRepoTransport implements CryptreeFileRepoTransport {
 
 	private static final Logger logger = LoggerFactory.getLogger(DbFileRepoTransportImpl.class);
 
-	private Boolean metaOnly;
+//	/**
+//	 * This delegate is used on the client-side.
+//	 */
+//	private CryptreeFileRepoTransportImpl delegateOnClient;
+//
+//	protected CryptreeFileRepoTransportImpl getDelegateOnClient() {
+//		if (delegateOnClient == null) {
+//			final CryptreeFileRepoTransportFactoryImpl factory = RepoTransportFactoryRegistry.getInstance().getRepoTransportFactoryOrFail(CryptreeFileRepoTransportFactoryImpl.class);
+//			delegateOnClient = (CryptreeFileRepoTransportImpl) factory.createRepoTransport(getRemoteRoot(), getClientRepositoryIdOrFail());
+//		}
+//		return delegateOnClient;
+//	}
 
 	@Override
 	public void delete(final SsDeleteModificationDto deleteModificationDto) {
 		assertNotNull("deleteModificationDto", deleteModificationDto);
+//		if (! isOnServer())
+//			throw new IllegalStateException("This method should only be invoked on the server!");
+
 		final UUID clientRepositoryId = assertNotNull("clientRepositoryId", getClientRepositoryId());
 
 		final LocalRepoManager localRepoManager = getLocalRepoManager();
 		try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
 			final String path = deleteModificationDto.getServerPath();
 			final File file = getFile(path); // we *must* *not* prefix this path! It is absolute inside the repository (= relative to the repository's root - not the connection point)!
-			if (!file.exists())
+
+			final RepoFile repoFile = transaction.getDao(RepoFileDao.class).getRepoFile(getLocalRepoManager().getLocalRoot(), file);
+			if (repoFile == null)
 				return; // already deleted (probably by other client) => no need to do anything (and a DB rollback is fine)
 
 			// We check first, if the file exists, because we cannot check the validity of the signature (more precisely the
@@ -64,12 +93,7 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 			createAndPersistDeleteModifications(transaction, deleteModificationDto);
 
 			final LocalRepoSync localRepoSync = LocalRepoSync.create(transaction);
-			final RepoFile repoFile = transaction.getDao(RepoFileDao.class).getRepoFile(getLocalRepoManager().getLocalRoot(), file);
-			if (repoFile != null)
-				localRepoSync.deleteRepoFile(repoFile, false);
-
-			if (!IOUtil.deleteDirectoryRecursively(file))
-				throw new IllegalStateException("Deleting file or directory failed: " + file);
+			localRepoSync.deleteRepoFile(repoFile, false);
 
 			transaction.commit();
 		}
@@ -77,45 +101,10 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 
 	@Override
 	public void delete(String path) {
-		if (isMetaOnly()) {
-			path = prefixPath(path);
-			final File localRoot = getLocalRepoManager().getLocalRoot();
-			try (final LocalRepoTransaction transaction = getLocalRepoManager().beginWriteTransaction();) {
-				final RepoFileDao repoFileDao = transaction.getDao(RepoFileDao.class);
-				final File file = getFile(path);
-				final RepoFile repoFile = repoFileDao.getRepoFile(localRoot, file);
-				if (repoFile != null)
-					deleteRepoFileRecursively(transaction, repoFile);
+//		if (! isOnClient())
+			throw new IllegalStateException("This method should only be invoked on the client!");
 
-				transaction.commit();
-			}
-		}
-		else
-			super.delete(path);
-	}
-
-	private void deleteRepoFileRecursively(final LocalRepoTransaction transaction, final RepoFile repoFile) {
-		final RepoFileDao repoFileDao = transaction.getDao(RepoFileDao.class);
-		for (final RepoFile childRepoFile : repoFileDao.getChildRepoFiles(repoFile))
-			deleteRepoFileRecursively(transaction, childRepoFile);
-
-		repoFileDao.deletePersistent(repoFile);
-	}
-
-	private boolean isMetaOnly() {
-		if (metaOnly == null) {
-			final Iterator<UUID> repoIdIt = getLocalRepoManager().getRemoteRepositoryId2RemoteRootMap().keySet().iterator();
-			if (! repoIdIt.hasNext())
-				throw new IllegalStateException("There is no remote-repository!");
-
-			final UUID serverRepositoryId = repoIdIt.next();
-			try (final LocalRepoTransaction transaction = getLocalRepoManager().beginReadTransaction();) {
-				final Cryptree cryptree = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail().getCryptreeOrCreate(transaction, serverRepositoryId);
-				metaOnly = cryptree.isMetaOnly();
-				transaction.commit();
-			}
-		}
-		return metaOnly;
+//		getDelegateOnClient().delete(path);
 	}
 
 	private void createAndPersistDeleteModifications(final LocalRepoTransaction transaction, final SsDeleteModificationDto deleteModificationDto) {
@@ -148,18 +137,109 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 	}
 
 	@Override
-	public void beginPutFile(final String path) {
+	public void makeDirectory(String path, Date lastModified) {
 		final RepoFileContext context = RepoFileContext.getContext();
-		boolean isOnServer = context != null;
-		if (isOnServer) {
-			final SsNormalFileDto normalFileDto = (SsNormalFileDto) context.getSsRepoFileDto();
-			beginPutFile(path, normalFileDto);
-		}
-		else
-			super.beginPutFile(path);
+		assertNotNull("RepoFileContext.getContext()", context);
+
+		final SsDirectoryDto directoryDto = (SsDirectoryDto) context.getSsRepoFileDto();
+		final CryptoRepoFileOnServerDto cryptoRepoFileOnServerDto = context.getCryptoRepoFileOnServerDto();
+		makeDirectory(path, directoryDto, cryptoRepoFileOnServerDto);
 	}
 
-	private final TempChunkFileManager tempChunkFileManager = TempChunkFileManager.getInstance();
+	protected void makeDirectory(String path, final SsDirectoryDto directoryDto, final CryptoRepoFileOnServerDto cryptoRepoFileOnServerDto) {
+		assertNotNull("path", path);
+		assertNotNull("directoryDto", directoryDto);
+		assertNotNull("cryptoRepoFileOnServerDto", cryptoRepoFileOnServerDto);
+
+		path = prefixPath(path);
+		final File file = getFile(path); // null-check already inside getFile(...) - no need for another check here
+		final File parentFile = file.getParentFile();
+		final File localRoot = getLocalRepoManager().getLocalRoot();
+		final UUID clientRepositoryId = getClientRepositoryIdOrFail();
+
+		assertThatUnsignedPathMatchesSignedSsRepoFileDto(path, file, parentFile, directoryDto);
+
+		final boolean isRoot = file.equals(localRoot); // we continue even with the root (even though this *always* exists) to allow for updating timestamps and similar.
+
+		try ( final LocalRepoTransaction transaction = getLocalRepoManager().beginWriteTransaction(); ) {
+			final RepoFileDao repoFileDao = transaction.getDao(RepoFileDao.class);
+
+			final RepoFile parentRepoFile = isRoot ? null : repoFileDao.getRepoFile(localRoot, parentFile);
+			if (! isRoot) {
+				assertNotNull("parentRepoFile", parentRepoFile); // TODO or is this a collision which requires a special exception?! Might be an attack, too: We sign only the direct parent - parents of parents (in path) are not signed. Hence, this might be a broken path!
+
+				if (! (parentRepoFile instanceof Directory))
+					throw new IllegalStateException("parentRepoFile is no Directory! " + parentRepoFile); // TODO collision?! special handling?!
+			}
+
+			// TODO detect collisions!
+			RepoFile repoFile = repoFileDao.getRepoFile(localRoot, file);
+			if (repoFile != null && ! (repoFile instanceof Directory)) {
+				repoFileDao.deletePersistent(repoFile);
+				repoFile = null;
+			}
+
+			SsDirectory directory = (SsDirectory) repoFile;
+			if (directory == null) {
+				repoFile = directory = createObject(SsDirectory.class);
+				directory.setParent(parentRepoFile);
+				directory.setName(directoryDto.getName());
+			}
+			directory.setLastModified(new Date(0)); // no need in CSX ;-) (but there's a not-null-constraint in the DB)
+			directory.setLastSyncFromRepositoryId(clientRepositoryId);
+			directory.setSignature(directoryDto.getSignature());
+
+			repoFileDao.makePersistent(directory); // just in case, it is not yet persistent ;-) if it already is, this is a no-op.
+			CryptoRepoFileOnServerDtoConverter.create(transaction).putCryptoRepoFileOnServer(cryptoRepoFileOnServerDto);
+
+			transaction.commit();
+		}
+	}
+
+	private void assertThatUnsignedPathMatchesSignedSsRepoFileDto(String path, File file, File parentFile, SsRepoFileDto repoFileDto) {
+		final File localRoot = getLocalRepoManager().getLocalRoot();
+		if (file.equals(localRoot) || parentFile.equals(localRoot)) {
+			if (! isEmpty(repoFileDto.getParentName()))
+				throw new IllegalStateException(String.format("path references localRoot, but repoFileDto.parentName is not empty! repoFileDto.parentName='%s' repoFileDto.name='%s' path='%s'",
+						repoFileDto.getParentName(), repoFileDto.getName(), path));
+		}
+		else {
+			if (! repoFileDto.getParentName().equals(parentFile.getName()))
+				throw new IllegalStateException(String.format("path does not match repoFileDto.parentName! repoFileDto.parentName='%s' parentFile.name='%s' repoFileDto.name='%s' path='%s'",
+						repoFileDto.getParentName(), parentFile.getName(), repoFileDto.getName(), path));
+
+		}
+
+		if (file.equals(localRoot)) {
+			if (! isEmpty(repoFileDto.getName()))
+				throw new IllegalStateException(String.format("path references localRoot, but repoFileDto.name is not empty! repoFileDto.name='%s' path='%s'",
+						repoFileDto.getName(), path));
+		}
+		else {
+			if (! repoFileDto.getName().equals(file.getName())) // or does this need to be the realName?!
+				throw new IllegalStateException(String.format("path does not match repoFileDto.name! repoFileDto.name='%s' file.name='%s' path='%s'",
+						repoFileDto.getName(), file.getName(), path));
+		}
+	}
+
+	@Override
+	public void makeSymlink(String path, String target, Date lastModified) {
+		throw new UnsupportedOperationException("NYI");
+//		super.makeSymlink(path, target, lastModified);
+	}
+
+	@Override
+	public void beginPutFile(final String path) {
+		final RepoFileContext context = RepoFileContext.getContext();
+		assertNotNull("RepoFileContext.getContext()", context);
+//		boolean isOnServer = context != null;
+//		if (isOnServer) {
+			final SsNormalFileDto normalFileDto = (SsNormalFileDto) context.getSsRepoFileDto();
+			beginPutFile(path, normalFileDto);
+//		}
+//		else
+//			getDelegateOnClient().beginPutFile(path);
+	}
 
 	protected void beginPutFile(String path, final SsNormalFileDto normalFileDto) {
 		assertNotNull("normalFileDto", normalFileDto);
@@ -168,68 +248,205 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 		final File file = getFile(path); // null-check already inside getFile(...) - no need for another check here
 		final UUID clientRepositoryId = getClientRepositoryIdOrFail();
 		final File parentFile = file.getParentFile();
+		final File localRoot = getLocalRepoManager().getLocalRoot();
+
+		assertThatUnsignedPathMatchesSignedSsRepoFileDto(path, file, parentFile, normalFileDto);
+
 		try ( final LocalRepoTransaction transaction = getLocalRepoManager().beginWriteTransaction(); ) {
-			ParentFileLastModifiedManager.getInstance().backupParentFileLastModified(parentFile);
-			try {
-				if (file.isSymbolicLink() || (file.exists() && !file.isFile())) { // exists() and isFile() both resolve symlinks! Their result depends on where the symlink points to.
-					logger.info("beginPutFile: Collision: Destination file already exists and is a symlink or a directory! file='{}'", file.getAbsolutePath());
-//					final File collisionFile = IOUtil.createCollisionFile(file);
-//					file.renameTo(collisionFile);
-//					LocalRepoSync.create(transaction).sync(collisionFile, new NullProgressMonitor(), true); // recursiveChildren==true, because the colliding thing might be a directory.
-					// Must not sync! On the server, we cannot handle collisions! Must throw proper exception!
-					// *Temporarily* throwing this exception:
-					throw new UnsupportedOperationException("Collision handling not yet implemented!");
-				}
+			assertNoDeleteModificationCollision(transaction, clientRepositoryId, path);
+			// TODO detect all types of collisions! And check, whether the above method actually works in CSX!
 
-				if (file.isSymbolicLink() || (file.exists() && !file.isFile()))
-					throw new IllegalStateException("Could not rename file! It is still in the way: " + file);
+			final RepoFileDao repoFileDao = transaction.getDao(RepoFileDao.class);
+			final RepoFile parentRepoFile = repoFileDao.getRepoFile(localRoot, parentFile);
+			assertNotNull("parentRepoFile", parentRepoFile); // TODO or is this a collision which requires a special exception?! Might be an attack, too: We sign only the direct parent - parents of parents (in path) are not signed. Hence, this might be a broken path!
 
-				final File localRoot = getLocalRepoManager().getLocalRoot();
-				assertNoDeleteModificationCollision(transaction, clientRepositoryId, path);
+			if (! (parentRepoFile instanceof Directory))
+				throw new IllegalStateException("parentRepoFile is no Directory! " + parentRepoFile); // TODO collision?! special handling?!
 
-				boolean newFile = false;
-				if (!file.isFile()) {
-					newFile = true;
-					try {
-						file.createNewFile();
-					} catch (final IOException e) {
-						throw new RuntimeException(e);
-					}
-				}
-
-				if (!file.isFile())
-					throw new IllegalStateException("Could not create file (permissions?!): " + file);
-
-				// A complete sync run might take very long. Therefore, we better update our local meta-data
-				// *immediately* before beginning the sync of this file and before detecting a collision.
-				// Furthermore, maybe the file is new and there's no meta-data, yet, hence we must do this anyway.
-				final RepoFileDao repoFileDao = transaction.getDao(RepoFileDao.class);
-
-				// Must not sync, if it already exists! This causes a collision! And it's actually is unnecessary,
-				// because changes can only happen through this transport.
-				RepoFile repoFile = repoFileDao.getRepoFile(localRoot, file);
-				if (repoFile == null)
-					LocalRepoSync.create(transaction).sync(file, new NullProgressMonitor(), false); // recursiveChildren has no effect on simple files, anyway (it's no directory).
-
-				tempChunkFileManager.deleteTempChunkFilesWithoutDtoFile(tempChunkFileManager.getOffset2TempChunkFileWithDtoFile(file).values());
-
-				repoFile = repoFileDao.getRepoFile(localRoot, file);
-				if (repoFile == null)
-					throw new IllegalStateException("LocalRepoSync.sync(...) did not create the RepoFile for file: " + file);
-
-				if (!(repoFile instanceof NormalFile))
-					throw new IllegalStateException("LocalRepoSync.sync(...) created an instance of " + repoFile.getClass().getName() + " instead  of a NormalFile for file: " + file);
-
-				final NormalFile normalFile = (NormalFile) repoFile;
-
-				if (!newFile && !normalFile.isInProgress())
-					detectAndHandleFileCollision(transaction, clientRepositoryId, file, normalFile);
-
-				normalFile.setLastSyncFromRepositoryId(clientRepositoryId);
-				normalFile.setInProgress(true);
-			} finally {
-				ParentFileLastModifiedManager.getInstance().restoreParentFileLastModified(parentFile);
+			RepoFile repoFile = repoFileDao.getRepoFile(localRoot, file);
+			if (repoFile != null && ! (repoFile instanceof NormalFile)) {
+				repoFileDao.deletePersistent(repoFile);
+				repoFile = null;
 			}
+
+			SsNormalFile normalFile = (SsNormalFile) repoFile;
+			if (normalFile == null) {
+				repoFile = normalFile = createObject(SsNormalFile.class);
+				normalFile.setParent(parentRepoFile);
+				normalFile.setName(normalFileDto.getName());
+			}
+			normalFile.setLength(0); // we don't store this on the server-side in CSX for security reasons!
+			normalFile.setSha1("X"); // we don't store this on the server-side in CSX for security reasons! but there's a not-null-constraint.
+			normalFile.setLastModified(new Date(0)); // we don't store this on the server-side in CSX for security reasons!
+			normalFile.setSignature(normalFileDto.getSignature());
+
+//			if (!newFile && !normalFile.isInProgress()) // TODO collision detection?!
+//				detectAndHandleFileCollision(transaction, clientRepositoryId, file, normalFile);
+
+			normalFile.setLastSyncFromRepositoryId(clientRepositoryId);
+			normalFile.setInProgress(true);
+
+			repoFileDao.makePersistent(normalFile); // just in case, it is not yet persistent ;-) if it already is, this is a no-op.
+
+			transaction.commit();
+		}
+	}
+
+	@Override
+	public void putFileData(String path, long offset, byte[] fileData) {
+//		if (isOnClient())
+//			getDelegateOnClient().putFileData(path, offset, fileData);
+//		else {
+			path = prefixPath(path);
+			logger.info("putFileData: path='{}' offset={}", path, offset);
+
+			final File file = getFile(path); // null-check already inside getFile(...) - no need for another check here
+			final UUID clientRepositoryId = getClientRepositoryIdOrFail();
+			final File localRoot = getLocalRepoManager().getLocalRoot();
+
+			try ( final LocalRepoTransaction transaction = getLocalRepoManager().beginWriteTransaction(); ) {
+				final RepoFileDao repoFileDao = transaction.getDao(RepoFileDao.class);
+				final TempFileChunkDao tempFileChunkDao = transaction.getDao(TempFileChunkDao.class);
+				final FileChunkPayloadDao fileChunkPayloadDao = transaction.getDao(FileChunkPayloadDao.class);
+
+				final RepoFile repoFile = repoFileDao.getRepoFile(localRoot, file);
+				assertNotNull("repoFile", repoFile); // TODO or is this a collision which requires a special exception?!
+
+				TempFileChunk tempFileChunk = tempFileChunkDao.getTempFileChunk(repoFile, clientRepositoryId, offset);
+				if (tempFileChunk == null) {
+					tempFileChunk = new TempFileChunk();
+					tempFileChunk.setRepoFile(repoFile);
+					tempFileChunk.setRemoteRepositoryId(clientRepositoryId);
+					tempFileChunk.setOffset(offset);
+					tempFileChunk = tempFileChunkDao.makePersistent(tempFileChunk);
+				}
+
+				FileChunkPayload fileChunkPayload = fileChunkPayloadDao.getFileChunkPayload(tempFileChunk);
+				if (fileChunkPayload == null) {
+					fileChunkPayload = new FileChunkPayload();
+					fileChunkPayload.setTempFileChunk(tempFileChunk);
+				}
+				fileChunkPayload.setFileData(fileData);
+				fileChunkPayloadDao.makePersistent(fileChunkPayload); // just in case, it is not yet persistent ;-) if it already is, this is a no-op.
+
+				transaction.commit();
+			}
+//		}
+	}
+
+	@Override
+	public byte[] getFileData(String path, long offset, int length) {
+//		if (isOnClient())
+//			return getDelegateOnClient().getFileData(path, offset, length);
+//		else {
+			path = prefixPath(path);
+			logger.info("getFileData: path='{}' offset={}", path, offset);
+
+			// length is ignored!
+			final File file = getFile(path); // null-check already inside getFile(...) - no need for another check here
+			final File localRoot = getLocalRepoManager().getLocalRoot();
+
+			try ( final LocalRepoTransaction transaction = getLocalRepoManager().beginReadTransaction(); ) {
+				final RepoFileDao repoFileDao = transaction.getDao(RepoFileDao.class);
+				final FileChunkPayloadDao fileChunkPayloadDao = transaction.getDao(FileChunkPayloadDao.class);
+
+				final RepoFile repoFile = repoFileDao.getRepoFile(localRoot, file);
+				assertNotNull("repoFile", repoFile); // TODO or is this a collision which requires a special exception?! or return null?!
+				final SsNormalFile normalFile = (SsNormalFile) repoFile;
+
+				final FileChunkPayload fileChunkPayload = fileChunkPayloadDao.getFileChunkPayloadOfFileChunk(normalFile, offset);
+				final byte[] fileData = fileChunkPayload == null ? null : fileChunkPayload.getFileData();
+
+				transaction.commit();
+				return fileData;
+			}
+//		}
+	}
+
+	@Override
+	public void endPutFile(String path, Date lastModified, long length, String sha1) {
+		final RepoFileContext context = RepoFileContext.getContext();
+		assertNotNull("RepoFileContext.getContext()", context);
+//		boolean isOnServer = context != null;
+//		if (isOnServer) {
+			final SsNormalFileDto normalFileDto = (SsNormalFileDto) context.getSsRepoFileDto();
+			final CryptoRepoFileOnServerDto cryptoRepoFileOnServerDto = context.getCryptoRepoFileOnServerDto();
+			// length is ignored and is always 0!
+			// sha1 is ignored and always null!
+			endPutFile(path, normalFileDto, cryptoRepoFileOnServerDto);
+//		}
+//		else
+//			getDelegateOnClient().endPutFile(path, lastModified, length, sha1);
+	}
+
+	protected void endPutFile(String path, final SsNormalFileDto normalFileDto, final CryptoRepoFileOnServerDto cryptoRepoFileOnServerDto) {
+		assertNotNull("path", path);
+		assertNotNull("normalFileDto", normalFileDto);
+		assertNotNull("cryptoRepoFileOnServerDto", cryptoRepoFileOnServerDto);
+
+		path = prefixPath(path);
+		final File file = getFile(path);
+		final UUID clientRepositoryId = getClientRepositoryIdOrFail();
+		final File localRoot = getLocalRepoManager().getLocalRoot();
+
+		try ( final LocalRepoTransaction transaction = getLocalRepoManager().beginWriteTransaction(); ) {
+			final RepoFileDao repoFileDao = transaction.getDao(RepoFileDao.class);
+			final TempFileChunkDao tempFileChunkDao = transaction.getDao(TempFileChunkDao.class);
+			final FileChunkPayloadDao fileChunkPayloadDao = transaction.getDao(FileChunkPayloadDao.class);
+
+			final RepoFile repoFile = repoFileDao.getRepoFile(localRoot, file);
+			assertNotNull("repoFile", repoFile); // TODO or is this a collision which requires a special exception?!
+			final SsNormalFile normalFile = (SsNormalFile) repoFile;
+
+			final SortedMap<Long, FileChunk> offset2FileChunk = new TreeMap<>();
+			for (FileChunk fileChunk : normalFile.getFileChunks())
+				offset2FileChunk.put(fileChunk.getOffset(), fileChunk);
+
+			final Collection<TempFileChunk> tempFileChunks = tempFileChunkDao.getTempFileChunks(repoFile, clientRepositoryId);
+			for (final TempFileChunk tempFileChunk : tempFileChunks) {
+				final FileChunkPayload fileChunkPayload = fileChunkPayloadDao.getFileChunkPayload(tempFileChunk);
+				if (fileChunkPayload == null) {
+					logger.warn("endPutFile: fileChunkPayload == null for {}", tempFileChunk);
+					continue;
+				}
+
+				FileChunk fileChunk = offset2FileChunk.get(tempFileChunk.getOffset());
+				if (fileChunk == null) {
+					fileChunk = createObject(FileChunk.class);
+					fileChunk.setRepoFile(normalFile);
+					fileChunk.setOffset(tempFileChunk.getOffset());
+					fileChunk.setLength(0); // no need in CSX ;-)
+					fileChunk.setSha1(null); // no need in CSX ;-)
+					offset2FileChunk.put(fileChunk.getOffset(), fileChunk);
+					normalFile.getFileChunks().add(fileChunk); // should implicitly persist it!
+				}
+				// FileChunk is read-only (once written to the DB) - hence we do not attempt to write anything - we don't need, anyway.
+
+				final FileChunkPayload oldFileChunkPayload = fileChunkPayloadDao.getFileChunkPayload(fileChunk);
+				if (oldFileChunkPayload != null) {
+					fileChunkPayloadDao.deletePersistent(oldFileChunkPayload);
+					transaction.flush(); // make sure it's deleted in the DB, before we re-associate the new one (=> unique key might be violated)
+				}
+
+				fileChunkPayload.setTempFileChunk(null);
+				fileChunkPayload.setFileChunk(fileChunk);
+			}
+			tempFileChunkDao.deletePersistentAll(tempFileChunks);
+
+			CryptoRepoFileOnServerDtoConverter.create(transaction).putCryptoRepoFileOnServer(cryptoRepoFileOnServerDto);
+
+			// normalFileDto.length is the real file size (before encryption) which may include random padding
+			// (to prevent an attacker from identifying files by their sizes). It therefore matches the offsets
+			// exactly. The actual length stored on the server might be much larger (due to each encrypted chunk
+			// containing additional data added by the encryption process).
+
+			for (FileChunk fileChunk : offset2FileChunk.values()) {
+				if (fileChunk.getOffset() >= normalFileDto.getLength())
+					normalFile.getFileChunks().remove(fileChunk); // it's dependentElement => remove causes DELETE in DB
+			}
+
+			normalFile.setInProgress(false);
+
 			transaction.commit();
 		}
 	}
@@ -243,4 +460,47 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 		// TODO must not invoke super method! Must throw exception instead! We must not handle collisions in the server! We must throw
 		// a detailed exception instead.
 	}
+
+	@Override
+	public ChangeSetDto getChangeSetDto(boolean localSync) {
+//		if (isOnClient())
+//			return getDelegateOnClient().getChangeSetDto(localSync);
+//		else
+			return super.getChangeSetDto(false); // we must *never* do a LocalSync on the server!
+	}
+
+//	protected boolean isOnServer() {
+//		return isServerThread();
+//	}
+//
+//	protected boolean isOnClient() {
+//		return ! isOnServer();
+//	}
+//
+//	private static boolean isServerThread() {
+//		final StackTraceElement[] stackTrace = new Exception().getStackTrace();
+//		for (final StackTraceElement stackTraceElement : stackTrace) {
+//			final String className = stackTraceElement.getClassName();
+//			if ("org.eclipse.jetty.server.Server".equals(className))
+//				return true;
+//
+//			if (className.startsWith("co.codewizards.cloudstore.rest.server.service."))
+//				return true;
+//
+//			if (className.startsWith("org.subshare.rest.server.service."))
+//				return true;
+//		}
+//		return false;
+//	}
+
+//	@Override
+//	public void close() {
+//		final CryptreeFileRepoTransportImpl d = delegateOnClient;
+//		delegateOnClient = null;
+//
+//		if (d != null)
+//			d.close();
+//
+//		super.close();
+//	}
 }

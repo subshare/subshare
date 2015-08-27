@@ -45,12 +45,10 @@ public class SsEndPutFileService extends EndPutFileService {
 
 		final SsNormalFileDto normalFileDto = (SsNormalFileDto) rfdto;
 
-		// TODO need to persist CryptoRepoFileOnServer instance, too!
 		RepoFileContext.setContext(new RepoFileContext(path, normalFileDto, cryptoRepoFileOnServerDto));
 		try {
 			final String sha1 = null; // no need
-			final Date lastModified = normalFileDto.getLastModified();
-			super.endPutFile(path, new DateTime(lastModified != null ? lastModified : new Date(0)), normalFileDto.getLength(), sha1);
+			super.endPutFile(path, new DateTime(new Date(0)), normalFileDto.getLength(), sha1);
 		} finally {
 			RepoFileContext.setContext(null);
 		}

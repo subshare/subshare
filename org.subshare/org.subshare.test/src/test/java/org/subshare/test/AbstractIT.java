@@ -94,6 +94,10 @@ public abstract class AbstractIT {
 			restLockerTransportFactory = LockerTransportFactoryRegistry.getInstance().getLockerTransportFactory(RestLockerTransportFactory.class);
 			restLockerTransportFactory.setDynamicX509TrustManagerCallbackClass(TestDynamicX509TrustManagerCallback.class);
 		}
+
+		for (File file : ConfigDir.getInstance().getFile().listFiles()) {
+			file.deleteRecursively();
+		}
 	}
 
 	@AfterClass

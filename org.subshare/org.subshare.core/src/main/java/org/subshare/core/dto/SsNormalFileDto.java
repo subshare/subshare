@@ -55,7 +55,7 @@ public class SsNormalFileDto extends NormalFileDto implements SsRepoFileDto {
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(parentName)
-					);
+					); // TODO add length! We truncate the data on the server-side based on it!
 		} catch (final IOException x) {
 			throw new RuntimeException(x);
 		}

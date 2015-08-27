@@ -4,6 +4,7 @@ dependencies {
 	compile group: 'co.codewizards.cloudstore', name: 'co.codewizards.cloudstore.server', version: cloudstoreVersion
 	compile project(':org.subshare.rest.server')
 	compile project(':org.subshare.local')
+	compile project(':org.subshare.local.dbrepo')
 	compile project(':org.subshare.ls.server')
 }
 

@@ -1,0 +1,2 @@
+org.subshare.local.dbrepo.persistence.DeleteRepoFileListener
+org.subshare.local.dbrepo.persistence.DeleteFileChunkListener
