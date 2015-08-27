@@ -22,6 +22,7 @@ import org.subshare.core.CryptreeFactoryRegistry;
 import org.subshare.core.WriteAccessDeniedException;
 import org.subshare.core.crypto.DecrypterInputStream;
 import org.subshare.core.crypto.EncrypterOutputStream;
+import org.subshare.core.crypto.KeyFactory;
 import org.subshare.core.crypto.RandomIvFactory;
 import org.subshare.core.dto.SsDeleteModificationDto;
 import org.subshare.core.dto.SsDirectoryDto;
@@ -33,7 +34,6 @@ import org.subshare.core.dto.CryptoChangeSetDto;
 import org.subshare.core.dto.CryptoRepoFileOnServerDto;
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.dto.RepoFileDtoWithCryptoRepoFileOnServerDto;
-import org.subshare.core.io.LimitedInputStream;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.repo.transport.CryptreeRestRepoTransport;
 import org.subshare.core.sign.PgpSignableSigner;
@@ -62,6 +62,7 @@ import org.slf4j.LoggerFactory;
 
 import co.codewizards.cloudstore.core.auth.SignatureException;
 import co.codewizards.cloudstore.core.dto.ChangeSetDto;
+import co.codewizards.cloudstore.core.dto.FileChunkDto;
 import co.codewizards.cloudstore.core.dto.ModificationDto;
 import co.codewizards.cloudstore.core.dto.NormalFileDto;
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
@@ -499,8 +500,7 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 			final Cryptree cryptree = getCryptree(transaction);
 			final KeyParameter dataKey = cryptree.getDataKeyOrFail(path);
 			final String unprefixedServerPath = unprefixPath(cryptree.getServerPath(path)); // it's automatically prefixed *again*, thus we must prefix it here (if we don't want to somehow suppress the automatic prefixing, which is probably quite a lot of work).
-			final int serverLength = (int) getServerOffset(length) + 65535; // TODO remove this (both multiplication + addition) as soon as we store the chunks individually on the server!
-			final byte[] encryptedFileData = getRestRepoTransport().getFileData(unprefixedServerPath, getServerOffset(offset), serverLength);
+			final byte[] encryptedFileData = getRestRepoTransport().getFileData(unprefixedServerPath, offset, length);
 			decryptedFileData = verifyAndDecrypt(encryptedFileData, dataKey, cryptree.getUserRepoKeyPublicKeyLookup());
 
 			transaction.commit();
@@ -533,6 +533,8 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 	protected SsNormalFileDto createNormalFileDtoForPutFile(final Cryptree cryptree, final String localPath, final String serverPath, long length) {
 		final UserRepoKey userRepoKey = cryptree.getUserRepoKeyOrFail(localPath, PermissionType.write);
 
+		length = roundLengthToChunkMaxLength(length);
+
 		final SsNormalFileDto normalFileDto = new SsNormalFileDto();
 
 		final File f = createFile(serverPath);
@@ -545,9 +547,14 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 		signableSigner.sign(normalFileDto);
 
 		// Calculating the SHA1 of the encrypted data is too complicated and unnecessary. We thus omit it (now optional in CloudStore).
-		final long serverLength = getServerOffset(length) + 65535; // TODO remove this (both multiplication + addition) as soon as we store the chunks individually on the server!
-		normalFileDto.setLength(serverLength);
+		normalFileDto.setLength(length);
 		return normalFileDto;
+	}
+
+	private long roundLengthToChunkMaxLength(final long length) {
+		final long multiplier = length / FileChunkDto.MAX_LENGTH;
+		final long remainder = length % FileChunkDto.MAX_LENGTH;
+		return (multiplier + (remainder == 0 ? 0 : 1)) * FileChunkDto.MAX_LENGTH;
 	}
 
 	@Override
@@ -560,11 +567,10 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 			final byte[] encryptedFileData = encryptAndSign(fileData, dataKey, userRepoKey);
 			// TODO maybe we store only one IV per file and derive the chunk's IV from this combined with the offset (and all hashed)? this could save valuable entropy and should still be secure - maybe later.
 
-			// TODO we *MUST* store the file chunks server-side in separate chunk-files permanently!
+			// Note: we *MUST* store the file chunks server-side in separate chunk-files/BLOBs permanently!
 			// The reason is that the chunks might be bigger (and usually are!) than the unencrypted files.
-			// Temporarily, we simply multiply the offset with a margin in order to have some reserve.
 			final String unprefixedServerPath = unprefixPath(cryptree.getServerPath(path)); // it's automatically prefixed *again*, thus we must prefix it here (if we don't want to somehow suppress the automatic prefixing, which is probably quite a lot of work).
-			getRestRepoTransport().putFileData(unprefixedServerPath, getServerOffset(offset), encryptedFileData);
+			getRestRepoTransport().putFileData(unprefixedServerPath, offset, encryptedFileData);
 
 			transaction.commit();
 		}
@@ -586,9 +592,6 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 			cryptree.updateLastCryptoKeySyncToRemoteRepo();
 
 //			// Calculating the SHA1 of the encrypted data is too complicated and unnecessary. We thus omit it (now optional in CloudStore).
-//			final String unprefixedServerPath = unprefixPath(cryptree.getServerPath(path)); // it's automatically prefixed *again*, thus we must prefix it here (if we don't want to somehow suppress the automatic prefixing, which is probably quite a lot of work).
-//			final long serverLength = getServerOffset(length) + 65535; // TODO remove this (both multiplication + addition) as soon as we store the chunks individually on the server!
-//			getRestRepoTransport().endPutFile(unprefixedServerPath, new Date(0), serverLength, null);
 			final String serverPath = cryptree.getServerPath(path);
 			final SsNormalFileDto serverNormalFileDto = createNormalFileDtoForPutFile(cryptree, path, serverPath, fromNormalFileDto.getLength());
 
@@ -608,34 +611,33 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 		final ByteArrayOutputStream bout = new ByteArrayOutputStream();
 		try {
 			try (SignerOutputStream signerOut = new SignerOutputStream(bout, signingUserRepoKey)) {
+				final int version = 1;
+				signerOut.write(version); // version is inside signed data - better
+
 				try (
 						final EncrypterOutputStream encrypterOut = new EncrypterOutputStream(signerOut,
 								getSymmetricCipherTransformation(),
 								keyParameter, new RandomIvFactory());
 				) {
-//					encrypterOut.write(1); // version
-//
-//					encrypterOut.write(plainText.length);
-//					encrypterOut.write(plainText.length >> 8);
-//					encrypterOut.write(plainText.length >> 16);
-//					encrypterOut.write(plainText.length >> 24);
-
+					final byte[] plainTextLengthBA = IOUtil.intToBytes(plainText.length);
+					encrypterOut.write(plainTextLengthBA);
 					IOUtil.transferStreamData(new ByteArrayInputStream(plainText), encrypterOut);
+
+					// TODO we should move this better into the CryptreeFileRepoTransportImpl so that there might be multiple
+					// entire padding-chunks and even additional whole padding-files + directories. These could be managed
+					// in a persistent way in the local DB (so that the padding-data is synced just like all other data, too,
+					// but not shown in the file-system).
+					int paddingLength = FileChunkDto.MAX_LENGTH - plainText.length;
+					if (paddingLength > 0) {
+						paddingLength = KeyFactory.secureRandom.nextInt(paddingLength) + 1;
+
+						for (int i = 0; i < paddingLength; ++i)
+							encrypterOut.write(0);
+					}
 // TODO we should maybe keep the plaintext-length and then fill with a padding to hide the real length. maybe do this somewhere else though (so that we can even have additional padding-chunks, not only some padding-bytes within a chunk).
 				}
 			}
-
-// TODO remove this length! we don't need it anymore once we store the chunks properly separately on the server! But we should still keep the version! So that we have the flexibility to change this again in the future.
-			final byte[] raw = bout.toByteArray();
-			final byte[] result = new byte[raw.length + 5];
-			int idx = -1;
-			result[++idx] = 1; // version
-			result[++idx] = (byte) raw.length;
-			result[++idx] = (byte) (raw.length >> 8);
-			result[++idx] = (byte) (raw.length >> 16);
-			result[++idx] = (byte) (raw.length >> 24);
-			System.arraycopy(raw, 0, result, ++idx, raw.length);
-			return result;
+			return bout.toByteArray();
 		} catch (final IOException x) {
 			throw new RuntimeException(x);
 		}
@@ -644,48 +646,31 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 	protected byte[] verifyAndDecrypt(final byte[] cipherText, final KeyParameter keyParameter, final UserRepoKeyPublicKeyLookup userRepoKeyPublicKeyLookup) {
 		try {
 			final ByteArrayInputStream in = new ByteArrayInputStream(cipherText);
-			final int version = in.read();
-			if (version != 1)
-				throw new IllegalStateException("version != 1");
+			try (final VerifierInputStream verifierIn = new VerifierInputStream(in, userRepoKeyPublicKeyLookup);) {
+				final int version = verifierIn.read();
+				if (version != 1)
+					throw new IllegalStateException("version != 1");
 
-			final int length = in.read() + (in.read() << 8) + (in.read() << 16) + (in.read() << 24);
-
-			try (final VerifierInputStream verifierIn = new VerifierInputStream(new LimitedInputStream(in, length, length), userRepoKeyPublicKeyLookup);) {
-//				final int plainTextLength;
 				final ByteArrayOutputStream bout = new ByteArrayOutputStream();
 				try (final DecrypterInputStream decrypterIn = new DecrypterInputStream(verifierIn, keyParameter);) {
-//					final int version = decrypterIn.read();
-//					if (version != 1)
-//						throw new IllegalStateException("version != 1");
-//
-//					plainTextLength = decrypterIn.read() + (decrypterIn.read() << 8) + (decrypterIn.read() << 16) + (decrypterIn.read() << 24);
-//
-//					IOUtil.transferStreamData(decrypterIn, bout, 0, plainTextLength);
-//
-//					// Read verifierIn completely, because verification happens only when hitting EOF.
-//					final byte[] buf = new byte[4096];
-//					while (verifierIn.read(buf) >= 0);
-					IOUtil.transferStreamData(decrypterIn, bout);
+					final byte[] plainTextLengthBA = new byte[4];
+					IOUtil.readOrFail(decrypterIn, plainTextLengthBA, 0, plainTextLengthBA.length);
+					final int plainTextLength = IOUtil.bytesToInt(plainTextLengthBA);
+					IOUtil.transferStreamData(decrypterIn, bout, 0, plainTextLength);
+
+					int b;
+					while ((b = decrypterIn.read()) >= 0) {
+						if (b != 0)
+							throw new IllegalStateException("padding byte is not 0?! Data loss?!");
+					}
 				}
 
 				final byte[] plainText = bout.toByteArray();
-//				if (plainText.length != plainTextLength)
-//					throw new IllegalStateException(String.format("plainText.length != plainTextLength :: %s != %s",
-//							plainText.length, plainTextLength));
-
 				return plainText;
 			}
 		} catch (final IOException x) {
 			throw new RuntimeException(x.getMessage() + " cipherText.length=" + cipherText.length, x);
 		}
-	}
-
-	// TODO we *MUST* store the file chunks server-side in separate chunk-files permanently!
-	// The reason is that the chunks might be bigger (and usually are!) than the unencrypted files.
-	// Temporarily, we simply multiply the offset with a margin in order to have some reserve.
-	private static long getServerOffset(final long plainOffset) {
-		// 10 % buffer should be sufficient - for now.
-		return plainOffset * 110 / 100;
 	}
 
 	private void putCryptoChangeSetDto(final CryptoChangeSetDto cryptoChangeSetDto) {

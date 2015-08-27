@@ -17,7 +17,6 @@ import org.subshare.core.Cryptree;
 import org.subshare.core.CryptreeFactory;
 import org.subshare.core.CryptreeFactoryRegistry;
 import org.subshare.core.dto.PermissionType;
-import org.subshare.core.io.LimitedInputStream;
 import org.subshare.core.sign.VerifierInputStream;
 import org.subshare.core.user.UserRepoKey;
 
@@ -51,13 +50,7 @@ public class SsWebDavService extends WebDavService {
 					final byte[] buf = new byte[64 * 1024];
 
 					final ByteArrayInputStream in = new ByteArrayInputStream(fileData);
-					final int version = in.read();
-					if (version != 1)
-						throw new IllegalStateException("version != 1");
-
-					final int length = in.read() + (in.read() << 8) + (in.read() << 16) + (in.read() << 24);
-
-					try (final VerifierInputStream verifierIn = new VerifierInputStream(new LimitedInputStream(in, length, length), cryptree.getUserRepoKeyPublicKeyLookup());) {
+					try (final VerifierInputStream verifierIn = new VerifierInputStream(in, cryptree.getUserRepoKeyPublicKeyLookup());) {
 						signatureCreated = verifierIn.getSignatureCreated();
 						signingUserRepoKeyPublicKey = verifierIn.getSigningUserRepoKeyPublicKey();
 

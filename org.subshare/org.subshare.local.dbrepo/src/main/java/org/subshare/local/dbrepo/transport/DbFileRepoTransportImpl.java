@@ -416,7 +416,7 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 					fileChunk.setRepoFile(normalFile);
 					fileChunk.setOffset(tempFileChunk.getOffset());
 					fileChunk.setLength(0); // no need in CSX ;-)
-					fileChunk.setSha1(null); // no need in CSX ;-)
+					fileChunk.setSha1("X"); // no need in CSX ;-) but: not-null-constraint!
 					offset2FileChunk.put(fileChunk.getOffset(), fileChunk);
 					normalFile.getFileChunks().add(fileChunk); // should implicitly persist it!
 				}

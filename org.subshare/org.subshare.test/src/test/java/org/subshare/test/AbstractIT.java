@@ -134,6 +134,7 @@ public abstract class AbstractIT {
 				}
 			};
 		}
+		createFile(ConfigDir.getInstance().getFile(), UserRegistry.USER_REGISTRY_FILE_NAME).delete();
 	}
 
 	@After
