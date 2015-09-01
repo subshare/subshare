@@ -513,7 +513,12 @@ public class CryptreeImpl extends AbstractCryptree {
 	private void processUserRepoKeyPublicKeyReplacementRequestAsInvitedUser(final UserRepoKeyPublicKeyReplacementRequest request) {
 		final LocalRepoTransaction transaction = getTransactionOrFail();
 		final UserRepoKey newUserRepoKey = getCryptreeContext().userRepoKeyRing.getUserRepoKeyOrFail(request.getNewKey().getUserRepoKeyId());
-		final UserRepoKey oldUserRepoKey = getCryptreeContext().userRepoKeyRing.getUserRepoKeyOrFail(request.getOldKey().getUserRepoKeyId());
+		final UserRepoKey oldUserRepoKey = getCryptreeContext().userRepoKeyRing.getUserRepoKey(request.getOldKey().getUserRepoKeyId());
+		if (oldUserRepoKey == null) {
+			logger.warn("processUserRepoKeyPublicKeyReplacementRequestAsInvitedUser: userRepoKeyId == {} unknown! Probably already processed?!", request.getOldKey().getUserRepoKeyId());
+			return;
+		}
+
 		final CryptoLinkDao cryptoLinkDao = transaction.getDao(CryptoLinkDao.class);
 		final PermissionDao permissionDao = transaction.getDao(PermissionDao.class);
 
@@ -534,6 +539,17 @@ public class CryptreeImpl extends AbstractCryptree {
 			permission.setUserRepoKeyPublicKey(request.getNewKey());
 			getCryptreeContext().getSignableSigner(oldUserRepoKey).sign(permission);
 		}
+
+		getCryptreeContext().userRepoKeyRing.removeUserRepoKey(oldUserRepoKey);
+//		final User user = getCryptreeContext().getUserRegistry().getUserByUserRepoKeyIdOrFail(request.getOldKey().getUserRepoKeyId());
+//		final UserRepoKeyRing userRepoKeyRing = user.getUserRepoKeyRing();
+//		final List<UserRepoKey> oldUrKeys = new ArrayList<>();
+//		for (final UserRepoKey pk : userRepoKeyRing.getUserRepoKeys()) {
+//			if (pk.getUserRepoKeyId().equals(request.getOldKey().getUserRepoKeyId()))
+//				oldUrKeys.add(pk);
+//		}
+//		for (UserRepoKey userRepoKey : oldUrKeys)
+//			userRepoKeyRing.removeUserRepoKey(userRepoKey);
 	}
 
 	private void processUserRepoKeyPublicKeyReplacementRequestAsInvitingUser(final UserRepoKeyPublicKeyReplacementRequest request) {
@@ -595,18 +611,22 @@ public class CryptreeImpl extends AbstractCryptree {
 			getCryptreeContext().getSignableSigner(oldKeySigningUserRepoKey).sign(permission);
 
 		// TODO extract this into a separate method (and maybe not only this!)
-		final User user = getCryptreeContext().getUserRegistry().getUserByUserRepoKeyIdOrFail(request.getOldKey().getUserRepoKeyId());
-		final UserIdentityPayloadDto userIdentityPayloadDto = getUserIdentityPayloadDtoOrFail(request.getNewKey().getUserRepoKeyId());
-		UserRepoKeyPublicKeyDtoWithSignatureConverter urkpkConverter = new UserRepoKeyPublicKeyDtoWithSignatureConverter();
-		UserRepoKey.PublicKeyWithSignature newPublicKey = urkpkConverter.fromUserRepoKeyPublicKeyDto(userIdentityPayloadDto.getUserRepoKeyPublicKeyDto());
-		assertNotNull("newPublicKey", newPublicKey);
-		final List<UserRepoKey.PublicKeyWithSignature> oldPublicKeys = new ArrayList<>();
-		for (final UserRepoKey.PublicKeyWithSignature pk : user.getUserRepoKeyPublicKeys()) {
-			if (pk.getUserRepoKeyId().equals(request.getOldKey().getUserRepoKeyId()))
-				oldPublicKeys.add(pk);
+		final User user = getCryptreeContext().getUserRegistry().getUserByUserRepoKeyId(request.getOldKey().getUserRepoKeyId());
+		if (user == null)
+			logger.warn("processUserRepoKeyPublicKeyReplacementRequestAsInvitingUser: userRepoKeyId = {} unknown! Maybe already processed?!", request.getOldKey().getUserRepoKeyId());
+		else {
+			final UserIdentityPayloadDto userIdentityPayloadDto = getUserIdentityPayloadDtoOrFail(request.getNewKey().getUserRepoKeyId());
+			UserRepoKeyPublicKeyDtoWithSignatureConverter urkpkConverter = new UserRepoKeyPublicKeyDtoWithSignatureConverter();
+			UserRepoKey.PublicKeyWithSignature newPublicKey = urkpkConverter.fromUserRepoKeyPublicKeyDto(userIdentityPayloadDto.getUserRepoKeyPublicKeyDto());
+			assertNotNull("newPublicKey", newPublicKey);
+			final List<UserRepoKey.PublicKeyWithSignature> oldPublicKeys = new ArrayList<>();
+			for (final UserRepoKey.PublicKeyWithSignature pk : user.getUserRepoKeyPublicKeys()) {
+				if (pk.getUserRepoKeyId().equals(request.getOldKey().getUserRepoKeyId()))
+					oldPublicKeys.add(pk);
+			}
+			user.getUserRepoKeyPublicKeys().removeAll(oldPublicKeys);
+			user.getUserRepoKeyPublicKeys().add(newPublicKey);
 		}
-		user.getUserRepoKeyPublicKeys().removeAll(oldPublicKeys);
-		user.getUserRepoKeyPublicKeys().add(newPublicKey);
 
 //		if (hasSeeUserIdentity)
 //			transferUserIdentities(request);
