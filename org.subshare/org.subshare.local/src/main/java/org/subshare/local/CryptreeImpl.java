@@ -486,6 +486,9 @@ public class CryptreeImpl extends AbstractCryptree {
 		if (isOnServer())
 			return;
 
+		if (isMetaOnly())
+			return;
+
 		final LocalRepoTransaction transaction = getTransactionOrFail();
 		final UserRepoKeyPublicKeyReplacementRequestDao requestDao = transaction.getDao(UserRepoKeyPublicKeyReplacementRequestDao.class);
 
