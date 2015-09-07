@@ -1,18 +1,32 @@
 package org.subshare.local.transport;
 
+import static co.codewizards.cloudstore.core.objectfactory.ObjectFactoryUtil.*;
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+
+import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.UUID;
 
 import org.subshare.core.Cryptree;
 import org.subshare.core.CryptreeFactoryRegistry;
+import org.subshare.core.dto.SsFileChunkDto;
+import org.subshare.core.dto.SsNormalFileDto;
+import org.subshare.core.repo.transport.CryptreeClientFileRepoTransport;
+import org.subshare.local.persistence.SsFileChunk;
+import org.subshare.local.persistence.SsNormalFile;
 
+import co.codewizards.cloudstore.core.dto.FileChunkDto;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
+import co.codewizards.cloudstore.local.persistence.FileChunk;
+import co.codewizards.cloudstore.local.persistence.NormalFile;
 import co.codewizards.cloudstore.local.persistence.RepoFile;
 import co.codewizards.cloudstore.local.persistence.RepoFileDao;
 import co.codewizards.cloudstore.local.transport.FileRepoTransport;
 
-public class CryptreeFileRepoTransportImpl extends FileRepoTransport {
+public class CryptreeFileRepoTransportImpl extends FileRepoTransport implements CryptreeClientFileRepoTransport {
 
 	private Boolean metaOnly;
 
@@ -68,4 +82,72 @@ public class CryptreeFileRepoTransportImpl extends FileRepoTransport {
 		// TODO must not invoke super method! Must throw exception instead! We must not handle collisions in the server! We must throw
 		// a detailed exception instead.
 	}
+
+	@Override
+	public void beginPutFile(String path) {
+		throw new UnsupportedOperationException("Should not be invoked on client-side!");
+	}
+
+	@Override
+	public void beginPutFile(String path, SsNormalFileDto normalFileDto) {
+		super.beginPutFile(path);
+	}
+
+	@Override
+	public void endPutFile(String path, Date lastModified, long length, String sha1) {
+		throw new UnsupportedOperationException("Should not be invoked on client-side!");
+	}
+
+	@Override
+	public void endPutFile(String path, SsNormalFileDto fromNormalFileDto) {
+		putPaddingMetaData(path, fromNormalFileDto);
+		super.endPutFile(path, fromNormalFileDto.getLastModified(), fromNormalFileDto.getLength(), fromNormalFileDto.getSha1());
+	}
+
+	private void putPaddingMetaData(String path, SsNormalFileDto fromNormalFileDto) {
+		path = prefixPath(path); // does a null-check
+		assertNotNull("fromNormalFileDto", fromNormalFileDto);
+
+		final File file = getFile(path);
+		try ( final LocalRepoTransaction transaction = getLocalRepoManager().beginWriteTransaction(); ) {
+			final RepoFile repoFile = transaction.getDao(RepoFileDao.class).getRepoFile(getLocalRepoManager().getLocalRoot(), file);
+			if (!(repoFile instanceof NormalFile)) {
+				throw new IllegalStateException(String.format("RepoFile is not an instance of NormalFile! repoFile=%s file=%s",
+						repoFile, file));
+			}
+
+			final SsNormalFile normalFile = (SsNormalFile) repoFile;
+			normalFile.setPaddingLength(fromNormalFileDto.getPaddingLength());
+
+			final Map<Long, SsFileChunk> offset2FileChunk = new HashMap<>(normalFile.getFileChunks().size());
+			for (FileChunk fc : normalFile.getFileChunks())
+				offset2FileChunk.put(fc.getOffset(), (SsFileChunk) fc);
+
+			for (final FileChunkDto fcDto : fromNormalFileDto.getFileChunkDtos()) {
+				SsFileChunkDto fileChunkDto = (SsFileChunkDto) fcDto;
+				if (fileChunkDto.getPaddingLength() <= 0 || fileChunkDto.getLength() > 0)
+					continue;
+
+				boolean isNew = false;
+				SsFileChunk fileChunk = offset2FileChunk.get(fileChunkDto.getOffset());
+				if (fileChunk == null) {
+					isNew = true;
+					fileChunk = (SsFileChunk) createObject(FileChunk.class);
+					fileChunk.setRepoFile(normalFile);
+					fileChunk.setOffset(fileChunkDto.getOffset());
+				}
+				fileChunk.makeWritable();
+				fileChunk.setLength(fileChunkDto.getLength());
+				fileChunk.setPaddingLength(fileChunkDto.getPaddingLength());
+				fileChunk.setSha1(fileChunkDto.getSha1());
+				fileChunk.makeReadOnly();
+
+				if (isNew)
+					normalFile.getFileChunks().add(fileChunk);
+			}
+
+			transaction.commit();
+		}
+	}
+
 }

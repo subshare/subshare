@@ -9,7 +9,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import org.subshare.core.dto.SsDeleteModificationDto;
-import org.subshare.core.repo.transport.CryptreeFileRepoTransport;
+import org.subshare.core.repo.transport.CryptreeServerFileRepoTransport;
 
 import co.codewizards.cloudstore.core.repo.transport.RepoTransport;
 import co.codewizards.cloudstore.rest.server.service.AbstractServiceWithRepoToRepoAuth;
@@ -24,8 +24,8 @@ public class DeleteService extends AbstractServiceWithRepoToRepoAuth {
 		assertNotNull("deleteModificationDto", deleteModificationDto);
 
 		try (final RepoTransport repoTransport = authenticateAndCreateLocalRepoTransport();) {
-			CryptreeFileRepoTransport cfrt = (CryptreeFileRepoTransport) repoTransport;
-			cfrt.delete(deleteModificationDto);
+			CryptreeServerFileRepoTransport csfrt = (CryptreeServerFileRepoTransport) repoTransport;
+			csfrt.delete(deleteModificationDto);
 		}
 	}
 

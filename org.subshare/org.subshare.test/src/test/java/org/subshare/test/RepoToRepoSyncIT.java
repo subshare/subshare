@@ -3,7 +3,9 @@ package org.subshare.test;
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static org.assertj.core.api.Assertions.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import mockit.Mock;
 import mockit.MockUp;
@@ -17,6 +19,10 @@ import org.subshare.core.user.UserRepoKey.PublicKey;
 import org.subshare.core.user.UserRepoKeyRing;
 import org.subshare.core.user.UserRepoKeyRingLookup;
 import org.subshare.local.UserRepoKeyPublicKeyHelper;
+import org.subshare.local.persistence.SsFileChunk;
+import org.subshare.local.persistence.SsNormalFile;
+import org.subshare.local.persistence.CryptoRepoFile;
+import org.subshare.local.persistence.CryptoRepoFileDao;
 import org.subshare.local.persistence.InvitationUserRepoKeyPublicKey;
 import org.subshare.local.persistence.UserRepoKeyPublicKey;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyDao;
@@ -29,6 +35,9 @@ import org.slf4j.LoggerFactory;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
+import co.codewizards.cloudstore.local.persistence.FileChunk;
+import co.codewizards.cloudstore.local.persistence.NormalFile;
+import co.codewizards.cloudstore.local.persistence.RepoFile;
 
 public class RepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 
@@ -54,6 +63,8 @@ public class RepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 		determineRemotePathPrefix2Encrypted();
 		createLocalDestinationRepo();
 		syncFromRemoteToLocalDest();
+
+		assertPaddingsAreEqual(localSrcRoot, localDestRoot);
 	}
 
 	@Test
@@ -71,6 +82,59 @@ public class RepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 
 		syncFromLocalSrcToRemote();
 		syncFromRemoteToLocalDest();
+	}
+
+	protected void assertPaddingsAreEqual(File localSrcRoot, File localDestRoot) {
+		try (final LocalRepoManager localRepoManagerSrc = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(localSrcRoot);) {
+			try (final LocalRepoManager localRepoManagerDest = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(localDestRoot);) {
+				try (LocalRepoTransaction txSrc = localRepoManagerSrc.beginReadTransaction();) {
+					try (LocalRepoTransaction txDest = localRepoManagerDest.beginReadTransaction();) {
+						CryptoRepoFileDao cryptoRepoFileDaoSrc = txSrc.getDao(CryptoRepoFileDao.class);
+						CryptoRepoFileDao cryptoRepoFileDaoDest = txDest.getDao(CryptoRepoFileDao.class);
+
+						for (CryptoRepoFile cryptoRepoFileSrc : cryptoRepoFileDaoSrc.getObjects()) {
+							CryptoRepoFile cryptoRepoFileDest = cryptoRepoFileDaoDest.getCryptoRepoFileOrFail(cryptoRepoFileSrc.getCryptoRepoFileId());
+							RepoFile repoFileSrc = cryptoRepoFileSrc.getRepoFile();
+							RepoFile repoFileDest = cryptoRepoFileDest.getRepoFile();
+
+							if (!(repoFileSrc instanceof NormalFile))
+								continue;
+
+							SsNormalFile normalFileSrc = (SsNormalFile) repoFileSrc;
+							SsNormalFile normalFileDest = (SsNormalFile) repoFileDest;
+
+							if (normalFileDest == null) // likely path-prefix => not checked out
+								continue;
+
+							assertThat(normalFileDest.getName()).isEqualTo(normalFileSrc.getName());
+							assertThat(normalFileDest.getSha1()).isEqualTo(normalFileSrc.getSha1());
+							assertThat(normalFileDest.getPaddingLength()).isEqualTo(normalFileSrc.getPaddingLength());
+							assertThat(normalFileDest.getFileChunks().size()).isEqualTo(normalFileSrc.getFileChunks().size());
+
+							Map<Long, SsFileChunk> offset2FileChunkSrc = new HashMap<>();
+							Map<Long, SsFileChunk> offset2FileChunkDest = new HashMap<>();
+
+							for (FileChunk fileChunk : normalFileSrc.getFileChunks())
+								offset2FileChunkSrc.put(fileChunk.getOffset(), (SsFileChunk) fileChunk);
+
+							for (FileChunk fileChunk : normalFileDest.getFileChunks())
+								offset2FileChunkDest.put(fileChunk.getOffset(), (SsFileChunk) fileChunk);
+
+							assertThat(offset2FileChunkSrc.size()).isEqualTo(normalFileSrc.getFileChunks().size());
+							assertThat(offset2FileChunkDest.size()).isEqualTo(offset2FileChunkSrc.size());
+
+							for (SsFileChunk fileChunkSrc : offset2FileChunkSrc.values()) {
+								SsFileChunk fileChunkDest = offset2FileChunkDest.get(fileChunkSrc.getOffset());
+								assertThat(fileChunkDest).isNotNull();
+								assertThat(fileChunkDest.getLength()).isEqualTo(fileChunkSrc.getLength());
+								assertThat(fileChunkDest.getPaddingLength()).isEqualTo(fileChunkSrc.getPaddingLength());
+								assertThat(fileChunkDest.getSha1()).isEqualTo(fileChunkSrc.getSha1());
+							}
+						};
+					}
+				}
+			}
+		}
 	}
 
 //	@Override

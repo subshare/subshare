@@ -61,7 +61,6 @@ import org.slf4j.LoggerFactory;
 
 import co.codewizards.cloudstore.core.auth.SignatureException;
 import co.codewizards.cloudstore.core.dto.ChangeSetDto;
-import co.codewizards.cloudstore.core.dto.FileChunkDto;
 import co.codewizards.cloudstore.core.dto.ModificationDto;
 import co.codewizards.cloudstore.core.dto.NormalFileDto;
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
@@ -513,7 +512,7 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 	}
 
 	@Override
-	public void beginPutFile(final String path, NormalFileDto fromNormalFileDto) {
+	public void beginPutFile(final String path, SsNormalFileDto fromNormalFileDto) {
 		final LocalRepoManager localRepoManager = getLocalRepoManager();
 		try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
 			final Cryptree cryptree = getCryptree(transaction);
@@ -522,7 +521,9 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 			cryptree.updateLastCryptoKeySyncToRemoteRepo();
 
 			final String serverPath = cryptree.getServerPath(path);
-			final SsNormalFileDto serverNormalFileDto = createNormalFileDtoForPutFile(cryptree, path, serverPath, fromNormalFileDto.getLength());
+			final SsNormalFileDto serverNormalFileDto = createNormalFileDtoForPutFile(
+					cryptree, path, serverPath,
+					fromNormalFileDto.getLength() + assertNotNegative(fromNormalFileDto.getPaddingLength()) );
 			getClient().execute(new SsBeginPutFile(getRepositoryId().toString(), serverPath, serverNormalFileDto));
 
 			transaction.commit();
@@ -532,7 +533,7 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 	protected SsNormalFileDto createNormalFileDtoForPutFile(final Cryptree cryptree, final String localPath, final String serverPath, long length) {
 		final UserRepoKey userRepoKey = cryptree.getUserRepoKeyOrFail(localPath, PermissionType.write);
 
-		length = roundLengthToChunkMaxLength(length);
+//		length = roundLengthToChunkMaxLength(length);
 
 		final SsNormalFileDto normalFileDto = new SsNormalFileDto();
 
@@ -550,11 +551,11 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 		return normalFileDto;
 	}
 
-	private long roundLengthToChunkMaxLength(final long length) {
-		final long multiplier = length / FileChunkDto.MAX_LENGTH;
-		final long remainder = length % FileChunkDto.MAX_LENGTH;
-		return (multiplier + (remainder == 0 ? 0 : 1)) * FileChunkDto.MAX_LENGTH;
-	}
+//	private long roundLengthToChunkMaxLength(final long length) {
+//		final long multiplier = length / FileChunkDto.MAX_LENGTH;
+//		final long remainder = length % FileChunkDto.MAX_LENGTH;
+//		return (multiplier + (remainder == 0 ? 0 : 1)) * FileChunkDto.MAX_LENGTH;
+//	}
 
 	@Override
 	public void putFileData(final String path, final long offset, final byte[] fileData) {
@@ -592,7 +593,9 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 
 //			// Calculating the SHA1 of the encrypted data is too complicated and unnecessary. We thus omit it (now optional in CloudStore).
 			final String serverPath = cryptree.getServerPath(path);
-			final SsNormalFileDto serverNormalFileDto = createNormalFileDtoForPutFile(cryptree, path, serverPath, fromNormalFileDto.getLength());
+			final SsNormalFileDto serverNormalFileDto = createNormalFileDtoForPutFile(
+					cryptree, path, serverPath,
+					fromNormalFileDto.getLength() + assertNotNegative(((SsNormalFileDto) fromNormalFileDto).getPaddingLength()) );
 
 			RepoFileDtoWithCryptoRepoFileOnServerDto rfdwcrfosd = new RepoFileDtoWithCryptoRepoFileOnServerDto();
 
@@ -604,6 +607,13 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 
 			transaction.commit();
 		}
+	}
+
+	protected static long assertNotNegative(final long value) {
+		if (value < 0)
+			throw new IllegalArgumentException("value < 0");
+
+		return value;
 	}
 
 	protected byte[] encryptAndSign(final byte[] plainText, final KeyParameter keyParameter, final UserRepoKey signingUserRepoKey) {

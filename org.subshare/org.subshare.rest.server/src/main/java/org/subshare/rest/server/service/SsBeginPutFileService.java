@@ -10,8 +10,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import org.subshare.core.context.RepoFileContext;
 import org.subshare.core.dto.SsNormalFileDto;
+import org.subshare.core.repo.transport.CryptreeServerFileRepoTransport;
 
 import co.codewizards.cloudstore.rest.server.service.BeginPutFileService;
 
@@ -22,15 +22,23 @@ public class SsBeginPutFileService extends BeginPutFileService {
 
 	@PUT
 	@Path("{path:.*}")
-	public void beginPutFile(@PathParam("path") final String path, final SsNormalFileDto normalFileDto) {
+	public void beginPutFile(@PathParam("path") String path, final SsNormalFileDto normalFileDto) {
 		assertNotNull("path", path);
 		assertNotNull("normalFileDto", normalFileDto);
 
-		RepoFileContext.setContext(new RepoFileContext(path, normalFileDto, null));
+//		RepoFileContext.setContext(new RepoFileContext(path, normalFileDto, null));
+//		try {
+//			super.beginPutFile(path);
+//		} finally {
+//			RepoFileContext.setContext(null);
+//		}
+
+		final CryptreeServerFileRepoTransport repoTransport = (CryptreeServerFileRepoTransport) authenticateAndCreateLocalRepoTransport();
 		try {
-			super.beginPutFile(path);
+			path = repoTransport.unprefixPath(path);
+			repoTransport.beginPutFile(path, normalFileDto);
 		} finally {
-			RepoFileContext.setContext(null);
+			repoTransport.close();
 		}
 	}
 

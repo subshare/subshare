@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<jdo xmlns="http://xmlns.jcp.org/xml/ns/jdo/jdo"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/jdo/jdo http://xmlns.jcp.org/xml/ns/jdo/jdo_3_0.xsd" version="3.0">
+
+	<!--
+	Classes in CloudStore which were not meant to be sub-classed don't have a discriminator.
+	We therefore have to override their persistence mapping here.
+	-->
+	<package name="co.codewizards.cloudstore.local.persistence">
+		<class name="FileChunk">
+			<inheritance>
+				<discriminator strategy="value-map" value="FileChunk"></discriminator>
+			</inheritance>
+		</class>
+	</package>
+
+</jdo>

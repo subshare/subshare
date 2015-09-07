@@ -2,6 +2,7 @@ package org.subshare.core.dto.jaxb;
 
 import org.subshare.core.dto.SsDeleteModificationDto;
 import org.subshare.core.dto.SsDirectoryDto;
+import org.subshare.core.dto.SsFileChunkDto;
 import org.subshare.core.dto.SsNormalFileDto;
 import org.subshare.core.dto.SsRequestRepoConnectionRepositoryDto;
 import org.subshare.core.dto.SsSymlinkDto;
@@ -41,6 +42,7 @@ public class CloudStoreJaxbContextProviderImpl extends AbstractCloudStoreJaxbCon
 				SsDeleteModificationDto.class,
 				SsDirectoryDto.class,
 				SsNormalFileDto.class,
+				SsFileChunkDto.class,
 				SsRequestRepoConnectionRepositoryDto.class,
 				SsSymlinkDto.class,
 				CreateRepositoryRequestDto.class,

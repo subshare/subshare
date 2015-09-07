@@ -22,6 +22,8 @@ public class SsNormalFileDto extends NormalFileDto implements SsRepoFileDto {
 	@XmlElement
 	private SignatureDto signatureDto;
 
+	private long paddingLength = -1;
+
 	@Override
 	public String getParentName() {
 		return parentName;
@@ -72,4 +74,10 @@ public class SsNormalFileDto extends NormalFileDto implements SsRepoFileDto {
 		this.signatureDto = SignatureDto.copyIfNeeded(signature);
 	}
 
+	public long getPaddingLength() {
+		return paddingLength;
+	}
+	public void setPaddingLength(long paddingLength) {
+		this.paddingLength = paddingLength;
+	}
 }

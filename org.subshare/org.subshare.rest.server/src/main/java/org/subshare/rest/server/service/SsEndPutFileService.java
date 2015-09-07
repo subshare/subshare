@@ -2,8 +2,6 @@ package org.subshare.rest.server.service;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
-import java.util.Date;
-
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -13,10 +11,10 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
-import org.subshare.core.context.RepoFileContext;
 import org.subshare.core.dto.SsNormalFileDto;
 import org.subshare.core.dto.CryptoRepoFileOnServerDto;
 import org.subshare.core.dto.RepoFileDtoWithCryptoRepoFileOnServerDto;
+import org.subshare.core.repo.transport.CryptreeServerFileRepoTransport;
 
 import co.codewizards.cloudstore.core.dto.DateTime;
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
@@ -29,7 +27,7 @@ public class SsEndPutFileService extends EndPutFileService {
 
 	@PUT
 	@Path("{path:.*}")
-	public void endPutFile(@PathParam("path") final String path, final RepoFileDtoWithCryptoRepoFileOnServerDto repoFileDtoWithCryptoRepoFileOnServerDto)
+	public void endPutFile(@PathParam("path") String path, final RepoFileDtoWithCryptoRepoFileOnServerDto repoFileDtoWithCryptoRepoFileOnServerDto)
 	{
 		assertNotNull("path", path);
 		assertNotNull("repoFileDtoWithCryptoRepoFileOnServerDto", repoFileDtoWithCryptoRepoFileOnServerDto);
@@ -45,12 +43,20 @@ public class SsEndPutFileService extends EndPutFileService {
 
 		final SsNormalFileDto normalFileDto = (SsNormalFileDto) rfdto;
 
-		RepoFileContext.setContext(new RepoFileContext(path, normalFileDto, cryptoRepoFileOnServerDto));
+//		RepoFileContext.setContext(new RepoFileContext(path, normalFileDto, cryptoRepoFileOnServerDto));
+//		try {
+//			final String sha1 = null; // no need
+//			super.endPutFile(path, new DateTime(new Date(0)), normalFileDto.getLength(), sha1);
+//		} finally {
+//			RepoFileContext.setContext(null);
+//		}
+
+		final CryptreeServerFileRepoTransport repoTransport = (CryptreeServerFileRepoTransport) authenticateAndCreateLocalRepoTransport();
 		try {
-			final String sha1 = null; // no need
-			super.endPutFile(path, new DateTime(new Date(0)), normalFileDto.getLength(), sha1);
+			path = repoTransport.unprefixPath(path);
+			repoTransport.endPutFile(path, normalFileDto, cryptoRepoFileOnServerDto);
 		} finally {
-			RepoFileContext.setContext(null);
+			repoTransport.close();
 		}
 	}
 

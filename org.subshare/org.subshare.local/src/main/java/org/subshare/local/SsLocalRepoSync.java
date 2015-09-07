@@ -1,26 +1,41 @@
 package org.subshare.local;
 
+import static co.codewizards.cloudstore.core.objectfactory.ObjectFactoryUtil.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.jdo.FetchPlan;
+import javax.jdo.PersistenceManager;
 
 import org.subshare.core.Cryptree;
 import org.subshare.core.CryptreeFactoryRegistry;
 import org.subshare.core.context.RepoFileContext;
+import org.subshare.core.crypto.KeyFactory;
 import org.subshare.core.dto.CryptoRepoFileOnServerDto;
 import org.subshare.local.dto.CryptoRepoFileOnServerDtoConverter;
 import org.subshare.local.persistence.SsDeleteModification;
+import org.subshare.local.persistence.SsFileChunk;
 import org.subshare.local.persistence.SsLocalRepository;
+import org.subshare.local.persistence.SsNormalFile;
 import org.subshare.local.persistence.SsRepoFile;
 import org.subshare.local.persistence.CryptoRepoFile;
 import org.subshare.local.persistence.CryptoRepoFileDao;
 import org.subshare.local.persistence.LocalRepositoryType;
 
+import co.codewizards.cloudstore.core.dto.FileChunkDto;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.progress.ProgressMonitor;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
+import co.codewizards.cloudstore.core.util.HashUtil;
+import co.codewizards.cloudstore.local.ContextWithPersistenceManager;
 import co.codewizards.cloudstore.local.LocalRepoSync;
 import co.codewizards.cloudstore.local.persistence.DeleteModification;
+import co.codewizards.cloudstore.local.persistence.FileChunk;
 import co.codewizards.cloudstore.local.persistence.LocalRepositoryDao;
+import co.codewizards.cloudstore.local.persistence.NormalFile;
 import co.codewizards.cloudstore.local.persistence.RemoteRepository;
 import co.codewizards.cloudstore.local.persistence.RepoFile;
 
@@ -77,6 +92,102 @@ public class SsLocalRepoSync extends LocalRepoSync {
 		final RepoFile repoFile = super._createRepoFile(parentRepoFile, file, monitor);
 		applyRepoFileContextIfExists(repoFile);
 		return repoFile;
+	}
+
+	@Override
+	protected void sha(final NormalFile normalFile, final File file, final ProgressMonitor monitor) {
+		assertNotNull("normalFile", normalFile);
+		assertNotNull("file", file);
+		assertNotNull("monitor", monitor);
+
+		SsNormalFile nf = (SsNormalFile) normalFile;
+		if (nf.getPaddingLength() < 0)
+			initPaddingLength(nf);
+
+		final PersistenceManager pm = ((ContextWithPersistenceManager) transaction).getPersistenceManager();
+		pm.getFetchPlan().setGroups(FetchPlan.DEFAULT);
+
+		// normalFile.fileChunks is cleared in super-method! Hence we copy them first.
+		final Map<Long, SsFileChunk> original_offset2FileChunk = new HashMap<>(normalFile.getFileChunks().size());
+		for (FileChunk fileChunk : normalFile.getFileChunks()) {
+			final SsFileChunk fc = pm.detachCopy((SsFileChunk) fileChunk);
+			original_offset2FileChunk.put(fc.getOffset(), fc);
+		}
+
+		super.sha(normalFile, file, monitor);
+
+		SsFileChunk lastNewFileChunk = null;
+
+		final long filePaddingLength = nf.getPaddingLength();
+		if (filePaddingLength > 0) {
+			final long fileNoPaddingLength = nf.getLength();
+			final long fileWithPaddingLength = fileNoPaddingLength + filePaddingLength;
+//			nf.setLength(fileWithPaddingLength); // padding NOT INCLUDED (anymore)!!!
+
+			for (FileChunk fileChunk : nf.getFileChunks()) {
+				if (lastNewFileChunk == null || lastNewFileChunk.getOffset() < fileChunk.getOffset())
+					lastNewFileChunk = (SsFileChunk) fileChunk;
+			}
+
+			assertNotNull("lastNewFileChunk", lastNewFileChunk); // every file has at least one chunk! even if it is empty!
+
+			long offset = lastNewFileChunk.getOffset();
+
+			lastNewFileChunk.makeWritable();
+			int chunkWithPaddingLength = (int) Math.min(FileChunkDto.MAX_LENGTH, fileWithPaddingLength - offset);
+			int chunkPaddingLength = chunkWithPaddingLength - lastNewFileChunk.getLength();
+			lastNewFileChunk.setPaddingLength(chunkPaddingLength);
+//			lastNewFileChunk.setLength(chunkWithPaddingLength); // padding NOT INCLUDED (anymore)!!!
+			lastNewFileChunk.makeReadOnly();
+
+			offset = lastNewFileChunk.getOffset() + lastNewFileChunk.getLength() + lastNewFileChunk.getPaddingLength();
+			while (offset < fileWithPaddingLength) {
+				chunkWithPaddingLength = (int) Math.min(FileChunkDto.MAX_LENGTH, fileWithPaddingLength - offset);
+
+				SsFileChunk fileChunk = original_offset2FileChunk.get(offset);
+				if (fileChunk == null)
+					fileChunk = createPaddingFileChunk(nf, offset, chunkWithPaddingLength);
+				else {
+					fileChunk.makeWritable();
+					fileChunk.setRepoFile(nf);
+					if (fileChunk.getPaddingLength() != chunkWithPaddingLength || fileChunk.getLength() != 0) {
+						fileChunk.setSha1(createRandomSha1());
+						fileChunk.setPaddingLength(chunkWithPaddingLength);
+						fileChunk.setLength(0); // padding NOT INCLUDED (anymore)!!!
+					}
+					fileChunk.makeReadOnly();
+				}
+				nf.getFileChunks().add(fileChunk);
+
+				lastNewFileChunk = fileChunk;
+				offset = lastNewFileChunk.getOffset() + lastNewFileChunk.getLength() + lastNewFileChunk.getPaddingLength();
+			}
+		}
+	}
+
+	private SsFileChunk createPaddingFileChunk(final SsNormalFile normalFile, final long offset, final int paddingLength) {
+		assertNotNull("normalFile", normalFile);
+		SsFileChunk fileChunk = (SsFileChunk) createObject(FileChunk.class);
+		fileChunk.setRepoFile(normalFile);
+		fileChunk.setOffset(offset);
+		fileChunk.setSha1(createRandomSha1());
+		fileChunk.setPaddingLength(paddingLength);
+		fileChunk.setLength(0); // padding NOT INCLUDED (anymore)!!!
+		return fileChunk;
+	}
+
+	private String createRandomSha1() {
+		final byte[] randomBytes = new byte[16];
+		KeyFactory.secureRandom.nextBytes(randomBytes);
+		final String sha1 = HashUtil.sha1(randomBytes);
+		return sha1;
+	}
+
+	private void initPaddingLength(final SsNormalFile normalFile) {
+		final File file = normalFile.getFile(localRoot);
+		final FilePaddingLengthRandom filePaddingLengthRandom = new FilePaddingLengthRandom(file);
+		final long paddingLength = filePaddingLengthRandom.nextPaddingLength();
+		normalFile.setPaddingLength(paddingLength);
 	}
 
 	@Override

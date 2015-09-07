@@ -8,14 +8,13 @@ import org.subshare.core.pgp.PgpKey;
 import co.codewizards.cloudstore.core.dto.NormalFileDto;
 import co.codewizards.cloudstore.core.repo.transport.RepoTransport;
 
-public interface CryptreeRestRepoTransport extends RepoTransport {
-
-	void createRepository(UUID serverRepositoryId, PgpKey pgpKey);
+public interface CryptreeRestRepoTransport extends RepoTransport, CryptreeRepoTransport {
 
 	void delete(SsDeleteModificationDto deleteModificationDto);
 
-	void beginPutFile(String path, NormalFileDto fromNormalFileDto);
+	void createRepository(UUID serverRepositoryId, PgpKey pgpKey);
+
+//	void beginPutFile(String path, NormalFileDto fromNormalFileDto); // inherited
 
 	void endPutFile(String path, NormalFileDto fromNormalFileDto);
-
 }

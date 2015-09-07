@@ -9,10 +9,10 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import org.subshare.core.context.RepoFileContext;
 import org.subshare.core.dto.SsDirectoryDto;
 import org.subshare.core.dto.CryptoRepoFileOnServerDto;
 import org.subshare.core.dto.RepoFileDtoWithCryptoRepoFileOnServerDto;
+import org.subshare.core.repo.transport.CryptreeServerFileRepoTransport;
 
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
 import co.codewizards.cloudstore.rest.server.service.MakeDirectoryService;
@@ -30,25 +30,32 @@ public class SsMakeDirectoryService extends MakeDirectoryService {
 
 	@POST
 	@Path("{path:.*}")
-	public void makeDirectory(@PathParam("path") final String path, final RepoFileDtoWithCryptoRepoFileOnServerDto repoFileDtoWithCryptoRepoFileOnServerDto)
+	public void makeDirectory(@PathParam("path") String path, final RepoFileDtoWithCryptoRepoFileOnServerDto repoFileDtoWithCryptoRepoFileOnServerDto)
 	{
 		assertNotNull("path", path);
 		assertNotNull("repoFileDtoWithCryptoRepoFileOnServerDto", repoFileDtoWithCryptoRepoFileOnServerDto);
 
-		CryptoRepoFileOnServerDto cryptoRepoFileOnServerDto = assertNotNull("repoFileDtoWithCryptoRepoFileOnServerDto.cryptoRepoFileOnServerDto",
+		final CryptoRepoFileOnServerDto cryptoRepoFileOnServerDto = assertNotNull("repoFileDtoWithCryptoRepoFileOnServerDto.cryptoRepoFileOnServerDto",
 				repoFileDtoWithCryptoRepoFileOnServerDto.getCryptoRepoFileOnServerDto());
 
-		RepoFileDto rfdto = assertNotNull("repoFileDtoWithCryptoRepoFileOnServerDto.repoFileDto",
+		final RepoFileDto rfdto = assertNotNull("repoFileDtoWithCryptoRepoFileOnServerDto.repoFileDto",
 				repoFileDtoWithCryptoRepoFileOnServerDto.getRepoFileDto());
 
 		if (! (rfdto instanceof SsDirectoryDto))
 			throw new IllegalArgumentException("repoFileDtoWithCryptoRepoFileOnServerDto.repoFileDto is not an instance of SsDirectoryDto, but: " + rfdto.getClass().getName());
 
-		RepoFileContext.setContext(new RepoFileContext(path, rfdto, cryptoRepoFileOnServerDto));
-		try {
-			super.makeDirectory(path);
-		} finally {
-			RepoFileContext.setContext(null);
+		final SsDirectoryDto directoryDto = (SsDirectoryDto) rfdto;
+
+//		RepoFileContext.setContext(new RepoFileContext(path, rfdto, cryptoRepoFileOnServerDto));
+//		try {
+//			super.makeDirectory(path);
+//		} finally {
+//			RepoFileContext.setContext(null);
+//		}
+
+		try (final CryptreeServerFileRepoTransport repoTransport = (CryptreeServerFileRepoTransport) authenticateAndCreateLocalRepoTransport();) {
+			path = repoTransport.unprefixPath(path);
+			repoTransport.makeDirectory(path, directoryDto, cryptoRepoFileOnServerDto);
 		}
 	}
 

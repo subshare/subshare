@@ -12,13 +12,12 @@ import java.util.UUID;
 
 import org.subshare.core.Cryptree;
 import org.subshare.core.CryptreeFactoryRegistry;
-import org.subshare.core.context.RepoFileContext;
 import org.subshare.core.dto.SsDeleteModificationDto;
 import org.subshare.core.dto.SsDirectoryDto;
 import org.subshare.core.dto.SsNormalFileDto;
 import org.subshare.core.dto.SsRepoFileDto;
 import org.subshare.core.dto.CryptoRepoFileOnServerDto;
-import org.subshare.core.repo.transport.CryptreeFileRepoTransport;
+import org.subshare.core.repo.transport.CryptreeServerFileRepoTransport;
 import org.subshare.local.dbrepo.persistence.FileChunkPayload;
 import org.subshare.local.dbrepo.persistence.FileChunkPayloadDao;
 import org.subshare.local.dbrepo.persistence.TempFileChunk;
@@ -46,7 +45,7 @@ import co.codewizards.cloudstore.local.persistence.RepoFile;
 import co.codewizards.cloudstore.local.persistence.RepoFileDao;
 import co.codewizards.cloudstore.local.transport.FileRepoTransport;
 
-public class DbFileRepoTransportImpl extends FileRepoTransport implements CryptreeFileRepoTransport {
+public class DbFileRepoTransportImpl extends FileRepoTransport implements CryptreeServerFileRepoTransport {
 
 	private static final Logger logger = LoggerFactory.getLogger(DbFileRepoTransportImpl.class);
 
@@ -138,15 +137,17 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 
 	@Override
 	public void makeDirectory(String path, Date lastModified) {
-		final RepoFileContext context = RepoFileContext.getContext();
-		assertNotNull("RepoFileContext.getContext()", context);
-
-		final SsDirectoryDto directoryDto = (SsDirectoryDto) context.getSsRepoFileDto();
-		final CryptoRepoFileOnServerDto cryptoRepoFileOnServerDto = context.getCryptoRepoFileOnServerDto();
-		makeDirectory(path, directoryDto, cryptoRepoFileOnServerDto);
+//		final RepoFileContext context = RepoFileContext.getContext();
+//		assertNotNull("RepoFileContext.getContext()", context);
+//
+//		final SsDirectoryDto directoryDto = (SsDirectoryDto) context.getSsRepoFileDto();
+//		final CryptoRepoFileOnServerDto cryptoRepoFileOnServerDto = context.getCryptoRepoFileOnServerDto();
+//		makeDirectory(path, directoryDto, cryptoRepoFileOnServerDto);
+		throw new IllegalStateException("This method should not be invoked on the server!");
 	}
 
-	protected void makeDirectory(String path, final SsDirectoryDto directoryDto, final CryptoRepoFileOnServerDto cryptoRepoFileOnServerDto) {
+	@Override
+	public void makeDirectory(String path, final SsDirectoryDto directoryDto, final CryptoRepoFileOnServerDto cryptoRepoFileOnServerDto) {
 		assertNotNull("path", path);
 		assertNotNull("directoryDto", directoryDto);
 		assertNotNull("cryptoRepoFileOnServerDto", cryptoRepoFileOnServerDto);
@@ -230,18 +231,15 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 
 	@Override
 	public void beginPutFile(final String path) {
-		final RepoFileContext context = RepoFileContext.getContext();
-		assertNotNull("RepoFileContext.getContext()", context);
-//		boolean isOnServer = context != null;
-//		if (isOnServer) {
-			final SsNormalFileDto normalFileDto = (SsNormalFileDto) context.getSsRepoFileDto();
-			beginPutFile(path, normalFileDto);
-//		}
-//		else
-//			getDelegateOnClient().beginPutFile(path);
+//		final RepoFileContext context = RepoFileContext.getContext();
+//		assertNotNull("RepoFileContext.getContext()", context);
+//		final SsNormalFileDto normalFileDto = (SsNormalFileDto) context.getSsRepoFileDto();
+//		beginPutFile(path, normalFileDto);
+		throw new IllegalStateException("This method should not be invoked on the server!");
 	}
 
-	protected void beginPutFile(String path, final SsNormalFileDto normalFileDto) {
+	@Override
+	public void beginPutFile(String path, final SsNormalFileDto normalFileDto) {
 		assertNotNull("normalFileDto", normalFileDto);
 
 		path = prefixPath(path);
@@ -365,21 +363,18 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 
 	@Override
 	public void endPutFile(String path, Date lastModified, long length, String sha1) {
-		final RepoFileContext context = RepoFileContext.getContext();
-		assertNotNull("RepoFileContext.getContext()", context);
-//		boolean isOnServer = context != null;
-//		if (isOnServer) {
-			final SsNormalFileDto normalFileDto = (SsNormalFileDto) context.getSsRepoFileDto();
-			final CryptoRepoFileOnServerDto cryptoRepoFileOnServerDto = context.getCryptoRepoFileOnServerDto();
-			// length is ignored and is always 0!
-			// sha1 is ignored and always null!
-			endPutFile(path, normalFileDto, cryptoRepoFileOnServerDto);
-//		}
-//		else
-//			getDelegateOnClient().endPutFile(path, lastModified, length, sha1);
+//		final RepoFileContext context = RepoFileContext.getContext();
+//		assertNotNull("RepoFileContext.getContext()", context);
+//		final SsNormalFileDto normalFileDto = (SsNormalFileDto) context.getSsRepoFileDto();
+//		final CryptoRepoFileOnServerDto cryptoRepoFileOnServerDto = context.getCryptoRepoFileOnServerDto();
+//		// length is ignored and is always 0!
+//		// sha1 is ignored and always null!
+//		endPutFile(path, normalFileDto, cryptoRepoFileOnServerDto);
+		throw new IllegalStateException("This method should not be invoked on the server!");
 	}
 
-	protected void endPutFile(String path, final SsNormalFileDto normalFileDto, final CryptoRepoFileOnServerDto cryptoRepoFileOnServerDto) {
+	@Override
+	public void endPutFile(String path, final SsNormalFileDto normalFileDto, final CryptoRepoFileOnServerDto cryptoRepoFileOnServerDto) {
 		assertNotNull("path", path);
 		assertNotNull("normalFileDto", normalFileDto);
 		assertNotNull("cryptoRepoFileOnServerDto", cryptoRepoFileOnServerDto);

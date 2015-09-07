@@ -8,6 +8,7 @@ import java.io.InputStream;
 
 import javax.jdo.JDOHelper;
 import javax.jdo.PersistenceManager;
+import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Discriminator;
 import javax.jdo.annotations.DiscriminatorStrategy;
 import javax.jdo.annotations.Embedded;
@@ -25,13 +26,16 @@ import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.local.persistence.NormalFile;
 
 @PersistenceCapable
-@Inheritance(strategy=InheritanceStrategy.SUPERCLASS_TABLE)
-@Discriminator(strategy=DiscriminatorStrategy.VALUE_MAP, value="SsNormalFile")
+@Inheritance(strategy = InheritanceStrategy.SUPERCLASS_TABLE)
+@Discriminator(strategy = DiscriminatorStrategy.VALUE_MAP, value = "SsNormalFile")
 public class SsNormalFile extends NormalFile implements SsRepoFile {
 
-//	@Persistent(nullValue=NullValue.EXCEPTION)
-	@Embedded(nullIndicatorColumn="signatureCreated")
+//	@Persistent(nullValue = NullValue.EXCEPTION)
+	@Embedded(nullIndicatorColumn = "signatureCreated")
 	private SignatureImpl signature;
+
+	@Column(defaultValue = "-1")
+	private long paddingLength = -1;
 
 	@Override
 	public String getSignedDataType() {
@@ -61,6 +65,22 @@ public class SsNormalFile extends NormalFile implements SsRepoFile {
 		} catch (final IOException x) {
 			throw new RuntimeException(x);
 		}
+	}
+
+	/**
+	 * Gets the number of padding bytes.
+	 * <p>
+	 * On the server, this is always -1. This is only managed on the client and then transferred inside the
+	 * encrypted DTO (in {@link CryptoRepoFile#getRepoFileDtoData() CryptoRepoFile.repoFileDtoData}) to the server.
+	 * <p>
+	 * <b>Important:</b> The file length is updated by CSX to include this padding!
+	 * @return the number of padding bytes.
+	 */
+	public long getPaddingLength() {
+		return paddingLength;
+	}
+	public void setPaddingLength(long paddingLength) {
+		this.paddingLength = paddingLength;
 	}
 
 	@Override
