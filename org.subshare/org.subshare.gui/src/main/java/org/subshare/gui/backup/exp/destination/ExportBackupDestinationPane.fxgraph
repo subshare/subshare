@@ -8,30 +8,31 @@ import javafx.scene.control.SelectionMode
 
 dynamic component ExportBackupDestinationPane resourcefile 'messages.properties' {
 	GridPane {
+		hgap : 8,
+		vgap : 8,
+		padding : Insets { left : 8, top : 8, right : 8, bottom : 8 },
 //		minWidth : 550,
 //		prefWidth : 550,
 //		prefHeight : 600,
 ////		minHeight : 600,
 		
-		children : [
-			Text id headerText {
-				text : rstring 'ExportBackupDestinationPane.headerText.text',
-				wrappingWidth : 500,
-				static columnIndex : 0,
-				static rowIndex : 0,
-				static hgrow : "ALWAYS",
-				static margin : Insets { bottom : 16 }
-			},
+		Text id headerText {
+			text : rstring 'ExportBackupDestinationPane.headerText.text',
+			wrappingWidth : 500,
+			static columnIndex : 0,
+			static rowIndex : 0,
+			static hgrow : "ALWAYS"
+//				static margin : Insets { bottom : 16 }
+		},
 
-			FileTreePane id fileTreePane {
-				useCase : "backup",
-				selectionMode: "SINGLE",
+		FileTreePane id fileTreePane {
+			useCase : "backup",
+			selectionMode: "SINGLE",
 
-				static columnIndex : 0,
-				static rowIndex : 1,
-				static hgrow : "ALWAYS",
-				static vgrow : "ALWAYS"
-			}
-		]
+			static columnIndex : 0,
+			static rowIndex : 1,
+			static hgrow : "ALWAYS",
+			static vgrow : "ALWAYS"
+		}
 	}
 }

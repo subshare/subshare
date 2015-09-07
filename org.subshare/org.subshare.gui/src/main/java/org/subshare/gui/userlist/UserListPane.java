@@ -36,7 +36,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
 import javafx.stage.FileChooser;
 
 import org.subshare.core.pgp.ImportKeysResult;
@@ -55,7 +55,7 @@ import org.subshare.gui.user.EditUserManager;
 
 import co.codewizards.cloudstore.core.oio.File;
 
-public class UserListPane extends BorderPane {
+public class UserListPane extends GridPane {
 
 	private final EditUserManager editUserManager;
 

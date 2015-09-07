@@ -4,21 +4,23 @@ import javafx.scene.layout.GridPane
 import javafx.scene.text.Text
 import javafx.geometry.Insets
 
-dynamic component FirstPane {
+dynamic component FirstPane resourcefile 'messages.properties' {
 	GridPane {
+		hgap : 8,
+		vgap : 8,
+		padding : Insets { left : 8, top : 8, right : 8, bottom : 8 },
+
 //		prefWidth : 400,
 //		prefHeight : 300,
 
-		children : [
-			Text id headerText {
-				text : rstring 'FirstPane.headerText.text',
-				wrappingWidth : 500,
-				static columnIndex : 0,
-				static rowIndex : 0,
-				static columnSpan : 3,
-				static hgrow : "ALWAYS",
-				static margin : Insets { bottom : 16 }
-			}
-		]
+		Text id headerText {
+			text : rstring 'FirstPane.headerText.text',
+			wrappingWidth : 500,
+			static columnIndex : 0,
+			static rowIndex : 0,
+			static columnSpan : 3,
+			static hgrow : "ALWAYS",
+			static margin : Insets { bottom : 16 }
+		}
 	}
 }

@@ -28,7 +28,7 @@ import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.TextFieldTableCell;
-import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
 import javafx.stage.DirectoryChooser;
 
 import org.subshare.core.pgp.PgpKeyId;
@@ -49,7 +49,7 @@ import org.subshare.gui.selectuser.SelectUserDialog;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.repo.sync.RepoSyncDaemon;
 
-public class ServerPane extends BorderPane /* GridPane */ {
+public class ServerPane extends GridPane {
 
 	private ServerRepoRegistry serverRepoRegistry;
 

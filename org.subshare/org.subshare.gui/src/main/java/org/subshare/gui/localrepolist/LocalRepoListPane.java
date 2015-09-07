@@ -3,12 +3,12 @@ package org.subshare.gui.localrepolist;
 import static org.subshare.gui.util.FxmlUtil.*;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
 
 import org.subshare.gui.invitation.accept.AcceptInvitationWizard;
 import org.subshare.gui.wizard.WizardDialog;
 
-public class LocalRepoListPane extends BorderPane {
+public class LocalRepoListPane extends GridPane {
 
 	public LocalRepoListPane() {
 		loadDynamicComponentFxml(LocalRepoListPane.class, this);

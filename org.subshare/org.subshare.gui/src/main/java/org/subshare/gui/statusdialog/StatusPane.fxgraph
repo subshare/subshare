@@ -12,13 +12,17 @@ import javafx.scene.control.ProgressBar
 
 dynamic component StatusPane resourcefile "messages.properties" {
 	GridPane {
+		hgap : 8,
+		vgap : 8,
+		padding : Insets { left : 8, top : 8, right : 8, bottom : 8 },
+		
 		children : [
 			Text id messageText {
 				text : rstring "StatusPane.messageText.text",
 				wrappingWidth : 500,
 				static columnIndex : 0,
-				static rowIndex : 0,
-				static margin : Insets { left : 8, top : 8, right : 8, bottom : 8 }
+				static rowIndex : 0
+//				static margin : Insets { left : 8, top : 8, right : 8, bottom : 8 }
 			}
 		]
 	}

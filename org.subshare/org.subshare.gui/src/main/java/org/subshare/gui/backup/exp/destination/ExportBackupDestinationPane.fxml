@@ -10,14 +10,11 @@
 <?import org.subshare.gui.filetree.FileTreePane?>
 <?scenebuilder-preview-i18n-resource messages.properties?>
 
-<fx:root xmlns:fx="http://javafx.com/fxml" type="GridPane">
+<fx:root xmlns:fx="http://javafx.com/fxml" type="GridPane" hgap="8" vgap="8">
 
-	<children>
-		<Text fx:id="headerText" text="%ExportBackupDestinationPane.headerText.text" wrappingWidth="500" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.hgrow="ALWAYS"> 
-			<GridPane.margin>
-				<Insets bottom="16"/> 
-			</GridPane.margin>
-		</Text>
-		<FileTreePane fx:id="fileTreePane" useCase="backup" selectionMode="SINGLE" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.hgrow="ALWAYS" GridPane.vgrow="ALWAYS"/> 
-	</children>
+	<Text fx:id="headerText" text="%ExportBackupDestinationPane.headerText.text" wrappingWidth="500" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.hgrow="ALWAYS"/> 
+	<FileTreePane fx:id="fileTreePane" useCase="backup" selectionMode="SINGLE" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.hgrow="ALWAYS" GridPane.vgrow="ALWAYS"/> 
+	<padding>
+		<Insets left="8" top="8" right="8" bottom="8"/> 
+	</padding>
 </fx:root>

@@ -15,8 +15,11 @@
 <?import javafx.scene.layout.GridPane?>
 <?scenebuilder-preview-i18n-resource messages.properties?>
 
-<fx:root xmlns:fx="http://javafx.com/fxml" type="GridPane">
+<fx:root xmlns:fx="http://javafx.com/fxml" type="GridPane" hgap="8" vgap="8">
 
+	<padding>
+		<Insets left="8" top="8" right="8" bottom="8"/> 
+	</padding>
 	<children>
 		<FlowPane GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="2"> 
 			<Button fx:id="checkOutButton" onAction="#checkOutButtonClicked"> 
@@ -31,29 +34,10 @@
 					<Tooltip text="Check-out this repository.&#010;&#010;You'll select a local directory into which the selected server-repository is going to be downloaded (and kept in-sync with, afterwards)."/> 
 				</tooltip>
 			</Button>
-			<GridPane.margin>
-				<Insets left="8" right="8" top="8" bottom="8"/> 
-			</GridPane.margin>
 		</FlowPane>
-		<Label text="Local path:" GridPane.columnIndex="0" GridPane.rowIndex="1"> 
-			<GridPane.margin>
-				<Insets left="8" right="8" bottom="8"/> 
-			</GridPane.margin>
-		</Label>
-		<TextField fx:id="localPathTextField" editable="false" GridPane.hgrow="ALWAYS" GridPane.columnIndex="1" GridPane.rowIndex="1"> 
-			<GridPane.margin>
-				<Insets right="8" bottom="8"/> 
-			</GridPane.margin>
-		</TextField>
-		<Label text="Server URL:" GridPane.columnIndex="0" GridPane.rowIndex="2"> 
-			<GridPane.margin>
-				<Insets left="8" right="8" bottom="8"/> 
-			</GridPane.margin>
-		</Label>
-		<TextField fx:id="serverUrlTextField" editable="false" GridPane.hgrow="ALWAYS" GridPane.columnIndex="1" GridPane.rowIndex="2"> 
-			<GridPane.margin>
-				<Insets right="8" bottom="8"/> 
-			</GridPane.margin>
-		</TextField>
+		<Label text="Local path:" GridPane.columnIndex="0" GridPane.rowIndex="1"/> 
+		<TextField fx:id="localPathTextField" editable="false" GridPane.hgrow="ALWAYS" GridPane.columnIndex="1" GridPane.rowIndex="1"/> 
+		<Label text="Server URL:" GridPane.columnIndex="0" GridPane.rowIndex="2"/> 
+		<TextField fx:id="serverUrlTextField" editable="false" GridPane.hgrow="ALWAYS" GridPane.columnIndex="1" GridPane.rowIndex="2"/> 
 	</children>
 </fx:root>

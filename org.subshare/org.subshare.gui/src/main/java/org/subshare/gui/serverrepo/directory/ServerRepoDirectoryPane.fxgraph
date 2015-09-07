@@ -12,6 +12,10 @@ import javafx.scene.control.TextField
 
 dynamic component ServerRepoDirectoryPane resourcefile 'messages.properties' {
 	GridPane {
+		hgap : 8,
+		vgap : 8,
+		padding : Insets { left : 8, top : 8, right : 8, bottom : 8 },
+		
 		children : [
 			FlowPane {
 				Button id checkOutButton {
@@ -21,36 +25,36 @@ dynamic component ServerRepoDirectoryPane resourcefile 'messages.properties' {
 				},
 				static columnIndex : 0,
 				static rowIndex : 0,
-				static columnSpan : 2,
-				static margin : Insets { left : 8, right : 8, top : 8, bottom : 8}
+				static columnSpan : 2
+//				static margin : Insets { left : 8, right : 8, top : 8, bottom : 8}
 			},
 
 			Label {
 				text : "Local path:",
 				static columnIndex : 0,
-				static rowIndex : 1,
-				static margin : Insets { left : 8, right : 8, bottom : 8}
+				static rowIndex : 1
+//				static margin : Insets { left : 8, right : 8, bottom : 8}
 			},
 			TextField id localPathTextField {
 				editable : false,
 				static hgrow : "ALWAYS",
 				static columnIndex : 1,
-				static rowIndex : 1,
-				static margin : Insets { right : 8, bottom : 8}
+				static rowIndex : 1
+//				static margin : Insets { right : 8, bottom : 8}
 			},
 
 			Label {
 				text : "Server URL:",
 				static columnIndex : 0,
-				static rowIndex : 2,
-				static margin : Insets { left : 8, right : 8, bottom : 8}
+				static rowIndex : 2
+//				static margin : Insets { left : 8, right : 8, bottom : 8}
 			},
 			TextField id serverUrlTextField {
 				editable : false,
 				static hgrow : "ALWAYS",
 				static columnIndex : 1,
-				static rowIndex : 2,
-				static margin : Insets { right : 8, bottom : 8}
+				static rowIndex : 2
+//				static margin : Insets { right : 8, bottom : 8}
 			}
 		]
 	}

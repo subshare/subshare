@@ -12,7 +12,6 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.RowConstraints;
 
 import org.subshare.core.pgp.PgpKey;
 
@@ -51,12 +50,15 @@ public abstract class PgpPrivateKeyPassphrasePromptPane extends GridPane {
 		userIdsComboBox.getSelectionModel().select(0);
 		keyIdTextField.setText(this.pgpKey.getPgpKeyId().toHumanString());
 
+		getChildren().remove(errorMessageBox);
 		if (errorMessage == null) {
-			errorMessageBox.setVisible(false);
-			getRowConstraints().add(0, new RowConstraints(0, 0, 0));
+//			errorMessageBox.setVisible(false);
+//			getRowConstraints().add(0, new RowConstraints(0, 0, 0));
 		}
 		else {
-			errorMessageBox.setVisible(true);
+			add(errorMessageBox, 0, 0);
+			GridPane.setColumnSpan(errorMessageBox, 2);
+//			errorMessageBox.setVisible(true);
 			errorMessageLabel.setText(errorMessage);
 		}
 	}

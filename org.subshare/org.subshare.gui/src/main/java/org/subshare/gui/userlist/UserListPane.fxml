@@ -14,107 +14,101 @@
 <?import javafx.scene.control.cell.PropertyValueFactory?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
-<?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.VBox?>
 <?scenebuilder-preview-i18n-resource messages.properties?>
 
-<fx:root xmlns:fx="http://javafx.com/fxml" type="BorderPane">
+<fx:root xmlns:fx="http://javafx.com/fxml" type="GridPane" hgap="8" vgap="8">
 
-	<top>
-		<VBox> 
-			<children>
-				<FlowPane> 
-					<Button fx:id="addButton" onAction="#addButtonClicked"> 
-						<graphic>
-							<ImageView> 
-								<image>
-									<Image url="@add_24x24.png"/> 
-								</image>
-							</ImageView>
-						</graphic>
-						<tooltip>
-							<Tooltip text="Add a new user."/> 
-						</tooltip>
-					</Button>
-					<Button fx:id="importPgpKeyButton" onAction="#importPgpKeyButtonClicked"> 
-						<graphic>
-							<ImageView> 
-								<image>
-									<Image url="@import-pgp-key_24x24.png"/> 
-								</image>
-							</ImageView>
-						</graphic>
-						<tooltip>
-							<Tooltip text="Import one or more PGP keys from a file."/> 
-						</tooltip>
-					</Button>
-					<Button fx:id="editButton" onAction="#editButtonClicked"> 
-						<graphic>
-							<ImageView> 
-								<image>
-									<Image url="@edit_24x24.png"/> 
-								</image>
-							</ImageView>
-						</graphic>
-						<tooltip>
-							<Tooltip text="Edit the selected user."/> 
-						</tooltip>
-					</Button>
-					<Button fx:id="deleteButton" onAction="#deleteButtonClicked"> 
-						<graphic>
-							<ImageView> 
-								<image>
-									<Image url="@delete_24x24.png"/> 
-								</image>
-							</ImageView>
-						</graphic>
-						<tooltip>
-							<Tooltip text="Delete the selected users."/> 
-						</tooltip>
-					</Button>
-				</FlowPane>
-				<HBox> 
-					<children>
-						<Label text="Filter: "/> 
-						<TextField fx:id="filterTextField" HBox.hgrow="ALWAYS"> 
-							<HBox.margin>
-								<Insets left="4"/> 
-							</HBox.margin>
-						</TextField>
-					</children>
-					<VBox.margin>
-						<Insets top="4" bottom="4"/> 
-					</VBox.margin>
-				</HBox>
-			</children>
-		</VBox>
-	</top>
-	<center>
-		<TableView fx:id="tableView"> 
-			<columns>
-				<TableColumn fx:id="firstNameColumn" text="First name" prefWidth="100"> 
-					<cellValueFactory>
-						<PropertyValueFactory property="firstName"/> 
-					</cellValueFactory>
-				</TableColumn>
-				<TableColumn fx:id="lastNameColumn" text="Last name" prefWidth="100"> 
-					<cellValueFactory>
-						<PropertyValueFactory property="lastName"/> 
-					</cellValueFactory>
-				</TableColumn>
-				<TableColumn fx:id="emailColumn" text="E-mail" prefWidth="200"> 
-					<cellValueFactory>
-						<PropertyValueFactory property="email"/> 
-					</cellValueFactory>
-				</TableColumn>
-				<TableColumn fx:id="emailColumn" text="Key trust level" prefWidth="120"> 
-					<cellValueFactory>
-						<PropertyValueFactory property="keyTrustLevel"/> 
-					</cellValueFactory>
-				</TableColumn>
-			</columns>
-		</TableView>
-	</center>
+	<FlowPane> 
+		<Button fx:id="addButton" onAction="#addButtonClicked"> 
+			<graphic>
+				<ImageView> 
+					<image>
+						<Image url="@add_24x24.png"/> 
+					</image>
+				</ImageView>
+			</graphic>
+			<tooltip>
+				<Tooltip text="Add a new user."/> 
+			</tooltip>
+		</Button>
+		<Button fx:id="importPgpKeyButton" onAction="#importPgpKeyButtonClicked"> 
+			<graphic>
+				<ImageView> 
+					<image>
+						<Image url="@import-pgp-key_24x24.png"/> 
+					</image>
+				</ImageView>
+			</graphic>
+			<tooltip>
+				<Tooltip text="Import one or more PGP keys from a file."/> 
+			</tooltip>
+		</Button>
+		<Button fx:id="editButton" onAction="#editButtonClicked"> 
+			<graphic>
+				<ImageView> 
+					<image>
+						<Image url="@edit_24x24.png"/> 
+					</image>
+				</ImageView>
+			</graphic>
+			<tooltip>
+				<Tooltip text="Edit the selected user."/> 
+			</tooltip>
+		</Button>
+		<Button fx:id="deleteButton" onAction="#deleteButtonClicked"> 
+			<graphic>
+				<ImageView> 
+					<image>
+						<Image url="@delete_24x24.png"/> 
+					</image>
+				</ImageView>
+			</graphic>
+			<tooltip>
+				<Tooltip text="Delete the selected users."/> 
+			</tooltip>
+		</Button>
+	</FlowPane>
+	<HBox GridPane.rowIndex="1"> 
+		<children>
+			<Label text="Filter: "/> 
+			<TextField fx:id="filterTextField" HBox.hgrow="ALWAYS"> 
+				<HBox.margin>
+					<Insets left="4"/> 
+				</HBox.margin>
+			</TextField>
+		</children>
+		<GridPane.margin>
+			<Insets top="4" bottom="4"/> 
+		</GridPane.margin>
+	</HBox>
+	<TableView fx:id="tableView" GridPane.rowIndex="2" GridPane.hgrow="ALWAYS" GridPane.vgrow="ALWAYS"> 
+		<columns>
+			<TableColumn fx:id="firstNameColumn" text="First name" prefWidth="100"> 
+				<cellValueFactory>
+					<PropertyValueFactory property="firstName"/> 
+				</cellValueFactory>
+			</TableColumn>
+			<TableColumn fx:id="lastNameColumn" text="Last name" prefWidth="100"> 
+				<cellValueFactory>
+					<PropertyValueFactory property="lastName"/> 
+				</cellValueFactory>
+			</TableColumn>
+			<TableColumn fx:id="emailColumn" text="E-mail" prefWidth="200"> 
+				<cellValueFactory>
+					<PropertyValueFactory property="email"/> 
+				</cellValueFactory>
+			</TableColumn>
+			<TableColumn fx:id="emailColumn" text="Key trust level" prefWidth="120"> 
+				<cellValueFactory>
+					<PropertyValueFactory property="keyTrustLevel"/> 
+				</cellValueFactory>
+			</TableColumn>
+		</columns>
+	</TableView>
+	<padding>
+		<Insets left="8" top="8" right="8" bottom="8"/> 
+	</padding>
 </fx:root>

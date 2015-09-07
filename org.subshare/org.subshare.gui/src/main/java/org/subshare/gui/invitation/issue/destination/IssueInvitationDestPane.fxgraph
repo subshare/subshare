@@ -7,6 +7,10 @@ import javafx.geometry.Insets
 
 dynamic component IssueInvitationDestPane resourcefile 'messages.properties' {
 	GridPane {
+		hgap : 8,
+		vgap : 8,
+		padding : Insets { left : 8, top : 8, right : 8, bottom : 8 },
+
 		children : [
 			Text id headerText {
 				text : rstring 'IssueInvitationDestPane.headerText.text',
@@ -14,8 +18,8 @@ dynamic component IssueInvitationDestPane resourcefile 'messages.properties' {
 				static columnIndex : 0,
 				static rowIndex : 0,
 				static columnSpan : 3,
-				static hgrow : "ALWAYS",
-				static margin : Insets { bottom : 16 }
+				static hgrow : "ALWAYS"
+//				static margin : Insets { bottom : 16 }
 			},
 
 			FileTreePane id fileTreePane {

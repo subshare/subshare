@@ -4,6 +4,7 @@
 -->
 
 <?import java.lang.*?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ButtonBar?>
 <?import javafx.scene.control.ComboBox?>
@@ -15,17 +16,23 @@
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
 
-<fx:root xmlns:fx="http://javafx.com/fxml" type="GridPane">
+<fx:root xmlns:fx="http://javafx.com/fxml" type="GridPane" hgap="8" vgap="8">
 
+	<padding>
+		<Insets left="8" top="8" right="8" bottom="8"/> 
+	</padding>
 	<children>
 		<HBox fx:id="errorMessageBox" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="2"> 
 			<children>
-				<ImageView> 
-					<image>
-						<Image url="@../../severity/ERROR_24x24.png"/> 
-					</image>
-				</ImageView>
-				<Label fx:id="errorMessageLabel"/> 
+				<Label fx:id="errorMessageLabel"> 
+					<graphic>
+						<ImageView> 
+							<image>
+								<Image url="@../../severity/ERROR_24x24.png"/> 
+							</image>
+						</ImageView>
+					</graphic>
+				</Label>
 			</children>
 		</HBox>
 		<Label fx:id="headerLabel" text="Please enter the passphrase for the following PGP key:" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.columnSpan="2"/> 

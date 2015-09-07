@@ -7,26 +7,28 @@ import org.subshare.gui.filetree.FileTreePane
 
 dynamic component ImportBackupSourcePane resourcefile 'messages.properties' {
 	GridPane {
-		children : [
-			Text id headerText {
-				text : rstring 'ImportBackupSourcePane.headerText.text',
-				wrappingWidth : 500,
-				static columnIndex : 0,
-				static rowIndex : 0,
-				static columnSpan : 3,
-				static hgrow : "ALWAYS",
-				static margin : Insets { bottom : 16 }
-			},
+		hgap : 8,
+		vgap : 8,
+		padding : Insets { left : 8, top : 8, right : 8, bottom : 8 },
 
-			FileTreePane id fileTreePane {
-				useCase : "backup",
-				selectionMode: "SINGLE",
+		Text id headerText {
+			text : rstring 'ImportBackupSourcePane.headerText.text',
+			wrappingWidth : 500,
+			static columnIndex : 0,
+			static rowIndex : 0,
+			static columnSpan : 3,
+			static hgrow : "ALWAYS"
+//				static margin : Insets { bottom : 16 }
+		},
 
-				static columnIndex : 0,
-				static rowIndex : 1,
-				static hgrow : "ALWAYS",
-				static vgrow : "ALWAYS"
-			}
-		]
+		FileTreePane id fileTreePane {
+			useCase : "backup",
+			selectionMode: "SINGLE",
+
+			static columnIndex : 0,
+			static rowIndex : 1,
+			static hgrow : "ALWAYS",
+			static vgrow : "ALWAYS"
+		}
 	}
 }

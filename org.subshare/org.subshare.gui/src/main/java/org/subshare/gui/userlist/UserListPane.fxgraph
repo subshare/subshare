@@ -16,55 +16,58 @@ import javafx.scene.layout.VBox
 import javafx.scene.layout.HBox
 import javafx.scene.control.TextField
 import javafx.geometry.Insets
+import javafx.scene.layout.GridPane
 
 dynamic component UserListPane resourcefile "messages.properties" {
-	BorderPane {
-		top : VBox {
-			children : [
-				FlowPane {
-					Button id addButton {
-						graphic : ImageView { image : Image { url : "@add_24x24.png" } },
-						tooltip : Tooltip { text : "Add a new user." },
-						onAction : controllermethod addButtonClicked
-					},
-					Button id importPgpKeyButton {
-						graphic : ImageView { image : Image { url : "@import-pgp-key_24x24.png" } },
-						tooltip : Tooltip { text : "Import one or more PGP keys from a file." },
-						onAction : controllermethod importPgpKeyButtonClicked
-					},
-					Button id editButton {
-						graphic : ImageView { image : Image { url : "@edit_24x24.png" } },
-						tooltip : Tooltip { text : "Edit the selected user." },
-						onAction : controllermethod editButtonClicked
-					},
-					Button id deleteButton {
-						graphic : ImageView { image : Image { url : "@delete_24x24.png" } },
-						tooltip : Tooltip { text : "Delete the selected users." },
-						onAction : controllermethod deleteButtonClicked
-					}
-				},
+	GridPane {
+		hgap : 8,
+		vgap : 8,
+		padding : Insets { left : 8, top : 8, right : 8, bottom : 8 },
+		
+		FlowPane {
+			Button id addButton {
+				graphic : ImageView { image : Image { url : "@add_24x24.png" } },
+				tooltip : Tooltip { text : "Add a new user." },
+				onAction : controllermethod addButtonClicked
+			},
+			Button id importPgpKeyButton {
+				graphic : ImageView { image : Image { url : "@import-pgp-key_24x24.png" } },
+				tooltip : Tooltip { text : "Import one or more PGP keys from a file." },
+				onAction : controllermethod importPgpKeyButtonClicked
+			},
+			Button id editButton {
+				graphic : ImageView { image : Image { url : "@edit_24x24.png" } },
+				tooltip : Tooltip { text : "Edit the selected user." },
+				onAction : controllermethod editButtonClicked
+			},
+			Button id deleteButton {
+				graphic : ImageView { image : Image { url : "@delete_24x24.png" } },
+				tooltip : Tooltip { text : "Delete the selected users." },
+				onAction : controllermethod deleteButtonClicked
+			}
+		},
 
-				HBox {
-					children : [
-						Label {
-							text : "Filter: "
-						},
-						TextField id filterTextField {
-							static hgrow : "ALWAYS",
-							static margin : Insets {
-								left : 4
-							}
-						}
-					],
+		HBox {
+			children : [
+				Label {
+					text : "Filter: "
+				},
+				TextField id filterTextField {
+					static hgrow : "ALWAYS",
 					static margin : Insets {
-						top : 4,
-						bottom : 4
+						left : 4
 					}
 				}
-			]
-		},
-		center : TableView < UserListItem > id tableView {
+			],
+			static margin : Insets {
+				top : 4,
+				bottom : 4
+			},
 			
+			static rowIndex : 1
+		},
+				
+		TableView < UserListItem > id tableView {
 			columns : [
 				TableColumn < UserListItem, String > id firstNameColumn {
 					text : "First name",
@@ -94,7 +97,11 @@ dynamic component UserListPane resourcefile "messages.properties" {
 						property : "keyTrustLevel"
 					}
 				}
-			]
+			],
+
+			static rowIndex : 2,
+			static hgrow : "ALWAYS",
+			static vgrow : "ALWAYS"
 		}
 	}
 }

@@ -4,6 +4,7 @@
 -->
 
 <?import java.lang.*?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
@@ -11,49 +12,48 @@
 <?import javafx.scene.control.cell.PropertyValueFactory?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
-<?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.GridPane?>
 <?scenebuilder-preview-i18n-resource messages.properties?>
 
-<fx:root xmlns:fx="http://javafx.com/fxml" type="BorderPane">
+<fx:root xmlns:fx="http://javafx.com/fxml" type="GridPane" hgap="8" vgap="8">
 
-	<top>
-		<FlowPane> 
-			<Button fx:id="createRepositoryButton" onAction="#createRepositoryButtonClicked"> 
-				<graphic>
-					<ImageView> 
-						<image>
-							<Image url="@create-repository_24x24.png"/> 
-						</image>
-					</ImageView>
-				</graphic>
-				<tooltip>
-					<Tooltip text="Create a new repository on this server.&#010;&#010;You'll select a local directory which is going to be uploaded to (and kept in-sync with) the new repository."/> 
-				</tooltip>
-			</Button>
-			<Button fx:id="checkOutButton" onAction="#checkOutButtonClicked"> 
-				<graphic>
-					<ImageView> 
-						<image>
-							<Image url="@check-out_24x24.png"/> 
-						</image>
-					</ImageView>
-				</graphic>
-				<tooltip>
-					<Tooltip text="Check the selected repository out.&#010;&#010;You'll select a local directory into which the selected server-repository is going to be downloaded (and kept in-sync with, afterwards)."/> 
-				</tooltip>
-			</Button>
-		</FlowPane>
-	</top>
-	<center>
-		<TableView fx:id="tableView" editable="true"> 
-			<columns>
-				<TableColumn fx:id="nameColumn" text="Name" prefWidth="200"> 
-					<cellValueFactory>
-						<PropertyValueFactory property="name"/> 
-					</cellValueFactory>
-				</TableColumn>
-			</columns>
-		</TableView>
-	</center>
+	<FlowPane> 
+		<Button fx:id="createRepositoryButton" onAction="#createRepositoryButtonClicked"> 
+			<graphic>
+				<ImageView> 
+					<image>
+						<Image url="@create-repository_24x24.png"/> 
+					</image>
+				</ImageView>
+			</graphic>
+			<tooltip>
+				<Tooltip text="Create a new repository on this server.&#010;&#010;You'll select a local directory which is going to be uploaded to (and kept in-sync with) the new repository."/> 
+			</tooltip>
+		</Button>
+		<Button fx:id="checkOutButton" onAction="#checkOutButtonClicked"> 
+			<graphic>
+				<ImageView> 
+					<image>
+						<Image url="@check-out_24x24.png"/> 
+					</image>
+				</ImageView>
+			</graphic>
+			<tooltip>
+				<Tooltip text="Check the selected repository out.&#010;&#010;You'll select a local directory into which the selected server-repository is going to be downloaded (and kept in-sync with, afterwards)."/> 
+			</tooltip>
+		</Button>
+	</FlowPane>
+	<TableView fx:id="tableView" editable="true" GridPane.rowIndex="1" GridPane.hgrow="ALWAYS" GridPane.vgrow="ALWAYS"> 
+		<columns>
+			<TableColumn fx:id="nameColumn" text="Name" prefWidth="200"> 
+				<cellValueFactory>
+					<PropertyValueFactory property="name"/> 
+				</cellValueFactory>
+			</TableColumn>
+		</columns>
+	</TableView>
+	<padding>
+		<Insets left="8" top="8" right="8" bottom="8"/> 
+	</padding>
 </fx:root>

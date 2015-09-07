@@ -11,14 +11,18 @@ import javafx.scene.control.Label
 
 dynamic component AcceptInvitationSourcePane resourcefile 'messages.properties' {
 	GridPane {
+		hgap : 8,
+		vgap : 8,
+		padding : Insets { left : 8, top : 8, right : 8, bottom : 8 },
+		
 		children : [
 			Text id headerText {
 				text : rstring 'AcceptInvitationSourcePane.headerText.text',
 				wrappingWidth : 500,
 				static columnIndex : 0,
 				static rowIndex : 0,
-				static hgrow : "ALWAYS",
-				static margin : Insets { bottom : 16 }
+				static hgrow : "ALWAYS"
+//				static margin : Insets { bottom : 16 }
 			},
 
 			FileTreePane id fileTreePane {
@@ -28,14 +32,20 @@ dynamic component AcceptInvitationSourcePane resourcefile 'messages.properties' 
 				static columnIndex : 0,
 				static rowIndex : 1,
 				static hgrow : "ALWAYS",
-				static vgrow : "ALWAYS",
-				static margin : Insets { bottom : 16 }
+				static vgrow : "ALWAYS"
+//				static margin : Insets { bottom : 16 }
 			},
 			
 			HBox id errorMessageBox {
 				children : [
 					ImageView id errorMessageImageView { image : Image { url : "@../../../severity/ERROR_24x24.png" } },
-					Label id errorMessageLabel { text : "This is an error description" }
+					Label id errorMessageLabel {
+						text : "This is an error description",
+						padding : Insets { left : 4, top : 2 }
+					}
+					// TODO we should have a "solve" button for problems that can be automatically solved. there's currently
+					// one such problem: the warning about a missing key and therefore being unable to verify the signature.
+					// in this case, we can import the key immediately and then verify the signature.
 				],
 				static columnIndex : 0,
 				static rowIndex : 2

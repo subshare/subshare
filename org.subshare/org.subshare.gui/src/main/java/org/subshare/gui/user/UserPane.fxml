@@ -18,121 +18,112 @@
 <?import javafx.scene.layout.GridPane?>
 <?import org.subshare.gui.pgp.keytree.PgpKeyTreePane?>
 
-<fx:root xmlns:fx="http://javafx.com/fxml" type="GridPane">
+<fx:root xmlns:fx="http://javafx.com/fxml" type="GridPane" hgap="8" vgap="8">
 
-	<children>
-		<FlowPane GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="2" GridPane.fillWidth="true" GridPane.hgrow="ALWAYS"> 
-			<Button fx:id="createPgpKeyButton" onAction="#createPgpKeyButtonClicked"> 
-				<graphic>
-					<ImageView> 
-						<image>
-							<Image url="@create-pgp-key_24x24.png"/> 
-						</image>
-					</ImageView>
-				</graphic>
-				<tooltip>
-					<Tooltip text="Create a new PGP key pair."/> 
-				</tooltip>
-			</Button>
-			<Button fx:id="signPgpKeyButton" onAction="#signPgpKeyButtonClicked"> 
-				<graphic>
-					<ImageView> 
-						<image>
-							<Image url="@sign-pgp-key_24x24.png"/> 
-						</image>
-					</ImageView>
-				</graphic>
-				<tooltip>
-					<Tooltip text="Certify the authenticity of the selected PGP key (sign it)."/> 
-				</tooltip>
-			</Button>
-			<Button fx:id="exportPgpKeyButton" onAction="#exportPgpKeyButtonClicked"> 
-				<graphic>
-					<ImageView> 
-						<image>
-							<Image url="@export-pgp-key_24x24.png"/> 
-						</image>
-					</ImageView>
-				</graphic>
-				<tooltip>
-					<Tooltip text="Export the selected PGP keys into a file."/> 
-				</tooltip>
-			</Button>
-			<Button fx:id="assignPgpKeyToThisUserButton" onAction="#assignPgpKeyToThisUserButtonClicked"> 
-				<graphic>
-					<ImageView> 
-						<image>
-							<Image url="@assign-pgp-key-to-this-user_24x24.png"/> 
-						</image>
-					</ImageView>
-				</graphic>
-				<tooltip>
-					<Tooltip text="Select a PGP key (or multiple) from your PGP key ring and assign it (or them) to this user (instead of the user they're currently associated with)."/> 
-				</tooltip>
-			</Button>
-			<Button fx:id="assignPgpKeyToOtherUserButton" onAction="#assignPgpKeyToOtherUserButtonClicked"> 
-				<graphic>
-					<ImageView> 
-						<image>
-							<Image url="@assign-pgp-key-to-other-user_24x24.png"/> 
-						</image>
-					</ImageView>
-				</graphic>
-				<tooltip>
-					<Tooltip text="Assign the selected PGP key(s) to another user (instead of this one)."/> 
-				</tooltip>
-			</Button>
-			<Button fx:id="deletePgpKeyButton" onAction="#deletePgpKeyButtonClicked"> 
-				<graphic>
-					<ImageView> 
-						<image>
-							<Image url="@delete-pgp-key_24x24.png"/> 
-						</image>
-					</ImageView>
-				</graphic>
-				<tooltip>
-					<Tooltip text="Delete the selected PGP keys."/> 
-				</tooltip>
-			</Button>
-			<Button fx:id="closeButton" onAction="#closeButtonClicked"> 
-				<graphic>
-					<ImageView> 
-						<image>
-							<Image url="@close_24x24.png"/> 
-						</image>
-					</ImageView>
-				</graphic>
-				<tooltip>
-					<Tooltip text="Close this user (end editing)."/> 
-				</tooltip>
-				<FlowPane.margin>
-					<Insets left="16"/> 
-				</FlowPane.margin>
-			</Button>
-			<GridPane.margin>
-				<Insets bottom="8"/> 
-			</GridPane.margin>
-		</FlowPane>
-		<Label text="First name:" GridPane.columnIndex="0" GridPane.rowIndex="1"/> 
-		<TextField fx:id="firstNameTextField" GridPane.columnIndex="1" GridPane.rowIndex="1" GridPane.fillWidth="true" GridPane.hgrow="ALWAYS"/> 
-		<Label text="Last name:" GridPane.columnIndex="0" GridPane.rowIndex="2"/> 
-		<TextField fx:id="lastNameTextField" GridPane.columnIndex="1" GridPane.rowIndex="2" GridPane.fillWidth="true" GridPane.hgrow="ALWAYS"/> 
-		<TableView fx:id="emailsTableView" editable="true" GridPane.columnIndex="0" GridPane.rowIndex="3" GridPane.columnSpan="2" GridPane.fillWidth="true" GridPane.hgrow="ALWAYS"> 
-			<columns>
-				<TableColumn fx:id="emailTableColumn" text="E-mail" prefWidth="300"> 
-					<cellValueFactory>
-						<PropertyValueFactory property="value"/> 
-					</cellValueFactory>
-				</TableColumn>
-			</columns>
-			<GridPane.margin>
-				<Insets top="8"/> 
-			</GridPane.margin>
-		</TableView>
-		<PgpKeyTreePane fx:id="pgpKeyTreePane" GridPane.columnIndex="0" GridPane.rowIndex="4" GridPane.columnSpan="2" GridPane.fillWidth="true" GridPane.hgrow="ALWAYS"> 
-			<GridPane.margin>
-				<Insets top="8"/> 
-			</GridPane.margin>
-		</PgpKeyTreePane>
-	</children>
+	<FlowPane GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="2" GridPane.fillWidth="true" GridPane.hgrow="ALWAYS"> 
+		<Button fx:id="createPgpKeyButton" onAction="#createPgpKeyButtonClicked"> 
+			<graphic>
+				<ImageView> 
+					<image>
+						<Image url="@create-pgp-key_24x24.png"/> 
+					</image>
+				</ImageView>
+			</graphic>
+			<tooltip>
+				<Tooltip text="Create a new PGP key pair."/> 
+			</tooltip>
+		</Button>
+		<Button fx:id="signPgpKeyButton" onAction="#signPgpKeyButtonClicked"> 
+			<graphic>
+				<ImageView> 
+					<image>
+						<Image url="@sign-pgp-key_24x24.png"/> 
+					</image>
+				</ImageView>
+			</graphic>
+			<tooltip>
+				<Tooltip text="Certify the authenticity of the selected PGP key (sign it)."/> 
+			</tooltip>
+		</Button>
+		<Button fx:id="exportPgpKeyButton" onAction="#exportPgpKeyButtonClicked"> 
+			<graphic>
+				<ImageView> 
+					<image>
+						<Image url="@export-pgp-key_24x24.png"/> 
+					</image>
+				</ImageView>
+			</graphic>
+			<tooltip>
+				<Tooltip text="Export the selected PGP keys into a file."/> 
+			</tooltip>
+		</Button>
+		<Button fx:id="assignPgpKeyToThisUserButton" onAction="#assignPgpKeyToThisUserButtonClicked"> 
+			<graphic>
+				<ImageView> 
+					<image>
+						<Image url="@assign-pgp-key-to-this-user_24x24.png"/> 
+					</image>
+				</ImageView>
+			</graphic>
+			<tooltip>
+				<Tooltip text="Select a PGP key (or multiple) from your PGP key ring and assign it (or them) to this user (instead of the user they're currently associated with)."/> 
+			</tooltip>
+		</Button>
+		<Button fx:id="assignPgpKeyToOtherUserButton" onAction="#assignPgpKeyToOtherUserButtonClicked"> 
+			<graphic>
+				<ImageView> 
+					<image>
+						<Image url="@assign-pgp-key-to-other-user_24x24.png"/> 
+					</image>
+				</ImageView>
+			</graphic>
+			<tooltip>
+				<Tooltip text="Assign the selected PGP key(s) to another user (instead of this one)."/> 
+			</tooltip>
+		</Button>
+		<Button fx:id="deletePgpKeyButton" onAction="#deletePgpKeyButtonClicked"> 
+			<graphic>
+				<ImageView> 
+					<image>
+						<Image url="@delete-pgp-key_24x24.png"/> 
+					</image>
+				</ImageView>
+			</graphic>
+			<tooltip>
+				<Tooltip text="Delete the selected PGP keys."/> 
+			</tooltip>
+		</Button>
+		<Button fx:id="closeButton" onAction="#closeButtonClicked"> 
+			<graphic>
+				<ImageView> 
+					<image>
+						<Image url="@close_24x24.png"/> 
+					</image>
+				</ImageView>
+			</graphic>
+			<tooltip>
+				<Tooltip text="Close this user (end editing)."/> 
+			</tooltip>
+			<FlowPane.margin>
+				<Insets left="16"/> 
+			</FlowPane.margin>
+		</Button>
+	</FlowPane>
+	<Label text="First name:" GridPane.columnIndex="0" GridPane.rowIndex="1"/> 
+	<TextField fx:id="firstNameTextField" GridPane.columnIndex="1" GridPane.rowIndex="1" GridPane.fillWidth="true" GridPane.hgrow="ALWAYS"/> 
+	<Label text="Last name:" GridPane.columnIndex="0" GridPane.rowIndex="2"/> 
+	<TextField fx:id="lastNameTextField" GridPane.columnIndex="1" GridPane.rowIndex="2" GridPane.fillWidth="true" GridPane.hgrow="ALWAYS"/> 
+	<TableView fx:id="emailsTableView" editable="true" GridPane.columnIndex="0" GridPane.rowIndex="3" GridPane.columnSpan="2" GridPane.fillWidth="true" GridPane.hgrow="ALWAYS"> 
+		<columns>
+			<TableColumn fx:id="emailTableColumn" text="E-mail" prefWidth="300"> 
+				<cellValueFactory>
+					<PropertyValueFactory property="value"/> 
+				</cellValueFactory>
+			</TableColumn>
+		</columns>
+	</TableView>
+	<PgpKeyTreePane fx:id="pgpKeyTreePane" GridPane.columnIndex="0" GridPane.rowIndex="4" GridPane.columnSpan="2" GridPane.fillWidth="true" GridPane.hgrow="ALWAYS"/> 
+	<padding>
+		<Insets left="8" top="8" right="8" bottom="8"/> 
+	</padding>
 </fx:root>

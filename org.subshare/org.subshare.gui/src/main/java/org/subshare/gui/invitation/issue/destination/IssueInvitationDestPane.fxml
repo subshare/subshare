@@ -10,14 +10,13 @@
 <?import org.subshare.gui.filetree.FileTreePane?>
 <?scenebuilder-preview-i18n-resource messages.properties?>
 
-<fx:root xmlns:fx="http://javafx.com/fxml" type="GridPane">
+<fx:root xmlns:fx="http://javafx.com/fxml" type="GridPane" hgap="8" vgap="8">
 
+	<padding>
+		<Insets left="8" top="8" right="8" bottom="8"/> 
+	</padding>
 	<children>
-		<Text fx:id="headerText" text="%IssueInvitationDestPane.headerText.text" wrappingWidth="500" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="3" GridPane.hgrow="ALWAYS"> 
-			<GridPane.margin>
-				<Insets bottom="16"/> 
-			</GridPane.margin>
-		</Text>
+		<Text fx:id="headerText" text="%IssueInvitationDestPane.headerText.text" wrappingWidth="500" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="3" GridPane.hgrow="ALWAYS"/> 
 		<FileTreePane fx:id="fileTreePane" useCase="invitation.out" selectionMode="SINGLE" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.hgrow="ALWAYS" GridPane.vgrow="ALWAYS"/> 
 	</children>
 </fx:root>

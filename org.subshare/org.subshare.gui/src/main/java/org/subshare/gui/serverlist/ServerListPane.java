@@ -34,7 +34,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.Tooltip;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
 
 import org.subshare.core.locker.sync.LockerSyncDaemon;
 import org.subshare.core.pgp.sync.PgpSyncDaemon;
@@ -53,7 +53,7 @@ import co.codewizards.cloudstore.core.Severity;
 import co.codewizards.cloudstore.core.dto.DateTime;
 import co.codewizards.cloudstore.core.util.StringUtil;
 
-public class ServerListPane extends BorderPane {
+public class ServerListPane extends GridPane {
 
 	private ServerRegistry serverRegistry;
 
