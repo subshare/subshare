@@ -6,11 +6,18 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.subshare.local.FilePaddingLengthRandom.LengthCategory;
+import org.junit.After;
 import org.junit.Test;
 
 import co.codewizards.cloudstore.core.config.Config;
 
 public class FilePaddingLengthRandomTest {
+
+	@After
+	public void after() {
+		for (LengthCategory lengthCategory : FilePaddingLengthRandom.LengthCategory.values())
+			System.getProperties().remove(Config.SYSTEM_PROPERTY_PREFIX + lengthCategory.getConfigPropertyKey());
+	}
 
 	@Test
 	public void generateOneRandomLength() {
@@ -22,6 +29,13 @@ public class FilePaddingLengthRandomTest {
 
 	@Test
 	public void testDistribution() {
+		System.setProperty(Config.SYSTEM_PROPERTY_PREFIX + FilePaddingLengthRandom.LengthCategory._100K.getConfigPropertyKey(), "600");
+		System.setProperty(Config.SYSTEM_PROPERTY_PREFIX + FilePaddingLengthRandom.LengthCategory._1M.getConfigPropertyKey(), "295");
+		System.setProperty(Config.SYSTEM_PROPERTY_PREFIX + FilePaddingLengthRandom.LengthCategory._10M.getConfigPropertyKey(), "94");
+		System.setProperty(Config.SYSTEM_PROPERTY_PREFIX + FilePaddingLengthRandom.LengthCategory._100M.getConfigPropertyKey(), "6");
+		System.setProperty(Config.SYSTEM_PROPERTY_PREFIX + FilePaddingLengthRandom.LengthCategory._1G.getConfigPropertyKey(), "4");
+		System.setProperty(Config.SYSTEM_PROPERTY_PREFIX + FilePaddingLengthRandom.LengthCategory._10G.getConfigPropertyKey(), "0");
+
 		FilePaddingLengthRandom random = new FilePaddingLengthRandom(Config.getInstance());
 		final int invocationCount = 500000;
 

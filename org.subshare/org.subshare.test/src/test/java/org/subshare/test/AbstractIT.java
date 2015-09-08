@@ -24,6 +24,8 @@ import org.subshare.core.user.User;
 import org.subshare.core.user.UserRegistry;
 import org.subshare.core.user.UserRegistryImpl;
 import org.subshare.core.user.UserRepoKeyRing;
+import org.subshare.local.FilePaddingLengthRandom;
+import org.subshare.local.FilePaddingLengthRandom.LengthCategory;
 import org.subshare.rest.client.locker.transport.RestLockerTransportFactory;
 import org.subshare.rest.client.pgp.transport.RestPgpTransportFactory;
 import org.subshare.rest.client.transport.CryptreeRestRepoTransportFactoryImpl;
@@ -82,8 +84,11 @@ public abstract class AbstractIT {
 
 	@BeforeClass
 	public static void abstractIT_beforeClass() {
-		System.setProperty(Config.SYSTEM_PROPERTY_PREFIX + "filePaddingLengthProbability[1G]", "0");
-		System.setProperty(Config.SYSTEM_PROPERTY_PREFIX + "filePaddingLengthProbability[10G]", "0");
+		// In order to make sure our tests are not unnecesarily slowed down, we set everything above 10M to 0:
+		for (LengthCategory lengthCategory : FilePaddingLengthRandom.LengthCategory.values()) {
+			if (lengthCategory.ordinal() > FilePaddingLengthRandom.LengthCategory._10M.ordinal())
+				System.setProperty(Config.SYSTEM_PROPERTY_PREFIX + lengthCategory.getConfigPropertyKey(), "0");
+		}
 
 		if (subShareServerTestSupport.beforeClass()) {
 			// *IMPORTANT* We run *all* tests in parallel in the same JVM. Therefore, we must - in this entire project - *not*
@@ -105,8 +110,8 @@ public abstract class AbstractIT {
 
 	@AfterClass
 	public static void abstractIT_afterClass() {
-		System.getProperties().remove(Config.SYSTEM_PROPERTY_PREFIX + "filePaddingLengthProbability[1G]");
-		System.getProperties().remove(Config.SYSTEM_PROPERTY_PREFIX + "filePaddingLengthProbability[10G]");
+		for (LengthCategory lengthCategory : FilePaddingLengthRandom.LengthCategory.values())
+			System.getProperties().remove(Config.SYSTEM_PROPERTY_PREFIX + lengthCategory.getConfigPropertyKey());
 
 		if (subShareServerTestSupport.afterClass()) {
 			CryptreeRestRepoTransportFactoryImpl f = cryptreeRepoTransportFactory;

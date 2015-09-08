@@ -14,11 +14,11 @@ public class FilePaddingLengthRandom {
 
 	private static final int[] defaultLengthProbability = {
 		600, // ‰ 100K
-		295, // ‰   1M
-		 94, // ‰  10M
-		  6, // ‰ 100M
-		  4, // ‰   1G
-		  1  // ‰  10G
+		310, // ‰   1M
+		 90, // ‰  10M
+		  0, // ‰ 100M
+		  0, // ‰   1G
+		  0  // ‰  10G
 	};
 
 	private int[] lengthProbability;
@@ -26,7 +26,7 @@ public class FilePaddingLengthRandom {
 
 	private static SecureRandom random = KeyFactory.secureRandom;
 
-	protected static enum LengthCategory {
+	public static enum LengthCategory {
 		_100K(0L, 100L * 1024L),
 		_1M(100L * 1024L, 1024L * 1024L),
 		_10M(1024L * 1024L, 10L * 1024L * 1024L),
@@ -56,6 +56,11 @@ public class FilePaddingLengthRandom {
 
 			return name().substring(1);
 		}
+
+		public String getConfigPropertyKey() {
+			final String key = String.format("filePaddingLengthProbability[%s]", getCategoryId());
+			return key;
+		}
 	}
 
 	static {
@@ -79,7 +84,7 @@ public class FilePaddingLengthRandom {
 
 		lengthProbabilitySum = 0; // should be 100, but maybe the user uses per-mille or simply screwed it up ;-) we can cope with everything > 0
 		for (final LengthCategory lengthCategory : LengthCategory.values()) {
-			final String key = String.format("filePaddingLengthProbability[%s]", lengthCategory.getCategoryId());
+			final String key = lengthCategory.getConfigPropertyKey();
 			final int probability = config.getPropertyAsPositiveOrZeroInt(key, defaultLengthProbability[lengthCategory.ordinal()]);
 			lengthProbability[lengthCategory.ordinal()] = probability;
 			lengthProbabilitySum += probability;
