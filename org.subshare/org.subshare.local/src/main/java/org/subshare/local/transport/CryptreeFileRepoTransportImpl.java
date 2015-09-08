@@ -117,7 +117,7 @@ public class CryptreeFileRepoTransportImpl extends FileRepoTransport implements 
 			}
 
 			final SsNormalFile normalFile = (SsNormalFile) repoFile;
-			normalFile.setPaddingLength(fromNormalFileDto.getPaddingLength());
+			normalFile.setLengthWithPadding(fromNormalFileDto.getLengthWithPadding());
 
 			final Map<Long, SsFileChunk> offset2FileChunk = new HashMap<>(normalFile.getFileChunks().size());
 			for (FileChunk fc : normalFile.getFileChunks())
@@ -125,7 +125,10 @@ public class CryptreeFileRepoTransportImpl extends FileRepoTransport implements 
 
 			for (final FileChunkDto fcDto : fromNormalFileDto.getFileChunkDtos()) {
 				SsFileChunkDto fileChunkDto = (SsFileChunkDto) fcDto;
-				if (fileChunkDto.getPaddingLength() <= 0 || fileChunkDto.getLength() > 0)
+
+				// If there is at least 1 byte of real data, the SHA1 (as well as the entire FileChunk object)
+				// is created from it and we don't need to store the FileChunk we received from the other side.
+				if (fileChunkDto.getLength() > 0)
 					continue;
 
 				boolean isNew = false;
@@ -138,7 +141,7 @@ public class CryptreeFileRepoTransportImpl extends FileRepoTransport implements 
 				}
 				fileChunk.makeWritable();
 				fileChunk.setLength(fileChunkDto.getLength());
-				fileChunk.setPaddingLength(fileChunkDto.getPaddingLength());
+				fileChunk.setLengthWithPadding(fileChunkDto.getLengthWithPadding());
 				fileChunk.setSha1(fileChunkDto.getSha1());
 				fileChunk.makeReadOnly();
 

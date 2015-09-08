@@ -101,8 +101,8 @@ public class SsLocalRepoSync extends LocalRepoSync {
 		assertNotNull("monitor", monitor);
 
 		SsNormalFile nf = (SsNormalFile) normalFile;
-		if (nf.getPaddingLength() < 0)
-			initPaddingLength(nf);
+		if (nf.getLengthWithPadding() < nf.getLength())
+			assignLengthWithPadding(nf);
 
 		final PersistenceManager pm = ((ContextWithPersistenceManager) transaction).getPersistenceManager();
 		pm.getFetchPlan().setGroups(FetchPlan.DEFAULT);
@@ -118,12 +118,10 @@ public class SsLocalRepoSync extends LocalRepoSync {
 
 		SsFileChunk lastNewFileChunk = null;
 
-		final long filePaddingLength = nf.getPaddingLength();
+		final long fileNoPaddingLength = nf.getLength();
+		final long fileWithPaddingLength = nf.getLengthWithPadding();
+		final long filePaddingLength = fileWithPaddingLength - fileNoPaddingLength;
 		if (filePaddingLength > 0) {
-			final long fileNoPaddingLength = nf.getLength();
-			final long fileWithPaddingLength = fileNoPaddingLength + filePaddingLength;
-//			nf.setLength(fileWithPaddingLength); // padding NOT INCLUDED (anymore)!!!
-
 			for (FileChunk fileChunk : nf.getFileChunks()) {
 				if (lastNewFileChunk == null || lastNewFileChunk.getOffset() < fileChunk.getOffset())
 					lastNewFileChunk = (SsFileChunk) fileChunk;
@@ -135,12 +133,10 @@ public class SsLocalRepoSync extends LocalRepoSync {
 
 			lastNewFileChunk.makeWritable();
 			int chunkWithPaddingLength = (int) Math.min(FileChunkDto.MAX_LENGTH, fileWithPaddingLength - offset);
-			int chunkPaddingLength = chunkWithPaddingLength - lastNewFileChunk.getLength();
-			lastNewFileChunk.setPaddingLength(chunkPaddingLength);
-//			lastNewFileChunk.setLength(chunkWithPaddingLength); // padding NOT INCLUDED (anymore)!!!
+			lastNewFileChunk.setLengthWithPadding(chunkWithPaddingLength);
 			lastNewFileChunk.makeReadOnly();
 
-			offset = lastNewFileChunk.getOffset() + lastNewFileChunk.getLength() + lastNewFileChunk.getPaddingLength();
+			offset = lastNewFileChunk.getOffset() + lastNewFileChunk.getLengthWithPadding();
 			while (offset < fileWithPaddingLength) {
 				chunkWithPaddingLength = (int) Math.min(FileChunkDto.MAX_LENGTH, fileWithPaddingLength - offset);
 
@@ -150,19 +146,26 @@ public class SsLocalRepoSync extends LocalRepoSync {
 				else {
 					fileChunk.makeWritable();
 					fileChunk.setRepoFile(nf);
-					if (fileChunk.getPaddingLength() != chunkWithPaddingLength || fileChunk.getLength() != 0) {
+					if (fileChunk.getLengthWithPadding() != chunkWithPaddingLength || fileChunk.getLength() != 0) {
 						fileChunk.setSha1(createRandomSha1());
-						fileChunk.setPaddingLength(chunkWithPaddingLength);
-						fileChunk.setLength(0); // padding NOT INCLUDED (anymore)!!!
+						fileChunk.setLengthWithPadding(chunkWithPaddingLength);
+						fileChunk.setLength(0); // padding NOT INCLUDED!!!
 					}
 					fileChunk.makeReadOnly();
 				}
 				nf.getFileChunks().add(fileChunk);
 
 				lastNewFileChunk = fileChunk;
-				offset = lastNewFileChunk.getOffset() + lastNewFileChunk.getLength() + lastNewFileChunk.getPaddingLength();
+				offset = lastNewFileChunk.getOffset() + lastNewFileChunk.getLengthWithPadding();
 			}
 		}
+	}
+
+	@Override
+	protected void onFinalizeFileChunk(FileChunk fileChunk) {
+		super.onFinalizeFileChunk(fileChunk);
+		final SsFileChunk fc = (SsFileChunk) fileChunk;
+		fc.setLengthWithPadding(fc.getLength());
 	}
 
 	private SsFileChunk createPaddingFileChunk(final SsNormalFile normalFile, final long offset, final int paddingLength) {
@@ -171,7 +174,7 @@ public class SsLocalRepoSync extends LocalRepoSync {
 		fileChunk.setRepoFile(normalFile);
 		fileChunk.setOffset(offset);
 		fileChunk.setSha1(createRandomSha1());
-		fileChunk.setPaddingLength(paddingLength);
+		fileChunk.setLengthWithPadding(paddingLength);
 		fileChunk.setLength(0); // padding NOT INCLUDED (anymore)!!!
 		return fileChunk;
 	}
@@ -183,11 +186,11 @@ public class SsLocalRepoSync extends LocalRepoSync {
 		return sha1;
 	}
 
-	private void initPaddingLength(final SsNormalFile normalFile) {
+	private void assignLengthWithPadding(final SsNormalFile normalFile) {
 		final File file = normalFile.getFile(localRoot);
 		final FilePaddingLengthRandom filePaddingLengthRandom = new FilePaddingLengthRandom(file);
 		final long paddingLength = filePaddingLengthRandom.nextPaddingLength();
-		normalFile.setPaddingLength(paddingLength);
+		normalFile.setLengthWithPadding(normalFile.getLength() + paddingLength);
 	}
 
 	@Override

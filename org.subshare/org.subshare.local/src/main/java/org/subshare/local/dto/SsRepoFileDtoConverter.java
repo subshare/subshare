@@ -26,7 +26,7 @@ public class SsRepoFileDtoConverter extends RepoFileDtoConverter {
 		if (repoFile instanceof NormalFile) {
 			SsNormalFile normalFile = (SsNormalFile) repoFile;
 			SsNormalFileDto normalFileDto = (SsNormalFileDto) ssrfDto;
-			normalFileDto.setPaddingLength(normalFile.getPaddingLength());
+			normalFileDto.setLengthWithPadding(normalFile.getLengthWithPadding());
 		}
 
 		ssrfDto.setParentName(repoFile.getParent() == null ? null : repoFile.getParent().getName());

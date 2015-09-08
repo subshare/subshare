@@ -14,24 +14,25 @@ import co.codewizards.cloudstore.local.persistence.FileChunk;
 @Discriminator(strategy = DiscriminatorStrategy.VALUE_MAP, value = "SsFileChunk")
 public class SsFileChunk extends FileChunk {
 
-	@Column(defaultValue = "0")
-	private int paddingLength;
+	@Column(defaultValue = "-1")
+	private int lengthWithPadding = -1;
 
 	/**
-	 * Gets the number of padding bytes.
+	 * Gets the length of the chunk with padding bytes.
 	 * <p>
-	 * On the server, this is always 0. This is only managed on the client and then transferred inside the
+	 * On the server, this is always -1. This is only managed on the client and then transferred inside the
 	 * encrypted DTO (in {@link CryptoRepoFile#getRepoFileDtoData() CryptoRepoFile.repoFileDtoData}) to the server.
 	 * <p>
-	 * <b>Important:</b> The chunk's length is updated by CSX to include this padding!
-	 * @return the number of padding bytes.
+	 * {@link #getLength() length} does not include the padding on the client-side - on the server-side, however,
+	 * {@code length} includes the padding.
+	 * @return the length of the chunk including both payload and padding bytes. Always -1 on the server-side.
 	 */
-	public int getPaddingLength() {
-		return paddingLength;
+	public int getLengthWithPadding() {
+		return lengthWithPadding;
 	}
 
-	public void setPaddingLength(int paddingLength) {
-		this.paddingLength = paddingLength;
+	public void setLengthWithPadding(int lengthWithPadding) {
+		this.lengthWithPadding = lengthWithPadding;
 	}
 
 	@Override

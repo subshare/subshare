@@ -108,7 +108,7 @@ public class RepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 
 							assertThat(normalFileDest.getName()).isEqualTo(normalFileSrc.getName());
 							assertThat(normalFileDest.getSha1()).isEqualTo(normalFileSrc.getSha1());
-							assertThat(normalFileDest.getPaddingLength()).isEqualTo(normalFileSrc.getPaddingLength());
+							assertThat(normalFileDest.getLengthWithPadding()).isEqualTo(normalFileSrc.getLengthWithPadding());
 							assertThat(normalFileDest.getFileChunks().size()).isEqualTo(normalFileSrc.getFileChunks().size());
 
 							Map<Long, SsFileChunk> offset2FileChunkSrc = new HashMap<>();
@@ -127,7 +127,7 @@ public class RepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 								SsFileChunk fileChunkDest = offset2FileChunkDest.get(fileChunkSrc.getOffset());
 								assertThat(fileChunkDest).isNotNull();
 								assertThat(fileChunkDest.getLength()).isEqualTo(fileChunkSrc.getLength());
-								assertThat(fileChunkDest.getPaddingLength()).isEqualTo(fileChunkSrc.getPaddingLength());
+								assertThat(fileChunkDest.getLengthWithPadding()).isEqualTo(fileChunkSrc.getLengthWithPadding());
 								assertThat(fileChunkDest.getSha1()).isEqualTo(fileChunkSrc.getSha1());
 							}
 						};

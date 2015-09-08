@@ -16,7 +16,7 @@ public class SsFileChunkDtoConverter extends FileChunkDtoConverter {
 	public FileChunkDto toFileChunkDto(FileChunk _fileChunk) {
 		final SsFileChunkDto fileChunkDto = (SsFileChunkDto) super.toFileChunkDto(_fileChunk);
 		final SsFileChunk fileChunk = (SsFileChunk) _fileChunk;
-		fileChunkDto.setPaddingLength(fileChunk.getPaddingLength());
+		fileChunkDto.setLengthWithPadding(fileChunk.getLengthWithPadding());
 		return fileChunkDto;
 	}
 }

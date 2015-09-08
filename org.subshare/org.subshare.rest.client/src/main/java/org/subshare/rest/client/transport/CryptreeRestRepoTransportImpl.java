@@ -523,7 +523,7 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 			final String serverPath = cryptree.getServerPath(path);
 			final SsNormalFileDto serverNormalFileDto = createNormalFileDtoForPutFile(
 					cryptree, path, serverPath,
-					fromNormalFileDto.getLength() + assertNotNegative(fromNormalFileDto.getPaddingLength()) );
+					assertNotNegative(fromNormalFileDto.getLengthWithPadding()) );
 			getClient().execute(new SsBeginPutFile(getRepositoryId().toString(), serverPath, serverNormalFileDto));
 
 			transaction.commit();
@@ -595,7 +595,7 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 			final String serverPath = cryptree.getServerPath(path);
 			final SsNormalFileDto serverNormalFileDto = createNormalFileDtoForPutFile(
 					cryptree, path, serverPath,
-					fromNormalFileDto.getLength() + assertNotNegative(((SsNormalFileDto) fromNormalFileDto).getPaddingLength()) );
+					assertNotNegative(((SsNormalFileDto) fromNormalFileDto).getLengthWithPadding()) );
 
 			RepoFileDtoWithCryptoRepoFileOnServerDto rfdwcrfosd = new RepoFileDtoWithCryptoRepoFileOnServerDto();
 

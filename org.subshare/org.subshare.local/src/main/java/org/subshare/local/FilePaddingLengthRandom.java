@@ -13,12 +13,12 @@ public class FilePaddingLengthRandom {
 	private final Config config;
 
 	private static final int[] defaultLengthProbability = {
-		400, // ‰ 100K
-		394, // ‰   1M
-		190, // ‰  10M
-		 10, // ‰ 100M
+		600, // ‰ 100K
+		295, // ‰   1M
+		 94, // ‰  10M
+		  6, // ‰ 100M
 		  4, // ‰   1G
-		  2  // ‰  10G
+		  1  // ‰  10G
 	};
 
 	private int[] lengthProbability;

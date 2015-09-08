@@ -35,7 +35,7 @@ public class SsNormalFile extends NormalFile implements SsRepoFile {
 	private SignatureImpl signature;
 
 	@Column(defaultValue = "-1")
-	private long paddingLength = -1;
+	private long lengthWithPadding = -1;
 
 	@Override
 	public String getSignedDataType() {
@@ -68,19 +68,20 @@ public class SsNormalFile extends NormalFile implements SsRepoFile {
 	}
 
 	/**
-	 * Gets the number of padding bytes.
+	 * Gets the length of the file with padding bytes.
 	 * <p>
 	 * On the server, this is always -1. This is only managed on the client and then transferred inside the
 	 * encrypted DTO (in {@link CryptoRepoFile#getRepoFileDtoData() CryptoRepoFile.repoFileDtoData}) to the server.
 	 * <p>
-	 * <b>Important:</b> The file length is updated by CSX to include this padding!
-	 * @return the number of padding bytes.
+	 * {@link #getLength() length} does not include the padding on the client-side - on the server-side, however,
+	 * {@code length} includes the padding.
+	 * @return the length of the file including both payload and padding bytes. Always -1 on the server-side.
 	 */
-	public long getPaddingLength() {
-		return paddingLength;
+	public long getLengthWithPadding() {
+		return lengthWithPadding;
 	}
-	public void setPaddingLength(long paddingLength) {
-		this.paddingLength = paddingLength;
+	public void setLengthWithPadding(long lengthWithPadding) {
+		this.lengthWithPadding = lengthWithPadding;
 	}
 
 	@Override

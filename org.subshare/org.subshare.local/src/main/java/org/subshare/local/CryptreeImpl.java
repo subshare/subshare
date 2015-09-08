@@ -455,7 +455,7 @@ public class CryptreeImpl extends AbstractCryptree {
 				final SsNormalFile normalFile = createObject(SsNormalFile.class);
 				result = normalFile;
 				normalFile.setLength(normalFileDto.getLength());
-				normalFile.setPaddingLength(normalFileDto.getPaddingLength());
+				normalFile.setLengthWithPadding(normalFileDto.getLengthWithPadding());
 				normalFile.setSha1(normalFileDto.getSha1());
 			}
 			else if (decryptedRepoFileDto instanceof DirectoryDto) {

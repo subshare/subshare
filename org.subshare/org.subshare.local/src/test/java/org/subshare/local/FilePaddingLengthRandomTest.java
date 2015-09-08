@@ -49,12 +49,12 @@ public class FilePaddingLengthRandomTest {
 
 		System.out.println("lengthCategory2HitPercentage: " + lengthCategory2HitPermille);
 
-		assertThat(lengthCategory2HitPermille.get(FilePaddingLengthRandom.LengthCategory._100K)).isBetween(399, 401);
-		assertThat(lengthCategory2HitPermille.get(FilePaddingLengthRandom.LengthCategory._1M)).isBetween(393, 395);
-		assertThat(lengthCategory2HitPermille.get(FilePaddingLengthRandom.LengthCategory._10M)).isBetween(189, 191);
-		assertThat(lengthCategory2HitPermille.get(FilePaddingLengthRandom.LengthCategory._100M)).isBetween(9, 11);
+		assertThat(lengthCategory2HitPermille.get(FilePaddingLengthRandom.LengthCategory._100K)).isBetween(599, 601);
+		assertThat(lengthCategory2HitPermille.get(FilePaddingLengthRandom.LengthCategory._1M)).isBetween(294, 296);
+		assertThat(lengthCategory2HitPermille.get(FilePaddingLengthRandom.LengthCategory._10M)).isBetween(93, 95);
+		assertThat(lengthCategory2HitPermille.get(FilePaddingLengthRandom.LengthCategory._100M)).isBetween(5, 7);
 		assertThat(lengthCategory2HitPermille.get(FilePaddingLengthRandom.LengthCategory._1G)).isBetween(3, 5);
-		assertThat(lengthCategory2HitPermille.get(FilePaddingLengthRandom.LengthCategory._10G)).isBetween(1, 3);
+		assertThat(lengthCategory2HitPermille.get(FilePaddingLengthRandom.LengthCategory._10G)).isBetween(0, 2);
 	}
 
 	protected FilePaddingLengthRandom.LengthCategory getLengthCategory(long paddingLength) {

@@ -82,6 +82,9 @@ public abstract class AbstractIT {
 
 	@BeforeClass
 	public static void abstractIT_beforeClass() {
+		System.setProperty(Config.SYSTEM_PROPERTY_PREFIX + "filePaddingLengthProbability[1G]", "0");
+		System.setProperty(Config.SYSTEM_PROPERTY_PREFIX + "filePaddingLengthProbability[10G]", "0");
+
 		if (subShareServerTestSupport.beforeClass()) {
 			// *IMPORTANT* We run *all* tests in parallel in the same JVM. Therefore, we must - in this entire project - *not*
 			// set any other dynamicX509TrustManagerCallbackClass!!! This setting is JVM-wide!
@@ -102,6 +105,9 @@ public abstract class AbstractIT {
 
 	@AfterClass
 	public static void abstractIT_afterClass() {
+		System.getProperties().remove(Config.SYSTEM_PROPERTY_PREFIX + "filePaddingLengthProbability[1G]");
+		System.getProperties().remove(Config.SYSTEM_PROPERTY_PREFIX + "filePaddingLengthProbability[10G]");
+
 		if (subShareServerTestSupport.afterClass()) {
 			CryptreeRestRepoTransportFactoryImpl f = cryptreeRepoTransportFactory;
 			cryptreeRepoTransportFactory = null;

@@ -87,7 +87,7 @@ public class SsRepoToRepoSync extends RepoToRepoSync {
 		final byte[] fileDataNoPadding;
 		if (toRepoTransport instanceof CryptreeRestRepoTransport) {
 			fileDataNoPadding = fileData;
-			fileData = addPadding(fileData, fcDto.getPaddingLength());
+			fileData = addPadding(fileData, assertNotNegative(fcDto.getLengthWithPadding()) - fcDto.getLength());
 		}
 		else if (fromRepoTransport instanceof CryptreeRestRepoTransport) {
 			fileData = removePadding(fileData);
@@ -105,7 +105,13 @@ public class SsRepoToRepoSync extends RepoToRepoSync {
 		}
 
 		return fileData;
+	}
 
+	protected static int assertNotNegative(final int value) {
+		if (value < 0)
+			throw new IllegalArgumentException("value < 0");
+
+		return value;
 	}
 
 	private static final int chunkPayloadLengthBytesLength = 4;

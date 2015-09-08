@@ -7,13 +7,13 @@ import co.codewizards.cloudstore.core.dto.FileChunkDto;
 @XmlRootElement
 public class SsFileChunkDto extends FileChunkDto {
 
-	private int paddingLength = -1;
+	private int lengthWithPadding = -1;
 
-	public int getPaddingLength() {
-		return paddingLength;
+	public int getLengthWithPadding() {
+		return lengthWithPadding;
 	}
 
-	public void setPaddingLength(int paddingLength) {
-		this.paddingLength = paddingLength;
+	public void setLengthWithPadding(int lengthWithPadding) {
+		this.lengthWithPadding = lengthWithPadding;
 	}
 }
