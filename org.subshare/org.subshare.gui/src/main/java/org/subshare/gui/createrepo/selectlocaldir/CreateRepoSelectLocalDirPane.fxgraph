@@ -1,0 +1,35 @@
+package org.subshare.gui.createrepo.selectlocaldir
+
+import javafx.scene.layout.GridPane
+import org.subshare.gui.filetree.FileTreePane
+import javafx.scene.text.Text
+import javafx.geometry.Insets
+
+dynamic component CreateRepoSelectLocalDirPane resourcefile 'messages.properties' {
+	GridPane {
+		hgap : 8,
+		vgap : 8,
+		padding : Insets { left : 8, top : 8, right : 8, bottom : 8 },
+
+		children : [
+			Text id headerText {
+				text : rstring 'CreateRepoSelectLocalDirPane.headerText.text',
+				wrappingWidth : 500,
+				static columnIndex : 0,
+				static rowIndex : 0,
+				static columnSpan : 3,
+				static hgrow : "ALWAYS"
+			},
+
+			FileTreePane id fileTreePane {
+				useCase : "createRepoSelectLocalDir",
+				selectionMode: "SINGLE",
+
+				static columnIndex : 0,
+				static rowIndex : 1,
+				static hgrow : "ALWAYS",
+				static vgrow : "ALWAYS"
+			}	
+		]
+	}
+}

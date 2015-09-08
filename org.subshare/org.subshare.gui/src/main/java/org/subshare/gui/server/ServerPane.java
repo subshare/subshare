@@ -1,7 +1,6 @@
 package org.subshare.gui.server;
 
 import static co.codewizards.cloudstore.core.bean.PropertyChangeListenerUtil.*;
-import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
 import static org.subshare.gui.util.FxmlUtil.*;
@@ -29,25 +28,16 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.GridPane;
-import javafx.stage.DirectoryChooser;
 
-import org.subshare.core.pgp.PgpKeyId;
 import org.subshare.core.repo.ServerRepo;
 import org.subshare.core.repo.ServerRepoRegistry;
 import org.subshare.core.server.Server;
-import org.subshare.core.user.User;
-import org.subshare.core.user.UserRegistry;
 import org.subshare.gui.checkout.CheckOutWizard;
 import org.subshare.gui.concurrent.SsTask;
-import org.subshare.gui.ls.PgpPrivateKeyPassphraseManagerLs;
-import org.subshare.gui.ls.RepoSyncDaemonLs;
-import org.subshare.gui.ls.ServerRepoManagerLs;
+import org.subshare.gui.createrepo.CreateRepoData;
+import org.subshare.gui.createrepo.CreateRepoWizard;
 import org.subshare.gui.ls.ServerRepoRegistryLs;
-import org.subshare.gui.ls.UserRegistryLs;
-import org.subshare.gui.selectuser.SelectUserDialog;
-
-import co.codewizards.cloudstore.core.oio.File;
-import co.codewizards.cloudstore.core.repo.sync.RepoSyncDaemon;
+import org.subshare.gui.wizard.WizardDialog;
 
 public class ServerPane extends GridPane {
 
@@ -57,9 +47,6 @@ public class ServerPane extends GridPane {
 
 	@FXML
 	private Button createRepositoryButton;
-
-//	@FXML
-//	private Button syncButton;
 
 	@FXML
 	private Button checkOutButton;
@@ -88,22 +75,6 @@ public class ServerPane extends GridPane {
 			addOrRemoveItemTablesViewCallback(serverRepos);
 		}
 	};
-
-//	private PropertyChangeListener serverRepoPropertyChangeListener = new PropertyChangeListener() {
-//		@Override
-//		public void propertyChange(final PropertyChangeEvent evt) {
-//			Platform.runLater(new Runnable() {
-//				@Override
-//				public void run() {
-////					final ServerRepo serverRepo = (ServerRepo) evt.getSource();
-//					// workaround for refresh bug
-//					List<TableColumn<ServerRepoListItem, ?>> columns = new ArrayList<>(tableView.getColumns());
-//					tableView.getColumns().clear();
-//					tableView.getColumns().addAll(columns);
-//				}
-//			});
-//		}
-//	};
 
 	public ServerPane(final Server server) {
 		this.server = assertNotNull("server", server);
@@ -191,57 +162,16 @@ public class ServerPane extends GridPane {
 		if (serverRepoRegistry == null) {
 			serverRepoRegistry = ServerRepoRegistryLs.getServerRepoRegistry();
 			addWeakPropertyChangeListener(serverRepoRegistry, ServerRepoRegistry.PropertyEnum.serverRepos, serverReposPropertyChangeListener);
-//			addWeakPropertyChangeListener(serverRepoRegistry, ServerRepoRegistry.PropertyEnum.serverRepos_serverRepo, serverRepoPropertyChangeListener);
 		}
 		return serverRepoRegistry;
 	}
 
-
-	@Override
-	protected void finalize() throws Throwable {
-//		final ServerRepoRegistry serverRepoRegistry = this.serverRepoRegistry;
-//		if (serverRepoRegistry != null) {
-//			serverRepoRegistry.removePropertyChangeListener(ServerRepoRegistry.PropertyEnum.serverRepos, serverReposPropertyChangeListener);
-//			serverRepoRegistry.removePropertyChangeListener(ServerRepoRegistry.PropertyEnum.serverRepos_serverRepo, serverRepoPropertyChangeListener);
-//		}
-		super.finalize();
-	}
-
 	@FXML
 	private void createRepositoryButtonClicked(final ActionEvent event) {
-		final File directory = selectLocalDirectory("Select local directory to be shared (upload).");
-		if (directory == null)
-			return;
-
-		final Set<PgpKeyId> pgpKeyIds = PgpPrivateKeyPassphraseManagerLs.getPgpPrivateKeyPassphraseStore().getPgpKeyIdsHavingPassphrase();
-		if (pgpKeyIds.isEmpty())
-			throw new IllegalStateException("There is no PGP private key unlocked."); // TODO show nice message and ask the user, if he would like to unlock.
-
-		final UserRegistry userRegistry = UserRegistryLs.getUserRegistry();
-		final Collection<User> users = userRegistry.getUsersByPgpKeyIds(pgpKeyIds);
-
-		if (users.isEmpty())
-			throw new IllegalStateException("There is no user for any of these PGP keys: " + pgpKeyIds); // TODO should we ask to unlock (further) PGP keys?
-
-		final User owner;
-		if (users.size() == 1)
-			owner = users.iterator().next();
-		else {
-			owner = selectOwner(new ArrayList<>(users));
-			if (owner == null)
-				return; // user cancelled the selection dialog.
-		}
-
-		// TODO do this in the background!
-		ServerRepoManagerLs.getServerRepoManager().createRepository(directory, server, owner);
-
-		// ...immediately sync after creation. This happens in the background (this method is non-blocking).
-		final RepoSyncDaemon repoSyncDaemon = RepoSyncDaemonLs.getRepoSyncDaemon();
-		repoSyncDaemon.startSync(directory);
-
-		// TO DO really create the repo on the server! => DONE!
-		// TODO 2: need to verify, if server-URLs and repos really exist! Maybe show an error marker in the UI, if there's a problem (might be temporary!)
-		// TODO 3: and maybe switch from UUID to Uid?!
+		final CreateRepoData createRepoData = new CreateRepoData(server);
+		final CreateRepoWizard wizard = new CreateRepoWizard(createRepoData);
+		final WizardDialog dialog = new WizardDialog(getScene().getWindow(), wizard);
+		dialog.show();
 	}
 
 	@FXML
@@ -256,21 +186,5 @@ public class ServerPane extends GridPane {
 		// TODO find out all local repositories that are connected to the server repositories and sync them!
 		for (ServerRepoListItem item : tableView.getSelectionModel().getSelectedItems())
 			item.getServerRepo().getRepositoryId();
-	}
-
-	private User selectOwner(final List<User> users) {
-		SelectUserDialog dialog = new SelectUserDialog(getScene().getWindow(), users, null, SelectionMode.SINGLE,
-				"There are multiple users in the user database having an unlocked private PGP key.\n\nPlease select the user who should become the owner of the new repository.");
-		dialog.showAndWait();
-		final List<User> selectedUsers = dialog.getSelectedUsers();
-		return selectedUsers == null || selectedUsers.isEmpty() ? null : selectedUsers.get(0);
-	}
-
-	private File selectLocalDirectory(final String title) {
-		// TODO implement our own directory-selection-dialog which allows for showing some more information to the user.
-		final DirectoryChooser directoryChooser = new DirectoryChooser();
-		directoryChooser.setTitle(title);
-		final java.io.File directory = directoryChooser.showDialog(getScene().getWindow());
-		return directory == null ? null : createFile(directory).getAbsoluteFile();
 	}
 }

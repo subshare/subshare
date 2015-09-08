@@ -32,8 +32,8 @@ public abstract class SelectUserPaneWithButtonBar extends GridPane {
 		loadDynamicComponentFxml(SelectUserPaneWithButtonBar.class, this);
 		selectUserPane = new SelectUserPane(users, selectedUsers, selectionMode, headerText) {
 			@Override
-			protected void updateDisable() {
-				super.updateDisable();
+			protected void updateComplete() {
+				super.updateComplete();
 				okButton.setDisable(getSelectedUsers().isEmpty());
 			}
 		};

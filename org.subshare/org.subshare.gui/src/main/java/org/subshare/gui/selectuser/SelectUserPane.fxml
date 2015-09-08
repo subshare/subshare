@@ -15,7 +15,7 @@
 <?import javafx.scene.text.Text?>
 <?scenebuilder-preview-i18n-resource messages.properties?>
 
-<fx:root xmlns:fx="http://javafx.com/fxml" type="GridPane">
+<fx:root xmlns:fx="http://javafx.com/fxml" type="GridPane" hgap="8" vgap="8">
 
 	<Text fx:id="headerText" wrappingWidth="500" GridPane.columnIndex="0" GridPane.rowIndex="0"/> 
 	<HBox GridPane.columnIndex="0" GridPane.rowIndex="1"> 
@@ -48,4 +48,7 @@
 			</TableColumn>
 		</columns>
 	</TableView>
+	<padding>
+		<Insets left="8" top="8" right="8" bottom="8"/> 
+	</padding>
 </fx:root>

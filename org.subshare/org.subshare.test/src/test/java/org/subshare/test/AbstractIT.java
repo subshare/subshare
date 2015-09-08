@@ -84,7 +84,7 @@ public abstract class AbstractIT {
 
 	@BeforeClass
 	public static void abstractIT_beforeClass() {
-		// In order to make sure our tests are not unnecesarily slowed down, we set everything above 10M to 0:
+		// In order to make sure our tests are not unnecessarily slowed down, we set everything above 10M to 0:
 		for (LengthCategory lengthCategory : FilePaddingLengthRandom.LengthCategory.values()) {
 			if (lengthCategory.ordinal() > FilePaddingLengthRandom.LengthCategory._10M.ordinal())
 				System.setProperty(Config.SYSTEM_PROPERTY_PREFIX + lengthCategory.getConfigPropertyKey(), "0");

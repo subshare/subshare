@@ -130,8 +130,13 @@ public class MetaOnlyRepoManagerImpl implements MetaOnlyRepoManager {
 		return remoteRoot;
 	}
 
+	@Override
+	public File getBaseDir() {
+		return createFile(ConfigDir.getInstance().getFile(), "metaOnlyRepo");
+	}
+
 	private File getLocalRoot(final ServerRepo serverRepo) {
-		return createFile(ConfigDir.getInstance().getFile(), "metaOnlyRepo",
+		return createFile(getBaseDir(),
 				serverRepo.getServerId().toString(), serverRepo.getRepositoryId().toString());
 	}
 

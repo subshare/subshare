@@ -128,6 +128,9 @@ public class FileTreeItem<T> extends TreeItem<FileTreeItem<?>> {
 		if (! file.isAbsolute())
 			throw new IllegalArgumentException("file not absolute!");
 
+		// TODO we should avoid loading all children! we should check by a path-test whether
+		// this is actually possible before we dive into the children. strange though - I thought
+		// I had already done this...
 		for (final TreeItem<FileTreeItem<?>> child : getChildren()) {
 			final FileTreeItem<?> treeItem = child.getValue().findFirst(file);
 			if (treeItem != null)

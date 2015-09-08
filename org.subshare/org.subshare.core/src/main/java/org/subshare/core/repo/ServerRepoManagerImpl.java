@@ -10,6 +10,7 @@ import java.util.UUID;
 import javafx.util.Pair;
 
 import org.subshare.core.pgp.PgpKey;
+import org.subshare.core.repo.metaonly.MetaOnlyRepoManagerImpl;
 import org.subshare.core.repo.transport.CryptreeRestRepoTransport;
 import org.subshare.core.server.Server;
 import org.subshare.core.user.User;
@@ -94,6 +95,39 @@ public class ServerRepoManagerImpl implements ServerRepoManager {
 			final ServerRepo serverRepo = userRepoInvitationManager.importUserRepoInvitationToken(userRepoInvitationToken);
 			return serverRepo;
 		}
+	}
+
+	@Override
+	public boolean canUseLocalDirectory(final File localDirectory) {
+		assertNotNull("localDirectory", localDirectory);
+		final File localRoot = LocalRepoHelper.getLocalRootContainingFile(localDirectory);
+		if (localRoot == null) {
+			final boolean containsOtherRepo = ! LocalRepoHelper.getLocalRootsContainedInDirectory(localDirectory).isEmpty();
+			if (containsOtherRepo)
+				return false;
+
+			return ! interferesWithMetaOnlyRepoBaseDir(localDirectory);
+		}
+
+		try (final LocalRepoManager localRepoManager = LocalRepoManagerFactory.Helper.getInstance().createLocalRepoManagerForExistingRepository(localRoot);) {
+			final Map<UUID, URL> remoteRepositoryId2RemoteRootMap = localRepoManager.getRemoteRepositoryId2RemoteRootMap();
+			return remoteRepositoryId2RemoteRootMap.isEmpty();
+		}
+	}
+
+	private boolean interferesWithMetaOnlyRepoBaseDir(File localDirectory) {
+		localDirectory = localDirectory.getAbsoluteFile();
+		final File baseDir = MetaOnlyRepoManagerImpl.getInstance().getBaseDir().getAbsoluteFile();
+		if (baseDir.equals(localDirectory))
+			return true;
+
+		final String baseDirPath = baseDir.getPath() + java.io.File.separator;
+		final String localDirectoryPath = localDirectory.getPath() + java.io.File.separator;
+
+		if (baseDirPath.startsWith(localDirectoryPath))
+			return true;
+
+		return localDirectoryPath.startsWith(baseDirPath);
 	}
 
 	private Pair<File, UUID> createLocalRepository(final File localDirectory) {

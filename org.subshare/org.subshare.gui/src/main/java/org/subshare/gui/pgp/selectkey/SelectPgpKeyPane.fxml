@@ -16,45 +16,41 @@
 <?import javafx.scene.text.Text?>
 <?import org.subshare.gui.pgp.keytree.PgpKeyTreePane?>
 
-<fx:root xmlns:fx="http://javafx.com/fxml" type="GridPane" prefWidth="400" prefHeight="300">
+<fx:root xmlns:fx="http://javafx.com/fxml" type="GridPane" prefWidth="400" prefHeight="300" hgap="8" vgap="8">
 
-	<children>
-		<Text fx:id="headerText" GridPane.columnIndex="0" GridPane.rowIndex="0"/> 
-		<HBox GridPane.columnIndex="0" GridPane.rowIndex="1"> 
-			<children>
-				<Label text="Filter: "/> 
-				<TextField fx:id="filterTextField" HBox.hgrow="ALWAYS"> 
-					<HBox.margin>
-						<Insets left="4"/> 
-					</HBox.margin>
-				</TextField>
-			</children>
-			<GridPane.margin>
-				<Insets top="4" bottom="4"/> 
-			</GridPane.margin>
-		</HBox>
-		<PgpKeyTreePane fx:id="pgpKeyTreePane" GridPane.fillHeight="true" GridPane.fillWidth="true" GridPane.vgrow="ALWAYS" GridPane.hgrow="ALWAYS" GridPane.columnIndex="0" GridPane.rowIndex="2"/> 
-		<ButtonBar GridPane.vgrow="NEVER" GridPane.columnIndex="0" GridPane.rowIndex="3" GridPane.columnSpan="1"> 
-			<buttons>
-				<Button fx:id="okButton" text="OK" defaultButton="true" onAction="#okButtonClicked"> 
-					<graphic>
-						<ImageView> 
-							<image>
-								<Image url="@ok_24x24.png"/> 
-							</image>
-						</ImageView>
-					</graphic>
-				</Button>
-				<Button fx:id="cancelButton" text="Cancel" cancelButton="true" onAction="#cancelButtonClicked"> 
-					<graphic>
-						<ImageView> 
-							<image>
-								<Image url="@cancel_24x24.png"/> 
-							</image>
-						</ImageView>
-					</graphic>
-				</Button>
-			</buttons>
-		</ButtonBar>
-	</children>
+	<Text fx:id="headerText" GridPane.columnIndex="0" GridPane.rowIndex="0"/> 
+	<HBox GridPane.columnIndex="0" GridPane.rowIndex="1"> 
+		<Label text="Filter: "/> 
+		<TextField fx:id="filterTextField" HBox.hgrow="ALWAYS"> 
+			<HBox.margin>
+				<Insets left="4"/> 
+			</HBox.margin>
+		</TextField>
+	</HBox>
+	<PgpKeyTreePane fx:id="pgpKeyTreePane" GridPane.fillHeight="true" GridPane.fillWidth="true" GridPane.vgrow="ALWAYS" GridPane.hgrow="ALWAYS" GridPane.columnIndex="0" GridPane.rowIndex="2"/> 
+	<ButtonBar GridPane.vgrow="NEVER" GridPane.columnIndex="0" GridPane.rowIndex="3" GridPane.columnSpan="1"> 
+		<buttons>
+			<Button fx:id="okButton" text="OK" defaultButton="true" onAction="#okButtonClicked"> 
+				<graphic>
+					<ImageView> 
+						<image>
+							<Image url="@ok_24x24.png"/> 
+						</image>
+					</ImageView>
+				</graphic>
+			</Button>
+			<Button fx:id="cancelButton" text="Cancel" cancelButton="true" onAction="#cancelButtonClicked"> 
+				<graphic>
+					<ImageView> 
+						<image>
+							<Image url="@cancel_24x24.png"/> 
+						</image>
+					</ImageView>
+				</graphic>
+			</Button>
+		</buttons>
+	</ButtonBar>
+	<padding>
+		<Insets left="8" top="8" right="8" bottom="8"/> 
+	</padding>
 </fx:root>

@@ -38,7 +38,7 @@ public class SelectUserWizardPage extends WizardPage {
 				users, issueInvitationData.getInvitees(), SelectionMode.MULTIPLE,
 				Messages.getString("SelectUserWizardPage.selectUserPane.headerText")) { //$NON-NLS-1$
 			@Override
-			protected void updateDisable() {
+			protected void updateComplete() {
 				SelectUserWizardPage.this.setComplete(! issueInvitationData.getInvitees().isEmpty());
 			}
 		};

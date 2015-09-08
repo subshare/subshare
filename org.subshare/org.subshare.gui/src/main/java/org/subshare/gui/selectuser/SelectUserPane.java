@@ -92,8 +92,8 @@ public class SelectUserPane extends GridPane {
 		tableView.getSelectionModel().getSelectedItems().addListener(selectedItemsChangeListener);
 		tableView.getSelectionModel().setSelectionMode(selectionMode);
 
-		this.selectedUsers.addListener((InvalidationListener) observable -> updateDisable());
-		updateDisable();
+		this.selectedUsers.addListener((InvalidationListener) observable -> updateComplete());
+		updateComplete();
 	}
 
 	private void applyFilterLater() {
@@ -184,7 +184,7 @@ public class SelectUserPane extends GridPane {
 		}
 	};
 
-	protected void updateDisable() {
+	protected void updateComplete() {
 	}
 
 	public ObservableSet<User> getSelectedUsers() {

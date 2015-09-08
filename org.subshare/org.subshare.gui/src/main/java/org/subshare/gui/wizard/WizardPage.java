@@ -8,7 +8,6 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.event.EventHandler;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
@@ -48,11 +47,11 @@ public abstract class WizardPage extends VBox {
 	};
 
 	protected WizardPage(String title) {
-		Label label = new Label(title);
-		label.setStyle("-fx-font-weight: bold; -fx-padding: 0 0 5 0;"); //$NON-NLS-1$
+//		Label label = new Label(title);
+//		label.setStyle("-fx-font-weight: bold; -fx-padding: 0 0 5 0;"); //$NON-NLS-1$
 		setId(getClass().getSimpleName());
 		setSpacing(5);
-		setStyle("-fx-padding:10; -fx-background-color: honeydew; -fx-border-color: derive(honeydew, -30%); -fx-border-width: 3;"); //$NON-NLS-1$
+		setStyle("-fx-padding:0; -fx-background-color: honeydew; -fx-border-color: derive(honeydew, -30%); -fx-border-width: 3;"); //$NON-NLS-1$
 
 		previousButton.setOnAction(event -> getWizard().navToPreviousPage());
 		previousButton.setGraphic(new ImageView(WizardPage.class.getResource("left_24x24.png").toExternalForm())); //$NON-NLS-1$
@@ -109,7 +108,7 @@ public abstract class WizardPage extends VBox {
 		HBox buttonBar = new HBox(5);
 		cancelButton.setCancelButton(true);
 		finishButton.setDefaultButton(true);
-		buttonBar.getChildren().addAll(spring, previousButton, nextButton, cancelButton, finishButton);
+		buttonBar.getChildren().addAll(spring, previousButton, nextButton, cancelButton, finishButton, new Region());
 		return buttonBar;
 	}
 
@@ -145,7 +144,7 @@ public abstract class WizardPage extends VBox {
 
 		getChildren().add(content);
 
-		getChildren().addAll(spring, createButtonBar());
+		getChildren().addAll(spring, createButtonBar(), new Region());
 		finishButton.disableProperty().bind(wizard.canFinishProperty().not());
 
 		init();
