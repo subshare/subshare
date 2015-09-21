@@ -16,6 +16,7 @@ import javafx.scene.control.Toggle;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 
 import org.subshare.core.pgp.PgpOwnerTrust;
 import org.subshare.core.user.User;
@@ -35,6 +36,9 @@ public class SelectOwnerTrustPane extends GridPane {
 	private VBox radioButtonBox;
 
 	private Map<PgpOwnerTrust, RadioButton> ownerTrust2RadioButton = new HashMap<>();
+
+	@FXML
+	private Text selectedOwnerTrustDescriptionText;
 
 	public SelectOwnerTrustPane(final AssignOwnerTrustData assignOwnerTrustData) {
 		this.assignOwnerTrustData = assertNotNull("assignOwnerTrustData", assignOwnerTrustData);
@@ -80,6 +84,7 @@ public class SelectOwnerTrustPane extends GridPane {
 		final PgpOwnerTrust ownerTrust = assignOwnerTrustData.ownerTrustProperty().get();
 		RadioButton radioButton = ownerTrust2RadioButton.get(ownerTrust);
 		toggleGroup.selectToggle(radioButton);
+		selectedOwnerTrustDescriptionText.setText(ownerTrust == null ? null : ownerTrust.getDescription());
 	}
 
 	private void populateRadioButtonBox() {
@@ -96,6 +101,7 @@ public class SelectOwnerTrustPane extends GridPane {
 		toggleGroup.selectedToggleProperty().addListener((ChangeListener<Toggle>) (observable, oldValue, newValue) -> {
 			final PgpOwnerTrust ownerTrust = newValue == null ? null : getOwnerTrust((RadioButton) newValue);
 			assignOwnerTrustData.setOwnerTrust(ownerTrust);
+			selectedOwnerTrustDescriptionText.setText(ownerTrust == null ? null : ownerTrust.getDescription());
 		});
 	}
 
