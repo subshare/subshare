@@ -60,6 +60,7 @@ public class PgpKey implements Serializable {
 
 	private List<PgpKey> subKeys;
 
+	private static final List<PgpKey> NULL_SUB_KEYS = Collections.unmodifiableList(new ArrayList<PgpKey>(0));
 
 	public PgpKey(
 			final PgpKeyId pgpKeyId,
@@ -155,6 +156,8 @@ public class PgpKey implements Serializable {
 		return userIds;
 	}
 
+	// TODO support user-attributes - e.g. images!
+
 	public Set<PgpKeyFlag> getPgpKeyFlags() {
 		return pgpKeyFlags;
 	}
@@ -171,7 +174,10 @@ public class PgpKey implements Serializable {
 		if (this.subKeys != null)
 			throw new IllegalStateException("this.subKeys already assigned!");
 
-		this.subKeys = Collections.unmodifiableList(new ArrayList<PgpKey>(assertNotNull("subKeys", subKeys)));
+		if (subKeys == null)
+		    this.subKeys = NULL_SUB_KEYS;
+		else
+		    this.subKeys = Collections.unmodifiableList(new ArrayList<PgpKey>(assertNotNull("subKeys", subKeys)));
 	}
 
 	/**
@@ -262,7 +268,7 @@ public class PgpKey implements Serializable {
 	}
 
 	public List<PgpKey> getSubKeys() {
-		return subKeys;
+		return subKeys == NULL_SUB_KEYS ? null : subKeys;
 	}
 
 	@Override

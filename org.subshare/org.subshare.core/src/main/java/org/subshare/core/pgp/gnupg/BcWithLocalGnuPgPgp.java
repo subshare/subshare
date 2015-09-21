@@ -2,6 +2,7 @@ package org.subshare.core.pgp.gnupg;
 
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static co.codewizards.cloudstore.core.util.CollectionUtil.*;
 import static co.codewizards.cloudstore.core.util.HashUtil.*;
 import static co.codewizards.cloudstore.core.util.PropertiesUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
@@ -17,7 +18,6 @@ import java.io.OutputStream;
 import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.security.SignatureException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -26,7 +26,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -62,9 +62,11 @@ import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureGenerator;
 import org.bouncycastle.openpgp.PGPSignatureSubpacketGenerator;
 import org.bouncycastle.openpgp.PGPSignatureSubpacketVector;
+import org.bouncycastle.openpgp.PGPUserAttributeSubpacketVector;
 import org.bouncycastle.openpgp.PGPUtil;
 import org.bouncycastle.openpgp.operator.PGPContentSignerBuilder;
 import org.bouncycastle.openpgp.operator.PGPDigestCalculator;
+import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator;
 import org.bouncycastle.openpgp.operator.bc.BcPBESecretKeyDecryptorBuilder;
 import org.bouncycastle.openpgp.operator.bc.BcPBESecretKeyEncryptorBuilder;
 import org.bouncycastle.openpgp.operator.bc.BcPGPContentSignerBuilder;
@@ -83,6 +85,7 @@ import org.subshare.core.pgp.PgpKeyTrustLevel;
 import org.subshare.core.pgp.PgpSignature;
 import org.subshare.core.pgp.PgpSignatureType;
 import org.subshare.core.pgp.PgpUserId;
+import org.subshare.core.pgp.PgpUserIdNameHash;
 import org.subshare.crypto.CryptoRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -100,8 +103,8 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 	private File pubringFile;
 	private File secringFile;
 
-	private long pubringFileLastModified;
-	private long secringFileLastModified;
+	private long pubringFileLastModified = Long.MIN_VALUE;
+	private long secringFileLastModified = Long.MIN_VALUE;
 
 	private Map<PgpKeyId, BcPgpKey> pgpKeyId2bcPgpKey; // all keys
 	private Map<PgpKeyId, BcPgpKey> pgpKeyId2masterKey; // only master-keys
@@ -207,7 +210,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 		boolean modified = false;
 		try {
 			in = PGPUtil.getDecoderStream(in);
-			final PGPObjectFactory pgpF = new PGPObjectFactory(in);
+			final PGPObjectFactory pgpF = new PGPObjectFactory(in, new BcKeyFingerprintCalculator());
 
 			Object o;
 			while ((o = pgpF.nextObject()) != null) {
@@ -235,10 +238,10 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 
 		final File pubringFile = getPubringFile();
 		if (!pubringFile.isFile())
-			oldPublicKeyRingCollection = new PGPPublicKeyRingCollection(new ByteArrayInputStream(new byte[0]));
+			oldPublicKeyRingCollection = new PGPPublicKeyRingCollection(new ByteArrayInputStream(new byte[0]), new BcKeyFingerprintCalculator());
 		else {
 			try (InputStream in = new BufferedInputStream(pubringFile.createInputStream());) {
-				oldPublicKeyRingCollection = new PGPPublicKeyRingCollection(PGPUtil.getDecoderStream(in));
+				oldPublicKeyRingCollection = new PGPPublicKeyRingCollection(PGPUtil.getDecoderStream(in), new BcKeyFingerprintCalculator());
 			}
 		}
 
@@ -295,6 +298,11 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 
 			if (newPublicKeyRing != oldPublicKeyRing) {
 				publicKeyRingCollection = PGPPublicKeyRingCollection.removePublicKeyRing(publicKeyRingCollection, oldPublicKeyRing);
+
+				final PGPPublicKeyRing pkr = publicKeyRingCollection.getPublicKeyRing(publicKeyRing.getPublicKey().getKeyID());
+				if (pkr != null)
+				    throw new IllegalStateException("PGPPublicKeyRingCollection.removePublicKeyRing(...) had no effect!");
+
 				publicKeyRingCollection = PGPPublicKeyRingCollection.addPublicKeyRing(publicKeyRingCollection, newPublicKeyRing);
 			}
 		}
@@ -317,6 +325,11 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 
 			if (newPublicKey != oldPublicKey) {
 				publicKeyRing = PGPPublicKeyRing.removePublicKey(publicKeyRing, oldPublicKey);
+
+				final PGPPublicKey pk = publicKeyRing.getPublicKey(publicKey.getKeyID());
+				if (pk != null)
+				    throw new IllegalStateException("PGPPublicKeyRing.removePublicKey(...) had no effect!");
+
 				publicKeyRing = PGPPublicKeyRing.insertPublicKey(publicKeyRing, newPublicKey);
 			}
 		}
@@ -361,10 +374,10 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 
 		final File secringFile = getSecringFile();
 		if (!secringFile.isFile())
-			oldSecretKeyRingCollection = new PGPSecretKeyRingCollection(new ByteArrayInputStream(new byte[0]));
+			oldSecretKeyRingCollection = new PGPSecretKeyRingCollection(new ByteArrayInputStream(new byte[0]), new BcKeyFingerprintCalculator());
 		else {
 			try (InputStream in = new BufferedInputStream(secringFile.createInputStream());) {
-				oldSecretKeyRingCollection = new PGPSecretKeyRingCollection(PGPUtil.getDecoderStream(in));
+				oldSecretKeyRingCollection = new PGPSecretKeyRingCollection(PGPUtil.getDecoderStream(in), new BcKeyFingerprintCalculator());
 			}
 		}
 
@@ -511,15 +524,15 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 			if (secringFile.isFile()) {
 				final PGPSecretKeyRingCollection pgpSecretKeyRingCollection;
 				try (InputStream in = new BufferedInputStream(secringFile.createInputStream());) {
-					pgpSecretKeyRingCollection = new PGPSecretKeyRingCollection(PGPUtil.getDecoderStream(in));
+					pgpSecretKeyRingCollection = new PGPSecretKeyRingCollection(PGPUtil.getDecoderStream(in), new BcKeyFingerprintCalculator());
 				}
-				BcPgpKey lastMasterKey = null;
 				for (final Iterator<?> it1 = pgpSecretKeyRingCollection.getKeyRings(); it1.hasNext(); ) {
 					final PGPSecretKeyRing keyRing = (PGPSecretKeyRing) it1.next();
+					BcPgpKey masterKey = null;
 					for (final Iterator<?> it2 = keyRing.getPublicKeys(); it2.hasNext(); ) {
 						final PGPPublicKey publicKey = (PGPPublicKey) it2.next();
-						lastMasterKey = enlistPublicKey(pgpKeyId2bcPgpKey,
-								pgpKeyId2masterKey, lastMasterKey, keyRing, publicKey);
+						masterKey = enlistPublicKey(pgpKeyId2bcPgpKey,
+								pgpKeyId2masterKey, masterKey, keyRing, publicKey);
 					}
 
 					for (final Iterator<?> it3 = keyRing.getSecretKeys(); it3.hasNext(); ) {
@@ -541,16 +554,16 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 			if (pubringFile.isFile()) {
 				final PGPPublicKeyRingCollection pgpPublicKeyRingCollection;
 				try (InputStream in = new BufferedInputStream(pubringFile.createInputStream());) {
-					pgpPublicKeyRingCollection = new PGPPublicKeyRingCollection(PGPUtil.getDecoderStream(in));
+					pgpPublicKeyRingCollection = new PGPPublicKeyRingCollection(PGPUtil.getDecoderStream(in), new BcKeyFingerprintCalculator());
 				}
 
-				BcPgpKey lastMasterKey = null;
 				for (final Iterator<?> it1 = pgpPublicKeyRingCollection.getKeyRings(); it1.hasNext(); ) {
 					final PGPPublicKeyRing keyRing = (PGPPublicKeyRing) it1.next();
+					BcPgpKey masterKey = null;
 					for (final Iterator<?> it2 = keyRing.getPublicKeys(); it2.hasNext(); ) {
 						final PGPPublicKey publicKey = (PGPPublicKey) it2.next();
-						lastMasterKey = enlistPublicKey(pgpKeyId2bcPgpKey,
-								pgpKeyId2masterKey, lastMasterKey, keyRing, publicKey);
+						masterKey = enlistPublicKey(pgpKeyId2bcPgpKey,
+								pgpKeyId2masterKey, masterKey, keyRing, publicKey);
 					}
 				}
 			}
@@ -580,16 +593,12 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 
 		final IdentityHashMap<PGPSignature, PGPSignature> bcPgpSignatures = new IdentityHashMap<>();
 
-		final List<String> userIds = new LinkedList<String>();
-		for (Iterator<?> itUserId = publicKey.getUserIDs(); itUserId.hasNext(); ) {
-			final String userId = (String) itUserId.next();
+		final LinkedHashSet<String> userIds = new LinkedHashSet<>();
+		for (@SuppressWarnings("unchecked") final Iterator<?> userIDsIterator = nullToEmpty(publicKey.getUserIDs()); userIDsIterator.hasNext(); ) {
+			final String userId = (String) userIDsIterator.next();
 			userIds.add(userId);
 
-			final Iterator<?> itSig = publicKey.getSignaturesForID(userId);
-			if (itSig == null)
-				continue;
-
-			while (itSig.hasNext()) {
+			for (@SuppressWarnings("unchecked") final Iterator<?> itSig = nullToEmpty(publicKey.getSignaturesForID(userId)); itSig.hasNext(); ) {
 				final PGPSignature bcPgpSignature = (PGPSignature) itSig.next();
 				bcPgpSignatures.put(bcPgpSignature, bcPgpSignature);
 				final PgpSignature pgpSignature = createPgpSignature(bcPgpSignature);
@@ -603,33 +612,40 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 			}
 		}
 
-		// It seems, there are both: certifications for individual user-ids and certifications for the
-		// entire key. I therefore first take the individual ones (above) and then I emulate the ones for the entire key
-		// as if they were individual ones (below).
+		for (@SuppressWarnings("unchecked") final Iterator<?> userAttributesIterator = nullToEmpty(publicKey.getUserAttributes()); userAttributesIterator.hasNext(); ) {
+			final PGPUserAttributeSubpacketVector userAttribute = (PGPUserAttributeSubpacketVector) userAttributesIterator.next();
 
-		final Iterator<?> itAllSigs = publicKey.getSignatures();
-		if (itAllSigs != null) {
-			while (itAllSigs.hasNext()) {
-				final PGPSignature bcPgpSignature = (PGPSignature) itAllSigs.next();
-				if (bcPgpSignatures.containsKey(bcPgpSignature))
+			for (@SuppressWarnings("unchecked") final Iterator<?> itSig = nullToEmpty(publicKey.getSignaturesForUserAttribute(userAttribute)); itSig.hasNext(); ) {
+				final PGPSignature bcPgpSignature = (PGPSignature) itSig.next();
+				bcPgpSignatures.put(bcPgpSignature, bcPgpSignature);
+				final PgpSignature pgpSignature = createPgpSignature(bcPgpSignature);
+
+				// all of them should be certifications, but we still check to make 100% sure
+				if (! pgpSignature.getSignatureType().isCertification())
 					continue;
 
-				final PgpSignatureType signatureType = signatureTypeToEnum(bcPgpSignature.getSignatureType());
-				if (! signatureType.isCertification())
-					continue;
-
-				for (String userId : userIds) {
-					final PgpSignature pgpSignature = createPgpSignature(bcPgpSignature);
-					pgpSignature.setUserId(userId);
-					result.add(pgpSignature);
-				}
+				PgpUserIdNameHash nameHash = PgpUserIdNameHash.createFromUserAttribute(userAttribute);
+				pgpSignature.setNameHash(nameHash);
+				result.add(pgpSignature);
 			}
 		}
 
-//		for (final Iterator<?> it = publicKey.getSignatures(); it.hasNext(); ) {
-//			final PGPSignature bcPgpSignature = (PGPSignature) it.next();
-//			result.add(createPgpSignature(bcPgpSignature));
-//		}
+		// It seems, there are both: certifications for individual user-ids and certifications for the
+		// entire key. I therefore first take the individual ones (above) into account then and then
+		// the ones for the entire key (below).
+		// Normally, the signatures bound to the key are never 'certifications', but it rarely happens.
+		// Don't know, if these are malformed or deprecated (very old) keys, but I should take them into account.
+		for (@SuppressWarnings("unchecked") final Iterator<?> it = nullToEmpty(publicKey.getKeySignatures()); it.hasNext(); ) {
+			final PGPSignature bcPgpSignature = (PGPSignature) it.next();
+			if (bcPgpSignatures.containsKey(bcPgpSignature))
+				continue;
+
+			final PgpSignatureType signatureType = signatureTypeToEnum(bcPgpSignature.getSignatureType());
+			if (! signatureType.isCertification())
+				continue;
+
+			result.add(createPgpSignature(bcPgpSignature));
+		}
 		return Collections.unmodifiableList(result);
 	}
 
@@ -681,7 +697,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 
 	private BcPgpKey enlistPublicKey(final Map<PgpKeyId, BcPgpKey> pgpKeyId2bcPgpKey,
 			final Map<PgpKeyId, BcPgpKey> pgpKeyId2masterKey,
-			BcPgpKey lastMasterKey, final PGPKeyRing keyRing, final PGPPublicKey publicKey)
+			BcPgpKey masterKey, final PGPKeyRing keyRing, final PGPPublicKey publicKey)
 	{
 		final PgpKeyId pgpKeyId = new PgpKeyId(publicKey.getKeyID());
 		BcPgpKey bcPgpKey = pgpKeyId2bcPgpKey.get(pgpKeyId);
@@ -700,22 +716,17 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 		bcPgpKey.setPublicKey(publicKey);
 
 		if (publicKey.isMasterKey()) {
-			lastMasterKey = bcPgpKey;
+			masterKey = bcPgpKey;
 			pgpKeyId2masterKey.put(bcPgpKey.getPgpKeyId(), bcPgpKey);
 		}
 		else {
-			if (lastMasterKey == null)
+			if (masterKey == null)
 				throw new IllegalStateException("First key is a non-master key!");
 
-			bcPgpKey.setMasterKey(lastMasterKey);
-
-			// It may already be in the lastMasterKey.subKeys, because we enlist from both the
-			// secret *and* public key ring collection. Therefore, we now use a LinkedHashSet (instead of an ArrayList).
-			// And to make sure the one we have in the subkeys is the same instance, we first remove and then re-add (as
-			// a set does not add, if it is contained, while a Map [pgpKeyId2bcPgpKey] does overwrite).
-			lastMasterKey.getSubKeyIds().add(bcPgpKey.getPgpKeyId());
+			bcPgpKey.setMasterKey(masterKey);
+			masterKey.getSubKeyIds().add(bcPgpKey.getPgpKeyId());
 		}
-		return lastMasterKey;
+		return masterKey;
 	}
 
 	private PgpSignatureType signatureTypeToEnum(final int signatureType) {
@@ -1204,12 +1215,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 		sGen.setHashedSubpackets(hashedSubpackets);
 		sGen.setUnhashedSubpackets(unhashedSubpackets);
 
-		final PGPSignature certification;
-		try {
-			certification = sGen.generateCertification(userId, masterPublicKey);
-		} catch (SignatureException e) {
-			throw new PGPException(e.getMessage(), e);
-		}
+		final PGPSignature certification = sGen.generateCertification(userId, masterPublicKey);
 		final PGPPublicKey newMasterPublicKey = PGPPublicKey.addCertification(masterPublicKey, userId, certification);
 
 		PGPPublicKeyRing result = PGPPublicKeyRing.removePublicKey(publicKeyRing, masterPublicKey);
@@ -1285,7 +1291,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 		 */
 		final int certainty = 12;
 
-		final SecureRandom random = createSecureRandom();
+		final SecureRandom random = getSecureRandom();
 
 		final DSAParametersGenerator pGen = new DSAParametersGenerator();
 		pGen.init(createPgpKeyParam.getStrength(), certainty, random);
@@ -1305,7 +1311,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 		 */
 		final int certainty = 8; // 12 takes ages - and DSA+El-Gamal is anyway a bad idea and discouraged. Reducing this to make it bearable.
 
-		final SecureRandom random = createSecureRandom();
+		final SecureRandom random = getSecureRandom();
 
 		ElGamalParametersGenerator pGen = new ElGamalParametersGenerator();
 		pGen.init(createPgpKeyParam.getStrength(), certainty, random);
@@ -1343,10 +1349,10 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 		final int certainty = 12;
 
 		return new RSAKeyGenerationParameters(
-				publicExponent, createSecureRandom(), createPgpKeyParam.getStrength(), certainty);
+				publicExponent, getSecureRandom(), createPgpKeyParam.getStrength(), certainty);
 	}
 
-	private SecureRandom createSecureRandom() {
+	private SecureRandom getSecureRandom() {
 		return new SecureRandom();
 	}
 }

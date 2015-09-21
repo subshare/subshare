@@ -307,6 +307,15 @@ public class PgpSyncIT extends AbstractIT {
 
 
 	private static void assertPgpKeysEqual(Collection<PgpKey> pgpKeys1, Collection<PgpKey> pgpKeys2) {
+	    if (pgpKeys1 == null && pgpKeys2 == null)
+	        return;
+
+	    if (pgpKeys1 == null)
+	        throw new ComparisonFailure("pgpKeys1 is null, but pgpKeys2 is not!", String.valueOf(pgpKeys1), String.valueOf(pgpKeys2));
+
+	    if (pgpKeys2 == null)
+            throw new ComparisonFailure("pgpKeys2 is null, but pgpKeys1 is not!", String.valueOf(pgpKeys1), String.valueOf(pgpKeys2));
+
 		Map<PgpKeyId, PgpKey> pgpKeyId2PgpKey1 = new HashMap<>(pgpKeys1.size());
 		for (PgpKey pgpKey1 : pgpKeys1)
 			pgpKeyId2PgpKey1.put(pgpKey1.getPgpKeyId(), pgpKey1);

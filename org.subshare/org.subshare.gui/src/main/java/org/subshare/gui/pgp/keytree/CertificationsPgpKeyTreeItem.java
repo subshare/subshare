@@ -31,7 +31,8 @@ public class CertificationsPgpKeyTreeItem extends PgpKeyTreeItem<PgpKey> {
 			final PgpKey pgpKey = getValueObject();
 			final Collection<PgpSignature> signatures = pgp.getCertifications(pgpKey);
 			for (PgpSignature signature : signatures) {
-				if (userId.equals(signature.getUserId()))
+			    // There might be certifications for the entire key (userId == null), too!
+				if (signature.getUserId() == null || userId.equals(signature.getUserId()))
 					getChildren().add(new CertificationPgpKeyTreeItem(pgp, signature));
 			}
 		}

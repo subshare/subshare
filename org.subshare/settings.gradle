@@ -7,4 +7,3 @@ rootDir.traverse(
     maxDepth: 3,
     preDir: { path << it.name },
     postDir: { path.removeLast() }) { if (path) include path.join(":") }
- 

@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.SecureRandom;
-import java.security.SignatureException;
 import java.util.Date;
 import java.util.Iterator;
 
@@ -118,7 +117,7 @@ public class BcPgpEncoder extends AbstractPgpEncoder {
 				if (edGenerator != null)
 					edGenerator.close();
 			}
-		} catch (final PGPException | SignatureException x) {
+		} catch (final PGPException x) {
 			throw new IOException(x);
 		}
 	}

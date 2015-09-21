@@ -42,7 +42,7 @@ public class BcPgpKey {
 
 	// A sub-key may be added twice, because we enlist from both the secret *and* public key ring
 	// collection. Therefore, we now use a LinkedHashSet (instead of an ArrayList).
-	private Set<PgpKeyId> subKeyIds = new LinkedHashSet<>();
+	private Set<PgpKeyId> subKeyIds;
 
 	private PgpKey pgpKey;
 
@@ -91,6 +91,9 @@ public class BcPgpKey {
 	}
 
 	public Set<PgpKeyId> getSubKeyIds() {
+		if (subKeyIds == null && masterKey == null) // only a master-key can have sub-keys! hence we keep it null, if this is not a master-key!
+			subKeyIds = new LinkedHashSet<>();
+
 		return subKeyIds;
 	}
 
@@ -114,16 +117,22 @@ public class BcPgpKey {
 					getPgpKeyAlgorithm(publicKey.getAlgorithm()), publicKey.getBitStrength(),
 					secretKeyAvailable, userIds, getPgpKeyFlags(), publicKey.isRevoked());
 
-			this.subKeyIds = Collections.unmodifiableSet(new LinkedHashSet<>(this.subKeyIds)); // turn read-only!
-			final List<PgpKey> subKeys = new ArrayList<PgpKey>(this.subKeyIds.size());
-			for (final PgpKeyId subKeyId : this.subKeyIds) {
-				final BcPgpKey subKey = pgp.getBcPgpKey(subKeyId);
-				if (subKey == null)
-					throw new IllegalStateException("Key not found: " + subKeyId);
+			getSubKeyIds();
+			if (this.subKeyIds == null)
+			    this.pgpKey.setSubKeys(null);
+			else {
+			    this.subKeyIds = Collections.unmodifiableSet(new LinkedHashSet<>(this.subKeyIds)); // turn read-only!
 
-				subKeys.add(subKey.getPgpKey());
+    			final List<PgpKey> subKeys = new ArrayList<PgpKey>(this.subKeyIds.size());
+    			for (final PgpKeyId subKeyId : this.subKeyIds) {
+    				final BcPgpKey subKey = pgp.getBcPgpKey(subKeyId);
+    				if (subKey == null)
+    					throw new IllegalStateException("Key not found: " + subKeyId);
+
+    				subKeys.add(subKey.getPgpKey());
+    			}
+    			this.pgpKey.setSubKeys(subKeys);
 			}
-			this.pgpKey.setSubKeys(subKeys);
 		}
 		return pgpKey;
 	}
@@ -210,5 +219,4 @@ public class BcPgpKey {
 
 		return result;
 	}
-
 }

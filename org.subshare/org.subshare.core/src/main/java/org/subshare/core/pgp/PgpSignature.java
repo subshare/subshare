@@ -12,6 +12,7 @@ public class PgpSignature implements Serializable {
 	private Date created;
 	private PgpSignatureType signatureType;
 	private String userId;
+	private PgpUserIdNameHash nameHash;
 
 	public PgpKeyId getPgpKeyId() {
 		return pgpKeyId;
@@ -36,6 +37,7 @@ public class PgpSignature implements Serializable {
 
 	/**
 	 * Gets the user-id that was certified by this signature or <code>null</code>, if this signature is not a {@linkplain PgpSignatureType#isCertification() certification}.
+	 * It is <code>null</code>, too, if there is a user-attribute instead.
 	 * @return the user-id that was certified by this signature; <code>null</code>, if this signature is not a {@linkplain PgpSignatureType#isCertification() certification}.
 	 * @see Pgp#getCertifications(PgpKey)
 	 * @see PgpSignatureType#isCertification()
@@ -43,7 +45,15 @@ public class PgpSignature implements Serializable {
 	public String getUserId() {
 		return userId;
 	}
-	public void setUserId(String userId) {
+	public void setUserId(final String userId) {
 		this.userId = userId;
+		setNameHash(userId == null ? null : PgpUserIdNameHash.createFromUserId(userId));
+	}
+
+	public void setNameHash(PgpUserIdNameHash nameHash) {
+		this.nameHash = nameHash;
+	}
+	public PgpUserIdNameHash getNameHash() {
+		return nameHash;
 	}
 }

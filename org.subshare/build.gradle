@@ -25,7 +25,7 @@ allprojects {
 
 	project.ext.subshareVersion = version
 
-	project.ext.bouncycastleVersion = '1.50'
+	project.ext.bouncycastleVersion = '1.52'
 	project.ext.cloudstoreVersion = '0.9.7-SNAPSHOT'
 	project.ext.slf4jVersion = '1.7.7'
 	project.ext.logbackVersion = '1.0.13'

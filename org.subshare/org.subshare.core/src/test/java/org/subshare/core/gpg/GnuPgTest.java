@@ -53,6 +53,7 @@ import org.bouncycastle.openpgp.operator.PGPDataEncryptorBuilder;
 import org.bouncycastle.openpgp.operator.PGPDigestCalculatorProvider;
 import org.bouncycastle.openpgp.operator.PGPKeyEncryptionMethodGenerator;
 import org.bouncycastle.openpgp.operator.PublicKeyDataDecryptorFactory;
+import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator;
 import org.bouncycastle.openpgp.operator.bc.BcPBESecretKeyDecryptorBuilder;
 import org.bouncycastle.openpgp.operator.bc.BcPGPContentSignerBuilder;
 import org.bouncycastle.openpgp.operator.bc.BcPGPContentVerifierBuilderProvider;
@@ -81,7 +82,7 @@ public class GnuPgTest {
 	public void readPubringGpg() throws Exception {
 		PGPPublicKeyRingCollection pgpPublicKeyRingCollection;
 		try (InputStream in = new BufferedInputStream(createPubringInputStream());) {
-			pgpPublicKeyRingCollection = new PGPPublicKeyRingCollection(PGPUtil.getDecoderStream(in));
+			pgpPublicKeyRingCollection = new PGPPublicKeyRingCollection(PGPUtil.getDecoderStream(in), new BcKeyFingerprintCalculator());
 		}
 		for (final Iterator<?> it1 = pgpPublicKeyRingCollection.getKeyRings(); it1.hasNext(); ) {
 			final PGPPublicKeyRing keyRing = (PGPPublicKeyRing) it1.next();
@@ -97,7 +98,7 @@ public class GnuPgTest {
 	public void readSecringGpg() throws Exception {
 		PGPSecretKeyRingCollection pgpSecretKeyRingCollection;
 		try (InputStream in = new BufferedInputStream(createSecringInputStream());) {
-			pgpSecretKeyRingCollection = new PGPSecretKeyRingCollection(PGPUtil.getDecoderStream(in));
+			pgpSecretKeyRingCollection = new PGPSecretKeyRingCollection(PGPUtil.getDecoderStream(in), new BcKeyFingerprintCalculator());
 		}
 		for (final Iterator<?> it1 = pgpSecretKeyRingCollection.getKeyRings(); it1.hasNext(); ) {
 			final PGPSecretKeyRing keyRing = (PGPSecretKeyRing) it1.next();
@@ -262,7 +263,7 @@ public class GnuPgTest {
 	public static void decryptAndVerify(InputStream in, final InputStream keyIn, final char[] passwd, final OutputStream fOut, final InputStream publicKeyIn) throws IOException, NoSuchProviderException, SignatureException, PGPException {
 		in = PGPUtil.getDecoderStream(in);
 
-		final PGPObjectFactory pgpF = new PGPObjectFactory(in);
+		final PGPObjectFactory pgpF = new PGPObjectFactory(in, new BcKeyFingerprintCalculator());
 		PGPEncryptedDataList enc;
 
 		final Object o = pgpF.nextObject();
@@ -296,7 +297,7 @@ public class GnuPgTest {
 
 		final InputStream clear = pbe.getDataStream(dataDecryptorFactory);
 
-		PGPObjectFactory plainFact = new PGPObjectFactory(clear);
+		PGPObjectFactory plainFact = new PGPObjectFactory(clear, new BcKeyFingerprintCalculator());
 
 		Object message = null;
 
@@ -310,7 +311,7 @@ public class GnuPgTest {
 		while (message != null) {
 			if (message instanceof PGPCompressedData) {
 				compressedData = (PGPCompressedData) message;
-				plainFact = new PGPObjectFactory(compressedData.getDataStream());
+				plainFact = new PGPObjectFactory(compressedData.getDataStream(), new BcKeyFingerprintCalculator());
 				message = plainFact.nextObject();
 			}
 
@@ -336,7 +337,7 @@ public class GnuPgTest {
 			for (int i = 0; i < onePassSignatureList.size(); i++) {
 				final PGPOnePassSignature ops = onePassSignatureList.get(0);
 				final PGPPublicKeyRingCollection pgpRing = new PGPPublicKeyRingCollection(
-						PGPUtil.getDecoderStream(publicKeyIn));
+						PGPUtil.getDecoderStream(publicKeyIn), new BcKeyFingerprintCalculator());
 				publicKey = pgpRing.getPublicKey(ops.getKeyID());
 				if (publicKey != null) {
 					ops.init(new BcPGPContentVerifierBuilderProvider(), publicKey);
@@ -367,7 +368,7 @@ public class GnuPgTest {
 	}
 
 	public static PGPPrivateKey findSecretKey(final InputStream keyIn, final long keyID, final char[] pass) throws IOException, PGPException {
-	    final PGPSecretKeyRingCollection pgpSec = new PGPSecretKeyRingCollection(PGPUtil.getDecoderStream(keyIn));
+	    final PGPSecretKeyRingCollection pgpSec = new PGPSecretKeyRingCollection(PGPUtil.getDecoderStream(keyIn), new BcKeyFingerprintCalculator());
 	    final PGPSecretKey pgpSecKey = pgpSec.getSecretKey(keyID);
 	    if (pgpSecKey == null) return null;
 
@@ -378,7 +379,7 @@ public class GnuPgTest {
 	private static PGPPublicKey getPgpPublicKeyOrFail(final long keyId) throws IOException, PGPException {
 		PGPPublicKeyRingCollection pgpPublicKeyRingCollection;
 		try (InputStream in = new BufferedInputStream(GnuPgTest.class.getResourceAsStream("pubring.gpg"));) {
-			pgpPublicKeyRingCollection = new PGPPublicKeyRingCollection(PGPUtil.getDecoderStream(in));
+			pgpPublicKeyRingCollection = new PGPPublicKeyRingCollection(PGPUtil.getDecoderStream(in), new BcKeyFingerprintCalculator());
 		}
 		final PGPPublicKey publicKey = pgpPublicKeyRingCollection.getPublicKey(keyId);
 		if (publicKey == null)
@@ -400,7 +401,7 @@ public class GnuPgTest {
 	private static PGPSecretKey getPgpSecretKeyOrFail(final long keyId) throws IOException, PGPException {
 		PGPSecretKeyRingCollection pgpSecretKeyRingCollection;
 		try (InputStream in = new BufferedInputStream(GnuPgTest.class.getResourceAsStream("secring.gpg"));) {
-			pgpSecretKeyRingCollection = new PGPSecretKeyRingCollection(PGPUtil.getDecoderStream(in));
+			pgpSecretKeyRingCollection = new PGPSecretKeyRingCollection(PGPUtil.getDecoderStream(in), new BcKeyFingerprintCalculator());
 		}
 		final PGPSecretKey secretKey = pgpSecretKeyRingCollection.getSecretKey(keyId);
 		if (secretKey == null)

@@ -29,6 +29,7 @@ import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureList;
 import org.bouncycastle.openpgp.PGPUtil;
 import org.bouncycastle.openpgp.operator.PublicKeyDataDecryptorFactory;
+import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator;
 import org.bouncycastle.openpgp.operator.bc.BcPBESecretKeyDecryptorBuilder;
 import org.bouncycastle.openpgp.operator.bc.BcPGPContentVerifierBuilderProvider;
 import org.bouncycastle.openpgp.operator.bc.BcPGPDigestCalculatorProvider;
@@ -66,7 +67,7 @@ public class BcPgpDecoder extends AbstractPgpDecoder {
 			decodePlainWithDetachedSignature(in, signIn);
 		}
 		else {
-			final PGPObjectFactory pgpF = new PGPObjectFactory(in);
+			final PGPObjectFactory pgpF = new PGPObjectFactory(in, new BcKeyFingerprintCalculator());
 			PGPEncryptedDataList enc = null;
 			PGPCompressedData comp = null;
 
@@ -104,7 +105,7 @@ public class BcPgpDecoder extends AbstractPgpDecoder {
 		assertNotNull("in", in);
 		assertNotNull("signIn", signIn);
 
-		final PGPObjectFactory pgpF = new PGPObjectFactory(signIn);
+		final PGPObjectFactory pgpF = new PGPObjectFactory(signIn, new BcKeyFingerprintCalculator());
 
 		PGPOnePassSignatureList onePassSignatureList = null;
 		PGPSignatureList signatureList = null;
@@ -134,7 +135,7 @@ public class BcPgpDecoder extends AbstractPgpDecoder {
 	private void decodeCompressed(final PGPCompressedData comp) throws SignatureException, IOException {
 		// TODO extract duplicate code and re-use in both, decodeEncrypted(...) and this method!
 		try {
-			PGPObjectFactory plainFact = new PGPObjectFactory(comp.getDataStream());
+			PGPObjectFactory plainFact = new PGPObjectFactory(comp.getDataStream(), new BcKeyFingerprintCalculator());
 
 			Object message = null;
 
@@ -148,7 +149,7 @@ public class BcPgpDecoder extends AbstractPgpDecoder {
 			while (message != null) {
 				if (message instanceof PGPCompressedData) {
 					compressedData = (PGPCompressedData) message;
-					plainFact = new PGPObjectFactory(compressedData.getDataStream());
+					plainFact = new PGPObjectFactory(compressedData.getDataStream(), new BcKeyFingerprintCalculator());
 					message = plainFact.nextObject();
 				}
 
@@ -228,7 +229,7 @@ public class BcPgpDecoder extends AbstractPgpDecoder {
 
 			final InputStream clear = pbe.getDataStream(dataDecryptorFactory);
 
-			PGPObjectFactory plainFact = new PGPObjectFactory(clear);
+			PGPObjectFactory plainFact = new PGPObjectFactory(clear, new BcKeyFingerprintCalculator());
 
 			Object message = null;
 
@@ -242,7 +243,7 @@ public class BcPgpDecoder extends AbstractPgpDecoder {
 			while (message != null) {
 				if (message instanceof PGPCompressedData) {
 					compressedData = (PGPCompressedData) message;
-					plainFact = new PGPObjectFactory(compressedData.getDataStream());
+					plainFact = new PGPObjectFactory(compressedData.getDataStream(), new BcKeyFingerprintCalculator());
 					message = plainFact.nextObject();
 				}
 
@@ -317,8 +318,6 @@ public class BcPgpDecoder extends AbstractPgpDecoder {
 						throw new SignatureException("Signature verification failed!");
 				}
 			}
-		} catch (final java.security.SignatureException x) {
-			throw new SignatureException(x);
 		} catch (final PGPException x) {
 			throw new IOException(x);
 		}
