@@ -19,7 +19,7 @@ import java.util.Map;
  * to her key.
  *
  * @author Marco หงุ่ยตระกูล-Schulze - marco at codewizards dot co
- * @see TrustDb#getOwnerTrust(org.bouncycastle.openpgp.wot.key.PgpKey)
+ * @see TrustDbImpl#getOwnerTrust(org.bouncycastle.openpgp.wot.key.PgpKey)
  */
 public enum OwnerTrust
 {
@@ -53,7 +53,7 @@ public enum OwnerTrust
      * This causes significant transitive trust. Depending on the settings, this is already enough for a certified key
      * to be trusted fully, or it might require further signatures.
      */
-    FULLY(TrustConst.TRUST_FULLY), // 5
+    FULL(TrustConst.TRUST_FULL), // 5
 
     /**
      * The key's owner can be ultimately trusted. One single signature of a notary whose key is marked 'ultimate' is

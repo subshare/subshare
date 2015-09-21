@@ -14,7 +14,7 @@ import org.subshare.core.pgp.Pgp;
 import org.subshare.core.pgp.PgpAuthenticationCallback;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpKeyId;
-import org.subshare.core.pgp.PgpKeyTrustLevel;
+import org.subshare.core.pgp.PgpKeyValidity;
 import org.subshare.core.pgp.PgpRegistry;
 import org.subshare.core.pgp.gnupg.GnuPgDir;
 import org.junit.Before;
@@ -70,27 +70,27 @@ public class UserRegistryTest {
 		final UserRegistry userRegistry = new UserRegistryImpl();
 		final Pgp pgp = PgpRegistry.getInstance().getPgpOrFail();
 
-		final Map<String, PgpKeyTrustLevel> email2ExpectedPgpKeyTrustLevel = new HashMap<String, PgpKeyTrustLevel>();
-		email2ExpectedPgpKeyTrustLevel.put("marco@codewizards.co", PgpKeyTrustLevel.ULTIMATE);
-		email2ExpectedPgpKeyTrustLevel.put("alex@nightlabs.de", PgpKeyTrustLevel.TRUSTED);
-		email2ExpectedPgpKeyTrustLevel.put("daniel@nightlabs.de", PgpKeyTrustLevel.TRUSTED);
-		email2ExpectedPgpKeyTrustLevel.put("janmorti@gmx.de", PgpKeyTrustLevel.NOT_TRUSTED);
-		email2ExpectedPgpKeyTrustLevel.put("jonathan@codewizards.co", PgpKeyTrustLevel.NOT_TRUSTED);
-		email2ExpectedPgpKeyTrustLevel.put("marc@nightlabs.de", PgpKeyTrustLevel.NOT_TRUSTED);
+		final Map<String, PgpKeyValidity> email2ExpectedPgpKeyTrustLevel = new HashMap<String, PgpKeyValidity>();
+		email2ExpectedPgpKeyTrustLevel.put("marco@codewizards.co", PgpKeyValidity.ULTIMATE);
+		email2ExpectedPgpKeyTrustLevel.put("alex@nightlabs.de", PgpKeyValidity.FULL);
+		email2ExpectedPgpKeyTrustLevel.put("daniel@nightlabs.de", PgpKeyValidity.FULL);
+		email2ExpectedPgpKeyTrustLevel.put("janmorti@gmx.de", PgpKeyValidity.NOT_TRUSTED);
+		email2ExpectedPgpKeyTrustLevel.put("jonathan@codewizards.co", PgpKeyValidity.NOT_TRUSTED);
+		email2ExpectedPgpKeyTrustLevel.put("marc@nightlabs.de", PgpKeyValidity.NOT_TRUSTED);
 
-		for (final Map.Entry<String, PgpKeyTrustLevel> me : email2ExpectedPgpKeyTrustLevel.entrySet()) {
+		for (final Map.Entry<String, PgpKeyValidity> me : email2ExpectedPgpKeyTrustLevel.entrySet()) {
 			final String email = me.getKey();
-			final PgpKeyTrustLevel expectedPgpKeyTrustLevel = me.getValue();
+			final PgpKeyValidity expectedPgpKeyTrustLevel = me.getValue();
 
 			final Collection<User> users = userRegistry.getUsersByEmail(email);
 			assertThat(users).hasSize(1);
 			final User user = users.iterator().next();
 
-			PgpKeyTrustLevel highestKeyTrustLevel = null;
+			PgpKeyValidity highestKeyTrustLevel = null;
 			for (final PgpKeyId pgpKeyId : user.getPgpKeyIds()) {
 				final PgpKey pgpKey = pgp.getPgpKey(pgpKeyId);
 				if (pgpKey != null) {
-					final PgpKeyTrustLevel ktl = pgp.getKeyTrustLevel(pgpKey);
+					final PgpKeyValidity ktl = pgp.getKeyValidity(pgpKey);
 					if (highestKeyTrustLevel == null || ktl.compareTo(highestKeyTrustLevel) > 0)
 						highestKeyTrustLevel = ktl;
 				}

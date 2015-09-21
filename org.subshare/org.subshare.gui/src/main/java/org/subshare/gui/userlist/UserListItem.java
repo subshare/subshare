@@ -6,7 +6,10 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
@@ -15,7 +18,8 @@ import javafx.beans.property.StringProperty;
 import org.subshare.core.pgp.Pgp;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpKeyId;
-import org.subshare.core.pgp.PgpKeyTrustLevel;
+import org.subshare.core.pgp.PgpKeyValidity;
+import org.subshare.core.pgp.PgpOwnerTrust;
 import org.subshare.core.user.User;
 import org.subshare.gui.ls.PgpLs;
 
@@ -27,10 +31,12 @@ public class UserListItem {
 	private final StringProperty firstName = new SimpleStringProperty(this, "firstName");
 	private final StringProperty lastName = new SimpleStringProperty(this, "lastName");
 	private final StringProperty email = new SimpleStringProperty(this, "email");
-	private final StringProperty keyTrustLevelProperty = new SimpleStringProperty(this, "keyTrustLevel");
+	private final StringProperty keyValidityProperty = new SimpleStringProperty(this, "keyValidity");
+	private final StringProperty ownerTrustProperty = new SimpleStringProperty(this, "ownerTrust");
 
 	private volatile List<String> emails;
-	private volatile String keyTrustLevel;
+	private volatile String keyValidity;
+	private volatile String ownerTrust;
 
 	public UserListItem(final User user) {
 		this.user = assertNotNull("user", user);
@@ -42,7 +48,7 @@ public class UserListItem {
 //		firstName = new SimpleStringProperty(user, User.PropertyEnum.firstName.name());
 //		lastName = new SimpleStringProperty(user, User.PropertyEnum.lastName.name());
 //		email = new SimpleStringProperty();
-//		keyTrustLevelProperty = new SimpleStringProperty();
+//		keyValidityProperty = new SimpleStringProperty();
 
 		copyDataFromUser();
 		copyDataFromPgp();
@@ -70,7 +76,8 @@ public class UserListItem {
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
 			Platform.runLater(() -> {
-				keyTrustLevel = null; // clear cache
+				keyValidity = null; // clear cache
+				ownerTrust = null; // clear cache
 				copyDataFromPgp();
 			});
 		}
@@ -83,7 +90,8 @@ public class UserListItem {
 	}
 
 	protected void copyDataFromPgp() {
-		keyTrustLevelProperty.set(getKeyTrustLevel());
+		keyValidityProperty.set(getKeyValidity());
+		ownerTrustProperty.set(getOwnerTrust());
 	}
 
 	/**
@@ -114,8 +122,11 @@ public class UserListItem {
 	public StringProperty emailProperty() {
 		return email;
 	}
-	public StringProperty keyTrustLevelProperty() {
-		return keyTrustLevelProperty;
+	public StringProperty keyValidityProperty() {
+		return keyValidityProperty;
+	}
+	public StringProperty ownerTrustProperty() {
+		return ownerTrustProperty;
 	}
 
 	public List<String> getEmails() {
@@ -138,21 +149,81 @@ public class UserListItem {
 		}
 	}
 
-	public String getKeyTrustLevel() {
-		String keyTrustLevel = this.keyTrustLevel;
-		if (keyTrustLevel == null) {
-			PgpKeyTrustLevel highestKeyTrustLevel = null;
+	public String getKeyValidity() {
+		String keyValidity = this.keyValidity;
+		if (keyValidity == null) {
+			final SortedSet<PgpKeyValidity> keyValidities = new TreeSet<>(Collections.reverseOrder());
+//			PgpKeyValidity highestValidity = null;
+//			for (final PgpKeyId pgpKeyId : user.getPgpKeyIds()) {
+//				final PgpKey pgpKey = getPgp().getPgpKey(pgpKeyId);
+//				if (pgpKey != null) {
+//					final PgpKeyValidity v = getPgp().getKeyValidity(pgpKey);
+//					if (highestValidity == null || v.compareTo(highestValidity) > 0)
+//						highestValidity = v;
+//				}
+//			}
+//			this.keyValidity = keyValidity = highestValidity == null ? null : highestValidity.toString();
 			for (final PgpKeyId pgpKeyId : user.getPgpKeyIds()) {
 				final PgpKey pgpKey = getPgp().getPgpKey(pgpKeyId);
 				if (pgpKey != null) {
-					final PgpKeyTrustLevel ktl = getPgp().getKeyTrustLevel(pgpKey);
-					if (highestKeyTrustLevel == null || ktl.compareTo(highestKeyTrustLevel) > 0)
-						highestKeyTrustLevel = ktl;
+					final PgpKeyValidity v = getPgp().getKeyValidity(pgpKey);
+					keyValidities.add(v);
 				}
 			}
-			this.keyTrustLevel = keyTrustLevel = highestKeyTrustLevel == null ? null : highestKeyTrustLevel.toString();
+
+			if (keyValidities.isEmpty())
+				keyValidities.add(PgpKeyValidity.NOT_TRUSTED);
+
+			StringBuilder sb = new StringBuilder();
+			for (PgpKeyValidity kv : keyValidities) {
+				if (sb.length() > 0)
+					sb.append(", ");
+
+				sb.append(kv.toShortString());
+			}
+
+			this.keyValidity = keyValidity = sb.toString();
 		}
-		return keyTrustLevel;
+		return keyValidity;
+	}
+
+	public String getOwnerTrust() {
+		String ownerTrust = this.ownerTrust;
+		if (ownerTrust == null) {
+//			PgpOwnerTrust highestOwnerTrust = null;
+//			for (final PgpKeyId pgpKeyId : user.getPgpKeyIds()) {
+//				final PgpKey pgpKey = getPgp().getPgpKey(pgpKeyId);
+//				if (pgpKey != null) {
+//					final PgpOwnerTrust ot = getPgp().getOwnerTrust(pgpKey);
+//					if (highestOwnerTrust == null || ot.compareTo(highestOwnerTrust) > 0)
+//						highestOwnerTrust = ot;
+//				}
+//			}
+//			this.ownerTrust = ownerTrust = highestOwnerTrust == null ? null : highestOwnerTrust.toString();
+
+			final SortedSet<PgpOwnerTrust> ownerTrusts = new TreeSet<>(Collections.reverseOrder());
+			for (final PgpKeyId pgpKeyId : user.getPgpKeyIds()) {
+				final PgpKey pgpKey = getPgp().getPgpKey(pgpKeyId);
+				if (pgpKey != null) {
+					final PgpOwnerTrust ot = getPgp().getOwnerTrust(pgpKey);
+					ownerTrusts.add(ot);
+				}
+			}
+
+			if (ownerTrusts.isEmpty())
+				ownerTrusts.add(PgpOwnerTrust.UNKNOWN);
+
+			StringBuilder sb = new StringBuilder();
+			for (PgpOwnerTrust ot : ownerTrusts) {
+				if (sb.length() > 0)
+					sb.append(", ");
+
+				sb.append(ot.toShortString());
+			}
+
+			this.ownerTrust = ownerTrust = sb.toString();
+		}
+		return ownerTrust;
 	}
 
 	public boolean matchesFilter(final String filterText) {

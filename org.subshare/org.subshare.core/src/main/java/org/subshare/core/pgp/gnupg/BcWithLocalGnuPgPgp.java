@@ -23,7 +23,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -72,6 +71,12 @@ import org.bouncycastle.openpgp.operator.bc.BcPBESecretKeyEncryptorBuilder;
 import org.bouncycastle.openpgp.operator.bc.BcPGPContentSignerBuilder;
 import org.bouncycastle.openpgp.operator.bc.BcPGPDigestCalculatorProvider;
 import org.bouncycastle.openpgp.operator.bc.BcPGPKeyPair;
+import org.bouncycastle.openpgp.wot.OwnerTrust;
+import org.bouncycastle.openpgp.wot.TrustDb;
+import org.bouncycastle.openpgp.wot.TrustDbImpl;
+import org.bouncycastle.openpgp.wot.Validity;
+import org.bouncycastle.openpgp.wot.key.PgpKeyRegistry;
+import org.bouncycastle.openpgp.wot.key.PgpKeyRegistryImpl;
 import org.subshare.core.pgp.AbstractPgp;
 import org.subshare.core.pgp.CreatePgpKeyParam;
 import org.subshare.core.pgp.ImportKeysResult;
@@ -81,7 +86,8 @@ import org.subshare.core.pgp.PgpDecoder;
 import org.subshare.core.pgp.PgpEncoder;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpKeyId;
-import org.subshare.core.pgp.PgpKeyTrustLevel;
+import org.subshare.core.pgp.PgpKeyValidity;
+import org.subshare.core.pgp.PgpOwnerTrust;
 import org.subshare.core.pgp.PgpSignature;
 import org.subshare.core.pgp.PgpSignatureType;
 import org.subshare.core.pgp.PgpUserId;
@@ -102,6 +108,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 	private File gnuPgDir;
 	private File pubringFile;
 	private File secringFile;
+	private File trustDbFile;
 
 	private long pubringFileLastModified = Long.MIN_VALUE;
 	private long secringFileLastModified = Long.MIN_VALUE;
@@ -112,6 +119,11 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 	private Properties gpgProperties;
 	private final Map<String, Object> pgpKeyIdRange2Mutex = new HashMap<>();
 	private final Map<String, Properties> pgpKeyIdRange2LocalRevisionProperties = Collections.synchronizedMap(new HashMap<String, Properties>());
+
+	private SecureRandom secureRandom;
+
+	private PgpKeyRegistry pgpKeyRegistry;
+	private TrustDb trustDb;
 
 	@Override
 	public int getPriority() {
@@ -500,6 +512,16 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 		return secringFile;
 	}
 
+	protected File getTrustDbFile()
+    {
+	    if (trustDbFile == null) {
+	        final File gnuPgDir = getGnuPgDir();
+            gnuPgDir.mkdirs();
+            trustDbFile = createFile(gnuPgDir, "trustdb.gpg");
+	    }
+        return trustDbFile;
+    }
+
 	protected synchronized void loadIfNeeded() {
 		if (pgpKeyId2bcPgpKey == null
 				|| getPubringFile().lastModified() != pubringFileLastModified
@@ -668,31 +690,125 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 		return Collections.unmodifiableList(result);
 	}
 
+//	@Override
+//	public boolean isTrusted(final PgpKey pgpKey) {
+//		return getKeyTrustLevel(pgpKey).compareTo(PgpKeyValidity.TRUSTED_EXPIRED) >= 0;
+//	}
+
 	@Override
-	public boolean isTrusted(final PgpKey pgpKey) {
-		return getKeyTrustLevel(pgpKey).compareTo(PgpKeyTrustLevel.TRUSTED_EXPIRED) >= 0;
+	public PgpKeyValidity getKeyValidity(final PgpKey pgpKey) {
+		assertNotNull("pgpKey", pgpKey);
+		final TrustDb trustDb = getTrustDb();
+		final BcPgpKey bcPgpKey = getBcPgpKeyOrFail(pgpKey);
+		final PGPPublicKey publicKey = bcPgpKey.getPublicKey();
+
+		if (trustDb.isDisabled(publicKey))
+			return PgpKeyValidity.DISABLED;
+
+		if (publicKey.isRevoked())
+			return PgpKeyValidity.REVOKED;
+
+		if (trustDb.isExpired(publicKey))
+			return PgpKeyValidity.EXPIRED;
+
+		final Validity validity = trustDb.getValidity(publicKey);
+		return toPgpKeyValidity(validity);
 	}
 
 	@Override
-	public PgpKeyTrustLevel getKeyTrustLevel(final PgpKey pgpKey) {
-		// PGPPublicKey.getTrustData() returns *always* null, hence we must calculate it ourselves :-(
-		// TODO we must manage the "owner-trust", too!
-		// TODO we should improve this algorithm and store the results in a database, too!
-		// TODO is it expired?!
-		// For now, we take only direct trust relations into account.
-		final Set<PgpKey> masterKeysWithPrivateKey = new HashSet<PgpKey>(getMasterKeysWithSecretKey());
-		if (masterKeysWithPrivateKey.contains(pgpKey))
-			return PgpKeyTrustLevel.ULTIMATE;
+	public PgpKeyValidity getKeyValidity(final PgpKey pgpKey, final String userId) {
+		assertNotNull("pgpKey", pgpKey);
+		assertNotNull("userId", userId);
+		final TrustDb trustDb = getTrustDb();
+		final BcPgpKey bcPgpKey = getBcPgpKeyOrFail(pgpKey);
+		final PGPPublicKey publicKey = bcPgpKey.getPublicKey();
 
-		for (final PgpSignature signature : getCertifications(pgpKey)) {
-			if (signature.getSignatureType().getTrustLevel() < PgpSignatureType.CASUAL_CERTIFICATION.getTrustLevel())
-				continue;
+		if (trustDb.isDisabled(publicKey))
+			return PgpKeyValidity.DISABLED;
 
-			final PgpKey signingKey = getPgpKey(signature.getPgpKeyId());
-			if (masterKeysWithPrivateKey.contains(signingKey))
-				return PgpKeyTrustLevel.TRUSTED;
+		if (publicKey.isRevoked())
+			return PgpKeyValidity.REVOKED;
+
+		if (trustDb.isExpired(publicKey))
+			return PgpKeyValidity.EXPIRED;
+
+		final Validity validity = trustDb.getValidity(publicKey);
+		return toPgpKeyValidity(validity);
+	}
+
+	private PgpKeyValidity toPgpKeyValidity(final Validity validity) {
+		switch (assertNotNull("validity", validity)) {
+			case NONE:
+			case UNDEFINED:
+				return PgpKeyValidity.NOT_TRUSTED;
+			case MARGINAL:
+				return PgpKeyValidity.MARGINAL;
+			case FULL:
+				return PgpKeyValidity.FULL;
+			case ULTIMATE:
+				return PgpKeyValidity.ULTIMATE;
+			default :
+				throw new IllegalStateException("Unknown validity: " + validity);
 		}
-		return PgpKeyTrustLevel.NOT_TRUSTED;
+	}
+
+	@Override
+	public PgpOwnerTrust getOwnerTrust(final PgpKey pgpKey) {
+		assertNotNull("pgpKey", pgpKey);
+		final TrustDb trustDb = getTrustDb();
+		final BcPgpKey bcPgpKey = getBcPgpKeyOrFail(pgpKey);
+		final PGPPublicKey publicKey = bcPgpKey.getPublicKey();
+
+		final OwnerTrust ownerTrust = trustDb.getOwnerTrust(publicKey);
+		switch (ownerTrust) {
+			case UNKNOWN:
+				return PgpOwnerTrust.UNKNOWN;
+			case NEVER:
+				return PgpOwnerTrust.NEVER;
+			case MARGINAL:
+				return PgpOwnerTrust.MARGINAL;
+			case FULL:
+				return PgpOwnerTrust.FULL;
+			case ULTIMATE:
+				return PgpOwnerTrust.ULTIMATE;
+			default :
+				throw new IllegalStateException("Unknown ownerTrust: " + ownerTrust);
+		}
+	}
+
+	@Override
+	public void setOwnerTrust(final PgpKey pgpKey, final PgpOwnerTrust ownerTrust) {
+		assertNotNull("pgpKey", pgpKey);
+		assertNotNull("ownerTrustLevel", ownerTrust);
+		final TrustDb trustDb = getTrustDb();
+		final BcPgpKey bcPgpKey = getBcPgpKeyOrFail(pgpKey);
+		final PGPPublicKey publicKey = bcPgpKey.getPublicKey();
+
+		switch (ownerTrust) {
+			case UNKNOWN:
+				trustDb.setOwnerTrust(publicKey, OwnerTrust.UNKNOWN);
+				break;
+			case NEVER:
+				trustDb.setOwnerTrust(publicKey, OwnerTrust.NEVER);
+				break;
+			case MARGINAL:
+				trustDb.setOwnerTrust(publicKey, OwnerTrust.MARGINAL);
+				break;
+			case FULL:
+				trustDb.setOwnerTrust(publicKey, OwnerTrust.FULL);
+				break;
+			case ULTIMATE:
+				trustDb.setOwnerTrust(publicKey, OwnerTrust.ULTIMATE);
+				break;
+			default :
+				throw new IllegalStateException("Unknown ownerTrustLevel: " + ownerTrust);
+		}
+	}
+
+	@Override
+	public void updateTrustDb() {
+		getTrustDb().updateTrustDb();
+		firePropertyChange(PropertyEnum.trustdb, null, null);
 	}
 
 	private BcPgpKey enlistPublicKey(final Map<PgpKeyId, BcPgpKey> pgpKeyId2bcPgpKey,
@@ -1352,7 +1468,57 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 				publicExponent, getSecureRandom(), createPgpKeyParam.getStrength(), certainty);
 	}
 
-	private SecureRandom getSecureRandom() {
-		return new SecureRandom();
+	private synchronized SecureRandom getSecureRandom() {
+		if (secureRandom == null)
+			secureRandom = new SecureRandom();
+
+		return secureRandom;
 	}
+
+	protected PgpKeyRegistry getPgpKeyRegistry()
+	{
+		if (pgpKeyRegistry == null)
+			pgpKeyRegistry = new PgpKeyRegistryImpl(getPubringFile().getIoFile(), getSecringFile().getIoFile());
+
+		return pgpKeyRegistry;
+	}
+
+	protected TrustDb getTrustDb()
+	{
+		if (trustDb == null) {
+			trustDb = new TrustDbImpl(getTrustDbFile().getIoFile(), getPgpKeyRegistry());
+			trustDb.updateTrustDbIfNeeded();
+		}
+		return trustDb;
+	}
+
+//	protected org.bouncycastle.openpgp.wot.key.PgpKeyId toWotPgpKeyId(final PgpKeyId pgpKeyId) {
+//		assertNotNull("pgpKeyId", pgpKeyId);
+//		return new org.bouncycastle.openpgp.wot.key.PgpKeyId(pgpKeyId.longValue());
+//	}
+//
+//	protected PgpKeyId toPgpKeyId(final org.bouncycastle.openpgp.wot.key.PgpKeyId wotPgpKeyId) {
+//		assertNotNull("wotPgpKeyId", wotPgpKeyId);
+//		return new PgpKeyId(wotPgpKeyId.longValue());
+//	}
+//
+//	protected org.bouncycastle.openpgp.wot.key.PgpKey getWotPgpKeyOrFail(final PgpKeyId wotPgpKeyId) {
+//		assertNotNull("wotPgpKeyId", wotPgpKeyId);
+//		return getPgpKeyRegistry().getPgpKeyOrFail(toWotPgpKeyId(wotPgpKeyId));
+//	}
+//
+//	protected org.bouncycastle.openpgp.wot.key.PgpKey getWotPgpKey(final PgpKeyId pgpKeyId) {
+//		assertNotNull("pgpKeyId", pgpKeyId);
+//		return getPgpKeyRegistry().getPgpKey(toWotPgpKeyId(pgpKeyId));
+//	}
+//
+//	protected org.bouncycastle.openpgp.wot.key.PgpKey getWotPgpKey(final PgpKey pgpKey) {
+//		assertNotNull("pgpKey", pgpKey);
+//		return getWotPgpKey(pgpKey.getPgpKeyId());
+//	}
+//
+//	protected org.bouncycastle.openpgp.wot.key.PgpKey getWotPgpKeyOrFail(final PgpKey pgpKey) {
+//		assertNotNull("pgpKey", pgpKey);
+//		return getWotPgpKeyOrFail(pgpKey.getPgpKeyId());
+//	}
 }

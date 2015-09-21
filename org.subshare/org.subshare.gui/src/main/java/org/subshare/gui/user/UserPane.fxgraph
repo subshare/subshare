@@ -38,7 +38,13 @@ dynamic component UserPane {
 			Button id signPgpKeyButton {
 				graphic : ImageView { image : Image { url : "@sign-pgp-key_24x24.png" } },
 				tooltip : Tooltip { text : "Certify the authenticity of the selected PGP key (sign it)." },
-				onAction : controllermethod signPgpKeyButtonClicked
+				onAction : controllermethod signPgpKeyButtonClicked,
+				static margin : Insets { left : 8 }
+			},
+			Button id ownerTrustButton {
+				graphic : ImageView { image : Image { url : "@owner-trust_24x24.png" } },
+				tooltip : Tooltip { text : "Set the owner trust for the selected or all keys of this user." },
+				onAction : controllermethod ownerTrustButtonClicked
 			},
 //				Button id importPgpKeyButton {
 //					graphic : ImageView { image : Image { url : "@import-pgp-key_24x24.png" } },
@@ -48,9 +54,8 @@ dynamic component UserPane {
 			Button id exportPgpKeyButton {
 				graphic : ImageView { image : Image { url : "@export-pgp-key_24x24.png" } },
 				tooltip : Tooltip { text : "Export the selected PGP keys into a file." },
-				onAction : controllermethod exportPgpKeyButtonClicked
-//					,
-//					static margin : Insets { left : 8 }
+				onAction : controllermethod exportPgpKeyButtonClicked,
+				static margin : Insets { left : 8 }
 			},
 			Button id assignPgpKeyToThisUserButton {
 				graphic : ImageView { image : Image { url : "@assign-pgp-key-to-this-user_24x24.png" } },
@@ -65,9 +70,8 @@ dynamic component UserPane {
 			Button id deletePgpKeyButton {
 				graphic : ImageView { image : Image { url : "@delete-pgp-key_24x24.png" } },
 				tooltip : Tooltip { text : "Delete the selected PGP keys." },
-				onAction : controllermethod deletePgpKeyButtonClicked
-//					,
-//					static margin : Insets { left : 8 }
+				onAction : controllermethod deletePgpKeyButtonClicked,
+				static margin : Insets { left : 8 }
 			},
 
 			Button id closeButton {

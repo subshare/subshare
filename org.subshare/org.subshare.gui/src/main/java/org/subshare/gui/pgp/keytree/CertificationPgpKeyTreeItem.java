@@ -7,6 +7,8 @@ import java.util.List;
 import org.subshare.core.pgp.Pgp;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpKeyId;
+import org.subshare.core.pgp.PgpKeyValidity;
+import org.subshare.core.pgp.PgpOwnerTrust;
 import org.subshare.core.pgp.PgpSignature;
 
 public class CertificationPgpKeyTreeItem extends PgpKeyTreeItem<PgpSignature> {
@@ -19,6 +21,24 @@ public class CertificationPgpKeyTreeItem extends PgpKeyTreeItem<PgpSignature> {
 		signaturePgpKeyId = assertNotNull("signature.pgpKeyId", signature.getPgpKeyId());
 		assertNotNull("pgp", pgp);
 		signaturePgpKey = pgp.getPgpKey(signaturePgpKeyId);
+	}
+
+	@Override
+	public String getKeyValidity() {
+		if (signaturePgpKey == null)
+			return null;
+
+		final PgpKeyValidity kv = getPgp().getKeyValidity(signaturePgpKey);
+		return kv.toShortString();
+	}
+
+	@Override
+	public String getOwnerTrust() {
+		if (signaturePgpKey == null)
+			return null;
+
+		final PgpOwnerTrust ot = getPgp().getOwnerTrust(signaturePgpKey);
+		return ot.toShortString();
 	}
 
 	@Override

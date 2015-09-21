@@ -12,11 +12,6 @@ public abstract class CreatePgpKeyWizard extends Wizard {
 
 	public CreatePgpKeyWizard(final CreatePgpKeyParam createPgpKeyParam) {
 		super(new PassphraseWizardPage(createPgpKeyParam));
-//				new PassphraseWizardPage(createPgpKeyParam),
-//				new ValidityWizardPage(createPgpKeyParam),
-//				new UserIdWizardPage(createPgpKeyParam),
-//				new AdvancedWizardPage(createPgpKeyParam));
-
 		this.createPgpKeyParam = assertNotNull("createPgpKeyParam", createPgpKeyParam); //$NON-NLS-1$
 	}
 

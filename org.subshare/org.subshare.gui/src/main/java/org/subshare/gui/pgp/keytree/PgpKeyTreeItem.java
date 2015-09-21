@@ -5,9 +5,14 @@ import javafx.scene.Node;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeTableView;
 
+import org.subshare.core.pgp.Pgp;
+import org.subshare.gui.ls.PgpLs;
+
 public class PgpKeyTreeItem<T> extends TreeItem<PgpKeyTreeItem<?>> {
 
 	private T valueObject;
+
+	private Pgp pgp;
 
 	public PgpKeyTreeItem(T valueObject) {
 		this(valueObject, null);
@@ -28,6 +33,14 @@ public class PgpKeyTreeItem<T> extends TreeItem<PgpKeyTreeItem<?>> {
 	}
 
 	public String getKeyId() {
+		return null;
+	}
+
+	public String getKeyValidity() {
+		return null;
+	}
+
+	public String getOwnerTrust() {
 		return null;
 	}
 
@@ -88,5 +101,12 @@ public class PgpKeyTreeItem<T> extends TreeItem<PgpKeyTreeItem<?>> {
 	@Override
 	public String toString() {
 		return String.format("%s[%s]", getClass().getName(), valueObject);
+	}
+
+	protected Pgp getPgp() {
+		if (pgp == null)
+			pgp = PgpLs.getPgpOrFail();
+
+		return pgp;
 	}
 }

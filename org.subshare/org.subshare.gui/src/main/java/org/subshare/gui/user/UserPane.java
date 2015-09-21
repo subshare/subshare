@@ -47,6 +47,8 @@ import org.subshare.core.user.UserRegistry;
 import org.subshare.gui.ls.PgpLs;
 import org.subshare.gui.ls.PgpPrivateKeyPassphraseManagerLs;
 import org.subshare.gui.ls.UserRegistryLs;
+import org.subshare.gui.pgp.assignownertrust.AssignOwnerTrustData;
+import org.subshare.gui.pgp.assignownertrust.AssignOwnerTrustWizard;
 import org.subshare.gui.pgp.createkey.CreatePgpKeyWizard;
 import org.subshare.gui.pgp.createkey.FxPgpUserId;
 import org.subshare.gui.pgp.createkey.TimeUnit;
@@ -94,6 +96,9 @@ public class UserPane extends GridPane {
 
 //	@FXML
 //	private Button importPgpKeyButton;
+
+	@FXML
+	private Button ownerTrustButton;
 
 	@FXML
 	private Button exportPgpKeyButton;
@@ -152,6 +157,7 @@ public class UserPane extends GridPane {
 
 	private void updateDisable() {
 		final int selectedPgpKeysSize = getSelectedPgpKeys().size();
+		ownerTrustButton.setDisable(pgpKeyTreePane.getTreeTableView().getRoot().getChildren().size() < 1);
 		exportPgpKeyButton.setDisable(selectedPgpKeysSize == 0);
 		deletePgpKeyButton.setDisable(selectedPgpKeysSize == 0);
 		assignPgpKeyToOtherUserButton.setDisable(selectedPgpKeysSize == 0);
@@ -377,11 +383,19 @@ public class UserPane extends GridPane {
 
 	@FXML
 	private void exportPgpKeyButtonClicked(final ActionEvent event) {
-		final File file = showSaveFileDialog("Choose file to export PGP key(s) into");
+		final Set<PgpKey> selectedPgpKeys = getSelectedPgpKeys();
+		String initialFileName;
+		if (selectedPgpKeys.size() == 1) {
+			PgpKey pgpKey = selectedPgpKeys.iterator().next();
+			initialFileName = pgpKey.getPgpKeyId().toString() + "_" + user.getFirstName() + "_" + user.getLastName() + ".gpg";
+		}
+		else {
+			initialFileName = user.getFirstName() + "_" + user.getLastName() + ".gpg";
+		}
+
+		final File file = showSaveFileDialog("Choose file to export PGP key(s) into", initialFileName);
 		if (file == null)
 			return;
-
-		final Set<PgpKey> selectedPgpKeys = getSelectedPgpKeys();
 
 		final boolean[] selectionContainsKeyWithPrivateKey = new boolean[] { false };
 		selectedPgpKeys.forEach(pgpKey -> {
@@ -399,19 +413,20 @@ public class UserPane extends GridPane {
 			getPgp().exportPublicKeys(selectedPgpKeys, file);
 	}
 
-	private File showSaveFileDialog(final String title) {
+	private File showSaveFileDialog(final String title, String initialFileName) {
 		final FileChooser fileChooser = new FileChooser();
 		fileChooser.setTitle(title);
+		fileChooser.setInitialFileName(initialFileName);
 		final java.io.File file = fileChooser.showSaveDialog(getScene().getWindow());
 		return file == null ? null : createFile(file).getAbsoluteFile();
 	}
 
-	private File showOpenFileDialog(final String title) {
-		final FileChooser fileChooser = new FileChooser();
-		fileChooser.setTitle(title);
-		final java.io.File file = fileChooser.showOpenDialog(getScene().getWindow());
-		return file == null ? null : createFile(file).getAbsoluteFile();
-	}
+//	private File showOpenFileDialog(final String title) {
+//		final FileChooser fileChooser = new FileChooser();
+//		fileChooser.setTitle(title);
+//		final java.io.File file = fileChooser.showOpenDialog(getScene().getWindow());
+//		return file == null ? null : createFile(file).getAbsoluteFile();
+//	}
 
 	private UserRegistry getUserRegistry() {
 		return UserRegistryLs.getUserRegistry();
@@ -420,6 +435,16 @@ public class UserPane extends GridPane {
 	@FXML
 	private void signPgpKeyButtonClicked(final ActionEvent event) {
 
+	}
+
+	@FXML
+	private void ownerTrustButtonClicked(final ActionEvent event) {
+		final Set<PgpKey> pgpKeys = getSelectedPgpKeys();
+		final AssignOwnerTrustData assignOwnerTrustData = new AssignOwnerTrustData();
+		assignOwnerTrustData.setUser(user);
+		assignOwnerTrustData.getPgpKeys().addAll(pgpKeys);
+		final AssignOwnerTrustWizard wizard = new AssignOwnerTrustWizard(assignOwnerTrustData);
+		new WizardDialog(getScene().getWindow(), wizard).show();
 	}
 
 	@FXML

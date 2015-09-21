@@ -14,6 +14,8 @@ import javafx.scene.control.TreeItem;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpKeyAlgorithm;
 import org.subshare.core.pgp.PgpKeyFlag;
+import org.subshare.core.pgp.PgpKeyValidity;
+import org.subshare.core.pgp.PgpOwnerTrust;
 
 public class PgpKeyPgpKeyTreeItem extends PgpKeyTreeItem<PgpKey> {
 
@@ -50,6 +52,20 @@ public class PgpKeyPgpKeyTreeItem extends PgpKeyTreeItem<PgpKey> {
 	@Override
 	public String getKeyId() {
 		return getPgpKey().getPgpKeyId().toHumanString();
+	}
+
+	@Override
+	public String getKeyValidity() {
+		final PgpKey pgpKey = getPgpKey();
+		final PgpKeyValidity kv = getPgp().getKeyValidity(pgpKey);
+		return kv.toShortString();
+	}
+
+	@Override
+	public String getOwnerTrust() {
+		final PgpKey pgpKey = getPgpKey();
+		final PgpOwnerTrust ot = getPgp().getOwnerTrust(pgpKey);
+		return ot.toShortString();
 	}
 
 	@Override

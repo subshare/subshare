@@ -5,6 +5,7 @@ import javafx.collections.ObservableList;
 import javafx.scene.control.TreeItem;
 
 import org.subshare.core.pgp.PgpKey;
+import org.subshare.core.pgp.PgpKeyValidity;
 
 public class UserIdPgpKeyTreeItem extends PgpKeyTreeItem<String> {
 
@@ -13,6 +14,13 @@ public class UserIdPgpKeyTreeItem extends PgpKeyTreeItem<String> {
 	public UserIdPgpKeyTreeItem(final PgpKey pgpKey, final String userId) {
 		super(assertNotNull("userId", userId));
 		this.pgpKey = assertNotNull("pgpKey", pgpKey);
+	}
+
+	@Override
+	public String getKeyValidity() {
+		final String userId = getValueObject();
+		final PgpKeyValidity kv = getPgp().getKeyValidity(pgpKey, userId);
+		return kv.toShortString();
 	}
 
 	@Override

@@ -37,20 +37,20 @@ dynamic component PgpKeyTreePane {
 							property : "keyId"
 						}
 					},
-//					TreeTableColumn < Object, String > id keyTrustTreeTableColumn {
-//						text : "Key-trust",
-//						prefWidth : 150,
-//						cellValueFactory : TreeItemPropertyValueFactory < PgpKeyTreeItem<?>, String > {
-//							property : "keyTrust"
-//						}
-//					},
-//					TreeTableColumn < Object, String > id ownerTrustTreeTableColumn {
-//						text : "Owner-trust",
-//						prefWidth : 150,
-//						cellValueFactory : TreeItemPropertyValueFactory < PgpKeyTreeItem<?>, String > {
-//							property : "ownerTrust"
-//						}
-//					},
+					TreeTableColumn < Object, String > id keyValidityTreeTableColumn {
+						text : "Key validity/trust",
+						prefWidth : 120,
+						cellValueFactory : TreeItemPropertyValueFactory < PgpKeyTreeItem<?>, String > {
+							property : "keyValidity"
+						}
+					},
+					TreeTableColumn < Object, String > id ownerTrustTreeTableColumn {
+						text : "Owner trust",
+						prefWidth : 120,
+						cellValueFactory : TreeItemPropertyValueFactory < PgpKeyTreeItem<?>, String > {
+							property : "ownerTrust"
+						}
+					},
 					TreeTableColumn < Object, String > id createdTreeTableColumn {
 						text : "Created",
 						prefWidth : 100,

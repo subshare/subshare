@@ -6,8 +6,8 @@ import java.util.Map;
 /**
  * Validity of a key or user-identity/-attribute.
  * <p>
- * The validity is calculated by {@link TrustDb#updateTrustDb()} and can be queried by its
- * {@link TrustDb#getValidity(org.bouncycastle.openpgp.wot.key.PgpKey) getValidity(PgpKey)} or another overloaded
+ * The validity is calculated by {@link TrustDbImpl#updateTrustDb()} and can be queried by its
+ * {@link TrustDbImpl#getValidity(org.bouncycastle.openpgp.wot.key.PgpKey) getValidity(PgpKey)} or another overloaded
  * {@code getValidity(...)} method.
  *
  * @author Marco หงุ่ยตระกูล-Schulze - marco at codewizards dot co
@@ -46,7 +46,7 @@ public enum Validity
      * A user should see some positive confirmation (e.g. a green indication colour) when using or encountering such a
      * key.
      */
-    FULLY(TrustConst.TRUST_FULLY), // 5
+    FULL(TrustConst.TRUST_FULL), // 5
 
     /**
      * The key/user-identity/user-attribute is definitely valid - probably it's belonging to the user himself. There is

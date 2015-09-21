@@ -44,6 +44,21 @@
 			<tooltip>
 				<Tooltip text="Certify the authenticity of the selected PGP key (sign it)."/> 
 			</tooltip>
+			<FlowPane.margin>
+				<Insets left="8"/> 
+			</FlowPane.margin>
+		</Button>
+		<Button fx:id="ownerTrustButton" onAction="#ownerTrustButtonClicked"> 
+			<graphic>
+				<ImageView> 
+					<image>
+						<Image url="@owner-trust_24x24.png"/> 
+					</image>
+				</ImageView>
+			</graphic>
+			<tooltip>
+				<Tooltip text="Set the owner trust for the selected or all keys of this user."/> 
+			</tooltip>
 		</Button>
 		<Button fx:id="exportPgpKeyButton" onAction="#exportPgpKeyButtonClicked"> 
 			<graphic>
@@ -56,6 +71,9 @@
 			<tooltip>
 				<Tooltip text="Export the selected PGP keys into a file."/> 
 			</tooltip>
+			<FlowPane.margin>
+				<Insets left="8"/> 
+			</FlowPane.margin>
 		</Button>
 		<Button fx:id="assignPgpKeyToThisUserButton" onAction="#assignPgpKeyToThisUserButtonClicked"> 
 			<graphic>
@@ -92,6 +110,9 @@
 			<tooltip>
 				<Tooltip text="Delete the selected PGP keys."/> 
 			</tooltip>
+			<FlowPane.margin>
+				<Insets left="8"/> 
+			</FlowPane.margin>
 		</Button>
 		<Button fx:id="closeButton" onAction="#closeButtonClicked"> 
 			<graphic>

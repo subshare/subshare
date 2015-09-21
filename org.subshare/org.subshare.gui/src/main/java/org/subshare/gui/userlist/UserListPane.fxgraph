@@ -90,11 +90,18 @@ dynamic component UserListPane resourcefile "messages.properties" {
 						property : "email"
 					}
 				},
-				TableColumn < UserListItem, String > id emailColumn {
-					text : "Key trust level",
+				TableColumn < UserListItem, String > id keyValidityColumn {
+					text : "Key validity/trust",
 					prefWidth : 120,
 					cellValueFactory : PropertyValueFactory < UserListItem, String > {
-						property : "keyTrustLevel"
+						property : "keyValidity"
+					}
+				},
+				TableColumn < UserListItem, String > id ownerTrustColumn {
+					text : "Owner trust",
+					prefWidth : 120,
+					cellValueFactory : PropertyValueFactory < UserListItem, String > {
+						property : "ownerTrust"
 					}
 				}
 			],

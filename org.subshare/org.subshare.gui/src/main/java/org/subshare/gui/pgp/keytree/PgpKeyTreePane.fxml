@@ -24,6 +24,16 @@
 						<TreeItemPropertyValueFactory property="keyId"/> 
 					</cellValueFactory>
 				</TreeTableColumn>
+				<TreeTableColumn fx:id="keyValidityTreeTableColumn" text="Key validity/trust" prefWidth="120"> 
+					<cellValueFactory>
+						<TreeItemPropertyValueFactory property="keyValidity"/> 
+					</cellValueFactory>
+				</TreeTableColumn>
+				<TreeTableColumn fx:id="ownerTrustTreeTableColumn" text="Owner trust" prefWidth="120"> 
+					<cellValueFactory>
+						<TreeItemPropertyValueFactory property="ownerTrust"/> 
+					</cellValueFactory>
+				</TreeTableColumn>
 				<TreeTableColumn fx:id="createdTreeTableColumn" text="Created" prefWidth="100"> 
 					<cellValueFactory>
 						<TreeItemPropertyValueFactory property="created"/> 

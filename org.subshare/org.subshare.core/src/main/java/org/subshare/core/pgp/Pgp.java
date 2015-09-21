@@ -14,7 +14,8 @@ public interface Pgp {
 	interface Property extends PropertyBase { }
 
 	enum PropertyEnum implements Property {
-		localRevision
+		localRevision,
+		trustdb
 	}
 
 	int getPriority();
@@ -41,9 +42,15 @@ public interface Pgp {
 
 	Collection<PgpKey> getMasterKeysWithSecretKey();
 
-	boolean isTrusted(PgpKey pgpKey);
+	PgpKeyValidity getKeyValidity(PgpKey pgpKey);
 
-	PgpKeyTrustLevel getKeyTrustLevel(PgpKey pgpKey);
+	PgpKeyValidity getKeyValidity(PgpKey pgpKey, String userId);
+
+	PgpOwnerTrust getOwnerTrust(PgpKey pgpKey);
+
+	void setOwnerTrust(PgpKey pgpKey, PgpOwnerTrust ownerTrust);
+
+	void updateTrustDb();
 
 	void exportPublicKeys(Set<PgpKey> pgpKeys, File file);
 

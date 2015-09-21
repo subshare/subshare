@@ -101,9 +101,14 @@
 					<PropertyValueFactory property="email"/> 
 				</cellValueFactory>
 			</TableColumn>
-			<TableColumn fx:id="emailColumn" text="Key trust level" prefWidth="120"> 
+			<TableColumn fx:id="keyValidityColumn" text="Key validity/trust" prefWidth="120"> 
 				<cellValueFactory>
-					<PropertyValueFactory property="keyTrustLevel"/> 
+					<PropertyValueFactory property="keyValidity"/> 
+				</cellValueFactory>
+			</TableColumn>
+			<TableColumn fx:id="ownerTrustColumn" text="Owner trust" prefWidth="120"> 
+				<cellValueFactory>
+					<PropertyValueFactory property="ownerTrust"/> 
 				</cellValueFactory>
 			</TableColumn>
 		</columns>

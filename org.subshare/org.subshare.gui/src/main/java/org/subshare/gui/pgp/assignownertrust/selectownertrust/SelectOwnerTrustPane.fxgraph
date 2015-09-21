@@ -1,0 +1,104 @@
+package org.subshare.gui.pgp.assignownertrust.selectownertrust
+
+import javafx.scene.layout.GridPane
+import javafx.geometry.Insets
+import javafx.scene.control.Label
+import javafx.scene.text.Text
+import javafx.scene.control.TextField
+import javafx.scene.control.RadioButton
+import javafx.scene.control.ToggleGroup
+import javafx.scene.layout.VBox
+
+dynamic component SelectOwnerTrustPane resourcefile 'messages.properties' {
+	define ToggleGroup id toggleGroup
+
+	GridPane {
+		hgap : 8,
+		vgap : 8,
+		padding : Insets { left : 8, top : 8, right : 8, bottom : 8 },
+
+		Text id headerText {
+			text : rstring 'SelectOwnerTrustPane.headerText.text',
+			wrappingWidth : 500,
+			static columnIndex : 0,
+			static rowIndex : 0,
+			static columnSpan : 2,
+			static hgrow : "ALWAYS"
+		},
+
+		Label {
+			text : "User:",
+			static columnIndex : 0,
+			static rowIndex : 1
+		},
+		TextField id userTextField {
+			editable : false,
+			static columnIndex : 1,
+			static rowIndex : 1,
+			static hgrow : "ALWAYS"
+		},
+
+
+		Label {
+			text : "How much do you trust this user to thoroughly check keys of other users before signing them?",
+			style : "-fx-font-weight: bold",
+			static columnIndex : 0,
+			static rowIndex : 2,
+			static columnSpan : 2,
+			static hgrow : "ALWAYS"
+		},
+
+		VBox id radioButtonBox {
+			fillWidth : true,
+			spacing : 8,
+			
+			RadioButton id unknownRadioButton {
+				text : "I do not know.",
+				toggleGroup : idref toggleGroup
+			},
+	
+			RadioButton id neverRadioButton {
+				text : "I do NOT trust him.",
+				toggleGroup : idref toggleGroup
+			},
+			
+			RadioButton id marginalRadioButton {
+				text : "I trust him marginally.",
+				toggleGroup : idref toggleGroup
+			},
+			
+			RadioButton id fullRadioButton {
+				text : "I trust him.",
+				toggleGroup : idref toggleGroup
+			},
+			
+			RadioButton id ultimateRadioButton {
+				text : "I trust him ultimately.",
+				toggleGroup : idref toggleGroup
+			},
+			
+			static columnIndex : 0,
+			static rowIndex : 3,
+			static columnSpan : 2,
+			static hgrow : "ALWAYS"
+		},
+		
+		Label {
+			text : "This means:",
+			style : "-fx-font-weight: bold",
+			static columnIndex : 0,
+			static rowIndex : 4,
+			static columnSpan : 2,
+			static hgrow : "ALWAYS"
+		},
+		
+		Text id selectedOwnerTrustDescriptionText {
+			text : "I believe in the authenticity of every key signed by this user. Either this user represents myself (and everyone trusts himself ultimately, of course); or this user is for other reasons an extremely reliable notary.",
+			wrappingWidth : 500,
+			static columnIndex : 0,
+			static rowIndex : 5,
+			static columnSpan : 2,
+			static hgrow : "ALWAYS"
+		}
+	}
+}
