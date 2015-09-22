@@ -21,7 +21,7 @@ import org.subshare.gui.pgp.keytree.UserRootPgpKeyTreeItem;
 
 public abstract class SelectKeyPane extends GridPane {
 
-	private final AssignOwnerTrustData assignOwnerTrustData;
+	private /*final*/ AssignOwnerTrustData assignOwnerTrustData;
 
 	@FXML
 	private ToggleGroup toggleGroup;

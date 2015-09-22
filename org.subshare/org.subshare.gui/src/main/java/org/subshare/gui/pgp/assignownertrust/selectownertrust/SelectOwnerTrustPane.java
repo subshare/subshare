@@ -24,7 +24,7 @@ import org.subshare.gui.pgp.assignownertrust.AssignOwnerTrustData;
 
 public class SelectOwnerTrustPane extends GridPane {
 
-	private final AssignOwnerTrustData assignOwnerTrustData;
+	private /*final*/ AssignOwnerTrustData assignOwnerTrustData;
 
 	@FXML
 	private ToggleGroup toggleGroup;
