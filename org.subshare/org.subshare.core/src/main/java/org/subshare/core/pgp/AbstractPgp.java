@@ -104,4 +104,9 @@ public abstract class AbstractPgp implements Pgp {
 	public ImportKeysResult importKeys(byte[] data) {
 		return importKeys(new ByteArrayInputStream(data));
 	}
+
+	@Override
+	public Object clone() {
+		throw new UnsupportedOperationException();
+	}
 }

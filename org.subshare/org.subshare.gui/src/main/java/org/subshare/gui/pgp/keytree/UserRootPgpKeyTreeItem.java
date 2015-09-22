@@ -11,7 +11,6 @@ import java.util.Map;
 import java.util.Set;
 
 import javafx.application.Platform;
-import javafx.scene.control.TreeTableView;
 
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpKeyId;
@@ -19,23 +18,23 @@ import org.subshare.core.user.User;
 
 public class UserRootPgpKeyTreeItem extends PgpKeyTreeItem<User> {
 
-	private final TreeTableView<PgpKeyTreeItem<?>> treeTableView;
+	private final PgpKeyTreePane pgpKeyTreePane;
 
 	private final PropertyChangeListener userPgpKeyIdsPropertyChangeListener = event -> Platform.runLater(() -> updatePgpKeyChildren());
 
 	private final Map<PgpKeyId, PgpKeyPgpKeyTreeItem> pgpKeyId2PgpKeyPgpKeyTreeItem = new HashMap<>();
 
-	public UserRootPgpKeyTreeItem(final TreeTableView<PgpKeyTreeItem<?>> treeTableView, final User user) {
+	public UserRootPgpKeyTreeItem(final PgpKeyTreePane pgpKeyTreePane, final User user) {
 		super(assertNotNull("user", user));
-		this.treeTableView = assertNotNull("treeTableView", treeTableView);
+		this.pgpKeyTreePane = assertNotNull("pgpKeyTreePane", pgpKeyTreePane);
 
 		addWeakPropertyChangeListener(user, User.PropertyEnum.pgpKeyIds, userPgpKeyIdsPropertyChangeListener);
 		updatePgpKeyChildren();
 	}
 
 	@Override
-	protected TreeTableView<PgpKeyTreeItem<?>> getTreeTableView() {
-		return treeTableView;
+	protected PgpKeyTreePane getPgpKeyTreePane() {
+		return pgpKeyTreePane;
 	}
 
 	private void updatePgpKeyChildren() {

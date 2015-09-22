@@ -88,14 +88,10 @@ public class UserPane extends GridPane {
 	private TableColumn<EmailWrapper, String> emailTableColumn;
 
 	@FXML
-//	private TreeTableView<PgpKeyTreeItem<?>> pgpKeyTreeTableView;
 	private PgpKeyTreePane pgpKeyTreePane;
 
 	@FXML
 	private Button createPgpKeyButton;
-
-//	@FXML
-//	private Button importPgpKeyButton;
 
 	@FXML
 	private Button ownerTrustButton;
@@ -149,7 +145,7 @@ public class UserPane extends GridPane {
 
 		emailTableColumn.prefWidthProperty().bind(emailsTableView.widthProperty().subtract(10)); // TODO we should find out the scroll-bar-width and subtract this!
 
-		final UserRootPgpKeyTreeItem root = new UserRootPgpKeyTreeItem(pgpKeyTreePane.getTreeTableView(), user);
+		final UserRootPgpKeyTreeItem root = new UserRootPgpKeyTreeItem(pgpKeyTreePane, user);
 		pgpKeyTreePane.getTreeTableView().setRoot(root);
 		pgpKeyTreePane.getTreeTableView().getSelectionModel().getSelectedItems().addListener((InvalidationListener) observable -> updateDisable());
 		updateDisable();

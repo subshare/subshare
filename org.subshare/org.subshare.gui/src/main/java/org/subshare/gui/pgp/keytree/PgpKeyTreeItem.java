@@ -1,6 +1,16 @@
 package org.subshare.gui.pgp.keytree;
 
+import static co.codewizards.cloudstore.core.bean.PropertyChangeListenerUtil.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ReadOnlyStringProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.scene.Node;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeTableView;
@@ -14,6 +24,30 @@ public class PgpKeyTreeItem<T> extends TreeItem<PgpKeyTreeItem<?>> {
 
 	private Pgp pgp;
 
+	private final BooleanProperty checked = new SimpleBooleanProperty(this, "checked") {
+		@Override
+		public void set(final boolean newValue) {
+			super.set(newValue);
+
+			if (newValue)
+				getPgpKeyTreePane().getCheckedTreeItems().add(PgpKeyTreeItem.this);
+			else
+				getPgpKeyTreePane().getCheckedTreeItems().remove(PgpKeyTreeItem.this);
+		}
+	};
+
+	private final PropertyChangeListener trustDbPropertyChangeListener = new PropertyChangeListener() {
+		@Override
+		public void propertyChange(PropertyChangeEvent evt) {
+			updateKeyValidityAndOwnerTrust();
+		}
+	};
+
+	private boolean trustDbPropertyChangeListenerHooked;
+
+	private final StringProperty keyValidity = new SimpleStringProperty(this, "keyValidity");
+	private final StringProperty ownerTrust = new SimpleStringProperty(this, "ownerTrust");
+
 	public PgpKeyTreeItem(T valueObject) {
 		this(valueObject, null);
 	}
@@ -24,8 +58,23 @@ public class PgpKeyTreeItem<T> extends TreeItem<PgpKeyTreeItem<?>> {
 		setGraphic(graphic);
 	}
 
+	protected void updateKeyValidityAndOwnerTrust() {
+		keyValidity.set(getKeyValidity());
+		ownerTrust.set(getOwnerTrust());
+	}
+
 	protected T getValueObject() {
 		return valueObject;
+	}
+
+	public BooleanProperty checkedProperty() {
+		return checked;
+	}
+	public boolean isChecked() {
+		return checked.get();
+	}
+	public void setChecked(boolean checked) {
+		this.checked.set(checked);
 	}
 
 	public String getName() {
@@ -40,8 +89,24 @@ public class PgpKeyTreeItem<T> extends TreeItem<PgpKeyTreeItem<?>> {
 		return null;
 	}
 
+	public ReadOnlyStringProperty keyValidityProperty() {
+		if (keyValidity.get() == null && getKeyValidity() != null) {
+			hookTrustDbPropertyChangeListener();
+			updateKeyValidityAndOwnerTrust();
+		}
+		return keyValidity;
+	}
+
 	public String getOwnerTrust() {
 		return null;
+	}
+
+	public ReadOnlyStringProperty ownerTrustProperty() {
+		if (ownerTrust.get() == null && getOwnerTrust() != null) {
+			hookTrustDbPropertyChangeListener();
+			updateKeyValidityAndOwnerTrust();
+		}
+		return ownerTrust;
 	}
 
 	public String getCreated() {
@@ -64,25 +129,14 @@ public class PgpKeyTreeItem<T> extends TreeItem<PgpKeyTreeItem<?>> {
 		return null;
 	}
 
-//	public static class MainTreeItemEvent extends Event {
-//		private static final long serialVersionUID = 1L;
-//
-//		private final PgpKeyTreeItem<?> mainTreeItem;
-//
-//		public MainTreeItemEvent(EventType<? extends Event> eventType, PgpKeyTreeItem<?> mainTreeItem) {
-//			super(eventType);
-//			this.mainTreeItem = mainTreeItem;
-//		}
-//
-//		public PgpKeyTreeItem<?> getMainTreeItem() {
-//			return mainTreeItem;
-//		}
-//	}
-
 	protected TreeTableView<PgpKeyTreeItem<?>> getTreeTableView() {
+		return getPgpKeyTreePane().getTreeTableView();
+	}
+
+	protected PgpKeyTreePane getPgpKeyTreePane() {
 		final PgpKeyTreeItem<?> parent = (PgpKeyTreeItem<?>) getParent();
 		assertNotNull("parent", parent);
-		return parent.getTreeTableView();
+		return parent.getPgpKeyTreePane();
 	}
 
 	public <I extends PgpKeyTreeItem<?>> I getThisOrParentPgpKeyTreeItemOfType(final Class<I> type) {
@@ -104,9 +158,20 @@ public class PgpKeyTreeItem<T> extends TreeItem<PgpKeyTreeItem<?>> {
 	}
 
 	protected Pgp getPgp() {
-		if (pgp == null)
-			pgp = PgpLs.getPgpOrFail();
-
+		if (pgp == null) {
+			final PgpKeyTreeItem<?> parent = (PgpKeyTreeItem<?>) getParent();
+			if (parent != null)
+				pgp = parent.getPgp();
+			else
+				pgp = PgpLs.getPgpOrFail();
+		}
 		return pgp;
+	}
+
+	protected void hookTrustDbPropertyChangeListener() {
+		if (! trustDbPropertyChangeListenerHooked) {
+			trustDbPropertyChangeListenerHooked = true;
+			addWeakPropertyChangeListener(getPgp(), Pgp.PropertyEnum.trustdb, trustDbPropertyChangeListener);
+		}
 	}
 }

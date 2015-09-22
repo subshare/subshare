@@ -330,9 +330,23 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 			publicKeyRing = PGPPublicKeyRing.insertPublicKey(publicKeyRing, publicKey);
 		else {
 			PGPPublicKey newPublicKey = oldPublicKey;
-			for (final Iterator<?> it = publicKey.getSignatures(); it.hasNext(); ) {
+			for (@SuppressWarnings("unchecked") final Iterator<?> it = nullToEmpty(publicKey.getKeySignatures()); it.hasNext(); ) {
 				PGPSignature signature = (PGPSignature) it.next();
-				newPublicKey = mergeSignature(newPublicKey, signature);
+				newPublicKey = mergeKeySignature(newPublicKey, signature);
+			}
+			for (@SuppressWarnings("unchecked") Iterator<?> uit = nullToEmpty(publicKey.getUserIDs()); uit.hasNext(); ) {
+				final String userId = (String) uit.next();
+				for (@SuppressWarnings("unchecked") final Iterator<?> it = nullToEmpty(publicKey.getSignaturesForID(userId)); it.hasNext(); ) {
+					PGPSignature signature = (PGPSignature) it.next();
+					newPublicKey = mergeUserIdSignature(newPublicKey, userId, signature);
+				}
+			}
+			for (@SuppressWarnings("unchecked") Iterator<?> uit = nullToEmpty(publicKey.getUserAttributes()); uit.hasNext(); ) {
+				final PGPUserAttributeSubpacketVector userAttribute = (PGPUserAttributeSubpacketVector) uit.next();
+				for (@SuppressWarnings("unchecked") final Iterator<?> it = nullToEmpty(publicKey.getSignaturesForUserAttribute(userAttribute)); it.hasNext(); ) {
+					PGPSignature signature = (PGPSignature) it.next();
+					newPublicKey = mergeUserAttributeSignature(newPublicKey, userAttribute, signature);
+				}
 			}
 
 			if (newPublicKey != oldPublicKey) {
@@ -348,22 +362,72 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 		return publicKeyRing;
 	}
 
-	private PGPPublicKey mergeSignature(PGPPublicKey publicKey, final PGPSignature signature) {
+	private PGPPublicKey mergeKeySignature(PGPPublicKey publicKey, final PGPSignature signature) {
 		assertNotNull("publicKey", publicKey);
 		assertNotNull("signature", signature);
 
-		PGPSignature oldSignature = getSignature(publicKey, signature);
+		PGPSignature oldSignature = getKeySignature(publicKey, signature);
 		if (oldSignature == null)
 			publicKey = PGPPublicKey.addCertification(publicKey, signature);
 
 		return publicKey;
 	}
 
-	private static PGPSignature getSignature(final PGPPublicKey publicKey, final PGPSignature signature) {
+	private PGPPublicKey mergeUserIdSignature(PGPPublicKey publicKey, final String userId, final PGPSignature signature) {
+		assertNotNull("publicKey", publicKey);
+		assertNotNull("userId", userId);
+		assertNotNull("signature", signature);
+
+		PGPSignature oldSignature = getUserIdSignature(publicKey, userId, signature);
+		if (oldSignature == null)
+			publicKey = PGPPublicKey.addCertification(publicKey, userId, signature);
+
+		return publicKey;
+	}
+
+	private PGPPublicKey mergeUserAttributeSignature(PGPPublicKey publicKey, final PGPUserAttributeSubpacketVector userAttribute, final PGPSignature signature) {
+		assertNotNull("publicKey", publicKey);
+		assertNotNull("userAttribute", userAttribute);
+		assertNotNull("signature", signature);
+
+		PGPSignature oldSignature = getUserAttributeSignature(publicKey, userAttribute, signature);
+		if (oldSignature == null)
+			publicKey = PGPPublicKey.addCertification(publicKey, userAttribute, signature);
+
+		return publicKey;
+	}
+
+	private static PGPSignature getKeySignature(final PGPPublicKey publicKey, final PGPSignature signature) {
 		assertNotNull("publicKey", publicKey);
 		assertNotNull("signature", signature);
 
-		for (final Iterator<?> it = publicKey.getSignatures(); it.hasNext(); ) {
+		for (@SuppressWarnings("unchecked") final Iterator<?> it = nullToEmpty(publicKey.getKeySignatures()); it.hasNext(); ) {
+			final PGPSignature s = (PGPSignature) it.next();
+			if (isSignatureEqual(s, signature))
+				return s;
+		}
+		return null;
+	}
+
+	private static PGPSignature getUserIdSignature(final PGPPublicKey publicKey, final String userId, final PGPSignature signature) {
+		assertNotNull("publicKey", publicKey);
+		assertNotNull("userId", userId);
+		assertNotNull("signature", signature);
+
+		for (@SuppressWarnings("unchecked") final Iterator<?> it = nullToEmpty(publicKey.getSignaturesForID(userId)); it.hasNext(); ) {
+			final PGPSignature s = (PGPSignature) it.next();
+			if (isSignatureEqual(s, signature))
+				return s;
+		}
+		return null;
+	}
+
+	private static PGPSignature getUserAttributeSignature(final PGPPublicKey publicKey, final PGPUserAttributeSubpacketVector userAttribute, final PGPSignature signature) {
+		assertNotNull("publicKey", publicKey);
+		assertNotNull("userAttribute", userAttribute);
+		assertNotNull("signature", signature);
+
+		for (@SuppressWarnings("unchecked") final Iterator<?> it = nullToEmpty(publicKey.getSignaturesForUserAttribute(userAttribute)); it.hasNext(); ) {
 			final PGPSignature s = (PGPSignature) it.next();
 			if (isSignatureEqual(s, signature))
 				return s;

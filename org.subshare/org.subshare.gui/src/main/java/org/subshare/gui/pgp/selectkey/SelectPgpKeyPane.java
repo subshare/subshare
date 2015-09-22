@@ -74,7 +74,7 @@ public abstract class SelectPgpKeyPane extends GridPane {
 
 		this.headerText.setText(headerText);
 
-		simpleRootPgpKeyTreeItem = new SimpleRootPgpKeyTreeItem(pgpKeyTreePane.getTreeTableView());
+		simpleRootPgpKeyTreeItem = new SimpleRootPgpKeyTreeItem(pgpKeyTreePane);
 
 		this.pgpKeys = pgpKeys;
 		pgpKeyPgpKeyTreeItems = new ArrayList<>(pgpKeys.size());

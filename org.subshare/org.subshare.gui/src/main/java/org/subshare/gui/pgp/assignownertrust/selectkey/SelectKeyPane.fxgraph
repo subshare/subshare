@@ -1,0 +1,69 @@
+package org.subshare.gui.pgp.assignownertrust.selectkey
+
+import javafx.scene.layout.GridPane
+import javafx.geometry.Insets
+import javafx.scene.text.Text
+import javafx.scene.control.ToggleGroup
+import javafx.scene.control.RadioButton
+import org.subshare.gui.pgp.keytree.PgpKeyTreePane
+import javafx.scene.layout.HBox
+import javafx.scene.control.Label
+import org.subshare.gui.splash.SplashPane
+import javafx.scene.control.TextField
+
+dynamic component SelectKeyPane resourcefile 'messages.properties' {
+	define ToggleGroup id toggleGroup
+	
+	GridPane {
+		hgap : 8,
+		vgap : 8,
+		padding : Insets { left : 8, top : 8, right : 8, bottom : 8 },
+
+		Text id headerText {
+			text : rstring 'SelectKeyPane.headerText.text',
+			wrappingWidth : 500,
+			static columnIndex : 0,
+			static rowIndex : 0,
+			static hgrow : "ALWAYS"
+		},
+
+		HBox {
+			spacing : 8,
+			
+			Label {
+				text : "New owner-trust:"
+			},
+			
+			TextField id newOwnerTrustTextField {
+				editable : false,
+				static hgrow : "ALWAYS"
+			},
+			
+			static columnIndex : 0,
+			static rowIndex : 1,
+			static hgrow : "ALWAYS"
+		},
+		
+		RadioButton id assignToAllPgpKeysRadioButton {
+			text : "Assign this owner-trust to all PGP keys (of this user).",
+			toggleGroup : idref toggleGroup,
+			static columnIndex : 0,
+			static rowIndex : 2,
+			static hgrow : "ALWAYS"
+		},
+		
+		RadioButton id assignToSelectedPgpKeysRadioButton {
+			text : "Assign this owner-trust to the following PGP keys:",
+			toggleGroup : idref toggleGroup,
+			static columnIndex : 0,
+			static rowIndex : 3,
+			static hgrow : "ALWAYS"
+		},
+
+		PgpKeyTreePane id pgpKeyTreePane {
+			static columnIndex : 0,
+			static rowIndex : 4,
+			static hgrow : "ALWAYS"
+		}
+	}
+}

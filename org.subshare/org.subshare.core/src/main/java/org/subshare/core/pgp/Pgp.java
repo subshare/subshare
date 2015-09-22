@@ -6,10 +6,11 @@ import java.io.OutputStream;
 import java.util.Collection;
 import java.util.Set;
 
+import co.codewizards.cloudstore.core.bean.Bean;
 import co.codewizards.cloudstore.core.bean.PropertyBase;
 import co.codewizards.cloudstore.core.oio.File;
 
-public interface Pgp {
+public interface Pgp extends Bean<Pgp.Property> {
 
 	interface Property extends PropertyBase { }
 
@@ -95,10 +96,14 @@ public interface Pgp {
 	 */
 	long getLocalRevision(PgpKey pgpKey);
 
+	@Override
 	void addPropertyChangeListener(PropertyChangeListener listener);
+	@Override
 	void addPropertyChangeListener(Property property, PropertyChangeListener listener);
 
+	@Override
 	void removePropertyChangeListener(PropertyChangeListener listener);
+	@Override
 	void removePropertyChangeListener(Property property, PropertyChangeListener listener);
 
 	/**

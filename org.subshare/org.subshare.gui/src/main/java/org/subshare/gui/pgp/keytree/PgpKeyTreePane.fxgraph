@@ -21,65 +21,67 @@ import javafx.geometry.Insets
 
 dynamic component PgpKeyTreePane {
 	BorderPane {
-		center : TreeTableView < PgpKeyTreeItem<?> > id treeTableView {
+		center : TreeTableView<PgpKeyTreeItem<?>> id treeTableView {
+				editable : true,
+
 				columns : [
-					TreeTableColumn < Object, String > id nameTreeTableColumn {
+					TreeTableColumn<PgpKeyTreeItem<?>, String> id nameTreeTableColumn {
 						text : "PGP key",
 						prefWidth : 300,
 						cellValueFactory : TreeItemPropertyValueFactory < PgpKeyTreeItem<?>, String > {
 							property : "name"
 						}
 					},
-					TreeTableColumn < Object, String > id keyIdTreeTableColumn {
+					TreeTableColumn<PgpKeyTreeItem<?>, String> id keyIdTreeTableColumn {
 						text : "Key-ID",
 						prefWidth : 80,
 						cellValueFactory : TreeItemPropertyValueFactory < PgpKeyTreeItem<?>, String > {
 							property : "keyId"
 						}
 					},
-					TreeTableColumn < Object, String > id keyValidityTreeTableColumn {
+					TreeTableColumn<PgpKeyTreeItem<?>, String> id keyValidityTreeTableColumn {
 						text : "Key validity/trust",
 						prefWidth : 120,
 						cellValueFactory : TreeItemPropertyValueFactory < PgpKeyTreeItem<?>, String > {
 							property : "keyValidity"
 						}
 					},
-					TreeTableColumn < Object, String > id ownerTrustTreeTableColumn {
+					TreeTableColumn<PgpKeyTreeItem<?>, String> id ownerTrustTreeTableColumn {
 						text : "Owner trust",
 						prefWidth : 120,
 						cellValueFactory : TreeItemPropertyValueFactory < PgpKeyTreeItem<?>, String > {
 							property : "ownerTrust"
 						}
 					},
-					TreeTableColumn < Object, String > id createdTreeTableColumn {
+					TreeTableColumn<PgpKeyTreeItem<?>, String> id createdTreeTableColumn {
 						text : "Created",
 						prefWidth : 100,
 						cellValueFactory : TreeItemPropertyValueFactory < PgpKeyTreeItem<?>, String > {
 							property : "created"
 						}
 					},
-					TreeTableColumn < Object, String > id validToTreeTableColumn {
+					TreeTableColumn<PgpKeyTreeItem<?>, String> id validToTreeTableColumn {
 						text : "Valid to",
 						prefWidth : 100,
 						cellValueFactory : TreeItemPropertyValueFactory < PgpKeyTreeItem<?>, String > {
 							property : "validTo"
 						}
 					},
-					TreeTableColumn < Object, String > id algorithmTreeTableColumn {
+					TreeTableColumn<PgpKeyTreeItem<?>, String> id algorithmTreeTableColumn {
 						text : "Algorithm",
 						prefWidth : 100,
 						cellValueFactory : TreeItemPropertyValueFactory < PgpKeyTreeItem<?>, String > {
 							property : "algorithm"
 						}
 					},
-					TreeTableColumn < Object, String > id strengthTreeTableColumn {
+					TreeTableColumn<PgpKeyTreeItem<?>, String> id strengthTreeTableColumn {
 						text : "Strength",
 						prefWidth : 100,
 						cellValueFactory : TreeItemPropertyValueFactory < PgpKeyTreeItem<?>, String > {
 							property : "strength"
 						}
 					},
-					TreeTableColumn < Object, String > id usageTreeTableColumn {
+					TreeTableColumn<PgpKeyTreeItem<?>, String> id usageTreeTableColumn {
 						text : "Usage",
 						prefWidth : 250,
 						cellValueFactory : TreeItemPropertyValueFactory < PgpKeyTreeItem<?>, String > {

@@ -12,13 +12,13 @@ import org.subshare.core.user.User;
 
 public class AssignOwnerTrustData {
 
-	private final ObjectProperty<PgpOwnerTrust> ownerTrust = new SimpleObjectProperty<PgpOwnerTrust>(this, "ownerTrust");
+	private final ObjectProperty<PgpOwnerTrust> ownerTrust = new SimpleObjectProperty<>(this, "ownerTrust");
 
 	private User user;
 
 	private final Set<PgpKey> pgpKeys = new HashSet<>();
 
-	private Boolean assignToAllPgpKeys;
+	private ObjectProperty<Boolean> assignToAllPgpKeys = new SimpleObjectProperty<>(this, "assignToAllPgpKeys");
 
 	public PgpOwnerTrust getOwnerTrust() {
 		return ownerTrust.get();
@@ -41,10 +41,13 @@ public class AssignOwnerTrustData {
 		return pgpKeys;
 	}
 
-	public Boolean getAssignToAllPgpKeys() {
+	public ObjectProperty<Boolean> assignToAllPgpKeysProperty() {
 		return assignToAllPgpKeys;
 	}
+	public Boolean getAssignToAllPgpKeys() {
+		return assignToAllPgpKeys.get();
+	}
 	public void setAssignToAllPgpKeys(Boolean assignToAllPgpKeys) {
-		this.assignToAllPgpKeys = assignToAllPgpKeys;
+		this.assignToAllPgpKeys.set(assignToAllPgpKeys);
 	}
 }
