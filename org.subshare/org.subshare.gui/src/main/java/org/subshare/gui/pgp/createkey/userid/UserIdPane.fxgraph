@@ -11,44 +11,43 @@ import org.subshare.gui.pgp.createkey.FxPgpUserId
 
 dynamic component UserIdPane resourcefile 'messages.properties' {
 	GridPane {
-//		prefWidth : 400,
-//		prefHeight : 300,
+		hgap : 8,
+		vgap : 8,
+		padding : Insets { left : 8, top : 8, right : 8, bottom : 8 },
 
-		children : [
-			Text id headerText {
-				text : rstring 'UserIdPane.headerText.text',
-				wrappingWidth : 500,
-				static columnIndex : 0,
-				static rowIndex : 0,
-				static margin : Insets { bottom : 16 }
-			},
-			
-			TableView < FxPgpUserId > id userIdsTableView {
-				editable : true,
+		Text id headerText {
+			text : rstring 'UserIdPane.headerText.text',
+			wrappingWidth : 500,
+			static columnIndex : 0,
+			static rowIndex : 0,
+			static margin : Insets { bottom : 16 }
+		},
+		
+		TableView < FxPgpUserId > id userIdsTableView {
+			editable : true,
 
-				columns : [
-					TableColumn < FxPgpUserId, String > id nameTableColumn {
-						text : "Name",
-						prefWidth : 180,
-						cellValueFactory : PropertyValueFactory < FxPgpUserId, String > {
-							property : "name"
-						}
-					},
-					TableColumn < FxPgpUserId, String > id emailTableColumn {
-						text : "E-mail",
-						prefWidth : 220,
-						cellValueFactory : PropertyValueFactory < FxPgpUserId, String > {
-							property : "email"
-						}
+			columns : [
+				TableColumn < FxPgpUserId, String > id nameTableColumn {
+					text : "Name",
+					prefWidth : 180,
+					cellValueFactory : PropertyValueFactory < FxPgpUserId, String > {
+						property : "name"
 					}
-				],
+				},
+				TableColumn < FxPgpUserId, String > id emailTableColumn {
+					text : "E-mail",
+					prefWidth : 220,
+					cellValueFactory : PropertyValueFactory < FxPgpUserId, String > {
+						property : "email"
+					}
+				}
+			],
 
-				static columnIndex : 0,
-				static rowIndex : 1,
-				static fillWidth : true,
-				static hgrow : "ALWAYS",
-				static margin : Insets { left : 8 }
-			}
-		]
+			static columnIndex : 0,
+			static rowIndex : 1,
+			static fillWidth : true,
+			static hgrow : "ALWAYS",
+			static margin : Insets { left : 8 }
+		}
 	}
 }

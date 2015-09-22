@@ -8,48 +8,50 @@ import javafx.scene.layout.HBox
 import javafx.scene.image.ImageView
 import javafx.scene.image.Image
 import javafx.scene.control.Label
+import javafx.scene.control.Button
 
 dynamic component AcceptInvitationSourcePane resourcefile 'messages.properties' {
 	GridPane {
 		hgap : 8,
 		vgap : 8,
 		padding : Insets { left : 8, top : 8, right : 8, bottom : 8 },
+
+		Text id headerText {
+			text : rstring 'AcceptInvitationSourcePane.headerText.text',
+			wrappingWidth : 500,
+			static columnIndex : 0,
+			static rowIndex : 0,
+			static hgrow : "ALWAYS"
+		},
+
+		FileTreePane id fileTreePane {
+			useCase : "invitation.in",
+			selectionMode: "SINGLE",
+
+			static columnIndex : 0,
+			static rowIndex : 1,
+			static hgrow : "ALWAYS",
+			static vgrow : "ALWAYS"
+		},
 		
-		children : [
-			Text id headerText {
-				text : rstring 'AcceptInvitationSourcePane.headerText.text',
-				wrappingWidth : 500,
-				static columnIndex : 0,
-				static rowIndex : 0,
-				static hgrow : "ALWAYS"
-//				static margin : Insets { bottom : 16 }
-			},
+		HBox id statusMessageBox {
+			spacing : 8,
 
-			FileTreePane id fileTreePane {
-				useCase : "invitation.in",
-				selectionMode: "SINGLE",
-
-				static columnIndex : 0,
-				static rowIndex : 1,
-				static hgrow : "ALWAYS",
-				static vgrow : "ALWAYS"
-//				static margin : Insets { bottom : 16 }
+			Label id statusMessageLabel {
+				graphic : ImageView { image : Image { url : "@../../../severity/ERROR_24x24.png" } },
+				text : "This is an error description"
+//				padding : Insets { left : 4, top : 2 }
 			},
-			
-			HBox id errorMessageBox {
-				children : [
-					ImageView id errorMessageImageView { image : Image { url : "@../../../severity/ERROR_24x24.png" } },
-					Label id errorMessageLabel {
-						text : "This is an error description",
-						padding : Insets { left : 4, top : 2 }
-					}
-					// TODO we should have a "solve" button for problems that can be automatically solved. there's currently
-					// one such problem: the warning about a missing key and therefore being unable to verify the signature.
-					// in this case, we can import the key immediately and then verify the signature.
-				],
-				static columnIndex : 0,
-				static rowIndex : 2
-			}
-		]
+			Button id solveProblemButton {
+				graphic : ImageView { image : Image { url : "@solve-problem_24x24.png" } },
+				onAction : controllermethod solveProblemButtonClicked
+			},
+				// TODO we should have a "solve" button for problems that can be automatically solved. there's currently
+				// one such problem: the warning about a missing key and therefore being unable to verify the signature.
+				// in this case, we can import the key immediately and then verify the signature.
+	
+			static columnIndex : 0,
+			static rowIndex : 2
+		}
 	}
 }

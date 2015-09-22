@@ -32,6 +32,8 @@ import org.subshare.core.CryptreeFactoryRegistry;
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.dto.UserRepoInvitationDto;
 import org.subshare.core.file.EncryptedDataFile;
+import org.subshare.core.pgp.ImportKeysResult;
+import org.subshare.core.pgp.ImportKeysResult.ImportedMasterKey;
 import org.subshare.core.pgp.Pgp;
 import org.subshare.core.pgp.PgpDecoder;
 import org.subshare.core.pgp.PgpEncoder;
@@ -188,19 +190,30 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 		final ByteArrayOutputStream out = new ByteArrayOutputStream();
 		final byte[] encryptedSignPgpKeyData = edf.getSigningKeyData();
 		final byte[] signPgpKeyData;
+		final Pgp pgp = getPgpOrFail();
 		if (encryptedSignPgpKeyData != null) { // should always be the case since 2015-07-17, but still we better check...
-			final PgpDecoder pgpDecoder = getPgpOrFail().createDecoder(new ByteArrayInputStream(encryptedSignPgpKeyData), out);
+			final PgpDecoder pgpDecoder = pgp.createDecoder(new ByteArrayInputStream(encryptedSignPgpKeyData), out);
 			try {
 				pgpDecoder.decode();
 			} catch (final IOException e) {
 				throw new RuntimeException(e);
 			}
 			signPgpKeyData = out.toByteArray(); // only encrypted - not signed! thus not checking signature!
-			getPgpOrFail().importKeys(signPgpKeyData);
+
+			final ImportKeysResult importKeysResult = pgp.importKeys(signPgpKeyData);
+			final Map<PgpKeyId, PgpKey> pgpKeyId2PgpKey = new HashMap<>();
+
+			for (ImportedMasterKey importedMasterKey : importKeysResult.getPgpKeyId2ImportedMasterKey().values()) {
+				final PgpKeyId pgpKeyId = importedMasterKey.getPgpKeyId();
+				final PgpKey pgpKey = pgp.getPgpKey(pgpKeyId);
+				assertNotNull("pgp.getPgpKey(" + pgpKeyId + ")", pgpKey);
+				pgpKeyId2PgpKey.put(pgpKeyId, pgpKey);
+			}
+			userRegistry.importUsersFromPgpKeys(pgpKeyId2PgpKey.values());
 		}
 
 		out.reset();
-		final PgpDecoder pgpDecoder = getPgpOrFail().createDecoder(new ByteArrayInputStream(defaultData), out);
+		final PgpDecoder pgpDecoder = pgp.createDecoder(new ByteArrayInputStream(defaultData), out);
 		try {
 			pgpDecoder.decode();
 		} catch (final IOException e) {

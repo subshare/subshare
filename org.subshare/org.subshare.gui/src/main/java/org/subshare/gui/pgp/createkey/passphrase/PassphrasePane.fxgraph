@@ -12,77 +12,75 @@ import javafx.scene.image.Image
 
 dynamic component PassphrasePane resourcefile 'messages.properties' {
 	GridPane {
-//		prefWidth : 600,
-//		prefHeight : 300,
+		hgap : 8,
+		vgap : 8,
+		padding : Insets { left : 8, top : 8, right : 8, bottom : 8 },
 
-		children : [
-			Text id headerText {
-				text : rstring 'PassphrasePane.headerText.text',
-				wrappingWidth : 500,
-				static columnIndex : 0,
-				static rowIndex : 0,
-				static columnSpan : 3,
-				static margin : Insets { bottom : 16 }
-			},
+		Text id headerText {
+			text : rstring 'PassphrasePane.headerText.text',
+			wrappingWidth : 500,
+			static columnIndex : 0,
+			static rowIndex : 0,
+			static columnSpan : 3,
+			static margin : Insets { bottom : 16 }
+		},
 
-			Label id passphrase1Label {
-				text : "Passphrase:",
-				static columnIndex : 0,
-				static rowIndex : 1
-			},
-			PasswordField id passphrase1PasswordField {
-//				promptText : "Please enter at least 15 characters!",
-				static columnIndex : 1,
-				static rowIndex : 1,
-				static margin : Insets { left : 8 },
-				static hgrow : "NEVER"
-			},
-			HBox id passphrase1StatusMessageBox {
-				children : [
-					ImageView id passphrase1StatusImageView { image : Image { url : "@../../../severity/ERROR_16x16.png" } },
-					Label id passphrase1StatusMessageLabel {
-						text : "Empty!"
-					}
-				],
-				static columnIndex : 2,
-				static rowIndex : 1,
-				static hgrow : "ALWAYS",
-				static margin : Insets { left : 8 }
-			},
+		Label id passphrase1Label {
+			text : "Passphrase:",
+			static columnIndex : 0,
+			static rowIndex : 1
+		},
+		PasswordField id passphrase1PasswordField {
+			static columnIndex : 1,
+			static rowIndex : 1,
+			static margin : Insets { left : 8 },
+			static hgrow : "NEVER"
+		},
+		HBox id passphrase1StatusMessageBox {
+			children : [
+				ImageView id passphrase1StatusImageView { image : Image { url : "@../../../severity/ERROR_16x16.png" } },
+				Label id passphrase1StatusMessageLabel {
+					text : "Empty!"
+				}
+			],
+			static columnIndex : 2,
+			static rowIndex : 1,
+			static hgrow : "ALWAYS",
+			static margin : Insets { left : 8 }
+		},
 
-			Label id passphrase2Label {
-				text : "Passphrase (again):",
-				static columnIndex : 0,
-				static rowIndex : 2
-				
-			},
-			PasswordField id passphrase2PasswordField {
+		Label id passphrase2Label {
+			text : "Passphrase (again):",
+			static columnIndex : 0,
+			static rowIndex : 2
+			
+		},
+		PasswordField id passphrase2PasswordField {
 //				promptText : "Please repeat the passphrase (to make sure you didn't type it wrongly).",
-				static columnIndex : 1,
-				static rowIndex : 2,
-				static margin : Insets { left : 8 },
-				static hgrow : "NEVER"
-			},
-			HBox id passphrase2StatusMessageBox {
-				children : [
-					ImageView id passphrase2StatusImageView { image : Image { url : "@../../../severity/ERROR_16x16.png" } },
-					Label id passphrase2StatusMessageLabel {
-						text : "Does not match the first!"
-					}
-				],
-				static columnIndex : 2,
-				static rowIndex : 2,
-				static hgrow : "ALWAYS",
-				static margin : Insets { left : 8 }
-			},
+			static columnIndex : 1,
+			static rowIndex : 2,
+			static margin : Insets { left : 8 },
+			static hgrow : "NEVER"
+		},
+		HBox id passphrase2StatusMessageBox {
+			children : [
+				ImageView id passphrase2StatusImageView { image : Image { url : "@../../../severity/ERROR_16x16.png" } },
+				Label id passphrase2StatusMessageLabel {
+					text : "Does not match the first!"
+				}
+			],
+			static columnIndex : 2,
+			static rowIndex : 2,
+			static hgrow : "ALWAYS",
+			static margin : Insets { left : 8 }
+		},
 
-			CheckBox id noPassphraseCheckBox {
-				text : "No passphrase! I know this is insecure, but I have good reasons.",
-				static columnIndex : 0,
-				static rowIndex : 3,
-				static margin : Insets { top : 8 },
-				static columnSpan : 3
+		CheckBox id noPassphraseCheckBox {
+			text : "No passphrase! I know this is insecure, but I have good reasons.",
+			static columnIndex : 0,
+			static rowIndex : 3,
+			static margin : Insets { top : 8 },
+			static columnSpan : 3
 			}
-		]
 	}
 }

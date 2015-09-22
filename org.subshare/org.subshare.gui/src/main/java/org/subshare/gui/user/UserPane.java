@@ -154,7 +154,7 @@ public class UserPane extends GridPane {
 	private void updateDisable() {
 		final int selectedPgpKeysSize = getSelectedPgpKeys().size();
 		ownerTrustButton.setDisable(pgpKeyTreePane.getTreeTableView().getRoot().getChildren().size() < 1);
-		exportPgpKeyButton.setDisable(selectedPgpKeysSize == 0);
+//		exportPgpKeyButton.setDisable(selectedPgpKeysSize == 0);
 		deletePgpKeyButton.setDisable(selectedPgpKeysSize == 0);
 		assignPgpKeyToOtherUserButton.setDisable(selectedPgpKeysSize == 0);
 		signPgpKeyButton.setDisable(selectedPgpKeysSize != 1);
@@ -379,7 +379,10 @@ public class UserPane extends GridPane {
 
 	@FXML
 	private void exportPgpKeyButtonClicked(final ActionEvent event) {
-		final Set<PgpKey> selectedPgpKeys = getSelectedPgpKeys();
+		Set<PgpKey> selectedPgpKeys = getSelectedPgpKeys();
+		if (selectedPgpKeys.isEmpty())
+			selectedPgpKeys = user.getValidPgpKeys();
+
 		String initialFileName;
 		if (selectedPgpKeys.size() == 1) {
 			PgpKey pgpKey = selectedPgpKeys.iterator().next();
@@ -394,9 +397,8 @@ public class UserPane extends GridPane {
 			return;
 
 		final boolean[] selectionContainsKeyWithPrivateKey = new boolean[] { false };
-		selectedPgpKeys.forEach(pgpKey -> {
+		for (PgpKey pgpKey : selectedPgpKeys)
 			selectionContainsKeyWithPrivateKey[0] |= pgpKey.isSecretKeyAvailable();
-		});
 
 		boolean exportPublicKeysWithPrivateKeys = false;
 		if (selectionContainsKeyWithPrivateKey[0]) {

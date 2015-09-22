@@ -10,6 +10,7 @@ import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Toggle;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.TreeItem;
 import javafx.scene.layout.GridPane;
 
 import org.subshare.core.pgp.PgpOwnerTrust;
@@ -75,12 +76,12 @@ public abstract class SelectKeyPane extends GridPane {
 		final UserRootPgpKeyTreeItem root = new UserRootPgpKeyTreeItem(pgpKeyTreePane, assignOwnerTrustData.getUser());
 		pgpKeyTreePane.getTreeTableView().setRoot(root);
 
-		root.getChildren().forEach(treeItem -> {
+		for (TreeItem<PgpKeyTreeItem<?>> treeItem : root.getChildren()) {
 			if (treeItem instanceof PgpKeyPgpKeyTreeItem) {
 				PgpKeyPgpKeyTreeItem ti = (PgpKeyPgpKeyTreeItem) treeItem;
 				ti.setChecked(assignOwnerTrustData.getPgpKeys().contains(ti.getPgpKey()));
 			}
-		});
+		}
 
 		pgpKeyTreePane.getCheckedTreeItems().addListener(new SetChangeListener<PgpKeyTreeItem<?>>() {
 			@Override

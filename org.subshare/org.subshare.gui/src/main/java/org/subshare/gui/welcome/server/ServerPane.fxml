@@ -12,30 +12,31 @@
 <?import javafx.scene.text.Text?>
 <?scenebuilder-preview-i18n-resource messages.properties?>
 
-<fx:root xmlns:fx="http://javafx.com/fxml" type="GridPane">
+<fx:root xmlns:fx="http://javafx.com/fxml" type="GridPane" hgap="8" vgap="8">
 
-	<children>
-		<Text fx:id="headerText" text="%ServerPane.headerText.text" wrappingWidth="500" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="2" GridPane.hgrow="ALWAYS"> 
-			<GridPane.margin>
-				<Insets bottom="16"/> 
-			</GridPane.margin>
-		</Text>
-		<Label fx:id="urlLabel" text="%ServerPane.urlLabel.text" GridPane.columnIndex="0" GridPane.rowIndex="1"/> 
-		<TextField fx:id="urlTextField" GridPane.columnIndex="1" GridPane.rowIndex="1"> 
-			<GridPane.margin>
-				<Insets left="8"/> 
-			</GridPane.margin>
-		</TextField>
-		<Label fx:id="nameLabel" text="%ServerPane.nameLabel.text" GridPane.columnIndex="0" GridPane.rowIndex="2"/> 
-		<TextField fx:id="nameTextField" GridPane.columnIndex="1" GridPane.rowIndex="2"> 
-			<GridPane.margin>
-				<Insets left="8"/> 
-			</GridPane.margin>
-		</TextField>
-		<CheckBox fx:id="acceptInvitationCheckBox" text="I've got an invitation! Import it instead of asking me these questions!" GridPane.columnIndex="0" GridPane.rowIndex="3" GridPane.columnSpan="2"> 
-			<GridPane.margin>
-				<Insets top="8"/> 
-			</GridPane.margin>
-		</CheckBox>
-	</children>
+	<Text fx:id="headerText" text="%ServerPane.headerText.text" wrappingWidth="500" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="2" GridPane.hgrow="ALWAYS"> 
+		<GridPane.margin>
+			<Insets bottom="16"/> 
+		</GridPane.margin>
+	</Text>
+	<Label fx:id="urlLabel" text="%ServerPane.urlLabel.text" GridPane.columnIndex="0" GridPane.rowIndex="1"/> 
+	<TextField fx:id="urlTextField" GridPane.columnIndex="1" GridPane.rowIndex="1"> 
+		<GridPane.margin>
+			<Insets left="8"/> 
+		</GridPane.margin>
+	</TextField>
+	<Label fx:id="nameLabel" text="%ServerPane.nameLabel.text" GridPane.columnIndex="0" GridPane.rowIndex="2"/> 
+	<TextField fx:id="nameTextField" GridPane.columnIndex="1" GridPane.rowIndex="2"> 
+		<GridPane.margin>
+			<Insets left="8"/> 
+		</GridPane.margin>
+	</TextField>
+	<CheckBox fx:id="acceptInvitationCheckBox" text="I've got an invitation! Import it instead of asking me these questions!" GridPane.columnIndex="0" GridPane.rowIndex="3" GridPane.columnSpan="2"> 
+		<GridPane.margin>
+			<Insets top="8"/> 
+		</GridPane.margin>
+	</CheckBox>
+	<padding>
+		<Insets left="8" top="8" right="8" bottom="8"/> 
+	</padding>
 </fx:root>

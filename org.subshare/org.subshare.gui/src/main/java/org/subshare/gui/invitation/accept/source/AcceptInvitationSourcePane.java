@@ -4,12 +4,18 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
 import static org.subshare.core.file.FileConst.*;
 import static org.subshare.gui.util.FxmlUtil.*;
+import static org.subshare.gui.util.PlatformUtil.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -22,21 +28,24 @@ import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.RowConstraints;
-import javafx.util.Pair;
 
 import org.subshare.core.file.DataFileFilter;
 import org.subshare.core.file.EncryptedDataFile;
 import org.subshare.core.pgp.Pgp;
 import org.subshare.core.pgp.PgpDecoder;
+import org.subshare.core.pgp.PgpKey;
+import org.subshare.core.pgp.PgpKeyId;
+import org.subshare.core.pgp.PgpKeyValidity;
 import org.subshare.core.user.UserRepoInvitationToken;
 import org.subshare.gui.IconSize;
 import org.subshare.gui.filetree.FileTreePane;
@@ -65,39 +74,56 @@ public abstract class AcceptInvitationSourcePane extends GridPane {
 		}
 	});
 
+	private static List<Class<? extends ProblemSolver>> problemSolverClasses = Arrays.asList(
+			ImportSigningKeyProblemSolver.class
+	);
+
 	@FXML
 	private FileTreePane fileTreePane;
 
 	@FXML
-	private HBox errorMessageBox;
-	private final RowConstraints errorMessageBoxRowConstraints = new RowConstraints(0, 0, 0);
+	private HBox statusMessageBox;
+	private final RowConstraints statusMessageBoxRowConstraints = new RowConstraints(0, 0, 0);
 
 	@FXML
-	private ImageView errorMessageImageView;
-	@FXML
-	private Label errorMessageLabel;
+	private Label statusMessageLabel;
 
-	private final ObjectProperty<Severity> errorSeverityProperty = new SimpleObjectProperty<Severity>(this, "errorSeverity") {
+	@FXML
+	private Button solveProblemButton;
+
+	private ProblemSolver problemSolver;
+
+	private final ObjectProperty<CheckInvitationFileResult> checkInvitationFileResult = new SimpleObjectProperty<CheckInvitationFileResult>(this, "checkInvitationFileResult") {
 		@Override
-		public void set(Severity newValue) {
+		public void set(CheckInvitationFileResult newValue) {
+			assertFxApplicationThread();
 			super.set(newValue);
-			updateErrorMessageBox();
+			problemSolver = determineProblemSolver();
+			updateStatusMessageBox();
 		}
 	};
-	private final StringProperty errorMessageProperty = new SimpleStringProperty(this, "errorMessage") {
-		@Override
-		public void set(String newValue) {
-			super.set(newValue);
-			updateErrorMessageBox();
-		}
-	};
-	private final StringProperty errorLongTextProperty = new SimpleStringProperty(this, "errorLongText") {
-		@Override
-		public void set(String newValue) {
-			super.set(newValue);
-			updateErrorMessageBox();
-		}
-	};
+
+//	private final ObjectProperty<Severity> errorSeverityProperty = new SimpleObjectProperty<Severity>(this, "errorSeverity") {
+//		@Override
+//		public void set(Severity newValue) {
+//			super.set(newValue);
+//
+//		}
+//	};
+//	private final StringProperty errorMessageProperty = new SimpleStringProperty(this, "errorMessage") {
+//		@Override
+//		public void set(String newValue) {
+//			super.set(newValue);
+//			updateStatusMessageBox();
+//		}
+//	};
+//	private final StringProperty errorLongTextProperty = new SimpleStringProperty(this, "errorLongText") {
+//		@Override
+//		public void set(String newValue) {
+//			super.set(newValue);
+//			updateStatusMessageBox();
+//		}
+//	};
 
 	public AcceptInvitationSourcePane(final AcceptInvitationData acceptInvitationData) {
 		this.acceptInvitationData = assertNotNull("acceptInvitationData", acceptInvitationData);
@@ -107,24 +133,70 @@ public abstract class AcceptInvitationSourcePane extends GridPane {
 
 		getRowConstraints().add(new RowConstraints());
 		getRowConstraints().add(new RowConstraints());
-		getRowConstraints().add(errorMessageBoxRowConstraints);
+		getRowConstraints().add(statusMessageBoxRowConstraints);
 
 		onSelectedFilesChanged();
-		updateErrorMessageBox();
+		updateStatusMessageBox();
 	}
 
-	private void updateErrorMessageBox() {
-		Severity severity = errorSeverityProperty.get();
-		String msg = errorMessageProperty.get();
-		String lt = errorLongTextProperty.get();
+	private void updateStatusMessageBox() {
+		final CheckInvitationFileResult cifResult = checkInvitationFileResult.get();
+		final Severity severity = cifResult == null ? Severity.INFO : cifResult.getSeverity();
+		final String msg = cifResult == null ? null : cifResult.getMessage();
+		final String lt = cifResult == null ? null : cifResult.getLongText();
+		final Image severityImage = SeverityImageRegistry.getInstance().getImage(severity, IconSize._24x24);
+		statusMessageLabel.setGraphic(severityImage == null ? null : new ImageView(severityImage));
+		statusMessageLabel.setText(msg);
+		statusMessageLabel.setTooltip(isEmpty(lt) ? null : new Tooltip(lt));
+		statusMessageBox.setVisible(! isEmpty(msg));
+		statusMessageBoxRowConstraints.setMinHeight(isEmpty(msg) ? 0 : USE_COMPUTED_SIZE);
+		statusMessageBoxRowConstraints.setMaxHeight(isEmpty(msg) ? 0 : USE_COMPUTED_SIZE);
+		statusMessageBoxRowConstraints.setPrefHeight(isEmpty(msg) ? 0 : USE_COMPUTED_SIZE);
 
-		errorMessageImageView.setImage(SeverityImageRegistry.getInstance().getImage(severity, IconSize._24x24));
-		errorMessageLabel.setText(msg);
-		errorMessageLabel.setTooltip(isEmpty(lt) ? null : new Tooltip(lt));
-		errorMessageBox.setVisible(! isEmpty(msg));
-		errorMessageBoxRowConstraints.setMinHeight(isEmpty(msg) ? 0 : USE_COMPUTED_SIZE);
-		errorMessageBoxRowConstraints.setMaxHeight(isEmpty(msg) ? 0 : USE_COMPUTED_SIZE);
-		errorMessageBoxRowConstraints.setPrefHeight(isEmpty(msg) ? 0 : USE_COMPUTED_SIZE);
+		if (problemSolver == null)
+			statusMessageBox.getChildren().remove(solveProblemButton);
+		else
+			statusMessageBox.getChildren().add(solveProblemButton);
+	}
+
+	protected List<ProblemSolver> createProblemSolvers() {
+		final List<ProblemSolver> problemSolvers = new ArrayList<>(problemSolverClasses.size());
+		for (final Class<? extends ProblemSolver> problemSolverClass : problemSolverClasses) {
+			final ProblemSolver problemSolver;
+			try {
+				problemSolver = problemSolverClass.newInstance();
+			} catch (InstantiationException | IllegalAccessException e) {
+				throw new RuntimeException(e);
+			}
+			problemSolver.setInvitationFile(getSelectedFile());
+			problemSolver.setCheckInvitationFileResult(getCheckInvitationFileResult());
+			problemSolvers.add(problemSolver);
+		}
+
+		Collections.sort(problemSolvers, new Comparator<ProblemSolver>() {
+			@Override
+			public int compare(ProblemSolver o1, ProblemSolver o2) {
+				int res = -1 * Integer.compare(o1.getPriority(), o2.getPriority()); // highest priority first!
+				if (res != 0)
+					return res;
+
+				res = o1.getClass().getName().compareTo(o2.getClass().getName());
+				return res;
+			}
+		});
+
+		return problemSolvers;
+	}
+
+	protected ProblemSolver determineProblemSolver() {
+		if (getSelectedFile() == null || getCheckInvitationFileResult() == null)
+			return null;
+
+		for (ProblemSolver problemSolver : createProblemSolvers()) {
+			if (problemSolver.canSolveProblem())
+				return problemSolver;
+		};
+		return null;
 	}
 
 	protected boolean isComplete() {
@@ -146,32 +218,31 @@ public abstract class AcceptInvitationSourcePane extends GridPane {
 	}
 
 	protected void checkSelectedFileAsync(final File file) {
-		errorSeverityProperty.set(Severity.INFO);
-		errorLongTextProperty.set(null);
 		acceptInvitationData.setInvitationFile(null);
 		updateComplete();
 
 		if (file == null) {
-			errorMessageProperty.set(null);
+			setCheckInvitationFileResult(null);
 			return;
 		}
-		errorMessageProperty.set("Checking the selected file...");
+		setCheckInvitationFileResult(new CheckInvitationFileResult(CheckInvitationFileResult.Type.OK, Severity.INFO,
+				"Checking the selected file...", null));
 
 		executorService.submit(() -> {
 			try {
 				if (! file.equals(getSelectedFile()))
 					return;
 
-				final Pair<Severity, String[]> checkSelectedFileResult = checkSelectedFile(file);
+				final CheckInvitationFileResult checkInvitationFileResult = checkSelectedFile(file);
 
 				Platform.runLater(() -> {
 					if (! file.equals(getSelectedFile()))
 						return;
 
-					errorSeverityProperty.set(checkSelectedFileResult == null ? Severity.INFO : checkSelectedFileResult.getKey());
-					errorMessageProperty.set(checkSelectedFileResult == null ? null : checkSelectedFileResult.getValue()[0]);
-					errorLongTextProperty.set(checkSelectedFileResult == null ? null : checkSelectedFileResult.getValue()[1]);
-					acceptInvitationData.setInvitationFile(file);
+					if (CheckInvitationFileResult.Type.ERROR_GENERAL.compareTo(checkInvitationFileResult.getType()) > 0)
+						acceptInvitationData.setInvitationFile(file);
+
+					setCheckInvitationFileResult(checkInvitationFileResult);
 					updateComplete();
 				});
 			} catch (final Exception x) {
@@ -179,15 +250,24 @@ public abstract class AcceptInvitationSourcePane extends GridPane {
 					if (! file.equals(getSelectedFile()))
 						return;
 
-					errorSeverityProperty.set(Severity.ERROR);
-					errorLongTextProperty.set(x.getLocalizedMessage());
-					errorMessageProperty.set("Failed to decrypt the selected file!");
+					setCheckInvitationFileResult(
+							new CheckInvitationFileResult(CheckInvitationFileResult.Type.ERROR_GENERAL, Severity.ERROR,
+									"Failed to decrypt the selected file!",
+									x.getLocalizedMessage()));
 				});
 			}
 		});
 	}
 
-	private Pair<Severity, String[]> checkSelectedFile(File file) throws Exception {
+	public CheckInvitationFileResult getCheckInvitationFileResult() {
+		return checkInvitationFileResult.get();
+	}
+
+	public void setCheckInvitationFileResult(CheckInvitationFileResult checkInvitationFileResult) {
+		this.checkInvitationFileResult.set(checkInvitationFileResult);
+	}
+
+	private CheckInvitationFileResult checkSelectedFile(File file) throws Exception {
 		final LocalServerClient lsc = LocalServerClient.getInstance();
 		final Pgp pgp = PgpLs.getPgpOrFail();
 		try (InputStream in = file.createInputStream();) {
@@ -207,18 +287,62 @@ public abstract class AcceptInvitationSourcePane extends GridPane {
 			// We expect the very first entry to be the MANIFEST.properties!
 			readManifest(zin);
 
-			if (decoder.getPgpSignature() != null)
-				return null;
+			if (decoder.getPgpSignature() != null) {
+				final PgpKeyId pgpKeyId = assertNotNull("pgpSignature.pgpKeyId", decoder.getPgpSignature().getPgpKeyId());
+				final PgpKey pgpKey = assertNotNull("pgp.getPgpKey(" + pgpKeyId + ")", pgp.getPgpKey(pgpKeyId));
+				final String primaryUserId = pgpKey.getUserIds().isEmpty() ? "<<unknown>>" : pgpKey.getUserIds().get(0);
+
+				final PgpKeyValidity keyValidity = pgp.getKeyValidity(pgpKey);
+				switch (keyValidity) {
+					case EXPIRED:
+						return new CheckInvitationFileResult(CheckInvitationFileResult.Type.SIGNING_KEY_EXPIRED, Severity.ERROR,
+								"Signing key expired!",
+								String.format("The key '%s' (%s), which was used to sign this invitation, already expired!",
+										pgpKeyId.toHumanString(), primaryUserId));
+
+					case REVOKED:
+						return new CheckInvitationFileResult(CheckInvitationFileResult.Type.SIGNING_KEY_REVOKED, Severity.ERROR,
+								"Signing key revoked!",
+								String.format("The key '%s' (%s), which was used to sign this invitation, was revoked!",
+										pgpKeyId.toHumanString(), primaryUserId));
+
+					case NOT_TRUSTED:
+						return new CheckInvitationFileResult(CheckInvitationFileResult.Type.SIGNING_KEY_NOT_TRUSTED, Severity.ERROR,
+								"Signing key not trusted!",
+								String.format("The key '%s' (%s), which was used to sign this invitation, is not trusted!",
+										pgpKeyId.toHumanString(), primaryUserId));
+
+					case DISABLED:
+						return new CheckInvitationFileResult(CheckInvitationFileResult.Type.SIGNING_KEY_DISABLED, Severity.ERROR,
+								"Signing key disabled!",
+								String.format("The key '%s' (%s), which was used to sign this invitation, is disabled!",
+										pgpKeyId.toHumanString(), primaryUserId));
+
+					case MARGINAL:
+						return new CheckInvitationFileResult(CheckInvitationFileResult.Type.SIGNING_KEY_MARGINALLY_TRUSTED, Severity.WARNING,
+								"Signing key only marginally trusted!",
+								String.format("The key '%s' (%s), which was used to sign this invitation, is only marginally trusted!",
+										pgpKeyId.toHumanString(), primaryUserId));
+
+					case FULL:
+					case ULTIMATE:
+						return new CheckInvitationFileResult(CheckInvitationFileResult.Type.OK, Severity.INFO);
+
+					default :
+						return new CheckInvitationFileResult(CheckInvitationFileResult.Type.SIGNING_KEY_UNKNOWN_VALIDITY, Severity.WARNING,
+								String.format("Unknown key-validity: %s", keyValidity), null);
+				}
+			}
 			else {
 				if (decoder.getSignPgpKeyIds().isEmpty())
-					new Pair<>(Severity.ERROR, new String[] {"The invitation is not signed!", "The invitation token is not signed at all! A signature is required."});
+					return new CheckInvitationFileResult(CheckInvitationFileResult.Type.ERROR_SIGNATURE_MISSING, Severity.ERROR,
+							"The invitation is not signed!",
+							"The invitation token is not signed at all! A signature is required.");
 
-				// TODO (1) we should use the public-key inside the invitation somehow + (2) we should check, if we have a chain of trust to the signing key!
-				// PROBLEM: The signing key might not yet be known (in our key-ring)! Since it may be included in the invitation
-				// and even have certifications establishing trust, this might still be valid and even totally fine!
-				return new Pair<>(Severity.WARNING, new String[] { "Signature could not be verified!",
+				return new CheckInvitationFileResult(CheckInvitationFileResult.Type.SIGNING_KEY_MISSING, Severity.WARNING,
+						"Signature could not be verified!",
 						String.format("The invitation token is signed by the PGP keys %s, but none of these PGP keys is in our key ring.\n\nIt is probably included in the invitation, but we cannot check this, now (not implemented, yet, sorry).",
-								decoder.getSignPgpKeyIds()) });
+								decoder.getSignPgpKeyIds()));
 			}
 		}
 	}
@@ -249,5 +373,13 @@ public abstract class AcceptInvitationSourcePane extends GridPane {
 	public void requestFocus() {
 		super.requestFocus();
 		fileTreePane.requestFocus();
+	}
+
+	@FXML
+	private void solveProblemButtonClicked(final ActionEvent event) {
+		assertNotNull("problemSolver", problemSolver);
+		problemSolver.setWindow(assertNotNull("scene.window", getScene().getWindow()));
+		problemSolver.solveProblem();
+		onSelectedFilesChanged();
 	}
 }

@@ -11,25 +11,26 @@
 <?import javafx.scene.text.Text?>
 <?scenebuilder-preview-i18n-resource messages.properties?>
 
-<fx:root xmlns:fx="http://javafx.com/fxml" type="GridPane">
+<fx:root xmlns:fx="http://javafx.com/fxml" type="GridPane" hgap="8" vgap="8">
 
-	<children>
-		<Text fx:id="headerText" text="%AdvancedPane.headerText.text" wrappingWidth="500" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="2" GridPane.hgrow="ALWAYS"> 
-			<GridPane.margin>
-				<Insets bottom="16"/> 
-			</GridPane.margin>
-		</Text>
-		<Label text="Algorithm:" GridPane.columnIndex="0" GridPane.rowIndex="4"/> 
-		<ComboBox fx:id="algorithmComboBox" GridPane.columnIndex="1" GridPane.rowIndex="4" GridPane.columnSpan="2" GridPane.hgrow="ALWAYS"> 
-			<GridPane.margin>
-				<Insets left="8"/> 
-			</GridPane.margin>
-		</ComboBox>
-		<Label text="Strength (bits):" GridPane.columnIndex="0" GridPane.rowIndex="5"/> 
-		<ComboBox fx:id="strengthComboBox" GridPane.columnIndex="1" GridPane.rowIndex="5" GridPane.columnSpan="2" GridPane.hgrow="ALWAYS"> 
-			<GridPane.margin>
-				<Insets left="8"/> 
-			</GridPane.margin>
-		</ComboBox>
-	</children>
+	<Text fx:id="headerText" text="%AdvancedPane.headerText.text" wrappingWidth="500" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="2" GridPane.hgrow="ALWAYS"> 
+		<GridPane.margin>
+			<Insets bottom="16"/> 
+		</GridPane.margin>
+	</Text>
+	<Label text="Algorithm:" GridPane.columnIndex="0" GridPane.rowIndex="4"/> 
+	<ComboBox fx:id="algorithmComboBox" GridPane.columnIndex="1" GridPane.rowIndex="4" GridPane.columnSpan="2" GridPane.hgrow="ALWAYS"> 
+		<GridPane.margin>
+			<Insets left="8"/> 
+		</GridPane.margin>
+	</ComboBox>
+	<Label text="Strength (bits):" GridPane.columnIndex="0" GridPane.rowIndex="5"/> 
+	<ComboBox fx:id="strengthComboBox" GridPane.columnIndex="1" GridPane.rowIndex="5" GridPane.columnSpan="2" GridPane.hgrow="ALWAYS"> 
+		<GridPane.margin>
+			<Insets left="8"/> 
+		</GridPane.margin>
+	</ComboBox>
+	<padding>
+		<Insets left="8" top="8" right="8" bottom="8"/> 
+	</padding>
 </fx:root>

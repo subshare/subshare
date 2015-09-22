@@ -11,60 +11,59 @@ import javafx.scene.control.CheckBox
 
 dynamic component IdentityPane resourcefile 'messages.properties' {
 	GridPane {
-//		prefWidth : 500,
-//		prefHeight : 300,
+		hgap : 8,
+		vgap : 8,
+		padding : Insets { left : 8, top : 8, right : 8, bottom : 8 },
 
-		children : [
-			Text id headerText {
-				text : rstring 'IdentityPane.headerText.text',
-				wrappingWidth : 500,
-				static columnIndex : 0,
-				static rowIndex : 0,
-				static columnSpan : 2,
-				static hgrow : "ALWAYS",
-				static margin : Insets { bottom : 16 }
-			},
-			
-			Label id firstNameLabel {
-				text : rstring 'IdentityPane.firstNameLabel.text',
-				static columnIndex : 0,
-				static rowIndex : 1
-			},
-			TextField id firstNameTextField {
-				static columnIndex : 1,
-				static rowIndex : 1,
-				static margin : Insets { left : 8 }
-			},
+		Text id headerText {
+			text : rstring 'IdentityPane.headerText.text',
+			wrappingWidth : 500,
+			static columnIndex : 0,
+			static rowIndex : 0,
+			static columnSpan : 2,
+			static hgrow : "ALWAYS",
+			static margin : Insets { bottom : 16 }
+		},
+		
+		Label id firstNameLabel {
+			text : rstring 'IdentityPane.firstNameLabel.text',
+			static columnIndex : 0,
+			static rowIndex : 1
+		},
+		TextField id firstNameTextField {
+			static columnIndex : 1,
+			static rowIndex : 1,
+			static margin : Insets { left : 8 }
+		},
 
-			Label id lastNameLabel {
-				text : rstring 'IdentityPane.lastNameLabel.text',
-				static columnIndex : 0,
-				static rowIndex : 2
-			},
-			TextField id lastNameTextField {
-				static columnIndex : 1,
-				static rowIndex : 2,
-				static margin : Insets { left : 8 }
-			},
-			
-			Label id emailLabel {
-				text : rstring 'IdentityPane.emailLabel.text',
-				static columnIndex : 0,
-				static rowIndex : 3
-			},
-			TextField id emailTextField {
-				static columnIndex : 1,
-				static rowIndex : 3,
-				static margin : Insets { left : 8 }
-			},
-			
-			CheckBox id importBackupCheckBox {
-				text : rstring 'IdentityPane.importBackupCheckBox.text',				
-				static columnIndex : 0,
-				static rowIndex : 4,
-				static columnSpan : 2,
-				static margin : Insets { top : 8 }
-			}
-		]
+		Label id lastNameLabel {
+			text : rstring 'IdentityPane.lastNameLabel.text',
+			static columnIndex : 0,
+			static rowIndex : 2
+		},
+		TextField id lastNameTextField {
+			static columnIndex : 1,
+			static rowIndex : 2,
+			static margin : Insets { left : 8 }
+		},
+		
+		Label id emailLabel {
+			text : rstring 'IdentityPane.emailLabel.text',
+			static columnIndex : 0,
+			static rowIndex : 3
+		},
+		TextField id emailTextField {
+			static columnIndex : 1,
+			static rowIndex : 3,
+			static margin : Insets { left : 8 }
+		},
+		
+		CheckBox id importBackupCheckBox {
+			text : rstring 'IdentityPane.importBackupCheckBox.text',				
+			static columnIndex : 0,
+			static rowIndex : 4,
+			static columnSpan : 2,
+			static margin : Insets { top : 8 }
+		}
 	}
 }

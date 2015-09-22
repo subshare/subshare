@@ -12,30 +12,31 @@
 <?import javafx.scene.text.Text?>
 <?scenebuilder-preview-i18n-resource messages.properties?>
 
-<fx:root xmlns:fx="http://javafx.com/fxml" type="GridPane">
+<fx:root xmlns:fx="http://javafx.com/fxml" type="GridPane" hgap="8" vgap="8">
 
-	<children>
-		<Text fx:id="headerText" text="%UserIdPane.headerText.text" wrappingWidth="500" GridPane.columnIndex="0" GridPane.rowIndex="0"> 
-			<GridPane.margin>
-				<Insets bottom="16"/> 
-			</GridPane.margin>
-		</Text>
-		<TableView fx:id="userIdsTableView" editable="true" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.fillWidth="true" GridPane.hgrow="ALWAYS"> 
-			<columns>
-				<TableColumn fx:id="nameTableColumn" text="Name" prefWidth="180"> 
-					<cellValueFactory>
-						<PropertyValueFactory property="name"/> 
-					</cellValueFactory>
-				</TableColumn>
-				<TableColumn fx:id="emailTableColumn" text="E-mail" prefWidth="220"> 
-					<cellValueFactory>
-						<PropertyValueFactory property="email"/> 
-					</cellValueFactory>
-				</TableColumn>
-			</columns>
-			<GridPane.margin>
-				<Insets left="8"/> 
-			</GridPane.margin>
-		</TableView>
-	</children>
+	<Text fx:id="headerText" text="%UserIdPane.headerText.text" wrappingWidth="500" GridPane.columnIndex="0" GridPane.rowIndex="0"> 
+		<GridPane.margin>
+			<Insets bottom="16"/> 
+		</GridPane.margin>
+	</Text>
+	<TableView fx:id="userIdsTableView" editable="true" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.fillWidth="true" GridPane.hgrow="ALWAYS"> 
+		<columns>
+			<TableColumn fx:id="nameTableColumn" text="Name" prefWidth="180"> 
+				<cellValueFactory>
+					<PropertyValueFactory property="name"/> 
+				</cellValueFactory>
+			</TableColumn>
+			<TableColumn fx:id="emailTableColumn" text="E-mail" prefWidth="220"> 
+				<cellValueFactory>
+					<PropertyValueFactory property="email"/> 
+				</cellValueFactory>
+			</TableColumn>
+		</columns>
+		<GridPane.margin>
+			<Insets left="8"/> 
+		</GridPane.margin>
+	</TableView>
+	<padding>
+		<Insets left="8" top="8" right="8" bottom="8"/> 
+	</padding>
 </fx:root>

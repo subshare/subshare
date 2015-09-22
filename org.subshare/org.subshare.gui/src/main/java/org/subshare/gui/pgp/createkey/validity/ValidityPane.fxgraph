@@ -12,43 +12,34 @@ import javafx.scene.layout.HBox
 
 dynamic component ValidityPane resourcefile 'messages.properties' {
 	GridPane {
-//		prefWidth : 500,
-//		prefHeight : 300,
+		hgap : 8,
+		vgap : 8,
+		padding : Insets { left : 8, top : 8, right : 8, bottom : 8 },
 
-		children : [
-			Text id headerText {
-				text : rstring 'ValidityPane.headerText.text',
-				wrappingWidth : 500,
-				static columnIndex : 0,
-				static rowIndex : 0,
-				static columnSpan : 3,
-				static margin : Insets { bottom : 16 }
-			},
+		Text id headerText {
+			text : rstring 'ValidityPane.headerText.text',
+			wrappingWidth : 500,
+			static columnIndex : 0,
+			static rowIndex : 0,
+			static columnSpan : 3,
+			static margin : Insets { bottom : 16 }
+		},
 
-			Label {
-				text : "Validity:",
-				static columnIndex : 0,
-				static rowIndex : 3
-			},
-			Spinner<Integer> id validityNumberSpinner {
-				editable : true,
-				static columnIndex : 1,
-				static rowIndex : 3,
-//				static hgrow : "ALWAYS",				
-				static margin : Insets { left : 8 }
-			},
-			ComboBox<TimeUnit> id validityTimeUnitComboBox {
-				static columnIndex : 2,
-				static rowIndex : 3,
-//				static hgrow : "ALWAYS",				
-				static margin : Insets { left : 8 }
-			}
-//			,
-//			HBox {
-//				static columnIndex : 3,
-//				static rowIndex : 3,
-//				static hgrow : "ALWAYS"
-//			}
-		]
+		Label {
+			text : "Validity:",
+			static columnIndex : 0,
+			static rowIndex : 3
+		},
+		Spinner<Integer> id validityNumberSpinner {
+			editable : true,
+			static columnIndex : 1,
+			static rowIndex : 3,
+			static margin : Insets { left : 8 }
+		},
+		ComboBox<TimeUnit> id validityTimeUnitComboBox {
+			static columnIndex : 2,
+			static rowIndex : 3,
+			static margin : Insets { left : 8 }
+		}
 	}
 }
