@@ -628,22 +628,7 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 								getSymmetricCipherTransformation(),
 								keyParameter, new RandomIvFactory());
 				) {
-//					final byte[] plainTextLengthBA = IOUtil.intToBytes(plainText.length);
-//					encrypterOut.write(plainTextLengthBA);
 					IOUtil.transferStreamData(new ByteArrayInputStream(plainText), encrypterOut);
-
-//					// TODO we should move this better into the CryptreeFileRepoTransportImpl so that there might be multiple
-//					// entire padding-chunks and even additional whole padding-files + directories. These could be managed
-//					// in a persistent way in the local DB (so that the padding-data is synced just like all other data, too,
-//					// but not shown in the file-system).
-//					int paddingLength = FileChunkDto.MAX_LENGTH - plainText.length;
-//					if (paddingLength > 0) {
-//						paddingLength = KeyFactory.secureRandom.nextInt(paddingLength) + 1;
-//
-//						for (int i = 0; i < paddingLength; ++i)
-//							encrypterOut.write(0);
-//					}
-// TODO we should maybe keep the plaintext-length and then fill with a padding to hide the real length. maybe do this somewhere else though (so that we can even have additional padding-chunks, not only some padding-bytes within a chunk).
 				}
 			}
 			return bout.toByteArray();
@@ -663,16 +648,6 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 				final ByteArrayOutputStream bout = new ByteArrayOutputStream();
 				try (final DecrypterInputStream decrypterIn = new DecrypterInputStream(verifierIn, keyParameter);) {
 					IOUtil.transferStreamData(decrypterIn, bout);
-//					final byte[] plainTextLengthBA = new byte[4];
-//					IOUtil.readOrFail(decrypterIn, plainTextLengthBA, 0, plainTextLengthBA.length);
-//					final int plainTextLength = IOUtil.bytesToInt(plainTextLengthBA);
-//					IOUtil.transferStreamData(decrypterIn, bout, 0, plainTextLength);
-//
-//					int b;
-//					while ((b = decrypterIn.read()) >= 0) {
-//						if (b != 0)
-//							throw new IllegalStateException("padding byte is not 0?! Data loss?!");
-//					}
 				}
 
 				final byte[] plainText = bout.toByteArray();

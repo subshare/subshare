@@ -3,7 +3,9 @@ package org.subshare.gui.server;
 import static co.codewizards.cloudstore.core.bean.PropertyChangeListenerUtil.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
+import static javafx.application.Platform.*;
 import static org.subshare.gui.util.FxmlUtil.*;
+import static org.subshare.gui.util.PlatformUtil.*;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -72,7 +74,7 @@ public class ServerPane extends GridPane {
 					it.remove();
 			}
 
-			addOrRemoveItemTablesViewCallback(serverRepos);
+			runLater(() -> addOrRemoveItemTablesViewCallback(serverRepos));
 		}
 	};
 
@@ -99,6 +101,7 @@ public class ServerPane extends GridPane {
 	}
 
 	private void addOrRemoveItemTablesViewCallback(final Collection<ServerRepo> serverRepos) {
+		assertFxApplicationThread();
 		final Set<ServerRepo> modelRepos = new HashSet<ServerRepo>(serverRepos);
 		final Map<ServerRepo, ServerRepoListItem> viewRepo2ServerRepoListItem = new HashMap<>();
 		for (final ServerRepoListItem sli : tableView.getItems())

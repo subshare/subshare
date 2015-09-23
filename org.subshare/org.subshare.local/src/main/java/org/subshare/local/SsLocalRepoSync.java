@@ -101,8 +101,6 @@ public class SsLocalRepoSync extends LocalRepoSync {
 		assertNotNull("monitor", monitor);
 
 		SsNormalFile nf = (SsNormalFile) normalFile;
-		if (nf.getLengthWithPadding() < nf.getLength())
-			assignLengthWithPadding(nf);
 
 		final PersistenceManager pm = ((ContextWithPersistenceManager) transaction).getPersistenceManager();
 		pm.getFetchPlan().setGroups(FetchPlan.DEFAULT);
@@ -115,6 +113,10 @@ public class SsLocalRepoSync extends LocalRepoSync {
 		}
 
 		super.sha(normalFile, file, monitor);
+
+		// must assign padding after super.sha(...), because super.sha(...) may override nf.length!
+		if (nf.getLengthWithPadding() < nf.getLength())
+			assignLengthWithPadding(nf);
 
 		SsFileChunk lastNewFileChunk = null;
 
@@ -190,6 +192,10 @@ public class SsLocalRepoSync extends LocalRepoSync {
 		final File file = normalFile.getFile(localRoot);
 		final FilePaddingLengthRandom filePaddingLengthRandom = new FilePaddingLengthRandom(file);
 		final long paddingLength = filePaddingLengthRandom.nextPaddingLength();
+
+		if (paddingLength < 0)
+			throw new IllegalStateException("paddingLength < 0");
+
 		normalFile.setLengthWithPadding(normalFile.getLength() + paddingLength);
 	}
 
