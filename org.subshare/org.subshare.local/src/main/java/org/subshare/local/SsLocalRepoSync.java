@@ -4,6 +4,7 @@ import static co.codewizards.cloudstore.core.objectfactory.ObjectFactoryUtil.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
 
+import java.io.RandomAccessFile;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -147,7 +148,7 @@ public class SsLocalRepoSync extends LocalRepoSync {
 					fileChunk = createPaddingFileChunk(nf, offset, chunkWithPaddingLength);
 				else {
 					fileChunk.makeWritable();
-					fileChunk.setRepoFile(nf);
+					fileChunk.setNormalFile(nf);
 					if (fileChunk.getLengthWithPadding() != chunkWithPaddingLength || fileChunk.getLength() != 0) {
 						fileChunk.setSha1(createRandomSha1());
 						fileChunk.setLengthWithPadding(chunkWithPaddingLength);
@@ -168,12 +169,27 @@ public class SsLocalRepoSync extends LocalRepoSync {
 		super.onFinalizeFileChunk(fileChunk);
 		final SsFileChunk fc = (SsFileChunk) fileChunk;
 		fc.setLengthWithPadding(fc.getLength());
+
+		// TODO BEGIN DEBUG
+		try {
+			File file = fileChunk.getNormalFile().getFile(localRoot);
+			RandomAccessFile raf = new RandomAccessFile(file.getIoFile(), "r");
+			raf.seek(fileChunk.getOffset());
+			byte[] data = new byte[fileChunk.getLength()];
+			raf.readFully(data, 0, data.length);
+
+			String sha1 = HashUtil.sha1(data);
+			System.out.println(fileChunk.getSha1());
+			System.out.println(sha1);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	private SsFileChunk createPaddingFileChunk(final SsNormalFile normalFile, final long offset, final int paddingLength) {
 		assertNotNull("normalFile", normalFile);
 		SsFileChunk fileChunk = (SsFileChunk) createObject(FileChunk.class);
-		fileChunk.setRepoFile(normalFile);
+		fileChunk.setNormalFile(normalFile);
 		fileChunk.setOffset(offset);
 		fileChunk.setSha1(createRandomSha1());
 		fileChunk.setLengthWithPadding(paddingLength);

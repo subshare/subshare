@@ -10,6 +10,8 @@ import javax.jdo.annotations.Query;
 import javax.jdo.annotations.Unique;
 import javax.jdo.listener.StoreCallback;
 
+import org.subshare.local.persistence.TempFileChunk;
+
 import co.codewizards.cloudstore.local.persistence.Entity;
 import co.codewizards.cloudstore.local.persistence.FileChunk;
 

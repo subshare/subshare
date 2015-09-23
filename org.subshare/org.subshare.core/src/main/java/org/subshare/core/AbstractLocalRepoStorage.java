@@ -1,35 +1,32 @@
 package org.subshare.core;
 
-
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.util.UUID;
 
-import org.subshare.core.user.UserRepoKeyRing;
-
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
 
-public abstract class AbstractCryptree implements Cryptree {
-
-	private CryptreeFactory cryptreeFactory;
+public abstract class AbstractLocalRepoStorage implements LocalRepoStorage {
+	private LocalRepoStorageFactory localRepoStorageFactory;
 	private LocalRepoTransaction transaction;
-	private UserRepoKeyRing userRepoKeyRing;
 	private UUID remoteRepositoryId;
 	private String remotePathPrefix;
 
 	@Override
-	public CryptreeFactory getCryptreeFactory() {
-		return cryptreeFactory;
+	public LocalRepoStorageFactory getLocalRepoStorageFactory() {
+		return localRepoStorageFactory;
 	}
-	@Override
-	public void setCryptreeFactory(final CryptreeFactory cryptreeFactory) {
-		if (this.cryptreeFactory != null && this.cryptreeFactory != cryptreeFactory)
-			throw new IllegalStateException("this.cryptreeFactory already assigned! Cannot modify after initial assignment!");
 
-		this.cryptreeFactory = cryptreeFactory;
+	@Override
+	public void setLocalRepoStorageFactory(LocalRepoStorageFactory localRepoStorageFactory) {
+		if (this.localRepoStorageFactory != null && this.localRepoStorageFactory != localRepoStorageFactory)
+			throw new IllegalStateException("this.localRepoStorageFactory already assigned! Cannot modify after initial assignment!");
+
+		this.localRepoStorageFactory = localRepoStorageFactory;
 	}
-	protected CryptreeFactory getCryptreeFactoryOrFail() {
-		return assertNotNull("getCryptreeFactory()", getCryptreeFactory());
+
+	protected LocalRepoStorageFactory getLocalRepoStorageFactoryOrFail() {
+		return assertNotNull("getLocalRepoStorageFactoryOrFail()", getLocalRepoStorageFactoryOrFail());
 	}
 
 	@Override
@@ -45,22 +42,6 @@ public abstract class AbstractCryptree implements Cryptree {
 	}
 	protected LocalRepoTransaction getTransactionOrFail() {
 		return assertNotNull("getTransaction()", getTransaction());
-	}
-
-	@Override
-	public UserRepoKeyRing getUserRepoKeyRing() {
-		return userRepoKeyRing;
-	}
-	@Override
-	public void setUserRepoKeyRing(final UserRepoKeyRing userRepoKeyRing) {
-		this.userRepoKeyRing = userRepoKeyRing;
-	}
-//	protected UserRepoKey getUserRepoKeyOrFail() {
-//		return assertNotNull("getUserRepoKey()", getUserRepoKeyRing());
-//	}
-
-	protected UserRepoKeyRing getUserRepoKeyRingOrFail() {
-		return assertNotNull("getUserRepoKeyRing()", getUserRepoKeyRing());
 	}
 
 	@Override

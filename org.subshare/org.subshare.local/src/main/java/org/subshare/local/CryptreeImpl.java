@@ -19,6 +19,9 @@ import org.bouncycastle.crypto.params.KeyParameter;
 import org.subshare.core.AbstractCryptree;
 import org.subshare.core.AccessDeniedException;
 import org.subshare.core.GrantAccessDeniedException;
+import org.subshare.core.LocalRepoStorage;
+import org.subshare.core.LocalRepoStorageFactory;
+import org.subshare.core.LocalRepoStorageFactoryRegistry;
 import org.subshare.core.PermissionCollisionException;
 import org.subshare.core.ReadAccessDeniedException;
 import org.subshare.core.ReadUserIdentityAccessDeniedException;
@@ -127,6 +130,8 @@ public class CryptreeImpl extends AbstractCryptree {
 	private CryptreeContext cryptreeContext;
 
 	private Uid rootCryptoRepoFileId;
+
+	private LocalRepoStorage localRepoStorage;
 
 	@Override
 	public UserRepoKeyPublicKeyLookup getUserRepoKeyPublicKeyLookup() {
@@ -487,7 +492,7 @@ public class CryptreeImpl extends AbstractCryptree {
 		if (isOnServer())
 			return;
 
-		if (isMetaOnly())
+		if (getLocalRepoStorage().isMetaOnly())
 			return;
 
 		final LocalRepoTransaction transaction = getTransactionOrFail();
@@ -1774,28 +1779,24 @@ public class CryptreeImpl extends AbstractCryptree {
 	}
 
 	@Override
-	public void makeMetaOnly() {
-		final LocalRepoTransaction transaction = getTransactionOrFail();
-		final SsLocalRepository localRepository = (SsLocalRepository) transaction.getDao(LocalRepositoryDao.class).getLocalRepositoryOrFail();
-		if (localRepository.getLocalRepositoryType() != LocalRepositoryType.UNINITIALISED)
-			throw new IllegalStateException("localRepositoryType is already initialised: " + localRepository.getLocalRepositoryType());
-
-		localRepository.setLocalRepositoryType(LocalRepositoryType.CLIENT_META_ONLY);
-	}
-
-	@Override
-	public boolean isMetaOnly() {
-		final LocalRepoTransaction transaction = getTransactionOrFail();
-		final SsLocalRepository localRepository = (SsLocalRepository) transaction.getDao(LocalRepositoryDao.class).getLocalRepositoryOrFail();
-		return localRepository.getLocalRepositoryType() == LocalRepositoryType.CLIENT_META_ONLY;
-	}
-
-	@Override
 	public Uid getOwnerUserRepoKeyId() {
 		final RepositoryOwner repositoryOwner = getCryptreeContext().getRepositoryOwner();
 		if (repositoryOwner == null)
 			return null;
 
 		return repositoryOwner.getUserRepoKeyPublicKey().getUserRepoKeyId();
+	}
+
+	@Override
+	public LocalRepoStorage getLocalRepoStorage() {
+		if (localRepoStorage == null) {
+			final LocalRepoStorageFactoryRegistry registry = LocalRepoStorageFactoryRegistry.getInstance();
+			final LocalRepoStorageFactory factory = registry.getLocalRepoStorageFactoryOrFail();
+			if (getRemotePathPrefix() == null)
+				return factory.getLocalRepoStorageOrCreate(getTransactionOrFail());
+			else
+				return factory.getLocalRepoStorageOrCreate(getTransactionOrFail(), getRemoteRepositoryIdOrFail(), getRemotePathPrefixOrFail());
+		}
+		return localRepoStorage;
 	}
 }

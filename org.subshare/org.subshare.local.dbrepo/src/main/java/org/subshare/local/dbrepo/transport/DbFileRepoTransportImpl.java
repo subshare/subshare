@@ -20,12 +20,12 @@ import org.subshare.core.dto.CryptoRepoFileOnServerDto;
 import org.subshare.core.repo.transport.CryptreeServerFileRepoTransport;
 import org.subshare.local.dbrepo.persistence.FileChunkPayload;
 import org.subshare.local.dbrepo.persistence.FileChunkPayloadDao;
-import org.subshare.local.dbrepo.persistence.TempFileChunk;
-import org.subshare.local.dbrepo.persistence.TempFileChunkDao;
 import org.subshare.local.dto.CryptoRepoFileOnServerDtoConverter;
 import org.subshare.local.persistence.SsDeleteModification;
 import org.subshare.local.persistence.SsDirectory;
 import org.subshare.local.persistence.SsNormalFile;
+import org.subshare.local.persistence.TempFileChunk;
+import org.subshare.local.persistence.TempFileChunkDao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -310,14 +310,20 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 				final RepoFile repoFile = repoFileDao.getRepoFile(localRoot, file);
 				assertNotNull("repoFile", repoFile); // TODO or is this a collision which requires a special exception?!
 
-				TempFileChunk tempFileChunk = tempFileChunkDao.getTempFileChunk(repoFile, clientRepositoryId, offset);
+				final NormalFile normalFile = (NormalFile) repoFile; // TODO maybe another collision?!
+
+				TempFileChunk tempFileChunk = tempFileChunkDao.getTempFileChunk(normalFile, clientRepositoryId, offset);
 				if (tempFileChunk == null) {
 					tempFileChunk = new TempFileChunk();
-					tempFileChunk.setRepoFile(repoFile);
+					tempFileChunk.setNormalFile(normalFile);
 					tempFileChunk.setRemoteRepositoryId(clientRepositoryId);
+					tempFileChunk.setRole(TempFileChunk.Role.RECEIVING);
 					tempFileChunk.setOffset(offset);
+					tempFileChunk.setLength(fileData.length);
 					tempFileChunk = tempFileChunkDao.makePersistent(tempFileChunk);
 				}
+				else
+					tempFileChunk.setLength(fileData.length);
 
 				FileChunkPayload fileChunkPayload = fileChunkPayloadDao.getFileChunkPayload(tempFileChunk);
 				if (fileChunkPayload == null) {
@@ -397,7 +403,7 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 			for (FileChunk fileChunk : normalFile.getFileChunks())
 				offset2FileChunk.put(fileChunk.getOffset(), fileChunk);
 
-			final Collection<TempFileChunk> tempFileChunks = tempFileChunkDao.getTempFileChunks(repoFile, clientRepositoryId);
+			final Collection<TempFileChunk> tempFileChunks = tempFileChunkDao.getTempFileChunks(normalFile, clientRepositoryId);
 			for (final TempFileChunk tempFileChunk : tempFileChunks) {
 				final FileChunkPayload fileChunkPayload = fileChunkPayloadDao.getFileChunkPayload(tempFileChunk);
 				if (fileChunkPayload == null) {
@@ -408,7 +414,7 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 				FileChunk fileChunk = offset2FileChunk.get(tempFileChunk.getOffset());
 				if (fileChunk == null) {
 					fileChunk = createObject(FileChunk.class);
-					fileChunk.setRepoFile(normalFile);
+					fileChunk.setNormalFile(normalFile);
 					fileChunk.setOffset(tempFileChunk.getOffset());
 					fileChunk.setLength(0); // no need in CSX ;-)
 					fileChunk.setSha1("X"); // no need in CSX ;-) but: not-null-constraint!

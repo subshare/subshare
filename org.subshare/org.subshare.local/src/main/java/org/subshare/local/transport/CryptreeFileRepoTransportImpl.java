@@ -5,12 +5,11 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
 
-import org.subshare.core.Cryptree;
-import org.subshare.core.CryptreeFactoryRegistry;
+import org.subshare.core.LocalRepoStorage;
+import org.subshare.core.LocalRepoStorageFactoryRegistry;
 import org.subshare.core.dto.SsFileChunkDto;
 import org.subshare.core.dto.SsNormalFileDto;
 import org.subshare.core.repo.transport.CryptreeClientFileRepoTransport;
@@ -59,14 +58,16 @@ public class CryptreeFileRepoTransportImpl extends FileRepoTransport implements 
 
 	private boolean isMetaOnly() {
 		if (metaOnly == null) {
-			final Iterator<UUID> repoIdIt = getLocalRepoManager().getRemoteRepositoryId2RemoteRootMap().keySet().iterator();
-			if (! repoIdIt.hasNext())
-				throw new IllegalStateException("There is no remote-repository!");
-
-			final UUID serverRepositoryId = repoIdIt.next();
+//			final Iterator<UUID> repoIdIt = getLocalRepoManager().getRemoteRepositoryId2RemoteRootMap().keySet().iterator();
+//			if (! repoIdIt.hasNext())
+//				throw new IllegalStateException("There is no remote-repository!");
+//
+//			final UUID serverRepositoryId = repoIdIt.next();
 			try (final LocalRepoTransaction transaction = getLocalRepoManager().beginReadTransaction();) {
-				final Cryptree cryptree = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail().getCryptreeOrCreate(transaction, serverRepositoryId);
-				metaOnly = cryptree.isMetaOnly();
+				final LocalRepoStorage lrs = LocalRepoStorageFactoryRegistry.getInstance().getLocalRepoStorageFactoryOrFail().getLocalRepoStorageOrCreate(transaction);
+
+//				final Cryptree cryptree = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail().getCryptreeOrCreate(transaction, serverRepositoryId);
+				metaOnly = lrs.isMetaOnly();
 				transaction.commit();
 			}
 		}
@@ -136,7 +137,7 @@ public class CryptreeFileRepoTransportImpl extends FileRepoTransport implements 
 				if (fileChunk == null) {
 					isNew = true;
 					fileChunk = (SsFileChunk) createObject(FileChunk.class);
-					fileChunk.setRepoFile(normalFile);
+					fileChunk.setNormalFile(normalFile);
 					fileChunk.setOffset(fileChunkDto.getOffset());
 				}
 				fileChunk.makeWritable();

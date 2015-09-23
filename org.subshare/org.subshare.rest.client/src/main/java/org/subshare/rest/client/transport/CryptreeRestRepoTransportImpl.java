@@ -2,6 +2,7 @@ package org.subshare.rest.client.transport;
 
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static co.codewizards.cloudstore.core.util.HashUtil.*;
 import static org.subshare.core.crypto.CryptoConfigUtil.*;
 
 import java.io.ByteArrayInputStream;
@@ -19,6 +20,8 @@ import org.subshare.core.AccessDeniedException;
 import org.subshare.core.Cryptree;
 import org.subshare.core.CryptreeFactory;
 import org.subshare.core.CryptreeFactoryRegistry;
+import org.subshare.core.LocalRepoStorage;
+import org.subshare.core.LocalRepoStorageFactoryRegistry;
 import org.subshare.core.WriteAccessDeniedException;
 import org.subshare.core.crypto.DecrypterInputStream;
 import org.subshare.core.crypto.EncrypterOutputStream;
@@ -478,15 +481,40 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 
 	@Override
 	public RepoFileDto getRepoFileDto(final String path) {
-		final RepoFileDto decryptedRepoFileDto;
+		final RepoFileDto result;
 		final LocalRepoManager localRepoManager = getLocalRepoManager();
 		try (final LocalRepoTransaction transaction = localRepoManager.beginReadTransaction();) {
 			final Cryptree cryptree = getCryptree(transaction);
-			decryptedRepoFileDto = cryptree.getDecryptedRepoFileOnServerDto(path);
+			final RepoFileDto decryptedRepoFileDto = cryptree.getDecryptedRepoFileOnServerDto(path);
+
+			final LocalRepoStorage lrs = LocalRepoStorageFactoryRegistry.getInstance().getLocalRepoStorageFactoryOrFail().getLocalRepoStorageOrCreate(
+					transaction, getRepositoryId(), getPathPrefix());
+
+			if (decryptedRepoFileDto != null)
+				result = decryptedRepoFileDto;
+			else {
+				// The file does not exist on the server, yet, but it was *partially* uploaded.
+				// Hence, we must synthetically create a NormalFileDto and
+				result = lrs.getRepoFileDto(path);
+				if (result instanceof NormalFileDto) {
+					final SsNormalFileDto nf = (SsNormalFileDto) result;
+					nf.getFileChunkDtos().clear();
+					nf.setLength(0);
+					nf.setLengthWithPadding(0);
+					nf.setLastModified(new Date());
+					nf.setSha1(sha1(Long.toString(System.currentTimeMillis(), 36)));
+				}
+			}
+
+			if (result instanceof NormalFileDto) {
+				final NormalFileDto nf = (NormalFileDto) result;
+				nf.getTempFileChunkDtos().clear();
+				nf.getTempFileChunkDtos().addAll(lrs.getTempFileChunkDtos(path));
+			}
 
 			transaction.commit();
 		}
-		return decryptedRepoFileDto;
+		return result;
 	}
 
 	@Override
@@ -572,6 +600,9 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 			final String unprefixedServerPath = unprefixPath(cryptree.getServerPath(path)); // it's automatically prefixed *again*, thus we must prefix it here (if we don't want to somehow suppress the automatic prefixing, which is probably quite a lot of work).
 			getRestRepoTransport().putFileData(unprefixedServerPath, offset, encryptedFileData);
 
+			// Store the "tempFileChunkDto" locally here (no need to encrypt+upload).
+			cryptree.getLocalRepoStorage().putTempFileChunkDto(path, offset);
+
 			transaction.commit();
 		}
 	}
@@ -604,6 +635,8 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 			rfdwcrfosd.setCryptoRepoFileOnServerDto(cryptoRepoFileOnServerDto);
 
 			getClient().execute(new SsEndPutFile(getRepositoryId().toString(), serverPath, rfdwcrfosd));
+
+			cryptree.getLocalRepoStorage().clearTempFileChunkDtos(path);
 
 			transaction.commit();
 		}

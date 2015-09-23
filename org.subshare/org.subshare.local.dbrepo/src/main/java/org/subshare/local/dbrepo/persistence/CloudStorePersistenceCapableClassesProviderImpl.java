@@ -7,7 +7,6 @@ public class CloudStorePersistenceCapableClassesProviderImpl extends AbstractClo
 	@Override
 	public Class<?>[] getPersistenceCapableClasses() {
 		return new Class<?>[] {
-				TempFileChunk.class,
 				FileChunkPayload.class
 		};
 	}

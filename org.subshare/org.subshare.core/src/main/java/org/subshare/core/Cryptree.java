@@ -169,12 +169,11 @@ public interface Cryptree {
 	void sign(WriteProtected writeProtected) throws AccessDeniedException;
 	void assertSignatureOk(WriteProtected writeProtected) throws SignatureException, AccessDeniedException;
 
-	void makeMetaOnly();
-	boolean isMetaOnly();
-
 	CryptoRepoFileOnServerDto createOrUpdateCryptoRepoFileOnServerDto(String localPath);
 	CryptoRepoFileOnServerDto getCryptoRepoFileOnServerDto(String localPath);
 	RepoFileDto getDecryptedRepoFileOnServerDtoOrFail(Uid cryptoRepoFileId) throws AccessDeniedException;
 	RepoFileDto getDecryptedRepoFileOnServerDto(String localPath);
 	Uid getOwnerUserRepoKeyId();
+
+	LocalRepoStorage getLocalRepoStorage();
 }

@@ -16,6 +16,8 @@ import java.util.UUID;
 import org.subshare.core.AccessDeniedException;
 import org.subshare.core.Cryptree;
 import org.subshare.core.CryptreeFactoryRegistry;
+import org.subshare.core.LocalRepoStorage;
+import org.subshare.core.LocalRepoStorageFactoryRegistry;
 import org.subshare.core.dto.CryptoRepoFileDto;
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.repo.local.SsLocalRepoMetaData;
@@ -241,23 +243,25 @@ public class SsLocalRepoMetaDataImpl extends LocalRepoMetaDataImpl implements Ss
 	@Override
 	public boolean isMetaOnly() {
 		try (final LocalRepoTransaction tx = getLocalRepoManagerOrFail().beginReadTransaction();) {
-			final UUID serverRepositoryId = getRemoteRepositoryId(tx);
-			final Cryptree cryptree = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail().getCryptreeOrCreate(tx, serverRepositoryId);
-			return cryptree.isMetaOnly();
+			final LocalRepoStorage lrs = LocalRepoStorageFactoryRegistry.getInstance().getLocalRepoStorageFactoryOrFail().getLocalRepoStorageOrCreate(tx);
+//			final UUID serverRepositoryId = getRemoteRepositoryId(tx);
+//			final Cryptree cryptree = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail().getCryptreeOrCreate(tx, serverRepositoryId);
+			return lrs.isMetaOnly();
 		}
 	}
 
 	@Override
 	public void makeMetaOnly() {
 		try (final LocalRepoTransaction tx = getLocalRepoManagerOrFail().beginWriteTransaction();) {
-			final UUID serverRepositoryId = getRemoteRepositoryId(tx);
-			final Cryptree cryptree = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail().getCryptreeOrCreate(tx, serverRepositoryId);
-			cryptree.makeMetaOnly();
+			final LocalRepoStorage lrs = LocalRepoStorageFactoryRegistry.getInstance().getLocalRepoStorageFactoryOrFail().getLocalRepoStorageOrCreate(tx);
+//			final UUID serverRepositoryId = getRemoteRepositoryId(tx);
+//			final Cryptree cryptree = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail().getCryptreeOrCreate(tx, serverRepositoryId);
+			lrs.makeMetaOnly();
 
-			// We must remove the Cryptree from the transaction, because this Cryptree thinks, it was on the server-side.
-			// It does this, because we do not provide a UserRepoKeyRing (which usually never happens on the client-side).
-			// This wrong assumption causes the VerifySignableAndWriteProtectedEntityListener to fail.
-			tx.removeContextObject(cryptree);
+//			// We must remove the Cryptree from the transaction, because this Cryptree thinks, it was on the server-side.
+//			// It does this, because we do not provide a UserRepoKeyRing (which usually never happens on the client-side).
+//			// This wrong assumption causes the VerifySignableAndWriteProtectedEntityListener to fail.
+//			tx.removeContextObject(cryptree);
 			tx.commit();
 		}
 	}

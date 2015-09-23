@@ -7,6 +7,7 @@ import java.util.Map;
 
 import javax.jdo.Query;
 
+import org.subshare.local.persistence.TempFileChunk;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

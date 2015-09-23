@@ -6,8 +6,8 @@ import static co.codewizards.cloudstore.core.util.IOUtil.*;
 
 import java.net.URL;
 
-import org.subshare.core.Cryptree;
-import org.subshare.core.CryptreeFactoryRegistry;
+import org.subshare.core.LocalRepoStorage;
+import org.subshare.core.LocalRepoStorageFactoryRegistry;
 import org.subshare.core.dto.SsDeleteModificationDto;
 import org.subshare.core.dto.SsFileChunkDto;
 import org.subshare.core.dto.SsNormalFileDto;
@@ -48,8 +48,9 @@ public class SsRepoToRepoSync extends RepoToRepoSync {
 	private boolean isMetaOnly() {
 		if (metaOnly == null) {
 			try (final LocalRepoTransaction transaction = localRepoManager.beginReadTransaction();) {
-				final Cryptree cryptree = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail().getCryptreeOrCreate(transaction, remoteRepositoryId);
-				metaOnly = cryptree.isMetaOnly();
+				final LocalRepoStorage lrs = LocalRepoStorageFactoryRegistry.getInstance().getLocalRepoStorageFactoryOrFail().getLocalRepoStorageOrCreate(transaction);
+//				final Cryptree cryptree = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail().getCryptreeOrCreate(transaction, remoteRepositoryId);
+				metaOnly = lrs.isMetaOnly();
 			}
 		}
 		return metaOnly;

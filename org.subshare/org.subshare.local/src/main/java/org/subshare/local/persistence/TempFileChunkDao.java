@@ -1,9 +1,8 @@
-package org.subshare.local.dbrepo.persistence;
+package org.subshare.local.persistence;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -14,20 +13,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import co.codewizards.cloudstore.local.persistence.Dao;
-import co.codewizards.cloudstore.local.persistence.RepoFile;
+import co.codewizards.cloudstore.local.persistence.NormalFile;
 
 public class TempFileChunkDao extends Dao<TempFileChunk, TempFileChunkDao> {
 
 	private static final Logger logger = LoggerFactory.getLogger(TempFileChunkDao.class);
 
-	public TempFileChunk getTempFileChunk(RepoFile repoFile, UUID remoteRepositoryId, long offset) {
-		assertNotNull("repoFile", repoFile);
+	public TempFileChunk getTempFileChunk(NormalFile normalFile, UUID remoteRepositoryId, long offset) {
+		assertNotNull("repoFile", normalFile);
 		assertNotNull("remoteRepositoryId", remoteRepositoryId);
 
-		final Query query = pm().newNamedQuery(getEntityClass(), "getTempFileChunk_repoFile_remoteRepositoryId_offset");
+		final Query query = pm().newNamedQuery(getEntityClass(), "getTempFileChunk_normalFile_remoteRepositoryId_offset");
 		try {
 			final Map<String, Object> params = new HashMap<String, Object>(3);
-			params.put("repoFile", repoFile);
+			params.put("normalFile", normalFile);
 			params.put("remoteRepositoryId", remoteRepositoryId.toString());
 			params.put("offset", offset);
 
@@ -40,13 +39,13 @@ public class TempFileChunkDao extends Dao<TempFileChunk, TempFileChunkDao> {
 		}
 	}
 
-	public Collection<TempFileChunk> getTempFileChunks(RepoFile repoFile) {
-		assertNotNull("repoFile", repoFile);
+	public Collection<TempFileChunk> getTempFileChunks(NormalFile normalFile) {
+		assertNotNull("repoFile", normalFile);
 
-		final Query query = pm().newNamedQuery(getEntityClass(), "getTempFileChunks_repoFile");
+		final Query query = pm().newNamedQuery(getEntityClass(), "getTempFileChunks_normalFile");
 		try {
 			final Map<String, Object> params = new HashMap<String, Object>(1);
-			params.put("repoFile", repoFile);
+			params.put("normalFile", normalFile);
 
 			long startTimestamp = System.currentTimeMillis();
 			@SuppressWarnings("unchecked")
@@ -63,14 +62,14 @@ public class TempFileChunkDao extends Dao<TempFileChunk, TempFileChunkDao> {
 		}
 	}
 
-	public Collection<TempFileChunk> getTempFileChunks(RepoFile repoFile, UUID remoteRepositoryId) {
-		assertNotNull("repoFile", repoFile);
+	public Collection<TempFileChunk> getTempFileChunks(NormalFile normalFile, UUID remoteRepositoryId) {
+		assertNotNull("repoFile", normalFile);
 		assertNotNull("remoteRepositoryId", remoteRepositoryId);
 
-		final Query query = pm().newNamedQuery(getEntityClass(), "getTempFileChunks_repoFile_remoteRepositoryId");
+		final Query query = pm().newNamedQuery(getEntityClass(), "getTempFileChunks_normalFile_remoteRepositoryId");
 		try {
 			final Map<String, Object> params = new HashMap<String, Object>(2);
-			params.put("repoFile", repoFile);
+			params.put("normalFile", normalFile);
 			params.put("remoteRepositoryId", remoteRepositoryId.toString());
 
 			long startTimestamp = System.currentTimeMillis();
@@ -88,36 +87,26 @@ public class TempFileChunkDao extends Dao<TempFileChunk, TempFileChunkDao> {
 		}
 	}
 
-	@Override
-	public void deletePersistent(TempFileChunk entity) {
-		deleteDependencies(Collections.singleton(entity));
-		super.deletePersistent(entity);
-	}
-
-	@Override
-	public void deletePersistentAll(Collection<? extends TempFileChunk> entities) {
-		deleteDependencies(entities);
-		super.deletePersistentAll(entities);
-	}
-
-	private void deleteDependencies(Collection<? extends TempFileChunk> tempFileChunks) {
-		final FileChunkPayloadDao fileChunkPayloadDao = getDao(FileChunkPayloadDao.class);
-		for (final TempFileChunk tempFileChunk : tempFileChunks) {
-			final FileChunkPayload fileChunkPayload = fileChunkPayloadDao.getFileChunkPayload(tempFileChunk);
-			if (fileChunkPayload != null)
-				fileChunkPayloadDao.deletePersistent(fileChunkPayload);
-		}
-		getPersistenceManager().flush();
-	}
-
-//	public List<TempFileChunk> getFileChunksSortedByOffset(final RepoFile repoFile, UUID remoteRepositoryId, FileChunkType fileChunkType) {
-//		final List<TempFileChunk> result = new ArrayList<TempFileChunk>(getFileChunks(repoFile, remoteRepositoryId, fileChunkType));
-//		Collections.sort(result, new Comparator<TempFileChunk>() {
-//			@Override
-//			public int compare(TempFileChunk o1, TempFileChunk o2) {
-//				return Long.compare(o1.getOffset(), o2.getOffset());
-//			}
-//		});
-//		return result;
+// done by listener, now...
+//	@Override
+//	public void deletePersistent(TempFileChunk entity) {
+//		deleteDependencies(Collections.singleton(entity));
+//		super.deletePersistent(entity);
+//	}
+//
+//	@Override
+//	public void deletePersistentAll(Collection<? extends TempFileChunk> entities) {
+//		deleteDependencies(entities);
+//		super.deletePersistentAll(entities);
+//	}
+//
+//	private void deleteDependencies(Collection<? extends TempFileChunk> tempFileChunks) {
+//		final FileChunkPayloadDao fileChunkPayloadDao = getDao(FileChunkPayloadDao.class);
+//		for (final TempFileChunk tempFileChunk : tempFileChunks) {
+//			final FileChunkPayload fileChunkPayload = fileChunkPayloadDao.getFileChunkPayload(tempFileChunk);
+//			if (fileChunkPayload != null)
+//				fileChunkPayloadDao.deletePersistent(fileChunkPayload);
+//		}
+//		getPersistenceManager().flush();
 //	}
 }
