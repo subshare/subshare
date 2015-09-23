@@ -3,27 +3,27 @@ import org.apache.tools.ant.filters.*
 sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
 
-sourceSets {
-	main {
-		java {
-			srcDir 'src/main/java'
-		}
-		resources {
-			srcDir 'src/main/java'
-			srcDir 'src/main/resources'
-		}
-	}
-
-	test {
-		java {
-			srcDir 'src/test/java'
-		}
-		resources {
-			srcDir 'src/test/java'
-			srcDir 'src/test/resources'
-		}
-	}
-}
+//sourceSets {
+//	main {
+//		java {
+//			srcDir 'src/main/java'
+//		}
+//		resources {
+//			srcDir 'src/main/java'
+//			srcDir 'src/main/resources'
+//		}
+//	}
+//
+//	test {
+//		java {
+//			srcDir 'src/test/java'
+//		}
+//		resources {
+//			srcDir 'src/test/java'
+//			srcDir 'src/test/resources'
+//		}
+//	}
+//}
 
 dependencies {
 	compile project(':org.subshare.ls.client')
