@@ -13,7 +13,7 @@ dynamic component IssueInvitationDestPane resourcefile 'messages.properties' {
 
 		Text id headerText {
 			text : rstring 'IssueInvitationDestPane.headerText.text',
-			wrappingWidth : 500,
+			wrappingWidth : 600,
 			static columnIndex : 0,
 			static rowIndex : 0,
 			static columnSpan : 3,

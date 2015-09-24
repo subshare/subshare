@@ -209,7 +209,7 @@ public class AbstractUserRegistryIT extends AbstractRepoToRepoSyncIT {
 		try (final LocalRepoManager localRepoManager = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(localSrcRoot);)
 		{
 			final UserRepoInvitationManager userRepoInvitationManager = UserRepoInvitationManager.Helper.getInstance(ownerUserRegistry, localRepoManager);
-			userRepoInvitationToken = userRepoInvitationManager.createUserRepoInvitationToken(localPath, friend, permissionType, 24 * 3600 * 1000);
+			userRepoInvitationToken = userRepoInvitationManager.createUserRepoInvitationToken(localPath, friend, userPgpKeys, permissionType, 24 * 3600 * 1000);
 		}
 		return userRepoInvitationToken;
 	}

@@ -15,6 +15,6 @@
 		<Insets left="8" top="8" right="8" bottom="8"/> 
 	</padding>
 	<children>
-		<Text fx:id="messageText" text="%StatusPane.messageText.text" wrappingWidth="500" GridPane.columnIndex="0" GridPane.rowIndex="0"/> 
+		<Text fx:id="messageText" text="%StatusPane.messageText.text" wrappingWidth="600" GridPane.columnIndex="0" GridPane.rowIndex="0"/> 
 	</children>
 </fx:root>

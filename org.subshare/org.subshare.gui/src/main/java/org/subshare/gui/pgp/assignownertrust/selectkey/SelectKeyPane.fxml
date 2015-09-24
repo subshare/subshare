@@ -20,7 +20,7 @@
 		<ToggleGroup fx:id="toggleGroup"/> 
 	</fx:define>
 
-	<Text fx:id="headerText" text="%SelectKeyPane.headerText.text" wrappingWidth="500" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.hgrow="ALWAYS"/> 
+	<Text fx:id="headerText" text="%SelectKeyPane.headerText.text" wrappingWidth="600" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.hgrow="ALWAYS"/> 
 	<HBox spacing="8" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.hgrow="ALWAYS"> 
 		<Label text="New owner-trust:"/> 
 		<TextField fx:id="newOwnerTrustTextField" editable="false" HBox.hgrow="ALWAYS"/> 

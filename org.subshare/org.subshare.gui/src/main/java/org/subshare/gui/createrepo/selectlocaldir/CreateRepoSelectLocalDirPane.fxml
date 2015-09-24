@@ -16,7 +16,7 @@
 		<Insets left="8" top="8" right="8" bottom="8"/> 
 	</padding>
 	<children>
-		<Text fx:id="headerText" text="%CreateRepoSelectLocalDirPane.headerText.text" wrappingWidth="500" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="3" GridPane.hgrow="ALWAYS"/> 
+		<Text fx:id="headerText" text="%CreateRepoSelectLocalDirPane.headerText.text" wrappingWidth="600" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="3" GridPane.hgrow="ALWAYS"/> 
 		<FileTreePane fx:id="fileTreePane" useCase="createRepoSelectLocalDir" selectionMode="SINGLE" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.hgrow="ALWAYS" GridPane.vgrow="ALWAYS"/> 
 	</children>
 </fx:root>

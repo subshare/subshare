@@ -7,9 +7,22 @@ import static org.subshare.core.file.FileConst.*;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
+
 import org.subshare.core.dto.PermissionType;
+import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.repo.LocalRepo;
 import org.subshare.core.user.User;
 import org.subshare.core.user.UserRegistry;
@@ -31,6 +44,7 @@ import co.codewizards.cloudstore.core.repo.sync.RepoSyncDaemon;
 public class IssueInvitationWizard extends Wizard {
 
 	private final IssueInvitationData issueInvitationData;
+	private final List<String> fileNames = new ArrayList<String>();
 
 	public IssueInvitationWizard(final IssueInvitationData issueInvitationData) {
 		this.issueInvitationData = assertNotNull("issueInvitationData", issueInvitationData);
@@ -40,8 +54,9 @@ public class IssueInvitationWizard extends Wizard {
 	@Override
 	public void init() {
 		super.init();
-		setPrefSize(500, 500);
+		setPrefSize(600, 500);
 	}
+
 
 	@Override
 	protected void finish(ProgressMonitor monitor) throws Exception {
@@ -55,14 +70,17 @@ public class IssueInvitationWizard extends Wizard {
 		final long validityDurationMillis = issueInvitationData.getValidityDurationMillis();
 		final String localPath = getLocalPath();
 
+		fileNames.clear();
 		try (final LocalRepoManager localRepoManager = LocalRepoManagerFactoryLs.getLocalRepoManagerFactory().createLocalRepoManagerForExistingRepository(localRoot);) {
 			final UserRepoInvitationManager userRepoInvitationManager = UserRepoInvitationManagerLs.getUserRepoInvitationManager(userRegistry, localRepoManager);
 
 			for (final User invitee : invitees) {
+				final Set<PgpKey> inviteePgpKeys = null; // TODO allow the user to specify the keys being used!
 				final UserRepoInvitationToken userRepoInvitationToken = userRepoInvitationManager.createUserRepoInvitationToken(
-						localPath, invitee, permissionType, validityDurationMillis);
+						localPath, invitee, inviteePgpKeys, permissionType, validityDurationMillis);
 				final byte[] data = userRepoInvitationToken.getSignedEncryptedUserRepoInvitationData();
 				final String fileName = getFileName(invitee);
+				fileNames.add(fileName);
 				final File file = createFile(invitationTokenDirectory, fileName);
 				try {
 					try (final OutputStream out = file.createOutputStream();) {
@@ -79,6 +97,41 @@ public class IssueInvitationWizard extends Wizard {
 		final RepoSyncDaemon repoSyncDaemon = RepoSyncDaemonLs.getRepoSyncDaemon();
 		repoSyncDaemon.startSync(localRoot);
 		// TODO we should wait for the sync to finish! and it would be cool if we could up-sync the meta-data only (skip huge files ;-)
+	}
+
+	@Override
+	protected void preFinished() {
+		Alert alert = new Alert(AlertType.INFORMATION);
+		alert.setHeaderText("The invitation files were successfully created!");
+
+		final VBox contentContainer = new VBox();
+		contentContainer.setSpacing(8);
+
+		final HBox directoryBox = new HBox();
+		directoryBox.setSpacing(8);
+		directoryBox.getChildren().add(new Label("Directory:"));
+
+		final TextField directoryTextField = new TextField();
+		directoryTextField.setEditable(false);
+		directoryTextField.setText(issueInvitationData.getInvitationTokenDirectory().getPath());
+		HBox.setHgrow(directoryTextField, Priority.ALWAYS);
+		directoryBox.getChildren().add(directoryTextField);
+		contentContainer.getChildren().add(directoryBox);
+
+		contentContainer.getChildren().add(new Label("Generated files:"));
+		ListView<String> fileNameListView = new ListView<>();
+		fileNameListView.getItems().addAll(fileNames);
+		fileNameListView.setPrefSize(400, 200);
+		contentContainer.getChildren().add(fileNameListView);
+
+		final Text contentText = new Text("Please give these invitation files to the invited users. You can send them by e-mail, pass them via a thumb drive, upload them to a web-server or use whatever communication channel you prefer.\n\nThe files are encrypted and can only be used by the intended receipients.");
+		contentText.setWrappingWidth(600);
+		contentContainer.getChildren().add(contentText);
+
+		alert.getDialogPane().setContent(contentContainer);
+
+		alert.showAndWait();
+		super.preFinished();
 	}
 
 	private String getLocalPath() {

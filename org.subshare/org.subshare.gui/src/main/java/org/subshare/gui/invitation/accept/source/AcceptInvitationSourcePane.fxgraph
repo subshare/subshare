@@ -18,7 +18,7 @@ dynamic component AcceptInvitationSourcePane resourcefile 'messages.properties' 
 
 		Text id headerText {
 			text : rstring 'AcceptInvitationSourcePane.headerText.text',
-			wrappingWidth : 500,
+			wrappingWidth : 600,
 			static columnIndex : 0,
 			static rowIndex : 0,
 			static hgrow : "ALWAYS"

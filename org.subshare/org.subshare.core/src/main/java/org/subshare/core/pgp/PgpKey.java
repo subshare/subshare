@@ -30,6 +30,7 @@ public class PgpKey implements Serializable {
 			true,
 			Collections.<String>emptyList(),
 			EnumSet.of(PgpKeyFlag.CAN_AUTHENTICATE, PgpKeyFlag.CAN_CERTIFY, PgpKeyFlag.CAN_SIGN, PgpKeyFlag.CAN_ENCRYPT_COMMS, PgpKeyFlag.CAN_ENCRYPT_STORAGE),
+			false,
 			false
 			);
 	static {
@@ -56,6 +57,8 @@ public class PgpKey implements Serializable {
 
 	private final boolean revoked;
 
+	private final boolean disabled;
+
 	private final PgpKey masterKey;
 
 	private List<PgpKey> subKeys;
@@ -73,7 +76,8 @@ public class PgpKey implements Serializable {
 			final boolean secretKeyAvailable,
 			final List<String> userIds,
 			final Set<PgpKeyFlag> pgpKeyFlags,
-			final boolean revoked) {
+			final boolean revoked,
+			final boolean disabled) {
 		this.pgpKeyId = assertNotNull("pgpKeyId", pgpKeyId);
 		this.fingerprint = assertNotNull("fingerprint", fingerprint);
 		this.masterKey = masterKey == null ? this : masterKey;
@@ -89,6 +93,7 @@ public class PgpKey implements Serializable {
 		this.pgpKeyFlags = Collections.unmodifiableSet(tmpPgpKeyFlags);
 
 		this.revoked = revoked;
+		this.disabled = disabled;
 	}
 
 	public PgpKeyId getPgpKeyId() {
@@ -113,7 +118,20 @@ public class PgpKey implements Serializable {
 		return validTo;
 	}
 
+	/**
+	 * A PGP key is valid, if it is neither revoked, nor the given {@code date} after its expiry date, nor
+	 * is disabled.
+	 *
+	 * @param date the date of which to determine the validity.
+	 * @return
+	 */
 	public boolean isValid(Date date) {
+		if (isDisabled())
+			return false;
+
+		if (isRevoked()) // TODO we should determine, if the revocation happened after the given date! However, we currently *always* use this method with null or now - hence it has very low priority.
+			return false;
+
 		if (date == null)
 			date = new Date();
 
@@ -136,6 +154,10 @@ public class PgpKey implements Serializable {
 
 	public boolean isRevoked() {
 		return revoked;
+	}
+
+	public boolean isDisabled() {
+		return disabled;
 	}
 
 	/**

@@ -760,8 +760,11 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 //	}
 
 	@Override
-	public PgpKeyValidity getKeyValidity(final PgpKey pgpKey) {
+	public PgpKeyValidity getKeyValidity(PgpKey pgpKey) {
 		assertNotNull("pgpKey", pgpKey);
+		if (pgpKey.getMasterKey() != null)
+			pgpKey = pgpKey.getMasterKey();
+
 		final TrustDb trustDb = getTrustDb();
 		final BcPgpKey bcPgpKey = getBcPgpKeyOrFail(pgpKey);
 		final PGPPublicKey publicKey = bcPgpKey.getPublicKey();
@@ -780,9 +783,12 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 	}
 
 	@Override
-	public PgpKeyValidity getKeyValidity(final PgpKey pgpKey, final String userId) {
+	public PgpKeyValidity getKeyValidity(PgpKey pgpKey, final String userId) {
 		assertNotNull("pgpKey", pgpKey);
 		assertNotNull("userId", userId);
+		if (pgpKey.getMasterKey() != null)
+			pgpKey = pgpKey.getMasterKey();
+
 		final TrustDb trustDb = getTrustDb();
 		final BcPgpKey bcPgpKey = getBcPgpKeyOrFail(pgpKey);
 		final PGPPublicKey publicKey = bcPgpKey.getPublicKey();
@@ -817,8 +823,11 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 	}
 
 	@Override
-	public PgpOwnerTrust getOwnerTrust(final PgpKey pgpKey) {
+	public PgpOwnerTrust getOwnerTrust(PgpKey pgpKey) {
 		assertNotNull("pgpKey", pgpKey);
+		if (pgpKey.getMasterKey() != null)
+			pgpKey = pgpKey.getMasterKey();
+
 		final TrustDb trustDb = getTrustDb();
 		final BcPgpKey bcPgpKey = getBcPgpKeyOrFail(pgpKey);
 		final PGPPublicKey publicKey = bcPgpKey.getPublicKey();
@@ -841,9 +850,12 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 	}
 
 	@Override
-	public void setOwnerTrust(final PgpKey pgpKey, final PgpOwnerTrust ownerTrust) {
+	public void setOwnerTrust(PgpKey pgpKey, final PgpOwnerTrust ownerTrust) {
 		assertNotNull("pgpKey", pgpKey);
 		assertNotNull("ownerTrustLevel", ownerTrust);
+		if (pgpKey.getMasterKey() != null)
+			pgpKey = pgpKey.getMasterKey();
+
 		final TrustDb trustDb = getTrustDb();
 		final BcPgpKey bcPgpKey = getBcPgpKeyOrFail(pgpKey);
 		final PGPPublicKey publicKey = bcPgpKey.getPublicKey();

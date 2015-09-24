@@ -14,7 +14,7 @@
 
 <fx:root xmlns:fx="http://javafx.com/fxml" type="GridPane" hgap="8" vgap="8">
 
-	<Text fx:id="headerText" text="%UserIdPane.headerText.text" wrappingWidth="500" GridPane.columnIndex="0" GridPane.rowIndex="0"> 
+	<Text fx:id="headerText" text="%UserIdPane.headerText.text" wrappingWidth="600" GridPane.columnIndex="0" GridPane.rowIndex="0"> 
 		<GridPane.margin>
 			<Insets bottom="16"/> 
 		</GridPane.margin>

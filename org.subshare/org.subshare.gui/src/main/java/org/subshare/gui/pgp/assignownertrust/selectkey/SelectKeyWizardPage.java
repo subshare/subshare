@@ -6,12 +6,12 @@ import javafx.scene.Parent;
 import org.subshare.gui.pgp.assignownertrust.AssignOwnerTrustData;
 import org.subshare.gui.wizard.WizardPage;
 
-public class SelectKeyPage extends WizardPage {
+public class SelectKeyWizardPage extends WizardPage {
 
 	private final AssignOwnerTrustData assignOwnerTrustData;
 	private SelectKeyPane selectKeyPane;
 
-	public SelectKeyPage(final AssignOwnerTrustData assignOwnerTrustData) {
+	public SelectKeyWizardPage(final AssignOwnerTrustData assignOwnerTrustData) {
 		super("Assign owner-trust to which keys?");
 		this.assignOwnerTrustData = assertNotNull("assignOwnerTrustData", assignOwnerTrustData);
 	}
@@ -21,7 +21,7 @@ public class SelectKeyPage extends WizardPage {
 		return selectKeyPane = new SelectKeyPane(assignOwnerTrustData) {
 			@Override
 			protected void updateComplete() {
-				SelectKeyPage.this.setComplete(isComplete());
+				SelectKeyWizardPage.this.setComplete(isComplete());
 			}
 		};
 	}

@@ -17,7 +17,7 @@
 
 <fx:root xmlns:fx="http://javafx.com/fxml" type="GridPane" hgap="8" vgap="8">
 
-	<Text fx:id="headerText" text="%AcceptInvitationSourcePane.headerText.text" wrappingWidth="500" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.hgrow="ALWAYS"/> 
+	<Text fx:id="headerText" text="%AcceptInvitationSourcePane.headerText.text" wrappingWidth="600" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.hgrow="ALWAYS"/> 
 	<FileTreePane fx:id="fileTreePane" useCase="invitation.in" selectionMode="SINGLE" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.hgrow="ALWAYS" GridPane.vgrow="ALWAYS"/> 
 	<HBox fx:id="statusMessageBox" spacing="8" GridPane.columnIndex="0" GridPane.rowIndex="2"> 
 		<Label fx:id="statusMessageLabel" text="This is an error description"> 

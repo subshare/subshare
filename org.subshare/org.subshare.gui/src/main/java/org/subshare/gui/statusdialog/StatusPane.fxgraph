@@ -19,7 +19,7 @@ dynamic component StatusPane resourcefile "messages.properties" {
 		children : [
 			Text id messageText {
 				text : rstring "StatusPane.messageText.text",
-				wrappingWidth : 500,
+				wrappingWidth : 600,
 				static columnIndex : 0,
 				static rowIndex : 0
 //				static margin : Insets { left : 8, top : 8, right : 8, bottom : 8 }

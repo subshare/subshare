@@ -108,17 +108,29 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 	}
 
 	@Override
-	public UserRepoInvitationToken createUserRepoInvitationToken(final String localPath, final User user, final PermissionType permissionType, final long validityDurationMillis) {
+	public UserRepoInvitationToken createUserRepoInvitationToken(final String localPath, final User user, Set<PgpKey> userPgpKeys, final PermissionType permissionType, final long validityDurationMillis) {
 		assertNotNull("localPath", localPath);
 		assertNotNull("user", user);
 		assertNotNull("permissionType", permissionType);
 
-		if (user.getPgpKeys().isEmpty())
-			throw new IllegalArgumentException("The user does not have any PGP keys assigned: " + user);
+		if (userPgpKeys == null) {
+			if (user.getPgpKeys().isEmpty())
+				throw new IllegalArgumentException("The user does not have any PGP keys assigned: " + user);
 
-		final Set<PgpKey> inviteePgpKeys = user.getValidPgpKeys();
-		if (inviteePgpKeys.isEmpty())
-			throw new IllegalArgumentException("All the user's PGP keys are revoked or expired: " + user);
+			userPgpKeys = user.getValidPgpKeys();
+			if (userPgpKeys.isEmpty())
+				throw new IllegalArgumentException("All the user's PGP keys are revoked or expired: " + user);
+		}
+		else {
+			if (userPgpKeys.isEmpty())
+				throw new IllegalArgumentException("The specified userPgpKeys must not be empty!");
+
+			final Set<PgpKey> allowedPgpKeys = user.getPgpKeys(); // or should we only allow *valid* keys?! maybe not in order to allow the UI to explicitly override validity.
+			for (final PgpKey pgpKey : userPgpKeys) {
+				if (! allowedPgpKeys.contains(pgpKey))
+					throw new IllegalArgumentException(String.format("The key %s given in userPgpKeys does not belong to the user %s!", pgpKey, user));
+			}
+		}
 
 		final UserRepoInvitation userRepoInvitation = createUserRepoInvitation(localPath, user, permissionType, validityDurationMillis);
 		final User grantingUser = assertNotNull("grantingUser", this.grantingUser);
@@ -126,8 +138,8 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 		final byte[] userRepoInvitationData = toUserRepoInvitationData(userRepoInvitation);
 
 		final PgpKey signPgpKey = grantingUser.getPgpKeyContainingSecretKeyOrFail();
-		final Set<PgpKey> encryptPgpKeys = new HashSet<PgpKey>(inviteePgpKeys.size() + 1);
-		encryptPgpKeys.addAll(inviteePgpKeys);
+		final Set<PgpKey> encryptPgpKeys = new HashSet<PgpKey>(userPgpKeys.size() + 1);
+		encryptPgpKeys.addAll(userPgpKeys);
 		encryptPgpKeys.add(signPgpKey); // We want to be able to decrypt our own invitations, too ;-)
 
 		final byte[] signPgpKeyData = getPgpOrFail().exportPublicKeys(Collections.singleton(signPgpKey));

@@ -230,13 +230,8 @@ public class UserImpl extends AbstractBean<User.Property> implements User {
 		final Date now = new Date();
 		final Set<PgpKey> result = new HashSet<PgpKey>(pgpKeys.size());
 		for (PgpKey pgpKey : pgpKeys) {
-			if (pgpKey.isRevoked())
-				continue;
-
-			if (! pgpKey.isValid(now))
-				continue;
-
-			result.add(pgpKey);
+			if (pgpKey.isValid(now))
+				result.add(pgpKey);
 		}
 		return result;
 	}

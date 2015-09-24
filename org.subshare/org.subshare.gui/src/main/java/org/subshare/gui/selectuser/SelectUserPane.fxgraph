@@ -18,15 +18,12 @@ import javafx.geometry.Insets
 
 dynamic component SelectUserPane resourcefile 'messages.properties' {
 	GridPane {
-//		prefWidth : 400,
-//		prefHeight : 300,
-
 		hgap : 8,
 		vgap : 8,
 		padding : Insets { left : 8, top : 8, right : 8, bottom : 8 },
 
 		Text id headerText {
-			wrappingWidth : 500,
+			wrappingWidth : 600,
 			static columnIndex : 0,
 			static rowIndex : 0
 		},
@@ -71,6 +68,13 @@ dynamic component SelectUserPane resourcefile 'messages.properties' {
 					prefWidth : 200,
 					cellValueFactory : PropertyValueFactory < UserListItem, String > {
 						property : "email"
+					}
+				},
+				TableColumn < UserListItem, String > id emailColumn {
+					text : "Key validity/trust",
+					prefWidth : 120,
+					cellValueFactory : PropertyValueFactory < UserListItem, String > {
+						property : "keyValidity"
 					}
 				}
 			],

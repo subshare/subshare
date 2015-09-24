@@ -10,7 +10,7 @@ import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpOwnerTrust;
 import org.subshare.core.user.User;
 import org.subshare.gui.ls.PgpLs;
-import org.subshare.gui.pgp.assignownertrust.selectownertrust.SelectOwnerTrustPage;
+import org.subshare.gui.pgp.assignownertrust.selectownertrust.SelectOwnerTrustWizardPage;
 import org.subshare.gui.wizard.Wizard;
 
 import co.codewizards.cloudstore.core.progress.ProgressMonitor;
@@ -21,7 +21,7 @@ public class AssignOwnerTrustWizard extends Wizard {
 	private final Pgp pgp;
 
 	public AssignOwnerTrustWizard(final AssignOwnerTrustData assignOwnerTrustData) {
-		super(new SelectOwnerTrustPage(assignOwnerTrustData));
+		super(new SelectOwnerTrustWizardPage(assignOwnerTrustData));
 		this.assignOwnerTrustData = assertNotNull("assignOwnerTrustData", assignOwnerTrustData);
 		final User user = assignOwnerTrustData.getUser();
 		assertNotNull("assignOwnerTrustData.user", user);
@@ -44,6 +44,7 @@ public class AssignOwnerTrustWizard extends Wizard {
 	@Override
 	public void init() {
 		super.init();
+		setPrefSize(600, 500);
 
 		determineOwnerTrust();
 		determineAssignToAllPgpKeys();

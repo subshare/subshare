@@ -17,7 +17,7 @@
 
 <fx:root xmlns:fx="http://javafx.com/fxml" type="GridPane" hgap="8" vgap="8">
 
-	<Text fx:id="headerText" wrappingWidth="500" GridPane.columnIndex="0" GridPane.rowIndex="0"/> 
+	<Text fx:id="headerText" wrappingWidth="600" GridPane.columnIndex="0" GridPane.rowIndex="0"/> 
 	<HBox GridPane.columnIndex="0" GridPane.rowIndex="1"> 
 		<Label text="Filter: "/> 
 		<TextField fx:id="filterTextField" HBox.hgrow="ALWAYS"> 
@@ -44,6 +44,11 @@
 			<TableColumn fx:id="emailColumn" text="E-mail" prefWidth="200"> 
 				<cellValueFactory>
 					<PropertyValueFactory property="email"/> 
+				</cellValueFactory>
+			</TableColumn>
+			<TableColumn fx:id="emailColumn" text="Key validity/trust" prefWidth="120"> 
+				<cellValueFactory>
+					<PropertyValueFactory property="keyValidity"/> 
 				</cellValueFactory>
 			</TableColumn>
 		</columns>

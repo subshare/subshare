@@ -319,7 +319,7 @@ public abstract class AcceptInvitationSourcePane extends GridPane {
 										pgpKeyId.toHumanString(), primaryUserId));
 
 					case MARGINAL:
-						return new CheckInvitationFileResult(CheckInvitationFileResult.Type.SIGNING_KEY_MARGINALLY_TRUSTED, Severity.WARNING,
+						return new CheckInvitationFileResult(CheckInvitationFileResult.Type.SIGNING_KEY_MARGINALLY_TRUSTED, Severity.INFO,
 								"Signing key only marginally trusted!",
 								String.format("The key '%s' (%s), which was used to sign this invitation, is only marginally trusted!",
 										pgpKeyId.toHumanString(), primaryUserId));

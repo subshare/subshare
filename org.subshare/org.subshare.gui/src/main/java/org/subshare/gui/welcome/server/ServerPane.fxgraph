@@ -15,7 +15,7 @@ dynamic component ServerPane resourcefile 'messages.properties' {
 
 		Text id headerText {
 			text : rstring 'ServerPane.headerText.text',
-			wrappingWidth : 500,
+			wrappingWidth : 600,
 			static columnIndex : 0,
 			static rowIndex : 0,
 			static columnSpan : 2,

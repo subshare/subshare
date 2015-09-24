@@ -2,12 +2,16 @@ package org.subshare.gui.invitation.issue;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableSet;
 
 import org.subshare.core.dto.PermissionType;
+import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.repo.LocalRepo;
 import org.subshare.core.user.User;
 
@@ -18,6 +22,10 @@ public class IssueInvitationData {
 	private LocalRepo localRepo;
 	private File invitationTargetFile;
 	private final ObservableSet<User> invitees = FXCollections.observableSet(new HashSet<User>());
+
+	// A *null* value (or missing entry) means all the invitee's *valid* keys are used.
+	private final Map<User, Set<PgpKey>> invitee2inviteePgpKeys = new HashMap<>();
+
 	private File invitationTokenDirectory;
 	private PermissionType permissionType = PermissionType.write; // TODO UI!
 	private long validityDurationMillis = 5L * 24L * 3600L * 1000L; // TODO UI!

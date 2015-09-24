@@ -17,7 +17,7 @@ dynamic component UserIdPane resourcefile 'messages.properties' {
 
 		Text id headerText {
 			text : rstring 'UserIdPane.headerText.text',
-			wrappingWidth : 500,
+			wrappingWidth : 600,
 			static columnIndex : 0,
 			static rowIndex : 0,
 			static margin : Insets { bottom : 16 }

@@ -19,10 +19,10 @@
 		<ToggleGroup fx:id="toggleGroup"/> 
 	</fx:define>
 
-	<Text fx:id="headerText" text="%SelectOwnerTrustPane.headerText.text" wrappingWidth="500" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="2" GridPane.hgrow="ALWAYS"/> 
-	<Label text="User:" GridPane.columnIndex="0" GridPane.rowIndex="1"/> 
-	<TextField fx:id="userTextField" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="1" GridPane.hgrow="ALWAYS"/> 
-	<Label text="How much do you trust this user to thoroughly check keys of other users before signing them?" style="-fx-font-weight: bold" GridPane.columnIndex="0" GridPane.rowIndex="2" GridPane.columnSpan="2" GridPane.hgrow="ALWAYS"/> 
+	<Label text="User:" GridPane.columnIndex="0" GridPane.rowIndex="0"/> 
+	<TextField fx:id="userTextField" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="0" GridPane.hgrow="ALWAYS"/> 
+	<Text text="How much do you trust this user to certify the authenticity of other users' keys?" style="-fx-font-weight: bold" wrappingWidth="600" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.columnSpan="2" GridPane.hgrow="ALWAYS"/> 
+	<Text text="%SelectOwnerTrustPane.explanationText.text" wrappingWidth="600" GridPane.columnIndex="0" GridPane.rowIndex="2" GridPane.columnSpan="2" GridPane.hgrow="ALWAYS"/> 
 	<VBox fx:id="radioButtonBox" fillWidth="true" spacing="8" GridPane.columnIndex="0" GridPane.rowIndex="3" GridPane.columnSpan="2" GridPane.hgrow="ALWAYS"> 
 		<RadioButton fx:id="unknownRadioButton" text="I do not know." toggleGroup="$toggleGroup"/> 
 		<RadioButton fx:id="neverRadioButton" text="I do NOT trust him." toggleGroup="$toggleGroup"/> 
@@ -31,7 +31,7 @@
 		<RadioButton fx:id="ultimateRadioButton" text="I trust him ultimately." toggleGroup="$toggleGroup"/> 
 	</VBox>
 	<Label text="This means:" style="-fx-font-weight: bold" GridPane.columnIndex="0" GridPane.rowIndex="4" GridPane.columnSpan="2" GridPane.hgrow="ALWAYS"/> 
-	<Text fx:id="selectedOwnerTrustDescriptionText" text="I believe in the authenticity of every key signed by this user. Either this user represents myself (and everyone trusts himself ultimately, of course); or this user is for other reasons an extremely reliable notary." wrappingWidth="500" GridPane.columnIndex="0" GridPane.rowIndex="5" GridPane.columnSpan="2" GridPane.hgrow="ALWAYS"/> 
+	<Text fx:id="selectedOwnerTrustDescriptionText" text="I believe in the authenticity of every key signed by this user. Either this user represents myself (and everyone trusts himself ultimately, of course); or this user is for other reasons an extremely reliable notary." wrappingWidth="600" GridPane.columnIndex="0" GridPane.rowIndex="5" GridPane.columnSpan="2" GridPane.hgrow="ALWAYS"/> 
 	<padding>
 		<Insets left="8" top="8" right="8" bottom="8"/> 
 	</padding>

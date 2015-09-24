@@ -4,14 +4,14 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import javafx.scene.Parent;
 
 import org.subshare.gui.pgp.assignownertrust.AssignOwnerTrustData;
-import org.subshare.gui.pgp.assignownertrust.selectkey.SelectKeyPage;
+import org.subshare.gui.pgp.assignownertrust.selectkey.SelectKeyWizardPage;
 import org.subshare.gui.wizard.WizardPage;
 
-public class SelectOwnerTrustPage extends WizardPage {
+public class SelectOwnerTrustWizardPage extends WizardPage {
 
 	private final AssignOwnerTrustData assignOwnerTrustData;
 
-	public SelectOwnerTrustPage(final AssignOwnerTrustData assignOwnerTrustData) {
+	public SelectOwnerTrustWizardPage(final AssignOwnerTrustData assignOwnerTrustData) {
 		super("How much is the owner trusted?");
 		this.assignOwnerTrustData = assertNotNull("assignOwnerTrustData", assignOwnerTrustData);
 	}
@@ -21,7 +21,7 @@ public class SelectOwnerTrustPage extends WizardPage {
 		super.init();
 
 		if (assignOwnerTrustData.getUser().getPgpKeys().size() > 1)
-			setNextPage(new SelectKeyPage(assignOwnerTrustData));
+			setNextPage(new SelectKeyWizardPage(assignOwnerTrustData));
 	}
 
 	@Override

@@ -112,10 +112,12 @@ public class BcPgpKey {
 			final long validSeconds = publicKey.getValidSeconds();
 			final Date created = publicKey.getCreationTime();
 			final Date validTo = validSeconds < 1 ? null : new Date(created.getTime() + (validSeconds * 1000));
+			final boolean disabled = pgp.getTrustDb().isDisabled(
+					masterPgpKey == null ? publicKey : masterKey.getPublicKey());
 			this.pgpKey = new PgpKey(
 					pgpKeyId, fingerprint, masterPgpKey, created, validTo,
 					getPgpKeyAlgorithm(publicKey.getAlgorithm()), publicKey.getBitStrength(),
-					secretKeyAvailable, userIds, getPgpKeyFlags(), publicKey.isRevoked());
+					secretKeyAvailable, userIds, getPgpKeyFlags(), publicKey.isRevoked(), disabled);
 
 			getSubKeyIds();
 			if (this.subKeyIds == null)

@@ -17,31 +17,31 @@ dynamic component SelectOwnerTrustPane resourcefile 'messages.properties' {
 		vgap : 8,
 		padding : Insets { left : 8, top : 8, right : 8, bottom : 8 },
 
-		Text id headerText {
-			text : rstring 'SelectOwnerTrustPane.headerText.text',
-			wrappingWidth : 500,
-			static columnIndex : 0,
-			static rowIndex : 0,
-			static columnSpan : 2,
-			static hgrow : "ALWAYS"
-		},
-
 		Label {
 			text : "User:",
 			static columnIndex : 0,
-			static rowIndex : 1
+			static rowIndex : 0
 		},
 		TextField id userTextField {
 			editable : false,
 			static columnIndex : 1,
-			static rowIndex : 1,
+			static rowIndex : 0,
 			static hgrow : "ALWAYS"
 		},
 
-
-		Label {
-			text : "How much do you trust this user to thoroughly check keys of other users before signing them?",
+		Text {
+			text : "How much do you trust this user to certify the authenticity of other users' keys?",
 			style : "-fx-font-weight: bold",
+			wrappingWidth : 600,
+			static columnIndex : 0,
+			static rowIndex : 1,
+			static columnSpan : 2,
+			static hgrow : "ALWAYS"
+		},
+
+		Text {
+			text : rstring 'SelectOwnerTrustPane.explanationText.text',
+			wrappingWidth : 600,
 			static columnIndex : 0,
 			static rowIndex : 2,
 			static columnSpan : 2,
@@ -82,7 +82,7 @@ dynamic component SelectOwnerTrustPane resourcefile 'messages.properties' {
 			static columnSpan : 2,
 			static hgrow : "ALWAYS"
 		},
-		
+
 		Label {
 			text : "This means:",
 			style : "-fx-font-weight: bold",
@@ -94,7 +94,7 @@ dynamic component SelectOwnerTrustPane resourcefile 'messages.properties' {
 		
 		Text id selectedOwnerTrustDescriptionText {
 			text : "I believe in the authenticity of every key signed by this user. Either this user represents myself (and everyone trusts himself ultimately, of course); or this user is for other reasons an extremely reliable notary.",
-			wrappingWidth : 500,
+			wrappingWidth : 600,
 			static columnIndex : 0,
 			static rowIndex : 5,
 			static columnSpan : 2,

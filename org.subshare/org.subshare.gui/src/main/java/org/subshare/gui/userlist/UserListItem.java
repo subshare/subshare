@@ -153,16 +153,6 @@ public class UserListItem {
 		String keyValidity = this.keyValidity;
 		if (keyValidity == null) {
 			final SortedSet<PgpKeyValidity> keyValidities = new TreeSet<>(Collections.reverseOrder());
-//			PgpKeyValidity highestValidity = null;
-//			for (final PgpKeyId pgpKeyId : user.getPgpKeyIds()) {
-//				final PgpKey pgpKey = getPgp().getPgpKey(pgpKeyId);
-//				if (pgpKey != null) {
-//					final PgpKeyValidity v = getPgp().getKeyValidity(pgpKey);
-//					if (highestValidity == null || v.compareTo(highestValidity) > 0)
-//						highestValidity = v;
-//				}
-//			}
-//			this.keyValidity = keyValidity = highestValidity == null ? null : highestValidity.toString();
 			for (final PgpKeyId pgpKeyId : user.getPgpKeyIds()) {
 				final PgpKey pgpKey = getPgp().getPgpKey(pgpKeyId);
 				if (pgpKey != null) {
@@ -171,8 +161,8 @@ public class UserListItem {
 				}
 			}
 
-			if (keyValidities.isEmpty())
-				keyValidities.add(PgpKeyValidity.NOT_TRUSTED);
+//			if (keyValidities.isEmpty())
+//				keyValidities.add(PgpKeyValidity.NOT_TRUSTED);
 
 			StringBuilder sb = new StringBuilder();
 			for (PgpKeyValidity kv : keyValidities) {
@@ -190,17 +180,6 @@ public class UserListItem {
 	public String getOwnerTrust() {
 		String ownerTrust = this.ownerTrust;
 		if (ownerTrust == null) {
-//			PgpOwnerTrust highestOwnerTrust = null;
-//			for (final PgpKeyId pgpKeyId : user.getPgpKeyIds()) {
-//				final PgpKey pgpKey = getPgp().getPgpKey(pgpKeyId);
-//				if (pgpKey != null) {
-//					final PgpOwnerTrust ot = getPgp().getOwnerTrust(pgpKey);
-//					if (highestOwnerTrust == null || ot.compareTo(highestOwnerTrust) > 0)
-//						highestOwnerTrust = ot;
-//				}
-//			}
-//			this.ownerTrust = ownerTrust = highestOwnerTrust == null ? null : highestOwnerTrust.toString();
-
 			final SortedSet<PgpOwnerTrust> ownerTrusts = new TreeSet<>(Collections.reverseOrder());
 			for (final PgpKeyId pgpKeyId : user.getPgpKeyIds()) {
 				final PgpKey pgpKey = getPgp().getPgpKey(pgpKeyId);
