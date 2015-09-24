@@ -27,6 +27,13 @@ public class PgpRegistry {
 	@Deprecated
 	public void clearCache() {
 		logger.info("clearCache: entered.");
+		if (pgp instanceof AutoCloseable) {
+			try {
+				((AutoCloseable) pgp).close();
+			} catch (Exception e) {
+				logger.error("clearCache: " + e, e);
+			}
+		}
 		pgp = null;
 	}
 

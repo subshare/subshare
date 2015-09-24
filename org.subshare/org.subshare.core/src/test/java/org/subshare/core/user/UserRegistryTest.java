@@ -15,6 +15,7 @@ import org.subshare.core.pgp.PgpAuthenticationCallback;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpKeyId;
 import org.subshare.core.pgp.PgpKeyValidity;
+import org.subshare.core.pgp.PgpOwnerTrust;
 import org.subshare.core.pgp.PgpRegistry;
 import org.subshare.core.pgp.gnupg.GnuPgDir;
 import org.junit.Before;
@@ -75,8 +76,12 @@ public class UserRegistryTest {
 		email2ExpectedPgpKeyTrustLevel.put("alex@nightlabs.de", PgpKeyValidity.FULL);
 		email2ExpectedPgpKeyTrustLevel.put("daniel@nightlabs.de", PgpKeyValidity.FULL);
 		email2ExpectedPgpKeyTrustLevel.put("janmorti@gmx.de", PgpKeyValidity.NOT_TRUSTED);
-		email2ExpectedPgpKeyTrustLevel.put("jonathan@codewizards.co", PgpKeyValidity.NOT_TRUSTED);
+		email2ExpectedPgpKeyTrustLevel.put("jonathan@codewizards.co", PgpKeyValidity.FULL); // PgpKeyValidity.NOT_TRUSTED);
 		email2ExpectedPgpKeyTrustLevel.put("marc@nightlabs.de", PgpKeyValidity.NOT_TRUSTED);
+
+		User marco = userRegistry.getUsersByEmail("marco@codewizards.co").iterator().next();
+		pgp.setOwnerTrust(marco.getPgpKeys().iterator().next(), PgpOwnerTrust.ULTIMATE);
+		pgp.updateTrustDb();
 
 		for (final Map.Entry<String, PgpKeyValidity> me : email2ExpectedPgpKeyTrustLevel.entrySet()) {
 			final String email = me.getKey();

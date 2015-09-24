@@ -101,7 +101,7 @@ import co.codewizards.cloudstore.core.io.LockFile;
 import co.codewizards.cloudstore.core.io.LockFileFactory;
 import co.codewizards.cloudstore.core.oio.File;
 
-public class BcWithLocalGnuPgPgp extends AbstractPgp {
+public class BcWithLocalGnuPgPgp extends AbstractPgp implements AutoCloseable {
 	private static final Logger logger = LoggerFactory.getLogger(BcWithLocalGnuPgPgp.class);
 
 	private File configDir;
@@ -1566,6 +1566,14 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 			trustDb.updateTrustDbIfNeeded();
 		}
 		return trustDb;
+	}
+
+	@Override
+	public synchronized void close() {
+		if (trustDb != null) {
+			trustDb.close();
+			trustDb = null;
+		}
 	}
 
 //	protected org.bouncycastle.openpgp.wot.key.PgpKeyId toWotPgpKeyId(final PgpKeyId pgpKeyId) {
