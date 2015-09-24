@@ -124,7 +124,7 @@ public class IssueInvitationWizard extends Wizard {
 		fileNameListView.setPrefSize(400, 200);
 		contentContainer.getChildren().add(fileNameListView);
 
-		final Text contentText = new Text("Please give these invitation files to the invited users. You can send them by e-mail, pass them via a thumb drive, upload them to a web-server or use whatever communication channel you prefer.\n\nThe files are encrypted and can only be used by the intended receipients.");
+		final Text contentText = new Text("Please give these invitation files to the invited users. You can send them by e-mail, pass them via a thumb drive, upload them to a web-server or use whatever communication channel you prefer.\n\nThe files are encrypted and can only be used by the intended receipients.\n\nImportant: The invitations can only be used *after* the next complete upward synchronisation of this repository!");
 		contentText.setWrappingWidth(600);
 		contentContainer.getChildren().add(contentText);
 
