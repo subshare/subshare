@@ -7,6 +7,7 @@ import static org.subshare.test.PgpTestUtil.*;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import mockit.Mock;
@@ -209,6 +210,7 @@ public class AbstractUserRegistryIT extends AbstractRepoToRepoSyncIT {
 		try (final LocalRepoManager localRepoManager = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(localSrcRoot);)
 		{
 			final UserRepoInvitationManager userRepoInvitationManager = UserRepoInvitationManager.Helper.getInstance(ownerUserRegistry, localRepoManager);
+			final Set<PgpKey> userPgpKeys = null;
 			userRepoInvitationToken = userRepoInvitationManager.createUserRepoInvitationToken(localPath, friend, userPgpKeys, permissionType, 24 * 3600 * 1000);
 		}
 		return userRepoInvitationToken;
