@@ -18,6 +18,7 @@ import mockit.MockUp;
 
 import org.subshare.core.locker.transport.LockerTransportFactoryRegistry;
 import org.subshare.core.pgp.PgpKey;
+import org.subshare.core.pgp.PgpRegistry;
 import org.subshare.core.pgp.gnupg.GnuPgDir;
 import org.subshare.core.pgp.transport.PgpTransportFactoryRegistry;
 import org.subshare.core.user.User;
@@ -146,6 +147,7 @@ public abstract class AbstractIT {
 			};
 		}
 		createFile(ConfigDir.getInstance().getFile(), UserRegistry.USER_REGISTRY_FILE_NAME).delete();
+		PgpRegistry.getInstance().clearCache();
 	}
 
 	@After
@@ -154,6 +156,7 @@ public abstract class AbstractIT {
 			userRegistryImplMockUp.tearDown(); // should be done automatically, but since we need to manage the reference, anyway, we do this explicitly here, too.
 			userRegistryImplMockUp = null;
 		}
+		PgpRegistry.getInstance().clearCache();
 	}
 
 	protected UserRepoKeyRing createUserRepoKeyRing(final UUID serverRepositoryId) {

@@ -18,6 +18,7 @@ import org.subshare.core.pgp.PgpKeyValidity;
 import org.subshare.core.pgp.PgpOwnerTrust;
 import org.subshare.core.pgp.PgpRegistry;
 import org.subshare.core.pgp.gnupg.GnuPgDir;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -42,6 +43,11 @@ public class UserRegistryTest {
 	public void before() throws Exception {
 		createFile(ConfigDir.getInstance().getFile(), UserRegistry.USER_REGISTRY_FILE_NAME).delete();
 		initPgp();
+	}
+	
+	@After
+	public void after() throws Exception {
+		PgpRegistry.getInstance().clearCache();
 	}
 
 	@Test
