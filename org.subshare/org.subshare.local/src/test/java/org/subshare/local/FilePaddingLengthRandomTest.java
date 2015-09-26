@@ -1,13 +1,13 @@
 package org.subshare.local;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.subshare.local.FilePaddingLengthRandom.LengthCategory;
 import org.junit.After;
 import org.junit.Test;
+import org.subshare.local.FilePaddingLengthRandom.LengthCategory;
 
 import co.codewizards.cloudstore.core.config.Config;
 
@@ -63,12 +63,12 @@ public class FilePaddingLengthRandomTest {
 
 		System.out.println("lengthCategory2HitPercentage: " + lengthCategory2HitPermille);
 
-		assertThat(lengthCategory2HitPermille.get(FilePaddingLengthRandom.LengthCategory._100K)).isBetween(599, 601);
-		assertThat(lengthCategory2HitPermille.get(FilePaddingLengthRandom.LengthCategory._1M)).isBetween(294, 296);
+		assertThat(lengthCategory2HitPermille.get(FilePaddingLengthRandom.LengthCategory._100K)).isBetween(598, 602);
+		assertThat(lengthCategory2HitPermille.get(FilePaddingLengthRandom.LengthCategory._1M)).isBetween(293, 297);
 		assertThat(lengthCategory2HitPermille.get(FilePaddingLengthRandom.LengthCategory._10M)).isBetween(93, 95);
 		assertThat(lengthCategory2HitPermille.get(FilePaddingLengthRandom.LengthCategory._100M)).isBetween(5, 7);
 		assertThat(lengthCategory2HitPermille.get(FilePaddingLengthRandom.LengthCategory._1G)).isBetween(3, 5);
-		assertThat(lengthCategory2HitPermille.get(FilePaddingLengthRandom.LengthCategory._10G)).isBetween(0, 2);
+		assertThat(lengthCategory2HitPermille.get(FilePaddingLengthRandom.LengthCategory._10G)).isEqualTo(0);
 	}
 
 	protected FilePaddingLengthRandom.LengthCategory getLengthCategory(long paddingLength) {

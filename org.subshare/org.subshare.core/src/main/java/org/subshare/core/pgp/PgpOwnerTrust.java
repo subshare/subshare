@@ -2,6 +2,7 @@ package org.subshare.core.pgp;
 
 public enum PgpOwnerTrust {
 
+	UNSPECIFIED,
 	UNKNOWN,
 	NEVER,
 	MARGINAL,

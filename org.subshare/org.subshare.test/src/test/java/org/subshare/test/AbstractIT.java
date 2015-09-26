@@ -1,7 +1,7 @@
 package org.subshare.test;
 
-import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
-import static org.assertj.core.api.Assertions.*;
+import static co.codewizards.cloudstore.core.oio.OioFileFactory.createFile;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -16,6 +16,12 @@ import java.util.UUID;
 import mockit.Mock;
 import mockit.MockUp;
 
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.subshare.core.locker.transport.LockerTransportFactoryRegistry;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpRegistry;
@@ -30,12 +36,6 @@ import org.subshare.local.FilePaddingLengthRandom.LengthCategory;
 import org.subshare.rest.client.locker.transport.RestLockerTransportFactory;
 import org.subshare.rest.client.pgp.transport.RestPgpTransportFactory;
 import org.subshare.rest.client.transport.CryptreeRestRepoTransportFactoryImpl;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import co.codewizards.cloudstore.core.config.Config;
 import co.codewizards.cloudstore.core.config.ConfigDir;
@@ -131,6 +131,8 @@ public abstract class AbstractIT {
 
 	@Before
 	public void before() throws Exception {
+		PgpRegistry.getInstance().clearCache();
+
 		// Make sure, we get a clean new instance for every test - not one that might already be initialised statically with the wrong directory + data. Skip, if sub-class already initialised!
 		if (userRegistryImplMockUp == null) {
 			final UserRegistry userRegistry = new UserRegistryImpl() {
@@ -147,7 +149,6 @@ public abstract class AbstractIT {
 			};
 		}
 		createFile(ConfigDir.getInstance().getFile(), UserRegistry.USER_REGISTRY_FILE_NAME).delete();
-		PgpRegistry.getInstance().clearCache();
 	}
 
 	@After

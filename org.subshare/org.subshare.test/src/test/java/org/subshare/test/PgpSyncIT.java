@@ -60,9 +60,9 @@ public class PgpSyncIT extends AbstractIT {
 		serverGnuPgDirFile = createFile("build/" + jvmInstanceId + "/server/.gnupg");
 		serverGnuPgDirFile.mkdirs();
 
-		clientConfigDir = createFile("build/" + jvmInstanceId + "/client/.csx");
+		clientConfigDir = createFile("build/" + jvmInstanceId + "/client/.subshare");
 		clientConfigDir.mkdirs();
-		serverConfigDir = createFile("build/" + jvmInstanceId + "/server/.csx");
+		serverConfigDir = createFile("build/" + jvmInstanceId + "/server/.subshare");
 		serverConfigDir.mkdirs();
 
 		new MockUp<ConfigDir>() {

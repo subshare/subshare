@@ -1,9 +1,9 @@
 package org.subshare.gui.invitation.issue;
 
-import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
-import static co.codewizards.cloudstore.core.util.StringUtil.*;
-import static org.subshare.core.file.FileConst.*;
+import static co.codewizards.cloudstore.core.oio.OioFileFactory.createFile;
+import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
+import static co.codewizards.cloudstore.core.util.StringUtil.isEmpty;
+import static org.subshare.core.file.FileConst.SUBSHARE_FILE_EXTENSION;
 
 import java.io.IOException;
 import java.io.OutputStream;

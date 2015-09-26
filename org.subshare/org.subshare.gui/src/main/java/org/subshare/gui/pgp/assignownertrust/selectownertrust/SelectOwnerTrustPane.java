@@ -1,8 +1,8 @@
 package org.subshare.gui.pgp.assignownertrust.selectownertrust;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
-import static co.codewizards.cloudstore.core.util.StringUtil.*;
-import static org.subshare.gui.util.FxmlUtil.*;
+import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
+import static co.codewizards.cloudstore.core.util.StringUtil.isEmpty;
+import static org.subshare.gui.util.FxmlUtil.loadDynamicComponentFxml;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -22,7 +22,7 @@ import org.subshare.core.pgp.PgpOwnerTrust;
 import org.subshare.core.user.User;
 import org.subshare.gui.pgp.assignownertrust.AssignOwnerTrustData;
 
-public class SelectOwnerTrustPane extends GridPane {
+public abstract class SelectOwnerTrustPane extends GridPane {
 
 	private /*final*/ AssignOwnerTrustData assignOwnerTrustData;
 
@@ -48,6 +48,13 @@ public class SelectOwnerTrustPane extends GridPane {
 		assignOwnerTrustData.ownerTrustProperty().addListener((InvalidationListener) observable -> updateToggleGroup());
 		updateToggleGroup();
 	}
+
+	protected boolean isComplete() {
+		return assignOwnerTrustData.getOwnerTrust() != null
+				&& assignOwnerTrustData.getOwnerTrust() != PgpOwnerTrust.UNSPECIFIED;
+	}
+
+	protected abstract void updateComplete();
 
 	private void populateUserTextField() {
 		final User user = assignOwnerTrustData.getUser();
@@ -85,12 +92,16 @@ public class SelectOwnerTrustPane extends GridPane {
 		RadioButton radioButton = ownerTrust2RadioButton.get(ownerTrust);
 		toggleGroup.selectToggle(radioButton);
 		selectedOwnerTrustDescriptionText.setText(ownerTrust == null ? null : ownerTrust.getDescription());
+		updateComplete();
 	}
 
 	private void populateRadioButtonBox() {
 		radioButtonBox.getChildren().clear();
 
 		for (PgpOwnerTrust ownerTrust : PgpOwnerTrust.values()) {
+			if (PgpOwnerTrust.UNSPECIFIED == ownerTrust)
+				continue; // cannot be assigned!
+
 			final RadioButton radioButton = new RadioButton(ownerTrust.getAnswer());
 			radioButton.setUserData(ownerTrust);
 			radioButton.setToggleGroup(toggleGroup);

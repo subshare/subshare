@@ -1,27 +1,27 @@
 allprojects {
-    apply plugin: 'java'
-    apply plugin: 'maven'
-    group = 'org.subshare'
-    version = '0.1.0-SNAPSHOT'
+	apply plugin: 'java'
+	apply plugin: 'maven'
+	group = 'org.subshare'
+	version = '0.1.0-SNAPSHOT'
 
 	sourceCompatibility = JavaVersion.VERSION_1_7
-    targetCompatibility = JavaVersion.VERSION_1_7
+	targetCompatibility = JavaVersion.VERSION_1_7
 
-   	[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+	[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
-    repositories {
-        mavenLocal()
-        mavenCentral()
-        maven {
-            url 'http://cloudstore.codewizards.co/maven/snapshot'
-        }
-        maven {
-            url 'http://cloudstore.codewizards.co/maven/release'
-        }
+	repositories {
+		mavenLocal()
+		mavenCentral()
+		maven {
+			url 'http://cloudstore.codewizards.co/maven/snapshot'
+		}
+		maven {
+			url 'http://cloudstore.codewizards.co/maven/release'
+		}
 		maven {
 			url 'http://www.datanucleus.org/downloads/maven2-nightly'
 		}
-    }
+	}
 
 	project.ext.subshareVersion = version
 
@@ -40,7 +40,7 @@ allprojects {
 				srcDir 'src/main/resources'
 			}
 		}
-	
+
 		test {
 			java {
 				srcDir 'src/test/java'
@@ -54,26 +54,26 @@ allprojects {
 }
 
 subprojects {
-    apply plugin: 'eclipse'
+	apply plugin: 'eclipse'
 
 	eclipse {
 		classpath {
-		   downloadSources = true
+			downloadSources = true
 		}
 	}
 
-    dependencies {
+	dependencies {
 		compile "org.slf4j:slf4j-api:$slf4jVersion"
 //		compile "org.apache.commons:commons-lang3:3.4"
 		compile "org.apache.commons:commons-collections4:4.0"
 		// jmockit must be *before* junit.
-        testCompile 'org.jmockit:jmockit:1.12', 'junit:junit:4.11', 'org.assertj:assertj-core:1.5.0'
+		testCompile 'org.jmockit:jmockit:1.12', 'junit:junit:4.11', 'org.assertj:assertj-core:1.5.0'
 		testCompile "org.slf4j:log4j-over-slf4j:$slf4jVersion", "ch.qos.logback:logback-classic:$logbackVersion"
-    }
+	}
 
-    jar {
-        manifest.attributes Provider: 'CodeWizards GmbH + blackbytes GmbH'
-    }
+	jar {
+		manifest.attributes Provider: 'CodeWizards GmbH + blackbytes GmbH'
+	}
 
 	tasks.withType(Test) {
 		jvmArgs "-XX:MaxPermSize=256m"

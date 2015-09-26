@@ -1,7 +1,7 @@
 package org.subshare.local;
 
-import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
-import static org.assertj.core.api.Assertions.*;
+import static co.codewizards.cloudstore.core.oio.OioFileFactory.createFile;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -14,15 +14,17 @@ import java.util.UUID;
 import mockit.Mock;
 import mockit.MockUp;
 
+import org.junit.After;
+import org.junit.Before;
 import org.subshare.core.Cryptree;
 import org.subshare.core.CryptreeFactoryRegistry;
 import org.subshare.core.pgp.PgpKey;
+import org.subshare.core.pgp.PgpRegistry;
 import org.subshare.core.user.User;
 import org.subshare.core.user.UserRegistry;
 import org.subshare.core.user.UserRegistryImpl;
 import org.subshare.core.user.UserRepoKeyRing;
 import org.subshare.local.persistence.UserRepoKeyPublicKey;
-import org.junit.Before;
 
 import co.codewizards.cloudstore.core.config.ConfigDir;
 import co.codewizards.cloudstore.core.dto.Uid;
@@ -77,12 +79,19 @@ public abstract class AbstractTest {
 
 	@Before
 	public void before() throws Exception {
+		PgpRegistry.getInstance().clearCache();
+
 		new MockUp<UserRepoKeyPublicKeyHelper>() {
 			@Mock
 			private void createUserIdentities(final UserRepoKeyPublicKey userRepoKeyPublicKey) {
 				// Our mock should do nothing, because we don't have a real UserRegistry here.
 			}
 		};
+	}
+
+	@After
+	public void after() {
+		PgpRegistry.getInstance().clearCache();
 	}
 
 //	protected static UserRepoKey createUserRepoKey(final UserRepoKeyRing userRepoKeyRing, final UUID repositoryId) {

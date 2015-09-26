@@ -14,7 +14,7 @@ REM This way, the real installation can be completely overwritten. I tested it a
 REM a batch file can be overwritten while it is being executed (fortunately, this is an exception
 REM to the ordinary Windows file blocking bullshit).
 
-echo Updating CSX...
+echo Updating Subshare...
 java -jar "%~dp0\..\updater\lib\co.codewizards.cloudstore.updater-@project.version@.jar" -installationDir "%~dp0\.."
 "%0" afterUpdateHook
 

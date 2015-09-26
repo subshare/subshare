@@ -11,6 +11,6 @@ public class SsConfigDirDefaultValueProvider implements ConfigDirDefaultValuePro
 
 	@Override
 	public String getConfigDir() {
-		return "${user.home}/.csx";
+		return "${user.home}/.subshare";
 	}
 }

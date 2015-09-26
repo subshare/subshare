@@ -82,7 +82,7 @@ public class CryptoRepoFileOnServer extends Entity implements WriteProtected, Au
 //	// cause https://github.com/cloudstore/cloudstore/issues/25 again (because issue 25 is only solved for direct partners - not indirect).
 //	// TODO 3: We should switch from UUID to Uid everywhere (most importantly the repositoryId).
 //	// Careful, though: Uid's String-representation is case-sensitive! Due to Windows, it must thus not be used for file names!
-//	// TODO 4: It is not yet sure, how CSX will actually detect and handle collisions. Maybe we don't need this field at all?!
+//	// TODO 4: It is not yet sure, how Subshare will actually detect and handle collisions. Maybe we don't need this field at all?!
 //	// TODO 5: Shouldn't we better store this inside the encrypted (and signed!) repoFileDtoData?!
 //	private String lastSyncFromRepositoryId;
 

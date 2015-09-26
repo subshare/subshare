@@ -186,7 +186,7 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 				directory.setParent(parentRepoFile);
 				directory.setName(directoryDto.getName());
 			}
-			directory.setLastModified(new Date(0)); // no need in CSX ;-) (but there's a not-null-constraint in the DB)
+			directory.setLastModified(new Date(0)); // no need in Subshare ;-) (but there's a not-null-constraint in the DB)
 			directory.setLastSyncFromRepositoryId(clientRepositoryId);
 			directory.setSignature(directoryDto.getSignature());
 
@@ -252,7 +252,7 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 
 		try ( final LocalRepoTransaction transaction = getLocalRepoManager().beginWriteTransaction(); ) {
 			assertNoDeleteModificationCollision(transaction, clientRepositoryId, path);
-			// TODO detect all types of collisions! And check, whether the above method actually works in CSX!
+			// TODO detect all types of collisions! And check, whether the above method actually works in Subshare!
 
 			final RepoFileDao repoFileDao = transaction.getDao(RepoFileDao.class);
 			final RepoFile parentRepoFile = repoFileDao.getRepoFile(localRoot, parentFile);
@@ -273,9 +273,9 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 				normalFile.setParent(parentRepoFile);
 				normalFile.setName(normalFileDto.getName());
 			}
-			normalFile.setLength(0); // we don't store this on the server-side in CSX for security reasons!
-			normalFile.setSha1("X"); // we don't store this on the server-side in CSX for security reasons! but there's a not-null-constraint.
-			normalFile.setLastModified(new Date(0)); // we don't store this on the server-side in CSX for security reasons!
+			normalFile.setLength(0); // we don't store this on the server-side in Subshare for security reasons!
+			normalFile.setSha1("X"); // we don't store this on the server-side in Subshare for security reasons! but there's a not-null-constraint.
+			normalFile.setLastModified(new Date(0)); // we don't store this on the server-side in Subshare for security reasons!
 			normalFile.setSignature(normalFileDto.getSignature());
 
 //			if (!newFile && !normalFile.isInProgress()) // TODO collision detection?!
@@ -416,8 +416,8 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 					fileChunk = createObject(FileChunk.class);
 					fileChunk.setNormalFile(normalFile);
 					fileChunk.setOffset(tempFileChunk.getOffset());
-					fileChunk.setLength(0); // no need in CSX ;-)
-					fileChunk.setSha1("X"); // no need in CSX ;-) but: not-null-constraint!
+					fileChunk.setLength(0); // no need in Subshare ;-)
+					fileChunk.setSha1("X"); // no need in Subshare ;-) but: not-null-constraint!
 					offset2FileChunk.put(fileChunk.getOffset(), fileChunk);
 					normalFile.getFileChunks().add(fileChunk); // should implicitly persist it!
 				}

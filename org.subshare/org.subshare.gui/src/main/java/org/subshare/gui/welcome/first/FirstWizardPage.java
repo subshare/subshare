@@ -7,7 +7,7 @@ import org.subshare.gui.wizard.WizardPage;
 public class FirstWizardPage extends WizardPage {
 
 	public FirstWizardPage() {
-		super("Welcome to CSX!");
+		super("Welcome to Subshare!");
 	}
 
 	@Override

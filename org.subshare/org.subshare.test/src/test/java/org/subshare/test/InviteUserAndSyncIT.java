@@ -285,7 +285,7 @@ public class InviteUserAndSyncIT extends AbstractUserRegistryIT {
 
 // TODO For this test, I first have to refactor the way the repo-connection is established: (1) It should connect
 // to the URL from the invitation-token. (2) The request-accept-connection-handling from CloudStore should be replaced
-// by a CSX-specific handshake mechanism that allows everyone having read access (=> use UserRepoKeyPublicKey-based signature/encryption)
+// by a Subshare-specific handshake mechanism that allows everyone having read access (=> use UserRepoKeyPublicKey-based signature/encryption)
 // to connect.
 	@Test
 	public void inviteUserAndSync_twoReadPermissionsOnSubdirs() throws Exception {

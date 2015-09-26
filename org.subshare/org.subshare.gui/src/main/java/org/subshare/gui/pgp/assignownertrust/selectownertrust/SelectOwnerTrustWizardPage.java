@@ -1,6 +1,6 @@
 package org.subshare.gui.pgp.assignownertrust.selectownertrust;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
 import javafx.scene.Parent;
 
 import org.subshare.gui.pgp.assignownertrust.AssignOwnerTrustData;
@@ -26,6 +26,11 @@ public class SelectOwnerTrustWizardPage extends WizardPage {
 
 	@Override
 	protected Parent createContent() {
-		return new SelectOwnerTrustPane(assignOwnerTrustData);
+		return new SelectOwnerTrustPane(assignOwnerTrustData) {
+			@Override
+			protected void updateComplete() {
+				SelectOwnerTrustWizardPage.this.setComplete(isComplete());
+			}
+		};
 	}
 }

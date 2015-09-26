@@ -833,6 +833,9 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp implements AutoCloseable {
 		final PGPPublicKey publicKey = bcPgpKey.getPublicKey();
 
 		final OwnerTrust ownerTrust = trustDb.getOwnerTrust(publicKey);
+		if (ownerTrust == null)
+			return PgpOwnerTrust.UNSPECIFIED;
+
 		switch (ownerTrust) {
 			case UNKNOWN:
 				return PgpOwnerTrust.UNKNOWN;
@@ -852,7 +855,11 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp implements AutoCloseable {
 	@Override
 	public void setOwnerTrust(PgpKey pgpKey, final PgpOwnerTrust ownerTrust) {
 		assertNotNull("pgpKey", pgpKey);
-		assertNotNull("ownerTrustLevel", ownerTrust);
+		assertNotNull("ownerTrust", ownerTrust);
+
+		if (ownerTrust == PgpOwnerTrust.UNSPECIFIED)
+			throw new IllegalArgumentException("ownerTrust cannot be set to UNSPECIFIED!");
+
 		if (pgpKey.getMasterKey() != null)
 			pgpKey = pgpKey.getMasterKey();
 
