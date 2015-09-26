@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/DECORATION/1.1.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/DECORATION/1.1.0 http://maven.apache.org/xsd/decoration-1.1.0.xsd"
+	name="SubShare">
+
+	<skin>
+		<groupId>org.subshare</groupId>
+		<artifactId>org.subshare.site.skin</artifactId>
+		<version>${subshare.version}</version>
+	</skin>
+
+	<custom>
+		<hideMenu>
+			<path>index.html</path>
+			<path>screenshots/index.html</path>
+		</hideMenu>
+	</custom>
+
+	<body>
+		<head>
+			<link rel="icon" href="/latest-stable/images/favicon.ico" />
+		</head>
+
+		<links>
+			<item name="Home" href="./index.html" />
+			<item name="Documentation" href="./documentation/index.html" />
+			<!--
+			<item name="Forum" href="../forum" />
+			-->
+			<item name="Tracker" href="../tracker" />
+			<item name="Download" href="./download/index.html" />
+		</links>
+
+		<menu name="Documentation">
+			<item name="Getting started" href="./documentation/getting-started.html" />
+			<item name="Wiki" href="../wiki" />
+			<item name="FAQ" href="./documentation/faq.html" />
+			<item name="Security" href="./documentation/security.html" />
+			<item name="Development" href="./documentation/development.html" />
+			<item name="Javadoc" href="./apidocs/index.html" />
+			<item name="What's new?" href="./documentation/whats-new.html" />
+		</menu>
+
+		<menu name="About">
+			<item name="Contact" href="./about/contact.html" />
+			<item name="Imprint" href="./about/imprint.html" />
+			<item name="Licence" href="./about/licence.html" />
+		</menu>
+
+		<menu name="Releases">
+			<item name="Latest development snapshot" href="../latest-dev/" />
+			<item name="Latest stable version" href="../latest-stable/" />
+			<item name="All releases" href="../latest-stable/releases/" />
+		</menu>
+	</body>
+
+	<poweredBy>
+<!-- We currently use this only on the home page (main index.html) and there we have their logo (with link) located directly on their image.
+		<logo img="images/powered-by/fibutton5.gif" href="http://www.freeimages.co.uk" alt="More than 13,500 Free hi-res stock photo images for Web, Design and Printed use. Design, Image Editing and Webmaster tips."/>
+-->
+	</poweredBy>
+
+</project>

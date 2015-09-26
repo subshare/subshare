@@ -1,6 +1,10 @@
+apply plugin: 'build-dashboard'
+
 allprojects {
 	apply plugin: 'java'
 	apply plugin: 'maven'
+	apply plugin: "jacoco"
+
 	group = 'org.subshare'
 	version = '0.1.0-SNAPSHOT'
 

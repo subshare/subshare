@@ -1,0 +1,20 @@
+<head><title>Licence</title></head>
+$!{decoration.custom.setAttribute("contentHeaderLogo", "../images/header-jump.jpg")}
+#set( $H = '#' )
+
+Licence
+-------
+
+$H$H$H GNU Affero General Public License (LGPL)
+
+SubShare is [Free Software](http://en.wikipedia.org/wiki/Free_Software) licenced under the conditions of the [AGPL](../license.html).
+
+In short, this means:
+
+* You can use SubShare for every purpose.
+* You\'re free to study how SubShare works, and to change it to make it do what you wish. This implies access to the source codes.
+* You can freely (re)distribute SubShare.
+* You have the freedom to improve SubShare, and release your improvements (and modified versions in general) to the public,
+so that the whole community benefits. This, too, implies access to the source codes. If you modify SubShare, you must
+make your modifications publicly available. However, if you just use SubShare in your own application, you\'re not required
+to publish your own (separate) application (using SubShare as a library) as free software.

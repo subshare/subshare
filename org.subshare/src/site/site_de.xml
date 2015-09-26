@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/DECORATION/1.1.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/DECORATION/1.1.0 http://maven.apache.org/xsd/decoration-1.1.0.xsd"
+	name="CloudStore">
+
+	<skin>
+		<groupId>org.subshare</groupId>
+		<artifactId>org.subshare.site.skin</artifactId>
+		<version>${subshare.version}</version>
+	</skin>
+
+	<custom>
+		<hideMenu>
+			<path>index.html</path>
+			<path>screenshots/index.html</path>
+		</hideMenu>
+	</custom>
+
+	<body>
+		<head>
+			<link rel="icon" href="/site/current/images/favicon.ico" />
+		</head>
+
+		<links>
+			<item name="Hauptseite" href="./index.html" />
+			<item name="Dokumentation" href="./documentation/index.html" />
+			<!--
+			<item name="Forum" href="../../forum" />
+			-->
+			<item name="Tracker" href="../../tracker" />
+			<item name="Herunterladen" href="./download/index.html" />
+		</links>
+
+		<menu name="Dokumentation">
+			<item name="Erste Schritte" href="./documentation/getting-started.html" />
+			<item name="Wiki" href="../../wiki" />
+			<item name="Häufige Fragen (FAQ)" href="./documentation/faq.html" />
+			<item name="Sicherheit" href="./documentation/security.html" />
+			<item name="Entwicklung" href="./documentation/development.html" />
+			<item name="Javadoc" href="./apidocs/index.html" />
+			<item name="Was ist neu?" href="./documentation/whats-new.html" />
+		</menu>
+
+		<menu name="Über">
+			<item name="Kontakt" href="./about/contact.html" />
+			<item name="Impressum" href="./about/imprint.html" />
+			<item name="Lizenz" href="./about/licence.html" />
+		</menu>
+
+		<menu name="Versionen">
+			<item name="Neuester Entwicklungs-Schnappschuss" href="../../latest-dev/de/" />
+			<item name="Neueste stabile Version" href="../../latest-stable/de/" />
+			<item name="Alle Veröffentlichungen" href="../../latest-stable/de/releases/" />
+		</menu>
+	</body>
+
+</project>

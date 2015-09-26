@@ -77,6 +77,8 @@ import org.bouncycastle.openpgp.wot.TrustDbImpl;
 import org.bouncycastle.openpgp.wot.Validity;
 import org.bouncycastle.openpgp.wot.key.PgpKeyRegistry;
 import org.bouncycastle.openpgp.wot.key.PgpKeyRegistryImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.subshare.core.pgp.AbstractPgp;
 import org.subshare.core.pgp.CreatePgpKeyParam;
 import org.subshare.core.pgp.ImportKeysResult;
@@ -93,8 +95,6 @@ import org.subshare.core.pgp.PgpSignatureType;
 import org.subshare.core.pgp.PgpUserId;
 import org.subshare.core.pgp.PgpUserIdNameHash;
 import org.subshare.crypto.CryptoRegistry;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import co.codewizards.cloudstore.core.config.ConfigDir;
 import co.codewizards.cloudstore.core.io.LockFile;
@@ -1581,6 +1581,12 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp implements AutoCloseable {
 			trustDb.close();
 			trustDb = null;
 		}
+	}
+
+	@Override
+	protected void finalize() throws Throwable {
+		close();
+		super.finalize();
 	}
 
 //	protected org.bouncycastle.openpgp.wot.key.PgpKeyId toWotPgpKeyId(final PgpKeyId pgpKeyId) {
