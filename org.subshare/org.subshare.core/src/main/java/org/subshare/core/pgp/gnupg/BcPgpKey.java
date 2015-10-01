@@ -19,6 +19,7 @@ import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureSubpacketVector;
+import org.bouncycastle.openpgp.wot.TrustDb;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpKeyAlgorithm;
 import org.subshare.core.pgp.PgpKeyFlag;
@@ -112,8 +113,11 @@ public class BcPgpKey {
 			final long validSeconds = publicKey.getValidSeconds();
 			final Date created = publicKey.getCreationTime();
 			final Date validTo = validSeconds < 1 ? null : new Date(created.getTime() + (validSeconds * 1000));
-			final boolean disabled = pgp.getTrustDb().isDisabled(
-					masterPgpKey == null ? publicKey : masterKey.getPublicKey());
+			final boolean disabled;
+			try (TrustDb trustDb = pgp.createTrustDb()) {
+				disabled = trustDb.isDisabled(
+						masterPgpKey == null ? publicKey : masterKey.getPublicKey());
+			}
 			this.pgpKey = new PgpKey(
 					pgpKeyId, fingerprint, masterPgpKey, created, validTo,
 					getPgpKeyAlgorithm(publicKey.getAlgorithm()), publicKey.getBitStrength(),

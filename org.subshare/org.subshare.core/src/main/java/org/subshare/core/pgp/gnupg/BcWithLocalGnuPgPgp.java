@@ -73,10 +73,8 @@ import org.bouncycastle.openpgp.operator.bc.BcPGPDigestCalculatorProvider;
 import org.bouncycastle.openpgp.operator.bc.BcPGPKeyPair;
 import org.bouncycastle.openpgp.wot.OwnerTrust;
 import org.bouncycastle.openpgp.wot.TrustDb;
-import org.bouncycastle.openpgp.wot.TrustDbImpl;
 import org.bouncycastle.openpgp.wot.Validity;
 import org.bouncycastle.openpgp.wot.key.PgpKeyRegistry;
-import org.bouncycastle.openpgp.wot.key.PgpKeyRegistryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.subshare.core.pgp.AbstractPgp;
@@ -101,7 +99,7 @@ import co.codewizards.cloudstore.core.io.LockFile;
 import co.codewizards.cloudstore.core.io.LockFileFactory;
 import co.codewizards.cloudstore.core.oio.File;
 
-public class BcWithLocalGnuPgPgp extends AbstractPgp implements AutoCloseable {
+public class BcWithLocalGnuPgPgp extends AbstractPgp {
 	private static final Logger logger = LoggerFactory.getLogger(BcWithLocalGnuPgPgp.class);
 
 	private File configDir;
@@ -123,7 +121,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp implements AutoCloseable {
 	private SecureRandom secureRandom;
 
 	private PgpKeyRegistry pgpKeyRegistry;
-	private TrustDb trustDb;
+	private TrustDbFactory trustDbFactory;
 
 	@Override
 	public int getPriority() {
@@ -162,7 +160,8 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp implements AutoCloseable {
 			return PgpKey.TEST_DUMMY_PGP_KEY;
 
 		final BcPgpKey bcPgpKey = pgpKeyId2bcPgpKey.get(pgpKeyId);
-		return bcPgpKey == null ? null : bcPgpKey.getPgpKey();
+		final PgpKey result = bcPgpKey == null ? null : bcPgpKey.getPgpKey();
+		return result;
 	}
 
 	@Override
@@ -765,21 +764,22 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp implements AutoCloseable {
 		if (pgpKey.getMasterKey() != null)
 			pgpKey = pgpKey.getMasterKey();
 
-		final TrustDb trustDb = getTrustDb();
-		final BcPgpKey bcPgpKey = getBcPgpKeyOrFail(pgpKey);
-		final PGPPublicKey publicKey = bcPgpKey.getPublicKey();
+		try (TrustDb trustDb = createTrustDb()) {
+			final BcPgpKey bcPgpKey = getBcPgpKeyOrFail(pgpKey);
+			final PGPPublicKey publicKey = bcPgpKey.getPublicKey();
 
-		if (trustDb.isDisabled(publicKey))
-			return PgpKeyValidity.DISABLED;
+			if (trustDb.isDisabled(publicKey))
+				return PgpKeyValidity.DISABLED;
 
-		if (publicKey.isRevoked())
-			return PgpKeyValidity.REVOKED;
+			if (publicKey.isRevoked())
+				return PgpKeyValidity.REVOKED;
 
-		if (trustDb.isExpired(publicKey))
-			return PgpKeyValidity.EXPIRED;
+			if (trustDb.isExpired(publicKey))
+				return PgpKeyValidity.EXPIRED;
 
-		final Validity validity = trustDb.getValidity(publicKey);
-		return toPgpKeyValidity(validity);
+			final Validity validity = trustDb.getValidity(publicKey);
+			return toPgpKeyValidity(validity);
+		}
 	}
 
 	@Override
@@ -789,24 +789,25 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp implements AutoCloseable {
 		if (pgpKey.getMasterKey() != null)
 			pgpKey = pgpKey.getMasterKey();
 
-		final TrustDb trustDb = getTrustDb();
-		final BcPgpKey bcPgpKey = getBcPgpKeyOrFail(pgpKey);
-		final PGPPublicKey publicKey = bcPgpKey.getPublicKey();
+		try (TrustDb trustDb = createTrustDb()) {
+			final BcPgpKey bcPgpKey = getBcPgpKeyOrFail(pgpKey);
+			final PGPPublicKey publicKey = bcPgpKey.getPublicKey();
 
-		if (trustDb.isDisabled(publicKey))
-			return PgpKeyValidity.DISABLED;
+			if (trustDb.isDisabled(publicKey))
+				return PgpKeyValidity.DISABLED;
 
-		if (publicKey.isRevoked())
-			return PgpKeyValidity.REVOKED;
+			if (publicKey.isRevoked())
+				return PgpKeyValidity.REVOKED;
 
-		if (trustDb.isExpired(publicKey))
-			return PgpKeyValidity.EXPIRED;
+			if (trustDb.isExpired(publicKey))
+				return PgpKeyValidity.EXPIRED;
 
-		final Validity validity = trustDb.getValidity(publicKey);
-		return toPgpKeyValidity(validity);
+			final Validity validity = trustDb.getValidity(publicKey);
+			return toPgpKeyValidity(validity);
+		}
 	}
 
-	private PgpKeyValidity toPgpKeyValidity(final Validity validity) {
+	private static PgpKeyValidity toPgpKeyValidity(final Validity validity) {
 		switch (assertNotNull("validity", validity)) {
 			case NONE:
 			case UNDEFINED:
@@ -828,27 +829,28 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp implements AutoCloseable {
 		if (pgpKey.getMasterKey() != null)
 			pgpKey = pgpKey.getMasterKey();
 
-		final TrustDb trustDb = getTrustDb();
-		final BcPgpKey bcPgpKey = getBcPgpKeyOrFail(pgpKey);
-		final PGPPublicKey publicKey = bcPgpKey.getPublicKey();
+		try (TrustDb trustDb = createTrustDb()) {
+			final BcPgpKey bcPgpKey = getBcPgpKeyOrFail(pgpKey);
+			final PGPPublicKey publicKey = bcPgpKey.getPublicKey();
 
-		final OwnerTrust ownerTrust = trustDb.getOwnerTrust(publicKey);
-		if (ownerTrust == null)
-			return PgpOwnerTrust.UNSPECIFIED;
+			final OwnerTrust ownerTrust = trustDb.getOwnerTrust(publicKey);
+			if (ownerTrust == null)
+				return PgpOwnerTrust.UNSPECIFIED;
 
-		switch (ownerTrust) {
-			case UNKNOWN:
-				return PgpOwnerTrust.UNKNOWN;
-			case NEVER:
-				return PgpOwnerTrust.NEVER;
-			case MARGINAL:
-				return PgpOwnerTrust.MARGINAL;
-			case FULL:
-				return PgpOwnerTrust.FULL;
-			case ULTIMATE:
-				return PgpOwnerTrust.ULTIMATE;
-			default :
-				throw new IllegalStateException("Unknown ownerTrust: " + ownerTrust);
+			switch (ownerTrust) {
+				case UNKNOWN:
+					return PgpOwnerTrust.UNKNOWN;
+				case NEVER:
+					return PgpOwnerTrust.NEVER;
+				case MARGINAL:
+					return PgpOwnerTrust.MARGINAL;
+				case FULL:
+					return PgpOwnerTrust.FULL;
+				case ULTIMATE:
+					return PgpOwnerTrust.ULTIMATE;
+				default :
+					throw new IllegalStateException("Unknown ownerTrust: " + ownerTrust);
+			}
 		}
 	}
 
@@ -863,35 +865,38 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp implements AutoCloseable {
 		if (pgpKey.getMasterKey() != null)
 			pgpKey = pgpKey.getMasterKey();
 
-		final TrustDb trustDb = getTrustDb();
-		final BcPgpKey bcPgpKey = getBcPgpKeyOrFail(pgpKey);
-		final PGPPublicKey publicKey = bcPgpKey.getPublicKey();
+		try (TrustDb trustDb = createTrustDb()) {
+			final BcPgpKey bcPgpKey = getBcPgpKeyOrFail(pgpKey);
+			final PGPPublicKey publicKey = bcPgpKey.getPublicKey();
 
-		switch (ownerTrust) {
-			case UNKNOWN:
-				trustDb.setOwnerTrust(publicKey, OwnerTrust.UNKNOWN);
-				break;
-			case NEVER:
-				trustDb.setOwnerTrust(publicKey, OwnerTrust.NEVER);
-				break;
-			case MARGINAL:
-				trustDb.setOwnerTrust(publicKey, OwnerTrust.MARGINAL);
-				break;
-			case FULL:
-				trustDb.setOwnerTrust(publicKey, OwnerTrust.FULL);
-				break;
-			case ULTIMATE:
-				trustDb.setOwnerTrust(publicKey, OwnerTrust.ULTIMATE);
-				break;
-			default :
-				throw new IllegalStateException("Unknown ownerTrustLevel: " + ownerTrust);
+			switch (ownerTrust) {
+				case UNKNOWN:
+					trustDb.setOwnerTrust(publicKey, OwnerTrust.UNKNOWN);
+					break;
+				case NEVER:
+					trustDb.setOwnerTrust(publicKey, OwnerTrust.NEVER);
+					break;
+				case MARGINAL:
+					trustDb.setOwnerTrust(publicKey, OwnerTrust.MARGINAL);
+					break;
+				case FULL:
+					trustDb.setOwnerTrust(publicKey, OwnerTrust.FULL);
+					break;
+				case ULTIMATE:
+					trustDb.setOwnerTrust(publicKey, OwnerTrust.ULTIMATE);
+					break;
+				default :
+					throw new IllegalStateException("Unknown ownerTrustLevel: " + ownerTrust);
+			}
 		}
 	}
 
 	@Override
 	public void updateTrustDb() {
-		getTrustDb().updateTrustDb();
-		firePropertyChange(PropertyEnum.trustdb, null, null);
+		try (TrustDb trustDb = createTrustDb()) {
+			trustDb.updateTrustDb();
+			firePropertyChange(PropertyEnum.trustdb, null, null);
+		}
 	}
 
 	private BcPgpKey enlistPublicKey(final Map<PgpKeyId, BcPgpKey> pgpKeyId2bcPgpKey,
@@ -1561,32 +1566,21 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp implements AutoCloseable {
 	protected PgpKeyRegistry getPgpKeyRegistry()
 	{
 		if (pgpKeyRegistry == null)
-			pgpKeyRegistry = new PgpKeyRegistryImpl(getPubringFile().getIoFile(), getSecringFile().getIoFile());
+			pgpKeyRegistry = PgpKeyRegistry.Helper.createInstance(getPubringFile().getIoFile(), getSecringFile().getIoFile());
 
 		return pgpKeyRegistry;
 	}
 
-	protected TrustDb getTrustDb()
-	{
-		if (trustDb == null) {
-			trustDb = new TrustDbImpl(getTrustDbFile().getIoFile(), getPgpKeyRegistry());
-			trustDb.updateTrustDbIfNeeded();
-		}
-		return trustDb;
+	protected synchronized TrustDbFactory getTrustDbFactory() {
+		if (trustDbFactory == null)
+			trustDbFactory = new TrustDbFactory(getTrustDbFile(), getPgpKeyRegistry());
+
+		return trustDbFactory;
 	}
 
-	@Override
-	public synchronized void close() {
-		if (trustDb != null) {
-			trustDb.close();
-			trustDb = null;
-		}
-	}
-
-	@Override
-	protected void finalize() throws Throwable {
-		close();
-		super.finalize();
+	protected TrustDb createTrustDb() {
+		final TrustDbFactory trustDbFactory = getTrustDbFactory();
+		return trustDbFactory.createTrustDb();
 	}
 
 //	protected org.bouncycastle.openpgp.wot.key.PgpKeyId toWotPgpKeyId(final PgpKeyId pgpKeyId) {
