@@ -108,8 +108,8 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 	private File secringFile;
 	private File trustDbFile;
 
-	private long pubringFileLastModified = Long.MIN_VALUE;
-	private long secringFileLastModified = Long.MIN_VALUE;
+	private volatile long pubringFileLastModified = Long.MIN_VALUE;
+	private volatile long secringFileLastModified = Long.MIN_VALUE;
 
 	private Map<PgpKeyId, BcPgpKey> pgpKeyId2bcPgpKey; // all keys
 	private Map<PgpKeyId, BcPgpKey> pgpKeyId2masterKey; // only master-keys
@@ -268,10 +268,14 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 			tmpFile.renameTo(pubringFile);
 
 			// ensure that it's re-loaded.
-			pubringFileLastModified = 0;
+			markStale();
 			return true;
 		}
 		return false;
+	}
+
+	public void markStale() {
+		pubringFileLastModified = 0;
 	}
 
 	private PGPPublicKeyRingCollection mergePublicKeyRing(ImportKeysResult importKeysResult, PGPPublicKeyRingCollection publicKeyRingCollection, final PGPPublicKeyRing publicKeyRing) throws PGPException {
@@ -593,7 +597,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 			load();
 		}
 		else
-			logger.debug("loadIfNeeded: *not* invoking load().");
+			logger.trace("loadIfNeeded: *not* invoking load().");
 	}
 
 	protected synchronized void load() {
@@ -820,6 +824,21 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 				return PgpKeyValidity.ULTIMATE;
 			default :
 				throw new IllegalStateException("Unknown validity: " + validity);
+		}
+	}
+
+	@Override
+	public void setDisabled(PgpKey pgpKey, boolean disabled) {
+		assertNotNull("pgpKey", pgpKey);
+		if (pgpKey.getMasterKey() != null)
+			pgpKey = pgpKey.getMasterKey();
+
+		try (TrustDb trustDb = createTrustDb()) {
+			final BcPgpKey bcPgpKey = getBcPgpKeyOrFail(pgpKey);
+			final PGPPublicKey publicKey = bcPgpKey.getPublicKey();
+
+			trustDb.setDisabled(publicKey, disabled);
+			markStale();
 		}
 	}
 
@@ -1167,9 +1186,10 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 	private String getPgpKeyIdRange(final PgpKeyId pgpKeyId) {
 		assertNotNull("pgpKeyId", pgpKeyId);
 		final int range1 = ((int) pgpKeyId.longValue()) & 0xff;
-		final int range2 = ((int) (pgpKeyId.longValue() >>> 8)) & 0xff;
-		return encodeHexStr(new byte[] { (byte)range2 }) + '/' + encodeHexStr(new byte[] { (byte)range1 });
+//		final int range2 = ((int) (pgpKeyId.longValue() >>> 8)) & 0xff;
+//		return encodeHexStr(new byte[] { (byte)range2 }) + '/' + encodeHexStr(new byte[] { (byte)range1 });
 //		return Integer.toHexString(range2) + '/' + Integer.toHexString(range1);
+		return encodeHexStr(new byte[] { (byte)range1 });
 	}
 
 	@Override
@@ -1582,34 +1602,4 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 		final TrustDbFactory trustDbFactory = getTrustDbFactory();
 		return trustDbFactory.createTrustDb();
 	}
-
-//	protected org.bouncycastle.openpgp.wot.key.PgpKeyId toWotPgpKeyId(final PgpKeyId pgpKeyId) {
-//		assertNotNull("pgpKeyId", pgpKeyId);
-//		return new org.bouncycastle.openpgp.wot.key.PgpKeyId(pgpKeyId.longValue());
-//	}
-//
-//	protected PgpKeyId toPgpKeyId(final org.bouncycastle.openpgp.wot.key.PgpKeyId wotPgpKeyId) {
-//		assertNotNull("wotPgpKeyId", wotPgpKeyId);
-//		return new PgpKeyId(wotPgpKeyId.longValue());
-//	}
-//
-//	protected org.bouncycastle.openpgp.wot.key.PgpKey getWotPgpKeyOrFail(final PgpKeyId wotPgpKeyId) {
-//		assertNotNull("wotPgpKeyId", wotPgpKeyId);
-//		return getPgpKeyRegistry().getPgpKeyOrFail(toWotPgpKeyId(wotPgpKeyId));
-//	}
-//
-//	protected org.bouncycastle.openpgp.wot.key.PgpKey getWotPgpKey(final PgpKeyId pgpKeyId) {
-//		assertNotNull("pgpKeyId", pgpKeyId);
-//		return getPgpKeyRegistry().getPgpKey(toWotPgpKeyId(pgpKeyId));
-//	}
-//
-//	protected org.bouncycastle.openpgp.wot.key.PgpKey getWotPgpKey(final PgpKey pgpKey) {
-//		assertNotNull("pgpKey", pgpKey);
-//		return getWotPgpKey(pgpKey.getPgpKeyId());
-//	}
-//
-//	protected org.bouncycastle.openpgp.wot.key.PgpKey getWotPgpKeyOrFail(final PgpKey pgpKey) {
-//		assertNotNull("pgpKey", pgpKey);
-//		return getWotPgpKeyOrFail(pgpKey.getPgpKeyId());
-//	}
 }

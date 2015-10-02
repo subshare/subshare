@@ -189,8 +189,8 @@ public class UserListItem {
 				}
 			}
 
-			if (ownerTrusts.isEmpty())
-				ownerTrusts.add(PgpOwnerTrust.UNKNOWN);
+//			if (ownerTrusts.isEmpty())
+//				ownerTrusts.add(PgpOwnerTrust.UNSPECIFIED);
 
 			StringBuilder sb = new StringBuilder();
 			for (PgpOwnerTrust ot : ownerTrusts) {

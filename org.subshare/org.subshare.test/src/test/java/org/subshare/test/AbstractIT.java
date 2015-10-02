@@ -1,7 +1,8 @@
 package org.subshare.test;
 
-import static co.codewizards.cloudstore.core.oio.OioFileFactory.createFile;
-import static org.assertj.core.api.Assertions.assertThat;
+import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
+import static co.codewizards.cloudstore.core.util.IOUtil.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -58,11 +59,21 @@ public abstract class AbstractIT {
 
 	static {
 		jvmInstanceId = new Uid(); // for parallel test execution ;-)
-		System.setProperty(ConfigDir.SYSTEM_PROPERTY_CONFIG_DIR, "build/" + jvmInstanceId + "/.cloudstore");
+		System.setProperty(ConfigDir.SYSTEM_PROPERTY_CONFIG_DIR, "build/" + jvmInstanceId + "/.subshare");
 		System.setProperty(Config.SYSTEM_PROPERTY_PREFIX + GnuPgDir.CONFIG_KEY_GNU_PG_DIR, "build/" + jvmInstanceId + "/.gnupg");
 		System.setProperty(LocalRepoManager.SYSTEM_PROPERTY_KEY_SIZE, "1024");
 		System.setProperty("testEnvironment", Boolean.TRUE.toString());
-		createFile("build/" + jvmInstanceId).mkdir();
+
+		final File configDir = createFile("build/" + jvmInstanceId + "/.subshare");
+		configDir.getParentFile().mkdir();
+		configDir.mkdir();
+
+		try {
+			copyResource(AbstractIT.class, "/logback-test.xml", createFile(configDir, "logback.client.xml"));
+			copyResource(AbstractIT.class, "/logback-test.xml", createFile(configDir, "logback.server.xml"));
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	protected static final SecureRandom random = new SecureRandom();

@@ -1,25 +1,31 @@
 package org.subshare.core.pgp.gnupg;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
-import static co.codewizards.cloudstore.core.util.Util.*;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.IdentityHashMap;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import org.bouncycastle.openpgp.wot.TrustDb;
 import org.bouncycastle.openpgp.wot.key.PgpKeyRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import co.codewizards.cloudstore.core.oio.File;
 
 public class TrustDbFactory {
+	private static final Logger logger = LoggerFactory.getLogger(TrustDbFactory.class);
+
 	private final File trustDbFile;
 	private final PgpKeyRegistry pgpKeyRegistry;
 
 	private TrustDb trustDb;
 	private IdentityHashMap<TrustDb, TrustDb> proxies = new IdentityHashMap<>();
-	private DeferredCloseThread deferredCloseThread;
+	private final Timer deferredCloseTimer = new Timer("TrustDbFactory.deferredCloseTimer");
+	private DeferredCloseTimerTask deferredCloseTimerTask;
 
 	public TrustDbFactory(final File trustDbFile, final PgpKeyRegistry pgpKeyRegistry) {
 		this.trustDbFile = assertNotNull("trustDbFile", trustDbFile);
@@ -27,8 +33,12 @@ public class TrustDbFactory {
 	}
 
 	public synchronized TrustDb createTrustDb() {
-		if (trustDb == null)
+		if (trustDb == null) {
+			logger.debug("createTrustDb: Creating *real* TrustDb instance.");
 			trustDb = TrustDb.Helper.createInstance(trustDbFile.getIoFile(), pgpKeyRegistry);
+		}
+		else
+			logger.trace("createTrustDb: Using existing *real* TrustDb instance.");
 
 		final Object proxy = Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class<?>[] { TrustDb.class }, new InvocationHandler() {
 			@Override
@@ -50,6 +60,7 @@ public class TrustDbFactory {
 
 		final TrustDb trustDbProxy = (TrustDb) proxy;
 		proxies.put(trustDbProxy, trustDbProxy);
+		logger.trace("createTrustDb: Created and enlisted new proxy. openProxyCount={}", proxies.size());
 		return trustDbProxy;
 	}
 
@@ -57,10 +68,14 @@ public class TrustDbFactory {
 		assertNotNull("trustDbProxy", trustDbProxy);
 		if (_isOpen(trustDbProxy)) {
 			proxies.remove(trustDbProxy);
+			logger.trace("_close: Delisted proxy. openProxyCount={}", proxies.size());
 
 			if (proxies.isEmpty()) {
-				deferredCloseThread = new DeferredCloseThread();
-				deferredCloseThread.start();
+				if (deferredCloseTimerTask != null)
+					deferredCloseTimerTask.cancel();
+
+				deferredCloseTimerTask = new DeferredCloseTimerTask();
+				deferredCloseTimer.schedule(deferredCloseTimerTask, 10000); // defer closing by 10 seconds to avoid quick open-close-reopen-reclose-cycles
 			}
 		}
 	}
@@ -76,25 +91,24 @@ public class TrustDbFactory {
 		return proxies.containsKey(trustDbProxy);
 	}
 
-	private class DeferredCloseThread extends Thread {
+	private class DeferredCloseTimerTask extends TimerTask {
+		private final Logger logger = LoggerFactory.getLogger(TrustDbFactory.DeferredCloseTimerTask.class);
+
 		@Override
 		public void run() {
-			try {
-				Thread.sleep(10000); // defer closing by 10 seconds to avoid quick open-close-reopen-reclose-cycles
-			} catch (final InterruptedException e) {
-				doNothing();
-			}
-
 			synchronized (TrustDbFactory.this) {
-				if (deferredCloseThread != DeferredCloseThread.this)
+				if (deferredCloseTimerTask != DeferredCloseTimerTask.this) {
+					logger.debug("run: Aborting, because this is not the current instance, anymore.");
 					return;
+				}
 
 				if (proxies.isEmpty() && trustDb != null) {
+					logger.debug("run: Closing *real* TrustDb instance.");
 					trustDb.close();
 					trustDb = null;
 				}
 
-				deferredCloseThread = null;
+				deferredCloseTimerTask = null;
 			}
 		}
 	}

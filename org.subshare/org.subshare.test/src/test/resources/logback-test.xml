@@ -16,6 +16,7 @@
 -->
 
 	<logger name="org.subshare.core.pgp" level="DEBUG"/>
+	<logger name="org.subshare.core.pgp.gnupg.TrustDbFactory" level="ALL"/>
 <!--
 	<logger name="org.subshare.local" level="DEBUG"/>
 -->

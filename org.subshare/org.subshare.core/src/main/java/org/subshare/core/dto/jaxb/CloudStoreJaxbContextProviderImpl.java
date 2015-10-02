@@ -1,11 +1,5 @@
 package org.subshare.core.dto.jaxb;
 
-import org.subshare.core.dto.SsDeleteModificationDto;
-import org.subshare.core.dto.SsDirectoryDto;
-import org.subshare.core.dto.SsFileChunkDto;
-import org.subshare.core.dto.SsNormalFileDto;
-import org.subshare.core.dto.SsRequestRepoConnectionRepositoryDto;
-import org.subshare.core.dto.SsSymlinkDto;
 import org.subshare.core.dto.CreateRepositoryRequestDto;
 import org.subshare.core.dto.CryptoChangeSetDto;
 import org.subshare.core.dto.CryptoKeyDeactivationDto;
@@ -17,11 +11,19 @@ import org.subshare.core.dto.DeletedUUID;
 import org.subshare.core.dto.DeletedUid;
 import org.subshare.core.dto.InvitationUserRepoKeyPublicKeyDto;
 import org.subshare.core.dto.LongDto;
+import org.subshare.core.dto.PgpKeyStateDto;
+import org.subshare.core.dto.PgpKeyStateRegistryDto;
 import org.subshare.core.dto.RepoFileDtoWithCryptoRepoFileOnServerDto;
 import org.subshare.core.dto.ServerRegistryDto;
 import org.subshare.core.dto.ServerRepoDto;
 import org.subshare.core.dto.ServerRepoRegistryDto;
 import org.subshare.core.dto.SignatureDto;
+import org.subshare.core.dto.SsDeleteModificationDto;
+import org.subshare.core.dto.SsDirectoryDto;
+import org.subshare.core.dto.SsFileChunkDto;
+import org.subshare.core.dto.SsNormalFileDto;
+import org.subshare.core.dto.SsRequestRepoConnectionRepositoryDto;
+import org.subshare.core.dto.SsSymlinkDto;
 import org.subshare.core.dto.UserDto;
 import org.subshare.core.dto.UserIdentityDto;
 import org.subshare.core.dto.UserIdentityLinkDto;
@@ -56,6 +58,8 @@ public class CloudStoreJaxbContextProviderImpl extends AbstractCloudStoreJaxbCon
 				DeletedUUID.class,
 				InvitationUserRepoKeyPublicKeyDto.class,
 				LongDto.class,
+				PgpKeyStateDto.class,
+				PgpKeyStateRegistryDto.class,
 				RepoFileDtoWithCryptoRepoFileOnServerDto.class,
 				ServerRegistryDto.class,
 				ServerRepoDto.class,

@@ -71,7 +71,7 @@ public class PgpSync implements Sync {
 
 		final long serverLocalRevision = getServerPgpTransport().getLocalRevision();
 		final long lastSyncServerLocalRevision = getPropertyValueAsLong(getPgpSyncProperties(), lastSyncServerLocalRevisionPropertyKey, -1);
-		if (lastSyncServerLocalRevision != serverLocalRevision) {
+		if (lastSyncServerLocalRevision != serverLocalRevision || isKeysMissing()) {
 			// sync DOWN (from server to local)
 			sync(getServerPgpTransport(), lastSyncServerLocalRevision, getLocalPgpTransport());
 			getPgpSyncProperties().setProperty(lastSyncServerLocalRevisionPropertyKey, Long.toString(localLocalRevision));
@@ -80,6 +80,18 @@ public class PgpSync implements Sync {
 
 		if (needWrite)
 			writePgpSyncProperties();
+	}
+
+	private boolean isKeysMissing() {
+		final Set<PgpKeyId> knownMasterKeyIds = getLocalPgpTransport().getMasterKeyIds();
+		final Set<PgpKeyId> missingMasterKeyIds = new HashSet<PgpKeyId>();
+		for (final User user : UserRegistryImpl.getInstance().getUsers()) {
+			for (final PgpKeyId pgpKeyId : user.getPgpKeyIds()) {
+				if (! knownMasterKeyIds.contains(pgpKeyId))
+					missingMasterKeyIds.add(pgpKeyId);
+			}
+		}
+		return ! missingMasterKeyIds.isEmpty();
 	}
 
 	public URL getServerUrl() {

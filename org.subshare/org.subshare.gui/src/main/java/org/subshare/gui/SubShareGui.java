@@ -18,6 +18,8 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.subshare.core.pgp.Pgp;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpKeyId;
@@ -33,8 +35,6 @@ import org.subshare.gui.util.PlatformUtil;
 import org.subshare.gui.welcome.Welcome;
 import org.subshare.gui.wizard.WizardDialog;
 import org.subshare.ls.server.SsLocalServer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.joran.JoranConfigurator;
@@ -221,7 +221,7 @@ public class SubShareGui extends Application {
 //		final ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
 //		try {
 			for (final PgpKey pgpKey : pgp.getMasterKeysWithSecretKey()) {
-				if (pgpKey.isRevoked() || !pgpKey.isValid(now))
+				if (! pgpKey.isValid(now))
 					continue;
 
 				final PgpKeyId pgpKeyId = pgpKey.getPgpKeyId();

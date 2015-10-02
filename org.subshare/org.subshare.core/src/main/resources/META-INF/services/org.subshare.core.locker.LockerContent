@@ -1,3 +1,4 @@
-org.subshare.core.user.UserRegistryLockerContent
-org.subshare.core.server.ServerRegistryLockerContent
+org.subshare.core.pgp.PgpKeyStateLockerContent
 org.subshare.core.repo.ServerRepoRegistryLockerContent
+org.subshare.core.server.ServerRegistryLockerContent
+org.subshare.core.user.UserRegistryLockerContent

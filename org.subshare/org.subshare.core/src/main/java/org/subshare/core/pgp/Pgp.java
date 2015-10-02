@@ -122,4 +122,6 @@ public interface Pgp extends Bean<Pgp.Property> {
 	 * contains solely the public key - no secret key.
 	 */
 	boolean testPassphrase(PgpKey pgpKey, char[] passphrase) throws IllegalArgumentException;
+
+	void setDisabled(PgpKey pgpKey, boolean disabled);
 }

@@ -4,7 +4,6 @@ import static co.codewizards.cloudstore.core.objectfactory.ObjectFactoryUtil.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
 
-import java.io.RandomAccessFile;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -17,14 +16,14 @@ import org.subshare.core.context.RepoFileContext;
 import org.subshare.core.crypto.KeyFactory;
 import org.subshare.core.dto.CryptoRepoFileOnServerDto;
 import org.subshare.local.dto.CryptoRepoFileOnServerDtoConverter;
+import org.subshare.local.persistence.CryptoRepoFile;
+import org.subshare.local.persistence.CryptoRepoFileDao;
+import org.subshare.local.persistence.LocalRepositoryType;
 import org.subshare.local.persistence.SsDeleteModification;
 import org.subshare.local.persistence.SsFileChunk;
 import org.subshare.local.persistence.SsLocalRepository;
 import org.subshare.local.persistence.SsNormalFile;
 import org.subshare.local.persistence.SsRepoFile;
-import org.subshare.local.persistence.CryptoRepoFile;
-import org.subshare.local.persistence.CryptoRepoFileDao;
-import org.subshare.local.persistence.LocalRepositoryType;
 
 import co.codewizards.cloudstore.core.dto.FileChunkDto;
 import co.codewizards.cloudstore.core.oio.File;
@@ -169,21 +168,6 @@ public class SsLocalRepoSync extends LocalRepoSync {
 		super.onFinalizeFileChunk(fileChunk);
 		final SsFileChunk fc = (SsFileChunk) fileChunk;
 		fc.setLengthWithPadding(fc.getLength());
-
-		// TODO BEGIN DEBUG
-		try {
-			File file = fileChunk.getNormalFile().getFile(localRoot);
-			RandomAccessFile raf = new RandomAccessFile(file.getIoFile(), "r");
-			raf.seek(fileChunk.getOffset());
-			byte[] data = new byte[fileChunk.getLength()];
-			raf.readFully(data, 0, data.length);
-
-			String sha1 = HashUtil.sha1(data);
-			System.out.println(fileChunk.getSha1());
-			System.out.println(sha1);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 	}
 
 	private SsFileChunk createPaddingFileChunk(final SsNormalFile normalFile, final long offset, final int paddingLength) {
