@@ -12,6 +12,10 @@ import java.util.UUID;
 import javax.jdo.PersistenceManager;
 import javax.jdo.PersistenceManagerFactory;
 
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.subshare.core.Cryptree;
 import org.subshare.core.CryptreeFactoryRegistry;
 import org.subshare.core.dto.PermissionType;
@@ -21,10 +25,6 @@ import org.subshare.core.user.UserRepoKeyRingLookup;
 import org.subshare.local.persistence.CryptoRepoFile;
 import org.subshare.local.persistence.CryptoRepoFileDao;
 import org.subshare.rest.client.transport.CryptreeRestRepoTransportFactoryImpl;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import co.codewizards.cloudstore.client.CloudStoreClient;
 import co.codewizards.cloudstore.core.oio.File;
@@ -64,7 +64,8 @@ public abstract class AbstractRepoToRepoSyncIT extends AbstractIT {
 
 	@AfterClass
 	public static void afterAbstractRepoToRepoSyncIT() {
-		UserRepoKeyRingLookup.Helper.setUserRepoKeyRingLookup(originalUserRepoKeyRingLookup);
+		if (originalUserRepoKeyRingLookup != null)
+			UserRepoKeyRingLookup.Helper.setUserRepoKeyRingLookup(originalUserRepoKeyRingLookup);
 	}
 
 	@Override

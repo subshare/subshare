@@ -25,9 +25,9 @@ public class PgpRegistry {
 	 * @deprecated Should normally only be used by tests.
 	 */
 	@Deprecated
-	public void clearCache() {
+	public synchronized void clearCache() {
 		logger.info("clearCache: entered.");
-		if (pgp instanceof AutoCloseable) {
+		if (pgp instanceof AutoCloseable) { // AFAIK not used anymore.
 			try {
 				((AutoCloseable) pgp).close();
 			} catch (Exception e) {
@@ -37,7 +37,7 @@ public class PgpRegistry {
 		pgp = null;
 	}
 
-	public Pgp getPgpOrFail() {
+	public synchronized Pgp getPgpOrFail() {
 		Pgp pgp = this.pgp;
 		if (pgp == null) {
 			for (final Pgp p : ServiceLoader.load(Pgp.class)) {
@@ -47,6 +47,10 @@ public class PgpRegistry {
 				if (pgp == null || pgp.getPriority() < p.getPriority())
 					pgp = p;
 			}
+
+			if (pgp == null)
+				throw new IllegalStateException("No supported Pgp implementation found!");
+
 			this.pgp = pgp;
 		}
 		else
