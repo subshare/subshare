@@ -32,13 +32,16 @@ dependencies {
 	// the following is needed only to configure the SSL certificate check callback - maybe not needed in the future, anymore
 	compile project(':org.subshare.rest.client')
 
+	// Just like every other app, we need an auto-update.
+	compile project(':org.subshare.updater')
+
 	// We cannot use the nio stuff on Android, AFAIK. Hence, we either must move the assembly of this gui stuff for ordinary
 	// desktop PCs into a separate project or override this somehow for Android (exclude the dependency). Need to deal with
 	// this later.
 	compile "co.codewizards.cloudstore:co.codewizards.cloudstore.core.oio.nio:$cloudstoreVersion"
 
 	compile "org.slf4j:log4j-over-slf4j:$slf4jVersion", "ch.qos.logback:logback-classic:$logbackVersion"
-
+	
 	// runtime-dependencies (needed when starting the app - not for compilation)
 	runtime project(':org.subshare.local')
 //	runtime project(':org.subshare.rest.client')

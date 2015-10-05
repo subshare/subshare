@@ -1,0 +1,12 @@
+dependencies {
+	compile group: 'co.codewizards.cloudstore', name: 'co.codewizards.cloudstore.updater', version: cloudstoreVersion
+	compile project(':org.subshare.core')
+}
+
+jar {
+	manifest {
+		attributes(
+			'Main-Class': 'org.subshare.updater.SubShareUpdater',
+			'Class-Path': configurations.runtime.collect { it.getName() }.join(' '))
+	}
+}

@@ -1,8 +1,8 @@
 package org.subshare.gui;
 
-import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
-import static co.codewizards.cloudstore.core.util.Util.*;
-import static org.subshare.gui.util.ResourceBundleUtil.*;
+import static co.codewizards.cloudstore.core.oio.OioFileFactory.createFile;
+import static co.codewizards.cloudstore.core.util.Util.doNothing;
+import static org.subshare.gui.util.ResourceBundleUtil.getMessages;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -42,6 +42,7 @@ import ch.qos.logback.core.joran.spi.JoranException;
 import ch.qos.logback.core.util.StatusPrinter;
 import co.codewizards.cloudstore.core.config.ConfigDir;
 import co.codewizards.cloudstore.core.oio.File;
+import co.codewizards.cloudstore.core.updater.CloudStoreUpdaterCore;
 import co.codewizards.cloudstore.core.util.DerbyUtil;
 import co.codewizards.cloudstore.core.util.IOUtil;
 import co.codewizards.cloudstore.ls.client.LocalServerClient;
@@ -178,6 +179,8 @@ public class SubShareGui extends Application {
 		if (exitCode == 0)
 			backupIfNeeded();
 
+		new CloudStoreUpdaterCore().createUpdaterDirIfUpdateNeeded();
+
 		PlatformUtil.notifyExiting();
 
 		final LocalServer _localServer = localServer;
@@ -188,7 +191,7 @@ public class SubShareGui extends Application {
 		new Thread() {
 			{
 				setName(SubShareGui.class.getSimpleName() + ".StopThread");
-				setDaemon(true);
+//				setDaemon(true);
 			}
 
 			@Override

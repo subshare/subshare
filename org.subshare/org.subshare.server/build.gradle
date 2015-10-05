@@ -6,6 +6,9 @@ dependencies {
 	compile project(':org.subshare.local')
 	compile project(':org.subshare.local.dbrepo')
 	compile project(':org.subshare.ls.server')
+
+	// Just like every other app, we need an auto-update.
+	compile project(':org.subshare.updater')
 }
 
 jar {

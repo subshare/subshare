@@ -15,7 +15,7 @@ REM a batch file can be overwritten while it is being executed (fortunately, thi
 REM to the ordinary Windows file blocking bullshit).
 
 echo Updating Subshare...
-java -jar "%~dp0\..\updater\lib\co.codewizards.cloudstore.updater-@project.version@.jar" -installationDir "%~dp0\.."
+java -jar "%~dp0\..\updater\lib\org.subshare.updater-@project.version@.jar" -installationDir "%~dp0\.."
 "%0" afterUpdateHook
 
 :end
