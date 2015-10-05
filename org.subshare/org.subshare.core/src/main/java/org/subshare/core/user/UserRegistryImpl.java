@@ -24,6 +24,8 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.subshare.core.dto.DeletedUid;
 import org.subshare.core.dto.UserDto;
 import org.subshare.core.dto.UserRegistryDto;
@@ -31,14 +33,14 @@ import org.subshare.core.dto.UserRepoKeyDto;
 import org.subshare.core.dto.UserRepoKeyPublicKeyDto;
 import org.subshare.core.dto.jaxb.UserRegistryDtoIo;
 import org.subshare.core.fbor.FileBasedObjectRegistry;
+import org.subshare.core.pgp.Pgp;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpKeyId;
 import org.subshare.core.pgp.PgpRegistry;
 import org.subshare.core.pgp.PgpUserId;
+import org.subshare.core.pgp.sync.PgpSyncDaemonImpl;
 import org.subshare.core.user.ImportUsersFromPgpKeysResult.ImportedUser;
 import org.subshare.core.user.UserRepoKey.PublicKeyWithSignature;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import co.codewizards.cloudstore.core.config.ConfigDir;
 import co.codewizards.cloudstore.core.dto.Uid;
@@ -581,6 +583,20 @@ public class UserRegistryImpl extends FileBasedObjectRegistry implements UserReg
 		}
 
 		writeIfNeeded();
+
+		if (hasMissingPgpKeys())
+			PgpSyncDaemonImpl.getInstance().sync();
+	}
+
+	private boolean hasMissingPgpKeys() {
+		final Pgp pgp = PgpRegistry.getInstance().getPgpOrFail();
+		for (final User user : getUsers()) {
+			for (final PgpKeyId pgpKeyId : user.getPgpKeyIds()) {
+				if (pgp.getPgpKey(pgpKeyId) == null)
+					return true;
+			}
+		}
+		return false;
 	}
 
 	private void merge(final User toUser, final UserDto fromUserDto, final Set<Uid> deletedUserRepoKeyIdSet) {

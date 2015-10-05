@@ -13,7 +13,6 @@ public class PgpKeyStateLockerContent extends FileLockerContent {
 
 	@Override
 	public File getFile() {
-		getPgpKeyStateRegistry().syncWithPgp();
 		return getPgpKeyStateRegistry().getFile();
 	}
 

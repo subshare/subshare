@@ -1,8 +1,11 @@
 package org.subshare.core.pgp;
 
+import static co.codewizards.cloudstore.core.bean.PropertyChangeListenerUtil.*;
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
@@ -31,8 +34,15 @@ public class PgpKeyStateRegistryImpl extends FileBasedObjectRegistry implements 
 
 	private final Map<PgpKeyId, PgpKeyStateDto> pgpKeyId2PgpKeyStateDto = new HashMap<>();
 	private Uid version;
-	private Pgp pgp;
+	private final Pgp pgp;
 	private boolean needUpdateTrustDb;
+
+	private final PropertyChangeListener pgpPropertyChangeListener = new PropertyChangeListener() {
+		@Override
+		public void propertyChange(PropertyChangeEvent evt) {
+			syncWithPgp();
+		}
+	};
 
 	private static final class Holder {
 		public static final PgpKeyStateRegistryImpl instance = new PgpKeyStateRegistryImpl();
@@ -45,6 +55,10 @@ public class PgpKeyStateRegistryImpl extends FileBasedObjectRegistry implements 
 	public PgpKeyStateRegistryImpl() {
 		pgpKeyStateRegistryFile = createFile(ConfigDir.getInstance().getFile(), PGP_KEY_STATE_REGISTRY_FILE_NAME);
 		read();
+
+		pgp = PgpRegistry.getInstance().getPgpOrFail();
+		addWeakPropertyChangeListener(pgp, pgpPropertyChangeListener);
+		syncWithPgp();
 	}
 
 	@Override
@@ -122,37 +136,26 @@ public class PgpKeyStateRegistryImpl extends FileBasedObjectRegistry implements 
 		}
 	}
 
-	public Pgp getPgp() {
-		if (pgp == null)
-			pgp = PgpRegistry.getInstance().getPgpOrFail();
+	protected synchronized void syncWithPgp() {
+		logger.info("syncWithPgp: entered.");
+		final long startTimestamp = System.currentTimeMillis();
 
-		return pgp;
-	}
-
-	public synchronized void syncWithPgp() {
-		final Pgp pgp = getPgp();
 		needUpdateTrustDb = false;
 
 		// All keys that are unmodified in PGP's trust-database, but have meaningful data in the
 		// PgpKeyStateRegistry should first be updated in the PGP-trust-database!
 		for (final PgpKeyStateDto pgpKeyStateDto : pgpKeyId2PgpKeyStateDto.values()) {
-//			if (pgpKeyStateDto.getDeleted() != null)
-//				continue;
-
 			final PgpKeyId pgpKeyId = assertNotNull("pgpKeyStateDto.pgpKeyId", pgpKeyStateDto.getPgpKeyId());
 			final PgpKey pgpKey = pgp.getPgpKey(pgpKeyId);
-			if (pgpKey != null) {
+			if (pgpKey != null && isDefaults(pgpKey)) {
+				if (pgpKeyStateDto.isDisabled()) {
+					needUpdateTrustDb = true;
+					pgp.setDisabled(pgpKey, true);
+				}
 
-				if (! pgpKey.isDisabled() && pgp.getOwnerTrust(pgpKey) == PgpOwnerTrust.UNSPECIFIED) {
-					if (pgpKeyStateDto.isDisabled()) {
-						needUpdateTrustDb = true;
-						pgp.setDisabled(pgpKey, true);
-					}
-
-					if (pgpKeyStateDto.getOwnerTrust() != PgpOwnerTrust.UNSPECIFIED) {
-						needUpdateTrustDb = true;
-						pgp.setOwnerTrust(pgpKey, pgpKeyStateDto.getOwnerTrust());
-					}
+				if (pgpKeyStateDto.getOwnerTrust() != PgpOwnerTrust.UNSPECIFIED) {
+					needUpdateTrustDb = true;
+					pgp.setOwnerTrust(pgpKey, pgpKeyStateDto.getOwnerTrust());
 				}
 			}
 		}
@@ -162,37 +165,23 @@ public class PgpKeyStateRegistryImpl extends FileBasedObjectRegistry implements 
 			final PgpKeyId pgpKeyId = pgpKey.getPgpKeyId();
 			PgpKeyStateDto pgpKeyStateDto = pgpKeyId2PgpKeyStateDto.get(pgpKeyId);
 			if (pgpKeyStateDto == null) {
-				pgpKeyStateDto = createPgpKeyStateDto(pgpKey);
-				pgpKeyId2PgpKeyStateDto.put(pgpKeyId, pgpKeyStateDto);
-				markDirty();
+				if (! isDefaults(pgpKey)) {
+					pgpKeyStateDto = createPgpKeyStateDto(pgpKey);
+					pgpKeyId2PgpKeyStateDto.put(pgpKeyId, pgpKeyStateDto);
+					markDirty();
+				}
 			}
-//			else if (pgpKeyStateDto.getDeleted() != null || isModified(pgpKey, pgpKeyStateDto)) {
 			else if (isModified(pgpKey, pgpKeyStateDto)) {
 				updatePgpKeyStateDto(pgpKey, pgpKeyStateDto);
 				markDirty();
 			}
 		}
 
-//		for (final PgpKeyStateDto pgpKeyStateDto : pgpKeyId2PgpKeyStateDto.values()) {
-//			if (pgpKeyStateDto.getDeleted() != null)
-//				continue;
-//
-//			final PgpKeyId pgpKeyId = assertNotNull("pgpKeyStateDto.pgpKeyId", pgpKeyStateDto.getPgpKeyId());
-//			final PgpKey pgpKey = pgp.getPgpKey(pgpKeyId);
-//			if (pgpKey == null) {
-//				if (pgpKeyStateDto.getReadded() != null)
-//					pgpKeyStateDto.setReadded(null);
-//
-//				pgpKeyStateDto.setDeleted(new Date());
-//				markDirty();
-//			}
-//		}
-
 		if (needUpdateTrustDb)
 			pgp.updateTrustDb();
 
-		this.pgp = null; // no need to keep reference.
 		writeIfNeeded();
+		logger.info("syncWithPgp: leaving (took {} ms).", System.currentTimeMillis() - startTimestamp);
 	}
 
 	private PgpKeyStateDto createPgpKeyStateDto(final PgpKey pgpKey) {
@@ -209,24 +198,24 @@ public class PgpKeyStateRegistryImpl extends FileBasedObjectRegistry implements 
 		assertNotNull("pgpKeyStateDto", pgpKeyStateDto);
 		pgpKeyStateDto.setChanged(new Date());
 		pgpKeyStateDto.setDisabled(pgpKey.isDisabled());
-		pgpKeyStateDto.setOwnerTrust(getPgp().getOwnerTrust(pgpKey));
+		pgpKeyStateDto.setOwnerTrust(pgp.getOwnerTrust(pgpKey));
+	}
 
-//		if (pgpKeyStateDto.getDeleted() != null) {
-//			pgpKeyStateDto.setReadded(new Date());
-//			pgpKeyStateDto.setDeleted(null);
-//		}
+	private boolean isDefaults(final PgpKey pgpKey) {
+		final boolean enabled = ! pgpKey.isDisabled();
+		final PgpOwnerTrust ownerTrust = pgp.getOwnerTrust(pgpKey);
+		return enabled && ownerTrust == PgpOwnerTrust.UNSPECIFIED;
 	}
 
 	private boolean isModified(final PgpKey pgpKey, final PgpKeyStateDto pgpKeyStateDto) {
 		assertNotNull("pgpKey", pgpKey);
 		assertNotNull("pgpKeyStateDto", pgpKeyStateDto);
 		return pgpKeyStateDto.isDisabled() != pgpKey.isDisabled()
-			|| pgpKeyStateDto.getOwnerTrust() != getPgp().getOwnerTrust(pgpKey);
+			|| pgpKeyStateDto.getOwnerTrust() != pgp.getOwnerTrust(pgpKey);
 	}
 
 	protected synchronized void mergeFrom(final PgpKeyStateRegistryDto pgpKeyStateRegistryDto) {
 		assertNotNull("pgpKeyStateRegistryDto", pgpKeyStateRegistryDto);
-		final Pgp pgp = getPgp();
 		needUpdateTrustDb = false;
 
 		for (final PgpKeyStateDto inPgpKeyStateDto : pgpKeyStateRegistryDto.getPgpKeyStateDtos()) {
@@ -250,14 +239,12 @@ public class PgpKeyStateRegistryImpl extends FileBasedObjectRegistry implements 
 		if (needUpdateTrustDb)
 			pgp.updateTrustDb();
 
-		this.pgp = null; // no need to keep reference.
 		writeIfNeeded();
 	}
 
 	private void updatePgp(PgpKey pgpKey, PgpKeyStateDto pgpKeyStateDto) {
 		assertNotNull("pgpKey", pgpKey);
 		assertNotNull("pgpKeyStateDto", pgpKeyStateDto);
-		final Pgp pgp = getPgp();
 
 		if (pgpKey.isDisabled() != pgpKeyStateDto.isDisabled()) {
 			needUpdateTrustDb = true;
