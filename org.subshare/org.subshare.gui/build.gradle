@@ -90,14 +90,20 @@ task chmodMainExecutable(type: Exec, dependsOn: [ copyFilesFromBin, copyFilesFro
 
 task tarGzAssembly(type: Tar, dependsOn: [ chmodMainExecutable, copyJar, copyDependencies ]) {
 	compression = Compression.GZIP
+	classifier = 'bin'
 	extension = 'tar.gz' // default is 'tgz'
 	includeEmptyDirs true
 	from "$buildDir/assembly"
 }
 
 task zipAssembly(type: Zip, dependsOn: tarGzAssembly) {
+	classifier = 'bin'
 	includeEmptyDirs true
 	from "$buildDir/assembly"
+}
+
+artifacts{
+    archives tarGzAssembly, zipAssembly
 }
 
 build.dependsOn(zipAssembly)
