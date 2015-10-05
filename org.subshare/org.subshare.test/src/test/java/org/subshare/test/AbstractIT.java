@@ -95,7 +95,7 @@ public abstract class AbstractIT {
 	protected MockUp<UserRegistryImpl> userRegistryImplMockUp;
 
 	@BeforeClass
-	public static void abstractIT_beforeClass() {
+	public static void abstractIT_beforeClass() throws Exception {
 		// In order to make sure our tests are not unnecessarily slowed down, we set everything above 10M to 0:
 		for (LengthCategory lengthCategory : FilePaddingLengthRandom.LengthCategory.values()) {
 			if (lengthCategory.ordinal() > FilePaddingLengthRandom.LengthCategory._10M.ordinal())
@@ -121,7 +121,7 @@ public abstract class AbstractIT {
 	}
 
 	@AfterClass
-	public static void abstractIT_afterClass() {
+	public static void abstractIT_afterClass() throws Exception {
 		for (LengthCategory lengthCategory : FilePaddingLengthRandom.LengthCategory.values())
 			System.getProperties().remove(Config.SYSTEM_PROPERTY_PREFIX + lengthCategory.getConfigPropertyKey());
 
