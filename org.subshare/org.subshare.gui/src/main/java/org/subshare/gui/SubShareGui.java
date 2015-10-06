@@ -1,8 +1,9 @@
 package org.subshare.gui;
 
-import static co.codewizards.cloudstore.core.oio.OioFileFactory.createFile;
-import static co.codewizards.cloudstore.core.util.Util.doNothing;
-import static org.subshare.gui.util.ResourceBundleUtil.getMessages;
+import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static co.codewizards.cloudstore.core.util.Util.*;
+import static org.subshare.gui.util.ResourceBundleUtil.*;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -13,8 +14,14 @@ import java.util.Set;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 
@@ -43,6 +50,7 @@ import ch.qos.logback.core.util.StatusPrinter;
 import co.codewizards.cloudstore.core.config.ConfigDir;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.updater.CloudStoreUpdaterCore;
+import co.codewizards.cloudstore.core.updater.Version;
 import co.codewizards.cloudstore.core.util.DerbyUtil;
 import co.codewizards.cloudstore.core.util.IOUtil;
 import co.codewizards.cloudstore.ls.client.LocalServerClient;
@@ -61,11 +69,26 @@ public class SubShareGui extends Application {
 	public void start(final Stage primaryStage) throws Exception {
 		this.primaryStage = primaryStage;
 
+		if (isAfterUpdateHook()) {
+			createUpdaterCore().getUpdaterDir().deleteRecursively();
+
+			if (! showUpdateDoneDialog())
+				System.exit(1);
+		}
+
 		// Show splash...
 		showSplash();
 
 		// ...and do initialisation in background.
 		startInitThread();
+	}
+	
+	private boolean isAfterUpdateHook() {
+		for (final String parameter : getParameters().getRaw()) {
+			if ("afterUpdateHook".equals(parameter))
+				return true;
+		}
+		return false;
 	}
 
 	private void showSplash() {
@@ -179,7 +202,9 @@ public class SubShareGui extends Application {
 		if (exitCode == 0)
 			backupIfNeeded();
 
-		new CloudStoreUpdaterCore().createUpdaterDirIfUpdateNeeded();
+		final CloudStoreUpdaterCore updaterCore = createUpdaterCore();
+		if (updaterCore.createUpdaterDirIfUpdateNeeded())
+			showUpdateStartingDialog(updaterCore);
 
 		PlatformUtil.notifyExiting();
 
@@ -208,6 +233,10 @@ public class SubShareGui extends Application {
 			}
 
 		}.start();
+	}
+	
+	private CloudStoreUpdaterCore createUpdaterCore() {
+		return new CloudStoreUpdaterCore();
 	}
 
 	public static void main(final String[] args) {
@@ -316,5 +345,52 @@ public class SubShareGui extends Application {
 			doNothing();
 		}
 		StatusPrinter.printInCaseOfErrorsOrWarnings(context);
+	}
+
+	private void showUpdateStartingDialog(final CloudStoreUpdaterCore updaterCore) {
+		assertNotNull("updaterCore", updaterCore);
+		Alert alert = new Alert(AlertType.INFORMATION);
+		alert.setHeaderText("Update to a new Subshare version!");
+
+		final String text = String.format("You are currently using version %s of Subshare.\n\nThe new version %s is available and is going to be installed, now.\n\nThe update might take a few minutes - please be patient!",
+				updaterCore.getLocalVersion(), updaterCore.getRemoteVersion());
+
+//		alert.setContentText(text);
+		// The above does not adjust the dialog size :-( Using a Text node instead works better.
+
+		final Text contentText = new Text(text);
+		final HBox contentTextContainer = new HBox();
+		contentTextContainer.getChildren().add(contentText);
+
+		GridPane.setMargin(contentText, new Insets(8));
+		alert.getDialogPane().setContent(contentTextContainer);
+
+		alert.showAndWait();
+	}
+
+	private boolean showUpdateDoneDialog() {
+		Alert alert = new Alert(AlertType.INFORMATION);
+		alert.setHeaderText("Update to a new Subshare version done!");
+		
+		final Version localVersion = new CloudStoreUpdaterCore().getLocalVersion();
+
+		final String text = String.format("Subshare was updated to version %s.",
+				localVersion);
+
+//		alert.setContentText(text);
+		// The above does not adjust the dialog size :-( Using a Text node instead works better.
+
+		final Text contentText = new Text(text);
+		final HBox contentTextContainer = new HBox();
+		contentTextContainer.getChildren().add(contentText);
+
+		GridPane.setMargin(contentText, new Insets(8));
+		alert.getDialogPane().setContent(contentTextContainer);
+//		alert.getButtonTypes().clear();
+//		alert.getButtonTypes().add(ButtonType.YES);
+//		alert.getButtonTypes().add(ButtonType.NO);
+
+		alert.showAndWait();
+		return false;
 	}
 }
