@@ -1,0 +1,14 @@
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
+
+dependencies {
+	compile project(':org.subshare.updater')
+}
+
+jar {
+	manifest {
+		attributes(
+			'Main-Class': 'org.subshare.updater.gui.SubShareUpdaterGui',
+			'Class-Path': configurations.runtime.collect { it.getName() }.join(' '))
+	}
+}

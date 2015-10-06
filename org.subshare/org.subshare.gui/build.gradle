@@ -33,7 +33,7 @@ dependencies {
 	compile project(':org.subshare.rest.client')
 
 	// Just like every other app, we need an auto-update.
-	compile project(':org.subshare.updater')
+	compile project(':org.subshare.updater.gui')
 
 	// We cannot use the nio stuff on Android, AFAIK. Hence, we either must move the assembly of this gui stuff for ordinary
 	// desktop PCs into a separate project or override this somehow for Android (exclude the dependency). Need to deal with
