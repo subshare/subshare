@@ -76,7 +76,7 @@ public abstract class WizardPage extends VBox {
 			}
 		});
 
-		addEventFilter(KeyEvent.KEY_PRESSED, new EventHandler<KeyEvent>() {
+		addEventFilter(KeyEvent.KEY_RELEASED, new EventHandler<KeyEvent>() {
 			@Override
 			public void handle(KeyEvent event) {
 				if (! event.isAltDown())

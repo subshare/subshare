@@ -8,6 +8,6 @@ java -jar "$INSTALLATION_DIR/lib/@project.artifactId@-@project.version@.jar" "$@
 
 if [ -d "$UPDATER_DIR" ]; then
 	echo "Updating Subshare..."
-	java -jar "$UPDATER_DIR/lib/org.subshare.updater-@project.version@.jar" -installationDir "$INSTALLATION_DIR"
+	java -jar "$UPDATER_DIR/lib/org.subshare.updater.gui-@project.version@.jar" -installationDir "$INSTALLATION_DIR"
 	"$0" afterUpdateHook
 fi

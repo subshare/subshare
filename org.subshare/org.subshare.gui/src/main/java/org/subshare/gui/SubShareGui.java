@@ -72,8 +72,8 @@ public class SubShareGui extends Application {
 		if (isAfterUpdateHook()) {
 			createUpdaterCore().getUpdaterDir().deleteRecursively();
 
-			if (! showUpdateDoneDialog())
-				System.exit(1);
+			showUpdateDoneDialog();
+			System.exit(1);
 		}
 
 		// Show splash...
@@ -82,7 +82,7 @@ public class SubShareGui extends Application {
 		// ...and do initialisation in background.
 		startInitThread();
 	}
-	
+
 	private boolean isAfterUpdateHook() {
 		for (final String parameter : getParameters().getRaw()) {
 			if ("afterUpdateHook".equals(parameter))
@@ -234,7 +234,7 @@ public class SubShareGui extends Application {
 
 		}.start();
 	}
-	
+
 	private CloudStoreUpdaterCore createUpdaterCore() {
 		return new CloudStoreUpdaterCore();
 	}
@@ -352,7 +352,7 @@ public class SubShareGui extends Application {
 		Alert alert = new Alert(AlertType.INFORMATION);
 		alert.setHeaderText("Update to a new Subshare version!");
 
-		final String text = String.format("You are currently using version %s of Subshare.\n\nThe new version %s is available and is going to be installed, now.\n\nThe update might take a few minutes - please be patient!",
+		final String text = String.format("You are currently using Subshare version %s.\n\nThe new version %s is available and is going to be installed, now.\n\nThe update might take a few minutes - please be patient!",
 				updaterCore.getLocalVersion(), updaterCore.getRemoteVersion());
 
 //		alert.setContentText(text);
@@ -368,17 +368,14 @@ public class SubShareGui extends Application {
 		alert.showAndWait();
 	}
 
-	private boolean showUpdateDoneDialog() {
+	private void showUpdateDoneDialog() {
 		Alert alert = new Alert(AlertType.INFORMATION);
 		alert.setHeaderText("Update to a new Subshare version done!");
-		
+
 		final Version localVersion = new CloudStoreUpdaterCore().getLocalVersion();
 
 		final String text = String.format("Subshare was updated to version %s.",
 				localVersion);
-
-//		alert.setContentText(text);
-		// The above does not adjust the dialog size :-( Using a Text node instead works better.
 
 		final Text contentText = new Text(text);
 		final HBox contentTextContainer = new HBox();
@@ -386,11 +383,7 @@ public class SubShareGui extends Application {
 
 		GridPane.setMargin(contentText, new Insets(8));
 		alert.getDialogPane().setContent(contentTextContainer);
-//		alert.getButtonTypes().clear();
-//		alert.getButtonTypes().add(ButtonType.YES);
-//		alert.getButtonTypes().add(ButtonType.NO);
 
 		alert.showAndWait();
-		return false;
 	}
 }

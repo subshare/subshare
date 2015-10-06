@@ -1,0 +1,60 @@
+package org.subshare.updater.gui.console
+
+import javafx.scene.layout.GridPane
+import javafx.geometry.Insets
+import javafx.scene.control.TextField
+import javafx.scene.control.TextArea
+import javafx.scene.image.ImageView
+import javafx.scene.image.Image
+import javafx.scene.control.Label
+import javafx.scene.control.Button
+import javafx.scene.layout.HBox
+import javafx.scene.layout.Border
+
+dynamic component ConsolePane resourcefile 'messages.properties' {
+	GridPane {
+		hgap : 8,
+		vgap : 8,
+		padding : Insets { left : 8, top : 8, right : 8, bottom : 8 },
+
+		Label id headerLabel {
+			text : "Update failed!",
+			style : "-fx-font-weight: bold",
+
+			graphic : ImageView id headerLabelImageView {
+				image : Image { url : "@ERROR_24x24.png" }
+			},
+
+			static columnIndex : 0,
+			static rowIndex : 0,
+			static hgrow : "ALWAYS"
+		},
+
+		TextArea id consoleTextArea {
+			editable : false,
+			static columnIndex : 0,
+			static rowIndex : 1,
+			static hgrow : "ALWAYS",
+			static vgrow : "ALWAYS"
+		},
+
+		HBox id buttonBar {
+			HBox {
+				static hgrow : "ALWAYS"
+			},
+
+			Button id okButton {
+				graphic : ImageView id headerLabelImageView {
+					image : Image { url : "@ok_24x24.png" }
+				},
+				text : "OK",
+				disable : true,
+				onAction : controllermethod okButtonClicked
+			},
+
+			static columnIndex : 0,
+			static rowIndex : 2,
+			static hgrow : "ALWAYS"
+		}
+	}
+}
