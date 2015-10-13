@@ -10,7 +10,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import org.subshare.core.dto.SsDirectoryDto;
-import org.subshare.core.dto.CryptoRepoFileOnServerDto;
+import org.subshare.core.dto.HistoCryptoRepoFileDto;
 import org.subshare.core.dto.RepoFileDtoWithCryptoRepoFileOnServerDto;
 import org.subshare.core.repo.transport.CryptreeServerFileRepoTransport;
 
@@ -35,7 +35,7 @@ public class SsMakeDirectoryService extends MakeDirectoryService {
 		assertNotNull("path", path);
 		assertNotNull("repoFileDtoWithCryptoRepoFileOnServerDto", repoFileDtoWithCryptoRepoFileOnServerDto);
 
-		final CryptoRepoFileOnServerDto cryptoRepoFileOnServerDto = assertNotNull("repoFileDtoWithCryptoRepoFileOnServerDto.cryptoRepoFileOnServerDto",
+		final HistoCryptoRepoFileDto histoCryptoRepoFileDto = assertNotNull("repoFileDtoWithCryptoRepoFileOnServerDto.cryptoRepoFileOnServerDto",
 				repoFileDtoWithCryptoRepoFileOnServerDto.getCryptoRepoFileOnServerDto());
 
 		final RepoFileDto rfdto = assertNotNull("repoFileDtoWithCryptoRepoFileOnServerDto.repoFileDto",
@@ -55,7 +55,7 @@ public class SsMakeDirectoryService extends MakeDirectoryService {
 
 		try (final CryptreeServerFileRepoTransport repoTransport = (CryptreeServerFileRepoTransport) authenticateAndCreateLocalRepoTransport();) {
 			path = repoTransport.unprefixPath(path);
-			repoTransport.makeDirectory(path, directoryDto, cryptoRepoFileOnServerDto);
+			repoTransport.makeDirectory(path, directoryDto, histoCryptoRepoFileDto);
 		}
 	}
 

@@ -6,21 +6,22 @@ import java.util.Map;
 
 import javax.ws.rs.ApplicationPath;
 
+import org.glassfish.jersey.server.ResourceConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.subshare.rest.server.service.CreateRepositoryService;
+import org.subshare.rest.server.service.CryptoChangeSetDtoService;
+import org.subshare.rest.server.service.DeleteService;
+import org.subshare.rest.server.service.HistoFrameDtoService;
+import org.subshare.rest.server.service.LockerService;
+import org.subshare.rest.server.service.PgpPublicKeyService;
 import org.subshare.rest.server.service.SsBeginPutFileService;
 import org.subshare.rest.server.service.SsChangeSetDtoService;
 import org.subshare.rest.server.service.SsEndPutFileService;
 import org.subshare.rest.server.service.SsMakeDirectoryService;
 import org.subshare.rest.server.service.SsRequestRepoConnectionService;
 import org.subshare.rest.server.service.SsWebDavService;
-import org.subshare.rest.server.service.CreateRepositoryService;
-import org.subshare.rest.server.service.CryptoChangeSetDtoService;
-import org.subshare.rest.server.service.DeleteService;
-import org.subshare.rest.server.service.LockerService;
-import org.subshare.rest.server.service.PgpPublicKeyService;
 import org.subshare.rest.server.service.TestSubShareService;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import co.codewizards.cloudstore.rest.server.CloudStoreRest;
 import co.codewizards.cloudstore.rest.server.service.BeginPutFileService;
@@ -58,6 +59,7 @@ public class SubShareRest extends CloudStoreRest {
 				CreateRepositoryService.class,
 				CryptoChangeSetDtoService.class,
 				DeleteService.class,
+				HistoFrameDtoService.class,
 				LockerService.class,
 				PgpPublicKeyService.class,
 				TestSubShareService.class

@@ -24,17 +24,19 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import org.bouncycastle.crypto.params.KeyParameter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.subshare.core.AccessDeniedException;
 import org.subshare.core.GrantAccessDeniedException;
 import org.subshare.core.ReadAccessDeniedException;
 import org.subshare.core.ReadUserIdentityAccessDeniedException;
 import org.subshare.core.WriteAccessDeniedException;
 import org.subshare.core.crypto.CryptoConfigUtil;
-import org.subshare.core.dto.SsRepoFileDto;
 import org.subshare.core.dto.CryptoKeyPart;
 import org.subshare.core.dto.CryptoKeyRole;
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.dto.SignatureDto;
+import org.subshare.core.dto.SsRepoFileDto;
 import org.subshare.core.sign.Signable;
 import org.subshare.core.sign.WriteProtected;
 import org.subshare.core.user.UserRepoKey;
@@ -47,7 +49,12 @@ import org.subshare.local.persistence.CryptoLink;
 import org.subshare.local.persistence.CryptoLinkDao;
 import org.subshare.local.persistence.CryptoRepoFile;
 import org.subshare.local.persistence.CryptoRepoFileDao;
-import org.subshare.local.persistence.CryptoRepoFileOnServer;
+import org.subshare.local.persistence.CurrentHistoCryptoRepoFile;
+import org.subshare.local.persistence.CurrentHistoCryptoRepoFileDao;
+import org.subshare.local.persistence.HistoCryptoRepoFile;
+import org.subshare.local.persistence.HistoCryptoRepoFileDao;
+import org.subshare.local.persistence.HistoFrame;
+import org.subshare.local.persistence.HistoFrameDao;
 import org.subshare.local.persistence.InvitationUserRepoKeyPublicKey;
 import org.subshare.local.persistence.Permission;
 import org.subshare.local.persistence.PermissionDao;
@@ -60,8 +67,6 @@ import org.subshare.local.persistence.UserIdentityLinkDao;
 import org.subshare.local.persistence.UserRepoKeyPublicKey;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyDao;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyReplacementRequestDao;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import co.codewizards.cloudstore.core.auth.SignatureException;
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
@@ -173,16 +178,19 @@ public class CryptreeNode {
 	}
 
 	public RepoFileDto getRepoFileDtoOnServer() throws AccessDeniedException {
-		final CryptoRepoFileOnServer cryptoRepoFileOnServer = getCryptoRepoFileOnServer();
-		if (cryptoRepoFileOnServer == null)
+		final CurrentHistoCryptoRepoFile currentHistoCryptoRepoFile = getCurrentHistoCryptoRepoFile();
+		if (currentHistoCryptoRepoFile == null)
 			return null;
 
-		final PlainCryptoKey plainCryptoKey = getPlainCryptoKeyForDecrypting(cryptoRepoFileOnServer.getCryptoKey());
-		if (plainCryptoKey == null)
-			throw new ReadAccessDeniedException(String.format("The CryptoRepoFileOnServer with cryptoRepoFileId=%s could not be decrypted! Access rights missing?!",
-					cryptoRepoFileOnServer.getCryptoRepoFile().getCryptoRepoFileId()));
+		final HistoCryptoRepoFile histoCryptoRepoFile = currentHistoCryptoRepoFile.getHistoCryptoRepoFile();
+		assertNotNull("currentHistoCryptoRepoFile.histoCryptoRepoFile", histoCryptoRepoFile);
 
-		final byte[] plainRepoFileDtoData = assertNotNull("decrypt(...)", decrypt(cryptoRepoFileOnServer.getRepoFileDtoData(), plainCryptoKey));
+		final PlainCryptoKey plainCryptoKey = getPlainCryptoKeyForDecrypting(histoCryptoRepoFile.getCryptoKey());
+		if (plainCryptoKey == null)
+			throw new ReadAccessDeniedException(String.format("The HistoCryptoRepoFile with cryptoRepoFileId=%s could not be decrypted! Access rights missing?!",
+					histoCryptoRepoFile.getCryptoRepoFile().getCryptoRepoFileId()));
+
+		final byte[] plainRepoFileDtoData = assertNotNull("decrypt(...)", decrypt(histoCryptoRepoFile.getRepoFileDtoData(), plainCryptoKey));
 		try {
 			final InputStream in = new GZIPInputStream(new ByteArrayInputStream(plainRepoFileDtoData));
 			final RepoFileDto repoFileDto = context.repoFileDtoIo.deserialize(in);
@@ -246,44 +254,61 @@ public class CryptreeNode {
 		return cryptoRepoFile;
 	}
 
-	public CryptoRepoFileOnServer getCryptoRepoFileOnServer() {
+	public CurrentHistoCryptoRepoFile getCurrentHistoCryptoRepoFile() {
 		final CryptoRepoFile cryptoRepoFile = getCryptoRepoFile();
 		if (cryptoRepoFile == null)
 			return null;
 
-		return cryptoRepoFile.getCryptoRepoFileOnServer();
+		final CurrentHistoCryptoRepoFileDao chcrfDao = context.transaction.getDao(CurrentHistoCryptoRepoFileDao.class);
+		final CurrentHistoCryptoRepoFile currentHistoCryptoRepoFile = chcrfDao.getCurrentHistoCryptoRepoFile(cryptoRepoFile);
+		return currentHistoCryptoRepoFile;
 	}
 
 	/**
-	 * Gets the current, freshly updated (!) {@link CryptoRepoFileOnServer}.
+	 * Creates a new current {@link HistoCryptoRepoFile} and assigns it as the current one.
 	 */
-	public CryptoRepoFileOnServer createOrUpdateCryptoRepoFileOnServer() {
+	public HistoCryptoRepoFile createHistoCryptoRepoFile() {
 		final CryptoRepoFile cryptoRepoFile = getCryptoRepoFileOrCreate(false);
 		assertNotNull("cryptoRepoFile", cryptoRepoFile);
-		CryptoRepoFileOnServer cryptoRepoFileOnServer = cryptoRepoFile.getCryptoRepoFileOnServer();
-		if (cryptoRepoFileOnServer == null) {
-			cryptoRepoFileOnServer = new CryptoRepoFileOnServer();
-			cryptoRepoFileOnServer.setCryptoRepoFile(cryptoRepoFile);
+
+		final CurrentHistoCryptoRepoFileDao chcrfDao = context.transaction.getDao(CurrentHistoCryptoRepoFileDao.class);
+		final HistoCryptoRepoFileDao hcrfDao = context.transaction.getDao(HistoCryptoRepoFileDao.class);
+		final HistoFrameDao hfDao = context.transaction.getDao(HistoFrameDao.class);
+		final HistoFrame histoFrame = hfDao.getUnsealedHistoFrameOrFail(context.localRepositoryId);
+
+		CurrentHistoCryptoRepoFile currentHistoCryptoRepoFile = chcrfDao.getCurrentHistoCryptoRepoFile(cryptoRepoFile);
+		if (currentHistoCryptoRepoFile == null) {
+			currentHistoCryptoRepoFile = new CurrentHistoCryptoRepoFile();
+			currentHistoCryptoRepoFile.setCryptoRepoFile(cryptoRepoFile);
 		}
+
+		final HistoCryptoRepoFile previousHistoCryptoRepoFile = currentHistoCryptoRepoFile.getHistoCryptoRepoFile();
+
+		HistoCryptoRepoFile histoCryptoRepoFile = new HistoCryptoRepoFile();
+		histoCryptoRepoFile.setCryptoRepoFile(cryptoRepoFile);
+		histoCryptoRepoFile.setPreviousHistoCryptoRepoFile(previousHistoCryptoRepoFile);
+		histoCryptoRepoFile.setHistoFrame(histoFrame);
 
 		final PlainCryptoKey plainCryptoKey = getActivePlainCryptoKeyOrCreate(CryptoKeyRole.dataKey, CipherOperationMode.ENCRYPT);
 		final CryptoKey cryptoKey = assertNotNull("plainCryptoKey", plainCryptoKey).getCryptoKey();
-		cryptoRepoFileOnServer.setCryptoKey(assertNotNull("plainCryptoKey.cryptoKey", cryptoKey));
+		histoCryptoRepoFile.setCryptoKey(assertNotNull("plainCryptoKey.cryptoKey", cryptoKey));
 
 		if (! cryptoKey.equals(cryptoRepoFile.getCryptoKey())) // sanity check: the key should not have changed inbetween! otherwise we might need a new CryptoChangeSet-upload to the server!!!
 			throw new IllegalStateException(String.format("cryptoKey != cryptoRepoFile.cryptoKey :: %s != %s",
 					cryptoKey, cryptoRepoFile.getCryptoKey()));
 
 		final byte[] repoFileDtoData = createRepoFileDtoDataForCryptoRepoFile(true);
-		cryptoRepoFileOnServer.setRepoFileDtoData(assertNotNull("encrypt(...)", encrypt(repoFileDtoData, plainCryptoKey)));
+		histoCryptoRepoFile.setRepoFileDtoData(assertNotNull("encrypt(...)", encrypt(repoFileDtoData, plainCryptoKey)));
 
-		sign(cryptoRepoFileOnServer);
+		sign(histoCryptoRepoFile);
 
-		if (cryptoRepoFile.getCryptoRepoFileOnServer() != cryptoRepoFileOnServer) {
-			cryptoRepoFile.setCryptoRepoFileOnServer(cryptoRepoFileOnServer); // should persist it.
-			context.transaction.flush(); // for early detection of an error
-		}
-		return cryptoRepoFileOnServer;
+		histoCryptoRepoFile = hcrfDao.makePersistent(histoCryptoRepoFile);
+
+		currentHistoCryptoRepoFile.setHistoCryptoRepoFile(histoCryptoRepoFile);
+		chcrfDao.makePersistent(currentHistoCryptoRepoFile);
+
+		context.transaction.flush(); // for early detection of an error
+		return histoCryptoRepoFile;
 	}
 
 	private void grantReadPermission(final UserRepoKey.PublicKey publicKey) {
@@ -321,7 +346,7 @@ public class CryptreeNode {
 		// No need for local IDs. Because this DTO is shared across all repositories, local IDs make no sense.
 		repoFileDtoConverter.setExcludeLocalIds(true);
 
-		// Erase information like last-modified, hash and length, if not used in CryptoRepoFileOnServer!
+		// Erase information like last-modified, hash and length, if not used in HistoCryptoRepoFile!
 		repoFileDtoConverter.setExcludeMutableData(! onServer);
 		final RepoFileDto repoFileDto = repoFileDtoConverter.toRepoFileDto(repoFile, onServer ? Integer.MAX_VALUE : 0);
 

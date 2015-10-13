@@ -9,7 +9,7 @@ public class RepoFileDtoWithCryptoRepoFileOnServerDto {
 
 	private RepoFileDto repoFileDto;
 
-	private CryptoRepoFileOnServerDto cryptoRepoFileOnServerDto;
+	private HistoCryptoRepoFileDto histoCryptoRepoFileDto;
 
 	public RepoFileDto getRepoFileDto() {
 		return repoFileDto;
@@ -18,10 +18,10 @@ public class RepoFileDtoWithCryptoRepoFileOnServerDto {
 		this.repoFileDto = repoFileDto;
 	}
 
-	public CryptoRepoFileOnServerDto getCryptoRepoFileOnServerDto() {
-		return cryptoRepoFileOnServerDto;
+	public HistoCryptoRepoFileDto getCryptoRepoFileOnServerDto() {
+		return histoCryptoRepoFileDto;
 	}
-	public void setCryptoRepoFileOnServerDto(CryptoRepoFileOnServerDto cryptoRepoFileOnServerDto) {
-		this.cryptoRepoFileOnServerDto = cryptoRepoFileOnServerDto;
+	public void setCryptoRepoFileOnServerDto(HistoCryptoRepoFileDto histoCryptoRepoFileDto) {
+		this.histoCryptoRepoFileDto = histoCryptoRepoFileDto;
 	}
 }

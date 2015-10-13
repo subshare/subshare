@@ -16,6 +16,8 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.bouncycastle.crypto.params.KeyParameter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.subshare.core.AccessDeniedException;
 import org.subshare.core.Cryptree;
 import org.subshare.core.CryptreeFactory;
@@ -26,16 +28,17 @@ import org.subshare.core.WriteAccessDeniedException;
 import org.subshare.core.crypto.DecrypterInputStream;
 import org.subshare.core.crypto.EncrypterOutputStream;
 import org.subshare.core.crypto.RandomIvFactory;
+import org.subshare.core.dto.CreateRepositoryRequestDto;
+import org.subshare.core.dto.CryptoChangeSetDto;
+import org.subshare.core.dto.HistoCryptoRepoFileDto;
+import org.subshare.core.dto.HistoFrameDto;
+import org.subshare.core.dto.PermissionType;
+import org.subshare.core.dto.RepoFileDtoWithCryptoRepoFileOnServerDto;
 import org.subshare.core.dto.SsDeleteModificationDto;
 import org.subshare.core.dto.SsDirectoryDto;
 import org.subshare.core.dto.SsNormalFileDto;
 import org.subshare.core.dto.SsRepoFileDto;
 import org.subshare.core.dto.SsRequestRepoConnectionRepositoryDto;
-import org.subshare.core.dto.CreateRepositoryRequestDto;
-import org.subshare.core.dto.CryptoChangeSetDto;
-import org.subshare.core.dto.CryptoRepoFileOnServerDto;
-import org.subshare.core.dto.PermissionType;
-import org.subshare.core.dto.RepoFileDtoWithCryptoRepoFileOnServerDto;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.repo.transport.CryptreeRestRepoTransport;
 import org.subshare.core.sign.PgpSignableSigner;
@@ -51,16 +54,15 @@ import org.subshare.core.user.UserRepoKeyPublicKeyLookup;
 import org.subshare.core.user.UserRepoKeyRing;
 import org.subshare.core.user.UserRepoKeyRingLookup;
 import org.subshare.core.user.UserRepoKeyRingLookupContext;
-import org.subshare.rest.client.transport.request.SsBeginPutFile;
-import org.subshare.rest.client.transport.request.SsDelete;
-import org.subshare.rest.client.transport.request.SsEndPutFile;
-import org.subshare.rest.client.transport.request.SsMakeDirectory;
 import org.subshare.rest.client.transport.request.CreateRepository;
 import org.subshare.rest.client.transport.request.EndGetCryptoChangeSetDto;
 import org.subshare.rest.client.transport.request.GetCryptoChangeSetDto;
 import org.subshare.rest.client.transport.request.PutCryptoChangeSetDto;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.subshare.rest.client.transport.request.PutHistoFrameDto;
+import org.subshare.rest.client.transport.request.SsBeginPutFile;
+import org.subshare.rest.client.transport.request.SsDelete;
+import org.subshare.rest.client.transport.request.SsEndPutFile;
+import org.subshare.rest.client.transport.request.SsMakeDirectory;
 
 import co.codewizards.cloudstore.core.auth.SignatureException;
 import co.codewizards.cloudstore.core.dto.ChangeSetDto;
@@ -395,13 +397,15 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 			putCryptoChangeSetDto(cryptoChangeSetDto);
 			cryptree.updateLastCryptoKeySyncToRemoteRepo();
 
+			createUnsealedCurrentHistoryFrameDtoIfNeeded(cryptree);
+
 			final String serverPath = cryptree.getServerPath(path);
 			SsDirectoryDto directoryDto = createDirectoryDtoForMakeDirectory(cryptree, path, serverPath);
-			CryptoRepoFileOnServerDto cryptoRepoFileOnServerDto = cryptree.createOrUpdateCryptoRepoFileOnServerDto(path);
+			HistoCryptoRepoFileDto histoCryptoRepoFileDto = cryptree.createHistoCryptoRepoFileDto(path);
 
 			RepoFileDtoWithCryptoRepoFileOnServerDto rfdwcrfosd = new RepoFileDtoWithCryptoRepoFileOnServerDto();
 			rfdwcrfosd.setRepoFileDto(directoryDto);
-			rfdwcrfosd.setCryptoRepoFileOnServerDto(cryptoRepoFileOnServerDto);
+			rfdwcrfosd.setCryptoRepoFileOnServerDto(histoCryptoRepoFileDto);
 
 			getClient().execute(new SsMakeDirectory(getRepositoryId().toString(), serverPath, rfdwcrfosd));
 
@@ -548,6 +552,8 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 			putCryptoChangeSetDto(cryptoChangeSetDto);
 			cryptree.updateLastCryptoKeySyncToRemoteRepo();
 
+			createUnsealedCurrentHistoryFrameDtoIfNeeded(cryptree);
+
 			final String serverPath = cryptree.getServerPath(path);
 			final SsNormalFileDto serverNormalFileDto = createNormalFileDtoForPutFile(
 					cryptree, path, serverPath,
@@ -555,6 +561,22 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 			getClient().execute(new SsBeginPutFile(getRepositoryId().toString(), serverPath, serverNormalFileDto));
 
 			transaction.commit();
+		}
+	}
+
+	protected void createUnsealedCurrentHistoryFrameDtoIfNeeded(final Cryptree cryptree) {
+		HistoFrameDto histoFrameDto = cryptree.getUnsealedHistoFrameDto();
+		if (histoFrameDto == null) {
+			histoFrameDto = cryptree.createUnsealedHistoFrameDto();
+			getClient().execute(new PutHistoFrameDto(getRepositoryId().toString(), histoFrameDto));
+		}
+	}
+
+	protected void sealCurrentHistoryFrameDto(final Cryptree cryptree) {
+		HistoFrameDto histoFrameDto = cryptree.getUnsealedHistoFrameDto();
+		if (histoFrameDto != null) {
+			histoFrameDto = cryptree.sealUnsealedHistoryFrame();
+			getClient().execute(new PutHistoFrameDto(getRepositoryId().toString(), histoFrameDto));
 		}
 	}
 
@@ -630,9 +652,9 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 
 			RepoFileDtoWithCryptoRepoFileOnServerDto rfdwcrfosd = new RepoFileDtoWithCryptoRepoFileOnServerDto();
 
-			final CryptoRepoFileOnServerDto cryptoRepoFileOnServerDto = cryptree.createOrUpdateCryptoRepoFileOnServerDto(path);
+			final HistoCryptoRepoFileDto histoCryptoRepoFileDto = cryptree.createHistoCryptoRepoFileDto(path);
 			rfdwcrfosd.setRepoFileDto(serverNormalFileDto);
-			rfdwcrfosd.setCryptoRepoFileOnServerDto(cryptoRepoFileOnServerDto);
+			rfdwcrfosd.setCryptoRepoFileOnServerDto(histoCryptoRepoFileDto);
 
 			getClient().execute(new SsEndPutFile(getRepositoryId().toString(), serverPath, rfdwcrfosd));
 
@@ -725,6 +747,8 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 			final CryptoChangeSetDto cryptoChangeSetDto = cryptree.getCryptoChangeSetDtoWithCryptoRepoFiles();
 			putCryptoChangeSetDto(cryptoChangeSetDto);
 			cryptree.updateLastCryptoKeySyncToRemoteRepo();
+
+			sealCurrentHistoryFrameDto(cryptree);
 
 			transaction.commit();
 		}

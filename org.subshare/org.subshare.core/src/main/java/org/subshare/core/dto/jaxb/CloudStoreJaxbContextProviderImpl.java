@@ -7,8 +7,11 @@ import org.subshare.core.dto.CryptoKeyDto;
 import org.subshare.core.dto.CryptoLinkDto;
 import org.subshare.core.dto.CryptoRepoFileDto;
 import org.subshare.core.dto.CryptoRepoFileDtoList;
+import org.subshare.core.dto.CurrentHistoCryptoRepoFileDto;
 import org.subshare.core.dto.DeletedUUID;
 import org.subshare.core.dto.DeletedUid;
+import org.subshare.core.dto.HistoCryptoRepoFileDto;
+import org.subshare.core.dto.HistoFrameDto;
 import org.subshare.core.dto.InvitationUserRepoKeyPublicKeyDto;
 import org.subshare.core.dto.LongDto;
 import org.subshare.core.dto.PgpKeyStateDto;
@@ -41,12 +44,7 @@ public class CloudStoreJaxbContextProviderImpl extends AbstractCloudStoreJaxbCon
 	@Override
 	public Class<?>[] getClassesToBeBound() {
 		return new Class<?>[] {
-				SsDeleteModificationDto.class,
-				SsDirectoryDto.class,
-				SsNormalFileDto.class,
-				SsFileChunkDto.class,
-				SsRequestRepoConnectionRepositoryDto.class,
-				SsSymlinkDto.class,
+				CurrentHistoCryptoRepoFileDto.class,
 				CreateRepositoryRequestDto.class,
 				CryptoChangeSetDto.class,
 				CryptoKeyDto.class,
@@ -56,6 +54,8 @@ public class CloudStoreJaxbContextProviderImpl extends AbstractCloudStoreJaxbCon
 				CryptoRepoFileDtoList.class,
 				DeletedUid.class,
 				DeletedUUID.class,
+				HistoCryptoRepoFileDto.class,
+				HistoFrameDto.class,
 				InvitationUserRepoKeyPublicKeyDto.class,
 				LongDto.class,
 				PgpKeyStateDto.class,
@@ -65,6 +65,12 @@ public class CloudStoreJaxbContextProviderImpl extends AbstractCloudStoreJaxbCon
 				ServerRepoDto.class,
 				ServerRepoRegistryDto.class,
 				SignatureDto.class,
+				SsDeleteModificationDto.class,
+				SsDirectoryDto.class,
+				SsNormalFileDto.class,
+				SsFileChunkDto.class,
+				SsRequestRepoConnectionRepositoryDto.class,
+				SsSymlinkDto.class,
 				UserDto.class,
 				UserIdentityDto.class,
 				UserIdentityLinkDto.class,

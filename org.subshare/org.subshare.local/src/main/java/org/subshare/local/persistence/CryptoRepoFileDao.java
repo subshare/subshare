@@ -179,10 +179,13 @@ public class CryptoRepoFileDao extends Dao<CryptoRepoFile, CryptoRepoFileDao> {
 	@Override
 	public void deletePersistent(CryptoRepoFile entity) {
 		nullCryptoRepoKey(entity);
-		deleteCryptoRepoFileOnServer(entity);
+		deleteCurrentHistoCryptoRepoFile(entity);
 		pm().flush();
 
-		deleteDependentObjects(entity);
+		deleteHistoCryptoRepoFiles(entity);
+		pm().flush();
+
+		deleteCryptoKeys(entity);
 		pm().flush();
 		super.deletePersistent(entity);
 	}
@@ -191,12 +194,17 @@ public class CryptoRepoFileDao extends Dao<CryptoRepoFile, CryptoRepoFileDao> {
 	public void deletePersistentAll(final Collection<? extends CryptoRepoFile> entities) {
 		for (CryptoRepoFile cryptoRepoFile : entities) {
 			nullCryptoRepoKey(cryptoRepoFile);
-			deleteCryptoRepoFileOnServer(cryptoRepoFile);
+			deleteCurrentHistoCryptoRepoFile(cryptoRepoFile);
 		}
 		pm().flush();
 
 		for (CryptoRepoFile cryptoRepoFile : entities)
-			deleteDependentObjects(cryptoRepoFile);
+			deleteHistoCryptoRepoFiles(cryptoRepoFile);
+
+		pm().flush();
+
+		for (CryptoRepoFile cryptoRepoFile : entities)
+			deleteCryptoKeys(cryptoRepoFile);
 
 		pm().flush();
 		super.deletePersistentAll(entities);
@@ -206,13 +214,22 @@ public class CryptoRepoFileDao extends Dao<CryptoRepoFile, CryptoRepoFileDao> {
 		cryptoRepoFile.setCryptoKey(null); // must null this first! otherwise there's a circular dependency
 	}
 
-	private void deleteCryptoRepoFileOnServer(final CryptoRepoFile cryptoRepoFile) { // doing this separately - before deleteDependentObjects(...) - to optimize flushs.
-		final CryptoRepoFileOnServer cryptoRepoFileOnServer = cryptoRepoFile.getCryptoRepoFileOnServer();
-		if (cryptoRepoFileOnServer != null)
-			getDao(CryptoRepoFileOnServerDao.class).deletePersistent(cryptoRepoFileOnServer);
+	protected void deleteCurrentHistoCryptoRepoFile(final CryptoRepoFile cryptoRepoFile) {
+		assertNotNull("cryptoRepoFile", cryptoRepoFile);
+		final CurrentHistoCryptoRepoFileDao chcrfDao = getDao(CurrentHistoCryptoRepoFileDao.class);
+		final CurrentHistoCryptoRepoFile chcrf = chcrfDao.getCurrentHistoCryptoRepoFile(cryptoRepoFile);
+		if (chcrf != null)
+			chcrfDao.deletePersistent(chcrf);
 	}
 
-	protected void deleteDependentObjects(final CryptoRepoFile cryptoRepoFile) {
+	protected void deleteHistoCryptoRepoFiles(final CryptoRepoFile cryptoRepoFile) {
+		assertNotNull("cryptoRepoFile", cryptoRepoFile);
+		final HistoCryptoRepoFileDao hcrfDao = getDao(HistoCryptoRepoFileDao.class);
+		final Collection<HistoCryptoRepoFile> histoCryptoRepoFiles = hcrfDao.getHistoCryptoRepoFiles(cryptoRepoFile);
+		hcrfDao.deletePersistentAll(histoCryptoRepoFiles);
+	}
+
+	protected void deleteCryptoKeys(final CryptoRepoFile cryptoRepoFile) {
 		assertNotNull("cryptoRepoFile", cryptoRepoFile);
 		final CryptoKeyDao cryptoKeyDao = getDao(CryptoKeyDao.class);
 		cryptoKeyDao.deletePersistentAll(cryptoKeyDao.getCryptoKeys(cryptoRepoFile));

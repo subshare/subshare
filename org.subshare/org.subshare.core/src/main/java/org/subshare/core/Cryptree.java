@@ -9,7 +9,8 @@ import org.subshare.core.dto.CryptoChangeSetDto;
 import org.subshare.core.dto.CryptoKeyDto;
 import org.subshare.core.dto.CryptoLinkDto;
 import org.subshare.core.dto.CryptoRepoFileDto;
-import org.subshare.core.dto.CryptoRepoFileOnServerDto;
+import org.subshare.core.dto.HistoCryptoRepoFileDto;
+import org.subshare.core.dto.HistoFrameDto;
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.dto.UserIdentityPayloadDto;
 import org.subshare.core.sign.WriteProtected;
@@ -169,11 +170,16 @@ public interface Cryptree {
 	void sign(WriteProtected writeProtected) throws AccessDeniedException;
 	void assertSignatureOk(WriteProtected writeProtected) throws SignatureException, AccessDeniedException;
 
-	CryptoRepoFileOnServerDto createOrUpdateCryptoRepoFileOnServerDto(String localPath);
-	CryptoRepoFileOnServerDto getCryptoRepoFileOnServerDto(String localPath);
+	HistoCryptoRepoFileDto createHistoCryptoRepoFileDto(String localPath);
+//	HistoCryptoRepoFileDto getCurrentHistoCryptoRepoFileDto(String localPath);
 	RepoFileDto getDecryptedRepoFileOnServerDtoOrFail(Uid cryptoRepoFileId) throws AccessDeniedException;
 	RepoFileDto getDecryptedRepoFileOnServerDto(String localPath);
 	Uid getOwnerUserRepoKeyId();
 
 	LocalRepoStorage getLocalRepoStorage();
+
+	HistoFrameDto getUnsealedHistoFrameDto();
+	HistoFrameDto createUnsealedHistoFrameDto();
+	HistoFrameDto sealUnsealedHistoryFrame();
+	void putHistoFrameDto(HistoFrameDto histoFrameDto);
 }

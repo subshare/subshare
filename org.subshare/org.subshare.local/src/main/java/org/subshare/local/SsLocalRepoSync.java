@@ -2,7 +2,6 @@ package org.subshare.local;
 
 import static co.codewizards.cloudstore.core.objectfactory.ObjectFactoryUtil.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
-import static co.codewizards.cloudstore.core.util.Util.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -12,10 +11,7 @@ import javax.jdo.PersistenceManager;
 
 import org.subshare.core.Cryptree;
 import org.subshare.core.CryptreeFactoryRegistry;
-import org.subshare.core.context.RepoFileContext;
 import org.subshare.core.crypto.KeyFactory;
-import org.subshare.core.dto.CryptoRepoFileOnServerDto;
-import org.subshare.local.dto.CryptoRepoFileOnServerDtoConverter;
 import org.subshare.local.persistence.CryptoRepoFile;
 import org.subshare.local.persistence.CryptoRepoFileDao;
 import org.subshare.local.persistence.LocalRepositoryType;
@@ -23,7 +19,6 @@ import org.subshare.local.persistence.SsDeleteModification;
 import org.subshare.local.persistence.SsFileChunk;
 import org.subshare.local.persistence.SsLocalRepository;
 import org.subshare.local.persistence.SsNormalFile;
-import org.subshare.local.persistence.SsRepoFile;
 
 import co.codewizards.cloudstore.core.dto.FileChunkDto;
 import co.codewizards.cloudstore.core.oio.File;
@@ -41,7 +36,7 @@ import co.codewizards.cloudstore.local.persistence.RepoFile;
 
 public class SsLocalRepoSync extends LocalRepoSync {
 
-	private boolean repoFileContextWasApplied;
+//	private boolean repoFileContextWasApplied;
 	private SsLocalRepository localRepository;
 
 	protected SsLocalRepoSync(final LocalRepoTransaction transaction) {
@@ -79,10 +74,10 @@ public class SsLocalRepoSync extends LocalRepoSync {
 				resursiveChildren = false;
 		}
 
-		repoFileContextWasApplied = false;
+//		repoFileContextWasApplied = false;
 		final RepoFile repoFile = super.sync(parentRepoFile, file, monitor, resursiveChildren);
-		if (!repoFileContextWasApplied && repoFile != null)
-			applyRepoFileContextIfExists(repoFile);
+//		if (!repoFileContextWasApplied && repoFile != null)
+//			applyRepoFileContextIfExists(repoFile);
 
 		return repoFile;
 	}
@@ -90,7 +85,7 @@ public class SsLocalRepoSync extends LocalRepoSync {
 	@Override
 	protected RepoFile _createRepoFile(final RepoFile parentRepoFile, final File file, final ProgressMonitor monitor) {
 		final RepoFile repoFile = super._createRepoFile(parentRepoFile, file, monitor);
-		applyRepoFileContextIfExists(repoFile);
+//		applyRepoFileContextIfExists(repoFile);
 		return repoFile;
 	}
 
@@ -202,29 +197,29 @@ public class SsLocalRepoSync extends LocalRepoSync {
 	@Override
 	public void updateRepoFile(final RepoFile repoFile, final File file, final ProgressMonitor monitor) {
 		super.updateRepoFile(repoFile, file, monitor);
-		applyRepoFileContextIfExists(repoFile);
+//		applyRepoFileContextIfExists(repoFile);
 	}
 
-	protected void applyRepoFileContextIfExists(final RepoFile repoFile) {
-		assertNotNull("repoFile", repoFile);
-		repoFileContextWasApplied = true;
-		final RepoFileContext repoFileContext = RepoFileContext.getContext();
-		if (repoFileContext != null) {
-			final SsRepoFile ccRepoFile = (SsRepoFile) repoFile;
-			final RepoFile parentRepoFile = repoFile.getParent();
-			final String parentName = parentRepoFile == null ? null : parentRepoFile.getName();
-
-			if (!equal(parentName, repoFileContext.getSsRepoFileDto().getParentName()))
-				throw new IllegalStateException(String.format("parentName != ssRepoFileDto.parentName :: '%s' != '%s'",
-						parentName, repoFileContext.getSsRepoFileDto().getParentName()));
-
-			ccRepoFile.setSignature(repoFileContext.getSsRepoFileDto().getSignature());
-
-			final CryptoRepoFileOnServerDto cryptoRepoFileOnServerDto = repoFileContext.getCryptoRepoFileOnServerDto();
-			if (cryptoRepoFileOnServerDto != null)
-				CryptoRepoFileOnServerDtoConverter.create(transaction).putCryptoRepoFileOnServer(cryptoRepoFileOnServerDto);
-		}
-	}
+//	protected void applyRepoFileContextIfExists(final RepoFile repoFile) {
+//		assertNotNull("repoFile", repoFile);
+//		repoFileContextWasApplied = true;
+//		final RepoFileContext repoFileContext = RepoFileContext.getContext();
+//		if (repoFileContext != null) {
+//			final SsRepoFile ccRepoFile = (SsRepoFile) repoFile;
+//			final RepoFile parentRepoFile = repoFile.getParent();
+//			final String parentName = parentRepoFile == null ? null : parentRepoFile.getName();
+//
+//			if (!equal(parentName, repoFileContext.getSsRepoFileDto().getParentName()))
+//				throw new IllegalStateException(String.format("parentName != ssRepoFileDto.parentName :: '%s' != '%s'",
+//						parentName, repoFileContext.getSsRepoFileDto().getParentName()));
+//
+//			ccRepoFile.setSignature(repoFileContext.getSsRepoFileDto().getSignature());
+//
+//			final HistoCryptoRepoFileDto histoCryptoRepoFileDto = repoFileContext.getCryptoRepoFileOnServerDto();
+//			if (histoCryptoRepoFileDto != null)
+//				HistoCryptoRepoFileDtoConverter.create(transaction).putCryptoRepoFileOnServer(histoCryptoRepoFileDto);
+//		}
+//	}
 
 	@Override
 	protected void populateDeleteModification(final DeleteModification modification, final RepoFile repoFile, final RemoteRepository remoteRepository) {

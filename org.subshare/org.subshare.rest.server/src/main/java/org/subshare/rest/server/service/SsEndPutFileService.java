@@ -12,7 +12,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import org.subshare.core.dto.SsNormalFileDto;
-import org.subshare.core.dto.CryptoRepoFileOnServerDto;
+import org.subshare.core.dto.HistoCryptoRepoFileDto;
 import org.subshare.core.dto.RepoFileDtoWithCryptoRepoFileOnServerDto;
 import org.subshare.core.repo.transport.CryptreeServerFileRepoTransport;
 
@@ -32,7 +32,7 @@ public class SsEndPutFileService extends EndPutFileService {
 		assertNotNull("path", path);
 		assertNotNull("repoFileDtoWithCryptoRepoFileOnServerDto", repoFileDtoWithCryptoRepoFileOnServerDto);
 
-		CryptoRepoFileOnServerDto cryptoRepoFileOnServerDto = assertNotNull("repoFileDtoWithCryptoRepoFileOnServerDto.cryptoRepoFileOnServerDto",
+		HistoCryptoRepoFileDto histoCryptoRepoFileDto = assertNotNull("repoFileDtoWithCryptoRepoFileOnServerDto.cryptoRepoFileOnServerDto",
 				repoFileDtoWithCryptoRepoFileOnServerDto.getCryptoRepoFileOnServerDto());
 
 		RepoFileDto rfdto = assertNotNull("repoFileDtoWithCryptoRepoFileOnServerDto.repoFileDto",
@@ -54,7 +54,7 @@ public class SsEndPutFileService extends EndPutFileService {
 		final CryptreeServerFileRepoTransport repoTransport = (CryptreeServerFileRepoTransport) authenticateAndCreateLocalRepoTransport();
 		try {
 			path = repoTransport.unprefixPath(path);
-			repoTransport.endPutFile(path, normalFileDto, cryptoRepoFileOnServerDto);
+			repoTransport.endPutFile(path, normalFileDto, histoCryptoRepoFileDto);
 		} finally {
 			repoTransport.close();
 		}

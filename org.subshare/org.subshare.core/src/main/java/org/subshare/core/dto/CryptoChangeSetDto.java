@@ -11,7 +11,11 @@ public class CryptoChangeSetDto {
 
 	private List<CryptoRepoFileDto> cryptoRepoFileDtos;
 
-	private List<CryptoRepoFileOnServerDto> cryptoRepoFileOnServerDtos; // should only be used for DOWN-syncs! ensure this?! how?!
+	private List<HistoFrameDto> histoFrameDtos; // should only be used in DOWN-syncs!
+
+	private List<HistoCryptoRepoFileDto> histoCryptoRepoFileDtos; // should only be used in DOWN-syncs!
+
+	private List<CurrentHistoCryptoRepoFileDto> currentHistoCryptoRepoFileDtos; // should only be used in DOWN-syncs!
 
 	private List<CryptoKeyDto> cryptoKeyDtos;
 
@@ -45,14 +49,34 @@ public class CryptoChangeSetDto {
 		this.cryptoRepoFileDtos = cryptoRepoFileDtos;
 	}
 
-	public List<CryptoRepoFileOnServerDto> getCryptoRepoFileOnServerDtos() {
-		if (cryptoRepoFileOnServerDtos == null)
-			cryptoRepoFileOnServerDtos = new ArrayList<>();
+	public List<HistoFrameDto> getHistoFrameDtos() {
+		if (histoFrameDtos == null)
+			histoFrameDtos = new ArrayList<>();
 
-		return cryptoRepoFileOnServerDtos;
+		return histoFrameDtos;
 	}
-	public void setCryptoRepoFileOnServerDtos(List<CryptoRepoFileOnServerDto> cryptoRepoFileOnServerDtos) {
-		this.cryptoRepoFileOnServerDtos = cryptoRepoFileOnServerDtos;
+	public void setHistoFrameDtos(List<HistoFrameDto> histoFrameDtos) {
+		this.histoFrameDtos = histoFrameDtos;
+	}
+
+	public List<HistoCryptoRepoFileDto> getHistoCryptoRepoFileDtos() {
+		if (histoCryptoRepoFileDtos == null)
+			histoCryptoRepoFileDtos = new ArrayList<>();
+
+		return histoCryptoRepoFileDtos;
+	}
+	public void setHistoCryptoRepoFileDtos(List<HistoCryptoRepoFileDto> histoCryptoRepoFileDtos) {
+		this.histoCryptoRepoFileDtos = histoCryptoRepoFileDtos;
+	}
+
+	public List<CurrentHistoCryptoRepoFileDto> getCurrentHistoCryptoRepoFileDtos() {
+		if (currentHistoCryptoRepoFileDtos == null)
+			currentHistoCryptoRepoFileDtos = new ArrayList<>();
+
+		return currentHistoCryptoRepoFileDtos;
+	}
+	public void setCurrentHistoCryptoRepoFileDtos(List<CurrentHistoCryptoRepoFileDto> currentHistoCryptoRepoFileDtos) {
+		this.currentHistoCryptoRepoFileDtos = currentHistoCryptoRepoFileDtos;
 	}
 
 	public List<CryptoKeyDto> getCryptoKeyDtos() {
@@ -166,7 +190,7 @@ public class CryptoChangeSetDto {
 	@Override
 	public String toString() {
 		return "CryptoChangeSetDto[cryptoRepoFileDtos=" + cryptoRepoFileDtos
-				+ ", cryptoRepoFileOnServerDtos=" + cryptoRepoFileOnServerDtos
+				+ ", histoCryptoRepoFileDtos=" + histoCryptoRepoFileDtos
 				+ ", cryptoKeyDtos=" + cryptoKeyDtos + ", cryptoLinkDtos=" + cryptoLinkDtos
 				+ ", userRepoKeyPublicKeyDtos=" + userRepoKeyPublicKeyDtos
 				+ ", userRepoKeyPublicKeyReplacementRequestDtos=" + userRepoKeyPublicKeyReplacementRequestDtos
@@ -177,7 +201,7 @@ public class CryptoChangeSetDto {
 
 	public boolean isEmpty() {
 		return isEmpty(cryptoRepoFileDtos)
-				&& isEmpty(cryptoRepoFileOnServerDtos)
+				&& isEmpty(histoCryptoRepoFileDtos)
 				&& isEmpty(cryptoKeyDtos)
 				&& isEmpty(cryptoLinkDtos)
 				&& isEmpty(userRepoKeyPublicKeyDtos)

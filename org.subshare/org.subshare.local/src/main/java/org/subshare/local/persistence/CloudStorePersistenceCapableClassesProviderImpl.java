@@ -11,6 +11,9 @@ public class CloudStorePersistenceCapableClassesProviderImpl extends AbstractClo
 				// already resolved using the ClassExtension mechanism. We thus only need CC-specific classes here.
 				CryptoKey.class,
 				CryptoLink.class,
+				FileChunkPayload.class,
+				HistoFileChunk.class,
+				HistoFrame.class,
 				InvitationUserRepoKeyPublicKey.class,
 				LastCryptoKeySyncToRemoteRepo.class,
 				Permission.class,

@@ -10,24 +10,28 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.subshare.core.Cryptree;
 import org.subshare.core.CryptreeFactoryRegistry;
+import org.subshare.core.dto.HistoCryptoRepoFileDto;
 import org.subshare.core.dto.SsDeleteModificationDto;
 import org.subshare.core.dto.SsDirectoryDto;
 import org.subshare.core.dto.SsNormalFileDto;
 import org.subshare.core.dto.SsRepoFileDto;
-import org.subshare.core.dto.CryptoRepoFileOnServerDto;
 import org.subshare.core.repo.transport.CryptreeServerFileRepoTransport;
-import org.subshare.local.dbrepo.persistence.FileChunkPayload;
-import org.subshare.local.dbrepo.persistence.FileChunkPayloadDao;
-import org.subshare.local.dto.CryptoRepoFileOnServerDtoConverter;
+import org.subshare.local.dto.HistoCryptoRepoFileDtoConverter;
+import org.subshare.local.persistence.CryptoRepoFile;
+import org.subshare.local.persistence.CurrentHistoCryptoRepoFile;
+import org.subshare.local.persistence.CurrentHistoCryptoRepoFileDao;
+import org.subshare.local.persistence.FileChunkPayload;
+import org.subshare.local.persistence.FileChunkPayloadDao;
+import org.subshare.local.persistence.HistoCryptoRepoFile;
 import org.subshare.local.persistence.SsDeleteModification;
 import org.subshare.local.persistence.SsDirectory;
 import org.subshare.local.persistence.SsNormalFile;
 import org.subshare.local.persistence.TempFileChunk;
 import org.subshare.local.persistence.TempFileChunkDao;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import co.codewizards.cloudstore.core.dto.ChangeSetDto;
 import co.codewizards.cloudstore.core.oio.File;
@@ -141,16 +145,16 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 //		assertNotNull("RepoFileContext.getContext()", context);
 //
 //		final SsDirectoryDto directoryDto = (SsDirectoryDto) context.getSsRepoFileDto();
-//		final CryptoRepoFileOnServerDto cryptoRepoFileOnServerDto = context.getCryptoRepoFileOnServerDto();
+//		final HistoCryptoRepoFileDto cryptoRepoFileOnServerDto = context.getCryptoRepoFileOnServerDto();
 //		makeDirectory(path, directoryDto, cryptoRepoFileOnServerDto);
 		throw new IllegalStateException("This method should not be invoked on the server!");
 	}
 
 	@Override
-	public void makeDirectory(String path, final SsDirectoryDto directoryDto, final CryptoRepoFileOnServerDto cryptoRepoFileOnServerDto) {
+	public void makeDirectory(String path, final SsDirectoryDto directoryDto, final HistoCryptoRepoFileDto histoCryptoRepoFileDto) {
 		assertNotNull("path", path);
 		assertNotNull("directoryDto", directoryDto);
-		assertNotNull("cryptoRepoFileOnServerDto", cryptoRepoFileOnServerDto);
+		assertNotNull("cryptoRepoFileOnServerDto", histoCryptoRepoFileDto);
 
 		path = prefixPath(path);
 		final File file = getFile(path); // null-check already inside getFile(...) - no need for another check here
@@ -191,7 +195,10 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 			directory.setSignature(directoryDto.getSignature());
 
 			repoFileDao.makePersistent(directory); // just in case, it is not yet persistent ;-) if it already is, this is a no-op.
-			CryptoRepoFileOnServerDtoConverter.create(transaction).putCryptoRepoFileOnServer(cryptoRepoFileOnServerDto);
+			final HistoCryptoRepoFile histoCryptoRepoFile = HistoCryptoRepoFileDtoConverter.create(transaction).putHistoCryptoRepoFile(histoCryptoRepoFileDto);
+
+			// TODO must sign CurrentHistoCryptoRepoFile on client-side and upload!
+			createOrUpdateCurrentHistoCryptoRepoFile(transaction, histoCryptoRepoFile);
 
 			transaction.commit();
 		}
@@ -372,7 +379,7 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 //		final RepoFileContext context = RepoFileContext.getContext();
 //		assertNotNull("RepoFileContext.getContext()", context);
 //		final SsNormalFileDto normalFileDto = (SsNormalFileDto) context.getSsRepoFileDto();
-//		final CryptoRepoFileOnServerDto cryptoRepoFileOnServerDto = context.getCryptoRepoFileOnServerDto();
+//		final HistoCryptoRepoFileDto cryptoRepoFileOnServerDto = context.getCryptoRepoFileOnServerDto();
 //		// length is ignored and is always 0!
 //		// sha1 is ignored and always null!
 //		endPutFile(path, normalFileDto, cryptoRepoFileOnServerDto);
@@ -380,10 +387,10 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 	}
 
 	@Override
-	public void endPutFile(String path, final SsNormalFileDto normalFileDto, final CryptoRepoFileOnServerDto cryptoRepoFileOnServerDto) {
+	public void endPutFile(String path, final SsNormalFileDto normalFileDto, final HistoCryptoRepoFileDto histoCryptoRepoFileDto) {
 		assertNotNull("path", path);
 		assertNotNull("normalFileDto", normalFileDto);
-		assertNotNull("cryptoRepoFileOnServerDto", cryptoRepoFileOnServerDto);
+		assertNotNull("cryptoRepoFileOnServerDto", histoCryptoRepoFileDto);
 
 		path = prefixPath(path);
 		final File file = getFile(path);
@@ -434,7 +441,10 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 			}
 			tempFileChunkDao.deletePersistentAll(tempFileChunks);
 
-			CryptoRepoFileOnServerDtoConverter.create(transaction).putCryptoRepoFileOnServer(cryptoRepoFileOnServerDto);
+			final HistoCryptoRepoFile histoCryptoRepoFile = HistoCryptoRepoFileDtoConverter.create(transaction).putHistoCryptoRepoFile(histoCryptoRepoFileDto);
+
+			// TODO must sign CurrentHistoCryptoRepoFile on client-side and upload!
+			createOrUpdateCurrentHistoCryptoRepoFile(transaction, histoCryptoRepoFile);
 
 			// normalFileDto.length is the real file size (before encryption) which may include random padding
 			// (to prevent an attacker from identifying files by their sizes). It therefore matches the offsets
@@ -450,6 +460,18 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 
 			transaction.commit();
 		}
+	}
+
+	private void createOrUpdateCurrentHistoCryptoRepoFile(final LocalRepoTransaction transaction, final HistoCryptoRepoFile histoCryptoRepoFile) {
+		CryptoRepoFile cryptoRepoFile = histoCryptoRepoFile.getCryptoRepoFile();
+		CurrentHistoCryptoRepoFileDao chcrfDao = transaction.getDao(CurrentHistoCryptoRepoFileDao.class);
+		CurrentHistoCryptoRepoFile currentHistoCryptoRepoFile = chcrfDao.getCurrentHistoCryptoRepoFile(cryptoRepoFile);
+		if (currentHistoCryptoRepoFile == null) {
+			currentHistoCryptoRepoFile = new CurrentHistoCryptoRepoFile();
+			currentHistoCryptoRepoFile.setCryptoRepoFile(cryptoRepoFile);
+		}
+		currentHistoCryptoRepoFile.setHistoCryptoRepoFile(histoCryptoRepoFile);
+		chcrfDao.makePersistent(currentHistoCryptoRepoFile);
 	}
 
 	@Override

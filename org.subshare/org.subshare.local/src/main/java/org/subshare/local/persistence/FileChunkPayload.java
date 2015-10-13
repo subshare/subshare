@@ -1,4 +1,4 @@
-package org.subshare.local.dbrepo.persistence;
+package org.subshare.local.persistence;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Index;
@@ -9,8 +9,6 @@ import javax.jdo.annotations.Queries;
 import javax.jdo.annotations.Query;
 import javax.jdo.annotations.Unique;
 import javax.jdo.listener.StoreCallback;
-
-import org.subshare.local.persistence.TempFileChunk;
 
 import co.codewizards.cloudstore.local.persistence.Entity;
 import co.codewizards.cloudstore.local.persistence.FileChunk;

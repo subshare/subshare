@@ -23,8 +23,7 @@ import javax.jdo.annotations.Uniques;
 import javax.jdo.listener.StoreCallback;
 
 import org.subshare.core.dto.CryptoKeyRole;
-import org.subshare.core.dto.CryptoRepoFileDto;
-import org.subshare.core.dto.CryptoRepoFileOnServerDto;
+import org.subshare.core.dto.HistoCryptoRepoFileDto;
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.io.InputStreamSource;
 import org.subshare.core.io.MultiInputStream;
@@ -40,27 +39,39 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 /**
  * Container holding the encrypted meta-data for a file (or directory) after the data was uploaded to the server.
  * <p>
- * There is a 1-1-relation to a {@link CryptoRepoFile} (via the {@link #getRepoFile() repoFile} property).
+ * There is a 1-1-relation to a {@link CryptoRepoFile} within the scope of a {@link HistoFrame}.
  * @author Marco หงุ่ยตระกูล-Schulze - marco at codewizards dot co
  */
 @PersistenceCapable
 @Inheritance(strategy=InheritanceStrategy.NEW_TABLE)
 @Uniques({
-	@Unique(name="CryptoRepoFileOnServer_cryptoRepoFile", members="cryptoRepoFile")
+	@Unique(name="UK_HistoCryptoRepoFile_histoCryptoRepoFileId", members="histoCryptoRepoFileId"),
+	@Unique(name="UK_HistoCryptoRepoFile_cryptoRepoFile_histoFrame", members={"cryptoRepoFile", "histoFrame"})
 })
 @Indices({
-	@Index(name="CryptoRepoFileOnServer_localRevision", members={"localRevision"})
+	@Index(name="HistoCryptoRepoFile_histoCryptoRepoFileId", members="histoCryptoRepoFileId"),
+	@Index(name="HistoCryptoRepoFile_localRevision", members="localRevision"),
+	@Index(name="HistoCryptoRepoFile_cryptoRepoFile_histoFrame", members={"cryptoRepoFile", "histoFrame"})
 })
 @Queries({
-//	@Query(name="getCryptoRepoFileOnServer_cryptoRepoFile", value="SELECT UNIQUE WHERE this.cryptoRepoFile == :cryptoRepoFile"),
+	@Query(name="getHistoCryptoRepoFile_histoCryptoRepoFileId", value="SELECT UNIQUE WHERE this.histoCryptoRepoFileId == :histoCryptoRepoFileId"),
+	@Query(name="getHistoCryptoRepoFiles_cryptoRepoFile", value="SELECT WHERE this.cryptoRepoFile == :cryptoRepoFile"),
 	@Query(
-			name="getCryptoRepoFileOnServerChangedAfter_localRevision",
+			name="getHistoCryptoRepoFilesChangedAfter_localRevision",
 			value="SELECT WHERE this.localRevision > :localRevision")
 })
-public class CryptoRepoFileOnServer extends Entity implements WriteProtected, AutoTrackLocalRevision, StoreCallback {
+public class HistoCryptoRepoFile extends Entity implements WriteProtected, AutoTrackLocalRevision, StoreCallback {
+
+	@Persistent(nullValue=NullValue.EXCEPTION)
+	private String histoCryptoRepoFileId;
+
+	private HistoCryptoRepoFile previousHistoCryptoRepoFile;
 
 	@Persistent(nullValue=NullValue.EXCEPTION)
 	private CryptoRepoFile cryptoRepoFile;
+
+	@Persistent(nullValue=NullValue.EXCEPTION)
+	private HistoFrame histoFrame;
 
 	private long localRevision;
 
@@ -75,24 +86,50 @@ public class CryptoRepoFileOnServer extends Entity implements WriteProtected, Au
 	@Embedded(nullIndicatorColumn="signatureCreated")
 	private SignatureImpl signature;
 
-//	// TODO 1: The direct partner-repository from which this was synced, should be a real relation to the RemoteRepository,
-//	// because this is more efficient (not a String, but a long id).
-//	// TODO 2: We should additionally store (and forward) the origin repositoryId (UUID/String) to use this feature during
-//	// circular syncs over multiple repos - e.g. repoA ---> repoB ---> repoC ---> repoA (again) - this circle would currently
-//	// cause https://github.com/cloudstore/cloudstore/issues/25 again (because issue 25 is only solved for direct partners - not indirect).
-//	// TODO 3: We should switch from UUID to Uid everywhere (most importantly the repositoryId).
-//	// Careful, though: Uid's String-representation is case-sensitive! Due to Windows, it must thus not be used for file names!
-//	// TODO 4: It is not yet sure, how Subshare will actually detect and handle collisions. Maybe we don't need this field at all?!
-//	// TODO 5: Shouldn't we better store this inside the encrypted (and signed!) repoFileDtoData?!
-//	private String lastSyncFromRepositoryId;
+	public HistoCryptoRepoFile() { }
 
-	public CryptoRepoFileOnServer() { }
+	public HistoCryptoRepoFile(final Uid histoCryptoRepoFileId) {
+		this.histoCryptoRepoFileId = histoCryptoRepoFileId == null ? null : histoCryptoRepoFileId.toString();
+	}
+
+	public Uid getHistoCryptoRepoFileId() {
+		if (histoCryptoRepoFileId == null)
+			histoCryptoRepoFileId = new Uid().toString();
+
+		return new Uid(histoCryptoRepoFileId);
+	}
 
 	public CryptoRepoFile getCryptoRepoFile() {
 		return cryptoRepoFile;
 	}
 	public void setCryptoRepoFile(CryptoRepoFile cryptoRepoFile) {
+		if (equal(this.cryptoRepoFile, cryptoRepoFile))
+			return;
+
+		if (this.cryptoRepoFile != null)
+			throw new IllegalStateException("this.cryptoRepoFile already assigned! Cannot re-assign!");
+
 		this.cryptoRepoFile = cryptoRepoFile;
+	}
+
+	public HistoFrame getHistoFrame() {
+		return histoFrame;
+	}
+	public void setHistoFrame(HistoFrame histoFrame) {
+		if (equal(this.histoFrame, histoFrame))
+			return;
+
+		if (this.histoFrame != null)
+			throw new IllegalStateException("this.histoFrame already assigned! Cannot re-assign!");
+
+		this.histoFrame = histoFrame;
+	}
+
+	public HistoCryptoRepoFile getPreviousHistoCryptoRepoFile() {
+		return previousHistoCryptoRepoFile;
+	}
+	public void setPreviousHistoCryptoRepoFile(final HistoCryptoRepoFile previousHistoCryptoRepoFile) {
+		this.previousHistoCryptoRepoFile = previousHistoCryptoRepoFile;
 	}
 
 	/**
@@ -143,11 +180,12 @@ public class CryptoRepoFileOnServer extends Entity implements WriteProtected, Au
 
 	@Override
 	public void jdoPreStore() {
+		getHistoCryptoRepoFileId();
 	}
 
 	@Override
 	public String getSignedDataType() {
-		return CryptoRepoFileOnServerDto.SIGNED_DATA_TYPE;
+		return HistoCryptoRepoFileDto.SIGNED_DATA_TYPE;
 	}
 
 	@Override
@@ -165,14 +203,24 @@ public class CryptoRepoFileOnServer extends Entity implements WriteProtected, Au
 	/**
 	 * {@inheritDoc}
 	 * <p>
-	 * <b>Important:</b> The implementation in {@code CryptoRepoFile} must exactly match the one in {@link CryptoRepoFileDto}!
+	 * <b>Important:</b> The implementation in {@code HistoCryptoRepoFile} must exactly match the one in {@link HistoCryptoRepoFileDto}!
 	 */
 	@Override
 	public InputStream getSignedData(final int signedDataVersion) {
 		try {
 			byte separatorIndex = 0;
 			return new MultiInputStream(
+					InputStreamSource.Helper.createInputStreamSource(getHistoCryptoRepoFileId()),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
+					InputStreamSource.Helper.createInputStreamSource(
+							previousHistoCryptoRepoFile == null ? null : previousHistoCryptoRepoFile.getHistoCryptoRepoFileId()),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(assertNotNull("cryptoRepoFile", cryptoRepoFile).getCryptoRepoFileId()),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
+					InputStreamSource.Helper.createInputStreamSource(assertNotNull("histoFrame", histoFrame).getHistoFrameId()),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(assertNotNull("cryptoKey", cryptoKey).getCryptoKeyId()),

@@ -108,8 +108,8 @@ public class CryptoRepoFile extends Entity implements WriteProtected, AutoTrackL
 	@Embedded(nullIndicatorColumn = "signatureCreated")
 	private SignatureImpl signature;
 
-	@Persistent(mappedBy = "cryptoRepoFile")
-	private CryptoRepoFileOnServer cryptoRepoFileOnServer;
+//	@Persistent(mappedBy = "cryptoRepoFile")
+//	private HistoCryptoRepoFile cryptoRepoFileOnServer;
 
 	public CryptoRepoFile() { }
 
@@ -328,12 +328,12 @@ public class CryptoRepoFile extends Entity implements WriteProtected, AutoTrackL
 		return 0;
 	}
 
-	public CryptoRepoFileOnServer getCryptoRepoFileOnServer() {
-		return cryptoRepoFileOnServer;
-	}
-	public void setCryptoRepoFileOnServer(final CryptoRepoFileOnServer cryptoRepoFileOnServer) {
-		this.cryptoRepoFileOnServer = cryptoRepoFileOnServer;
-	}
+//	public HistoCryptoRepoFile getCryptoRepoFileOnServer() {
+//		return cryptoRepoFileOnServer;
+//	}
+//	public void setCryptoRepoFileOnServer(final HistoCryptoRepoFile cryptoRepoFileOnServer) {
+//		this.cryptoRepoFileOnServer = cryptoRepoFileOnServer;
+//	}
 
 	/**
 	 * {@inheritDoc}

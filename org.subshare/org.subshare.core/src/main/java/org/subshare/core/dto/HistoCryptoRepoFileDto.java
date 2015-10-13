@@ -1,5 +1,7 @@
 package org.subshare.core.dto;
 
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -15,10 +17,16 @@ import org.subshare.core.sign.Signature;
 import co.codewizards.cloudstore.core.dto.Uid;
 
 @XmlRootElement
-public class CryptoRepoFileOnServerDto implements Signable {
-	public static final String SIGNED_DATA_TYPE = "CryptoRepoFileOnServer";
+public class HistoCryptoRepoFileDto implements Signable {
+	public static final String SIGNED_DATA_TYPE = "HistoCryptoRepoFile";
+
+	private Uid histoCryptoRepoFileId;
+
+	private Uid previousHistoCryptoRepoFileId;
 
 	private Uid cryptoRepoFileId;
+
+	private Uid histoFrameId;
 
 	private Uid cryptoKeyId;
 
@@ -27,11 +35,32 @@ public class CryptoRepoFileOnServerDto implements Signable {
 	@XmlElement
 	private SignatureDto signatureDto;
 
+	public Uid getHistoCryptoRepoFileId() {
+		return histoCryptoRepoFileId;
+	}
+	public void setHistoCryptoRepoFileId(final Uid id) {
+		this.histoCryptoRepoFileId = id;
+	}
+
+	public Uid getPreviousHistoCryptoRepoFileId() {
+		return previousHistoCryptoRepoFileId;
+	}
+	public void setPreviousHistoCryptoRepoFileId(final Uid id) {
+		this.previousHistoCryptoRepoFileId = id;
+	}
+
 	public Uid getCryptoRepoFileId() {
 		return cryptoRepoFileId;
 	}
 	public void setCryptoRepoFileId(final Uid cryptoRepoFileId) {
 		this.cryptoRepoFileId = cryptoRepoFileId;
+	}
+
+	public Uid getHistoFrameId() {
+		return histoFrameId;
+	}
+	public void setHistoFrameId(Uid histoFrameId) {
+		this.histoFrameId = histoFrameId;
 	}
 
 	public Uid getCryptoKeyId() {
@@ -50,7 +79,7 @@ public class CryptoRepoFileOnServerDto implements Signable {
 
 	@Override
 	public String getSignedDataType() {
-		return CryptoRepoFileOnServerDto.SIGNED_DATA_TYPE;
+		return HistoCryptoRepoFileDto.SIGNED_DATA_TYPE;
 	}
 
 	@Override
@@ -61,17 +90,26 @@ public class CryptoRepoFileOnServerDto implements Signable {
 	/**
 	 * {@inheritDoc}
 	 * <p>
-	 * <b>Important:</b> The implementation in {@code CryptoRepoFile} must exactly match the one in {@code CryptoRepoFileDto}!
+	 * <b>Important:</b> The implementation in {@code CryptoRepoFileOnServer} must exactly match the one in {@code HistoCryptoRepoFileDto}!
 	 */
 	@Override
 	public InputStream getSignedData(final int signedDataVersion) {
 		try {
 			byte separatorIndex = 0;
 			return new MultiInputStream(
-					InputStreamSource.Helper.createInputStreamSource(cryptoRepoFileId),
+					InputStreamSource.Helper.createInputStreamSource(assertNotNull("histoCryptoRepoFileId", histoCryptoRepoFileId)),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
-					InputStreamSource.Helper.createInputStreamSource(cryptoKeyId),
+					InputStreamSource.Helper.createInputStreamSource(previousHistoCryptoRepoFileId),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
+					InputStreamSource.Helper.createInputStreamSource(assertNotNull("cryptoRepoFileId", cryptoRepoFileId)),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
+					InputStreamSource.Helper.createInputStreamSource(assertNotNull("histoFrameId", histoFrameId)),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
+					InputStreamSource.Helper.createInputStreamSource(assertNotNull("cryptoKeyId", cryptoKeyId)),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(repoFileDtoData)
@@ -93,7 +131,7 @@ public class CryptoRepoFileOnServerDto implements Signable {
 
 	@Override
 	public String toString() {
-		return "CryptoRepoFileOnServerDto[cryptoRepoFileId=" + cryptoRepoFileId
+		return "HistoCryptoRepoFileDto[cryptoRepoFileId=" + cryptoRepoFileId
 				+ ", cryptoKeyId=" + cryptoKeyId + "]";
 	}
 }
