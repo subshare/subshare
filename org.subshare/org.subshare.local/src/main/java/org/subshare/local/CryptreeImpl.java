@@ -112,6 +112,8 @@ import org.subshare.local.persistence.UserRepoKeyPublicKeyReplacementRequestDele
 import org.subshare.local.persistence.UserRepoKeyPublicKeyReplacementRequestDeletionDao;
 
 import co.codewizards.cloudstore.core.auth.SignatureException;
+import co.codewizards.cloudstore.core.dto.ChangeSetDto;
+import co.codewizards.cloudstore.core.dto.DeleteModificationDto;
 import co.codewizards.cloudstore.core.dto.DirectoryDto;
 import co.codewizards.cloudstore.core.dto.NormalFileDto;
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
@@ -266,17 +268,8 @@ public class CryptreeImpl extends AbstractCryptree {
 		final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo = getLastCryptoKeySyncToRemoteRepo();
 		lastCryptoKeySyncToRemoteRepo.setLocalRepositoryRevisionInProgress(localRepository.getRevision());
 
-		// First links then keys, because we query all changed *after* a certain localRevision - and not in a range.
-		// Thus, we might find newer keys when querying them after the links. Since the links reference the keys
-		// (collection is mapped-by) and we currently don't delete anything, this guarantees that all references can
-		// be fulfilled on the remote side. Extremely unlikely, but still better ;-)
-		// Currently, this does not matter at all, because we use exclusive transactions (a write-transaction locks
-		// the entire DB), but this might matter later, when we make this more efficient => leaving this comment.
 		final CryptoChangeSetDto cryptoChangeSetDto = new CryptoChangeSetDto();
-		populateChangedUserRepoKeyPublicKeyDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 		populateChangedCryptoRepoFileDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
-		populateChangedCryptoLinkDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
-		populateChangedCryptoKeyDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 
 		populateCryptoChangeSetDtoWithAllButCryptoRepoFiles(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 		return cryptoChangeSetDto;
@@ -336,6 +329,18 @@ public class CryptreeImpl extends AbstractCryptree {
 							cryptoKeyId));
 
 				cryptoRepoFile.setCryptoKey(cryptoKey);
+			}
+		}
+
+		if (isOnServer()) {
+			for (final CryptoRepoFile cryptoRepoFile : cryptoRepoFileDto2CryptoRepoFile.values()) {
+				if (cryptoRepoFile.getDeleted() != null) {
+					final RepoFile repoFile = cryptoRepoFile.getRepoFile();
+					if (repoFile != null)
+						deleteRepoFileWithAllChildrenRecursively(repoFile);
+					else
+						logger.warn("putCryptoChangeSetDto: repoFile == null!!! {}", cryptoRepoFile);
+				}
 			}
 		}
 
@@ -405,6 +410,9 @@ public class CryptreeImpl extends AbstractCryptree {
 				final Map<CryptoRepoFile, RepoFileDto> cryptoRepoFile2DecryptedRepoFileDto = new HashMap<>();
 
 				for (final HistoCryptoRepoFile histoCryptoRepoFile : histoCryptoRepoFileDto2HistoCryptoRepoFile.values()) {
+					if (histoCryptoRepoFile.getCryptoRepoFile().getDeleted() != null)
+						continue;
+
 					final RepoFileDto decryptedRepoFileDto;
 					try {
 						decryptedRepoFileDto = getDecryptedRepoFileOnServerDtoOrFail(histoCryptoRepoFile.getCryptoRepoFile().getCryptoRepoFileId());
@@ -841,10 +849,12 @@ public class CryptreeImpl extends AbstractCryptree {
 
 	@Override
 	public UserRepoKey getUserRepoKey(final String localPath, final PermissionType permissionType) {
-		assertNotNull("localPath", localPath);
 		assertNotNull("permissionType", permissionType);
-		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(localPath);
-		return cryptreeNode.getUserRepoKey(false, permissionType);
+		final CryptreeNode cryptreeNode =
+				localPath == null
+				? getCryptreeContext().getCryptreeNodeOrCreate(getRootCryptoRepoFileIdOrFail())
+				: getCryptreeContext().getCryptreeNodeOrCreate(localPath);
+		return cryptreeNode.getUserRepoKey(localPath == null, permissionType);
 	}
 
 	@Override
@@ -865,6 +875,11 @@ public class CryptreeImpl extends AbstractCryptree {
 			}
 		}
 		return userRepoKey;
+	}
+
+	public Uid getRootCryptoRepoFileIdOrFail() {
+		final Uid rootCryptoRepoFileId = getRootCryptoRepoFileId();
+		return assertNotNull("rootCryptoRepoFileId", rootCryptoRepoFileId);
 	}
 
 	@Override
@@ -1074,10 +1089,21 @@ public class CryptreeImpl extends AbstractCryptree {
 
 		cryptoRepoFile.setDirectory(cryptoRepoFileDto.isDirectory());
 		cryptoRepoFile.setLastSyncFromRepositoryId(getRemoteRepositoryId());
+		cryptoRepoFile.setDeleted(cryptoRepoFileDto.getDeleted());
 
 		cryptoRepoFile.setSignature(cryptoRepoFileDto.getSignature());
 
 		return cryptoRepoFileDao.makePersistent(cryptoRepoFile);
+	}
+
+	protected void deleteRepoFileWithAllChildrenRecursively(final RepoFile repoFile) {
+		assertNotNull("repoFile", repoFile);
+		final LocalRepoTransaction transaction = getTransactionOrFail();
+		final RepoFileDao repoFileDao = transaction.getDao(RepoFileDao.class);
+		for (final RepoFile childRepoFile : repoFileDao.getChildRepoFiles(repoFile)) {
+			deleteRepoFileWithAllChildrenRecursively(childRepoFile);
+		}
+		repoFileDao.deletePersistent(repoFile);
 	}
 
 	private UserRepoKeyPublicKey putUserRepoKeyPublicKeyDto(final UserRepoKeyPublicKeyDto userRepoKeyPublicKeyDto) {
@@ -1409,15 +1435,14 @@ public class CryptreeImpl extends AbstractCryptree {
 
 		final CryptoChangeSetDto cryptoChangeSetDto = new CryptoChangeSetDto();
 		cryptoChangeSetDto.getCryptoRepoFileDtos().add(CryptoRepoFileDtoConverter.create().toCryptoRepoFileDto(cryptoRepoFile));
-		populateChangedUserRepoKeyPublicKeyDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
-		populateChangedCryptoLinkDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
-		populateChangedCryptoKeyDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
-
 		populateCryptoChangeSetDtoWithAllButCryptoRepoFiles(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 		return cryptoChangeSetDto;
 	}
 
 	private void populateCryptoChangeSetDtoWithAllButCryptoRepoFiles(final CryptoChangeSetDto cryptoChangeSetDto, final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {
+		populateChangedUserRepoKeyPublicKeyDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
+		populateChangedCryptoLinkDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
+		populateChangedCryptoKeyDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 		populateChangedRepositoryOwnerDto(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 		populateChangedPermissionSetInheritanceDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 		populateChangedPermissionDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
@@ -1432,8 +1457,8 @@ public class CryptreeImpl extends AbstractCryptree {
 	}
 
 	private void populateChangedHistoFrameDtos(final CryptoChangeSetDto cryptoChangeSetDto, final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {
-		if (! isOnServer())
-			return; // We *up*load them exclusively individually. The CryptoChangeSet is only used for *down*load.
+//		if (! isOnServer())
+//			return; // We *up*load them exclusively individually. The CryptoChangeSet is only used for *down*load.
 
 		final HistoFrameDtoConverter converter = HistoFrameDtoConverter.create(getTransactionOrFail());
 		final HistoFrameDao dao = getTransactionOrFail().getDao(HistoFrameDao.class);
@@ -1899,47 +1924,101 @@ public class CryptreeImpl extends AbstractCryptree {
 		return localRepoStorage;
 	}
 
+//	@Override
+//	public HistoFrameDto getUnsealedHistoFrameDto() {
+//		final LocalRepoTransaction tx = getTransactionOrFail();
+//		final HistoFrame histoFrame = tx.getDao(HistoFrameDao.class).getUnsealedHistoFrame(getLocalRepositoryIdOrFail());
+//		if (histoFrame == null)
+//			return null;
+//
+//		return HistoFrameDtoConverter.create(tx).toHistoFrameDto(histoFrame);
+//	}
+//
+//	@Override
+//	public HistoFrameDto createUnsealedHistoFrameDto() {
+//		final LocalRepoTransaction tx = getTransactionOrFail();
+//		final HistoFrameDao histoFrameDao = tx.getDao(HistoFrameDao.class);
+//		final UUID fromRepositoryId = getLocalRepositoryIdOrFail();
+//		final CryptreeNode rootCryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(getRootCryptoRepoFileId());
+//		final UserRepoKey userRepoKey = rootCryptreeNode.getUserRepoKey(true, PermissionType.write);
+//
+//		HistoFrame histoFrame = histoFrameDao.getUnsealedHistoFrame(fromRepositoryId);
+//		if (histoFrame != null)
+//			throw new IllegalStateException(String.format("There is already an unsealed HistoFrame with fromRepositoryId='%s'!", fromRepositoryId));
+//
+//		histoFrame = new HistoFrame();
+//		histoFrame.setFromRepositoryId(fromRepositoryId);
+//
+//		getCryptreeContext().getSignableSigner(userRepoKey).sign(histoFrame);
+//
+//		histoFrame = histoFrameDao.makePersistent(histoFrame);
+//		return HistoFrameDtoConverter.create(tx).toHistoFrameDto(histoFrame);
+//	}
+
 	@Override
-	public HistoFrameDto getUnsealedHistoFrameDto() {
+	public CryptoChangeSetDto createHistoCryptoRepoFilesForDeletedCryptoRepoFiles() {
 		final LocalRepoTransaction tx = getTransactionOrFail();
-		final HistoFrame histoFrame = tx.getDao(HistoFrameDao.class).getUnsealedHistoFrame(getLocalRepositoryIdOrFail());
-		if (histoFrame == null)
+		final CryptoRepoFileDao cryptoRepoFileDao = tx.getDao(CryptoRepoFileDao.class);
+		final Collection<CryptoRepoFile> deletedCryptoRepoFiles = cryptoRepoFileDao.getDeletedCryptoRepoFilesWithoutDeletedHistoCryptoRepoFiles();
+		final List<HistoCryptoRepoFile> histoCryptoRepoFiles = new ArrayList<>();
+		if (deletedCryptoRepoFiles.isEmpty())
 			return null;
 
-		return HistoFrameDtoConverter.create(tx).toHistoFrameDto(histoFrame);
+		createUnsealedHistoFrameIfNeeded();
+		for (CryptoRepoFile deletedCryptoRepoFile : deletedCryptoRepoFiles) {
+			final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(deletedCryptoRepoFile.getCryptoRepoFileId());
+			histoCryptoRepoFiles.add(cryptreeNode.createHistoCryptoRepoFile());
+		}
+
+		final CryptoChangeSetDto cryptoChangeSetDto = getCryptoChangeSetDtoWithCryptoRepoFiles();
+
+		final CurrentHistoCryptoRepoFileDao chcrfDao = tx.getDao(CurrentHistoCryptoRepoFileDao.class);
+		final HistoCryptoRepoFileDtoConverter hcrfdConverter = HistoCryptoRepoFileDtoConverter.create(tx);
+		final CurrentHistoCryptoRepoFileDtoConverter chcrfdConverter = CurrentHistoCryptoRepoFileDtoConverter.create(tx);
+
+		// HistoCryptoRepoFiles are normally only *DOWN*-synced, but for the deleted ones, we want them to be up-synced, too.
+		for (HistoCryptoRepoFile histoCryptoRepoFile : histoCryptoRepoFiles) {
+			final CryptoRepoFile cryptoRepoFile = histoCryptoRepoFile.getCryptoRepoFile();
+			final CurrentHistoCryptoRepoFile currentHistoCryptoRepoFile = chcrfDao.getCurrentHistoCryptoRepoFile(cryptoRepoFile);
+			cryptoChangeSetDto.getHistoCryptoRepoFileDtos().add(hcrfdConverter.toHistoCryptoRepoFileDto(histoCryptoRepoFile));
+			cryptoChangeSetDto.getCurrentHistoCryptoRepoFileDtos().add(chcrfdConverter.toCurrentHistoCryptoRepoFileDto(currentHistoCryptoRepoFile));
+		}
+		return cryptoChangeSetDto;
 	}
 
 	@Override
-	public HistoFrameDto createUnsealedHistoFrameDto() {
+	public void createUnsealedHistoFrameIfNeeded() {
 		final LocalRepoTransaction tx = getTransactionOrFail();
 		final HistoFrameDao histoFrameDao = tx.getDao(HistoFrameDao.class);
 		final UUID fromRepositoryId = getLocalRepositoryIdOrFail();
-		final CryptreeNode rootCryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(getRootCryptoRepoFileId());
-		final UserRepoKey userRepoKey = rootCryptreeNode.getUserRepoKey(true, PermissionType.write);
+
+		if (getRootCryptoRepoFileId() == null)
+			createOrUpdateCryptoRepoFile("");
+
+		final UserRepoKey userRepoKey = getUserRepoKeyOrFail(null, PermissionType.write);
 
 		HistoFrame histoFrame = histoFrameDao.getUnsealedHistoFrame(fromRepositoryId);
-		if (histoFrame != null)
-			throw new IllegalStateException(String.format("There is already an unsealed HistoFrame with fromRepositoryId='%s'!", fromRepositoryId));
+		if (histoFrame == null) {
+			histoFrame = new HistoFrame();
+			histoFrame.setFromRepositoryId(fromRepositoryId);
 
-		histoFrame = new HistoFrame();
-		histoFrame.setFromRepositoryId(fromRepositoryId);
+			getCryptreeContext().getSignableSigner(userRepoKey).sign(histoFrame);
 
-		getCryptreeContext().getSignableSigner(userRepoKey).sign(histoFrame);
-
-		histoFrame = histoFrameDao.makePersistent(histoFrame);
-		return HistoFrameDtoConverter.create(tx).toHistoFrameDto(histoFrame);
+			histoFrame = histoFrameDao.makePersistent(histoFrame);
+		}
 	}
 
 	@Override
-	public HistoFrameDto sealUnsealedHistoryFrame() {
+	public void sealUnsealedHistoryFrame() {
 		final LocalRepoTransaction tx = getTransactionOrFail();
 		final HistoFrameDao histoFrameDao = tx.getDao(HistoFrameDao.class);
 		final CryptreeNode rootCryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(getRootCryptoRepoFileId());
 		final UserRepoKey userRepoKey = rootCryptreeNode.getUserRepoKey(true, PermissionType.write);
-		final HistoFrame histoFrame = histoFrameDao.getUnsealedHistoFrameOrFail(getLocalRepositoryIdOrFail());
-		histoFrame.setSealed(new Date());
-		getCryptreeContext().getSignableSigner(userRepoKey).sign(histoFrame);
-		return HistoFrameDtoConverter.create(tx).toHistoFrameDto(histoFrame);
+		final HistoFrame histoFrame = histoFrameDao.getUnsealedHistoFrame(getLocalRepositoryIdOrFail());
+		if (histoFrame != null) {
+			histoFrame.setSealed(new Date());
+			getCryptreeContext().getSignableSigner(userRepoKey).sign(histoFrame);
+		}
 	}
 
 	@Override
@@ -1947,5 +2026,30 @@ public class CryptreeImpl extends AbstractCryptree {
 		assertNotNull("histoFrameDto", histoFrameDto);
 		final LocalRepoTransaction tx = getTransactionOrFail();
 		HistoFrameDtoConverter.create(tx).putHistoFrameDto(histoFrameDto);
+	}
+
+	@Override
+	public void preDelete(final String localPath) {
+		assertNotNull("localPath", localPath);
+		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(localPath);
+		final CryptoRepoFile cryptoRepoFile = cryptreeNode.getCryptoRepoFile();
+		if (cryptoRepoFile != null && cryptoRepoFile.getDeleted() == null) {
+			cryptoRepoFile.setDeleted(new Date());
+			cryptreeNode.sign(cryptoRepoFile);
+		}
+	}
+
+	@Override
+	public void createSyntheticDeleteModifications(final ChangeSetDto changeSetDto) {
+		assertNotNull("changeSetDto", changeSetDto);
+		final LocalRepoTransaction tx = getTransactionOrFail();
+		final CryptoRepoFileDao cryptoRepoFileDao = tx.getDao(CryptoRepoFileDao.class);
+		final Collection<CryptoRepoFile> cryptoRepoFiles = cryptoRepoFileDao.getCryptoRepoFilesWithRepoFileAndDeleted();
+		for (final CryptoRepoFile cryptoRepoFile : cryptoRepoFiles) {
+			final String path = cryptoRepoFile.getRepoFile().getPath();
+			final DeleteModificationDto deleteModificationDto = new DeleteModificationDto();
+			deleteModificationDto.setPath(path);
+			changeSetDto.getModificationDtos().add(deleteModificationDto);
+		}
 	}
 }

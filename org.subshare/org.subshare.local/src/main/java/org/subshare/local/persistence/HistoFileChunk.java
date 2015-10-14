@@ -5,20 +5,24 @@ import javax.jdo.annotations.Indices;
 import javax.jdo.annotations.NullValue;
 import javax.jdo.annotations.PersistenceCapable;
 import javax.jdo.annotations.Persistent;
+import javax.jdo.annotations.Queries;
+import javax.jdo.annotations.Query;
 import javax.jdo.annotations.Unique;
 
 import co.codewizards.cloudstore.local.persistence.Entity;
-import co.codewizards.cloudstore.local.persistence.NormalFile;
 
 @PersistenceCapable
 @Unique(
 		name = "UK_HistoFileChunk_histoCryptoRepoFile_offset", members = {"histoCryptoRepoFile", "offset"})
 @Indices({
-	@Index(name = "HistoFileChunk_normalFile", members = "normalFile"),
-
+//	@Index(name = "HistoFileChunk_normalFile", members = "normalFile"),
 	@Index(name = "HistoFileChunk_histoCryptoRepoFile_offset", members = {"histoCryptoRepoFile", "offset"}),
+	@Index(name = "HistoFileChunk_fileChunkPayload", members = "fileChunkPayload"),
 })
-//@Queries({
+@Queries({
+	@Query(name = "getHistoFileChunks_fileChunkPayload", value = "SELECT WHERE this.fileChunkPayload == :fileChunkPayload"),
+	@Query(name = "getHistoFileChunkCount_fileChunkPayload", value = "SELECT count(this) WHERE this.fileChunkPayload == :fileChunkPayload")
+
 //	@Query(name = "getHistoFileChunks_normalFile", value = "SELECT WHERE this.normalFile == :normalFile"),
 //
 //	@Query(name = "getHistoFileChunks_normalFile_remoteRepositoryId",
@@ -29,13 +33,13 @@ import co.codewizards.cloudstore.local.persistence.NormalFile;
 //			value = "SELECT UNIQUE WHERE this.normalFile == :normalFile "
 //					+ "&& this.remoteRepositoryId == :remoteRepositoryId "
 //					+ "&& this.offset == :offset")
-//})
+})
 public class HistoFileChunk extends Entity {
 
 	@Persistent(nullValue = NullValue.EXCEPTION)
 	private HistoCryptoRepoFile histoCryptoRepoFile;
 
-	private NormalFile normalFile;
+//	private NormalFile normalFile;
 
 	private long offset;
 
@@ -56,12 +60,12 @@ public class HistoFileChunk extends Entity {
 		this.histoCryptoRepoFile = histoCryptoRepoFile;
 	}
 
-	public NormalFile getNormalFile() {
-		return normalFile;
-	}
-	public void setNormalFile(NormalFile normalFile) {
-		this.normalFile = normalFile;
-	}
+//	public NormalFile getNormalFile() {
+//		return normalFile;
+//	}
+//	public void setNormalFile(NormalFile normalFile) {
+//		this.normalFile = normalFile;
+//	}
 
 	public long getOffset() {
 		return offset;

@@ -1,10 +1,9 @@
 package org.subshare.test;
 
-import static co.codewizards.cloudstore.core.oio.OioFileFactory.createFile;
-import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
-import static mockit.Deencapsulation.setField;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
+import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static mockit.Deencapsulation.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -18,10 +17,13 @@ import mockit.Mock;
 import mockit.MockUp;
 
 import org.bouncycastle.crypto.params.KeyParameter;
-import org.subshare.core.dto.SsDirectoryDto;
-import org.subshare.core.dto.SsNormalFileDto;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.dto.SignatureDto;
+import org.subshare.core.dto.SsDirectoryDto;
+import org.subshare.core.dto.SsNormalFileDto;
 import org.subshare.core.sign.Signable;
 import org.subshare.core.sign.Signature;
 import org.subshare.core.user.UserRepoKey;
@@ -38,9 +40,6 @@ import org.subshare.local.persistence.PermissionSetInheritanceDao;
 import org.subshare.local.persistence.UserRepoKeyPublicKey;
 import org.subshare.rest.client.transport.CryptreeRestRepoTransportImpl;
 import org.subshare.rest.server.service.SsWebDavService;
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import co.codewizards.cloudstore.core.auth.SignatureException;
 import co.codewizards.cloudstore.core.dto.RemoteException;
@@ -66,6 +65,8 @@ public class BrokenSignatureIT extends AbstractRepoToRepoSyncIT {
 	private boolean cryptreeRepoTransport_encryptAndSign_breakSignature = false;
 	private boolean ssWebDavService_getFileData_breakSignature = false;
 
+	private List<MockUp<?>> mockUps = new ArrayList<MockUp<?>>();
+
 	@Override
 	public void before() throws Exception {
 		super.before();
@@ -73,29 +74,40 @@ public class BrokenSignatureIT extends AbstractRepoToRepoSyncIT {
 		jmockitWasUsed = false;
 		cryptreeRepoTransport_encryptAndSign_breakSignature = false;
 
-		new MockUp<UserRepoKeyPublicKeyHelper>() {
+		mockUps.add(new MockUp<UserRepoKeyPublicKeyHelper>() {
 			@Mock
 			private void createUserIdentities(final UserRepoKeyPublicKey userRepoKeyPublicKey) {
 				// Our mock should do nothing, because we don't have a real UserRegistry here.
 			}
-		};
+		});
 	}
 
 	@Override
 	public void after() throws Exception {
 		super.after();
+
+		for (final MockUp<?> mockUp : mockUps) {
+			try {
+				mockUp.tearDown();
+			} catch (Exception x) {
+				logger.warn("mockUp.tearDown() failed: " + x, x);
+			}
+		}
+
+		mockUps.clear();
+
 		if (jmockitShouldBeUsed && ! jmockitWasUsed)
 			fail("jmockit should have been used but was not used! missing agent?");
 	}
 
-	private final int headerAreaLengthCausingDifferentException = 5 + 4;
-	private final int footerAreaLengthCausingDifferentException = 2;
+	private final int headerAreaLengthCausingDifferentException = 10;
+	private final int footerAreaLengthCausingDifferentException = 0;
 
 	@Test
 	public void uploadBrokenSignature() throws Exception {
 		jmockitShouldBeUsed = true;
 
-		new MockUp<CryptreeRestRepoTransportImpl>() {
+		mockUps.add(new MockUp<CryptreeRestRepoTransportImpl>() {
 			@Mock
 			public byte[] encryptAndSign(final Invocation invocation, final byte[] plainText, final KeyParameter keyParameter, final UserRepoKey signingUserRepoKey) {
 				jmockitWasUsed = true;
@@ -113,7 +125,7 @@ public class BrokenSignatureIT extends AbstractRepoToRepoSyncIT {
 				}
 				return result;
 			}
-		};
+		});
 
 		createLocalSourceAndRemoteRepo();
 		populateLocalSourceRepo();
@@ -166,7 +178,7 @@ public class BrokenSignatureIT extends AbstractRepoToRepoSyncIT {
 	@Test
 	public void downloadBrokenSignature() throws Exception {
 
-		new MockUp<SsWebDavService>() {
+		mockUps.add(new MockUp<SsWebDavService>() {
 			@Mock
 			public byte[] getFileData(
 					final Invocation invocation,
@@ -178,13 +190,15 @@ public class BrokenSignatureIT extends AbstractRepoToRepoSyncIT {
 				logger.info("getFileData: about to call invocation.proceed(...). ssWebDavService_getFileData_breakSignature={}", ssWebDavService_getFileData_breakSignature);
 				final byte[] result = invocation.proceed(path, offset, length);
 				if (ssWebDavService_getFileData_breakSignature) {
-					// TEMPORARILY our data is too much (because of the way, we still store it on the server - in one single file)
-					// hence we must read the dataLength!
-					int idx = -1;
-					if (result[++idx] != 1)
-						throw new IllegalStateException("version == " + result[idx] + " != 1");
+//					// TEMPORARILY our data is too much (because of the way, we still store it on the server - in one single file)
+//					// hence we must read the dataLength!
+//					int idx = -1;
+//					if (result[++idx] != 1)
+//						throw new IllegalStateException("version == " + result[idx] + " != 1");
+//
+//					final int dataLength = result[++idx] + (result[++idx] << 8) + (result[++idx] << 16) + (result[++idx] << 24);
 
-					final int dataLength = result[++idx] + (result[++idx] << 8) + (result[++idx] << 16) + (result[++idx] << 24);
+					final int dataLength = result.length;
 
 					// If we modify anything in this part of the header, we cause a different exception - not a SignatureException!
 					// The same goes for the last few bytes of the footer.
@@ -197,7 +211,7 @@ public class BrokenSignatureIT extends AbstractRepoToRepoSyncIT {
 				}
 				return result;
 			}
-		};
+		});
 
 		createLocalSourceAndRemoteRepo();
 		populateLocalSourceRepo();
@@ -385,7 +399,7 @@ public class BrokenSignatureIT extends AbstractRepoToRepoSyncIT {
 	}
 
 	private void breakRandomNormalFileDtoSignatureForUpload() throws Exception {
-		new MockUp<SsNormalFileDto>() {
+		mockUps.add(new MockUp<SsNormalFileDto>() {
 			private SignatureDto signatureDto;
 
 			@Mock
@@ -407,7 +421,7 @@ public class BrokenSignatureIT extends AbstractRepoToRepoSyncIT {
 				}
 				this.signatureDto = signatureDto;
 			}
-		};
+		});
 
 		final File child_2 = createFile(localSrcRoot, "2");
 		final File child_2_a = createFile(child_2, "a");
@@ -417,7 +431,7 @@ public class BrokenSignatureIT extends AbstractRepoToRepoSyncIT {
 	}
 
 	private void breakRandomDirectoryDtoSignatureForUpload() {
-		new MockUp<SsDirectoryDto>() {
+		mockUps.add(new MockUp<SsDirectoryDto>() {
 			private SignatureDto signatureDto;
 
 			@Mock
@@ -439,7 +453,7 @@ public class BrokenSignatureIT extends AbstractRepoToRepoSyncIT {
 				}
 				this.signatureDto = signatureDto;
 			}
-		};
+		});
 
 		final File child_2 = createFile(localSrcRoot, "2");
 		child_2.setLastModified(child_2.lastModified() - 1000);

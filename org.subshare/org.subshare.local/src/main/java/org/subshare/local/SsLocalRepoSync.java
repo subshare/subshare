@@ -3,22 +3,26 @@ package org.subshare.local;
 import static co.codewizards.cloudstore.core.objectfactory.ObjectFactoryUtil.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import javax.jdo.FetchPlan;
 import javax.jdo.PersistenceManager;
 
 import org.subshare.core.Cryptree;
+import org.subshare.core.CryptreeFactory;
 import org.subshare.core.CryptreeFactoryRegistry;
 import org.subshare.core.crypto.KeyFactory;
-import org.subshare.local.persistence.CryptoRepoFile;
-import org.subshare.local.persistence.CryptoRepoFileDao;
+import org.subshare.core.user.UserRepoKeyRing;
+import org.subshare.core.user.UserRepoKeyRingLookup;
+import org.subshare.core.user.UserRepoKeyRingLookupContext;
 import org.subshare.local.persistence.LocalRepositoryType;
-import org.subshare.local.persistence.SsDeleteModification;
 import org.subshare.local.persistence.SsFileChunk;
 import org.subshare.local.persistence.SsLocalRepository;
 import org.subshare.local.persistence.SsNormalFile;
+import org.subshare.local.persistence.SsRemoteRepository;
 
 import co.codewizards.cloudstore.core.dto.FileChunkDto;
 import co.codewizards.cloudstore.core.oio.File;
@@ -27,17 +31,19 @@ import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
 import co.codewizards.cloudstore.core.util.HashUtil;
 import co.codewizards.cloudstore.local.ContextWithPersistenceManager;
 import co.codewizards.cloudstore.local.LocalRepoSync;
-import co.codewizards.cloudstore.local.persistence.DeleteModification;
 import co.codewizards.cloudstore.local.persistence.FileChunk;
 import co.codewizards.cloudstore.local.persistence.LocalRepositoryDao;
 import co.codewizards.cloudstore.local.persistence.NormalFile;
 import co.codewizards.cloudstore.local.persistence.RemoteRepository;
+import co.codewizards.cloudstore.local.persistence.RemoteRepositoryDao;
 import co.codewizards.cloudstore.local.persistence.RepoFile;
 
 public class SsLocalRepoSync extends LocalRepoSync {
 
 //	private boolean repoFileContextWasApplied;
 	private SsLocalRepository localRepository;
+	private UserRepoKeyRing userRepoKeyRing;
+	private CryptreeFactory cryptreeFactory;
 
 	protected SsLocalRepoSync(final LocalRepoTransaction transaction) {
 		super(transaction);
@@ -222,34 +228,104 @@ public class SsLocalRepoSync extends LocalRepoSync {
 //	}
 
 	@Override
-	protected void populateDeleteModification(final DeleteModification modification, final RepoFile repoFile, final RemoteRepository remoteRepository) {
-		super.populateDeleteModification(modification, repoFile, remoteRepository);
-		SsDeleteModification ccDeleteModification = (SsDeleteModification) modification;
-
-		final CryptoRepoFile cryptoRepoFile = transaction.getDao(CryptoRepoFileDao.class).getCryptoRepoFile(repoFile);
-		final CryptoRepoFile parentCryptoRepoFile = cryptoRepoFile.getParent();
-		if (parentCryptoRepoFile == null)
-			throw new IllegalStateException("Seems the deleted file is the root?! Cannot delete the repository's root!");
-
-		ccDeleteModification.setCryptoRepoFileIdControllingPermissions(parentCryptoRepoFile.getCryptoRepoFileId());
-
-		final boolean removeCryptreeFromTx = transaction.getContextObject(CryptreeImpl.class) == null;
-
-		final Cryptree cryptree =
-				CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail().getCryptreeOrCreate(
-						transaction, remoteRepository.getRepositoryId());
-
-		// We must remove the Cryptree from the transaction, because this Cryptree thinks, it was on the server-side.
-		// It does this, because we do not provide a UserRepoKeyRing (which usually never happens on the client-side).
-		// This wrong assumption causes the VerifySignableAndWriteProtectedEntityListener to fail.
-		if (removeCryptreeFromTx)
-			transaction.removeContextObject(cryptree);
-
-		final String serverPath = cryptree.getServerPath(ccDeleteModification.getPath());
-		ccDeleteModification.setServerPath(serverPath);
-
-		// We cannot sign now, because we do not have a UserRepoKey available - we'd need to initialise the Cryptree differently.
-		// We therefore sign later.
-//		cryptree.sign(ccDeleteModification);
+	protected void createCopyModificationsIfPossible(NormalFile newNormalFile) {
+		// We don't support any Modification in Subshare - at least for now.
+		// The remote-repo-dependent 'Modification' (and all its subclasses) should be replaced by a
+		// global (not remote-repo-dependent) 'Mod', anyway! See the new TO-DO and the @deprecated-comment in
+		// 'Modification' for more details!
 	}
+
+	@Override
+	protected void createDeleteModifications(RepoFile repoFile) {
+		// We don't support any Modification in Subshare - at least for now.
+		// The remote-repo-dependent 'Modification' (and all its subclasses) should be replaced by a
+		// global (not remote-repo-dependent) 'Mod', anyway! See the new TO-DO and the @deprecated-comment in
+		// 'Modification' for more details!
+		//
+		// Note: The delete-tracking is done via CryptoRepoFile.deleted and HistoCryptoRepoFile.deleted!
+	}
+
+	@Override
+	protected void deleteRepoFileWithAllChildrenRecursively(RepoFile repoFile) {
+		final Cryptree cryptree = getCryptree(transaction);
+		final String localPath = repoFile.getPath();
+		cryptree.preDelete(localPath);
+		super.deleteRepoFileWithAllChildrenRecursively(repoFile);
+	}
+
+	protected UserRepoKeyRing getUserRepoKeyRing() {
+		if (userRepoKeyRing == null) {
+			final UserRepoKeyRingLookup lookup = UserRepoKeyRingLookup.Helper.getUserRepoKeyRingLookup();
+			final UserRepoKeyRingLookupContext context = new UserRepoKeyRingLookupContext(getClientRepositoryId(), getServerRepositoryId());
+			userRepoKeyRing = lookup.getUserRepoKeyRing(context);
+			if (userRepoKeyRing == null)
+				throw new IllegalStateException(String.format("UserRepoKeyRingLookup.getUserRepoKeyRing(context) returned null! lookup=%s context=%s", lookup, context));
+
+//			return assertNotNull("cryptreeRepoTransportFactory.userRepoKeyRing", getRepoTransportFactory().getUserRepoKeyRing());
+		}
+		return userRepoKeyRing;
+	}
+
+	private UUID getServerRepositoryId() {
+		final Collection<RemoteRepository> remoteRepositories = transaction.getDao(RemoteRepositoryDao.class).getObjects();
+		if (remoteRepositories.size() != 1)
+			throw new IllegalStateException("remoteRepositories.size() != 1");
+
+		return remoteRepositories.iterator().next().getRepositoryId();
+	}
+
+	private String getServerPathPrefix() {
+		final Collection<RemoteRepository> remoteRepositories = transaction.getDao(RemoteRepositoryDao.class).getObjects();
+		if (remoteRepositories.size() != 1)
+			throw new IllegalStateException("remoteRepositories.size() != 1");
+
+		return ((SsRemoteRepository)remoteRepositories.iterator().next()).getRemotePathPrefix();
+	}
+
+	private UUID getClientRepositoryId() {
+		return getLocalRepository().getRepositoryId();
+	}
+
+	protected CryptreeFactory getCryptreeFactory() {
+		if (cryptreeFactory == null)
+			cryptreeFactory = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail();
+
+		return cryptreeFactory;
+	}
+
+	protected Cryptree getCryptree(final LocalRepoTransaction transaction) {
+		return getCryptreeFactory().getCryptreeOrCreate(transaction, getServerRepositoryId(), getServerPathPrefix(), getUserRepoKeyRing());
+	}
+
+//	@Override
+//	protected void populateDeleteModification(final DeleteModification modification, final RepoFile repoFile, final RemoteRepository remoteRepository) {
+//		super.populateDeleteModification(modification, repoFile, remoteRepository);
+//		SsDeleteModification ccDeleteModification = (SsDeleteModification) modification;
+//
+//		final CryptoRepoFile cryptoRepoFile = transaction.getDao(CryptoRepoFileDao.class).getCryptoRepoFile(repoFile);
+//		final CryptoRepoFile parentCryptoRepoFile = cryptoRepoFile.getParent();
+//		if (parentCryptoRepoFile == null)
+//			throw new IllegalStateException("Seems the deleted file is the root?! Cannot delete the repository's root!");
+//
+//		ccDeleteModification.setCryptoRepoFileIdControllingPermissions(parentCryptoRepoFile.getCryptoRepoFileId());
+//
+//		final boolean removeCryptreeFromTx = transaction.getContextObject(CryptreeImpl.class) == null;
+//
+//		final Cryptree cryptree =
+//				CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail().getCryptreeOrCreate(
+//						transaction, remoteRepository.getRepositoryId());
+//
+//		// We must remove the Cryptree from the transaction, because this Cryptree thinks, it was on the server-side.
+//		// It does this, because we do not provide a UserRepoKeyRing (which usually never happens on the client-side).
+//		// This wrong assumption causes the VerifySignableAndWriteProtectedEntityListener to fail.
+//		if (removeCryptreeFromTx)
+//			transaction.removeContextObject(cryptree);
+//
+//		final String serverPath = cryptree.getServerPath(ccDeleteModification.getPath());
+//		ccDeleteModification.setServerPath(serverPath);
+//
+//		// We cannot sign now, because we do not have a UserRepoKey available - we'd need to initialise the Cryptree differently.
+//		// We therefore sign later.
+////		cryptree.sign(ccDeleteModification);
+//	}
 }

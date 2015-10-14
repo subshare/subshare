@@ -19,6 +19,7 @@ import org.subshare.core.user.UserRepoKeyPublicKeyLookup;
 import org.subshare.core.user.UserRepoKeyRing;
 
 import co.codewizards.cloudstore.core.auth.SignatureException;
+import co.codewizards.cloudstore.core.dto.ChangeSetDto;
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
 import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
@@ -178,8 +179,10 @@ public interface Cryptree {
 
 	LocalRepoStorage getLocalRepoStorage();
 
-	HistoFrameDto getUnsealedHistoFrameDto();
-	HistoFrameDto createUnsealedHistoFrameDto();
-	HistoFrameDto sealUnsealedHistoryFrame();
+	void createUnsealedHistoFrameIfNeeded();
+	void sealUnsealedHistoryFrame();
 	void putHistoFrameDto(HistoFrameDto histoFrameDto);
+	void preDelete(String localPath);
+	CryptoChangeSetDto createHistoCryptoRepoFilesForDeletedCryptoRepoFiles();
+	void createSyntheticDeleteModifications(ChangeSetDto changeSetDto);
 }

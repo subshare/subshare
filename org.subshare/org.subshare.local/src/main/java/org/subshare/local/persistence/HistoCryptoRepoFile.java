@@ -5,6 +5,7 @@ import static co.codewizards.cloudstore.core.util.Util.*;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Date;
 import java.util.zip.GZIPOutputStream;
 
 import javax.jdo.annotations.Column;
@@ -81,6 +82,8 @@ public class HistoCryptoRepoFile extends Entity implements WriteProtected, AutoT
 	@Persistent(nullValue=NullValue.EXCEPTION)
 	@Column(jdbcType="BLOB")
 	private byte[] repoFileDtoData;
+
+	private Date deleted;
 
 	@Persistent(nullValue=NullValue.EXCEPTION)
 	@Embedded(nullIndicatorColumn="signatureCreated")
@@ -168,6 +171,13 @@ public class HistoCryptoRepoFile extends Entity implements WriteProtected, AutoT
 			this.repoFileDtoData = repoFileDtoData;
 	}
 
+	public Date getDeleted() {
+		return deleted;
+	}
+	public void setDeleted(Date deleted) {
+		this.deleted = deleted;
+	}
+
 	@Override
 	public long getLocalRevision() {
 		return localRevision;
@@ -226,7 +236,10 @@ public class HistoCryptoRepoFile extends Entity implements WriteProtected, AutoT
 					InputStreamSource.Helper.createInputStreamSource(assertNotNull("cryptoKey", cryptoKey).getCryptoKeyId()),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
-					InputStreamSource.Helper.createInputStreamSource(getRepoFileDtoData())
+					InputStreamSource.Helper.createInputStreamSource(getRepoFileDtoData()),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
+					InputStreamSource.Helper.createInputStreamSource(deleted)
 					);
 		} catch (final IOException x) {
 			throw new RuntimeException(x);

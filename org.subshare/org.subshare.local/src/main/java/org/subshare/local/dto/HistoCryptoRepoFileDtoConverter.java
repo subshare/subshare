@@ -44,7 +44,7 @@ public class HistoCryptoRepoFileDtoConverter {
 
 		final byte[] repoFileDtoData = assertNotNull("cryptoRepoFileOnServer.repoFileDtoData", histoCryptoRepoFile.getRepoFileDtoData());
 		result.setRepoFileDtoData(repoFileDtoData);
-
+		result.setDeleted(histoCryptoRepoFile.getDeleted());
 		result.setSignature(assertNotNull("cryptoRepoFileOnServer.signature", histoCryptoRepoFile.getSignature()));
 
 		return result;
@@ -78,6 +78,7 @@ public class HistoCryptoRepoFileDtoConverter {
 		final CryptoKey cryptoKey = cryptoKeyDao.getCryptoKeyOrFail(histoCryptoRepoFileDto.getCryptoKeyId());
 		histoCryptoRepoFile.setCryptoKey(cryptoKey);
 		histoCryptoRepoFile.setRepoFileDtoData(histoCryptoRepoFileDto.getRepoFileDtoData());
+		histoCryptoRepoFile.setDeleted(histoCryptoRepoFileDto.getDeleted());
 		histoCryptoRepoFile.setSignature(histoCryptoRepoFileDto.getSignature());
 
 		histoCryptoRepoFile = histoCryptoRepoFileDao.makePersistent(histoCryptoRepoFile);

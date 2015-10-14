@@ -31,14 +31,19 @@ public class DeleteRepoFileListener extends AbstractLocalRepoTransactionListener
 			final TempFileChunkDao tempFileChunkDao = tx.getDao(TempFileChunkDao.class);
 			final Collection<TempFileChunk> tempFileChunks = tempFileChunkDao.getTempFileChunks(normalFile);
 			tempFileChunkDao.deletePersistentAll(tempFileChunks);
+
 			tx.flush();
 		}
 
 		final CryptoRepoFileDao cryptoRepoFileDao = tx.getDao(CryptoRepoFileDao.class);
 		final CryptoRepoFile cryptoRepoFile = cryptoRepoFileDao.getCryptoRepoFile(repoFile);
 		if (cryptoRepoFile != null) {
-			cryptoRepoFileDao.deletePersistent(cryptoRepoFile);
-			tx.flush();
+//			cryptoRepoFileDao.deletePersistent(cryptoRepoFile);
+//			tx.flush();
+			if (cryptoRepoFile.getDeleted() == null)
+				throw new IllegalStateException(String.format("%s not marked as deleted!", cryptoRepoFile));
+
+			cryptoRepoFile.setRepoFile(null);
 		}
 	}
 

@@ -27,6 +27,8 @@ import org.subshare.local.persistence.CurrentHistoCryptoRepoFileDao;
 import org.subshare.local.persistence.FileChunkPayload;
 import org.subshare.local.persistence.FileChunkPayloadDao;
 import org.subshare.local.persistence.HistoCryptoRepoFile;
+import org.subshare.local.persistence.HistoFileChunk;
+import org.subshare.local.persistence.HistoFileChunkDao;
 import org.subshare.local.persistence.SsDeleteModification;
 import org.subshare.local.persistence.SsDirectory;
 import org.subshare.local.persistence.SsNormalFile;
@@ -400,6 +402,7 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 		try ( final LocalRepoTransaction transaction = getLocalRepoManager().beginWriteTransaction(); ) {
 			final RepoFileDao repoFileDao = transaction.getDao(RepoFileDao.class);
 			final TempFileChunkDao tempFileChunkDao = transaction.getDao(TempFileChunkDao.class);
+			final HistoFileChunkDao histoFileChunkDao = transaction.getDao(HistoFileChunkDao.class);
 			final FileChunkPayloadDao fileChunkPayloadDao = transaction.getDao(FileChunkPayloadDao.class);
 
 			final RepoFile repoFile = repoFileDao.getRepoFile(localRoot, file);
@@ -432,8 +435,12 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 
 				final FileChunkPayload oldFileChunkPayload = fileChunkPayloadDao.getFileChunkPayload(fileChunk);
 				if (oldFileChunkPayload != null) {
-					fileChunkPayloadDao.deletePersistent(oldFileChunkPayload);
-					transaction.flush(); // make sure it's deleted in the DB, before we re-associate the new one (=> unique key might be violated)
+					if (histoFileChunkDao.getHistoFileChunkCount(oldFileChunkPayload) == 0)
+						fileChunkPayloadDao.deletePersistent(oldFileChunkPayload);
+					else
+						oldFileChunkPayload.setFileChunk(null);
+
+					transaction.flush(); // make sure it's written to the DB, before we re-associate the new one (=> unique key might be violated)
 				}
 
 				fileChunkPayload.setTempFileChunk(null);
@@ -451,9 +458,20 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 			// exactly. The actual length stored on the server might be much larger (due to each encrypted chunk
 			// containing additional data added by the encryption process).
 
-			for (FileChunk fileChunk : offset2FileChunk.values()) {
+			for (final FileChunk fileChunk : offset2FileChunk.values()) {
 				if (fileChunk.getOffset() >= normalFileDto.getLength())
 					normalFile.getFileChunks().remove(fileChunk); // it's dependentElement => remove causes DELETE in DB
+			}
+
+			for (final FileChunk fileChunk : normalFile.getFileChunks()) {
+				final FileChunkPayload fileChunkPayload = fileChunkPayloadDao.getFileChunkPayload(fileChunk);
+				HistoFileChunk histoFileChunk = new HistoFileChunk();
+				histoFileChunk.setHistoCryptoRepoFile(histoCryptoRepoFile);
+//				histoFileChunk.setNormalFile(fileChunk.getNormalFile());
+				histoFileChunk.setOffset(fileChunk.getOffset());
+				histoFileChunk.setLength(fileChunk.getLength());
+				histoFileChunk.setFileChunkPayload(fileChunkPayload);
+				histoFileChunkDao.makePersistent(histoFileChunk);
 			}
 
 			normalFile.setInProgress(false);

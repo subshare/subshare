@@ -284,10 +284,18 @@ public class CryptreeNode {
 
 		final HistoCryptoRepoFile previousHistoCryptoRepoFile = currentHistoCryptoRepoFile.getHistoCryptoRepoFile();
 
+		Collection<HistoCryptoRepoFile> histoCryptoRepoFiles = hcrfDao.getHistoCryptoRepoFiles(cryptoRepoFile);
+		for (HistoCryptoRepoFile histoCryptoRepoFile : histoCryptoRepoFiles) {
+			if (histoFrame.equals(histoCryptoRepoFile.getHistoFrame()))
+				throw new IllegalStateException("xxx");
+		}
+
 		HistoCryptoRepoFile histoCryptoRepoFile = new HistoCryptoRepoFile();
 		histoCryptoRepoFile.setCryptoRepoFile(cryptoRepoFile);
 		histoCryptoRepoFile.setPreviousHistoCryptoRepoFile(previousHistoCryptoRepoFile);
 		histoCryptoRepoFile.setHistoFrame(histoFrame);
+		final Date deleted = cryptoRepoFile.getDeleted();
+		histoCryptoRepoFile.setDeleted(deleted);
 
 		final PlainCryptoKey plainCryptoKey = getActivePlainCryptoKeyOrCreate(CryptoKeyRole.dataKey, CipherOperationMode.ENCRYPT);
 		final CryptoKey cryptoKey = assertNotNull("plainCryptoKey", plainCryptoKey).getCryptoKey();
@@ -297,8 +305,12 @@ public class CryptreeNode {
 			throw new IllegalStateException(String.format("cryptoKey != cryptoRepoFile.cryptoKey :: %s != %s",
 					cryptoKey, cryptoRepoFile.getCryptoKey()));
 
-		final byte[] repoFileDtoData = createRepoFileDtoDataForCryptoRepoFile(true);
-		histoCryptoRepoFile.setRepoFileDtoData(assertNotNull("encrypt(...)", encrypt(repoFileDtoData, plainCryptoKey)));
+		if (deleted != null)
+			histoCryptoRepoFile.setRepoFileDtoData(new byte[0]);
+		else{
+			final byte[] repoFileDtoData = createRepoFileDtoDataForCryptoRepoFile(true);
+			histoCryptoRepoFile.setRepoFileDtoData(assertNotNull("encrypt(...)", encrypt(repoFileDtoData, plainCryptoKey)));
+		}
 
 		sign(histoCryptoRepoFile);
 
@@ -339,7 +351,7 @@ public class CryptreeNode {
 		return repoFileDtoConverter;
 	}
 
-	private byte[] createRepoFileDtoDataForCryptoRepoFile(final boolean onServer) {
+	private byte[] createRepoFileDtoDataForCryptoRepoFile(final boolean forHisto) {
 		// TODO can we assert here, that this code is invoked on the client-side with the plain-text RepoFile?!
 
 		final RepoFileDtoConverter repoFileDtoConverter = getRepoFileDtoConverter();
@@ -347,8 +359,8 @@ public class CryptreeNode {
 		repoFileDtoConverter.setExcludeLocalIds(true);
 
 		// Erase information like last-modified, hash and length, if not used in HistoCryptoRepoFile!
-		repoFileDtoConverter.setExcludeMutableData(! onServer);
-		final RepoFileDto repoFileDto = repoFileDtoConverter.toRepoFileDto(repoFile, onServer ? Integer.MAX_VALUE : 0);
+		repoFileDtoConverter.setExcludeMutableData(! forHisto);
+		final RepoFileDto repoFileDto = repoFileDtoConverter.toRepoFileDto(repoFile, forHisto ? Integer.MAX_VALUE : 0);
 
 		((SsRepoFileDto) repoFileDto).setParentName(null); // only needed for uploading to the server.
 		if (((SsRepoFileDto) repoFileDto).getSignature() != null) // must be null on the client - and this method is never called on the server.

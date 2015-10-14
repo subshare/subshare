@@ -56,8 +56,8 @@ public class CryptoRepoFileDao extends Dao<CryptoRepoFile, CryptoRepoFileDao> {
 		}
 	}
 
-	public Collection<CryptoRepoFile> getCryptoRepoFilesWithoutRepoFile() {
-		final Query query = pm().newNamedQuery(getEntityClass(), "getCryptoRepoFilesWithoutRepoFile");
+	public Collection<CryptoRepoFile> getCryptoRepoFilesWithoutRepoFileAndNotDeleted() {
+		final Query query = pm().newNamedQuery(getEntityClass(), "getCryptoRepoFilesWithoutRepoFileAndNotDeleted");
 		try {
 			long startTimestamp = System.currentTimeMillis();
 
@@ -233,5 +233,46 @@ public class CryptoRepoFileDao extends Dao<CryptoRepoFile, CryptoRepoFileDao> {
 		assertNotNull("cryptoRepoFile", cryptoRepoFile);
 		final CryptoKeyDao cryptoKeyDao = getDao(CryptoKeyDao.class);
 		cryptoKeyDao.deletePersistentAll(cryptoKeyDao.getCryptoKeys(cryptoRepoFile));
+	}
+
+	public Collection<CryptoRepoFile> getDeletedCryptoRepoFilesWithoutDeletedHistoCryptoRepoFiles() {
+		final Query query = pm().newQuery("SELECT FROM " + CryptoRepoFile.class.getName()
+				+ " WHERE this.deleted != null"
+				+ " && (SELECT count(h) FROM " + HistoCryptoRepoFile.class.getName() + " h WHERE h.cryptoRepoFile == this && h.deleted != null) == 0");
+		try {
+			long startTimestamp = System.currentTimeMillis();
+
+			@SuppressWarnings("unchecked")
+			Collection<CryptoRepoFile> cryptoRepoFiles = (Collection<CryptoRepoFile>) query.execute();
+			logger.debug("getDeletedCryptoRepoFilesWithoutDeletedHistoCryptoRepoFiles: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
+
+			startTimestamp = System.currentTimeMillis();
+			cryptoRepoFiles = load(cryptoRepoFiles);
+			logger.debug("getDeletedCryptoRepoFilesWithoutDeletedHistoCryptoRepoFiles: Loading result-set with {} elements took {} ms.", cryptoRepoFiles.size(), System.currentTimeMillis() - startTimestamp);
+
+			return cryptoRepoFiles;
+		} finally {
+			query.closeAll();
+		}
+	}
+
+	public Collection<CryptoRepoFile> getCryptoRepoFilesWithRepoFileAndDeleted() {
+		final Query query = pm().newQuery("SELECT FROM " + CryptoRepoFile.class.getName()
+				+ " WHERE this.repoFile != null && this.deleted != null");
+		try {
+			long startTimestamp = System.currentTimeMillis();
+
+			@SuppressWarnings("unchecked")
+			Collection<CryptoRepoFile> cryptoRepoFiles = (Collection<CryptoRepoFile>) query.execute();
+			logger.debug("getCryptoRepoFilesWithRepoFileAndDeleted: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
+
+			startTimestamp = System.currentTimeMillis();
+			cryptoRepoFiles = load(cryptoRepoFiles);
+			logger.debug("getCryptoRepoFilesWithRepoFileAndDeleted: Loading result-set with {} elements took {} ms.", cryptoRepoFiles.size(), System.currentTimeMillis() - startTimestamp);
+
+			return cryptoRepoFiles;
+		} finally {
+			query.closeAll();
+		}
 	}
 }

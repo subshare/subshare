@@ -44,7 +44,7 @@ public class AssignCryptoRepoFileRepoFileListener extends AbstractLocalRepoTrans
 			return;
 
 		final CryptoRepoFileDao cryptoRepoFileDao = getTransactionOrFail().getDao(CryptoRepoFileDao.class);
-		final Collection<CryptoRepoFile> cryptoRepoFiles = cryptoRepoFileDao.getCryptoRepoFilesWithoutRepoFile();
+		final Collection<CryptoRepoFile> cryptoRepoFiles = cryptoRepoFileDao.getCryptoRepoFilesWithoutRepoFileAndNotDeleted();
 		for (final CryptoRepoFile cryptoRepoFile : cryptoRepoFiles) {
 			final RepoFile repoFile;
 			if (cryptoRepoFile.getLocalName() != null) // on client-side!

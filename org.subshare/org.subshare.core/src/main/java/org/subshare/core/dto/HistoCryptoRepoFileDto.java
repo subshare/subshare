@@ -4,6 +4,7 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Date;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -31,6 +32,8 @@ public class HistoCryptoRepoFileDto implements Signable {
 	private Uid cryptoKeyId;
 
 	private byte[] repoFileDtoData;
+
+	private Date deleted;
 
 	@XmlElement
 	private SignatureDto signatureDto;
@@ -77,6 +80,13 @@ public class HistoCryptoRepoFileDto implements Signable {
 		this.repoFileDtoData = repoFileDtoData;
 	}
 
+	public Date getDeleted() {
+		return deleted;
+	}
+	public void setDeleted(Date deleted) {
+		this.deleted = deleted;
+	}
+
 	@Override
 	public String getSignedDataType() {
 		return HistoCryptoRepoFileDto.SIGNED_DATA_TYPE;
@@ -112,7 +122,10 @@ public class HistoCryptoRepoFileDto implements Signable {
 					InputStreamSource.Helper.createInputStreamSource(assertNotNull("cryptoKeyId", cryptoKeyId)),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
-					InputStreamSource.Helper.createInputStreamSource(repoFileDtoData)
+					InputStreamSource.Helper.createInputStreamSource(repoFileDtoData),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
+					InputStreamSource.Helper.createInputStreamSource(deleted)
 					);
 		} catch (final IOException x) {
 			throw new RuntimeException(x);

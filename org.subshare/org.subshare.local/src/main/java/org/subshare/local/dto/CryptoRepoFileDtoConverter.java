@@ -33,6 +33,8 @@ public class CryptoRepoFileDtoConverter {
 		final byte[] repoFileDtoData = assertNotNull("cryptoRepoFile.repoFileDtoData", cryptoRepoFile.getRepoFileDtoData());
 		cryptoRepoFileDto.setRepoFileDtoData(repoFileDtoData);
 
+		cryptoRepoFileDto.setDeleted(cryptoRepoFile.getDeleted());
+
 		cryptoRepoFileDto.setSignature(assertNotNull("cryptoRepoFile.signature", cryptoRepoFile.getSignature()));
 
 		return cryptoRepoFileDto;

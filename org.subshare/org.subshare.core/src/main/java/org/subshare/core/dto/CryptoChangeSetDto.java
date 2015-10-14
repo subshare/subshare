@@ -11,7 +11,7 @@ public class CryptoChangeSetDto {
 
 	private List<CryptoRepoFileDto> cryptoRepoFileDtos;
 
-	private List<HistoFrameDto> histoFrameDtos; // should only be used in DOWN-syncs!
+	private List<HistoFrameDto> histoFrameDtos;
 
 	private List<HistoCryptoRepoFileDto> histoCryptoRepoFileDtos; // should only be used in DOWN-syncs!
 
@@ -212,7 +212,10 @@ public class CryptoChangeSetDto {
 				&& isEmpty(userRepoKeyPublicKeyReplacementRequestDtos)
 				&& isEmpty(userRepoKeyPublicKeyReplacementRequestDeletionDtos)
 				&& isEmpty(userIdentityDtos)
-				&& isEmpty(userIdentityLinkDtos);
+				&& isEmpty(userIdentityLinkDtos)
+				&& isEmpty(histoFrameDtos)
+				&& isEmpty(histoCryptoRepoFileDtos)
+				&& isEmpty(currentHistoCryptoRepoFileDtos);
 	}
 
 	private static boolean isEmpty(final Collection<?> c) {

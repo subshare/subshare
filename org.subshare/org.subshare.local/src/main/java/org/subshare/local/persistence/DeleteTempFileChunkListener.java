@@ -24,8 +24,14 @@ public class DeleteTempFileChunkListener extends AbstractLocalRepoTransactionLis
 		final FileChunkPayloadDao fileChunkPayloadDao = tx.getDao(FileChunkPayloadDao.class);
 
 		final FileChunkPayload fileChunkPayload = fileChunkPayloadDao.getFileChunkPayload(tempFileChunk);
-		if (fileChunkPayload != null)
-			fileChunkPayloadDao.deletePersistent(fileChunkPayload);
+		if (fileChunkPayload != null) {
+			// check, if it's still referenced by a HistoFileChunk!
+			final long histoFileChunkCount = tx.getDao(HistoFileChunkDao.class).getHistoFileChunkCount(fileChunkPayload);
+			if (histoFileChunkCount == 0)
+				fileChunkPayloadDao.deletePersistent(fileChunkPayload);
+			else
+				fileChunkPayload.setTempFileChunk(null);
+		}
 
 		tx.flush();
 	}

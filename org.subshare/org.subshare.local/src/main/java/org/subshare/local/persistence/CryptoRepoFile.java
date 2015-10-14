@@ -6,6 +6,7 @@ import static co.codewizards.cloudstore.core.util.Util.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -59,13 +60,14 @@ import co.codewizards.cloudstore.local.persistence.RepoFile;
 	// CryptoRepoFile instances with repoFile == null!
 	@Index(name="CryptoRepoFile_repoFile", members="repoFile"),
 	@Index(name="CryptoRepoFile_parent", members="parent"),
+	@Index(name="CryptoRepoFile_deleted", members="deleted"),
 	@Index(name="CryptoRepoFile_localRevision", members={"localRevision"})
 })
 @Queries({
 	@Query(name="getChildCryptoRepoFiles_parent", value="SELECT WHERE this.parent == :parent"),
 	@Query(name="getChildCryptoRepoFile_parent_localName", value="SELECT UNIQUE WHERE this.parent == :parent && this.localName == :localName"),
 	@Query(name="getCryptoRepoFile_repoFile", value="SELECT UNIQUE WHERE this.repoFile == :repoFile"),
-	@Query(name="getCryptoRepoFilesWithoutRepoFile", value="SELECT WHERE this.repoFile == null"),
+	@Query(name="getCryptoRepoFilesWithoutRepoFileAndNotDeleted", value="SELECT WHERE this.repoFile == null && this.deleted == null"),
 	@Query(name="getCryptoRepoFile_cryptoRepoFileId", value="SELECT UNIQUE WHERE this.cryptoRepoFileId == :cryptoRepoFileId"),
 	@Query(
 			name="getCryptoRepoFileChangedAfter_localRevision_exclLastSyncFromRepositoryId",
@@ -103,6 +105,8 @@ public class CryptoRepoFile extends Entity implements WriteProtected, AutoTrackL
 	private String localName;
 
 	private boolean directory;
+
+	private Date deleted;
 
 	@Persistent(nullValue = NullValue.EXCEPTION)
 	@Embedded(nullIndicatorColumn = "signatureCreated")
@@ -328,6 +332,13 @@ public class CryptoRepoFile extends Entity implements WriteProtected, AutoTrackL
 		return 0;
 	}
 
+	public Date getDeleted() {
+		return deleted;
+	}
+	public void setDeleted(Date deleted) {
+		this.deleted = deleted;
+	}
+
 //	public HistoCryptoRepoFile getCryptoRepoFileOnServer() {
 //		return cryptoRepoFileOnServer;
 //	}
@@ -359,7 +370,10 @@ public class CryptoRepoFile extends Entity implements WriteProtected, AutoTrackL
 					InputStreamSource.Helper.createInputStreamSource(getRepoFileDtoData()),
 //			localName;
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
-					InputStreamSource.Helper.createInputStreamSource(directory)
+					InputStreamSource.Helper.createInputStreamSource(directory),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
+					InputStreamSource.Helper.createInputStreamSource(deleted)
 					);
 		} catch (final IOException x) {
 			throw new RuntimeException(x);

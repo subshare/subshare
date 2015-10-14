@@ -2,6 +2,7 @@ package org.subshare.core.dto;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Date;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -27,6 +28,8 @@ public class CryptoRepoFileDto implements Signable {
 	private boolean directory;
 
 	private byte[] repoFileDtoData;
+
+	private Date deleted;
 
 	@XmlElement
 	private SignatureDto signatureDto;
@@ -66,6 +69,13 @@ public class CryptoRepoFileDto implements Signable {
 		this.repoFileDtoData = repoFileDtoData;
 	}
 
+	public Date getDeleted() {
+		return deleted;
+	}
+	public void setDeleted(Date deleted) {
+		this.deleted = deleted;
+	}
+
 	@Override
 	public String getSignedDataType() {
 		return CryptoRepoFileDto.SIGNED_DATA_TYPE;
@@ -100,7 +110,10 @@ public class CryptoRepoFileDto implements Signable {
 					InputStreamSource.Helper.createInputStreamSource(repoFileDtoData),
 //			localName;
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
-					InputStreamSource.Helper.createInputStreamSource(directory)
+					InputStreamSource.Helper.createInputStreamSource(directory),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
+					InputStreamSource.Helper.createInputStreamSource(deleted)
 					);
 		} catch (final IOException x) {
 			throw new RuntimeException(x);

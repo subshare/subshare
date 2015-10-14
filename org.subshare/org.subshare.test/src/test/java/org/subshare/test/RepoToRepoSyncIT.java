@@ -10,6 +10,11 @@ import java.util.Map;
 import mockit.Mock;
 import mockit.MockUp;
 
+import org.junit.Assert;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.subshare.core.AccessDeniedException;
 import org.subshare.core.ReadAccessDeniedException;
 import org.subshare.core.WriteAccessDeniedException;
@@ -19,18 +24,13 @@ import org.subshare.core.user.UserRepoKey.PublicKey;
 import org.subshare.core.user.UserRepoKeyRing;
 import org.subshare.core.user.UserRepoKeyRingLookup;
 import org.subshare.local.UserRepoKeyPublicKeyHelper;
-import org.subshare.local.persistence.SsFileChunk;
-import org.subshare.local.persistence.SsNormalFile;
 import org.subshare.local.persistence.CryptoRepoFile;
 import org.subshare.local.persistence.CryptoRepoFileDao;
 import org.subshare.local.persistence.InvitationUserRepoKeyPublicKey;
+import org.subshare.local.persistence.SsFileChunk;
+import org.subshare.local.persistence.SsNormalFile;
 import org.subshare.local.persistence.UserRepoKeyPublicKey;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyDao;
-import org.junit.Assert;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
@@ -71,7 +71,7 @@ public class RepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 	public void syncFromLocalToRemoteToLocalThenDeleteFileAndSyncAgain() throws Exception {
 		syncFromLocalToRemoteToLocal();
 
-		// SsDelete file /2/a in local source repository and sync this deletion.
+		// Delete file /2/a in local source repository and sync this deletion.
 		final File child_2 = createFile(localSrcRoot, "2");
 		final File child_2_a = createFile(child_2, "a");
 		assertThat(child_2_a.exists()).isTrue();
