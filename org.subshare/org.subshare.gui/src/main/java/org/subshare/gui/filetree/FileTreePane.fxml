@@ -7,6 +7,7 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Tooltip?>
 <?import javafx.scene.control.TreeTableColumn?>
 <?import javafx.scene.control.TreeTableView?>
 <?import javafx.scene.control.cell.TreeItemPropertyValueFactory?>
@@ -43,7 +44,7 @@
 		<HBox> 
 			<children>
 				<CheckBox fx:id="showHiddenFilesCheckBox" text="%FileTreePane.showHiddenFilesCheckBox.text"/> 
-				<Button fx:id="refreshButton" text="Refresh"> 
+				<Button fx:id="refreshButton" onAction="#refreshButtonClicked"> 
 					<graphic>
 						<ImageView> 
 							<image>
@@ -51,8 +52,56 @@
 							</image>
 						</ImageView>
 					</graphic>
+					<tooltip>
+						<Tooltip text="Refresh: Read the files and directories from the file system, again."/> 
+					</tooltip>
 					<HBox.margin>
 						<Insets left="16"/> 
+					</HBox.margin>
+				</Button>
+				<Button fx:id="createDirButton" onAction="#createDirButtonClicked"> 
+					<graphic>
+						<ImageView> 
+							<image>
+								<Image url="@create-dir_16x16.png"/> 
+							</image>
+						</ImageView>
+					</graphic>
+					<tooltip>
+						<Tooltip text="Create a new folder in the selected folder."/> 
+					</tooltip>
+					<HBox.margin>
+						<Insets left="4"/> 
+					</HBox.margin>
+				</Button>
+				<Button fx:id="renameButton" onAction="#renameButtonClicked"> 
+					<graphic>
+						<ImageView> 
+							<image>
+								<Image url="@rename_16x16.png"/> 
+							</image>
+						</ImageView>
+					</graphic>
+					<tooltip>
+						<Tooltip text="Rename the selected file (or folder)."/> 
+					</tooltip>
+					<HBox.margin>
+						<Insets left="4"/> 
+					</HBox.margin>
+				</Button>
+				<Button fx:id="deleteButton" onAction="#deleteButtonClicked"> 
+					<graphic>
+						<ImageView> 
+							<image>
+								<Image url="@delete_16x16.png"/> 
+							</image>
+						</ImageView>
+					</graphic>
+					<tooltip>
+						<Tooltip text="Delete the selected files (or folders)."/> 
+					</tooltip>
+					<HBox.margin>
+						<Insets left="4"/> 
 					</HBox.margin>
 				</Button>
 			</children>

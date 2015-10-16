@@ -1,13 +1,19 @@
 package org.subshare.gui.filetree;
 
+import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static co.codewizards.cloudstore.core.util.StringUtil.*;
 import static org.subshare.gui.util.FxmlUtil.*;
 import static org.subshare.gui.util.PlatformUtil.*;
 
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -23,17 +29,30 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableSet;
 import javafx.collections.SetChangeListener;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
+import javafx.scene.Node;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionMode;
+import javafx.scene.control.TextField;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeTableView;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 
-import org.subshare.gui.filetree.RefreshListener.RefreshEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.subshare.gui.filetree.RefreshListener.RefreshEvent;
 
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.oio.FileFilter;
@@ -60,6 +79,15 @@ public class FileTreePane extends BorderPane {
 
 	@FXML
 	private Button refreshButton;
+
+	@FXML
+	private Button createDirButton;
+
+	@FXML
+	private Button renameButton;
+
+	@FXML
+	private Button deleteButton;
 
 	private final BooleanProperty showHiddenFilesProperty = new SimpleBooleanProperty(this, "showHiddenFiles", false);
 
@@ -100,6 +128,8 @@ public class FileTreePane extends BorderPane {
 
 			if (c.getElementAdded() != null)
 				selectFileTreeItemForSelectedFile(c.getElementAdded());
+
+			updateDisable();
 		}
 	};
 
@@ -124,11 +154,17 @@ public class FileTreePane extends BorderPane {
 
 		selectedFiles.addListener(selectedFilesChangeListener);
 		showHiddenFilesCheckBox.selectedProperty().bindBidirectional(showHiddenFilesProperty);
-		refreshButton.setOnAction(event -> fireRefreshEvent());
 
 		// TODO remove the following line - preferably replace by proper, use-case-dependent management!
-//		selectedFiles.add(createFile("/home/mn/Desktop/Bilder_Juergen/Bilder Indien 2007"));
 		selectedFiles.add(IOUtil.getUserHome());
+		updateDisable();
+	}
+
+	private void updateDisable() {
+		final int seletectItemsSize = treeTableView.getSelectionModel().getSelectedItems().size();
+		createDirButton.setDisable(seletectItemsSize != 1); // the selection is the parent - and thus required!
+		renameButton.setDisable(seletectItemsSize != 1);
+		deleteButton.setDisable(seletectItemsSize < 1);
 	}
 
 	public boolean isRefreshButtonVisible() {
@@ -197,8 +233,14 @@ public class FileTreePane extends BorderPane {
 		updatingSelectedFiles = true;
 		try {
 			final FileTreeItem<?> fileTreeItem = rootFileTreeItem.findFirst(file);
-			if (fileTreeItem != null)
-				treeTableView.getSelectionModel().getSelectedItems().remove(fileTreeItem);
+			if (fileTreeItem != null) {
+				final Set<TreeItem<FileTreeItem<?>>> selectedItems = new LinkedHashSet<TreeItem<FileTreeItem<?>>>(treeTableView.getSelectionModel().getSelectedItems());
+				if (selectedItems.remove(fileTreeItem)) {
+					treeTableView.getSelectionModel().clearSelection();
+					for (TreeItem<FileTreeItem<?>> treeItem : selectedItems)
+						treeTableView.getSelectionModel().select(treeItem);
+				}
+			}
 		} finally {
 			updatingSelectedFiles = false;
 		}
@@ -296,5 +338,181 @@ public class FileTreePane extends BorderPane {
 	public void requestFocus() {
 		super.requestFocus();
 		treeTableView.requestFocus();
+	}
+
+	@FXML
+	private void refreshButtonClicked(final ActionEvent event) {
+		fireRefreshEvent();
+	}
+
+	@FXML
+	private void createDirButtonClicked(final ActionEvent event) {
+		final File parent = assertNotNull("getSelectedDirectory()", getSelectedDirectory());
+
+		final String dirName = showCreateOrRenameDialog(
+				"Create folder",
+				"What should be the new folder's name?",
+				parent, null,
+				(name) -> ! createFile(parent, name).exists());
+
+		if (dirName != null) {
+			final File directory = createFile(parent, dirName);
+			directory.mkdirs();
+			if (! directory.isDirectory())
+				showErrorDialog("Failed to create directory!", "The directory could not be created! Maybe you're missing the required permissions?!");
+			else {
+				refresh();
+				getSelectedFiles().clear();
+				getSelectedFiles().add(directory);
+			}
+		}
+	}
+
+	@FXML
+	private void renameButtonClicked(final ActionEvent event) {
+		final File selectedFile = getSelectedFile();
+		final File parent = selectedFile.getParentFile();
+
+		final String newName = showCreateOrRenameDialog(
+				"Rename",
+				"What should be the new name?",
+				parent, selectedFile.getName(),
+				(name) -> ! selectedFile.getName().equals(name) && ! createFile(parent, name).exists() );
+
+		if (newName != null) {
+			final File newFile = createFile(parent, newName);
+			if (!selectedFile.renameTo(newFile))
+				showErrorDialog("Failed to rename file!", "The file could not be renamed! Maybe you're missing the required permissions?!");
+			else {
+				refresh();
+				getSelectedFiles().clear();
+				getSelectedFiles().add(newFile);
+			}
+		}
+	}
+
+	@FXML
+	private void deleteButtonClicked(final ActionEvent event) {
+		final Set<File> selectedFiles = getSelectedFiles();
+		if (selectedFiles.isEmpty())
+			return;
+
+		Alert alert = new Alert(AlertType.CONFIRMATION);
+		alert.setTitle("Delete");
+		alert.setHeaderText("Delete these files?");
+
+		final VBox contentContainer = new VBox();
+		contentContainer.setSpacing(8);
+
+		final Text contentText = new Text("The following files and folders are about to be deleted (folders recursively!):");
+		contentText.setWrappingWidth(400);
+		contentContainer.getChildren().add(contentText);
+
+		final ListView<String> fileListView = new ListView<>();
+		for (final File file : selectedFiles)
+			fileListView.getItems().add(file.getAbsolutePath());
+
+		fileListView.setPrefSize(400, 200);
+		contentContainer.getChildren().add(fileListView);
+
+		alert.getDialogPane().setContent(contentContainer);
+
+		if (alert.showAndWait().get() == ButtonType.OK) {
+			final List<File> notDeletedFiles = new ArrayList<>();
+			for (final File file : selectedFiles) {
+				file.deleteRecursively();
+				if (file.exists())
+					notDeletedFiles.add(file);
+			}
+			refresh();
+
+			if (! notDeletedFiles.isEmpty())
+				showErrorDialog("Deleting failed!", "The selected files (or directories) could be not deleted. They may have been deleted partially, though.");
+		}
+	}
+
+	private String showCreateOrRenameDialog(final String title, final String headerText,
+			final File parent, final String name, final NameVerifier nameVerifier) {
+		final Alert alert = new Alert(AlertType.CONFIRMATION);
+		alert.setTitle(title);
+		alert.setHeaderText(headerText);
+
+		final GridPane contentContainer = new GridPane();
+		contentContainer.setPadding(new Insets(8));
+		contentContainer.setHgap(8);
+		contentContainer.setVgap(8);
+
+		contentContainer.add(new Label("Parent:"), 0, 0);
+		final TextField parentTextField = new TextField();
+		parentTextField.setEditable(false);
+
+		parentTextField.setText(parent.getAbsolutePath());
+		contentContainer.add(parentTextField, 1, 0);
+
+		contentContainer.add(new Label("Name:"), 0, 1);
+
+		final TextField dirNameTextField = new TextField();
+		dirNameTextField.setText(name);
+		GridPane.setHgrow(dirNameTextField, Priority.ALWAYS);
+		contentContainer.add(dirNameTextField, 1, 1);
+
+		final InvalidationListener updateDisableInvalidationListener = (observable) -> {
+			final String dirName = dirNameTextField.getText();
+			final Node okButton = alert.getDialogPane().lookupButton(ButtonType.OK);
+			if (isEmpty(dirName))
+				okButton.setDisable(true);
+			else {
+				final boolean nameAcceptable = nameVerifier.isNameAcceptable(dirName);
+				okButton.setDisable(! nameAcceptable);
+			}
+		};
+		dirNameTextField.textProperty().addListener(updateDisableInvalidationListener);
+
+		alert.getDialogPane().setContent(contentContainer);
+		alert.setOnShowing((event) -> {
+			dirNameTextField.requestFocus();
+			dirNameTextField.selectAll();
+			updateDisableInvalidationListener.invalidated(null);
+		});
+
+		if (alert.showAndWait().get() == ButtonType.OK)
+			return dirNameTextField.getText();
+		else
+			return null;
+	}
+
+	private void showErrorDialog(final String headerText, final String contentText) {
+		final Alert alert = new Alert(AlertType.ERROR);
+//		alert.setTitle("Error");
+		alert.setHeaderText(headerText);
+		alert.setContentText(contentText);
+		alert.showAndWait();
+	}
+
+	@FunctionalInterface
+	private static interface NameVerifier {
+		boolean isNameAcceptable(String name);
+	}
+
+	private File getSelectedFile() {
+		final Iterator<File> iterator = getSelectedFiles().iterator();
+		if (! iterator.hasNext())
+			return null; // nothing selected
+
+		final File file = iterator.next();
+
+		if (iterator.hasNext())
+			return null; // more than one selected.
+		else
+			return file;
+	}
+
+	private File getSelectedDirectory() {
+		File directory = getSelectedFile();
+
+		if (directory != null && ! directory.isDirectory())
+			directory = directory.getParentFile();
+
+		return directory;
 	}
 }

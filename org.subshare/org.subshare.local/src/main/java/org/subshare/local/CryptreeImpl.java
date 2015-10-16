@@ -826,9 +826,19 @@ public class CryptreeImpl extends AbstractCryptree {
 		final LocalRepoTransaction transaction = getTransactionOrFail();
 		transaction.flush();
 		final InvitationUserRepoKeyPublicKey oldKey = request.getOldKey();
-		transaction.getDao(UserRepoKeyPublicKeyReplacementRequestDao.class).deletePersistent(request);
-		transaction.getDao(UserRepoKeyPublicKeyDao.class).deletePersistent(oldKey);
+
+		final UserRepoKeyPublicKeyReplacementRequestDao urkpkrrDao = transaction.getDao(UserRepoKeyPublicKeyReplacementRequestDao.class);
+		urkpkrrDao.deletePersistent(request);
 		transaction.flush();
+
+		final Collection<UserRepoKeyPublicKeyReplacementRequest> otherRequests = urkpkrrDao.getUserRepoKeyPublicKeyReplacementRequestsForOldKey(oldKey);
+		if (otherRequests.isEmpty()) {
+			transaction.getDao(UserRepoKeyPublicKeyDao.class).deletePersistent(oldKey);
+			transaction.flush();
+		}
+		else
+			logger.warn("deleteUserRepoKeyPublicKeyReplacementRequestWithOldKey: Not deleting oldKey={}, because there are other requests referencing it! {}",
+					oldKey, otherRequests);
 	}
 
 	@Override

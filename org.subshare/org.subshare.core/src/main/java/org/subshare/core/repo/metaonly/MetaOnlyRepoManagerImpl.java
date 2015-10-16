@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.subshare.core.dto.CryptoRepoFileDto;
 import org.subshare.core.repo.ServerRepo;
 import org.subshare.core.repo.ServerRepoManagerImpl;
@@ -22,8 +24,6 @@ import org.subshare.core.server.Server;
 import org.subshare.core.server.ServerRegistry;
 import org.subshare.core.server.ServerRegistryImpl;
 import org.subshare.core.sync.RepoSyncState;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import co.codewizards.cloudstore.core.Severity;
 import co.codewizards.cloudstore.core.config.ConfigDir;
@@ -45,7 +45,7 @@ public class MetaOnlyRepoManagerImpl implements MetaOnlyRepoManager {
 
 	private final static int REPO_FILE_DTO_DEPTH = 0;
 
-	private MetaOnlyRepoManagerImpl() { }
+	protected MetaOnlyRepoManagerImpl() { }
 
 	private static final class Holder {
 		public static final MetaOnlyRepoManager instance = new MetaOnlyRepoManagerImpl();
