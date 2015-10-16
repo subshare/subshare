@@ -17,6 +17,9 @@ import mockit.Invocation;
 import mockit.Mock;
 import mockit.MockUp;
 
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.subshare.core.WriteAccessDeniedException;
 import org.subshare.core.crypto.CryptoConfigUtil;
 import org.subshare.core.dto.CryptoKeyRole;
@@ -29,9 +32,6 @@ import org.subshare.local.UserRepoKeyPublicKeyHelper;
 import org.subshare.local.persistence.CryptoKey;
 import org.subshare.local.persistence.CryptoLink;
 import org.subshare.local.persistence.UserRepoKeyPublicKey;
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import co.codewizards.cloudstore.core.config.Config;
 import co.codewizards.cloudstore.core.oio.File;
@@ -39,10 +39,12 @@ import co.codewizards.cloudstore.core.oio.File;
 public class PermissionIT extends AbstractRepoToRepoSyncIT {
 	private static final Logger logger = LoggerFactory.getLogger(PermissionIT.class);
 
+	private static final long BACKDATING_MAX_PERMISSION_VALID_TO_AGE = 30000; // was 15 sec, originally, but our build server is too slow - needed to increase :-(
+
 	@Override
 	public void before() throws Exception {
 		super.before();
-		System.setProperty(Config.SYSTEM_PROPERTY_PREFIX + CryptoConfigUtil.CONFIG_KEY_BACKDATING_MAX_PERMISSION_VALID_TO_AGE, "15000");
+		System.setProperty(Config.SYSTEM_PROPERTY_PREFIX + CryptoConfigUtil.CONFIG_KEY_BACKDATING_MAX_PERMISSION_VALID_TO_AGE, Long.toString(BACKDATING_MAX_PERMISSION_VALID_TO_AGE));
 
 		new MockUp<UserRepoKeyPublicKeyHelper>() {
 			@Mock
@@ -276,7 +278,7 @@ public class PermissionIT extends AbstractRepoToRepoSyncIT {
 			// backdating should still be allowed (within time-range)
 			syncFromRemoteToLocalDest(false);
 
-			Thread.sleep(15000);
+			Thread.sleep(BACKDATING_MAX_PERMISSION_VALID_TO_AGE);
 
 			final OutputStream out = file.createOutputStream();
 			out.write(123);
