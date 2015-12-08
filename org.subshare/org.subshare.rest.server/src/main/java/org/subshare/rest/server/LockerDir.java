@@ -14,7 +14,7 @@ public class LockerDir {
 	private static final Logger logger = LoggerFactory.getLogger(LockerDir.class);
 
 	public static final String CONFIG_KEY_LOCKER_DIR = "locker.dir";
-	public static final String DEFAULT_LOCKER_DIR = "${cloudstore.configDir}/locker";
+	public static final String DEFAULT_LOCKER_DIR = "${subshare.configDir}/locker";
 
 	protected LockerDir() { }
 
