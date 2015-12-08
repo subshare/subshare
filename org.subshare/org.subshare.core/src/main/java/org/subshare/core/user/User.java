@@ -9,11 +9,11 @@ import java.util.UUID;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpKeyId;
 
-import co.codewizards.cloudstore.core.bean.Bean;
+import co.codewizards.cloudstore.core.bean.CloneableBean;
 import co.codewizards.cloudstore.core.bean.PropertyBase;
 import co.codewizards.cloudstore.core.dto.Uid;
 
-public interface User extends Bean<User.Property> {
+public interface User extends CloneableBean<User.Property> {
 
 	public static interface Property extends PropertyBase {
 	}

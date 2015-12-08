@@ -50,12 +50,12 @@ import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.joran.JoranConfigurator;
 import ch.qos.logback.core.joran.spi.JoranException;
 import ch.qos.logback.core.util.StatusPrinter;
+import co.codewizards.cloudstore.core.appid.AppIdRegistry;
 import co.codewizards.cloudstore.core.config.ConfigDir;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.updater.CloudStoreUpdaterCore;
 import co.codewizards.cloudstore.core.updater.Version;
 import co.codewizards.cloudstore.core.util.DerbyUtil;
-import co.codewizards.cloudstore.core.util.IOUtil;
 import co.codewizards.cloudstore.ls.client.LocalServerClient;
 import co.codewizards.cloudstore.ls.server.LocalServer;
 
@@ -338,7 +338,8 @@ public class SubShareGui extends Application {
 		final String logbackXmlName = "logback.client.xml";
 		final File logbackXmlFile = createFile(ConfigDir.getInstance().getFile(), logbackXmlName);
 		if (!logbackXmlFile.exists()) {
-			IOUtil.copyResource(SubShareGui.class, logbackXmlName, logbackXmlFile);
+			AppIdRegistry.getInstance().copyResourceResolvingAppId(
+					SubShareGui.class, logbackXmlName, logbackXmlFile);
 		}
 
 		final LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();

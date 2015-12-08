@@ -9,6 +9,7 @@ import java.beans.PropertyChangeSupport;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -19,6 +20,8 @@ import java.util.TimerTask;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.subshare.core.observable.ModificationEventType;
 import org.subshare.core.observable.ObservableSet;
 import org.subshare.core.observable.standard.StandardPostModificationEvent;
@@ -28,8 +31,6 @@ import org.subshare.core.observable.standard.StandardPreModificationListener;
 import org.subshare.core.server.Server;
 import org.subshare.core.server.ServerRegistry;
 import org.subshare.core.server.ServerRegistryImpl;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import co.codewizards.cloudstore.core.Severity;
 import co.codewizards.cloudstore.core.config.Config;
@@ -156,6 +157,7 @@ public abstract class SyncDaemonImpl implements SyncDaemon {
 			for (final Server server : getServerRegistry().getServers()) {
 				oldServers.remove(server);
 				try (final Sync sync = createSync(server);) {
+					final Date syncStarted = new Date();
 					try {
 						final long startTimestamp = System.currentTimeMillis();
 						sync.sync();
@@ -163,10 +165,12 @@ public abstract class SyncDaemonImpl implements SyncDaemon {
 						final String message = String.format("Synchronizing with server '%s' (%s) took %d ms.",
 								server.getName(), server.getUrl(), System.currentTimeMillis() - startTimestamp);
 
-						getStates().add(new SyncState(server, server.getUrl(), Severity.INFO, message, null));
+						getStates().add(new SyncState(server, server.getUrl(), Severity.INFO, message, null,
+								syncStarted, new Date()));
 					} catch (Exception x) {
 						logger.error("_sync: " + x, x);
-						getStates().add(new SyncState(server, server.getUrl(), Severity.ERROR, x.getLocalizedMessage(), new Error(x)));
+						getStates().add(new SyncState(server, server.getUrl(), Severity.ERROR, x.getLocalizedMessage(), new Error(x),
+								syncStarted, new Date()));
 					}
 				}
 			}

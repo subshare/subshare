@@ -23,6 +23,8 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.subshare.core.dto.DeletedUid;
 import org.subshare.core.dto.ServerDto;
 import org.subshare.core.dto.ServerRegistryDto;
@@ -34,8 +36,6 @@ import org.subshare.core.observable.standard.StandardPostModificationEvent;
 import org.subshare.core.observable.standard.StandardPostModificationListener;
 import org.subshare.core.observable.standard.StandardPreModificationEvent;
 import org.subshare.core.observable.standard.StandardPreModificationListener;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import co.codewizards.cloudstore.core.config.ConfigDir;
 import co.codewizards.cloudstore.core.dto.Uid;
@@ -430,10 +430,5 @@ public class ServerRegistryImpl extends FileBasedObjectRegistry implements Serve
 
 	public Uid getVersion() {
 		return version;
-	}
-
-	@Override
-	public Object clone() {
-		throw new UnsupportedOperationException();
 	}
 }

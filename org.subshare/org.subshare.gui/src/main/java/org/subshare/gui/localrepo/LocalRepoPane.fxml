@@ -7,65 +7,61 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Spinner?>
+<?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.Tooltip?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
 <?scenebuilder-preview-i18n-resource messages.properties?>
 
-<fx:root xmlns:fx="http://javafx.com/fxml" type="GridPane">
+<fx:root xmlns:fx="http://javafx.com/fxml" type="GridPane" hgap="8" vgap="8">
 
-	<children>
-		<FlowPane GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="2"> 
-			<Button fx:id="syncButton" onAction="#syncButtonClicked"> 
-				<graphic>
-					<ImageView> 
-						<image>
-							<Image url="@sync_24x24.png"/> 
-						</image>
-					</ImageView>
-				</graphic>
-				<tooltip>
-					<Tooltip text="Synchronize this repository now."/> 
-				</tooltip>
-			</Button>
-			<Button fx:id="inviteButton" onAction="#inviteButtonClicked"> 
-				<graphic>
-					<ImageView> 
-						<image>
-							<Image url="@invite_24x24.png"/> 
-						</image>
-					</ImageView>
-				</graphic>
-				<tooltip>
-					<Tooltip text="Invite someone to share this repository.&#010;&#010;You'll select another user and an invitation token is going to be created for this user."/> 
-				</tooltip>
-			</Button>
-			<GridPane.margin>
-				<Insets left="8" right="8" top="8" bottom="8"/> 
-			</GridPane.margin>
-		</FlowPane>
-		<Label text="Name:" GridPane.columnIndex="0" GridPane.rowIndex="1"> 
-			<GridPane.margin>
-				<Insets left="8" right="8" bottom="8"/> 
-			</GridPane.margin>
-		</Label>
-		<TextField fx:id="nameTextField" GridPane.columnIndex="1" GridPane.rowIndex="1"> 
-			<GridPane.margin>
-				<Insets right="8" bottom="8"/> 
-			</GridPane.margin>
-		</TextField>
-		<Label text="Local root:" GridPane.columnIndex="0" GridPane.rowIndex="2"> 
-			<GridPane.margin>
-				<Insets left="8" right="8" bottom="8"/> 
-			</GridPane.margin>
-		</Label>
-		<TextField fx:id="localRootTextField" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="2"> 
-			<GridPane.margin>
-				<Insets right="8" bottom="8"/> 
-			</GridPane.margin>
-		</TextField>
-	</children>
+	<FlowPane GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="2"> 
+		<Button fx:id="syncButton" onAction="#syncButtonClicked"> 
+			<graphic>
+				<ImageView> 
+					<image>
+						<Image url="@sync_24x24.png"/> 
+					</image>
+				</ImageView>
+			</graphic>
+			<tooltip>
+				<Tooltip text="Synchronize this repository now."/> 
+			</tooltip>
+		</Button>
+		<Button fx:id="inviteButton" onAction="#inviteButtonClicked"> 
+			<graphic>
+				<ImageView> 
+					<image>
+						<Image url="@invite_24x24.png"/> 
+					</image>
+				</ImageView>
+			</graphic>
+			<tooltip>
+				<Tooltip text="Invite someone to share this repository.&#010;&#010;You'll select another user and an invitation token is going to be created for this user."/> 
+			</tooltip>
+		</Button>
+	</FlowPane>
+	<Label text="Name:" GridPane.columnIndex="0" GridPane.rowIndex="1"/> 
+	<TextField fx:id="nameTextField" GridPane.columnIndex="1" GridPane.rowIndex="1"/> 
+	<Label text="Local root:" GridPane.columnIndex="0" GridPane.rowIndex="2"/> 
+	<TextField fx:id="localRootTextField" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="2"/> 
+	<Label text="Activity:" GridPane.columnIndex="0" GridPane.rowIndex="3"/> 
+	<TextField fx:id="activityTextField" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="3"/> 
+	<Label text="Last sync:" GridPane.columnIndex="0" GridPane.rowIndex="4"/> 
+	<TextField fx:id="syncStateStartedFinishedTextField" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="4"/> 
+	<Label text="Error:" GridPane.columnIndex="0" GridPane.rowIndex="5" GridPane.valignment="TOP"/> 
+	<TextArea fx:id="syncStateErrorTextArea" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="5"/> 
+	<Label text="Sync period:" GridPane.columnIndex="0" GridPane.rowIndex="6"/> 
+	<HBox spacing="8" GridPane.columnIndex="1" GridPane.rowIndex="6"> 
+		<Spinner fx:id="syncPeriodSpinner" editable="true"/> 
+		<Label text="milliseconds"/> 
+	</HBox>
+	<padding>
+		<Insets left="8" top="8" right="8" bottom="8"/> 
+	</padding>
 </fx:root>

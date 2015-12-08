@@ -3,6 +3,7 @@ package org.subshare.core.sync;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.net.URL;
+import java.util.Date;
 import java.util.UUID;
 
 import org.subshare.core.repo.ServerRepo;
@@ -17,13 +18,13 @@ public class RepoSyncState extends co.codewizards.cloudstore.core.repo.sync.Repo
 
 	private final Server server;
 	private final ServerRepo serverRepo;
-	private final File localRoot;
+//	private final File localRoot;
 
-	public RepoSyncState(UUID localRepositoryId, ServerRepo serverRepo, Server server, File localRoot, URL url, Severity severity, String message, Error error) {
-		super(localRepositoryId, assertNotNull("serverRepo", serverRepo).getRepositoryId(), localRoot, url, severity, message, error);
+	public RepoSyncState(UUID localRepositoryId, ServerRepo serverRepo, Server server, File localRoot, URL url, Severity severity, String message, Error error, Date syncStarted, Date syncFinished) {
+		super(localRepositoryId, assertNotNull("serverRepo", serverRepo).getRepositoryId(), localRoot, url, severity, message, error, syncStarted, syncFinished);
 		this.serverRepo = serverRepo;
 		this.server = assertNotNull("server", server);
-		this.localRoot = assertNotNull("localRoot", localRoot);
+//		this.localRoot = assertNotNull("localRoot", localRoot);
 	}
 
 	public Server getServer() {
@@ -34,8 +35,8 @@ public class RepoSyncState extends co.codewizards.cloudstore.core.repo.sync.Repo
 		return serverRepo;
 	}
 
-	@Override
-	public File getLocalRoot() {
-		return localRoot;
-	}
+//	@Override
+//	public File getLocalRoot() {
+//		return localRoot;
+//	}
 }

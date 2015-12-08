@@ -9,51 +9,102 @@ import javafx.scene.image.ImageView
 import javafx.scene.image.Image
 import javafx.scene.control.Tooltip
 import javafx.geometry.Insets
+import javafx.scene.control.TextArea
+import javafx.scene.control.Spinner
+import javafx.scene.layout.HBox
 
 dynamic component LocalRepoPane resourcefile 'messages.properties' {
 	GridPane {
-		children : [
-			FlowPane {
-				Button id syncButton {
-					graphic : ImageView { image : Image { url : "@sync_24x24.png" } },
-					tooltip : Tooltip { text : "Synchronize this repository now." },
-					onAction : controllermethod syncButtonClicked
-				},
-				Button id inviteButton {
-					graphic : ImageView { image : Image { url : "@invite_24x24.png" } },
-					tooltip : Tooltip { text : "Invite someone to share this repository.&#010;&#010;You'll select another user and an invitation token is going to be created for this user." },
-					onAction : controllermethod inviteButtonClicked
-				},
-				static columnIndex : 0,
-				static rowIndex : 0,
-				static columnSpan : 2,
-				static margin : Insets { left : 8, right : 8, top : 8, bottom : 8}
+		hgap : 8,
+		vgap : 8,
+		padding : Insets { left : 8, top : 8, right : 8, bottom : 8 },		
+		
+		FlowPane {
+			Button id syncButton {
+				graphic : ImageView { image : Image { url : "@sync_24x24.png" } },
+				tooltip : Tooltip { text : "Synchronize this repository now." },
+				onAction : controllermethod syncButtonClicked
 			},
+			Button id inviteButton {
+				graphic : ImageView { image : Image { url : "@invite_24x24.png" } },
+				tooltip : Tooltip { text : "Invite someone to share this repository.&#010;&#010;You'll select another user and an invitation token is going to be created for this user." },
+				onAction : controllermethod inviteButtonClicked
+			},
+			static columnIndex : 0,
+			static rowIndex : 0,
+			static columnSpan : 2
+		},
 
-			Label {
-				text : "Name:",
-				static columnIndex : 0,
-				static rowIndex : 1,
-				static margin : Insets { left : 8, right : 8, bottom : 8}
-			},
-			TextField id nameTextField {
-				static columnIndex : 1,
-				static rowIndex : 1,
-				static margin : Insets { right : 8, bottom : 8}
-			},
+		Label {
+			text : "Name:",
+			static columnIndex : 0,
+			static rowIndex : 1
+		},
+		TextField id nameTextField {
+			static columnIndex : 1,
+			static rowIndex : 1
+		},
 
-			Label {
-				text : "Local root:",
-				static columnIndex : 0,
-				static rowIndex : 2,
-				static margin : Insets { left : 8, right : 8, bottom : 8}
+		Label {
+			text : "Local root:",
+			static columnIndex : 0,
+			static rowIndex : 2
+		},
+		TextField id localRootTextField {
+			editable : false,
+			static columnIndex : 1,
+			static rowIndex : 2
+		},
+
+		Label {
+			text : "Activity:",
+			static columnIndex : 0,
+			static rowIndex : 3
+		},
+		TextField id activityTextField {
+			editable : false,
+			static columnIndex : 1,
+			static rowIndex : 3
+		},
+
+		Label {
+			text : "Last sync:",
+			static columnIndex : 0,
+			static rowIndex : 4
+		},
+		TextField id syncStateStartedFinishedTextField {
+			editable : false,
+			static columnIndex : 1,
+			static rowIndex : 4
+		},
+		
+		Label {
+			text : "Error:",
+			static columnIndex : 0,
+			static rowIndex : 5,
+			static valignment : "TOP"
+		},
+		TextArea id syncStateErrorTextArea {
+			editable : false,
+			static columnIndex : 1,
+			static rowIndex : 5
+		},
+		
+		Label {
+			text : "Sync period:",
+			static columnIndex : 0,
+			static rowIndex : 6
+		},
+		HBox {
+			spacing : 8,
+			Spinner<Integer> id syncPeriodSpinner { // TODO replace this by a better component - see TimePeriodOptionHandler
+				editable : true
 			},
-			TextField id localRootTextField {
-				editable : false,
-				static columnIndex : 1,
-				static rowIndex : 2,
-				static margin : Insets { right : 8, bottom : 8}
-			}
-		]
+			Label {
+				text : "milliseconds"
+			},
+			static columnIndex : 1,
+			static rowIndex : 6
+		}
 	}
 }

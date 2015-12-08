@@ -6,7 +6,7 @@ import java.util.UUID;
 
 import org.subshare.core.server.Server;
 
-import co.codewizards.cloudstore.core.bean.Bean;
+import co.codewizards.cloudstore.core.bean.CloneableBean;
 import co.codewizards.cloudstore.core.bean.PropertyBase;
 import co.codewizards.cloudstore.core.dto.RepositoryDto;
 import co.codewizards.cloudstore.core.dto.Uid;
@@ -19,7 +19,7 @@ import co.codewizards.cloudstore.core.dto.Uid;
  *
  * @author Marco หงุ่ยตระกูล-Schulze - marco at codewizards dot co
  */
-public interface ServerRepo extends Bean<ServerRepo.Property> {
+public interface ServerRepo extends CloneableBean<ServerRepo.Property> {
 
 	public static interface Property extends PropertyBase {
 	}

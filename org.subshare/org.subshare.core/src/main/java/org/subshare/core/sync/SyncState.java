@@ -3,6 +3,7 @@ package org.subshare.core.sync;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.net.URL;
+import java.util.Date;
 
 import org.subshare.core.server.Server;
 
@@ -14,8 +15,8 @@ public class SyncState extends co.codewizards.cloudstore.core.sync.SyncState {
 
 	private final Server server;
 
-	public SyncState(final Server server, final URL url, final Severity severity, final String message, final Error error) {
-		super(url, severity, message, error);
+	public SyncState(final Server server, final URL url, final Severity severity, final String message, final Error error, Date syncStarted, Date syncFinished) {
+		super(url, severity, message, error, syncStarted, syncFinished);
 		this.server = assertNotNull("server", server);
 	}
 

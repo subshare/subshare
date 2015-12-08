@@ -1,10 +1,16 @@
 package org.subshare.gui.localrepo;
 
+import static co.codewizards.cloudstore.core.bean.PropertyChangeListenerUtil.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static org.subshare.gui.util.FxmlUtil.*;
 
+import java.beans.PropertyChangeListener;
+import java.text.DateFormat;
+import java.util.List;
+import java.util.Set;
 import java.util.function.UnaryOperator;
 
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.adapter.JavaBeanObjectProperty;
 import javafx.beans.property.adapter.JavaBeanObjectPropertyBuilder;
@@ -13,6 +19,8 @@ import javafx.beans.property.adapter.JavaBeanStringPropertyBuilder;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
+import javafx.scene.control.Spinner;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
 import javafx.scene.control.TextFormatter.Change;
@@ -25,11 +33,15 @@ import org.subshare.gui.ls.RepoSyncDaemonLs;
 import org.subshare.gui.util.FileStringConverter;
 import org.subshare.gui.wizard.WizardDialog;
 
+import co.codewizards.cloudstore.core.dto.Error;
 import co.codewizards.cloudstore.core.oio.File;
+import co.codewizards.cloudstore.core.repo.sync.RepoSyncActivity;
 import co.codewizards.cloudstore.core.repo.sync.RepoSyncDaemon;
+import co.codewizards.cloudstore.core.repo.sync.RepoSyncState;
 
 public class LocalRepoPane extends GridPane {
 	private final LocalRepo localRepo;
+	private final RepoSyncDaemon repoSyncDaemon;
 
 	@FXML
 	private Button syncButton;
@@ -43,12 +55,32 @@ public class LocalRepoPane extends GridPane {
 	@FXML
 	private TextField localRootTextField;
 
+	@FXML
+	private TextField activityTextField;
+
+	@FXML
+	private TextField syncStateStartedFinishedTextField;
+
+	@FXML
+	private TextArea syncStateErrorTextArea;
+
+	@FXML
+	private Spinner<Integer> syncPeriodSpinner;
+
+	private Set<RepoSyncActivity> activities;
+	private List<RepoSyncState> states;
+
 	private JavaBeanStringProperty nameProperty;
 
 	private JavaBeanObjectProperty<File> localRootProperty;
 
+	private final PropertyChangeListener activityPropertyChangeListener = event -> updateActivities();
+
+	private final PropertyChangeListener statePropertyChangeListener = event -> updateState();
+
 	public LocalRepoPane(final LocalRepo localRepo) {
 		this.localRepo = assertNotNull("localRepo", localRepo);
+		this.repoSyncDaemon = RepoSyncDaemonLs.getRepoSyncDaemon();
 		loadDynamicComponentFxml(LocalRepoPane.class, this);
 		nameTextField.setTextFormatter(new TextFormatter<String>(new UnaryOperator<Change>() {
 			@Override
@@ -64,8 +96,10 @@ public class LocalRepoPane extends GridPane {
 			}
 		}));
 		bind();
+		updateActivities();
 	}
 
+	@SuppressWarnings("unchecked")
 	private void bind() {
 		try {
 			// nameProperty must be kept as field to prevent garbage-collection!
@@ -81,9 +115,57 @@ public class LocalRepoPane extends GridPane {
 					.build();
 
 			Bindings.bindBidirectional(localRootTextField.textProperty(), localRootProperty, new FileStringConverter());
+
 		} catch (NoSuchMethodException e) {
 			throw new RuntimeException(e);
 		}
+
+		addWeakPropertyChangeListener(repoSyncDaemon, RepoSyncDaemon.PropertyEnum.activities, activityPropertyChangeListener);
+		addWeakPropertyChangeListener(repoSyncDaemon, RepoSyncDaemon.PropertyEnum.states, statePropertyChangeListener);
+	}
+
+	private void updateActivities() {
+		final Set<RepoSyncActivity> newActivities = repoSyncDaemon.getActivities(localRepo.getRepositoryId());
+		Platform.runLater(() -> {
+			if (activities == null || ! activities.equals(newActivities)) {
+				activities = newActivities;
+				activityTextField.setText(getActivityTypesDisplayString(newActivities));
+			}
+		});
+	}
+
+	private void updateState() {
+		final List<RepoSyncState> newStates = repoSyncDaemon.getStates(localRepo.getRepositoryId());
+		Platform.runLater(() -> {
+			if (states == null || ! states.equals(newStates)) {
+				states = newStates;
+				final RepoSyncState state = states.isEmpty() ? null : states.get(0);
+				final DateFormat dateFormat = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM);
+				syncStateStartedFinishedTextField.setText(state == null ? null :
+					dateFormat.format(state.getSyncStarted()) + " ... " + dateFormat.format(state.getSyncFinished()));
+
+				final Error error = state == null ? null : state.getError();
+				syncStateErrorTextArea.setText(error == null ? null : error.getClassName() + "\n\n" + error.getMessage());
+
+				if (states.size() > 1)
+					syncStateErrorTextArea.setText("ARG!!! THERE ARE MULTIPLE STATES!!! SHOULD BE 0 OR 1!!!");
+			}
+		});
+	}
+
+	private String getActivityTypesDisplayString(Set<RepoSyncActivity> activities) {
+		if (activities.isEmpty())
+			return "{none}";
+
+		final StringBuilder sb = new StringBuilder();
+		for (RepoSyncActivity repoSyncActivity : activities) {
+			if (sb.length() > 0)
+				sb.append(" + ");
+
+			sb.append(repoSyncActivity.getActivityType()); // TODO nicer String!!!
+		}
+
+		return sb.toString();
 	}
 
 	@FXML
