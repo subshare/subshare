@@ -39,8 +39,11 @@ import org.subshare.gui.ls.PgpPrivateKeyPassphraseManagerLs;
 import org.subshare.gui.pgp.privatekeypassphrase.PgpPrivateKeyPassphrasePromptDialog;
 import org.subshare.gui.splash.SplashPane;
 import org.subshare.gui.util.PlatformUtil;
+import org.subshare.gui.welcome.ServerWizard;
 import org.subshare.gui.welcome.Welcome;
+import org.subshare.gui.welcome.pgp.privatekeypassphrase.IntroWizard;
 import org.subshare.gui.wizard.WizardDialog;
+import org.subshare.gui.wizard.WizardState;
 import org.subshare.ls.server.SsLocalServer;
 
 import ch.qos.logback.classic.LoggerContext;
@@ -123,8 +126,13 @@ public class SubShareGui extends Application {
 					final Set<PgpKeyId> pgpKeyIdsHavingPrivateKeyBeforeRestore = getIdsOfMasterKeysWithPrivateKey();
 					tryPgpKeysNoPassphrase();
 					PlatformUtil.runAndWait(() -> promptPgpKeyPassphrases(primaryStage.getScene().getWindow()));
+					if (exitCode != 0) {
+						stopLater();
+						return;
+					}
 
-					if (! new Welcome(primaryStage.getScene().getWindow()).welcome()) {
+					final Welcome welcome = new Welcome(primaryStage.getScene().getWindow());
+					if (! welcome.welcome()) {
 						exitCode = 1;
 						stopLater();
 						return;
@@ -248,43 +256,33 @@ public class SubShareGui extends Application {
 		final PgpPrivateKeyPassphraseStore pgpPrivateKeyPassphraseStore = PgpPrivateKeyPassphraseManagerLs.getPgpPrivateKeyPassphraseStore();
 		final Date now = new Date();
 
-//		// Trying to submit the empty passphrases takes a while, because the exceptions cause our
-//		// LocalServerClient to perform a retry. We therefore simply use multiple threads.
-//		final ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
-//		try {
-			for (final PgpKey pgpKey : pgp.getMasterKeysWithSecretKey()) {
-				if (! pgpKey.isValid(now))
-					continue;
+		for (final PgpKey pgpKey : pgp.getMasterKeysWithSecretKey()) {
+			if (! pgpKey.isValid(now))
+				continue;
 
-				final PgpKeyId pgpKeyId = pgpKey.getPgpKeyId();
-				if (pgpPrivateKeyPassphraseStore.hasPassphrase(pgpKeyId))
-					continue;
+			final PgpKeyId pgpKeyId = pgpKey.getPgpKeyId();
+			if (pgpPrivateKeyPassphraseStore.hasPassphrase(pgpKeyId))
+				continue;
 
-//				executorService.submit(new Runnable() {
-//					@Override
-//					public void run() {
-						// We try an empty password to prevent a dialog from popping up, if the PGP key is not passphrase-protected.
+			// We try an empty password to prevent a dialog from popping up, if the PGP key is not passphrase-protected.
 
-						// To prevent log pollution as well as speeding this up (LocalServer-RPC does retries in case of *all* exceptions),
-						// I first invoke testPassphrase(...) (even though this would not be necessary).
-						if (pgp.testPassphrase(pgpKey, new char[0])) {
-							try {
-								pgpPrivateKeyPassphraseStore.putPassphrase(pgpKeyId, new char[0]);
-								// successful => next PGP key
-							} catch (Exception x) {
-								doNothing();
-							}
-						}
-//					}
-//				});
+			// To prevent log pollution as well as speeding this up (LocalServer-RPC does retries in case of *all* exceptions),
+			// I first invoke testPassphrase(...) (even though this would not be necessary).
+			if (pgp.testPassphrase(pgpKey, new char[0])) {
+				try {
+					pgpPrivateKeyPassphraseStore.putPassphrase(pgpKeyId, new char[0]);
+					// successful => next PGP key
+				} catch (Exception x) {
+					doNothing();
+				}
 			}
-//		} finally {
-//			executorService.shutdown();
-//			executorService.awaitTermination(10, TimeUnit.MINUTES);
-//		}
+		}
 	}
 
 	private void promptPgpKeyPassphrases(Window owner) {
+		final boolean serverWizardIsNeeded = new ServerWizard(true, true).isNeeded();
+		boolean introAlreadyShown = false;
+
 		final Pgp pgp = PgpLs.getPgpOrFail();
 		final PgpPrivateKeyPassphraseStore pgpPrivateKeyPassphraseStore = PgpPrivateKeyPassphraseManagerLs.getPgpPrivateKeyPassphraseStore();
 		final Date now = new Date();
@@ -296,6 +294,17 @@ public class SubShareGui extends Application {
 			final PgpKeyId pgpKeyId = pgpKey.getPgpKeyId();
 			if (pgpPrivateKeyPassphraseStore.hasPassphrase(pgpKeyId))
 				continue;
+
+			if (serverWizardIsNeeded && ! introAlreadyShown) {
+				// Show the user a nice introductory explaining why we're going to ask for the PGP key passphrase.
+				introAlreadyShown = true;
+				final IntroWizard introWizard = new IntroWizard();
+				new WizardDialog(owner, introWizard).showAndWait();
+				if (introWizard.getState() == WizardState.CANCELLED) {
+					exitCode = 2;
+					return;
+				}
+			}
 
 			boolean retry = false;
 			String errorMessage = null;

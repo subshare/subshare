@@ -1,0 +1,24 @@
+package org.subshare.gui.welcome.pgp.privatekeypassphrase.first
+
+import javafx.scene.layout.GridPane
+import javafx.scene.text.Text
+import javafx.geometry.Insets
+import javafx.scene.control.CheckBox
+
+dynamic component FirstPane {
+	GridPane {
+		hgap : 8,
+		vgap : 8,
+		padding : Insets { left : 8, top : 8, right : 8, bottom : 8 },
+
+		Text id headerText {
+			text : rstring 'FirstPane.headerText.text',
+			wrappingWidth : 600,
+			static columnIndex : 0,
+			static rowIndex : 0,
+			static columnSpan : 3,
+			static hgrow : "ALWAYS",
+			static margin : Insets { bottom : 16 }
+		}
+	}
+}

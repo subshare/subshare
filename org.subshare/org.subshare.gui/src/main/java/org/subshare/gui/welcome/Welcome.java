@@ -14,7 +14,7 @@ public class Welcome {
 	private final Window owner;
 
 	private IdentityWizard identityWizard;
-	private boolean identityWizardNeeded;
+	private volatile boolean identityWizardNeeded;
 
 	private ServerWizard serverWizard;
 	private volatile boolean serverWizardNeeded;
@@ -24,9 +24,7 @@ public class Welcome {
 		this.owner = assertNotNull("owner", owner);
 	}
 
-	public boolean welcome() {
-		final boolean[] result = new boolean[1];
-
+	private void init() {
 		PlatformUtil.runAndWait(() -> {
 			identityWizard = new IdentityWizard();
 			identityWizardNeeded = identityWizard.isNeeded();
@@ -60,6 +58,12 @@ public class Welcome {
 				});
 			}
 		});
+	}
+
+	public boolean welcome() {
+		init();
+
+		final boolean[] result = new boolean[1];
 
 		PlatformUtil.runAndWait(() -> {
 			if (identityWizardNeeded) {

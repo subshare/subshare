@@ -2,8 +2,13 @@ package org.subshare.gui.welcome;
 
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
 
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
 import org.subshare.core.pgp.Pgp;
 import org.subshare.core.pgp.PgpKey;
+import org.subshare.core.pgp.PgpKeyId;
 import org.subshare.core.pgp.man.PgpPrivateKeyPassphraseStore;
 import org.subshare.core.user.User;
 import org.subshare.core.user.UserRegistry;
@@ -24,16 +29,32 @@ public class IdentityWizard extends Wizard {
 	private final IdentityData identityData = new IdentityData();
 
 	private final Pgp pgp;
+	private final PgpPrivateKeyPassphraseStore pgpPrivateKeyPassphraseStore;
 	private boolean needed;
 
 	private User user;
-	private boolean importBackup;
+//	private boolean importBackup;
 
 	public IdentityWizard() {
 		super(new FirstWizardPage());
 
 		pgp = PgpLs.getPgpOrFail();
-		if (pgp.getMasterKeysWithSecretKey().isEmpty()) {
+		pgpPrivateKeyPassphraseStore = PgpPrivateKeyPassphraseManagerLs.getPgpPrivateKeyPassphraseStore();
+		final Date now = new Date();
+
+		List<PgpKey> usableMasterKeys = new ArrayList<>();
+		for (final PgpKey pgpKey : pgp.getMasterKeysWithSecretKey()) {
+			if (pgpKey.isRevoked() || !pgpKey.isValid(now))
+				continue;
+
+			final PgpKeyId pgpKeyId = pgpKey.getPgpKeyId();
+			if (! pgpPrivateKeyPassphraseStore.hasPassphrase(pgpKeyId))
+				continue;
+
+			usableMasterKeys.add(pgpKey);
+		}
+
+		if (usableMasterKeys.isEmpty()) {
 			needed = true;
 			getFirstPage().setNextPage(new IdentityWizardPage(identityData));
 
