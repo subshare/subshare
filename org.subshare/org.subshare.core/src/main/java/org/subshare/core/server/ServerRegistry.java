@@ -22,6 +22,11 @@ public interface ServerRegistry extends Bean<ServerRegistry.Property> {
 
 	Server getServer(Uid serverId);
 
+	/**
+	 * Gets a thread-safe {@code List} of the servers known to this registry. The result can be
+	 * iterated in a thread-safe way.
+	 * @return a thread-safe {@code List} of the servers known to this registry. Never <code>null</code>.
+	 */
 	List<Server> getServers();
 
 	Server createServer();

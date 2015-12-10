@@ -26,7 +26,7 @@ public abstract class WizardPage extends VBox {
 	protected final Button cancelButton = new Button("Cancel");
 	protected final Button finishButton = new Button("_Finish");
 
-	private final ObjectProperty<WizardPage> nextPageProperty = new SimpleObjectProperty<WizardPage>(this, "nextPage") { //$NON-NLS-1$
+	private final ObjectProperty<WizardPage> nextPage = new SimpleObjectProperty<WizardPage>(this, "nextPage") { //$NON-NLS-1$
 		@Override
 		public void set(WizardPage newValue) {
 			super.set(newValue);
@@ -211,19 +211,19 @@ public abstract class WizardPage extends VBox {
 	 * @see #getNextPage()
 	 * @see #setNextPage(WizardPage)
 	 */
-	public ObjectProperty<WizardPage> nextPageProperty() { return nextPageProperty; }
+	public ObjectProperty<WizardPage> nextPageProperty() { return nextPage; }
 	/**
 	 * Gets the next page after this page.
 	 * @return the next page following this page. May be <code>null</code>.
 	 * @see #nextPageProperty()
 	 */
-	public WizardPage getNextPage() { return nextPageProperty.get(); }
+	public WizardPage getNextPage() { return nextPage.get(); }
 	/**
 	 * Set the next page after this page.
 	 * @param wizardPage the next page after this page. May be <code>null</code>.
 	 * @see #nextPageProperty()
 	 */
-	public void setNextPage(final WizardPage wizardPage) { nextPageProperty.set(wizardPage); }
+	public void setNextPage(final WizardPage wizardPage) { nextPage.set(wizardPage); }
 
 	protected Wizard getWizard() {
 		return wizard;

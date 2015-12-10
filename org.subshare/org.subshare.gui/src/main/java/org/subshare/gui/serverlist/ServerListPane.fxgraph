@@ -44,30 +44,30 @@ dynamic component ServerListPane resourcefile "messages.properties" {
 			}
 		},
 
-		TableView < ServerListItem > id tableView {
+		TableView<ServerListItem> id tableView {
 			editable : true,
 
 			columns : [
-				TableColumn < ServerListItem, String > id nameColumn {
+				TableColumn<ServerListItem, String> id nameColumn {
 					text : "Name",
 					prefWidth : 150,
-					cellValueFactory : PropertyValueFactory < ServerListItem, String > {
+					cellValueFactory : PropertyValueFactory<ServerListItem, String> {
 						property : "name"
 					}
 //					,
 //					cellFactory : TextFieldTableCell createdby forTableColumn { }
 				},
-				TableColumn < ServerListItem, URL > id urlColumn {
+				TableColumn<ServerListItem, URL> id urlColumn {
 					text : "URL",
 					prefWidth : 350,
-					cellValueFactory : PropertyValueFactory < ServerListItem, URL > {
+					cellValueFactory : PropertyValueFactory<ServerListItem, URL> {
 						property : "url"
 					}
 				},
-				TableColumn < ServerListItem, Severity > id severityIconColumn {
+				TableColumn<ServerListItem, Severity> id severityIconColumn {
 					text : "Severity",
 					prefWidth : 24,
-					cellValueFactory : PropertyValueFactory < ServerListItem, Severity > {
+					cellValueFactory : PropertyValueFactory<ServerListItem, Severity> {
 						property : "severity"
 					}
 				}

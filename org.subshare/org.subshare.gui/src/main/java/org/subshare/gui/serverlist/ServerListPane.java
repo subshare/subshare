@@ -90,7 +90,7 @@ public class ServerListPane extends GridPane {
 		public void propertyChange(PropertyChangeEvent evt) {
 			@SuppressWarnings("unchecked")
 			final Set<Server> servers = new LinkedHashSet<Server>((List<Server>) evt.getNewValue());
-			runLater(() -> addOrRemoveItemTablesViewCallback(servers));
+			runLater(() -> addOrRemoveTableItemsViewCallback(servers));
 		}
 	};
 
@@ -144,24 +144,22 @@ public class ServerListPane extends GridPane {
 		severityIconColumn.setCellFactory(l -> new TableCell<ServerListItem, Severity>() {
 			@Override
 			public void updateItem(final Severity severity, final boolean empty) {
-				if (empty)
-					setGraphic(null);
-				else {
-					assertNotNull("severity", severity);
-					final ServerListItem serverListItem = (ServerListItem) getTableRow().getItem();
-					if (serverListItem == null)
+				ImageView imageView = null;
+				Tooltip tooltip = null;
+				if (severity != null) {
+					final ServerListItem listItem = (ServerListItem) getTableRow().getItem();
+					if (listItem == null)
 						return;
 
-					final String tooltipText = serverListItem.getTooltipText();
+					final String tooltipText = listItem.getTooltipText();
 
-					final ImageView imageView = new ImageView(SeverityImageRegistry.getInstance().getImage(severity, IconSize._16x16));
+					imageView = new ImageView(SeverityImageRegistry.getInstance().getImage(severity, IconSize._16x16));
 
-					if (!StringUtil.isEmpty(tooltipText)) {
-						Tooltip tooltip = new Tooltip(tooltipText);
-						setTooltip(tooltip);
-					}
-					setGraphic(imageView);
+					if (!StringUtil.isEmpty(tooltipText))
+						tooltip = new Tooltip(tooltipText);
 				}
+				setGraphic(imageView);
+				setTooltip(tooltip);
 			}
 		});
 
@@ -190,7 +188,7 @@ public class ServerListPane extends GridPane {
 					protected void succeeded() {
 						final Collection<Server> servers;
 						try { servers = get(); } catch (InterruptedException | ExecutionException e) { throw new RuntimeException(e); }
-						addTableItemsViewCallback(servers);
+						addOrRemoveTableItemsViewCallback(servers);
 					}
 				};
 			}
@@ -222,7 +220,7 @@ public class ServerListPane extends GridPane {
 		return lockerSyncDaemon;
 	}
 
-	private void addOrRemoveItemTablesViewCallback(final Set<Server> servers) {
+	private void addOrRemoveTableItemsViewCallback(final Collection<Server> servers) {
 		assertNotNull("servers", servers);
 		final Map<Server, ServerListItem> viewServer2ServerListItem = new HashMap<>();
 		for (final ServerListItem sli : tableView.getItems())
@@ -259,15 +257,15 @@ public class ServerListPane extends GridPane {
 		serverListItem.setLockerSyncState(state);
 	}
 
-	private void addTableItemsViewCallback(final Collection<Server> servers) {
-		assertNotNull("servers", servers);
-		for (final Server server : servers) {
-			ServerListItem serverListItem = new ServerListItem(server);
-			updateSyncStates(serverListItem);
-			tableView.getItems().add(serverListItem);
-		}
-		tableView.requestLayout();
-	}
+//	private void addTableItemsViewCallback(final Collection<Server> servers) {
+//		assertNotNull("servers", servers);
+//		for (final Server server : servers) {
+//			ServerListItem serverListItem = new ServerListItem(server);
+//			updateSyncStates(serverListItem);
+//			tableView.getItems().add(serverListItem);
+//		}
+//		tableView.requestLayout();
+//	}
 
 	@Override
 	protected void finalize() throws Throwable {

@@ -26,7 +26,7 @@ public abstract class AdvancedPane extends GridPane {
 
 	@FXML
 	private ComboBox<CreatePgpKeyParam.Algorithm> algorithmComboBox;
-	private final JavaBeanObjectProperty<CreatePgpKeyParam.Algorithm> algorithmProperty;
+	private final JavaBeanObjectProperty<CreatePgpKeyParam.Algorithm> algorithm;
 
 	@FXML
 	private ComboBox<Integer> strengthComboBox;
@@ -48,11 +48,11 @@ public abstract class AdvancedPane extends GridPane {
 		this.createPgpKeyParam = assertNotNull("createPgpKeyParam", createPgpKeyParam);
 		loadDynamicComponentFxml(AdvancedPane.class, this);
 
-		algorithmProperty = createAlgorithmProperty();
-		algorithmProperty.addListener((InvalidationListener) observable -> updateStrengthComboBoxItems());
+		algorithm = createAlgorithmProperty();
+		algorithm.addListener((InvalidationListener) observable -> updateStrengthComboBoxItems());
 		algorithmComboBox.setItems(FXCollections.observableArrayList(CreatePgpKeyParam.Algorithm.values()));
 		algorithmComboBox.setConverter(algorithmStringConverter);
-		algorithmComboBox.valueProperty().bindBidirectional(algorithmProperty);
+		algorithmComboBox.valueProperty().bindBidirectional(algorithm);
 
 		updateStrengthComboBoxItems();
 		strengthComboBox.valueProperty().addListener((InvalidationListener) observable -> createPgpKeyParam.setStrength(strengthComboBox.getValue()));

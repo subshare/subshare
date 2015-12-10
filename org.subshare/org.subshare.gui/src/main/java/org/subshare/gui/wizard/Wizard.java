@@ -46,7 +46,7 @@ import co.codewizards.cloudstore.core.progress.ProgressMonitor;
 public abstract class Wizard extends StackPane {
 	private final IdentityHashMap<WizardPage, Void> knownPages = new IdentityHashMap<WizardPage, Void>();
 
-	protected final ObjectProperty<WizardPage> firstPageProperty = new SimpleObjectProperty<WizardPage>(this, "firstPage") {
+	protected final ObjectProperty<WizardPage> firstPage = new SimpleObjectProperty<WizardPage>(this, "firstPage") {
 		@Override
 		public void set(final WizardPage newValue) {
 			final WizardPage oldValue = get();
@@ -89,9 +89,9 @@ public abstract class Wizard extends StackPane {
     /**
      * Create an instance of a {@code Wizard} with the specified first page. If {@code firstPage} is
      * <code>null</code>, it must be set later via {@link #setFirstPage(WizardPage)} or the
-     * {@link #firstPageProperty() firstPageProperty} before the wizard can be used.
+     * {@link #firstPageProperty() firstPage} before the wizard can be used.
      * @param firstPage the first page to be shown by this wizard. May be <code>null</code> - in this
-     * case it must be set via the {@code firstPageProperty}, before the wizard is usable.
+     * case it must be set via the {@code firstPage}, before the wizard is usable.
      */
 	protected Wizard(final WizardPage firstPage) {
 		setFirstPage(firstPage);
@@ -141,19 +141,19 @@ public abstract class Wizard extends StackPane {
 	 * @see #getFirstPage()
 	 * @see #setFirstPage(WizardPage)
 	 */
-	public ObjectProperty<WizardPage> firstPageProperty() { return firstPageProperty; }
+	public ObjectProperty<WizardPage> firstPageProperty() { return firstPage; }
 	/**
 	 * Gets the first page.
 	 * @return the first page. May be <code>null</code>.
 	 * @see #firstPageProperty()
 	 */
-	public WizardPage getFirstPage() { return firstPageProperty.get(); }
+	public WizardPage getFirstPage() { return firstPage.get(); }
 	/**
 	 * Sets the first page.
 	 * @param wizardPage the first page. May be <code>null</code>.
 	 * @see #firstPageProperty()
 	 */
-	public void setFirstPage(WizardPage wizardPage) { firstPageProperty.set(wizardPage); }
+	public void setFirstPage(WizardPage wizardPage) { firstPage.set(wizardPage); }
 
 	public void init() {
 		PlatformUtil.assertFxApplicationThread();

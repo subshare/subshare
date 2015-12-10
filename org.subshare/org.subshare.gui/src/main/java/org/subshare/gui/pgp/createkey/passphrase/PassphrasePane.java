@@ -41,7 +41,7 @@ public abstract class PassphrasePane extends GridPane {
 
 	@FXML
 	private PasswordField passphrase1PasswordField;
-	private final JavaBeanObjectProperty<char[]> passphrase1Property;
+	private final JavaBeanObjectProperty<char[]> passphrase1;
 
 	@FXML
 	private CheckBox noPassphraseCheckBox;
@@ -77,11 +77,11 @@ public abstract class PassphrasePane extends GridPane {
 		this.createPgpKeyParam = assertNotNull("createPgpKeyParam", createPgpKeyParam); //$NON-NLS-1$
 		loadDynamicComponentFxml(PassphrasePane.class, this);
 
-		passphrase1Property = createPassphraseProperty();
+		passphrase1 = createPassphraseProperty();
 		Bindings.bindBidirectional(
-				passphrase1PasswordField.textProperty(), passphrase1Property, new CharArrayStringConverter());
+				passphrase1PasswordField.textProperty(), passphrase1, new CharArrayStringConverter());
 
-		passphrase1Property.addListener((InvalidationListener) observable -> updatePassphraseStatus());
+		passphrase1.addListener((InvalidationListener) observable -> updatePassphraseStatus());
 		passphrase2PasswordField.textProperty().addListener((InvalidationListener) observable -> updatePassphraseStatus());
 		noPassphraseCheckBox.selectedProperty().addListener(new ChangeListener<Boolean>() {
 			@Override

@@ -26,8 +26,8 @@ public class ServerListItem {
 	private SyncState lockerSyncState;
 
 	private final StringProperty nameProperty;
-	private final ObjectProperty<URL> urlProperty;
-	private final ObjectProperty<Severity> severityProperty = new SimpleObjectProperty<>();
+	private final ObjectProperty<URL> url;
+	private final ObjectProperty<Severity> severity = new SimpleObjectProperty<>(this, "severity");
 
 	public ServerListItem(final Server server) {
 		this.server = assertNotNull("server", server);
@@ -36,7 +36,7 @@ public class ServerListItem {
 					.bean(server)
 					.name(Server.PropertyEnum.name.name()).build();
 
-			urlProperty = JavaBeanObjectPropertyBuilder.create()
+			url = JavaBeanObjectPropertyBuilder.create()
 					.bean(server)
 					.name(Server.PropertyEnum.url.name()).build();
 		} catch (NoSuchMethodException e) {
@@ -54,11 +54,11 @@ public class ServerListItem {
 	}
 
 	public ObjectProperty<URL> urlProperty() {
-		return urlProperty;
+		return url;
 	}
 
 	public ObjectProperty<Severity> severityProperty() {
-		return severityProperty;
+		return severity;
 	}
 
 	private void updateSeverity() {
@@ -66,7 +66,7 @@ public class ServerListItem {
 		final SyncState pgpSyncState = getPgpSyncState();
 		final SyncState lockerSyncState = getLockerSyncState();
 
-		severityProperty.set(getHighestSeverity(
+		severity.set(getHighestSeverity(
 				(pgpSyncState == null ? null : pgpSyncState.getSeverity()),
 				(lockerSyncState == null ? null : lockerSyncState.getSeverity())
 				));

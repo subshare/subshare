@@ -97,6 +97,7 @@ public class LocalRepoPane extends GridPane {
 		}));
 		bind();
 		updateActivities();
+		updateState();
 	}
 
 	@SuppressWarnings("unchecked")
@@ -139,16 +140,13 @@ public class LocalRepoPane extends GridPane {
 		Platform.runLater(() -> {
 			if (states == null || ! states.equals(newStates)) {
 				states = newStates;
-				final RepoSyncState state = states.isEmpty() ? null : states.get(0);
+				final RepoSyncState state = states.isEmpty() ? null : states.get(states.size() - 1); // last one!
 				final DateFormat dateFormat = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM);
 				syncStateStartedFinishedTextField.setText(state == null ? null :
 					dateFormat.format(state.getSyncStarted()) + " ... " + dateFormat.format(state.getSyncFinished()));
 
 				final Error error = state == null ? null : state.getError();
 				syncStateErrorTextArea.setText(error == null ? null : error.getClassName() + "\n\n" + error.getMessage());
-
-				if (states.size() > 1)
-					syncStateErrorTextArea.setText("ARG!!! THERE ARE MULTIPLE STATES!!! SHOULD BE 0 OR 1!!!");
 			}
 		});
 	}

@@ -3,9 +3,12 @@ package org.subshare.gui.localrepolist
 import javafx.scene.layout.BorderPane
 import java.net.URL
 import javafx.util.converter.DefaultStringConverter
+import co.codewizards.cloudstore.core.Severity
+import co.codewizards.cloudstore.core.repo.sync.RepoSyncActivity
 import org.subshare.core.Severity
 import org.subshare.gui.serverlist.ServerListPane
-import org.subshare.gui.serverlist.ServerListItem
+import org.subshare.gui.localrepolist.LocalRepoListItem
+import java.util.Set
 import javafx.util.Callback
 import javafx.scene.control.cell.TextFieldTableCell
 import javafx.scene.control.Label
@@ -28,10 +31,66 @@ dynamic component LocalRepoListPane resourcefile "messages.properties" {
 
 		FlowPane {
 			Button id acceptInvitationButton {
-				graphic : ImageView { image : Image { url : "@acceptInvitation_24x24.png" } },
+				graphic : ImageView { image : Image { url : "@accept-invitation_24x24.png" } },
 				tooltip : Tooltip { text : "Accept an invitation, i.e. import an invitation token from a file." },
 				onAction : controllermethod acceptInvitationButtonClicked
+			},
+			Button id syncAllButton {
+				graphic : ImageView { image : Image { url : "@sync-all_24x24.png" } },
+				tooltip : Tooltip { text : "Sync all repositories." },
+				onAction : controllermethod syncAllButtonClicked
+			},
+			Button id syncButton {
+				graphic : ImageView { image : Image { url : "@sync_24x24.png" } },
+				tooltip : Tooltip { text : "Sync the selected repositories." },
+				onAction : controllermethod syncButtonClicked
 			}
+		},
+
+		TableView<LocalRepoListItem> id tableView {
+			editable : true,
+
+			columns : [
+				TableColumn < LocalRepoListItem, String > id nameColumn {
+					text : "Name",
+					prefWidth : 100,
+					cellValueFactory : PropertyValueFactory < LocalRepoListItem, String > {
+						property : "nameShown"
+					}
+				},
+				TableColumn < LocalRepoListItem, String > id urlColumn {
+					text : "Local root",
+					prefWidth : 220,
+					cellValueFactory : PropertyValueFactory < LocalRepoListItem, String > {
+						property : "localRootAsString"
+					}
+				},
+				TableColumn < LocalRepoListItem, String > id urlColumn {
+					text : "Last sync",
+					prefWidth : 150,
+					cellValueFactory : PropertyValueFactory < LocalRepoListItem, String > {
+						property : "syncStartedAsString"
+					}
+				},
+				TableColumn < LocalRepoListItem, Set<RepoSyncActivity> > id repoSyncActivityIconColumn {
+					text : "Activity",
+					prefWidth : 24,
+					cellValueFactory : PropertyValueFactory < LocalRepoListItem, Set<RepoSyncActivity> > {
+						property : "repoSyncActivities"
+					}
+				},
+				TableColumn < LocalRepoListItem, Severity > id severityIconColumn {
+					text : "Severity",
+					prefWidth : 24,
+					cellValueFactory : PropertyValueFactory < LocalRepoListItem, Severity > {
+						property : "severity"
+					}
+				}
+			],
+
+			static rowIndex : 1,
+			static hgrow : "ALWAYS",
+			static vgrow : "ALWAYS"
 		}
 	}
 }

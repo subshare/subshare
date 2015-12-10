@@ -36,14 +36,14 @@ public abstract class ServerPane extends GridPane {
 
 	@FXML
 	private TextField urlTextField;
-	private final ObjectProperty<URL> urlProperty;
+	private final ObjectProperty<URL> url;
 
 	@FXML
 	private Label nameLabel;
 
 	@FXML
 	private TextField nameTextField;
-	private final StringProperty nameProperty;
+	private final StringProperty name;
 
 	@FXML
 	private CheckBox acceptInvitationCheckBox;
@@ -55,13 +55,13 @@ public abstract class ServerPane extends GridPane {
 		loadDynamicComponentFxml(ServerPane.class, this);
 
 		try {
-			urlProperty = JavaBeanObjectPropertyBuilder.create().bean(server).name(Server.PropertyEnum.url.name()).build();
-			nameProperty = JavaBeanStringPropertyBuilder.create().bean(server).name(Server.PropertyEnum.name.name()).build();
+			url = JavaBeanObjectPropertyBuilder.create().bean(server).name(Server.PropertyEnum.url.name()).build();
+			name = JavaBeanStringPropertyBuilder.create().bean(server).name(Server.PropertyEnum.name.name()).build();
 		} catch (NoSuchMethodException e) {
 			throw new RuntimeException(e);
 		}
-		urlTextField.textProperty().bindBidirectional(urlProperty, new UrlStringConverter());
-		nameTextField.textProperty().bindBidirectional(nameProperty);
+		urlTextField.textProperty().bindBidirectional(url, new UrlStringConverter());
+		nameTextField.textProperty().bindBidirectional(name);
 
 		acceptInvitationCheckBox.selectedProperty().bindBidirectional(serverData.acceptInvitationProperty());
 		nameLabel.disableProperty().bind(acceptInvitationCheckBox.selectedProperty());
