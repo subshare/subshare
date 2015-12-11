@@ -287,7 +287,8 @@ public class CryptreeNode {
 		Collection<HistoCryptoRepoFile> histoCryptoRepoFiles = hcrfDao.getHistoCryptoRepoFiles(cryptoRepoFile);
 		for (HistoCryptoRepoFile histoCryptoRepoFile : histoCryptoRepoFiles) {
 			if (histoFrame.equals(histoCryptoRepoFile.getHistoFrame()))
-				throw new IllegalStateException("xxx");
+				return histoCryptoRepoFile; // TODO is this the right strategy? Or should we better delete and recreate? I encountered this situation when aborting an up-sync and resuming later.
+//				throw new IllegalStateException("xxx");
 		}
 
 		HistoCryptoRepoFile histoCryptoRepoFile = new HistoCryptoRepoFile();

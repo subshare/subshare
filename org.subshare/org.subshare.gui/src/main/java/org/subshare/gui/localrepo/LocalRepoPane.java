@@ -17,22 +17,35 @@ import javafx.beans.property.adapter.JavaBeanObjectPropertyBuilder;
 import javafx.beans.property.adapter.JavaBeanStringProperty;
 import javafx.beans.property.adapter.JavaBeanStringPropertyBuilder;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.Spinner;
-import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
 import javafx.scene.control.TextFormatter.Change;
+import javafx.scene.control.Tooltip;
+import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.text.Text;
 
 import org.subshare.core.repo.LocalRepo;
+import org.subshare.gui.IconSize;
+import org.subshare.gui.error.ErrorHandler;
 import org.subshare.gui.invitation.issue.IssueInvitationData;
 import org.subshare.gui.invitation.issue.IssueInvitationWizard;
 import org.subshare.gui.ls.RepoSyncDaemonLs;
+import org.subshare.gui.severity.SeverityImageRegistry;
 import org.subshare.gui.util.FileStringConverter;
 import org.subshare.gui.wizard.WizardDialog;
 
+import co.codewizards.cloudstore.core.Severity;
 import co.codewizards.cloudstore.core.dto.Error;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.repo.sync.RepoSyncActivity;
@@ -62,7 +75,10 @@ public class LocalRepoPane extends GridPane {
 	private TextField syncStateStartedFinishedTextField;
 
 	@FXML
-	private TextArea syncStateErrorTextArea;
+	private Label syncStateSeverityLabel;
+
+	@FXML
+	private ImageView syncStateSeverityImageView;
 
 	@FXML
 	private Spinner<Integer> syncPeriodSpinner;
@@ -98,6 +114,10 @@ public class LocalRepoPane extends GridPane {
 		bind();
 		updateActivities();
 		updateState();
+
+		final EventHandler<? super MouseEvent> syncStateMouseEventFilter = event -> showSyncStateDialog();
+		syncStateStartedFinishedTextField.addEventFilter(MouseEvent.MOUSE_CLICKED, syncStateMouseEventFilter);
+		syncStateSeverityLabel.addEventFilter(MouseEvent.MOUSE_CLICKED, syncStateMouseEventFilter);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -135,6 +155,41 @@ public class LocalRepoPane extends GridPane {
 		});
 	}
 
+	private void showSyncStateDialog() {
+		final RepoSyncState state = states.isEmpty() ? null : states.get(states.size() - 1); // last one!
+		final Error error = state == null ? null : state.getError();
+		if (error == null) {
+			if (state == null)
+				showSyncStateInfoDialog("There was no synchonisation, yet (since the application was started).");
+			else
+				showSyncStateInfoDialog("The last synchonisation was successful.");
+		}
+		else
+			showSyncStateErrorDialog(error);
+	}
+
+	private void showSyncStateInfoDialog(String message) {
+		Alert alert = new Alert(AlertType.INFORMATION);
+		alert.setHeaderText("All fine, dude!");
+
+//		alert.setContentText(text);
+		// The above does not adjust the dialog size :-( Using a Text node instead works better.
+
+		final Text contentText = new Text(message);
+		final HBox contentTextContainer = new HBox();
+		contentTextContainer.getChildren().add(contentText);
+
+		GridPane.setMargin(contentText, new Insets(8));
+		alert.getDialogPane().setContent(contentTextContainer);
+
+		alert.show();
+	}
+
+	private void showSyncStateErrorDialog(final Error error) {
+		assertNotNull("error", error);
+		ErrorHandler.handleError("Last synchronisation failed!", null, error); // take 'contentText' from throwable
+	}
+
 	private void updateState() {
 		final List<RepoSyncState> newStates = repoSyncDaemon.getStates(localRepo.getRepositoryId());
 		Platform.runLater(() -> {
@@ -146,7 +201,22 @@ public class LocalRepoPane extends GridPane {
 					dateFormat.format(state.getSyncStarted()) + " ... " + dateFormat.format(state.getSyncFinished()));
 
 				final Error error = state == null ? null : state.getError();
-				syncStateErrorTextArea.setText(error == null ? null : error.getClassName() + "\n\n" + error.getMessage());
+
+				final Severity severity = state == null ? Severity.INFO : state.getSeverity();
+				syncStateSeverityImageView.setDisable(state == null);
+				syncStateSeverityImageView.setImage(SeverityImageRegistry.getInstance().getImage(severity, IconSize._24x24));
+
+				Tooltip tooltip = null;
+
+				if (error != null)
+					tooltip = new Tooltip(error.getClassName() + "\n\n" + error.getMessage());
+				else if (state == null)
+					tooltip = new Tooltip("There was no synchonisation, yet (since the application was started).");
+				else
+					tooltip = new Tooltip("The last synchonisation was successful.");
+
+				syncStateStartedFinishedTextField.setTooltip(tooltip);
+				syncStateSeverityLabel.setTooltip(tooltip);
 			}
 		});
 	}

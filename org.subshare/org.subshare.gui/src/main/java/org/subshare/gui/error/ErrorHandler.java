@@ -22,9 +22,12 @@ import javafx.scene.control.TextArea;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 
-import org.subshare.gui.util.PlatformUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.subshare.gui.util.PlatformUtil;
+
+import co.codewizards.cloudstore.core.dto.Error;
+import co.codewizards.cloudstore.core.dto.RemoteExceptionUtil;
 
 public class ErrorHandler {
 
@@ -71,6 +74,18 @@ public class ErrorHandler {
 
 	public static void handleError(final Throwable error) {
 		new ErrorHandler(null, null, error).doHandleError();
+	}
+
+	public static void handleError(final String headerText, final String contentText, final Error error) {
+		try {
+			RemoteExceptionUtil.throwOriginalExceptionIfPossible(error);
+		} catch (final Throwable throwable) {
+			handleError(headerText, contentText, throwable);
+		}
+	}
+
+	public static void handleError(final Error error) {
+		handleError(null, null, error);
 	}
 
 	protected String getHeaderText() {

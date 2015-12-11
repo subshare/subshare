@@ -72,22 +72,19 @@ dynamic component LocalRepoPane resourcefile 'messages.properties' {
 			static columnIndex : 0,
 			static rowIndex : 4
 		},
-		TextField id syncStateStartedFinishedTextField {
-			editable : false,
+		HBox {
+			spacing : 8,
+			TextField id syncStateStartedFinishedTextField {
+				editable : false,
+				static hgrow : "ALWAYS"
+			},
+			Label id syncStateSeverityLabel {
+				graphic : ImageView id syncStateSeverityImageView {
+					image : Image { url : "@/org/subshare/gui/severity/INFO_24x24.png" }
+				}
+			},
 			static columnIndex : 1,
 			static rowIndex : 4
-		},
-		
-		Label {
-			text : "Error:",
-			static columnIndex : 0,
-			static rowIndex : 5,
-			static valignment : "TOP"
-		},
-		TextArea id syncStateErrorTextArea {
-			editable : false,
-			static columnIndex : 1,
-			static rowIndex : 5
 		},
 		
 		Label {
@@ -98,6 +95,7 @@ dynamic component LocalRepoPane resourcefile 'messages.properties' {
 		HBox {
 			spacing : 8,
 			Spinner<Integer> id syncPeriodSpinner { // TODO replace this by a better component - see TimePeriodOptionHandler
+				static hgrow : "ALWAYS",
 				editable : true
 			},
 			Label {

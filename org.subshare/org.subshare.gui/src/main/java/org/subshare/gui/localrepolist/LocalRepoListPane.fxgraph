@@ -51,38 +51,38 @@ dynamic component LocalRepoListPane resourcefile "messages.properties" {
 			editable : true,
 
 			columns : [
-				TableColumn < LocalRepoListItem, String > id nameColumn {
+				TableColumn<LocalRepoListItem, String> id nameColumn {
 					text : "Name",
 					prefWidth : 100,
-					cellValueFactory : PropertyValueFactory < LocalRepoListItem, String > {
+					cellValueFactory : PropertyValueFactory<LocalRepoListItem, String> {
 						property : "nameShown"
 					}
 				},
-				TableColumn < LocalRepoListItem, String > id urlColumn {
+				TableColumn<LocalRepoListItem, String> id urlColumn {
 					text : "Local root",
 					prefWidth : 220,
-					cellValueFactory : PropertyValueFactory < LocalRepoListItem, String > {
+					cellValueFactory : PropertyValueFactory<LocalRepoListItem, String> {
 						property : "localRootAsString"
 					}
 				},
-				TableColumn < LocalRepoListItem, String > id urlColumn {
+				TableColumn<LocalRepoListItem, String> id urlColumn {
 					text : "Last sync",
 					prefWidth : 150,
-					cellValueFactory : PropertyValueFactory < LocalRepoListItem, String > {
+					cellValueFactory : PropertyValueFactory<LocalRepoListItem, String> {
 						property : "syncStartedAsString"
 					}
 				},
-				TableColumn < LocalRepoListItem, Set<RepoSyncActivity> > id repoSyncActivityIconColumn {
+				TableColumn<LocalRepoListItem, Set<RepoSyncActivity>> id repoSyncActivityIconColumn {
 					text : "Activity",
 					prefWidth : 24,
-					cellValueFactory : PropertyValueFactory < LocalRepoListItem, Set<RepoSyncActivity> > {
+					cellValueFactory : PropertyValueFactory<LocalRepoListItem, Set<RepoSyncActivity>> {
 						property : "repoSyncActivities"
 					}
 				},
-				TableColumn < LocalRepoListItem, Severity > id severityIconColumn {
+				TableColumn<LocalRepoListItem, Severity> id severityIconColumn {
 					text : "Severity",
 					prefWidth : 24,
-					cellValueFactory : PropertyValueFactory < LocalRepoListItem, Severity > {
+					cellValueFactory : PropertyValueFactory<LocalRepoListItem, Severity> {
 						property : "severity"
 					}
 				}
