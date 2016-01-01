@@ -14,6 +14,8 @@ import javafx.scene.control.Spinner
 import javafx.scene.layout.HBox
 import javafx.scene.control.CheckBox
 
+import org.subshare.gui.control.TimePeriodTextField
+
 dynamic component LocalRepoPane resourcefile 'messages.properties' {
 	GridPane {
 		hgap : 8,
@@ -88,26 +90,35 @@ dynamic component LocalRepoPane resourcefile 'messages.properties' {
 			static rowIndex : 4
 		},
 
-		CheckBox id syncPeriodCheckBox {
+		Label {
+			text : "Next sync:",
+			static columnIndex : 0,
+			static rowIndex : 5
+		},
+		TextField id nextSyncTextField {
+			editable : false,
+			static hgrow : "ALWAYS",
+			static columnIndex : 1,
+			static rowIndex : 5
+		},
+
+		Label {
 			text : "Sync period:",
-			tooltip : Tooltip { text : "Check to set a repository-specific sync period. If not checked, the global/default value is used." },
 			static columnIndex : 0,
 			static rowIndex : 6
 		},
-//		Label {
-//			text : "Sync period:",
-//			static columnIndex : 0,
-//			static rowIndex : 6
-//		},
 		HBox {
 			spacing : 8,
-			Spinner<Integer> id syncPeriodSpinner { // TODO replace this by a better component - see TimePeriodOptionHandler
-				static hgrow : "ALWAYS",
-				editable : true
+			CheckBox id syncPeriodCheckBox {
+				text : "override:",
+				tooltip : Tooltip { text : "Check to set a repository-specific sync period. If not checked, the global/default value is used." }
 			},
-			Label {
-				text : "milliseconds"
+			TimePeriodTextField id syncPeriodTimePeriodTextField {
+				static hgrow : "ALWAYS"
 			},
+//			Label {
+//				text : "milliseconds"
+//			},
 			static columnIndex : 1,
 			static rowIndex : 6
 		}

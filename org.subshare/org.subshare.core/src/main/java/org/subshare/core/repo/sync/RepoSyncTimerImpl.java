@@ -5,6 +5,7 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -30,6 +31,7 @@ public class RepoSyncTimerImpl implements RepoSyncTimer {
 
 	private static final Logger logger = LoggerFactory.getLogger(RepoSyncTimerImpl.class);
 
+	private final PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
 	private final Timer timer = new Timer("RepoSyncTimer");
 	private TimerTask timerTask;
 	private final Map<UUID, Long> localRepositoryId2NextSyncTimestamp = new HashMap<>();
@@ -58,7 +60,8 @@ public class RepoSyncTimerImpl implements RepoSyncTimer {
 		return Holder.instance;
 	}
 
-	private void scheduleTimerTask() {
+	@Override
+	public void scheduleTimerTask() {
 		cancelTimerTask(); // just in case, there's one scheduled.
 
 		long globalNextSyncTimestamp = Long.MAX_VALUE;
@@ -145,15 +148,22 @@ public class RepoSyncTimerImpl implements RepoSyncTimer {
 		return false;
 	}
 
-	public synchronized long getNextSyncTimestamp(final LocalRepo localRepo) {
-		final UUID localRepositoryId = assertNotNull("localRepo", localRepo).getRepositoryId();
+	@Override
+	public synchronized long getNextSyncTimestamp(final UUID localRepositoryId) {
+		assertNotNull("localRepositoryId", localRepositoryId);
 		final Long result = localRepositoryId2NextSyncTimestamp.get(localRepositoryId);
 		return result == null ? 0L : result;
 	}
 
-	public synchronized void setNextSyncTimestamp(final LocalRepo localRepo, long lastSyncTimestamp) {
+	protected void setNextSyncTimestamp(final LocalRepo localRepo, long lastSyncTimestamp) {
 		final UUID localRepositoryId = assertNotNull("localRepo", localRepo).getRepositoryId();
+		setNextSyncTimestamp(localRepositoryId, lastSyncTimestamp);
+	}
+
+	protected synchronized void setNextSyncTimestamp(final UUID localRepositoryId, long lastSyncTimestamp) {
+		assertNotNull("localRepositoryId", localRepositoryId);
 		localRepositoryId2NextSyncTimestamp.put(localRepositoryId, lastSyncTimestamp);
+		firePropertyChange(PropertyEnum.nextSyncTimestamps, null, null);
 	}
 
 	private long getSyncPeriod(final LocalRepo localRepo) {
@@ -164,5 +174,29 @@ public class RepoSyncTimerImpl implements RepoSyncTimer {
 
 	private RepoSyncDaemon getRepoSyncDaemon() {
 		return RepoSyncDaemonImpl.getInstance();
+	}
+
+	@Override
+	public void addPropertyChangeListener(PropertyChangeListener listener) {
+		propertyChangeSupport.addPropertyChangeListener(listener);
+	}
+
+	@Override
+	public void addPropertyChangeListener(Property property, PropertyChangeListener listener) {
+		propertyChangeSupport.addPropertyChangeListener(property.name(), listener);
+	}
+
+	@Override
+	public void removePropertyChangeListener(PropertyChangeListener listener) {
+		propertyChangeSupport.removePropertyChangeListener(listener);
+	}
+
+	@Override
+	public void removePropertyChangeListener(Property property, PropertyChangeListener listener) {
+		propertyChangeSupport.removePropertyChangeListener(property.name(), listener);
+	}
+
+	protected void firePropertyChange(Property property, Object oldValue, Object newValue) {
+		propertyChangeSupport.firePropertyChange(property.name(), oldValue, newValue);
 	}
 }

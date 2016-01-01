@@ -8,8 +8,12 @@ import static org.subshare.gui.util.FxmlUtil.*;
 
 import java.beans.PropertyChangeListener;
 import java.text.DateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.UnaryOperator;
 
 import javafx.application.Platform;
@@ -28,8 +32,6 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
-import javafx.scene.control.Spinner;
-import javafx.scene.control.SpinnerValueFactory.IntegerSpinnerValueFactory;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
 import javafx.scene.control.TextFormatter.Change;
@@ -43,16 +45,19 @@ import javafx.scene.text.Text;
 import org.subshare.core.repo.LocalRepo;
 import org.subshare.core.repo.sync.RepoSyncTimer;
 import org.subshare.gui.IconSize;
+import org.subshare.gui.control.TimePeriodTextField;
 import org.subshare.gui.error.ErrorHandler;
 import org.subshare.gui.invitation.issue.IssueInvitationData;
 import org.subshare.gui.invitation.issue.IssueInvitationWizard;
 import org.subshare.gui.ls.ConfigLs;
 import org.subshare.gui.ls.RepoSyncDaemonLs;
+import org.subshare.gui.ls.RepoSyncTimerLs;
 import org.subshare.gui.severity.SeverityImageRegistry;
 import org.subshare.gui.util.FileStringConverter;
 import org.subshare.gui.wizard.WizardDialog;
 
 import co.codewizards.cloudstore.core.Severity;
+import co.codewizards.cloudstore.core.TimePeriod;
 import co.codewizards.cloudstore.core.config.Config;
 import co.codewizards.cloudstore.core.dto.Error;
 import co.codewizards.cloudstore.core.oio.File;
@@ -61,8 +66,12 @@ import co.codewizards.cloudstore.core.repo.sync.RepoSyncDaemon;
 import co.codewizards.cloudstore.core.repo.sync.RepoSyncState;
 
 public class LocalRepoPane extends GridPane {
+	private static final AtomicInteger nextLocalRepoPaneIndex = new AtomicInteger();
+	private final int localRepoPaneIndex = nextLocalRepoPaneIndex.getAndIncrement();
+
 	private final LocalRepo localRepo;
 	private final RepoSyncDaemon repoSyncDaemon;
+	private final RepoSyncTimer repoSyncTimer;
 
 	@FXML
 	private Button syncButton;
@@ -89,10 +98,13 @@ public class LocalRepoPane extends GridPane {
 	private ImageView syncStateSeverityImageView;
 
 	@FXML
+	private TextField nextSyncTextField;
+
+	@FXML
 	private CheckBox syncPeriodCheckBox;
 
 	@FXML
-	private Spinner<Integer> syncPeriodSpinner;
+	private TimePeriodTextField syncPeriodTimePeriodTextField;
 
 	private Set<RepoSyncActivity> activities;
 	private List<RepoSyncState> states;
@@ -105,11 +117,16 @@ public class LocalRepoPane extends GridPane {
 
 	private final PropertyChangeListener statePropertyChangeListener = event -> updateState();
 
+	private final PropertyChangeListener nextSyncPropertyChangeListener = event -> updateNextSync();
+
+	private final Timer setSyncPeriodInConfigTimer = new Timer("LocalRepoPane[" + localRepoPaneIndex + "].setSyncPeriodInConfigTimer");
+	private TimerTask setSyncPeriodInConfigTimerTask;
+
 	public LocalRepoPane(final LocalRepo localRepo) {
 		this.localRepo = assertNotNull("localRepo", localRepo);
 		this.repoSyncDaemon = RepoSyncDaemonLs.getRepoSyncDaemon();
+		this.repoSyncTimer = RepoSyncTimerLs.getRepoSyncTimer();
 		loadDynamicComponentFxml(LocalRepoPane.class, this);
-		syncPeriodSpinner.setValueFactory(new IntegerSpinnerValueFactory(0, Integer.MAX_VALUE));
 		nameTextField.setTextFormatter(new TextFormatter<String>(new UnaryOperator<Change>() {
 			@Override
 			public Change apply(Change change) {
@@ -126,6 +143,7 @@ public class LocalRepoPane extends GridPane {
 		bind();
 		updateActivities();
 		updateState();
+		updateNextSync();
 		updateSyncPeriodUi();
 
 		final EventHandler<? super MouseEvent> syncStateMouseEventFilter = event -> showSyncStateDialog();
@@ -155,10 +173,19 @@ public class LocalRepoPane extends GridPane {
 		}
 
 		syncPeriodCheckBox.selectedProperty().addListener((InvalidationListener) observable -> updateSyncPeriodInConfig());
-		syncPeriodSpinner.valueProperty().addListener((InvalidationListener) observable -> updateSyncPeriodInConfig());
+		syncPeriodTimePeriodTextField.timePeriodProperty().addListener((InvalidationListener) observable -> updateSyncPeriodInConfig());
 
 		addWeakPropertyChangeListener(repoSyncDaemon, RepoSyncDaemon.PropertyEnum.activities, activityPropertyChangeListener);
 		addWeakPropertyChangeListener(repoSyncDaemon, RepoSyncDaemon.PropertyEnum.states, statePropertyChangeListener);
+		addWeakPropertyChangeListener(repoSyncTimer, RepoSyncTimer.PropertyEnum.nextSyncTimestamps, nextSyncPropertyChangeListener);
+	}
+
+	private void updateNextSync() {
+		Platform.runLater(() -> {
+			long nextSyncTimestamp = repoSyncTimer.getNextSyncTimestamp(localRepo.getRepositoryId());
+			final DateFormat dateFormat = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM);
+			nextSyncTextField.setText(dateFormat.format(new Date(nextSyncTimestamp)));
+		});
 	}
 
 	private void updateSyncPeriodUi() {
@@ -172,21 +199,17 @@ public class LocalRepoPane extends GridPane {
 		else
 			syncPeriodCheckBox.setSelected(true);
 
-		syncPeriodSpinner.getValueFactory().setValue(syncPeriod.intValue()); // int/long => we need to replace this Spinner by a better component, anyway!
+		syncPeriodTimePeriodTextField.setTimePeriod(new TimePeriod(syncPeriod));
 	}
 
 	private void updateSyncPeriodInConfig() {
-		Integer syncPeriodFromUi = syncPeriodSpinner.getValue();
-
-		if (syncPeriodCheckBox.isSelected() && syncPeriodFromUi == null) {
-			syncPeriodFromUi = (int) RepoSyncTimer.DEFAULT_SYNC_PERIOD;
-			syncPeriodSpinner.getValueFactory().setValue(syncPeriodFromUi);
+		if (syncPeriodCheckBox.isSelected()) {
+			final TimePeriod syncPeriodFromUi = syncPeriodTimePeriodTextField.getTimePeriod();
+			if (syncPeriodFromUi != null)
+				setSyncPeriodInConfigLater(syncPeriodFromUi.toMillis());
 		}
-
-		if (syncPeriodCheckBox.isSelected())
-			setSyncPeriodInConfig(syncPeriodFromUi.longValue());
 		else
-			setSyncPeriodInConfig(null);
+			setSyncPeriodInConfigLater(null);
 	}
 
 	private Long getSyncPeriodInConfig() {
@@ -199,12 +222,28 @@ public class LocalRepoPane extends GridPane {
 		}
 	}
 
+	private synchronized void setSyncPeriodInConfigLater(final Long syncPeriod) {
+		if (setSyncPeriodInConfigTimerTask != null) {
+			setSyncPeriodInConfigTimerTask.cancel();
+			setSyncPeriodInConfigTimerTask = null;
+		}
+
+		setSyncPeriodInConfigTimerTask = new TimerTask() {
+			@Override
+			public void run() {
+				setSyncPeriodInConfig(syncPeriod);
+			}
+		};
+		setSyncPeriodInConfigTimer.schedule(setSyncPeriodInConfigTimerTask, 1000L);
+	}
+
 	private void setSyncPeriodInConfig(final Long syncPeriod) {
 		if (equal(getSyncPeriodInConfig(), syncPeriod))
 			return;
 
 		final Config config = ConfigLs.getInstanceForDirectory(localRepo.getLocalRoot());
 		config.setDirectProperty(RepoSyncTimer.CONFIG_KEY_SYNC_PERIOD, syncPeriod == null ? null : Long.toString(syncPeriod));
+		repoSyncTimer.scheduleTimerTask();
 	}
 
 	private void updateActivities() {
