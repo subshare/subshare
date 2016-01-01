@@ -6,6 +6,7 @@
 <?import java.lang.*?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Spinner?>
 <?import javafx.scene.control.TextField?>
@@ -64,7 +65,11 @@
 			</graphic>
 		</Label>
 	</HBox>
-	<Label text="Sync period:" GridPane.columnIndex="0" GridPane.rowIndex="6"/> 
+	<CheckBox fx:id="syncPeriodCheckBox" text="Sync period:" GridPane.columnIndex="0" GridPane.rowIndex="6"> 
+		<tooltip>
+			<Tooltip text="Check to set a repository-specific sync period. If not checked, the global/default value is used."/> 
+		</tooltip>
+	</CheckBox>
 	<HBox spacing="8" GridPane.columnIndex="1" GridPane.rowIndex="6"> 
 		<Spinner fx:id="syncPeriodSpinner" editable="true" HBox.hgrow="ALWAYS"/> 
 		<Label text="milliseconds"/> 

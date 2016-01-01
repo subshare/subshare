@@ -1,6 +1,6 @@
 package org.subshare.local;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.*;
 
 import java.util.Map;
 import java.util.TreeMap;
@@ -10,6 +10,7 @@ import org.junit.Test;
 import org.subshare.local.FilePaddingLengthRandom.LengthCategory;
 
 import co.codewizards.cloudstore.core.config.Config;
+import co.codewizards.cloudstore.core.config.ConfigImpl;
 
 public class FilePaddingLengthRandomTest {
 
@@ -21,7 +22,7 @@ public class FilePaddingLengthRandomTest {
 
 	@Test
 	public void generateOneRandomLength() {
-		FilePaddingLengthRandom random = new FilePaddingLengthRandom(Config.getInstance());
+		FilePaddingLengthRandom random = new FilePaddingLengthRandom(ConfigImpl.getInstance());
 		long length = random.nextPaddingLength();
 		assertThat(length).isNotNegative();
 		System.out.println(length);
@@ -36,7 +37,7 @@ public class FilePaddingLengthRandomTest {
 		System.setProperty(Config.SYSTEM_PROPERTY_PREFIX + FilePaddingLengthRandom.LengthCategory._1G.getConfigPropertyKey(), "4");
 		System.setProperty(Config.SYSTEM_PROPERTY_PREFIX + FilePaddingLengthRandom.LengthCategory._10G.getConfigPropertyKey(), "0");
 
-		FilePaddingLengthRandom random = new FilePaddingLengthRandom(Config.getInstance());
+		FilePaddingLengthRandom random = new FilePaddingLengthRandom(ConfigImpl.getInstance());
 		final int invocationCount = 500000;
 
 		Map<FilePaddingLengthRandom.LengthCategory, Integer> lengthCategory2HitCount = new TreeMap<>();

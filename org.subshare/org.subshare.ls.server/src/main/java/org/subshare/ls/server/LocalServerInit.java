@@ -1,5 +1,7 @@
 package org.subshare.ls.server;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.subshare.core.locker.sync.LockerSyncDaemonImpl;
 import org.subshare.core.locker.transport.LockerTransportFactoryRegistry;
 import org.subshare.core.pgp.PgpAuthenticationCallback;
@@ -8,12 +10,11 @@ import org.subshare.core.pgp.man.PgpPrivateKeyPassphraseStoreImpl;
 import org.subshare.core.pgp.sync.PgpSyncDaemonImpl;
 import org.subshare.core.pgp.transport.PgpTransportFactoryRegistry;
 import org.subshare.core.repo.metaonly.MetaOnlyRepoSyncDaemonImpl;
+import org.subshare.core.repo.sync.RepoSyncTimerImpl;
 import org.subshare.ls.server.ssl.AcceptAllDynamicX509TrustManagerCallback;
 import org.subshare.rest.client.locker.transport.RestLockerTransportFactory;
 import org.subshare.rest.client.pgp.transport.RestPgpTransportFactory;
 import org.subshare.rest.client.transport.CryptreeRestRepoTransportFactoryImpl;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import co.codewizards.cloudstore.core.repo.transport.RepoTransportFactoryRegistry;
 
@@ -59,6 +60,7 @@ public class LocalServerInit {
 					PgpSyncDaemonImpl.getInstance().sync();
 					LockerSyncDaemonImpl.getInstance().sync();
 					MetaOnlyRepoSyncDaemonImpl.getInstance().sync();
+					RepoSyncTimerImpl.getInstance(); // this is *not* blocking (the above invocations are) => the repo-syncs are in the background.
 				}
 			};
 			localServerInitFinishThread.start();

@@ -2,6 +2,8 @@ package org.subshare.gui.localrepo;
 
 import static co.codewizards.cloudstore.core.bean.PropertyChangeListenerUtil.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static co.codewizards.cloudstore.core.util.StringUtil.*;
+import static co.codewizards.cloudstore.core.util.Util.*;
 import static org.subshare.gui.util.FxmlUtil.*;
 
 import java.beans.PropertyChangeListener;
@@ -11,6 +13,7 @@ import java.util.Set;
 import java.util.function.UnaryOperator;
 
 import javafx.application.Platform;
+import javafx.beans.InvalidationListener;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.adapter.JavaBeanObjectProperty;
 import javafx.beans.property.adapter.JavaBeanObjectPropertyBuilder;
@@ -23,8 +26,10 @@ import javafx.geometry.Insets;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Spinner;
+import javafx.scene.control.SpinnerValueFactory.IntegerSpinnerValueFactory;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
 import javafx.scene.control.TextFormatter.Change;
@@ -36,16 +41,19 @@ import javafx.scene.layout.HBox;
 import javafx.scene.text.Text;
 
 import org.subshare.core.repo.LocalRepo;
+import org.subshare.core.repo.sync.RepoSyncTimer;
 import org.subshare.gui.IconSize;
 import org.subshare.gui.error.ErrorHandler;
 import org.subshare.gui.invitation.issue.IssueInvitationData;
 import org.subshare.gui.invitation.issue.IssueInvitationWizard;
+import org.subshare.gui.ls.ConfigLs;
 import org.subshare.gui.ls.RepoSyncDaemonLs;
 import org.subshare.gui.severity.SeverityImageRegistry;
 import org.subshare.gui.util.FileStringConverter;
 import org.subshare.gui.wizard.WizardDialog;
 
 import co.codewizards.cloudstore.core.Severity;
+import co.codewizards.cloudstore.core.config.Config;
 import co.codewizards.cloudstore.core.dto.Error;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.repo.sync.RepoSyncActivity;
@@ -81,6 +89,9 @@ public class LocalRepoPane extends GridPane {
 	private ImageView syncStateSeverityImageView;
 
 	@FXML
+	private CheckBox syncPeriodCheckBox;
+
+	@FXML
 	private Spinner<Integer> syncPeriodSpinner;
 
 	private Set<RepoSyncActivity> activities;
@@ -98,6 +109,7 @@ public class LocalRepoPane extends GridPane {
 		this.localRepo = assertNotNull("localRepo", localRepo);
 		this.repoSyncDaemon = RepoSyncDaemonLs.getRepoSyncDaemon();
 		loadDynamicComponentFxml(LocalRepoPane.class, this);
+		syncPeriodSpinner.setValueFactory(new IntegerSpinnerValueFactory(0, Integer.MAX_VALUE));
 		nameTextField.setTextFormatter(new TextFormatter<String>(new UnaryOperator<Change>() {
 			@Override
 			public Change apply(Change change) {
@@ -114,6 +126,7 @@ public class LocalRepoPane extends GridPane {
 		bind();
 		updateActivities();
 		updateState();
+		updateSyncPeriodUi();
 
 		final EventHandler<? super MouseEvent> syncStateMouseEventFilter = event -> showSyncStateDialog();
 		syncStateStartedFinishedTextField.addEventFilter(MouseEvent.MOUSE_CLICKED, syncStateMouseEventFilter);
@@ -141,8 +154,57 @@ public class LocalRepoPane extends GridPane {
 			throw new RuntimeException(e);
 		}
 
+		syncPeriodCheckBox.selectedProperty().addListener((InvalidationListener) observable -> updateSyncPeriodInConfig());
+		syncPeriodSpinner.valueProperty().addListener((InvalidationListener) observable -> updateSyncPeriodInConfig());
+
 		addWeakPropertyChangeListener(repoSyncDaemon, RepoSyncDaemon.PropertyEnum.activities, activityPropertyChangeListener);
 		addWeakPropertyChangeListener(repoSyncDaemon, RepoSyncDaemon.PropertyEnum.states, statePropertyChangeListener);
+	}
+
+	private void updateSyncPeriodUi() {
+		Long syncPeriod = getSyncPeriodInConfig();
+
+		if (syncPeriod == null) {
+			final Config config = ConfigLs.getInstanceForDirectory(localRepo.getLocalRoot());
+			syncPeriodCheckBox.setSelected(false);
+			syncPeriod = config.getPropertyAsPositiveOrZeroLong(RepoSyncTimer.CONFIG_KEY_SYNC_PERIOD, RepoSyncTimer.DEFAULT_SYNC_PERIOD);
+		}
+		else
+			syncPeriodCheckBox.setSelected(true);
+
+		syncPeriodSpinner.getValueFactory().setValue(syncPeriod.intValue()); // int/long => we need to replace this Spinner by a better component, anyway!
+	}
+
+	private void updateSyncPeriodInConfig() {
+		Integer syncPeriodFromUi = syncPeriodSpinner.getValue();
+
+		if (syncPeriodCheckBox.isSelected() && syncPeriodFromUi == null) {
+			syncPeriodFromUi = (int) RepoSyncTimer.DEFAULT_SYNC_PERIOD;
+			syncPeriodSpinner.getValueFactory().setValue(syncPeriodFromUi);
+		}
+
+		if (syncPeriodCheckBox.isSelected())
+			setSyncPeriodInConfig(syncPeriodFromUi.longValue());
+		else
+			setSyncPeriodInConfig(null);
+	}
+
+	private Long getSyncPeriodInConfig() {
+		final Config config = ConfigLs.getInstanceForDirectory(localRepo.getLocalRoot());
+		String syncPeriodStr = config.getDirectProperty(RepoSyncTimer.CONFIG_KEY_SYNC_PERIOD);
+		try {
+			return isEmpty(syncPeriodStr) ? null : Long.parseLong(syncPeriodStr);
+		} catch (NumberFormatException x) {
+			return null;
+		}
+	}
+
+	private void setSyncPeriodInConfig(final Long syncPeriod) {
+		if (equal(getSyncPeriodInConfig(), syncPeriod))
+			return;
+
+		final Config config = ConfigLs.getInstanceForDirectory(localRepo.getLocalRoot());
+		config.setDirectProperty(RepoSyncTimer.CONFIG_KEY_SYNC_PERIOD, syncPeriod == null ? null : Long.toString(syncPeriod));
 	}
 
 	private void updateActivities() {

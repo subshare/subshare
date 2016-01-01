@@ -7,6 +7,7 @@ import java.security.SecureRandom;
 import org.subshare.core.crypto.KeyFactory;
 
 import co.codewizards.cloudstore.core.config.Config;
+import co.codewizards.cloudstore.core.config.ConfigImpl;
 import co.codewizards.cloudstore.core.oio.File;
 
 public class FilePaddingLengthRandom {
@@ -71,7 +72,7 @@ public class FilePaddingLengthRandom {
 	}
 
 	public FilePaddingLengthRandom(final File file) {
-		this(Config.getInstanceForFile(assertNotNull("file", file)));
+		this(ConfigImpl.getInstanceForFile(assertNotNull("file", file)));
 	}
 
 	public FilePaddingLengthRandom(final Config config) {

@@ -1,7 +1,5 @@
 package org.subshare.gui.createrepo;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
-
 import java.util.HashSet;
 
 import javafx.collections.FXCollections;
@@ -14,16 +12,22 @@ import co.codewizards.cloudstore.core.oio.File;
 
 public class CreateRepoData {
 
-	private final Server server;
+	private Server server;
 	private File localDirectory;
 	private ObservableSet<User> ownerList = FXCollections.observableSet(new HashSet<User>());
 
+	public CreateRepoData() {
+	}
+
 	public CreateRepoData(final Server server) {
-		this.server = assertNotNull("server", server);
+		this.server = server;
 	}
 
 	public Server getServer() {
 		return server;
+	}
+	public void setServer(Server server) {
+		this.server = server;
 	}
 
 	public File getLocalDirectory() {

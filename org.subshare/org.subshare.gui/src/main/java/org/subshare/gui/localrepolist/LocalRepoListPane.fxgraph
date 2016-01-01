@@ -30,6 +30,11 @@ dynamic component LocalRepoListPane resourcefile "messages.properties" {
 		padding : Insets { left : 8, top : 8, right : 8, bottom : 8 },
 
 		FlowPane {
+			Button id createRepositoryButton {
+				graphic : ImageView { image : Image { url : "@create-repository_24x24.png" } },
+				tooltip : Tooltip { text : "Create a new repository on a server.&#010;&#010;You'll select a local directory which is going to be uploaded to (and kept in-sync with) the new repository." },
+				onAction : controllermethod createRepositoryButtonClicked
+			},
 			Button id acceptInvitationButton {
 				graphic : ImageView { image : Image { url : "@accept-invitation_24x24.png" } },
 				tooltip : Tooltip { text : "Accept an invitation, i.e. import an invitation token from a file." },

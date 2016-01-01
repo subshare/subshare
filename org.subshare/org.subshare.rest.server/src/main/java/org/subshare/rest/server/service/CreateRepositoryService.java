@@ -15,7 +15,7 @@ import org.subshare.core.dto.CreateRepositoryRequestDto;
 import org.subshare.core.pgp.PgpSignature;
 import org.subshare.core.sign.PgpSignableVerifier;
 
-import co.codewizards.cloudstore.core.config.Config;
+import co.codewizards.cloudstore.core.config.ConfigImpl;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.repo.local.CreateRepositoryContext;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoHelper;
@@ -44,7 +44,7 @@ public class CreateRepositoryService {
 		// can read and the server owner can simply delete the repos...
 
 		// TODO where do we put the repos??? need configuration!
-		final String baseDir = Config.getInstance().getPropertyAsNonEmptyTrimmedString(CONFIG_KEY_REPO_BASE_DIR, DEFAULT_REPO_BASE_DIR);
+		final String baseDir = ConfigImpl.getInstance().getPropertyAsNonEmptyTrimmedString(CONFIG_KEY_REPO_BASE_DIR, DEFAULT_REPO_BASE_DIR);
 		final String resolvedBaseDir = IOUtil.replaceTemplateVariables(baseDir, System.getProperties());
 		final File localDirectory = createFile(resolvedBaseDir, serverRepositoryId.toString()).getAbsoluteFile();
 		localDirectory.mkdirs();

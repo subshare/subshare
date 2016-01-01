@@ -34,6 +34,8 @@ import org.subshare.core.repo.LocalRepo;
 import org.subshare.core.repo.LocalRepoRegistry;
 import org.subshare.gui.IconSize;
 import org.subshare.gui.concurrent.SsTask;
+import org.subshare.gui.createrepo.CreateRepoData;
+import org.subshare.gui.createrepo.CreateRepoWizard;
 import org.subshare.gui.invitation.accept.AcceptInvitationWizard;
 import org.subshare.gui.ls.LocalRepoRegistryLs;
 import org.subshare.gui.ls.RepoSyncDaemonLs;
@@ -161,6 +163,14 @@ public class LocalRepoListPane extends GridPane {
 				};
 			}
 		}.start();
+	}
+
+	@FXML
+	private void createRepositoryButtonClicked(final ActionEvent event) {
+		final CreateRepoData createRepoData = new CreateRepoData();
+		final CreateRepoWizard wizard = new CreateRepoWizard(createRepoData);
+		final WizardDialog dialog = new WizardDialog(getScene().getWindow(), wizard);
+		dialog.show();
 	}
 
 	@FXML

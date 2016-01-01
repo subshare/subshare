@@ -3,6 +3,7 @@ package org.subshare.core.crypto;
 import org.subshare.core.sign.SignerTransformation;
 
 import co.codewizards.cloudstore.core.config.Config;
+import co.codewizards.cloudstore.core.config.ConfigImpl;
 import co.codewizards.cloudstore.core.oio.File;
 
 public class CryptoConfigUtil {
@@ -17,7 +18,7 @@ public class CryptoConfigUtil {
 	 * @return the configured/preferred transformation for symmetric encryption. Never <code>null</code>.
 	 */
 	public static CipherTransformation getSymmetricCipherTransformation() {
-		return Config.getInstance().getPropertyAsEnum(
+		return ConfigImpl.getInstance().getPropertyAsEnum(
 				CipherTransformation.CONFIG_KEY_SYMMETRIC, CipherTransformation.CONFIG_DEFAULT_VALUE_SYMMETRIC);
 	}
 
@@ -28,7 +29,7 @@ public class CryptoConfigUtil {
 	 * @return the configured/preferred transformation for asymmetric encryption. Never <code>null</code>.
 	 */
 	public static CipherTransformation getAsymmetricCipherTransformation() {
-		return Config.getInstance().getPropertyAsEnum(
+		return ConfigImpl.getInstance().getPropertyAsEnum(
 				CipherTransformation.CONFIG_KEY_ASYMMETRIC, CipherTransformation.CONFIG_DEFAULT_VALUE_ASYMMETRIC);
 	}
 
@@ -39,12 +40,12 @@ public class CryptoConfigUtil {
 	 * @return the configured/preferred transformation for signing. Never <code>null</code>.
 	 */
 	public static SignerTransformation getSignerTransformation() {
-		return Config.getInstance().getPropertyAsEnum(
+		return ConfigImpl.getInstance().getPropertyAsEnum(
 				SignerTransformation.CONFIG_KEY, SignerTransformation.CONFIG_DEFAULT_VALUE);
 	}
 
 	public static long getBackdatingMaxPermissionValidToAge(final File file) {
-		final Config config = file.isDirectory() ? Config.getInstanceForDirectory(file) : Config.getInstanceForFile(file);
+		final Config config = file.isDirectory() ? ConfigImpl.getInstanceForDirectory(file) : ConfigImpl.getInstanceForFile(file);
 		return config.getPropertyAsLong(
 				CONFIG_KEY_BACKDATING_MAX_PERMISSION_VALID_TO_AGE, CONFIG_DEFAULT_VALUE_BACKDATING_MAX_PERMISSION_VALID_TO_AGE);
 	}

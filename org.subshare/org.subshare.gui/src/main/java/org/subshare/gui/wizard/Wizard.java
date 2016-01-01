@@ -52,8 +52,8 @@ public abstract class Wizard extends StackPane {
 			final WizardPage oldValue = get();
 			super.set(newValue);
 
-			if (currentPage == oldValue)
-				currentPage = null;
+			if (getCurrentPage() == oldValue)
+				setCurrentPage(null);
 
 //			if (oldValue != null)
 //				getChildren().remove(oldValue); // TODO is this really needed? and if so, shouldn't we remove all other pages?
@@ -62,15 +62,15 @@ public abstract class Wizard extends StackPane {
 				newValue.setWizard(Wizard.this);
 				newValue.updateButtonsDisable();
 
-				if (currentPage == null)
+				if (getCurrentPage() == null)
 					navTo(newValue, false);
 			}
 		}
 	};
 
 	protected final Deque<WizardPage> history = new LinkedList<>();
-	private WizardPage currentPage;
-	private final BooleanProperty canFinishProperty = new SimpleBooleanProperty(this, "canFinish");
+	private final ObjectProperty<WizardPage> currentPage = new SimpleObjectProperty<>(this, "currentPage");
+	private final BooleanProperty canFinish = new SimpleBooleanProperty(this, "canFinish");
 	private Parent finishingPage = new DefaultFinishingPage();
 
 	private final ObjectProperty<WizardState> stateProperty = new SimpleObjectProperty<>(this, "state", WizardState.NEW);
@@ -165,6 +165,7 @@ public abstract class Wizard extends StackPane {
 	}
 
 	protected void navToNextPage() {
+		final WizardPage currentPage = getCurrentPage();
 		if (hasNextPage() && currentPage != null) {
 			final WizardPage nextPage = currentPage.getNextPage();
 			if (nextPage != null)
@@ -180,6 +181,7 @@ public abstract class Wizard extends StackPane {
 	}
 
 	protected boolean hasNextPage() {
+		final WizardPage currentPage = getCurrentPage();
 		if (currentPage == null)
 			return false;
 
@@ -187,6 +189,14 @@ public abstract class Wizard extends StackPane {
 	}
 
 	protected WizardPage getCurrentPage() {
+		return this.currentPage.get();
+	}
+
+	private void setCurrentPage(WizardPage currentPage) {
+		this.currentPage.set(currentPage);
+	}
+
+	protected ReadOnlyObjectProperty<WizardPage> currentPageProperty() {
 		return currentPage;
 	}
 
@@ -198,13 +208,16 @@ public abstract class Wizard extends StackPane {
 		assertNotNull("wizardPage", wizardPage);
 		PlatformUtil.assertFxApplicationThread();
 
-		if (currentPage != null)
-			currentPage.onHidden();
+		{
+			WizardPage currentPage = getCurrentPage();
+			if (currentPage != null)
+				currentPage.onHidden();
 
-		if (currentPage != null && addToHistory)
-			history.addLast(currentPage);
+			if (currentPage != null && addToHistory)
+				history.addLast(currentPage);
+		}
 
-		currentPage = wizardPage;
+		setCurrentPage(wizardPage);
 		for (Node child : getChildren())
 			child.setVisible(false);
 
@@ -402,7 +415,7 @@ public abstract class Wizard extends StackPane {
 	public abstract String getTitle();
 
 	public ReadOnlyBooleanProperty canFinishProperty() {
-		return canFinishProperty;
+		return canFinish;
 	}
 
 	private final InvalidationListener updateCanFinishInvalidationListener = observable -> updateCanFinish();
@@ -415,7 +428,7 @@ public abstract class Wizard extends StackPane {
 				canFinish = false;
 		}
 
-		WizardPage wizardPage = currentPage;
+		WizardPage wizardPage = getCurrentPage();
 		while (wizardPage != null) {
 			if (! wizardPage.completeProperty().getValue())
 				canFinish = false;
@@ -423,7 +436,7 @@ public abstract class Wizard extends StackPane {
 			wizardPage = wizardPage.getNextPage();
 		}
 
-		canFinishProperty.set(canFinish);
+		this.canFinish.set(canFinish);
 	}
 
 //	public ObservableList<WizardPage> getPages() {
@@ -514,6 +527,7 @@ public abstract class Wizard extends StackPane {
 		getChildren().remove(finishingPage);
 		getChildren().add(0, finishingPage);
 
+		final WizardPage currentPage = getCurrentPage();
 		if (currentPage != null)
 			currentPage.setVisible(true);
 	}

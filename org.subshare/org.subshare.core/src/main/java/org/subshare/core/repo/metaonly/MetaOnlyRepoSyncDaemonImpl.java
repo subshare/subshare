@@ -8,12 +8,12 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.subshare.core.repo.ServerRepoRegistry;
-import org.subshare.core.repo.ServerRepoRegistryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.subshare.core.repo.ServerRepoRegistry;
+import org.subshare.core.repo.ServerRepoRegistryImpl;
 
-import co.codewizards.cloudstore.core.config.Config;
+import co.codewizards.cloudstore.core.config.ConfigImpl;
 
 
 public class MetaOnlyRepoSyncDaemonImpl implements MetaOnlyRepoSyncDaemon {
@@ -59,7 +59,7 @@ public class MetaOnlyRepoSyncDaemonImpl implements MetaOnlyRepoSyncDaemon {
 	private synchronized boolean createSyncTimerTask(final boolean runImmediately) {
 		destroySyncTimerTask(); // just in case
 
-		final long syncPeriod = Config.getInstance().getPropertyAsLong(getConfigKeySyncPeriod(), getConfigDefaultValueSyncPeriod());
+		final long syncPeriod = ConfigImpl.getInstance().getPropertyAsLong(getConfigKeySyncPeriod(), getConfigDefaultValueSyncPeriod());
 		this.syncPeriod = syncPeriod;
 		if (syncPeriod <= 0)
 			return false;
@@ -78,7 +78,7 @@ public class MetaOnlyRepoSyncDaemonImpl implements MetaOnlyRepoSyncDaemon {
 	}
 
 	private synchronized void recreateSyncTimerTaskIfPeriodChanged() {
-		final long syncPeriod = Config.getInstance().getPropertyAsLong(getConfigKeySyncPeriod(), getConfigDefaultValueSyncPeriod());
+		final long syncPeriod = ConfigImpl.getInstance().getPropertyAsLong(getConfigKeySyncPeriod(), getConfigDefaultValueSyncPeriod());
 		if (this.syncPeriod != syncPeriod) {
 			destroySyncTimerTask();
 			if (! createSyncTimerTask(false))

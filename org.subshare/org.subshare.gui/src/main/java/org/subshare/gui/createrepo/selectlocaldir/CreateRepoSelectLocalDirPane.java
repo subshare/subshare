@@ -43,4 +43,10 @@ public abstract class CreateRepoSelectLocalDirPane extends GridPane {
 	}
 
 	protected abstract void updateComplete();
+
+	@Override
+	public void requestFocus() {
+		super.requestFocus();
+		fileTreePane.requestFocus();
+	}
 }

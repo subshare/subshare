@@ -20,6 +20,7 @@ import javafx.scene.text.Text;
  * basic wizard page class
  */
 public abstract class WizardPage extends VBox {
+	private String title;
 	private Wizard wizard;
 	protected final Button previousButton = new Button("P_revious");
 	protected final Button nextButton = new Button("N_ext");
@@ -47,6 +48,7 @@ public abstract class WizardPage extends VBox {
 	};
 
 	protected WizardPage(String title) {
+		this.title = title;
 //		Label label = new Label(title);
 //		label.setStyle("-fx-font-weight: bold; -fx-padding: 0 0 5 0;"); //$NON-NLS-1$
 		setId(getClass().getSimpleName());
@@ -100,6 +102,14 @@ public abstract class WizardPage extends VBox {
 				}
 			}
 		});
+	}
+
+	/**
+	 * Gets the title of this page.
+	 * @return the title of this page. May be <code>null</code>.
+	 */
+	public String getTitle() {
+		return title;
 	}
 
 	private HBox createButtonBar() {

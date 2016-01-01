@@ -12,6 +12,7 @@ import javafx.geometry.Insets
 import javafx.scene.control.TextArea
 import javafx.scene.control.Spinner
 import javafx.scene.layout.HBox
+import javafx.scene.control.CheckBox
 
 dynamic component LocalRepoPane resourcefile 'messages.properties' {
 	GridPane {
@@ -86,12 +87,18 @@ dynamic component LocalRepoPane resourcefile 'messages.properties' {
 			static columnIndex : 1,
 			static rowIndex : 4
 		},
-		
-		Label {
+
+		CheckBox id syncPeriodCheckBox {
 			text : "Sync period:",
+			tooltip : Tooltip { text : "Check to set a repository-specific sync period. If not checked, the global/default value is used." },
 			static columnIndex : 0,
 			static rowIndex : 6
 		},
+//		Label {
+//			text : "Sync period:",
+//			static columnIndex : 0,
+//			static rowIndex : 6
+//		},
 		HBox {
 			spacing : 8,
 			Spinner<Integer> id syncPeriodSpinner { // TODO replace this by a better component - see TimePeriodOptionHandler

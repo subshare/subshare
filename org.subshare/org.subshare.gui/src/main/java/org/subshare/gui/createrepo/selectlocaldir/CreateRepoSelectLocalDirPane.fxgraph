@@ -11,25 +11,23 @@ dynamic component CreateRepoSelectLocalDirPane resourcefile 'messages.properties
 		vgap : 8,
 		padding : Insets { left : 8, top : 8, right : 8, bottom : 8 },
 
-		children : [
-			Text id headerText {
-				text : rstring 'CreateRepoSelectLocalDirPane.headerText.text',
-				wrappingWidth : 600,
-				static columnIndex : 0,
-				static rowIndex : 0,
-				static columnSpan : 3,
-				static hgrow : "ALWAYS"
-			},
+		Text id headerText {
+			text : rstring 'CreateRepoSelectLocalDirPane.headerText.text',
+			wrappingWidth : 600,
+			static columnIndex : 0,
+			static rowIndex : 0,
+			static columnSpan : 3,
+			static hgrow : "ALWAYS"
+		},
 
-			FileTreePane id fileTreePane {
-				useCase : "createRepoSelectLocalDir",
-				selectionMode: "SINGLE",
+		FileTreePane id fileTreePane {
+			useCase : "createRepoSelectLocalDir",
+			selectionMode: "SINGLE",
 
-				static columnIndex : 0,
-				static rowIndex : 1,
-				static hgrow : "ALWAYS",
-				static vgrow : "ALWAYS"
-			}	
-		]
+			static columnIndex : 0,
+			static rowIndex : 1,
+			static hgrow : "ALWAYS",
+			static vgrow : "ALWAYS"
+		}	
 	}
 }

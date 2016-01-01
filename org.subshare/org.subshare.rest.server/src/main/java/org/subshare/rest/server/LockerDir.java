@@ -5,7 +5,7 @@ import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import co.codewizards.cloudstore.core.config.Config;
+import co.codewizards.cloudstore.core.config.ConfigImpl;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.util.IOUtil;
 
@@ -27,7 +27,7 @@ public class LockerDir {
 	}
 
 	public File getFile() {
-		final String dirString = Config.getInstance().getPropertyAsNonEmptyTrimmedString(CONFIG_KEY_LOCKER_DIR, DEFAULT_LOCKER_DIR);
+		final String dirString = ConfigImpl.getInstance().getPropertyAsNonEmptyTrimmedString(CONFIG_KEY_LOCKER_DIR, DEFAULT_LOCKER_DIR);
 		logger.debug("getFile: dirString={}", dirString);
 		final String resolvedDir = IOUtil.replaceTemplateVariables(dirString, System.getProperties());
 		final File result = createFile(resolvedDir).getAbsoluteFile();

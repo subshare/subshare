@@ -33,7 +33,7 @@ import org.subshare.core.server.ServerRegistry;
 import org.subshare.core.server.ServerRegistryImpl;
 
 import co.codewizards.cloudstore.core.Severity;
-import co.codewizards.cloudstore.core.config.Config;
+import co.codewizards.cloudstore.core.config.ConfigImpl;
 import co.codewizards.cloudstore.core.dto.Error;
 
 public abstract class SyncDaemonImpl implements SyncDaemon {
@@ -194,7 +194,7 @@ public abstract class SyncDaemonImpl implements SyncDaemon {
 	protected abstract Sync createSync(Server server);
 
 	private synchronized void recreateSyncTimerTaskIfPeriodChanged() {
-		final long syncPeriod = Config.getInstance().getPropertyAsLong(getConfigKeySyncPeriod(), getConfigDefaultValueSyncPeriod());
+		final long syncPeriod = ConfigImpl.getInstance().getPropertyAsLong(getConfigKeySyncPeriod(), getConfigDefaultValueSyncPeriod());
 		if (this.syncPeriod != syncPeriod) {
 			destroySyncTimerTask();
 			if (! createSyncTimerTask(false))
@@ -219,7 +219,7 @@ public abstract class SyncDaemonImpl implements SyncDaemon {
 	private synchronized boolean createSyncTimerTask(final boolean runImmediately) {
 		destroySyncTimerTask(); // just in case
 
-		final long syncPeriod = Config.getInstance().getPropertyAsLong(getConfigKeySyncPeriod(), getConfigDefaultValueSyncPeriod());
+		final long syncPeriod = ConfigImpl.getInstance().getPropertyAsLong(getConfigKeySyncPeriod(), getConfigDefaultValueSyncPeriod());
 		this.syncPeriod = syncPeriod;
 		if (syncPeriod <= 0)
 			return false;

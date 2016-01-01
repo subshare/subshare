@@ -2,10 +2,14 @@ package org.subshare.gui.createrepo;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
+import java.util.List;
+
 import org.subshare.core.server.Server;
 import org.subshare.core.user.User;
 import org.subshare.gui.createrepo.selectlocaldir.CreateRepoSelectLocalDirWizardPage;
+import org.subshare.gui.createrepo.selectserver.CreateRepoSelectServerWizardPage;
 import org.subshare.gui.ls.RepoSyncDaemonLs;
+import org.subshare.gui.ls.ServerRegistryLs;
 import org.subshare.gui.ls.ServerRepoManagerLs;
 import org.subshare.gui.wizard.Wizard;
 
@@ -19,7 +23,17 @@ public class CreateRepoWizard extends Wizard {
 
 	public CreateRepoWizard(final CreateRepoData createRepoData) {
 		this.createRepoData = assertNotNull("createRepoData", createRepoData);
-		setFirstPage(new CreateRepoSelectLocalDirWizardPage(createRepoData));
+
+		if (createRepoData.getServer() == null) {
+			List<Server> servers = ServerRegistryLs.getServerRegistry().getServers();
+			if (servers.size() == 1)
+				createRepoData.setServer(servers.get(0));
+			else
+				setFirstPage(new CreateRepoSelectServerWizardPage(createRepoData));
+		}
+
+		if (createRepoData.getServer() != null)
+			setFirstPage(new CreateRepoSelectLocalDirWizardPage(createRepoData));
 	}
 
 	@Override

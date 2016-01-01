@@ -19,6 +19,18 @@
 <fx:root xmlns:fx="http://javafx.com/fxml" type="GridPane" hgap="8" vgap="8">
 
 	<FlowPane> 
+		<Button fx:id="createRepositoryButton" onAction="#createRepositoryButtonClicked"> 
+			<graphic>
+				<ImageView> 
+					<image>
+						<Image url="@create-repository_24x24.png"/> 
+					</image>
+				</ImageView>
+			</graphic>
+			<tooltip>
+				<Tooltip text="Create a new repository on a server.&#010;&#010;You'll select a local directory which is going to be uploaded to (and kept in-sync with) the new repository."/> 
+			</tooltip>
+		</Button>
 		<Button fx:id="acceptInvitationButton" onAction="#acceptInvitationButtonClicked"> 
 			<graphic>
 				<ImageView> 

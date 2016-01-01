@@ -25,14 +25,14 @@ public class ServerListItem {
 	private SyncState pgpSyncState;
 	private SyncState lockerSyncState;
 
-	private final StringProperty nameProperty;
+	private final StringProperty name;
 	private final ObjectProperty<URL> url;
 	private final ObjectProperty<Severity> severity = new SimpleObjectProperty<>(this, "severity");
 
 	public ServerListItem(final Server server) {
 		this.server = assertNotNull("server", server);
 		try {
-			nameProperty = JavaBeanStringPropertyBuilder.create()
+			name = JavaBeanStringPropertyBuilder.create()
 					.bean(server)
 					.name(Server.PropertyEnum.name.name()).build();
 
@@ -50,7 +50,7 @@ public class ServerListItem {
 	}
 
 	public StringProperty nameProperty() {
-		return nameProperty;
+		return name;
 	}
 
 	public ObjectProperty<URL> urlProperty() {
