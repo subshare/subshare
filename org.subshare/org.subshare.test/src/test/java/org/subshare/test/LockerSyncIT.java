@@ -13,6 +13,11 @@ import java.util.Map;
 import mockit.Mock;
 import mockit.MockUp;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.subshare.core.locker.sync.LockerSync;
 import org.subshare.core.pgp.Pgp;
 import org.subshare.core.pgp.PgpKeyId;
@@ -28,14 +33,10 @@ import org.subshare.core.user.User;
 import org.subshare.core.user.UserRegistry;
 import org.subshare.core.user.UserRegistryImpl;
 import org.subshare.rest.server.LockerDir;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import co.codewizards.cloudstore.core.config.Config;
 import co.codewizards.cloudstore.core.config.ConfigDir;
+import co.codewizards.cloudstore.core.config.ConfigImpl;
 import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.oio.File;
 
@@ -52,14 +53,14 @@ public class LockerSyncIT extends AbstractIT {
 	private Location location;
 
 	private MockUp<ConfigDir> configDirMockUp;
-	private MockUp<Config> configMockUp;
+	private MockUp<ConfigImpl> configMockUp;
 	private MockUp<GnuPgDir> gnuPgDirMockUp;
 	private MockUp<PgpRegistry> pgpRegistryMockUp;
 	private MockUp<UserRegistryImpl> userRegistryImplMockUp;
 	private MockUp<ServerRegistryImpl> serverRegistryImplMockUp;
 
 	private Map<Location, ConfigDir> location2ConfigDir = new HashMap<>(Location.values().length);
-	private Map<Location, Config> location2Config = new HashMap<>(Location.values().length);
+	private Map<Location, ConfigImpl> location2Config = new HashMap<>(Location.values().length);
 	private Map<Location, GnuPgDir> location2GnuPgDir = new HashMap<>(Location.values().length);
 	private Map<Location, Pgp> location2Pgp = new HashMap<>(Location.values().length);
 	private Map<Location, UserRegistry> location2UserRegistry = new HashMap<>(Location.values().length);
@@ -71,6 +72,7 @@ public class LockerSyncIT extends AbstractIT {
 		System.setProperty(Config.SYSTEM_PROPERTY_PREFIX + GnuPgDir.CONFIG_KEY_GNU_PG_DIR, "build/" + jvmInstanceId + '/' + location + "/.gnupg");
 	}
 
+	@Override
 	@Before
 	public void before() throws Exception {
 		System.setProperty(Config.SYSTEM_PROPERTY_PREFIX + LockerDir.CONFIG_KEY_LOCKER_DIR, "build/" + jvmInstanceId + "/locker");
@@ -89,12 +91,12 @@ public class LockerSyncIT extends AbstractIT {
 			}
 		};
 
-		configMockUp = new MockUp<Config>() {
+		configMockUp = new MockUp<ConfigImpl>() {
 			@Mock
 			Config getInstance() {
-				Config config = location2Config.get(location);
+				ConfigImpl config = location2Config.get(location);
 				if (config == null) {
-					config = invokeConstructor(Config.class,
+					config = invokeConstructor(ConfigImpl.class,
 							(Object) null, null,
 							new File[] { createFile(ConfigDir.getInstance().getFile(), "cloudstore.properties") });
 					location2Config.put(location, config);
@@ -152,6 +154,7 @@ public class LockerSyncIT extends AbstractIT {
 		};
 	}
 
+	@Override
 	@After
 	public void after() throws Exception {
 		if (serverRegistryImplMockUp != null)
