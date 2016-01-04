@@ -3,6 +3,7 @@ package org.subshare.core.dto;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Date;
 
@@ -10,7 +11,8 @@ import org.subshare.core.sign.Signature;
 
 import co.codewizards.cloudstore.core.dto.Uid;
 
-public class SignatureDto implements Signature {
+@SuppressWarnings("serial")
+public class SignatureDto implements Signature, Serializable {
 
 	private Date signatureCreated;
 

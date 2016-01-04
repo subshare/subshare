@@ -189,6 +189,11 @@ public class Permission extends Entity implements WriteProtected, AutoTrackLocal
 		getPermissionId();
 	}
 
+	/**
+	 * Gets the time (including) from which on this permission is effective.
+	 * @return the time (including) from which on this permission is effective. Never <code>null</code>
+	 * in persistent data - and usually never <code>null</code> in transient data, too.
+	 */
 	public Date getValidFrom() {
 		return validFrom;
 	}
@@ -205,6 +210,14 @@ public class Permission extends Entity implements WriteProtected, AutoTrackLocal
 			this.revoked = revoked;
 	}
 
+	/**
+	 * Gets the time (excluding) until which this permission is effective.
+	 * <p>
+	 * A value of <code>null</code> means that this permission is valid forever - or at least the end
+	 * timestamp is not yet known (the permission was not <i>yet</i> revoked).
+	 * @return the time (excluding) until which this permission is effective. May be <code>null</code>,
+	 * if there is no end.
+	 */
 	public Date getValidTo() {
 		return validTo;
 	}

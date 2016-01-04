@@ -38,7 +38,7 @@ public class LocalRepoDirectoryPane extends VBox {
 	private TabPane tabPane;
 
 	@FXML
-	private Tab contentTab;
+	private Tab generalTab;
 
 	@FXML
 	private Tab securityTab;
@@ -81,7 +81,7 @@ public class LocalRepoDirectoryPane extends VBox {
 					LocalRepoDirectoryPane.this.startSync();
 				}
 			};
-			securityPaneRef = new WeakReference<SecurityPane>(securityPane);
+			securityPaneRef = new WeakReference<>(securityPane);
 		}
 
 		if (securityTab.getContent() == null)

@@ -1,0 +1,42 @@
+package org.subshare.gui.histo
+
+import java.util.Date
+import javafx.scene.layout.VBox
+import javafx.scene.control.TableView
+import javafx.scene.control.TableColumn
+import javafx.scene.control.cell.PropertyValueFactory
+
+import co.codewizards.cloudstore.core.dto.Uid
+import org.subshare.gui.histo.HistoFrameListItem
+
+dynamic component HistoFrameListPane resourcefile 'messages.properties' {
+	VBox {
+		spacing : 8,
+
+		TableView<HistoFrameListItem> id tableView {
+			columns : [
+				TableColumn<HistoFrameListItem, Date> id dateColumn {
+					text : "Date",
+					prefWidth : 180,
+					cellValueFactory : PropertyValueFactory<HistoFrameListItem, Date> {
+						property : "date"
+					}
+				},
+//				TableColumn<HistoFrameListItem, Uid> id signingUserRepoKeyIdColumn {
+//					text : "Signing key",
+//					prefWidth : 140,
+//					cellValueFactory : PropertyValueFactory<HistoFrameListItem, Uid> {
+//						property : "signingUserRepoKeyId"
+//					}
+//				},
+				TableColumn<HistoFrameListItem, String> id signingUserNameColumn {
+					text : "Signing user",
+					prefWidth : 200,
+					cellValueFactory : PropertyValueFactory<HistoFrameListItem, String> {
+						property : "signingUserName"
+					}
+				}
+			]
+		}
+	}
+}

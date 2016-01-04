@@ -62,7 +62,7 @@
 		</VBox.margin>
 	</FlowPane>
 	<TabPane fx:id="tabPane" tabClosingPolicy="UNAVAILABLE"> 
-		<Tab fx:id="contentTab" text="Content"> 
+		<Tab fx:id="generalTab" text="General"> 
 			<content>
 				<GridPane> 
 					<TextField fx:id="pathTextField" editable="false" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.hgrow="ALWAYS"> 

@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.subshare.core.dto.CryptoRepoFileDto;
+import org.subshare.core.dto.HistoFrameDto;
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.user.UserRepoKey;
 
@@ -61,4 +62,5 @@ public interface SsLocalRepoMetaData extends LocalRepoMetaData {
 
 	void makeMetaOnly();
 
+	Collection<HistoFrameDto> getHistoFrameDtos(HistoFrameFilter filter);
 }

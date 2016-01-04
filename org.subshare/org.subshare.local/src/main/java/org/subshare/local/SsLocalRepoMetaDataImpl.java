@@ -3,12 +3,14 @@ package org.subshare.local;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -19,15 +21,20 @@ import org.subshare.core.CryptreeFactoryRegistry;
 import org.subshare.core.LocalRepoStorage;
 import org.subshare.core.LocalRepoStorageFactoryRegistry;
 import org.subshare.core.dto.CryptoRepoFileDto;
+import org.subshare.core.dto.HistoFrameDto;
 import org.subshare.core.dto.PermissionType;
+import org.subshare.core.repo.local.HistoFrameFilter;
 import org.subshare.core.repo.local.SsLocalRepoMetaData;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKeyRing;
 import org.subshare.core.user.UserRepoKeyRingLookup;
 import org.subshare.core.user.UserRepoKeyRingLookupContext;
 import org.subshare.local.dto.CryptoRepoFileDtoConverter;
+import org.subshare.local.dto.HistoFrameDtoConverter;
 import org.subshare.local.persistence.CryptoRepoFile;
 import org.subshare.local.persistence.CryptoRepoFileDao;
+import org.subshare.local.persistence.HistoFrame;
+import org.subshare.local.persistence.HistoFrameDao;
 
 import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
@@ -263,6 +270,22 @@ public class SsLocalRepoMetaDataImpl extends LocalRepoMetaDataImpl implements Ss
 //			// This wrong assumption causes the VerifySignableAndWriteProtectedEntityListener to fail.
 //			tx.removeContextObject(cryptree);
 			tx.commit();
+		}
+	}
+
+	@Override
+	public Collection<HistoFrameDto> getHistoFrameDtos(HistoFrameFilter filter) {
+		assertNotNull("filter", filter);
+		try (final LocalRepoTransaction tx = getLocalRepoManagerOrFail().beginReadTransaction();) {
+			final HistoFrameDao hfDao = tx.getDao(HistoFrameDao.class);
+			final Collection<HistoFrame> histoFrames = hfDao.getHistoFrames(filter);
+			final List<HistoFrameDto> result = new ArrayList<>(histoFrames.size());
+			final HistoFrameDtoConverter converter = HistoFrameDtoConverter.create(tx);
+			for (final HistoFrame histoFrame : histoFrames) {
+				final HistoFrameDto histoFrameDto = converter.toHistoFrameDto(histoFrame);
+				result.add(histoFrameDto);
+			}
+			return result;
 		}
 	}
 }

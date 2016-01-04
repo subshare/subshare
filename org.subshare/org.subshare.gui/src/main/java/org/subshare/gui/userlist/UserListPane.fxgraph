@@ -67,40 +67,40 @@ dynamic component UserListPane resourcefile "messages.properties" {
 			static rowIndex : 1
 		},
 				
-		TableView < UserListItem > id tableView {
+		TableView<UserListItem> id tableView {
 			columns : [
-				TableColumn < UserListItem, String > id firstNameColumn {
+				TableColumn<UserListItem, String> id firstNameColumn {
 					text : "First name",
 					prefWidth : 100,
-					cellValueFactory : PropertyValueFactory < UserListItem, String > {
+					cellValueFactory : PropertyValueFactory<UserListItem, String> {
 						property : "firstName"
 					}
 				},
-				TableColumn < UserListItem, String > id lastNameColumn {
+				TableColumn<UserListItem, String> id lastNameColumn {
 					text : "Last name",
 					prefWidth : 100,
-					cellValueFactory : PropertyValueFactory < UserListItem, String > {
+					cellValueFactory : PropertyValueFactory<UserListItem, String> {
 						property : "lastName"
 					}
 				},
-				TableColumn < UserListItem, String > id emailColumn {
+				TableColumn<UserListItem, String> id emailColumn {
 					text : "E-mail",
 					prefWidth : 200,
-					cellValueFactory : PropertyValueFactory < UserListItem, String > {
+					cellValueFactory : PropertyValueFactory<UserListItem, String> {
 						property : "email"
 					}
 				},
-				TableColumn < UserListItem, String > id keyValidityColumn {
+				TableColumn<UserListItem, String> id keyValidityColumn {
 					text : "Key validity/trust",
 					prefWidth : 120,
-					cellValueFactory : PropertyValueFactory < UserListItem, String > {
+					cellValueFactory : PropertyValueFactory<UserListItem, String> {
 						property : "keyValidity"
 					}
 				},
-				TableColumn < UserListItem, String > id ownerTrustColumn {
+				TableColumn<UserListItem, String> id ownerTrustColumn {
 					text : "Owner trust",
 					prefWidth : 120,
-					cellValueFactory : PropertyValueFactory < UserListItem, String > {
+					cellValueFactory : PropertyValueFactory<UserListItem, String> {
 						property : "ownerTrust"
 					}
 				}

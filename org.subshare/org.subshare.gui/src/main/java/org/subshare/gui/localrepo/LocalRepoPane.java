@@ -5,8 +5,10 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
 import static org.subshare.gui.util.FxmlUtil.*;
+import static org.subshare.gui.util.PlatformUtil.*;
 
 import java.beans.PropertyChangeListener;
+import java.lang.ref.WeakReference;
 import java.text.DateFormat;
 import java.util.Date;
 import java.util.List;
@@ -32,6 +34,8 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
 import javafx.scene.control.TextFormatter.Change;
@@ -40,6 +44,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 
 import org.subshare.core.repo.LocalRepo;
@@ -47,6 +52,7 @@ import org.subshare.core.repo.sync.RepoSyncTimer;
 import org.subshare.gui.IconSize;
 import org.subshare.gui.control.TimePeriodTextField;
 import org.subshare.gui.error.ErrorHandler;
+import org.subshare.gui.histo.HistoryPane;
 import org.subshare.gui.invitation.issue.IssueInvitationData;
 import org.subshare.gui.invitation.issue.IssueInvitationWizard;
 import org.subshare.gui.ls.ConfigLs;
@@ -65,7 +71,7 @@ import co.codewizards.cloudstore.core.repo.sync.RepoSyncActivity;
 import co.codewizards.cloudstore.core.repo.sync.RepoSyncDaemon;
 import co.codewizards.cloudstore.core.repo.sync.RepoSyncState;
 
-public class LocalRepoPane extends GridPane {
+public class LocalRepoPane extends VBox {
 	private static final AtomicInteger nextLocalRepoPaneIndex = new AtomicInteger();
 	private final int localRepoPaneIndex = nextLocalRepoPaneIndex.getAndIncrement();
 
@@ -78,6 +84,17 @@ public class LocalRepoPane extends GridPane {
 
 	@FXML
 	private Button inviteButton;
+
+	@FXML
+	private TabPane tabPane;
+
+	@FXML
+	private Tab generalTab;
+
+	@FXML
+	private Tab historyTab;
+
+	private WeakReference<HistoryPane> historyPaneRef;
 
 	@FXML
 	private TextField nameTextField;
@@ -149,6 +166,8 @@ public class LocalRepoPane extends GridPane {
 		final EventHandler<? super MouseEvent> syncStateMouseEventFilter = event -> showSyncStateDialog();
 		syncStateStartedFinishedTextField.addEventFilter(MouseEvent.MOUSE_CLICKED, syncStateMouseEventFilter);
 		syncStateSeverityLabel.addEventFilter(MouseEvent.MOUSE_CLICKED, syncStateMouseEventFilter);
+
+		tabPane.getSelectionModel().selectedItemProperty().addListener((InvalidationListener) observable -> createOrForgetHistoryPane());
 	}
 
 	@SuppressWarnings("unchecked")
@@ -179,6 +198,26 @@ public class LocalRepoPane extends GridPane {
 		addWeakPropertyChangeListener(repoSyncDaemon, RepoSyncDaemon.PropertyEnum.states, statePropertyChangeListener);
 		addWeakPropertyChangeListener(repoSyncTimer, RepoSyncTimer.PropertyEnum.nextSyncTimestamps, nextSyncPropertyChangeListener);
 	}
+
+	private void createOrForgetHistoryPane() {
+		assertFxApplicationThread();
+
+		if (historyTab != tabPane.getSelectionModel().getSelectedItem()) {
+			historyTab.setContent(null);
+			return;
+		}
+
+		HistoryPane historyPane = historyPaneRef == null ? null : historyPaneRef.get();
+		if (historyPane == null) {
+			historyPane = new HistoryPane();
+			historyPane.setLocalRepo(localRepo);
+			historyPaneRef = new WeakReference<>(historyPane);
+		}
+
+		if (historyTab.getContent() == null)
+			historyTab.setContent(historyPane);
+	}
+
 
 	private void updateNextSync() {
 		Platform.runLater(() -> {

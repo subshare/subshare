@@ -2,6 +2,7 @@ package org.subshare.core.dto;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.util.Date;
 import java.util.UUID;
 
@@ -16,8 +17,9 @@ import org.subshare.core.sign.Signature;
 
 import co.codewizards.cloudstore.core.dto.Uid;
 
+@SuppressWarnings("serial")
 @XmlRootElement
-public class HistoFrameDto implements Signable {
+public class HistoFrameDto implements Signable, Serializable {
 	public static final String SIGNED_DATA_TYPE = "HistoFrame";
 
 	private Uid histoFrameId;

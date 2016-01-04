@@ -49,8 +49,8 @@ dynamic component LocalRepoDirectoryPane resourcefile 'messages.properties' {
 
 		TabPane id tabPane {
 			tabClosingPolicy : "UNAVAILABLE",
-			Tab id contentTab {
-				text : "Content",
+			Tab id generalTab {
+				text : "General",
 				content : GridPane {
 
 					TextField id pathTextField {
