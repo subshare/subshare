@@ -13,11 +13,11 @@ import javafx.scene.control.TextArea
 import javafx.scene.control.Spinner
 import javafx.scene.layout.HBox
 import javafx.scene.control.CheckBox
-
-import org.subshare.gui.control.TimePeriodTextField
 import javafx.scene.control.TabPane
 import javafx.scene.control.Tab
 import javafx.scene.layout.VBox
+import javafx.scene.text.Text
+import org.subshare.gui.control.TimePeriodTextField
 
 dynamic component LocalRepoPane resourcefile 'messages.properties' {
 	VBox {

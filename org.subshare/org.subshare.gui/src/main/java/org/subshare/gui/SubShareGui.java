@@ -94,7 +94,7 @@ public class SubShareGui extends Application {
 		return false;
 	}
 
-	private void showSplash() {
+	private void showSplash() { // TODO we should *additionally* implement a Preloader, later. JavaFX has a special Preloader class.
 		splashPane = new SplashPane();
 		final Scene scene = new Scene(splashPane, 400, 300);
 		scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());

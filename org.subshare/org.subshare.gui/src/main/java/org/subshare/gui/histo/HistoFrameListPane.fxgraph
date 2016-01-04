@@ -15,11 +15,11 @@ dynamic component HistoFrameListPane resourcefile 'messages.properties' {
 
 		TableView<HistoFrameListItem> id tableView {
 			columns : [
-				TableColumn<HistoFrameListItem, Date> id dateColumn {
+				TableColumn<HistoFrameListItem, Date> id signatureCreatedColumn {
 					text : "Date",
 					prefWidth : 180,
 					cellValueFactory : PropertyValueFactory<HistoFrameListItem, Date> {
-						property : "date"
+						property : "signatureCreated"
 					}
 				},
 //				TableColumn<HistoFrameListItem, Uid> id signingUserRepoKeyIdColumn {
@@ -30,7 +30,7 @@ dynamic component HistoFrameListPane resourcefile 'messages.properties' {
 //					}
 //				},
 				TableColumn<HistoFrameListItem, String> id signingUserNameColumn {
-					text : "Signing user",
+					text : "User",
 					prefWidth : 200,
 					cellValueFactory : PropertyValueFactory<HistoFrameListItem, String> {
 						property : "signingUserName"

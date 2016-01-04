@@ -11,28 +11,28 @@ import co.codewizards.cloudstore.core.dto.Uid;
 public class HistoFrameListItem {
 
 	private final HistoFrameDto histoFrameDto;
+	private final String signingUserName;
 
-	public HistoFrameListItem(final HistoFrameDto histoFrameDto) {
+	public HistoFrameListItem(final HistoFrameDto histoFrameDto, final String signingUserName) {
 		// TODO pass resolved user for signingUserRepoKeyId! Or resolve+assign it afterwards!
 		this.histoFrameDto = assertNotNull("histoFrameDto", histoFrameDto);
 		assertNotNull("histoFrameDto.signature", histoFrameDto.getSignature());
+		this.signingUserName = assertNotNull("signingUserName", signingUserName);
 	}
 
 	public HistoFrameDto getHistoFrameDto() {
 		return histoFrameDto;
 	}
 
-	public Date getDate() {
-		final Date sealed = histoFrameDto.getSealed();
-		return sealed != null ? sealed : histoFrameDto.getSignature().getSignatureCreated();
+	public Date getSignatureCreated() {
+		return histoFrameDto.getSignature().getSignatureCreated();
 	}
 
 	public Uid getSigningUserRepoKeyId() {
 		return histoFrameDto.getSignature().getSigningUserRepoKeyId();
 	}
 
-	public String getSigningUserNameName() {
-		// TODO resolve the user and return a nice name here!
-		return String.valueOf(histoFrameDto.getSignature().getSigningUserRepoKeyId());
+	public String getSigningUserName() {
+		return signingUserName;
 	}
 }

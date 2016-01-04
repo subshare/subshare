@@ -2,11 +2,11 @@ package org.subshare.gui.histo;
 
 import static org.subshare.gui.util.FxmlUtil.*;
 import javafx.fxml.FXML;
-import javafx.scene.layout.GridPane;
+import javafx.scene.control.SplitPane;
 
 import org.subshare.core.repo.LocalRepo;
 
-public class HistoryPane extends GridPane {
+public class HistoryPane extends SplitPane {
 
 	@FXML
 	private HistoFrameListPane histoFrameListPane;

@@ -14,12 +14,12 @@
 
 	<TableView fx:id="tableView"> 
 		<columns>
-			<TableColumn fx:id="dateColumn" text="Date" prefWidth="180"> 
+			<TableColumn fx:id="signatureCreatedColumn" text="Date" prefWidth="180"> 
 				<cellValueFactory>
-					<PropertyValueFactory property="date"/> 
+					<PropertyValueFactory property="signatureCreated"/> 
 				</cellValueFactory>
 			</TableColumn>
-			<TableColumn fx:id="signingUserNameColumn" text="Signing user" prefWidth="200"> 
+			<TableColumn fx:id="signingUserNameColumn" text="User" prefWidth="200"> 
 				<cellValueFactory>
 					<PropertyValueFactory property="signingUserName"/> 
 				</cellValueFactory>

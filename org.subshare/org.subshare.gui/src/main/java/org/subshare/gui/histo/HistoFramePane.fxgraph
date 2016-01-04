@@ -1,0 +1,9 @@
+package org.subshare.gui.histo
+
+import javafx.scene.layout.GridPane
+
+dynamic component HistoFramePane resourcefile 'messages.properties' {
+	GridPane {
+		//TODO Add Nodes
+	}
+}
