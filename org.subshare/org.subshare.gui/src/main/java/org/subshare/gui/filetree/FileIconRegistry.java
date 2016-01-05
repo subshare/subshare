@@ -16,6 +16,8 @@ import co.codewizards.cloudstore.core.util.IOUtil;
 public class FileIconRegistry {
 
 	public static final String ICON_ID_DIRECTORY = "directory";
+	public static final String ICON_ID_HOME = "home";
+	public static final String ICON_ID_FILE = "file-empty";
 
 	private static final FileIconRegistry instance = new FileIconRegistry();
 	private final Map<String, Map<IconSize, Image>> iconId2IconSize2Image = new HashMap<>();
@@ -87,10 +89,10 @@ public class FileIconRegistry {
 		assertNotNull("file", file);
 		if (file.isDirectory()) {
 			if (IOUtil.getUserHome().equals(file))
-				return "home";
+				return ICON_ID_HOME;
 			else
 				return ICON_ID_DIRECTORY;
 		}
-		return "file-empty";
+		return ICON_ID_FILE;
 	}
 }

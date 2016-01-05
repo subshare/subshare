@@ -1,9 +1,41 @@
 package org.subshare.gui.histo
 
 import javafx.scene.layout.GridPane
+import javafx.scene.layout.BorderPane
+import javafx.scene.control.TreeTableView
+import javafx.scene.control.TreeTableColumn
+import javafx.scene.control.cell.TreeItemPropertyValueFactory
+import org.subshare.gui.histo.HistoCryptoRepoFileTreeItem
 
 dynamic component HistoFramePane resourcefile 'messages.properties' {
-	GridPane {
-		//TODO Add Nodes
+	BorderPane {
+		center : TreeTableView<HistoCryptoRepoFileTreeItem> id treeTableView {
+				showRoot : false,
+				editable : false,
+
+				columns : [
+//					TreeTableColumn<HistoCryptoRepoFileTreeItem, String> id nameTreeTableColumn {
+//						text : "Action",
+//						prefWidth : 48,
+//						cellValueFactory : TreeItemPropertyValueFactory<HistoCryptoRepoFileTreeItem, String> {
+//							property : "action"
+//						}
+//					},
+					TreeTableColumn<HistoCryptoRepoFileTreeItem, String> id nameTreeTableColumn {
+						text : "Name",
+						prefWidth : 350,
+						cellValueFactory : TreeItemPropertyValueFactory<HistoCryptoRepoFileTreeItem, String> {
+							property : "name"
+						}
+					},
+					TreeTableColumn<HistoCryptoRepoFileTreeItem, Long> id lengthTreeTableColumn {
+						text : "Size",
+						prefWidth : 100,
+						cellValueFactory : TreeItemPropertyValueFactory<HistoCryptoRepoFileTreeItem, Long> {
+							property : "length"
+						}
+					}
+				]
+			}
 	}
 }

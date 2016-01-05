@@ -23,7 +23,9 @@ import org.subshare.core.LocalRepoStorageFactoryRegistry;
 import org.subshare.core.dto.CryptoRepoFileDto;
 import org.subshare.core.dto.HistoFrameDto;
 import org.subshare.core.dto.PermissionType;
+import org.subshare.core.dto.PlainHistoCryptoRepoFileDto;
 import org.subshare.core.repo.local.HistoFrameFilter;
+import org.subshare.core.repo.local.PlainHistoCryptoRepoFileFilter;
 import org.subshare.core.repo.local.SsLocalRepoMetaData;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKeyRing;
@@ -274,7 +276,7 @@ public class SsLocalRepoMetaDataImpl extends LocalRepoMetaDataImpl implements Ss
 	}
 
 	@Override
-	public Collection<HistoFrameDto> getHistoFrameDtos(HistoFrameFilter filter) {
+	public Collection<HistoFrameDto> getHistoFrameDtos(final HistoFrameFilter filter) {
 		assertNotNull("filter", filter);
 		try (final LocalRepoTransaction tx = getLocalRepoManagerOrFail().beginReadTransaction();) {
 			final HistoFrameDao hfDao = tx.getDao(HistoFrameDao.class);
@@ -286,6 +288,14 @@ public class SsLocalRepoMetaDataImpl extends LocalRepoMetaDataImpl implements Ss
 				result.add(histoFrameDto);
 			}
 			return result;
+		}
+	}
+
+	@Override
+	public Collection<PlainHistoCryptoRepoFileDto> getPlainHistoCryptoRepoFileDtos(PlainHistoCryptoRepoFileFilter filter) {
+		assertNotNull("filter", filter);
+		try (final LocalRepoTransaction tx = getLocalRepoManagerOrFail().beginReadTransaction();) {
+			return getCryptree(tx).getPlainHistoCryptoRepoFileDtos(filter);
 		}
 	}
 }

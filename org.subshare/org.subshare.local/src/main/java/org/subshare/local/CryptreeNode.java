@@ -177,6 +177,25 @@ public class CryptreeNode {
 		}
 	}
 
+	public RepoFileDto getHistoCryptoRepoFileRepoFileDto(final HistoCryptoRepoFile histoCryptoRepoFile) throws AccessDeniedException {
+		assertNotNull("histoCryptoRepoFile", histoCryptoRepoFile);
+
+		final PlainCryptoKey plainCryptoKey = getPlainCryptoKeyForDecrypting(histoCryptoRepoFile.getCryptoKey());
+		if (plainCryptoKey == null)
+			throw new ReadAccessDeniedException(String.format("The HistoCryptoRepoFile with histoCryptoRepoFileId=%s could not be decrypted! Access rights missing?!",
+					histoCryptoRepoFile.getHistoCryptoRepoFileId()));
+
+		final byte[] plainRepoFileDtoData = assertNotNull("decrypt(...)", decrypt(histoCryptoRepoFile.getRepoFileDtoData(), plainCryptoKey));
+		try {
+			final InputStream in = new GZIPInputStream(new ByteArrayInputStream(plainRepoFileDtoData));
+			final RepoFileDto repoFileDto = context.repoFileDtoIo.deserialize(in);
+			in.close();
+			return repoFileDto;
+		} catch (final IOException x) {
+			throw new RuntimeException(x);
+		}
+	}
+
 	public RepoFileDto getRepoFileDtoOnServer() throws AccessDeniedException {
 		final CurrentHistoCryptoRepoFile currentHistoCryptoRepoFile = getCurrentHistoCryptoRepoFile();
 		if (currentHistoCryptoRepoFile == null)

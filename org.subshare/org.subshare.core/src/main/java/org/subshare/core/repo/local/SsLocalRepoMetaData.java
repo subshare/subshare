@@ -8,6 +8,7 @@ import java.util.Set;
 import org.subshare.core.dto.CryptoRepoFileDto;
 import org.subshare.core.dto.HistoFrameDto;
 import org.subshare.core.dto.PermissionType;
+import org.subshare.core.dto.PlainHistoCryptoRepoFileDto;
 import org.subshare.core.user.UserRepoKey;
 
 import co.codewizards.cloudstore.core.dto.Uid;
@@ -63,4 +64,6 @@ public interface SsLocalRepoMetaData extends LocalRepoMetaData {
 	void makeMetaOnly();
 
 	Collection<HistoFrameDto> getHistoFrameDtos(HistoFrameFilter filter);
+
+	Collection<PlainHistoCryptoRepoFileDto> getPlainHistoCryptoRepoFileDtos(PlainHistoCryptoRepoFileFilter filter);
 }

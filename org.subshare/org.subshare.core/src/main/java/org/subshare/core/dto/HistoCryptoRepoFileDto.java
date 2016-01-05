@@ -4,6 +4,7 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.util.Date;
 
 import javax.xml.bind.annotation.XmlElement;
@@ -17,8 +18,9 @@ import org.subshare.core.sign.Signature;
 
 import co.codewizards.cloudstore.core.dto.Uid;
 
+@SuppressWarnings("serial")
 @XmlRootElement
-public class HistoCryptoRepoFileDto implements Signable {
+public class HistoCryptoRepoFileDto implements Signable, Serializable {
 	public static final String SIGNED_DATA_TYPE = "HistoCryptoRepoFile";
 
 	private Uid histoCryptoRepoFileId;

@@ -52,11 +52,13 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 @Indices({
 	@Index(name="HistoCryptoRepoFile_histoCryptoRepoFileId", members="histoCryptoRepoFileId"),
 	@Index(name="HistoCryptoRepoFile_localRevision", members="localRevision"),
-	@Index(name="HistoCryptoRepoFile_cryptoRepoFile_histoFrame", members={"cryptoRepoFile", "histoFrame"})
+	@Index(name="HistoCryptoRepoFile_cryptoRepoFile_histoFrame", members={"cryptoRepoFile", "histoFrame"}),
+	@Index(name="HistoCryptoRepoFile_histoFrame", members="histoFrame")
 })
 @Queries({
 	@Query(name="getHistoCryptoRepoFile_histoCryptoRepoFileId", value="SELECT UNIQUE WHERE this.histoCryptoRepoFileId == :histoCryptoRepoFileId"),
 	@Query(name="getHistoCryptoRepoFiles_cryptoRepoFile", value="SELECT WHERE this.cryptoRepoFile == :cryptoRepoFile"),
+	@Query(name="getHistoCryptoRepoFiles_histoFrame", value="SELECT WHERE this.histoFrame == :histoFrame"),
 	@Query(
 			name="getHistoCryptoRepoFilesChangedAfter_localRevision",
 			value="SELECT WHERE this.localRevision > :localRevision")

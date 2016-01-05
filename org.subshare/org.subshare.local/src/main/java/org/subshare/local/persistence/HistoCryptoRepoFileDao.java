@@ -53,6 +53,26 @@ public class HistoCryptoRepoFileDao extends Dao<HistoCryptoRepoFile, HistoCrypto
 		}
 	}
 
+	public Collection<HistoCryptoRepoFile> getHistoCryptoRepoFiles(HistoFrame histoFrame) {
+		assertNotNull("histoFrame", histoFrame);
+
+		final Query query = pm().newNamedQuery(getEntityClass(), "getHistoCryptoRepoFiles_histoFrame");
+		try {
+			long startTimestamp = System.currentTimeMillis();
+			@SuppressWarnings("unchecked")
+			Collection<HistoCryptoRepoFile> result = (Collection<HistoCryptoRepoFile>) query.execute(histoFrame);
+			logger.debug("getHistoCryptoRepoFiles: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
+
+			startTimestamp = System.currentTimeMillis();
+			result = load(result);
+			logger.debug("getHistoCryptoRepoFiles: Loading result-set with {} elements took {} ms.", result.size(), System.currentTimeMillis() - startTimestamp);
+
+			return result;
+		} finally {
+			query.closeAll();
+		}
+	}
+
 	public HistoCryptoRepoFile getHistoCryptoRepoFileOrFail(final Uid histoCryptoRepoFileId) {
 		final HistoCryptoRepoFile histoCryptoRepoFile = getHistoCryptoRepoFile(histoCryptoRepoFileId);
 		assertNotNull("getHistoCryptoRepoFile(" + histoCryptoRepoFileId + ")", histoCryptoRepoFile);

@@ -4,9 +4,28 @@
 -->
 
 <?import java.lang.*?>
-<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.control.TreeTableColumn?>
+<?import javafx.scene.control.TreeTableView?>
+<?import javafx.scene.control.cell.TreeItemPropertyValueFactory?>
+<?import javafx.scene.layout.BorderPane?>
 <?scenebuilder-preview-i18n-resource messages.properties?>
 
-<fx:root xmlns:fx="http://javafx.com/fxml" type="GridPane">
+<fx:root xmlns:fx="http://javafx.com/fxml" type="BorderPane">
 
+	<center>
+		<TreeTableView fx:id="treeTableView" showRoot="false" editable="false"> 
+			<columns>
+				<TreeTableColumn fx:id="nameTreeTableColumn" text="Name" prefWidth="350"> 
+					<cellValueFactory>
+						<TreeItemPropertyValueFactory property="name"/> 
+					</cellValueFactory>
+				</TreeTableColumn>
+				<TreeTableColumn fx:id="lengthTreeTableColumn" text="Size" prefWidth="100"> 
+					<cellValueFactory>
+						<TreeItemPropertyValueFactory property="length"/> 
+					</cellValueFactory>
+				</TreeTableColumn>
+			</columns>
+		</TreeTableView>
+	</center>
 </fx:root>

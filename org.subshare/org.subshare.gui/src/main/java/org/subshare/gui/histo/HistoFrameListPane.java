@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
+import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
@@ -48,31 +49,37 @@ public class HistoFrameListPane extends VBox {
 
 	private HistoFrameFilter filter = new HistoFrameFilter();
 	{
-		filter.setMaxResultSize(-1);
+		filter.setMaxResultSize(-1); // TODO add UI to edit filter!
 	}
+
+	private final Callback<TableColumn<HistoFrameListItem, Date>, TableCell<HistoFrameListItem, Date>> signatureCreateColumnCellFactory = new Callback<TableColumn<HistoFrameListItem, Date>, TableCell<HistoFrameListItem, Date>>() {
+		private final DateFormat dateFormat = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM);
+
+		@Override
+		public TableCell<HistoFrameListItem, Date> call(TableColumn<HistoFrameListItem, Date> tableColumn) {
+			return new TableCell<HistoFrameListItem, Date>() {
+				@Override
+				protected void updateItem(Date value, boolean empty) {
+					super.updateItem(value, empty);
+
+					if (value == null || empty) {
+						setText(null);
+					} else {
+						setText(dateFormat.format(value));
+					}
+				}
+			};
+		}
+	};
 
 	public HistoFrameListPane() {
 		loadDynamicComponentFxml(HistoFrameListPane.class, this);
 
-		signatureCreatedColumn.setCellFactory(new Callback<TableColumn<HistoFrameListItem, Date>, TableCell<HistoFrameListItem, Date>>() {
-			private final DateFormat dateFormat = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM);
+		signatureCreatedColumn.setCellFactory(signatureCreateColumnCellFactory);
+	}
 
-			@Override
-			public TableCell<HistoFrameListItem, Date> call(TableColumn<HistoFrameListItem, Date> tableColumn) {
-                return new TableCell<HistoFrameListItem, Date>() {
-                    @Override
-                    protected void updateItem(Date value, boolean empty) {
-                        super.updateItem(value, empty);
-
-                        if (value == null || empty) {
-                            setText(null);
-                        } else {
-                            setText(dateFormat.format(value));
-                        }
-                    }
-                };
-            }
-        });
+	public ReadOnlyObjectProperty<HistoFrameListItem> selectedItemProperty() {
+		return tableView.getSelectionModel().selectedItemProperty();
 	}
 
 	public LocalRepo getLocalRepo() {
@@ -139,7 +146,7 @@ public class HistoFrameListPane extends VBox {
 				return new SsTask<List<HistoFrameDto>>() {
 					@Override
 					protected List<HistoFrameDto> call() throws Exception {
-						try (final LocalRepoManager localRepoManager = createLocalRepoManager(localRepo);) {
+						try (final LocalRepoManager localRepoManager = createLocalRepoManager()) {
 							final SsLocalRepoMetaData localRepoMetaData = (SsLocalRepoMetaData) localRepoManager.getLocalRepoMetaData();
 							final List<HistoFrameDto> histoFrameDtos = new ArrayList<>(localRepoMetaData.getHistoFrameDtos(filter));
 							sortHistoFrameDtosBySignatureCreatedNewestFirst(histoFrameDtos);
@@ -184,8 +191,8 @@ public class HistoFrameListPane extends VBox {
 		tableView.requestLayout();
 	}
 
-	private LocalRepoManager createLocalRepoManager(final LocalRepo localRepo) {
+	private LocalRepoManager createLocalRepoManager() {
+		final LocalRepo localRepo = assertNotNull("localRepo", getLocalRepo());
 		return LocalRepoManagerFactoryLs.getLocalRepoManagerFactory().createLocalRepoManagerForExistingRepository(localRepo.getLocalRoot());
 	}
-
 }

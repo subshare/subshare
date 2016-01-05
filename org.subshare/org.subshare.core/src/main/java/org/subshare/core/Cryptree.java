@@ -1,5 +1,6 @@
 package org.subshare.core;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.Set;
 import java.util.UUID;
@@ -12,7 +13,9 @@ import org.subshare.core.dto.CryptoRepoFileDto;
 import org.subshare.core.dto.HistoCryptoRepoFileDto;
 import org.subshare.core.dto.HistoFrameDto;
 import org.subshare.core.dto.PermissionType;
+import org.subshare.core.dto.PlainHistoCryptoRepoFileDto;
 import org.subshare.core.dto.UserIdentityPayloadDto;
+import org.subshare.core.repo.local.PlainHistoCryptoRepoFileFilter;
 import org.subshare.core.sign.WriteProtected;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKeyPublicKeyLookup;
@@ -185,4 +188,5 @@ public interface Cryptree {
 	void preDelete(String localPath);
 	CryptoChangeSetDto createHistoCryptoRepoFilesForDeletedCryptoRepoFiles();
 	void createSyntheticDeleteModifications(ChangeSetDto changeSetDto);
+	Collection<PlainHistoCryptoRepoFileDto> getPlainHistoCryptoRepoFileDtos(PlainHistoCryptoRepoFileFilter filter);
 }
