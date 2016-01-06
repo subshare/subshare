@@ -72,7 +72,7 @@ public class InviteUserWithNormalAndMetaOnlyRepoIT extends AbstractUserRegistryI
 		createLocalDestinationRepo();
 
 		// Keep the LocalRepoManager open until @After to make sure that createFileWithRandomContent(...) works fine (I had *sometimes* test failures, otherwise).
-		localDestLocalRepoManager = localRepoManagerFactory.createLocalRepoManagerForNewRepository(localDestRoot);
+		localDestLocalRepoManager = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(localDestRoot);
 
 		// Importing the invitation with the temporary key causes a permanent key to be generated and a request
 		// to replace the temporary key by the permanent one.
