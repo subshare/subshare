@@ -10,7 +10,9 @@ import static org.subshare.gui.util.PlatformUtil.*;
 import java.beans.PropertyChangeListener;
 import java.lang.ref.WeakReference;
 import java.text.DateFormat;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.Timer;
@@ -25,6 +27,8 @@ import javafx.beans.property.adapter.JavaBeanObjectProperty;
 import javafx.beans.property.adapter.JavaBeanObjectPropertyBuilder;
 import javafx.beans.property.adapter.JavaBeanStringProperty;
 import javafx.beans.property.adapter.JavaBeanStringPropertyBuilder;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableSet;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -40,6 +44,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
 import javafx.scene.control.TextFormatter.Change;
 import javafx.scene.control.Tooltip;
+import javafx.scene.control.TreeItem;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
@@ -47,12 +52,16 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 
+import org.subshare.core.dto.HistoCryptoRepoFileDto;
 import org.subshare.core.repo.LocalRepo;
 import org.subshare.core.repo.sync.RepoSyncTimer;
 import org.subshare.gui.IconSize;
 import org.subshare.gui.control.TimePeriodTextField;
 import org.subshare.gui.error.ErrorHandler;
+import org.subshare.gui.histo.HistoCryptoRepoFileTreeItem;
 import org.subshare.gui.histo.HistoryPane;
+import org.subshare.gui.histo.exp.ExportFromHistoryData;
+import org.subshare.gui.histo.exp.ExportFromHistoryWizard;
 import org.subshare.gui.invitation.issue.IssueInvitationData;
 import org.subshare.gui.invitation.issue.IssueInvitationWizard;
 import org.subshare.gui.ls.ConfigLs;
@@ -66,6 +75,8 @@ import co.codewizards.cloudstore.core.Severity;
 import co.codewizards.cloudstore.core.TimePeriod;
 import co.codewizards.cloudstore.core.config.Config;
 import co.codewizards.cloudstore.core.dto.Error;
+import co.codewizards.cloudstore.core.dto.NormalFileDto;
+import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.repo.sync.RepoSyncActivity;
 import co.codewizards.cloudstore.core.repo.sync.RepoSyncDaemon;
@@ -84,6 +95,9 @@ public class LocalRepoPane extends VBox {
 
 	@FXML
 	private Button inviteButton;
+
+	@FXML
+	private Button exportFromHistoryButton;
 
 	@FXML
 	private TabPane tabPane;
@@ -136,6 +150,10 @@ public class LocalRepoPane extends VBox {
 
 	private final PropertyChangeListener nextSyncPropertyChangeListener = event -> updateNextSync();
 
+	private final InvalidationListener selectedHistoCryptoRepoFileTreeItemsInvalidationListener = observable -> selectedHistoCryptoRepoFileTreeItemsChanged();
+
+	private final ObservableSet<Uid> selectedHistoCryptoRepoFileIds = FXCollections.observableSet(new HashSet<Uid>());
+
 	private final Timer setSyncPeriodInConfigTimer = new Timer("LocalRepoPane[" + localRepoPaneIndex + "].setSyncPeriodInConfigTimer");
 	private TimerTask setSyncPeriodInConfigTimerTask;
 
@@ -168,6 +186,7 @@ public class LocalRepoPane extends VBox {
 		syncStateSeverityLabel.addEventFilter(MouseEvent.MOUSE_CLICKED, syncStateMouseEventFilter);
 
 		tabPane.getSelectionModel().selectedItemProperty().addListener((InvalidationListener) observable -> createOrForgetHistoryPane());
+		createOrForgetHistoryPane();
 	}
 
 	@SuppressWarnings("unchecked")
@@ -197,27 +216,65 @@ public class LocalRepoPane extends VBox {
 		addWeakPropertyChangeListener(repoSyncDaemon, RepoSyncDaemon.PropertyEnum.activities, activityPropertyChangeListener);
 		addWeakPropertyChangeListener(repoSyncDaemon, RepoSyncDaemon.PropertyEnum.states, statePropertyChangeListener);
 		addWeakPropertyChangeListener(repoSyncTimer, RepoSyncTimer.PropertyEnum.nextSyncTimestamps, nextSyncPropertyChangeListener);
+
+		selectedHistoCryptoRepoFileIds.addListener((InvalidationListener) observable -> selectedHistoCryptoRepoFileIdsChanged());
 	}
 
 	private void createOrForgetHistoryPane() {
 		assertFxApplicationThread();
 
+		HistoryPane historyPane = historyPaneRef == null ? null : historyPaneRef.get();
+		if (historyPane != null)
+			historyPane.getSelectedHistoCryptoRepoFileTreeItems().removeListener(selectedHistoCryptoRepoFileTreeItemsInvalidationListener);
+
 		if (historyTab != tabPane.getSelectionModel().getSelectedItem()) {
 			historyTab.setContent(null);
+			exportFromHistoryButton.setVisible(false);
+			selectedHistoCryptoRepoFileIds.clear();
 			return;
 		}
 
-		HistoryPane historyPane = historyPaneRef == null ? null : historyPaneRef.get();
 		if (historyPane == null) {
 			historyPane = new HistoryPane();
 			historyPane.setLocalRepo(localRepo);
 			historyPaneRef = new WeakReference<>(historyPane);
 		}
 
+		historyPane.getSelectedHistoCryptoRepoFileTreeItems().addListener(selectedHistoCryptoRepoFileTreeItemsInvalidationListener);
+
 		if (historyTab.getContent() == null)
 			historyTab.setContent(historyPane);
+
+		exportFromHistoryButton.setVisible(true);
+		selectedHistoCryptoRepoFileTreeItemsChanged();
+		selectedHistoCryptoRepoFileIdsChanged();
 	}
 
+	private void selectedHistoCryptoRepoFileTreeItemsChanged() {
+		final HistoryPane historyPane = historyPaneRef == null ? null : historyPaneRef.get();
+
+		final List<TreeItem<HistoCryptoRepoFileTreeItem>> selectedTreeItems;
+		if (historyPane == null)
+			selectedTreeItems = Collections.emptyList();
+		else
+			selectedTreeItems = historyPane.getSelectedHistoCryptoRepoFileTreeItems();
+
+		final Set<Uid> newSelectedHistoCryptoRepoFileIds = new HashSet<Uid>();
+		for (final TreeItem<HistoCryptoRepoFileTreeItem> treeItem : selectedTreeItems) {
+			final HistoCryptoRepoFileTreeItem ti = treeItem.getValue();
+			final HistoCryptoRepoFileDto histoCryptoRepoFileDto = ti.getHistoCryptoRepoFileDto();
+			if (histoCryptoRepoFileDto != null
+					&& ti.getPlainHistoCryptoRepoFileDto().getRepoFileDto() instanceof NormalFileDto) // TODO support all types!
+				newSelectedHistoCryptoRepoFileIds.add(histoCryptoRepoFileDto.getHistoCryptoRepoFileId());
+		}
+
+		selectedHistoCryptoRepoFileIds.retainAll(newSelectedHistoCryptoRepoFileIds);
+		selectedHistoCryptoRepoFileIds.addAll(newSelectedHistoCryptoRepoFileIds);
+	}
+
+	private void selectedHistoCryptoRepoFileIdsChanged() {
+		exportFromHistoryButton.setDisable(selectedHistoCryptoRepoFileIds.isEmpty());
+	}
 
 	private void updateNextSync() {
 		Platform.runLater(() -> {
@@ -385,6 +442,15 @@ public class LocalRepoPane extends VBox {
 	@FXML
 	private void inviteButtonClicked(final ActionEvent event) {
 		final IssueInvitationWizard wizard = new IssueInvitationWizard(new IssueInvitationData(localRepo, localRepo.getLocalRoot()));
+		final WizardDialog dialog = new WizardDialog(getScene().getWindow(), wizard);
+		dialog.show(); // no need to wait ;-)
+	}
+
+	@FXML
+	private void exportFromHistoryButtonClicked(final ActionEvent event) {
+		final ExportFromHistoryData exportFromHistoryData = new ExportFromHistoryData(localRepo);
+		exportFromHistoryData.getHistoCryptoRepoFileIds().addAll(selectedHistoCryptoRepoFileIds);
+		final ExportFromHistoryWizard wizard = new ExportFromHistoryWizard(exportFromHistoryData);
 		final WizardDialog dialog = new WizardDialog(getScene().getWindow(), wizard);
 		dialog.show(); // no need to wait ;-)
 	}

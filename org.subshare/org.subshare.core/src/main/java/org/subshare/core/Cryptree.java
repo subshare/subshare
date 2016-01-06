@@ -189,4 +189,5 @@ public interface Cryptree {
 	CryptoChangeSetDto createHistoCryptoRepoFilesForDeletedCryptoRepoFiles();
 	void createSyntheticDeleteModifications(ChangeSetDto changeSetDto);
 	Collection<PlainHistoCryptoRepoFileDto> getPlainHistoCryptoRepoFileDtos(PlainHistoCryptoRepoFileFilter filter);
+	PlainHistoCryptoRepoFileDto getPlainHistoCryptoRepoFileDto(Uid histoCryptoRepoFileId);
 }

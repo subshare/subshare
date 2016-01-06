@@ -1,0 +1,17 @@
+package org.subshare.gui.histo.exp.option
+
+import javafx.scene.layout.GridPane
+import javafx.geometry.Insets
+import javafx.scene.control.CheckBox
+
+dynamic component ExportFromHistoryOptionPane {
+	GridPane {
+		hgap : 8,
+		vgap : 8,
+		padding : Insets { left : 8, top : 8, right : 8, bottom : 8 },
+
+		CheckBox id entireDirectories {
+			text : "Entire directories: Include all files and sub-directories of the same time."
+		}
+	}
+}

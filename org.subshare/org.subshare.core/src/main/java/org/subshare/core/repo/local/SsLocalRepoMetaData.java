@@ -1,9 +1,11 @@
 package org.subshare.core.repo.local;
 
+import java.net.URL;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import org.subshare.core.dto.CryptoRepoFileDto;
 import org.subshare.core.dto.HistoFrameDto;
@@ -15,6 +17,10 @@ import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoMetaData;
 
 public interface SsLocalRepoMetaData extends LocalRepoMetaData {
+
+	URL getRemoteRoot();
+
+	UUID getRemoteRepositoryId();
 
 	CryptoRepoFileDto getCryptoRepoFileDto(long repoFileId);
 

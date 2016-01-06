@@ -3,6 +3,7 @@ package org.subshare.local;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
 
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -49,6 +50,7 @@ import co.codewizards.cloudstore.local.persistence.RepoFileDao;
 public class SsLocalRepoMetaDataImpl extends LocalRepoMetaDataImpl implements SsLocalRepoMetaData {
 
 	private UUID remoteRepositoryId;
+	private URL remoteRoot;
 
 //	@Override
 //	public CryptoRepoFileDto getCryptoRepoFileDto(final String localPath) {
@@ -231,7 +233,8 @@ public class SsLocalRepoMetaDataImpl extends LocalRepoMetaDataImpl implements Ss
 		return cryptree;
 	}
 
-	protected UUID getRemoteRepositoryId(LocalRepoTransaction tx) {
+	protected UUID getRemoteRepositoryId(final LocalRepoTransaction tx) {
+		assertNotNull("tx", tx);
 		UUID result = remoteRepositoryId;
 		if (result == null) {
 			final RemoteRepositoryDao remoteRepositoryDao = tx.getDao(RemoteRepositoryDao.class);
@@ -239,12 +242,51 @@ public class SsLocalRepoMetaDataImpl extends LocalRepoMetaDataImpl implements Ss
 			if (! iterator.hasNext())
 				throw new IllegalStateException("There is no RemoteRepository!");
 
-			result = iterator.next().getRepositoryId();
+			final RemoteRepository remoteRepository = iterator.next();
+			final URL remoteRoot = remoteRepository.getRemoteRoot();
+			result = remoteRepository.getRepositoryId();
 
 			if (iterator.hasNext())
 				throw new IllegalStateException("There is more than one RemoteRepository!");
 
+			this.remoteRepositoryId = result;
+			this.remoteRoot = remoteRoot;
+		}
+		return result;
+	}
+
+	protected URL getRemoteRoot(final LocalRepoTransaction tx) {
+		assertNotNull("tx", tx);
+		URL result = remoteRoot;
+		if (result == null) {
+			getRemoteRepositoryId(tx);
+			result = remoteRoot;
+			if (result == null)
+				throw new IllegalStateException("getRemoteRepositoryId(tx) did not assign remoteRoot!");
+		}
+		return result;
+	}
+
+	@Override
+	public UUID getRemoteRepositoryId() {
+		UUID result = remoteRepositoryId;
+		if (result == null) {
+			try (final LocalRepoTransaction tx = getLocalRepoManagerOrFail().beginReadTransaction();) {
+				result = getRemoteRepositoryId(tx);
+			}
 			remoteRepositoryId = result;
+		}
+		return result;
+	}
+
+	@Override
+	public URL getRemoteRoot() {
+		URL result = remoteRoot;
+		if (result == null) {
+			getRemoteRepositoryId();
+			result = remoteRoot;
+			if (result == null)
+				throw new IllegalStateException("getRemoteRepositoryId() did not assign remoteRoot!");
 		}
 		return result;
 	}

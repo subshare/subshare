@@ -2081,19 +2081,10 @@ public class CryptreeImpl extends AbstractCryptree {
 		final List<PlainHistoCryptoRepoFileDto> result = new ArrayList<>(histoCryptoRepoFiles.size());
 		final HistoCryptoRepoFileDtoConverter converter = HistoCryptoRepoFileDtoConverter.create(tx);
 		for (final HistoCryptoRepoFile histoCryptoRepoFile : histoCryptoRepoFiles) {
-			final PlainHistoCryptoRepoFileDto plainHistoCryptoRepoFileDto = new PlainHistoCryptoRepoFileDto();
-			plainHistoCryptoRepoFileDto.setHistoCryptoRepoFileDto(converter.toHistoCryptoRepoFileDto(histoCryptoRepoFile));
+			final PlainHistoCryptoRepoFileDto plainHistoCryptoRepoFileDto = createPlainHistoCryptoRepoFileDto(
+					converter, histoCryptoRepoFile);
 
-			final Uid cryptoRepoFileId = histoCryptoRepoFile.getCryptoRepoFile().getCryptoRepoFileId();
-			plainHistoCryptoRepoFileDto.setCryptoRepoFileId(cryptoRepoFileId);
-			final CryptoRepoFile parentCryptoRepoFile = histoCryptoRepoFile.getCryptoRepoFile().getParent();
-			plainHistoCryptoRepoFileDto.setParentCryptoRepoFileId(parentCryptoRepoFile == null ? null : parentCryptoRepoFile.getCryptoRepoFileId());
-			final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(cryptoRepoFileId);
-			final RepoFileDto repoFileDto = tryDecryptHistoCryptoRepoFile(cryptreeNode, histoCryptoRepoFile);
-
-			plainHistoCryptoRepoFileDto.setRepoFileDto(repoFileDto);
-
-			cryptoRepoFileId2PlainHistoCryptoRepoFileDto.put(cryptoRepoFileId, plainHistoCryptoRepoFileDto);
+			cryptoRepoFileId2PlainHistoCryptoRepoFileDto.put(plainHistoCryptoRepoFileDto.getCryptoRepoFileId(), plainHistoCryptoRepoFileDto);
 			result.add(plainHistoCryptoRepoFileDto);
 		}
 
@@ -2133,6 +2124,34 @@ public class CryptreeImpl extends AbstractCryptree {
 			}
 		}
 		return result;
+	}
+
+	@Override
+	public PlainHistoCryptoRepoFileDto getPlainHistoCryptoRepoFileDto(final Uid histoCryptoRepoFileId) {
+		assertNotNull("histoCryptoRepoFileId", histoCryptoRepoFileId);
+		final LocalRepoTransaction tx = getTransactionOrFail();
+		final HistoCryptoRepoFileDao hcrfDao = tx.getDao(HistoCryptoRepoFileDao.class);
+		final HistoCryptoRepoFileDtoConverter converter = HistoCryptoRepoFileDtoConverter.create(tx);
+		final HistoCryptoRepoFile histoCryptoRepoFile = hcrfDao.getHistoCryptoRepoFileOrFail(histoCryptoRepoFileId);
+		return createPlainHistoCryptoRepoFileDto(converter, histoCryptoRepoFile);
+	}
+
+	private PlainHistoCryptoRepoFileDto createPlainHistoCryptoRepoFileDto(final HistoCryptoRepoFileDtoConverter converter, final HistoCryptoRepoFile histoCryptoRepoFile) {
+		assertNotNull("converter", converter);
+		assertNotNull("histoCryptoRepoFile", histoCryptoRepoFile);
+
+		final PlainHistoCryptoRepoFileDto plainHistoCryptoRepoFileDto = new PlainHistoCryptoRepoFileDto();
+		plainHistoCryptoRepoFileDto.setHistoCryptoRepoFileDto(converter.toHistoCryptoRepoFileDto(histoCryptoRepoFile));
+
+		final Uid cryptoRepoFileId = histoCryptoRepoFile.getCryptoRepoFile().getCryptoRepoFileId();
+		plainHistoCryptoRepoFileDto.setCryptoRepoFileId(cryptoRepoFileId);
+		final CryptoRepoFile parentCryptoRepoFile = histoCryptoRepoFile.getCryptoRepoFile().getParent();
+		plainHistoCryptoRepoFileDto.setParentCryptoRepoFileId(parentCryptoRepoFile == null ? null : parentCryptoRepoFile.getCryptoRepoFileId());
+		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(cryptoRepoFileId);
+		final RepoFileDto repoFileDto = tryDecryptHistoCryptoRepoFile(cryptreeNode, histoCryptoRepoFile);
+
+		plainHistoCryptoRepoFileDto.setRepoFileDto(repoFileDto);
+		return plainHistoCryptoRepoFileDto;
 	}
 
 	private RepoFileDto tryDecryptHistoCryptoRepoFile(CryptreeNode cryptreeNode, HistoCryptoRepoFile histoCryptoRepoFile) {

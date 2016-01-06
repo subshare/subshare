@@ -11,9 +11,11 @@ import java.util.concurrent.ExecutionException;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.collections.ObservableList;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
+import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeTableCell;
 import javafx.scene.control.TreeTableColumn;
 import javafx.scene.control.TreeTableView;
@@ -63,6 +65,8 @@ public class HistoFramePane extends BorderPane {
 
 	@FXML
 	private TreeTableColumn<HistoCryptoRepoFileTreeItem, String> nameTreeTableColumn;
+
+	private PlainHistoCryptoRepoFileFilter filter;
 
 	private final Map<HistoCryptoRepoFileTreeItem.Action, Image> action2ActionIcon = new HashMap<>();
 	{
@@ -124,6 +128,10 @@ public class HistoFramePane extends BorderPane {
 		nameTreeTableColumn.setCellFactory(nameColumnCellFactory);
 	}
 
+	public ObservableList<TreeItem<HistoCryptoRepoFileTreeItem>> getSelectedHistoCryptoRepoFileTreeItems() {
+		return treeTableView.getSelectionModel().getSelectedItems();
+	}
+
 	public ObjectProperty<Uid> histoFrameIdProperty() {
 		return histoFrameId;
 	}
@@ -144,11 +152,13 @@ public class HistoFramePane extends BorderPane {
 
 		// TODO refactor to lazy-load tree-items when expanding?!
 
-		final PlainHistoCryptoRepoFileFilter filter = new PlainHistoCryptoRepoFileFilter();
+		filter = new PlainHistoCryptoRepoFileFilter();
 		filter.setFillParents(true);
 		filter.setHistoFrameId(histoFrameId);
 
 		new Service<HistoCryptoRepoFileTreeItem>() {
+			private final PlainHistoCryptoRepoFileFilter filter = HistoFramePane.this.filter;
+
 			@Override
 			protected Task<HistoCryptoRepoFileTreeItem> createTask() {
 				return new SsTask<HistoCryptoRepoFileTreeItem>() {
@@ -163,6 +173,9 @@ public class HistoFramePane extends BorderPane {
 
 					@Override
 					protected void succeeded() {
+						if (filter != HistoFramePane.this.filter)
+							return; // out-dated result (new invocation triggered, already)
+
 						final HistoCryptoRepoFileTreeItem rootTreeItem;
 						try { rootTreeItem = get(); } catch (InterruptedException | ExecutionException e) { throw new RuntimeException(e); }
 						treeTableView.setRoot(rootTreeItem);

@@ -48,6 +48,18 @@
 				<Tooltip text="Invite someone to share this repository.&#010;&#010;You'll select another user and an invitation token is going to be created for this user."/> 
 			</tooltip>
 		</Button>
+		<Button fx:id="exportFromHistoryButton" onAction="#exportFromHistoryButtonClicked"> 
+			<graphic>
+				<ImageView> 
+					<image>
+						<Image url="@export-from-history_24x24.png"/> 
+					</image>
+				</ImageView>
+			</graphic>
+			<tooltip>
+				<Tooltip text="Export the selected file(s) from the history."/> 
+			</tooltip>
+		</Button>
 		<VBox.margin>
 			<Insets left="8" right="8" top="8" bottom="8"/> 
 		</VBox.margin>

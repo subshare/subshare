@@ -1,0 +1,38 @@
+package org.subshare.gui.histo.exp.destination
+
+import javafx.scene.layout.GridPane
+import javafx.scene.text.Text
+import javafx.geometry.Insets
+import org.subshare.gui.filetree.FileTreePane
+import javafx.scene.control.SelectionMode
+
+dynamic component ExportFromHistoryDestinationPane resourcefile 'messages.properties' {
+	GridPane {
+		hgap : 8,
+		vgap : 8,
+		padding : Insets { left : 8, top : 8, right : 8, bottom : 8 },
+//		minWidth : 550,
+//		prefWidth : 550,
+//		prefHeight : 600,
+////		minHeight : 600,
+		
+		Text id headerText {
+			text : rstring 'ExportFromHistoryDestinationPane.headerText.text',
+			wrappingWidth : 600,
+			static columnIndex : 0,
+			static rowIndex : 0,
+			static hgrow : "ALWAYS"
+//				static margin : Insets { bottom : 16 }
+		},
+
+		FileTreePane id fileTreePane {
+			useCase : "history",
+			selectionMode: "SINGLE",
+
+			static columnIndex : 0,
+			static rowIndex : 1,
+			static hgrow : "ALWAYS",
+			static vgrow : "ALWAYS"
+		}
+	}
+}
