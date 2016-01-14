@@ -15,6 +15,7 @@ import javafx.collections.ObservableList;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
+import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeTableCell;
 import javafx.scene.control.TreeTableColumn;
@@ -126,6 +127,7 @@ public class HistoFramePane extends BorderPane {
 	public HistoFramePane() {
 		loadDynamicComponentFxml(HistoFramePane.class, this);
 		nameTreeTableColumn.setCellFactory(nameColumnCellFactory);
+		treeTableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 	}
 
 	public ObservableList<TreeItem<HistoCryptoRepoFileTreeItem>> getSelectedHistoCryptoRepoFileTreeItems() {

@@ -1,7 +1,11 @@
 package org.subshare.core.repo.histo;
 
+import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static org.subshare.core.repo.sync.PaddingUtil.*;
 
+import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.UUID;
@@ -93,10 +97,9 @@ public class HistoExporterImpl implements HistoExporter {
 	}
 
 	@Override
-	public void exportFile(final Uid histoCryptoRepoFileId, final File exportDirectory) {
+	public void exportFile(final Uid histoCryptoRepoFileId, final File exportDirectory) throws IOException {
 		// TODO use param-object
 		// TODO support directories and take options into account (e.g. entire dirs [complete snapshots])
-		// TODO move out of SsLocalRepoMetaData[Impl]!
 		assertNotNull("histoCryptoRepoFileId", histoCryptoRepoFileId);
 		assertNotNull("exportDirectory", exportDirectory);
 
@@ -110,11 +113,18 @@ public class HistoExporterImpl implements HistoExporter {
 
 			final NormalFileDto normalFileDto = (NormalFileDto) repoFileDto;
 
-			for (final FileChunkDto fileChunkDto : assertNotNull("normalFileDto.fileChunkDtos", normalFileDto.getFileChunkDtos())) {
-//				remoteRepoTransport.getHistoFileData(histoCryptoRepoFileId, fileChunkDto.getOffset());
-
+			File exportFile = createFile(exportDirectory, normalFileDto.getName());
+			try (final RandomAccessFile raf = exportFile.createRandomAccessFile("rw")) {
+				for (final FileChunkDto fileChunkDto : assertNotNull("normalFileDto.fileChunkDtos", normalFileDto.getFileChunkDtos())) {
+					// TODO first try to get the chunk from the current local file - only download it, if it's different or missing locally!
+					// TODO check, which chunks already contain the data - and skip downloading the histoFileData, whenever possible.
+					byte[] histoFileData = remoteRepoTransport.getHistoFileData(histoCryptoRepoFileId, fileChunkDto.getOffset());
+					histoFileData = removePadding(histoFileData);
+					raf.seek(fileChunkDto.getOffset());
+					raf.write(histoFileData);
+				}
+				raf.setLength(normalFileDto.getLength()); // in case the file existed and was too long, we need to truncate.
 			}
-			throw new UnsupportedOperationException("NYI");
 		}
 	}
 }

@@ -9,6 +9,10 @@ import java.util.Random;
 import java.util.UUID;
 
 import org.bouncycastle.crypto.params.KeyParameter;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.subshare.core.DataKey;
 import org.subshare.core.crypto.KeyFactory;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.user.User;
@@ -19,9 +23,6 @@ import org.subshare.core.user.UserRepoKeyPublicKeyLookup;
 import org.subshare.core.user.UserRepoKeyRing;
 import org.subshare.core.user.UserRepoKeyRingLookup;
 import org.subshare.core.user.UserRepoKeyRingLookupContext;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
 
 import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.rest.client.ssl.CheckServerTrustedCertificateExceptionContext;
@@ -77,6 +78,7 @@ public class CryptreeRepoTransportTest {
 			};
 
 			final KeyParameter keyParameter = KeyFactory.getInstance().createSymmetricKey();
+			final DataKey dataKey = new DataKey(new Uid(), keyParameter);
 			final UserRepoKey signingUserRepoKey = userRepoKeyRing.getPermanentUserRepoKeys(serverRepositoryId).get(0);
 
 			for (int i = 0; i < 100; ++i) {
@@ -86,7 +88,7 @@ public class CryptreeRepoTransportTest {
 				final byte[] plainText = new byte[length];
 				random.nextBytes(plainText);
 
-				final byte[] encryptedAndSigned = repoTransport.encryptAndSign(plainText, keyParameter, signingUserRepoKey);
+				final byte[] encryptedAndSigned = repoTransport.encryptAndSign(plainText, dataKey, signingUserRepoKey);
 				final byte[] decrypted = repoTransport.verifyAndDecrypt(encryptedAndSigned, keyParameter, userRepoKeyPublicKeyLookup);
 				assertThat(decrypted).isEqualTo(plainText);
 

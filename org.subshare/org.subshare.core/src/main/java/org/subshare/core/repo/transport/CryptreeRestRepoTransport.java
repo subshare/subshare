@@ -6,6 +6,7 @@ import org.subshare.core.dto.SsDeleteModificationDto;
 import org.subshare.core.pgp.PgpKey;
 
 import co.codewizards.cloudstore.core.dto.NormalFileDto;
+import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.repo.transport.RepoTransport;
 
 public interface CryptreeRestRepoTransport extends RepoTransport, CryptreeRepoTransport {
@@ -17,4 +18,6 @@ public interface CryptreeRestRepoTransport extends RepoTransport, CryptreeRepoTr
 //	void beginPutFile(String path, NormalFileDto fromNormalFileDto); // inherited
 
 	void endPutFile(String path, NormalFileDto fromNormalFileDto);
+
+	byte[] getHistoFileData(Uid histoCryptoRepoFileId, long offset);
 }

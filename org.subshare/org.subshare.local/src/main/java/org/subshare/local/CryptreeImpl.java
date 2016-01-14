@@ -15,11 +15,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import org.bouncycastle.crypto.params.KeyParameter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.subshare.core.AbstractCryptree;
 import org.subshare.core.AccessDeniedException;
+import org.subshare.core.DataKey;
 import org.subshare.core.GrantAccessDeniedException;
 import org.subshare.core.LocalRepoStorage;
 import org.subshare.core.LocalRepoStorageFactory;
@@ -227,10 +227,30 @@ public class CryptreeImpl extends AbstractCryptree {
 	}
 
 	@Override
-	public KeyParameter getDataKeyOrFail(final String localPath) {
+	public DataKey getDataKeyOrFail(final String localPath) {
+		assertNotNull("localPath", localPath);
 		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(localPath);
 		return cryptreeNode.getDataKeyOrFail();
 	}
+
+	@Override
+	public DataKey getDataKeyOrFail(Uid cryptoKeyId) {
+		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(getRootCryptoRepoFileIdOrFail());
+		return cryptreeNode.getDataKeyOrFail(cryptoKeyId);
+	}
+
+//	@Override
+//	public KeyParameter getHistoDataKeyOrFail(Uid histoCryptoRepoFileId) {
+//		assertNotNull("histoCryptoRepoFileId", histoCryptoRepoFileId);
+//
+////		final LocalRepoTransaction tx = getCryptreeContext().transaction;
+////		final HistoCryptoRepoFile histoCryptoRepoFile = tx.getDao(HistoCryptoRepoFileDao.class).getHistoCryptoRepoFileOrFail(histoCryptoRepoFileId);
+////		final Uid cryptoRepoFileId = histoCryptoRepoFile.getCryptoRepoFile().getCryptoRepoFileId();
+////		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(cryptoRepoFileId);
+//
+//		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(getRootCryptoRepoFileIdOrFail());
+//		return cryptreeNode.getHistoDataKeyOrFail(histoCryptoRepoFileId);
+//	}
 
 	protected CryptreeContext getCryptreeContext() {
 		if (cryptreeContext == null)

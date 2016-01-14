@@ -25,6 +25,12 @@ import co.codewizards.cloudstore.local.persistence.FileChunk;
 
 	@Query(name = "getFileChunkPayloadOfFileChunk_normalFile_offset",
 			value = "SELECT UNIQUE WHERE this.fileChunk.normalFile == :normalFile && this.tempFileChunk == null && this.fileChunk.offset == :offset"),
+
+	@Query(name = "getFileChunkPayloadOfHistoFileChunk_histoCryptoRepoFile_offset",
+			value = "SELECT UNIQUE WHERE this == histoFileChunk.fileChunkPayload"
+					+ " && histoFileChunk.histoCryptoRepoFile == :histoCryptoRepoFile"
+					+ " && this.tempFileChunk == null && histoFileChunk.offset == :offset"
+					+ " VARIABLES org.subshare.local.persistence.HistoFileChunk histoFileChunk")
 })
 public class FileChunkPayload extends Entity implements StoreCallback {
 

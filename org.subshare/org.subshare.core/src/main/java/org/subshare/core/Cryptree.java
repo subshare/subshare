@@ -5,7 +5,6 @@ import java.util.Date;
 import java.util.Set;
 import java.util.UUID;
 
-import org.bouncycastle.crypto.params.KeyParameter;
 import org.subshare.core.dto.CryptoChangeSetDto;
 import org.subshare.core.dto.CryptoKeyDto;
 import org.subshare.core.dto.CryptoLinkDto;
@@ -100,7 +99,21 @@ public interface Cryptree {
 	CryptoChangeSetDto getCryptoChangeSetDtoWithCryptoRepoFiles();
 
 	void updateLastCryptoKeySyncToRemoteRepo();
-	KeyParameter getDataKeyOrFail(String localPath);
+
+	/**
+	 * Gets the <i>current</i> data-key for the given path -- used to encrypt a data block (chunk).
+	 * @param localPath the local path; must not be <code>null</code>.
+	 * @return the data-key; never <code>null</code>.
+	 */
+	DataKey getDataKeyOrFail(String localPath);
+
+	/**
+	 * Gets the data-key identified by the given ID.
+	 * @param cryptoKeyId the ID of the {@code CryptoKey} to be decrypted and returned in plain. Must not be <code>null</code>.
+	 * @return the data-key; never <code>null</code>.
+	 */
+	DataKey getDataKeyOrFail(Uid cryptoKeyId);
+
 	void putCryptoChangeSetDto(CryptoChangeSetDto cryptoChangeSetDto);
 
 	Uid getRootCryptoRepoFileId();

@@ -27,6 +27,7 @@ import org.subshare.local.persistence.CurrentHistoCryptoRepoFileDao;
 import org.subshare.local.persistence.FileChunkPayload;
 import org.subshare.local.persistence.FileChunkPayloadDao;
 import org.subshare.local.persistence.HistoCryptoRepoFile;
+import org.subshare.local.persistence.HistoCryptoRepoFileDao;
 import org.subshare.local.persistence.HistoFileChunk;
 import org.subshare.local.persistence.HistoFileChunkDao;
 import org.subshare.local.persistence.SsDeleteModification;
@@ -36,6 +37,7 @@ import org.subshare.local.persistence.TempFileChunk;
 import org.subshare.local.persistence.TempFileChunkDao;
 
 import co.codewizards.cloudstore.core.dto.ChangeSetDto;
+import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
@@ -374,6 +376,20 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 				return fileData;
 			}
 //		}
+	}
+
+	@Override
+	public byte[] getHistoFileData(final Uid histoCryptoRepoFileId, final long offset) {
+		try ( final LocalRepoTransaction transaction = getLocalRepoManager().beginReadTransaction(); ) {
+			final HistoCryptoRepoFileDao hcrfDao = transaction.getDao(HistoCryptoRepoFileDao.class);
+			final HistoCryptoRepoFile histoCryptoRepoFile = hcrfDao.getHistoCryptoRepoFileOrFail(histoCryptoRepoFileId);
+			final FileChunkPayloadDao fcpDao = transaction.getDao(FileChunkPayloadDao.class);
+			final FileChunkPayload fileChunkPayload = fcpDao.getFileChunkPayloadOfHistoFileChunk(histoCryptoRepoFile, offset);
+			final byte[] fileData = fileChunkPayload == null ? null : fileChunkPayload.getFileData();
+
+			transaction.commit();
+			return fileData;
+		}
 	}
 
 	@Override

@@ -22,6 +22,13 @@ public class VerifierInputStream extends FilterInputStream {
 
 	public static final int MAGIC_BYTE = SignerOutputStream.MAGIC_BYTE;
 
+	public static final int HEADER_LENGTH = 1 // magic byte
+			+ 1 // version
+			+ 2 // signerTransformationNumeric
+			+ 16 // signingUserRepoKeyId
+			+ 8 // signatureCreated
+			;
+
 	/**
 	 * Maximum length of the footer.
 	 * <p>
@@ -101,7 +108,7 @@ public class VerifierInputStream extends FilterInputStream {
 		}
 		final SignerTransformation signerTransformation = SignerTransformation.values()[signerTransformationNumeric];
 
-		final byte[] signingUserRepoKeyIdBytes = new byte[16];
+		final byte[] signingUserRepoKeyIdBytes = new byte[Uid.LENGTH_BYTES];
 		readOrFail(in, signingUserRepoKeyIdBytes, 0, signingUserRepoKeyIdBytes.length);
 		final Uid signingUserRepoKeyId = new Uid(signingUserRepoKeyIdBytes);
 

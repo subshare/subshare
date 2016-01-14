@@ -261,6 +261,9 @@ public class LocalRepoPane extends VBox {
 
 		final Set<Uid> newSelectedHistoCryptoRepoFileIds = new HashSet<Uid>();
 		for (final TreeItem<HistoCryptoRepoFileTreeItem> treeItem : selectedTreeItems) {
+			if (treeItem == null) // this should IMHO really never happen, but it does :-(
+				continue;
+
 			final HistoCryptoRepoFileTreeItem ti = treeItem.getValue();
 			final HistoCryptoRepoFileDto histoCryptoRepoFileDto = ti.getHistoCryptoRepoFileDto();
 			if (histoCryptoRepoFileDto != null

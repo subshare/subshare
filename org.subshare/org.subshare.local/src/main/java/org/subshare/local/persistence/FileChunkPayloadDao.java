@@ -68,4 +68,20 @@ public class FileChunkPayloadDao extends Dao<FileChunkPayload, FileChunkPayloadD
 		}
 	}
 
+	public FileChunkPayload getFileChunkPayloadOfHistoFileChunk(HistoCryptoRepoFile histoCryptoRepoFile, long offset) {
+		final Query query = pm().newNamedQuery(getEntityClass(), "getFileChunkPayloadOfHistoFileChunk_histoCryptoRepoFile_offset");
+		try {
+			final Map<String, Object> params = new HashMap<String, Object>(2);
+			params.put("histoCryptoRepoFile", histoCryptoRepoFile);
+			params.put("offset", offset);
+
+			long startTimestamp = System.currentTimeMillis();
+			final FileChunkPayload result = (FileChunkPayload) query.executeWithMap(params);
+			logger.debug("getFileChunkPayloadOfFileChunk: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
+			return result;
+		} finally {
+			query.closeAll();
+		}
+	}
+
 }

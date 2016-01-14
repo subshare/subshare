@@ -5,6 +5,8 @@ import static org.subshare.local.CryptreeNodeUtil.*;
 
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.bouncycastle.crypto.params.KeyParameter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.subshare.core.crypto.KeyFactory;
 import org.subshare.core.dto.CryptoKeyPart;
 import org.subshare.core.dto.CryptoKeyRole;
@@ -18,8 +20,6 @@ import org.subshare.local.persistence.PermissionDao;
 import org.subshare.local.persistence.PermissionSet;
 import org.subshare.local.persistence.PermissionSetInheritance;
 import org.subshare.local.persistence.UserRepoKeyPublicKey;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 abstract class PlainCryptoKeyFactory {
 
@@ -443,6 +443,13 @@ abstract class PlainCryptoKeyFactory {
 			final PlainCryptoKey plainCryptoKey = createSymmetricPlainCryptoKey(CryptoKeyRole.dataKey);
 			createCryptoLinkFromBacklinkKey(plainCryptoKey);
 			createCryptoLinkFromParentFileKey(plainCryptoKey);
+
+			// TODO the *new* data-key should have crypto-links to the *old* crypto-keys (at least or at best only
+			// one link to the newest old key).
+			// Otherwise, if we grant permission to a file later and the file was partially written with older
+			// data-keys, the user won't be able to read old data. Probably the same applies to all key types: the newest
+			// key must be able to read the older keys.
+			// But before we implement this, we need a test for this scenario!
 
 			logger.debug("createPlainCryptoKey: <<< cryptoRepoFile={} repoFile={}",
 					cryptreeNode.getCryptoRepoFile(), cryptreeNode.getRepoFile());

@@ -3,6 +3,7 @@ package org.subshare.rest.client.transport;
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.HashUtil.*;
+import static co.codewizards.cloudstore.core.util.IOUtil.*;
 import static org.subshare.core.crypto.CryptoConfigUtil.*;
 
 import java.io.ByteArrayInputStream;
@@ -22,6 +23,7 @@ import org.subshare.core.AccessDeniedException;
 import org.subshare.core.Cryptree;
 import org.subshare.core.CryptreeFactory;
 import org.subshare.core.CryptreeFactoryRegistry;
+import org.subshare.core.DataKey;
 import org.subshare.core.LocalRepoStorage;
 import org.subshare.core.LocalRepoStorageFactoryRegistry;
 import org.subshare.core.WriteAccessDeniedException;
@@ -56,6 +58,7 @@ import org.subshare.core.user.UserRepoKeyRingLookupContext;
 import org.subshare.rest.client.transport.request.CreateRepository;
 import org.subshare.rest.client.transport.request.EndGetCryptoChangeSetDto;
 import org.subshare.rest.client.transport.request.GetCryptoChangeSetDto;
+import org.subshare.rest.client.transport.request.GetHistoFileData;
 import org.subshare.rest.client.transport.request.PutCryptoChangeSetDto;
 import org.subshare.rest.client.transport.request.SsBeginPutFile;
 import org.subshare.rest.client.transport.request.SsDelete;
@@ -544,10 +547,32 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 		final LocalRepoManager localRepoManager = getLocalRepoManager();
 		try (final LocalRepoTransaction transaction = localRepoManager.beginReadTransaction();) {
 			final Cryptree cryptree = getCryptree(transaction);
-			final KeyParameter dataKey = cryptree.getDataKeyOrFail(path);
 			final String unprefixedServerPath = unprefixPath(cryptree.getServerPath(path)); // it's automatically prefixed *again*, thus we must prefix it here (if we don't want to somehow suppress the automatic prefixing, which is probably quite a lot of work).
 			final byte[] encryptedFileData = getRestRepoTransport().getFileData(unprefixedServerPath, offset, length);
-			decryptedFileData = verifyAndDecrypt(encryptedFileData, dataKey, cryptree.getUserRepoKeyPublicKeyLookup());
+			final UserRepoKeyPublicKeyLookup userRepoKeyPublicKeyLookup = cryptree.getUserRepoKeyPublicKeyLookup();
+			final Uid cryptoKeyId = readCryptoKeyId(encryptedFileData, userRepoKeyPublicKeyLookup);
+			final DataKey dataKey = cryptree.getDataKeyOrFail(cryptoKeyId);
+			decryptedFileData = verifyAndDecrypt(encryptedFileData, dataKey.keyParameter, userRepoKeyPublicKeyLookup);
+
+			transaction.commit();
+		}
+		return decryptedFileData;
+	}
+
+	@Override
+	public byte[] getHistoFileData(Uid histoCryptoRepoFileId, long offset) {
+		final byte[] decryptedFileData;
+		final LocalRepoManager localRepoManager = getLocalRepoManager();
+		try (final LocalRepoTransaction transaction = localRepoManager.beginReadTransaction();) {
+			final Cryptree cryptree = getCryptree(transaction);
+
+			final byte[] encryptedFileData = getClient().execute(
+					new GetHistoFileData(getRepositoryId().toString(), histoCryptoRepoFileId, offset));
+
+			final UserRepoKeyPublicKeyLookup userRepoKeyPublicKeyLookup = cryptree.getUserRepoKeyPublicKeyLookup();
+			final Uid cryptoKeyId = readCryptoKeyId(encryptedFileData, userRepoKeyPublicKeyLookup);
+			final DataKey dataKey = cryptree.getDataKeyOrFail(cryptoKeyId);
+			decryptedFileData = verifyAndDecrypt(encryptedFileData, dataKey.keyParameter, userRepoKeyPublicKeyLookup);
 
 			transaction.commit();
 		}
@@ -628,7 +653,7 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 		final LocalRepoManager localRepoManager = getLocalRepoManager();
 		try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
 			final Cryptree cryptree = getCryptree(transaction);
-			final KeyParameter dataKey = cryptree.getDataKeyOrFail(path);
+			final DataKey dataKey = cryptree.getDataKeyOrFail(path);
 			final UserRepoKey userRepoKey = cryptree.getUserRepoKeyOrFail(path, PermissionType.write);
 			final byte[] encryptedFileData = encryptAndSign(fileData, dataKey, userRepoKey);
 			// TODO maybe we store only one IV per file and derive the chunk's IV from this combined with the offset (and all hashed)? this could save valuable entropy and should still be secure - maybe later.
@@ -690,17 +715,19 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 		return value;
 	}
 
-	protected byte[] encryptAndSign(final byte[] plainText, final KeyParameter keyParameter, final UserRepoKey signingUserRepoKey) {
+	protected byte[] encryptAndSign(final byte[] plainText, final DataKey dataKey, final UserRepoKey signingUserRepoKey) {
 		final ByteArrayOutputStream bout = new ByteArrayOutputStream();
 		try {
 			try (SignerOutputStream signerOut = new SignerOutputStream(bout, signingUserRepoKey)) {
 				final int version = 1;
 				signerOut.write(version); // version is inside signed data - better
 
+				signerOut.write(dataKey.cryptoKeyId.toBytes());
+
 				try (
 						final EncrypterOutputStream encrypterOut = new EncrypterOutputStream(signerOut,
 								getSymmetricCipherTransformation(),
-								keyParameter, new RandomIvFactory());
+								dataKey.keyParameter, new RandomIvFactory());
 				) {
 					IOUtil.transferStreamData(new ByteArrayInputStream(plainText), encrypterOut);
 				}
@@ -711,6 +738,33 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 		}
 	}
 
+	protected Uid readCryptoKeyId(final byte[] cipherText, final UserRepoKeyPublicKeyLookup userRepoKeyPublicKeyLookup) {
+		final long startTimestamp = System.currentTimeMillis();
+		try {
+			final ByteArrayInputStream in = new ByteArrayInputStream(cipherText);
+//			in.skip(VerifierInputStream.HEADER_LENGTH);
+			try (final VerifierInputStream verifierIn = new VerifierInputStream(in, userRepoKeyPublicKeyLookup);) {
+				final int version = verifierIn.read();
+				if (version != 1)
+					throw new IllegalStateException("version != 1");
+
+				final byte[] bytes = new byte[Uid.LENGTH_BYTES];
+				readOrFail(verifierIn, bytes, 0, bytes.length);
+				final Uid cryptoKeyId = new Uid(bytes);
+
+				// must read until the end for verification - TODO shall we instead seek directly to the right location and only read without verifying? we'll verify afterwards anyway...
+				final byte[] buf = new byte[32 * 1024];
+				while (verifierIn.read(buf) >= 0);
+
+				return cryptoKeyId;
+			}
+		} catch (final IOException x) {
+			throw new RuntimeException(x.getMessage() + " cipherText.length=" + cipherText.length, x);
+		} finally {
+			logger.info("readCryptoKeyId: took {} ms.", System.currentTimeMillis() - startTimestamp);
+		}
+	}
+
 	protected byte[] verifyAndDecrypt(final byte[] cipherText, final KeyParameter keyParameter, final UserRepoKeyPublicKeyLookup userRepoKeyPublicKeyLookup) {
 		try {
 			final ByteArrayInputStream in = new ByteArrayInputStream(cipherText);
@@ -718,6 +772,8 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 				final int version = verifierIn.read();
 				if (version != 1)
 					throw new IllegalStateException("version != 1");
+
+				readOrFail(verifierIn, new byte[Uid.LENGTH_BYTES], 0, Uid.LENGTH_BYTES);
 
 				final ByteArrayOutputStream bout = new ByteArrayOutputStream();
 				try (final DecrypterInputStream decrypterIn = new DecrypterInputStream(verifierIn, keyParameter);) {

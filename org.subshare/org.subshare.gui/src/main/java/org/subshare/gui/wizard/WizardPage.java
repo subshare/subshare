@@ -36,6 +36,9 @@ public abstract class WizardPage extends VBox {
 			if (wizard != null && newValue != null && wizard != newValue.getWizard())
 				newValue.setWizard(wizard);
 
+			if (wizard != null)
+				wizard.updateCanFinish();
+
 			updateButtonsDisable();
 		}
 	};

@@ -23,10 +23,10 @@ import java.util.Set;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-import org.bouncycastle.crypto.params.KeyParameter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.subshare.core.AccessDeniedException;
+import org.subshare.core.DataKey;
 import org.subshare.core.GrantAccessDeniedException;
 import org.subshare.core.ReadAccessDeniedException;
 import org.subshare.core.ReadUserIdentityAccessDeniedException;
@@ -676,17 +676,34 @@ public class CryptreeNode {
 
 	/**
 	 * Gets the current data key as indicated by {@link CryptoRepoFile#getCryptoKey()}.
-	 * @return
+	 * @return the current data key. Never <code>null</code>.
 	 */
-	public KeyParameter getDataKeyOrFail() {
+	public DataKey getDataKeyOrFail() {
 		final CryptoRepoFile cryptoRepoFile = getCryptoRepoFile();
 		assertNotNull("cryptoRepoFile", cryptoRepoFile);
+		return getDataKeyOrFail(cryptoRepoFile.getCryptoKey());
+	}
+
+	/**
+	 * Gets the data key identified by the given {@ code cryptoKeyId}.
+	 * @param cryptoKeyId the unique ID of the {@link CryptoKey} from which to extract the plain key material.
+	 * @return the data key. Never <code>null</code>.
+	 */
+	public DataKey getDataKeyOrFail(final Uid cryptoKeyId) {
+		assertNotNull("cryptoKeyId", cryptoKeyId);
+		final CryptoKeyDao cryptoKeyDao = context.transaction.getDao(CryptoKeyDao.class);
+		final CryptoKey cryptoKey = cryptoKeyDao.getCryptoKeyOrFail(cryptoKeyId);
+		return getDataKeyOrFail(cryptoKey);
+	}
+
+	protected DataKey getDataKeyOrFail(final CryptoKey cryptoKey) {
+		assertNotNull("cryptoKey", cryptoKey);
 
 		// We can use the following method, because it's *symmetric* - thus it works for both decrypting and encrypting!
-		final PlainCryptoKey plainCryptoKey = getPlainCryptoKeyForDecrypting(cryptoRepoFile.getCryptoKey());
+		final PlainCryptoKey plainCryptoKey = getPlainCryptoKeyForDecrypting(cryptoKey);
 		if (plainCryptoKey == null)
-			throw new ReadAccessDeniedException(String.format("Cannot decrypt dataKey for cryptoRepoFileId=%s!",
-					cryptoRepoFile.getCryptoRepoFileId()));
+			throw new ReadAccessDeniedException(String.format("Cannot decrypt dataKey for cryptoKeyID=%s (cryptoRepoFileId=%s)!",
+					cryptoKey.getCryptoKeyId(), cryptoKey.getCryptoRepoFile().getCryptoRepoFileId()));
 
 		assertNotNull("plainCryptoKey.cryptoKey", plainCryptoKey.getCryptoKey());
 
@@ -696,7 +713,7 @@ public class CryptreeNode {
 		if (CryptoKeyPart.sharedSecret != plainCryptoKey.getCryptoKeyPart())
 			throw new IllegalStateException("CryptoKeyPart.sharedSecret != plainCryptoKey.getCryptoKeyPart()");
 
-		return plainCryptoKey.getKeyParameterOrFail();
+		return new DataKey(cryptoKey.getCryptoKeyId(), plainCryptoKey.getKeyParameterOrFail());
 	}
 
 	public CryptreeNode getParent() {
