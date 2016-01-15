@@ -1,4 +1,4 @@
-package org.subshare.ls.server;
+package org.subshare.ls.server.cproc;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,7 +11,7 @@ import org.subshare.core.pgp.sync.PgpSyncDaemonImpl;
 import org.subshare.core.pgp.transport.PgpTransportFactoryRegistry;
 import org.subshare.core.repo.metaonly.MetaOnlyRepoSyncDaemonImpl;
 import org.subshare.core.repo.sync.RepoSyncTimerImpl;
-import org.subshare.ls.server.ssl.AcceptAllDynamicX509TrustManagerCallback;
+import org.subshare.ls.server.cproc.ssl.AcceptAllDynamicX509TrustManagerCallback;
 import org.subshare.rest.client.locker.transport.RestLockerTransportFactory;
 import org.subshare.rest.client.pgp.transport.RestPgpTransportFactory;
 import org.subshare.rest.client.transport.CryptreeRestRepoTransportFactoryImpl;
@@ -57,10 +57,13 @@ public class LocalServerInit {
 			final Thread localServerInitFinishThread = new Thread() {
 				@Override
 				public void run() {
+					// Blocking syncs performed serially (one after the other):
 					PgpSyncDaemonImpl.getInstance().sync();
 					LockerSyncDaemonImpl.getInstance().sync();
 					MetaOnlyRepoSyncDaemonImpl.getInstance().sync();
-					RepoSyncTimerImpl.getInstance(); // this is *not* blocking (the above invocations are) => the repo-syncs are in the background.
+
+					// The following is *not* blocking (the above invocations are) => the repo-syncs are in the background.
+					RepoSyncTimerImpl.getInstance();
 				}
 			};
 			localServerInitFinishThread.start();

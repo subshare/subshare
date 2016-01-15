@@ -16,10 +16,10 @@ import mockit.Invocation;
 import mockit.Mock;
 import mockit.MockUp;
 
-import org.bouncycastle.crypto.params.KeyParameter;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.subshare.core.DataKey;
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.dto.SignatureDto;
 import org.subshare.core.dto.SsDirectoryDto;
@@ -109,11 +109,11 @@ public class BrokenSignatureIT extends AbstractRepoToRepoSyncIT {
 
 		mockUps.add(new MockUp<CryptreeRestRepoTransportImpl>() {
 			@Mock
-			public byte[] encryptAndSign(final Invocation invocation, final byte[] plainText, final KeyParameter keyParameter, final UserRepoKey signingUserRepoKey) {
+			public byte[] encryptAndSign(final Invocation invocation, final byte[] plainText, final DataKey dataKey, final UserRepoKey signingUserRepoKey) {
 				jmockitWasUsed = true;
 
 				logger.info("encryptAndSign: about to call invocation.proceed(...). cryptreeRepoTransport_encryptAndSign_breakSignature={}", cryptreeRepoTransport_encryptAndSign_breakSignature);
-				final byte[] result = invocation.proceed(plainText, keyParameter, signingUserRepoKey);
+				final byte[] result = invocation.proceed(plainText, dataKey, signingUserRepoKey);
 				if (cryptreeRepoTransport_encryptAndSign_breakSignature) {
 					// If we modify anything in this part of the header, we cause a different exception - not a SignatureException!
 					// The same goes for the last few bytes of the footer.

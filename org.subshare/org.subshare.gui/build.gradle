@@ -27,7 +27,8 @@ targetCompatibility = JavaVersion.VERSION_1_8
 
 dependencies {
 	compile project(':org.subshare.ls.client')
-	compile project(':org.subshare.ls.server')
+//	compile project(':org.subshare.ls.server') // is a transitive dependency of o.s.l.server.cproc
+	compile project(':org.subshare.ls.server.cproc')
 
 	// the following is needed only to configure the SSL certificate check callback - maybe not needed in the future, anymore
 	compile project(':org.subshare.rest.client')

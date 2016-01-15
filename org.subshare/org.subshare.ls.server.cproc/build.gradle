@@ -1,0 +1,13 @@
+dependencies {
+	compile group: 'co.codewizards.cloudstore', name: 'co.codewizards.cloudstore.ls.server.cproc', version: cloudstoreVersion
+	compile project(':org.subshare.ls.server')
+	compile project(':org.subshare.rest.client')
+}
+
+jar {
+	manifest {
+		attributes(
+			'Main-Class': 'org.subshare.ls.server.cproc.LocalServerMain',
+			'Class-Path': configurations.runtime.collect { it.getName() }.join(' '))
+	}
+}

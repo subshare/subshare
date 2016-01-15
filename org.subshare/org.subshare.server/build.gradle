@@ -11,6 +11,13 @@ dependencies {
 	compile project(':org.subshare.updater')
 }
 
+// The REST client is not needed, because a SubShare server does not talk to other servers.
+// If we ever add a server-to-server-sync, we'll have to re-add this (and probably subshare-specific projects, too).
+configurations.all*.exclude module: "co.codewizards.cloudstore.rest.client"
+
+// The CloudStore client is not usable with SubShare => exclude it.
+configurations.all*.exclude module: "co.codewizards.cloudstore.client"
+
 jar {
 	manifest {
 		attributes(

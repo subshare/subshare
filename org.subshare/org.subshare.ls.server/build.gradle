@@ -1,13 +1,4 @@
 dependencies {
 	compile group: 'co.codewizards.cloudstore', name: 'co.codewizards.cloudstore.ls.server', version: cloudstoreVersion
 	compile project(':org.subshare.ls.rest.server')
-	compile project(':org.subshare.rest.client')
-}
-
-jar {
-	manifest {
-		attributes(
-			'Main-Class': 'org.subshare.ls.server.LocalServerMain',
-			'Class-Path': configurations.runtime.collect { it.getName() }.join(' '))
-	}
 }

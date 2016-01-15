@@ -1,4 +1,4 @@
-package org.subshare.ls.server.ssl;
+package org.subshare.ls.server.cproc.ssl;
 
 import co.codewizards.cloudstore.rest.client.ssl.CheckServerTrustedCertificateExceptionContext;
 import co.codewizards.cloudstore.rest.client.ssl.CheckServerTrustedCertificateExceptionResult;

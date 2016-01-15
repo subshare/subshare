@@ -8,10 +8,10 @@ public class LocalServerInitLs {
 	}
 
 	public static void initPrepare() {
-		LocalServerClient.getInstance().invokeStatic("org.subshare.ls.server.LocalServerInit", "initPrepare");
+		LocalServerClient.getInstance().invokeStatic("org.subshare.ls.server.cproc.LocalServerInit", "initPrepare");
 	}
 
 	public static void initFinish() {
-		LocalServerClient.getInstance().invokeStatic("org.subshare.ls.server.LocalServerInit", "initFinish");
+		LocalServerClient.getInstance().invokeStatic("org.subshare.ls.server.cproc.LocalServerInit", "initFinish");
 	}
 }
