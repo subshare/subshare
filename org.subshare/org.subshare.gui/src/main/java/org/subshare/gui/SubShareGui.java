@@ -45,6 +45,7 @@ import org.subshare.gui.welcome.pgp.privatekeypassphrase.IntroWizard;
 import org.subshare.gui.wizard.WizardDialog;
 import org.subshare.gui.wizard.WizardState;
 import org.subshare.ls.server.SsLocalServer;
+import org.subshare.ls.server.cproc.SsLocalServerProcessLauncher;
 
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.joran.JoranConfigurator;
@@ -63,7 +64,7 @@ public class SubShareGui extends Application {
 
 	private static final Logger logger = LoggerFactory.getLogger(SubShareGui.class);
 
-	private SsLocalServer localServer;
+	private volatile SsLocalServer localServer;
 	private Stage primaryStage;
 	private SplashPane splashPane;
 	private volatile int exitCode = 0;
@@ -116,7 +117,10 @@ public class SubShareGui extends Application {
 					initLogging();
 
 					// We create the LocalServer before constructing the UI to make sure, the UI can access everything.
-					// TODO we should start an external JVM and keep it running when closing - or maybe handle this differently?!
+					// First we try to launch it in a separate JVM.
+					new SsLocalServerProcessLauncher().start();
+
+					// Then, as fallback, we try to launch it inside this JVM.
 					localServer = new SsLocalServer();
 					if (! localServer.start())
 						localServer = null;

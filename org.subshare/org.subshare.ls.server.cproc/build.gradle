@@ -2,12 +2,19 @@ dependencies {
 	compile group: 'co.codewizards.cloudstore', name: 'co.codewizards.cloudstore.ls.server.cproc', version: cloudstoreVersion
 	compile project(':org.subshare.ls.server')
 	compile project(':org.subshare.rest.client')
+
+	// We cannot use the nio stuff on Android, AFAIK. However, we're likely not going to use
+	// this o.s.ls.server.cproc on Android, anyway. Have to deal with it later, when addressing Android.
+	compile "co.codewizards.cloudstore:co.codewizards.cloudstore.core.oio.nio:$cloudstoreVersion"
+
+	// runtime-dependencies (needed when starting the app - not for compilation)
+	runtime project(':org.subshare.local')
 }
 
 jar {
 	manifest {
 		attributes(
-			'Main-Class': 'org.subshare.ls.server.cproc.LocalServerMain',
+			'Main-Class': 'org.subshare.ls.server.cproc.SsLocalServerMain',
 			'Class-Path': configurations.runtime.collect { it.getName() }.join(' '))
 	}
 }
