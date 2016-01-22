@@ -165,7 +165,7 @@ public class CollisionRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 				plainHistoCryptoRepoFileDtos.get(2).getHistoCryptoRepoFileDto().getHistoCryptoRepoFileId(), tempDir2);
 		File histoFile2 = createFile(tempDir2, "a");
 
-		IOUtil.copyFile(file1, tempDir2.createFile("a.current"));
+//		IOUtil.copyFile(file1, tempDir2.createFile("a.current"));
 		assertThat(IOUtil.compareFiles(histoFile2, file1)).isTrue();
 
 		int lastByteOfHistoFile1 = getLastByte(histoFile1);
