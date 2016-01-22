@@ -19,6 +19,7 @@ import org.subshare.local.persistence.SsNormalFile;
 import co.codewizards.cloudstore.core.dto.FileChunkDto;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
+import co.codewizards.cloudstore.core.repo.transport.CollisionException;
 import co.codewizards.cloudstore.local.persistence.FileChunk;
 import co.codewizards.cloudstore.local.persistence.NormalFile;
 import co.codewizards.cloudstore.local.persistence.RepoFile;
@@ -154,4 +155,8 @@ public class CryptreeFileRepoTransportImpl extends FileRepoTransport implements 
 		}
 	}
 
+	@Override
+	protected File handleFileCollision(LocalRepoTransaction transaction, UUID fromRepositoryId, File file) {
+		throw new CollisionException();
+	}
 }
