@@ -25,7 +25,7 @@ import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.progress.ProgressMonitor;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
 import co.codewizards.cloudstore.core.repo.sync.RepoToRepoSync;
-import co.codewizards.cloudstore.core.repo.transport.DeleteModificationCollisionException;
+import co.codewizards.cloudstore.core.repo.transport.CollisionException;
 import co.codewizards.cloudstore.core.repo.transport.RepoTransport;
 
 public class SsRepoToRepoSync extends RepoToRepoSync {
@@ -68,7 +68,7 @@ public class SsRepoToRepoSync extends RepoToRepoSync {
 	@Override
 	protected void beginPutFile(final RepoTransport fromRepoTransport, final RepoTransport toRepoTransport,
 			final RepoFileDtoTreeNode repoFileDtoTreeNode, final String path, final NormalFileDto fromNormalFileDto)
-					throws DeleteModificationCollisionException {
+					throws CollisionException {
 		if (toRepoTransport instanceof CryptreeRepoTransport)
 			((CryptreeRepoTransport) toRepoTransport).beginPutFile(path, (SsNormalFileDto) fromNormalFileDto);
 		else

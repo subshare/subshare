@@ -42,35 +42,35 @@ import co.codewizards.cloudstore.local.persistence.Entity;
  * @author Marco หงุ่ยตระกูล-Schulze - marco at codewizards dot co
  */
 @PersistenceCapable
-@Inheritance(strategy=InheritanceStrategy.NEW_TABLE)
-@Unique(name="CryptoLink_cryptoLinkId", members="cryptoLinkId")
+@Inheritance(strategy = InheritanceStrategy.NEW_TABLE)
+@Unique(name = "CryptoLink_cryptoLinkId", members = "cryptoLinkId")
 @Indices({
-	@Index(name="CryptoLink_localRevision", members="localRevision")
+	@Index(name = "CryptoLink_localRevision", members = "localRevision")
 })
 @Queries({
-	@Query(name="getCryptoLink_cryptoLinkId", value="SELECT UNIQUE WHERE this.cryptoLinkId == :cryptoLinkId"),
-	@Query(name="getCryptoLinksChangedAfter_localRevision", value="SELECT WHERE this.localRevision > :localRevision"),
+	@Query(name = "getCryptoLink_cryptoLinkId", value = "SELECT UNIQUE WHERE this.cryptoLinkId == :cryptoLinkId"),
+	@Query(name = "getCryptoLinksChangedAfter_localRevision", value = "SELECT WHERE this.localRevision > :localRevision"),
 
-	@Query(name="getCryptoLinksFrom_fromCryptoKey", value="SELECT WHERE this.fromCryptoKey == :fromCryptoKey"),
-	@Query(name="getCryptoLinksTo_toCryptoKey", value="SELECT WHERE this.toCryptoKey == :toCryptoKey"),
+	@Query(name = "getCryptoLinksFrom_fromCryptoKey", value = "SELECT WHERE this.fromCryptoKey == :fromCryptoKey"),
+	@Query(name = "getCryptoLinksTo_toCryptoKey", value = "SELECT WHERE this.toCryptoKey == :toCryptoKey"),
 
-	@Query(name="getCryptoLinks_fromUserRepoKeyPublicKey",
-			value="SELECT WHERE this.fromUserRepoKeyPublicKey == :fromUserRepoKeyPublicKey"),
+	@Query(name = "getCryptoLinks_fromUserRepoKeyPublicKey",
+			value = "SELECT WHERE this.fromUserRepoKeyPublicKey == :fromUserRepoKeyPublicKey"),
 
-	@Query(name="getActiveCryptoLinks_toCryptoRepoFile_toCryptoKeyRole_toCryptoKeyPart",
-			value="SELECT WHERE "
+	@Query(name = "getActiveCryptoLinks_toCryptoRepoFile_toCryptoKeyRole_toCryptoKeyPart",
+			value = "SELECT WHERE "
 					+ "this.toCryptoKey.cryptoKeyDeactivation == null && "
 					+ "this.toCryptoKey.cryptoRepoFile == :toCryptoRepoFile && "
 					+ "this.toCryptoKey.cryptoKeyRole == :toCryptoKeyRole && "
 					+ "this.toCryptoKeyPart == :toCryptoKeyPart"),
 
-	@Query(name="getCryptoLinks_signingUserRepoKeyId",
-			value="SELECT WHERE this.signature.signingUserRepoKeyId == :signingUserRepoKeyId")
+	@Query(name = "getCryptoLinks_signingUserRepoKeyId",
+			value = "SELECT WHERE this.signature.signingUserRepoKeyId == :signingUserRepoKeyId")
 })
 public class CryptoLink extends Entity implements WriteProtected, AutoTrackLocalRevision, StoreCallback {
 
-	@Persistent(nullValue=NullValue.EXCEPTION)
-	@Column(length=22)
+	@Persistent(nullValue = NullValue.EXCEPTION)
+	@Column(length = 22)
 	private String cryptoLinkId;
 
 	private long localRevision;
@@ -79,19 +79,19 @@ public class CryptoLink extends Entity implements WriteProtected, AutoTrackLocal
 
 	private UserRepoKeyPublicKey fromUserRepoKeyPublicKey;
 
-	@Persistent(nullValue=NullValue.EXCEPTION)
+	@Persistent(nullValue = NullValue.EXCEPTION)
 	private CryptoKey toCryptoKey;
 
-	@Persistent(nullValue=NullValue.EXCEPTION)
-	@Column(jdbcType="INTEGER")
+	@Persistent(nullValue = NullValue.EXCEPTION)
+	@Column(jdbcType = "INTEGER")
 	private CryptoKeyPart toCryptoKeyPart;
 
-	@Persistent(nullValue=NullValue.EXCEPTION)
-	@Column(jdbcType="BLOB")
+	@Persistent(nullValue = NullValue.EXCEPTION)
+	@Column(jdbcType = "BLOB")
 	private byte[] toCryptoKeyData;
 
-	@Persistent(nullValue=NullValue.EXCEPTION)
-	@Embedded(nullIndicatorColumn="signatureCreated")
+	@Persistent(nullValue = NullValue.EXCEPTION)
+	@Embedded(nullIndicatorColumn = "signatureCreated")
 	private SignatureImpl signature;
 
 	public CryptoLink() { }
