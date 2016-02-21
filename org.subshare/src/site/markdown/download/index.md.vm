@@ -12,24 +12,24 @@ To download the source codes please follow the [Development](../documentation/de
 
 $H$H$H Binaries
 
-$H$H$H$H Client
+$H$H$H$H Client (GUI)
 
 * tar.gz (recommended)
-	* [co.codewizards.subshare.client-${subshare_version}-bin.tar.gz](./co.codewizards.subshare.client-${subshare_version}-bin.tar.gz)
-	* [OpenPGP signature](./co.codewizards.subshare.client-${subshare_version}-bin.tar.gz.sig)
+	* [org.subshare.gui-${subshare_version}-bin.tar.gz](./org.subshare.gui-${subshare_version}-bin.tar.gz)
+	* [OpenPGP signature](./org.subshare.gui-${subshare_version}-bin.tar.gz.sig)
 * zip (if you really cannot open tar.gz files)
-	* [co.codewizards.subshare.client-${subshare_version}-bin.zip](./co.codewizards.subshare.client-${subshare_version}-bin.zip)
-	* [OpenPGP signature](./co.codewizards.subshare.client-${subshare_version}-bin.zip.sig)
+	* [org.subshare.gui-${subshare_version}-bin.zip](./org.subshare.gui-${subshare_version}-bin.zip)
+	* [OpenPGP signature](./org.subshare.gui-${subshare_version}-bin.zip.sig)
 
 
 $H$H$H$H Server
 
 * tar.gz (recommended)
-	* [co.codewizards.subshare.server-${subshare_version}-bin.tar.gz](./co.codewizards.subshare.server-${subshare_version}-bin.tar.gz)
-	* [OpenPGP signature](./co.codewizards.subshare.server-${subshare_version}-bin.tar.gz.sig)
+	* [org.subshare.server-${subshare_version}-bin.tar.gz](./org.subshare.server-${subshare_version}-bin.tar.gz)
+	* [OpenPGP signature](./org.subshare.server-${subshare_version}-bin.tar.gz.sig)
 * zip (if you really cannot open tar.gz files)
-	* [co.codewizards.subshare.server-${subshare_version}-bin.zip](./co.codewizards.subshare.server-${subshare_version}-bin.zip)
-	* [OpenPGP signature](./co.codewizards.subshare.server-${subshare_version}-bin.zip.sig)
+	* [org.subshare.server-${subshare_version}-bin.zip](./org.subshare.server-${subshare_version}-bin.zip)
+	* [OpenPGP signature](./org.subshare.server-${subshare_version}-bin.zip.sig)
 
 **Important:** Only stable versions are signed. It is thus normal that you get a 404 error when trying to download a signature
 for a *SNAPSHOT* version. We simply do not sign snapshots. They are for testing only and should not be used productively,
@@ -47,8 +47,8 @@ Both files should be located in the same directory.
 Then open a console, switch to the directory containing the downloads and verify them using these commands:
 
 <div><pre>cd ~/Downloads
-gpg co.codewizards.subshare.client-${subshare_version}-bin.tar.gz.sig
-gpg co.codewizards.subshare.server-${subshare_version}-bin.tar.gz.sig</pre></div>
+gpg org.subshare.gui-${subshare_version}-bin.tar.gz.sig
+gpg org.subshare.server-${subshare_version}-bin.tar.gz.sig</pre></div>
 
 Of course, you need the OpenPGP *public* key which was used for signing. The CodeWizards\' keys can be found
 [here on the CodeWizards web-site](http://codewizards.co/site/current/about/contact.html).
