@@ -139,4 +139,27 @@ public class CreatePgpKeyParam extends AbstractBean<CreatePgpKeyParam.Property> 
 		}
 		return result;
 	}
+
+	/**
+	 * Creates a new instance of {@code this} that can be transferred to the
+	 * client-process-VM.
+	 * <p>
+	 * This object may contain instances of JavaFX-specific sub-classes (e.g. {@code FxPgpUserId}).
+	 * These classes are not available in the client-process-VM, because they are UI-specific.
+	 * Hence, we must create a clone that is free of such UI-specific objects.
+	 * @return a new instance wiht the same data as {@code this}. Never <code>null</code>.
+	 */
+	public CreatePgpKeyParam toPortable() {
+		final CreatePgpKeyParam result = new CreatePgpKeyParam();
+
+		for (PgpUserId pgpUserId : this._userIds)
+			result._userIds.add(new PgpUserId(pgpUserId));
+
+		result.passphrase = this.passphrase;
+		result.validitySeconds = this.validitySeconds;
+		result.algorithm = this.algorithm;
+		result.strength = this.strength;
+
+		return result;
+	}
 }

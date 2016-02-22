@@ -57,6 +57,7 @@ import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.updater.CloudStoreUpdaterCore;
 import co.codewizards.cloudstore.core.updater.Version;
 import co.codewizards.cloudstore.core.util.DerbyUtil;
+import co.codewizards.cloudstore.core.util.MainArgsUtil;
 import co.codewizards.cloudstore.ls.client.LocalServerClient;
 import co.codewizards.cloudstore.ls.server.LocalServer;
 
@@ -251,7 +252,8 @@ public class SubShareGui extends Application {
 		return new CloudStoreUpdaterCore();
 	}
 
-	public static void main(final String[] args) {
+	public static void main(String[] args) {
+		args = MainArgsUtil.extractAndApplySystemPropertiesReturnOthers(args);
 		launch(args);
 	}
 

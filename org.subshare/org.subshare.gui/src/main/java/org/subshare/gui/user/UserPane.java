@@ -41,6 +41,7 @@ import org.subshare.core.pgp.CreatePgpKeyParam;
 import org.subshare.core.pgp.Pgp;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpKeyId;
+import org.subshare.core.pgp.PgpOwnerTrust;
 import org.subshare.core.pgp.man.PgpPrivateKeyPassphraseStore;
 import org.subshare.core.user.User;
 import org.subshare.core.user.UserRegistry;
@@ -297,14 +298,20 @@ public class UserPane extends GridPane {
 
 		final PgpPrivateKeyPassphraseStore pgpPrivateKeyPassphraseStore = PgpPrivateKeyPassphraseManagerLs.getPgpPrivateKeyPassphraseStore();
 
-		final CreatingPgpKeyDialog dialog2 = new CreatingPgpKeyDialog(owner, createPgpKeyParam);
+		final CreatePgpKeyParam portableCreatePgpKeyParam = createPgpKeyParam.toPortable();
+		final CreatingPgpKeyDialog dialog2 = new CreatingPgpKeyDialog(owner, portableCreatePgpKeyParam);
 		final Thread createPgpKeyThread = new Thread("createPgpKeyThread") {
 			@Override
 			public void run() {
 				final Pgp pgp = getPgp();
-				final PgpKey pgpKey = pgp.createPgpKey(createPgpKeyParam);
+				final PgpKey pgpKey = pgp.createPgpKey(portableCreatePgpKeyParam);
 				user.getPgpKeyIds().add(pgpKey.getPgpKeyId());
-				pgpPrivateKeyPassphraseStore.putPassphrase(pgpKey.getPgpKeyId(), createPgpKeyParam.getPassphrase());
+				pgpPrivateKeyPassphraseStore.putPassphrase(pgpKey.getPgpKeyId(), portableCreatePgpKeyParam.getPassphrase());
+
+				// We trust our own keys ultimately!
+				pgp.setOwnerTrust(pgpKey, PgpOwnerTrust.ULTIMATE);
+				pgp.updateTrustDb();
+
 				Platform.runLater(() -> dialog2.close());
 			}
 		};
@@ -327,6 +334,10 @@ public class UserPane extends GridPane {
 			if (emails.add(email))
 				createPgpKeyParam.getUserIds().add(new FxPgpUserId(name, email));
 		}
+
+		// If no e-mail-address is set, we must ensure, now, that at least one PgpUserId exists!
+		if (createPgpKeyParam.getUserIds().isEmpty())
+			createPgpKeyParam.getUserIds().add(new FxPgpUserId(name, null));
 
 		return createPgpKeyParam;
 	}

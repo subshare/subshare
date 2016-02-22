@@ -9,6 +9,7 @@ import java.util.List;
 import org.subshare.core.pgp.Pgp;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpKeyId;
+import org.subshare.core.pgp.PgpOwnerTrust;
 import org.subshare.core.pgp.man.PgpPrivateKeyPassphraseStore;
 import org.subshare.core.user.User;
 import org.subshare.core.user.UserRegistry;
@@ -127,8 +128,12 @@ public class IdentityWizard extends Wizard {
 
 	private void createPgpKey() {
 		final PgpPrivateKeyPassphraseStore pgpPrivateKeyPassphraseStore = PgpPrivateKeyPassphraseManagerLs.getPgpPrivateKeyPassphraseStore();
-		final PgpKey pgpKey = pgp.createPgpKey(identityData.getCreatePgpKeyParam());
+		final PgpKey pgpKey = pgp.createPgpKey(identityData.getCreatePgpKeyParam().toPortable());
 		user.getPgpKeyIds().add(pgpKey.getPgpKeyId());
 		pgpPrivateKeyPassphraseStore.putPassphrase(pgpKey.getPgpKeyId(), identityData.getCreatePgpKeyParam().getPassphrase());
+
+		// We trust our own keys ultimately!
+		pgp.setOwnerTrust(pgpKey, PgpOwnerTrust.ULTIMATE);
+		pgp.updateTrustDb();
 	}
 }

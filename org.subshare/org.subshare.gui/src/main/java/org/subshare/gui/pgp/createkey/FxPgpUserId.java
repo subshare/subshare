@@ -1,6 +1,5 @@
 package org.subshare.gui.pgp.createkey;
 
-import static co.codewizards.cloudstore.core.util.StringUtil.*;
 import javafx.beans.property.StringProperty;
 import javafx.beans.property.adapter.JavaBeanStringProperty;
 import javafx.beans.property.adapter.JavaBeanStringPropertyBuilder;

@@ -33,12 +33,18 @@ public class SelectOwnerWizardPage extends WizardPage {
 	@Override
 	protected void init() {
 		super.init();
-		// TODO set the next page dependent on whether the selected user has multiple active OpenPGP keys! In this case, the user must select a specific OpenPGP key!!!
-//		setNextPage(new IssueInvitationDestWizardPage(issueInvitationData));
 	}
 
 	public boolean isNeeded() {
-		return getUsersWithUnlockedPgpKeys().size() != 1;
+		List<User> ownerCandidates = getUsersWithUnlockedPgpKeys();
+		final boolean needed = ownerCandidates.size() != 1;
+		if (! needed) {
+			// If this wizard-page is not needed, it is not shown. Therefore, we must
+			// populate the createRepoData.owners, now!
+			createRepoData.getOwners().clear();
+			createRepoData.getOwners().add(ownerCandidates.iterator().next());
+		}
+		return needed;
 	}
 
 	protected synchronized List<User> getUsersWithUnlockedPgpKeys() {

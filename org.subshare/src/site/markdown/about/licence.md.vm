@@ -7,14 +7,20 @@ Licence
 
 $H$H$H GNU Affero General Public License (LGPL)
 
-SubShare is [Free Software](http://en.wikipedia.org/wiki/Free_Software) licenced under the conditions of the [AGPL](../license.html).
+subshare is [Free Software](http://en.wikipedia.org/wiki/Free_Software) licenced under the conditions of the [AGPL](../license.html).
 
 In short, this means:
 
-* You can use SubShare for every purpose.
-* You\'re free to study how SubShare works, and to change it to make it do what you wish. This implies access to the source codes.
-* You can freely (re)distribute SubShare.
-* You have the freedom to improve SubShare, and release your improvements (and modified versions in general) to the public,
-so that the whole community benefits. This, too, implies access to the source codes. If you modify SubShare, you must
-make your modifications publicly available. However, if you just use SubShare in your own application, you\'re not required
-to publish your own (separate) application (using SubShare as a library) as free software.
+* You can use subshare for every purpose.
+* You\'re free to study how subshare works, and to change it to make it do what you wish. This implies access to the source codes.
+* You can freely (re)distribute subshare.
+* You have the freedom to improve subshare, and release your improvements (and modified versions in general) to the public,
+so that the whole community benefits. This, too, implies access to the source codes.
+* If you modify subshare, you must make all your modifications publicly available.
+* If you integrate subshare into your own application (including your SaaS), you must make your application publicly available.
+
+
+$H$H$H Dual-licencing
+
+Do you want to include subshare in your *proprietary* solution without publishing any of your code? Or
+do you have other reasons for preferring another licence? Please contact us! We offer dual-licencing.
