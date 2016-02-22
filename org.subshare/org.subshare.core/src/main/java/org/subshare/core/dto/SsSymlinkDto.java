@@ -13,6 +13,7 @@ import org.subshare.core.sign.Signature;
 
 import co.codewizards.cloudstore.core.dto.SymlinkDto;
 
+@SuppressWarnings("serial")
 @XmlRootElement
 public class SsSymlinkDto extends SymlinkDto implements SsRepoFileDto {
 	public static final String SIGNED_DATA_TYPE = "Symlink";

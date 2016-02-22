@@ -2178,9 +2178,6 @@ public class CryptreeImpl extends AbstractCryptree {
 		assertNotNull("cryptreeNode", cryptreeNode);
 		assertNotNull("histoCryptoRepoFile", histoCryptoRepoFile);
 
-		if (histoCryptoRepoFile.getDeleted() != null)
-			histoCryptoRepoFile = assertNotNull("histoCryptoRepoFile.previousHistoCryptoRepoFile", histoCryptoRepoFile.getPreviousHistoCryptoRepoFile());
-
 		RepoFileDto repoFileDto = null;
 		try {
 			repoFileDto = cryptreeNode.getHistoCryptoRepoFileRepoFileDto(histoCryptoRepoFile);

@@ -36,7 +36,10 @@ import org.subshare.core.dto.CryptoKeyPart;
 import org.subshare.core.dto.CryptoKeyRole;
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.dto.SignatureDto;
+import org.subshare.core.dto.SsDirectoryDto;
+import org.subshare.core.dto.SsNormalFileDto;
 import org.subshare.core.dto.SsRepoFileDto;
+import org.subshare.core.dto.SsSymlinkDto;
 import org.subshare.core.sign.Signable;
 import org.subshare.core.sign.WriteProtected;
 import org.subshare.core.user.UserRepoKey;
@@ -325,12 +328,13 @@ public class CryptreeNode {
 			throw new IllegalStateException(String.format("cryptoKey != cryptoRepoFile.cryptoKey :: %s != %s",
 					cryptoKey, cryptoRepoFile.getCryptoKey()));
 
+		final byte[] repoFileDtoData;
 		if (deleted != null)
-			histoCryptoRepoFile.setRepoFileDtoData(new byte[0]);
-		else{
-			final byte[] repoFileDtoData = createRepoFileDtoDataForCryptoRepoFile(true);
-			histoCryptoRepoFile.setRepoFileDtoData(assertNotNull("encrypt(...)", encrypt(repoFileDtoData, plainCryptoKey)));
-		}
+			repoFileDtoData = getRepoFileDtoDataForDeletedCryptoRepoFile(previousHistoCryptoRepoFile);
+		else
+			repoFileDtoData = createRepoFileDtoDataForCryptoRepoFile(true);
+
+		histoCryptoRepoFile.setRepoFileDtoData(assertNotNull("encrypt(...)", encrypt(repoFileDtoData, plainCryptoKey)));
 
 		sign(histoCryptoRepoFile);
 
@@ -341,6 +345,25 @@ public class CryptreeNode {
 
 		context.transaction.flush(); // for early detection of an error
 		return histoCryptoRepoFile;
+	}
+
+	private byte[] getRepoFileDtoDataForDeletedCryptoRepoFile(final HistoCryptoRepoFile previousHistoCryptoRepoFile) {
+		assertNotNull("previousHistoCryptoRepoFile", previousHistoCryptoRepoFile);
+
+		RepoFileDto repoFileDto = getHistoCryptoRepoFileRepoFileDto(previousHistoCryptoRepoFile);
+		if (repoFileDto instanceof SsDirectoryDto)
+			; // nothing to do
+		else if (repoFileDto instanceof SsNormalFileDto) {
+			SsNormalFileDto normalFileDto = (SsNormalFileDto) repoFileDto;
+			normalFileDto.setFileChunkDtos(null);
+			normalFileDto.setTempFileChunkDtos(null); // they should always be null, anyway.
+		}
+		else if (repoFileDto instanceof SsSymlinkDto)
+			; // nothing to do
+		else
+			throw new IllegalStateException("Unexpected repoFileDto type: " + repoFileDto);
+
+		return serializeRepoFileDto(repoFileDto);
 	}
 
 	private void grantReadPermission(final UserRepoKey.PublicKey publicKey) {
@@ -392,6 +415,12 @@ public class CryptreeNode {
 			cryptoRepoFile.setLocalName(repoFileDto.getName());
 		else
 			repoFileDto.setName(cryptoRepoFile.getLocalName());
+
+		return serializeRepoFileDto(repoFileDto);
+	}
+
+	private byte[] serializeRepoFileDto(final RepoFileDto repoFileDto) {
+		assertNotNull("repoFileDto", repoFileDto);
 
 		// Serialise to XML and compress.
 		final ByteArrayOutputStream out = new ByteArrayOutputStream();

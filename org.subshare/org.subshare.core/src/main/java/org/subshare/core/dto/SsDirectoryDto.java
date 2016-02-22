@@ -13,6 +13,7 @@ import org.subshare.core.sign.Signature;
 
 import co.codewizards.cloudstore.core.dto.DirectoryDto;
 
+@SuppressWarnings("serial")
 @XmlRootElement
 public class SsDirectoryDto extends DirectoryDto implements SsRepoFileDto {
 	public static final String SIGNED_DATA_TYPE = "Directory";

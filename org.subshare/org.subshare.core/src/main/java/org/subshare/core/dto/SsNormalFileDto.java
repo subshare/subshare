@@ -13,6 +13,7 @@ import org.subshare.core.sign.Signature;
 
 import co.codewizards.cloudstore.core.dto.NormalFileDto;
 
+@SuppressWarnings("serial")
 @XmlRootElement
 public class SsNormalFileDto extends NormalFileDto implements SsRepoFileDto {
 	public static final String SIGNED_DATA_TYPE = "NormalFile";
