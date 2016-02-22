@@ -154,7 +154,7 @@ public class ServerRegistryImpl extends FileBasedObjectRegistry implements Serve
 	@Override
 	protected void postRead() {
 		if (version == null) {
-			version = new Uid();
+//			version = new Uid(); // done by markDirty()
 			markDirty();
 		}
 	}

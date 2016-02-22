@@ -80,7 +80,7 @@ public class PgpKeyStateRegistryImpl extends FileBasedObjectRegistry implements 
 	@Override
 	protected void postRead() {
 		if (version == null) {
-			version = new Uid();
+//			version = new Uid(); // done by markDirty()
 			markDirty();
 		}
 	}

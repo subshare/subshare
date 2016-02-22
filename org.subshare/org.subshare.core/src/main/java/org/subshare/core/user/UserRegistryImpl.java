@@ -104,7 +104,7 @@ public class UserRegistryImpl extends FileBasedObjectRegistry implements UserReg
 	@Override
 	protected void postRead() {
 		if (version == null) {
-			version = new Uid();
+//			version = new Uid(); // done by markDirty()
 			markDirty();
 		}
 	}

@@ -22,6 +22,8 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.subshare.core.dto.DeletedUUID;
 import org.subshare.core.dto.ServerRepoDto;
 import org.subshare.core.dto.ServerRepoRegistryDto;
@@ -35,8 +37,6 @@ import org.subshare.core.observable.standard.StandardPreModificationEvent;
 import org.subshare.core.observable.standard.StandardPreModificationListener;
 import org.subshare.core.server.ServerRegistry;
 import org.subshare.core.server.ServerRegistryImpl;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import co.codewizards.cloudstore.core.config.ConfigDir;
 import co.codewizards.cloudstore.core.dto.Uid;
@@ -146,6 +146,7 @@ public class ServerRepoRegistryImpl extends FileBasedObjectRegistry implements S
 	protected void markDirty() {
 		super.markDirty();
 		repositoryId2ServerRepo = null;
+		version = new Uid();
 		deferredWrite();
 	}
 
@@ -178,7 +179,7 @@ public class ServerRepoRegistryImpl extends FileBasedObjectRegistry implements S
 	@Override
 	protected void postRead() {
 		if (version == null) {
-			version = new Uid();
+//			version = new Uid(); // done by markDirty()
 			markDirty();
 		}
 	}
