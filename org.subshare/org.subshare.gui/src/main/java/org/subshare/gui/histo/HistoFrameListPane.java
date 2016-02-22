@@ -61,7 +61,10 @@ public class HistoFrameListPane extends VBox {
 		filter.setMaxResultSize(-1); // TODO add UI to edit filter!
 	}
 
-	private final LocalRepoCommitEventListener localRepoCommitEventListener = event -> scheduleDeferredUpdateUiTimerTask();
+	private final LocalRepoCommitEventListener localRepoCommitEventListener = event -> {
+		if (! event.getModifications().isEmpty())
+			scheduleDeferredUpdateUiTimerTask();
+	};
 
 	private WeakLocalRepoCommitEventListener weakLocalRepoCommitEventListener;
 

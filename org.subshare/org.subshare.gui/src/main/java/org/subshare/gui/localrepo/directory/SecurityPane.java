@@ -90,7 +90,10 @@ public abstract class SecurityPane extends GridPane {
 	private SecureRandom random;
 	private StatusDialog statusDialog;
 
-	private final LocalRepoCommitEventListener localRepoCommitEventListener = event -> scheduleDeferredUpdateUiTimerTask();
+	private final LocalRepoCommitEventListener localRepoCommitEventListener = event -> {
+		if (! event.getModifications().isEmpty())
+			scheduleDeferredUpdateUiTimerTask();
+	};
 
 	private final WeakLocalRepoCommitEventListener weakLocalRepoCommitEventListener;
 
