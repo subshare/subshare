@@ -8,17 +8,25 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import org.subshare.core.Cryptree;
+import org.subshare.core.CryptreeFactoryRegistry;
 import org.subshare.core.LocalRepoStorage;
 import org.subshare.core.LocalRepoStorageFactoryRegistry;
 import org.subshare.core.dto.SsFileChunkDto;
 import org.subshare.core.dto.SsNormalFileDto;
 import org.subshare.core.repo.transport.CryptreeClientFileRepoTransport;
+import org.subshare.core.user.UserRepoKeyRing;
+import org.subshare.core.user.UserRepoKeyRingLookup;
+import org.subshare.core.user.UserRepoKeyRingLookupContext;
 import org.subshare.local.persistence.SsFileChunk;
 import org.subshare.local.persistence.SsNormalFile;
 
 import co.codewizards.cloudstore.core.dto.FileChunkDto;
 import co.codewizards.cloudstore.core.oio.File;
+import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
+import co.codewizards.cloudstore.core.repo.local.LocalRepoTransactionPostCloseAdapter;
+import co.codewizards.cloudstore.core.repo.local.LocalRepoTransactionPostCloseEvent;
 import co.codewizards.cloudstore.core.repo.transport.CollisionException;
 import co.codewizards.cloudstore.local.persistence.FileChunk;
 import co.codewizards.cloudstore.local.persistence.NormalFile;
@@ -81,8 +89,41 @@ public class CryptreeFileRepoTransportImpl extends FileRepoTransport implements 
 			RepoFile normalFileOrSymlink) {
 		super.detectAndHandleFileCollision(transaction, fromRepositoryId, file, normalFileOrSymlink);
 
-		// TODO must not invoke super method! Must throw exception instead! We must not handle collisions in the server! We must throw
+		// TO DO must not invoke super method! Must throw exception instead! We must not handle collisions in the server! We must throw
 		// a detailed exception instead.
+		// ... seems to be fine, because the super-method calls handleFileCollision(...) which is overridden, below.
+	}
+
+	@Override
+	protected File handleFileCollision(final LocalRepoTransaction transaction, final UUID fromRepositoryId, final File file) {
+		transaction.addPostCloseListener(new LocalRepoTransactionPostCloseAdapter() {
+			@Override
+			public void postRollback(LocalRepoTransactionPostCloseEvent event) {
+				createAndPersistCollision(event.getLocalRepoManager(), fromRepositoryId, file);
+			}
+			@Override
+			public void postCommit(LocalRepoTransactionPostCloseEvent event) {
+				throw new IllegalStateException("Commit is not allowed, anymore!");
+			}
+		});
+
+		throw new CollisionException();
+	}
+
+	protected void createAndPersistCollision(final LocalRepoManager localRepoManager, final UUID fromRepositoryId, final File file) {
+		try (final LocalRepoTransaction tx = localRepoManager.beginWriteTransaction();) {
+			final String remotePathPrefix = ""; //$NON-NLS-1$ // TODO is this really fine?! If so, we should explain, why! And we should test!!!
+
+			final UserRepoKeyRing userRepoKeyRing = UserRepoKeyRingLookup.Helper.getUserRepoKeyRingLookup().getUserRepoKeyRing(
+					new UserRepoKeyRingLookupContext(localRepoManager.getRepositoryId(), fromRepositoryId));
+
+			Cryptree cryptree = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail()
+					.getCryptreeOrCreate(tx, fromRepositoryId, remotePathPrefix, userRepoKeyRing);
+
+//			cryptree.createCollision(); // TODO implement this!
+
+			tx.commit();
+		}
 	}
 
 	@Override
@@ -155,8 +196,4 @@ public class CryptreeFileRepoTransportImpl extends FileRepoTransport implements 
 		}
 	}
 
-	@Override
-	protected File handleFileCollision(LocalRepoTransaction transaction, UUID fromRepositoryId, File file) {
-		throw new CollisionException();
-	}
 }

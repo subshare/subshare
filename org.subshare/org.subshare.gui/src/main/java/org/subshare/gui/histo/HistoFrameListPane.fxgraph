@@ -22,13 +22,6 @@ dynamic component HistoFrameListPane resourcefile 'messages.properties' {
 						property : "signatureCreated"
 					}
 				},
-//				TableColumn<HistoFrameListItem, Uid> id signingUserRepoKeyIdColumn {
-//					text : "Signing key",
-//					prefWidth : 140,
-//					cellValueFactory : PropertyValueFactory<HistoFrameListItem, Uid> {
-//						property : "signingUserRepoKeyId"
-//					}
-//				},
 				TableColumn<HistoFrameListItem, String> id signingUserNameColumn {
 					text : "User",
 					prefWidth : 200,

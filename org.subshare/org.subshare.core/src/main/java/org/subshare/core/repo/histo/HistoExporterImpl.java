@@ -85,7 +85,7 @@ public class HistoExporterImpl implements HistoExporter {
 	}
 
 	protected Cryptree getCryptree(LocalRepoTransaction tx) {
-		final String remotePathPrefix = ""; //$NON-NLS-1$
+		final String remotePathPrefix = ""; //$NON-NLS-1$ // TODO is this really fine?! If so, we should explain, why! And we should test!!!
 
 		final UserRepoKeyRing userRepoKeyRing = UserRepoKeyRingLookup.Helper.getUserRepoKeyRingLookup().getUserRepoKeyRing(
 				new UserRepoKeyRingLookupContext(localRepositoryId, remoteRepositoryId));

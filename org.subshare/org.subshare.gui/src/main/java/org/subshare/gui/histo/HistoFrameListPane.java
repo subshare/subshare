@@ -54,6 +54,9 @@ public class HistoFrameListPane extends VBox {
 	@FXML
 	private TableColumn<HistoFrameListItem, Date> signatureCreatedColumn;
 
+	@FXML
+	private TableColumn<HistoFrameListItem, String> signingUserNameColumn;
+
 	private final Map<Uid, String> userRepoKey2UserName = Collections.synchronizedMap(new HashMap<>());
 
 	private HistoFrameFilter filter = new HistoFrameFilter();
@@ -61,10 +64,32 @@ public class HistoFrameListPane extends VBox {
 		filter.setMaxResultSize(-1); // TODO add UI to edit filter!
 	}
 
-	private final LocalRepoCommitEventListener localRepoCommitEventListener = event -> {
-		if (! event.getModifications().isEmpty())
-			scheduleDeferredUpdateUiTimerTask();
-	};
+	private final LocalRepoCommitEventListener localRepoCommitEventListener; // Must not assign here! Causes error with xtext / E(fx)clipse:
+//	org.eclipse.xtext.common.types.access.jdt.JdtTypeMirror  - Error initializing type java:/Objects/org.subshare.gui.histo.HistoFrameListPane
+//	java.lang.IllegalArgumentException
+//	at org.eclipse.jdt.core.dom.ASTNode.setSourceRange(ASTNode.java:2845)
+//	at org.eclipse.jdt.core.dom.ASTConverter.createFakeNullLiteral(ASTConverter.java:4097)
+//	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:2281)
+//	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1857)
+//	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1153)
+//	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1782)
+//	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:2819)
+//	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1319)
+//	at org.eclipse.jdt.core.dom.ASTConverter.checkAndAddMultipleFieldDeclaration(ASTConverter.java:440)
+//	at org.eclipse.jdt.core.dom.ASTConverter.buildBodyDeclarations(ASTConverter.java:194)
+//	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:3026)
+//	at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1442)
+//	at org.eclipse.jdt.core.dom.CompilationUnitResolver.resolve(CompilationUnitResolver.java:913)
+//	at org.eclipse.jdt.core.dom.CompilationUnitResolver.resolve(CompilationUnitResolver.java:606)
+//	at org.eclipse.jdt.core.dom.CompilationUnitResolver.resolve(CompilationUnitResolver.java:819)
+//	at org.eclipse.jdt.core.dom.ASTParser.createBindings(ASTParser.java:1054)
+//	at org.eclipse.xtext.common.types.access.jdt.JdtBasedTypeFactory.resolveBindings(JdtBasedTypeFactory.java:434)
+//	at org.eclipse.xtext.common.types.access.jdt.JdtBasedTypeFactory.createType(JdtBasedTypeFactory.java:389)
+//	at org.eclipse.xtext.common.types.access.jdt.JdtBasedTypeFactory.createType(JdtBasedTypeFactory.java:456)
+//	at org.eclipse.xtext.common.types.access.jdt.JdtBasedTypeFactory.createType(JdtBasedTypeFactory.java:1)
+//	at org.eclipse.xtext.common.types.access.jdt.JdtTypeMirror.initialize(JdtTypeMirror.java:52)
+//	at org.eclipse.xtext.common.types.access.TypeResource.doLoad(TypeResource.java:119)
+//  ...
 
 	private WeakLocalRepoCommitEventListener weakLocalRepoCommitEventListener;
 
@@ -96,6 +121,11 @@ public class HistoFrameListPane extends VBox {
 		loadDynamicComponentFxml(HistoFrameListPane.class, this);
 
 		signatureCreatedColumn.setCellFactory(signatureCreateColumnCellFactory);
+
+		localRepoCommitEventListener = event -> {
+			if (! event.getModifications().isEmpty())
+				scheduleDeferredUpdateUiTimerTask();
+		};
 	}
 
 	public ReadOnlyObjectProperty<HistoFrameListItem> selectedItemProperty() {

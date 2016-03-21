@@ -65,6 +65,26 @@ public class Collision extends Entity implements WriteProtected, AutoTrackLocalR
 		return new Uid(collisionId);
 	}
 
+	public HistoCryptoRepoFile getHistoCryptoRepoFile1() {
+		return histoCryptoRepoFile1;
+	}
+	public void setHistoCryptoRepoFile1(HistoCryptoRepoFile histoCryptoRepoFile1) {
+		this.histoCryptoRepoFile1 = histoCryptoRepoFile1;
+	}
+	public HistoCryptoRepoFile getHistoCryptoRepoFile2() {
+		return histoCryptoRepoFile2;
+	}
+	public void setHistoCryptoRepoFile2(HistoCryptoRepoFile histoCryptoRepoFile2) {
+		this.histoCryptoRepoFile2 = histoCryptoRepoFile2;
+	}
+
+	public Date getResolved() {
+		return resolved;
+	}
+	public void setResolved(Date resolved) {
+		this.resolved = resolved;
+	}
+
 	@Override
 	public String getSignedDataType() {
 		return CollisionDto.SIGNED_DATA_TYPE;
