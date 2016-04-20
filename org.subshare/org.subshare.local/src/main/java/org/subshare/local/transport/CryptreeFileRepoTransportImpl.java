@@ -1,23 +1,22 @@
 package org.subshare.local.transport;
 
 import static co.codewizards.cloudstore.core.objectfactory.ObjectFactoryUtil.*;
+import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
+import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import org.subshare.core.Cryptree;
-import org.subshare.core.CryptreeFactoryRegistry;
 import org.subshare.core.LocalRepoStorage;
 import org.subshare.core.LocalRepoStorageFactoryRegistry;
 import org.subshare.core.dto.SsFileChunkDto;
 import org.subshare.core.dto.SsNormalFileDto;
 import org.subshare.core.repo.transport.CryptreeClientFileRepoTransport;
-import org.subshare.core.user.UserRepoKeyRing;
-import org.subshare.core.user.UserRepoKeyRingLookup;
-import org.subshare.core.user.UserRepoKeyRingLookupContext;
+import org.subshare.local.persistence.PreliminaryCollision;
+import org.subshare.local.persistence.PreliminaryCollisionDao;
 import org.subshare.local.persistence.SsFileChunk;
 import org.subshare.local.persistence.SsNormalFile;
 
@@ -99,7 +98,7 @@ public class CryptreeFileRepoTransportImpl extends FileRepoTransport implements 
 		transaction.addPostCloseListener(new LocalRepoTransactionPostCloseAdapter() {
 			@Override
 			public void postRollback(LocalRepoTransactionPostCloseEvent event) {
-				createAndPersistCollision(event.getLocalRepoManager(), fromRepositoryId, file);
+				createAndPersistPreliminaryCollision(event.getLocalRepoManager(), file);
 			}
 			@Override
 			public void postCommit(LocalRepoTransactionPostCloseEvent event) {
@@ -110,19 +109,43 @@ public class CryptreeFileRepoTransportImpl extends FileRepoTransport implements 
 		throw new CollisionException();
 	}
 
-	protected void createAndPersistCollision(final LocalRepoManager localRepoManager, final UUID fromRepositoryId, final File file) {
+//	protected void createAndPersistCollision(final LocalRepoManager localRepoManager, final UUID fromRepositoryId, final File file) {
+//		try (final LocalRepoTransaction tx = localRepoManager.beginWriteTransaction();) {
+//			final String remotePathPrefix = ""; //$NON-NLS-1$ // TODO is this really fine?! If so, we should explain, why! And we should test!!!
+//
+//			final UserRepoKeyRing userRepoKeyRing = UserRepoKeyRingLookup.Helper.getUserRepoKeyRingLookup().getUserRepoKeyRing(
+//					new UserRepoKeyRingLookupContext(localRepoManager.getRepositoryId(), fromRepositoryId));
+//
+//			Cryptree cryptree = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail()
+//					.getCryptreeOrCreate(tx, fromRepositoryId, remotePathPrefix, userRepoKeyRing);
+//
+//			final RepoFileDao repoFileDao = tx.getDao(RepoFileDao.class);
+//			final RepoFile repoFile = repoFileDao.getRepoFile(localRepoManager.getLocalRoot(), file);
+//			final String localPath = repoFile.getPath();
+//
+//			cryptree.createUnsealedHistoFrameIfNeeded();
+//			LocalRepoSync.create(tx).sync(file, new NullProgressMonitor(), false);
+//			cryptree.createCollisionIfNeeded(localPath);
+//
+//			tx.commit();
+//		}
+//	}
+
+	protected void createAndPersistPreliminaryCollision(final LocalRepoManager localRepoManager, final File file) {
 		try (final LocalRepoTransaction tx = localRepoManager.beginWriteTransaction();) {
-			final String remotePathPrefix = ""; //$NON-NLS-1$ // TODO is this really fine?! If so, we should explain, why! And we should test!!!
+			final String localPath = '/' + localRepoManager.getLocalRoot().relativize(file).replace(FILE_SEPARATOR_CHAR, '/');
+			final PreliminaryCollisionDao pcDao = tx.getDao(PreliminaryCollisionDao.class);
 
-			final UserRepoKeyRing userRepoKeyRing = UserRepoKeyRingLookup.Helper.getUserRepoKeyRingLookup().getUserRepoKeyRing(
-					new UserRepoKeyRingLookupContext(localRepoManager.getRepositoryId(), fromRepositoryId));
-
-			Cryptree cryptree = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail()
-					.getCryptreeOrCreate(tx, fromRepositoryId, remotePathPrefix, userRepoKeyRing);
-
-//			cryptree.createCollision(); // TODO implement this!
+			PreliminaryCollision preliminaryCollision = pcDao.getPreliminaryCollision(localPath);
+			if (preliminaryCollision == null) {
+				preliminaryCollision = new PreliminaryCollision();
+				preliminaryCollision.setPath(localPath);
+				pcDao.makePersistent(preliminaryCollision);
+			}
 
 			tx.commit();
+		} catch (IOException x) {
+			throw new RuntimeException(x);
 		}
 	}
 

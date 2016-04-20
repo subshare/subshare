@@ -178,7 +178,7 @@ public class CryptreeImpl extends AbstractCryptree {
 	@Override
 	public HistoCryptoRepoFileDto createHistoCryptoRepoFileDto(String localPath) {
 		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(localPath);
-		final HistoCryptoRepoFile histoCryptoRepoFile = cryptreeNode.createHistoCryptoRepoFile();
+		final HistoCryptoRepoFile histoCryptoRepoFile = cryptreeNode.createHistoCryptoRepoFileIfNeeded();
 		final HistoCryptoRepoFileDtoConverter converter = HistoCryptoRepoFileDtoConverter.create(getTransactionOrFail());
 		final HistoCryptoRepoFileDto result = converter.toHistoCryptoRepoFileDto(histoCryptoRepoFile);
 		return result;
@@ -1999,7 +1999,7 @@ public class CryptreeImpl extends AbstractCryptree {
 		createUnsealedHistoFrameIfNeeded();
 		for (CryptoRepoFile deletedCryptoRepoFile : deletedCryptoRepoFiles) {
 			final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(deletedCryptoRepoFile.getCryptoRepoFileId());
-			histoCryptoRepoFiles.add(cryptreeNode.createHistoCryptoRepoFile());
+			histoCryptoRepoFiles.add(cryptreeNode.createHistoCryptoRepoFileIfNeeded());
 		}
 
 		final CryptoChangeSetDto cryptoChangeSetDto = getCryptoChangeSetDtoWithCryptoRepoFiles();
@@ -2155,6 +2155,75 @@ public class CryptreeImpl extends AbstractCryptree {
 		final HistoCryptoRepoFile histoCryptoRepoFile = hcrfDao.getHistoCryptoRepoFileOrFail(histoCryptoRepoFileId);
 		return createPlainHistoCryptoRepoFileDto(converter, histoCryptoRepoFile);
 	}
+
+//	@Override
+//	public void createCollisionIfNeeded(final String localPath) {
+//		assertNotNull("localPath", localPath);
+//
+//		final LocalRepoTransaction tx = getTransactionOrFail();
+//		final HistoCryptoRepoFileDao hcrfDao = tx.getDao(HistoCryptoRepoFileDao.class);
+//		final CollisionDao collisionDao = tx.getDao(CollisionDao.class);
+//
+//		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(localPath);
+//		final CryptoRepoFile cryptoRepoFile = cryptreeNode.getCryptoRepoFile();
+//
+//		final HistoCryptoRepoFile histoCryptoRepoFileLocal = cryptreeNode.createHistoCryptoRepoFileIfNeeded();
+//
+//		final Collection<HistoCryptoRepoFile> histoCryptoRepoFiles = hcrfDao.getHistoCryptoRepoFiles(cryptoRepoFile);
+////		final HistoCryptoRepoFile histoCryptoRepoFileLocal = getLastHistoCryptoRepoFileLocalOrFail(histoCryptoRepoFiles);
+////		if (histoCryptoRepoFileLocal.getHistoFrame().getSealed() != null)
+////			throw new IllegalStateException("Why is the local HistoFrame already sealed?!???!!!");
+//
+//		final HistoCryptoRepoFile histoCryptoRepoFileRemote = getLastHistoCryptoRepoFileRemoteOrFail(histoCryptoRepoFiles);
+//
+//		Collision collision = new Collision();
+//		collision.setHistoCryptoRepoFile1(histoCryptoRepoFileLocal);
+//		collision.setHistoCryptoRepoFile2(histoCryptoRepoFileRemote);
+//		sign(collision);
+//		collisionDao.makePersistent(collision);
+//
+//		logger.info("createCollisionIfNeeded: localPath='{}' localRevision={}", localPath, cryptoRepoFile.getRepoFile().getLocalRevision());
+//	}
+
+//	// TODO replace this method by a specific, optimized query!
+//	private HistoCryptoRepoFile getLastHistoCryptoRepoFileLocalOrFail(final Collection<HistoCryptoRepoFile> histoCryptoRepoFiles) {
+//		assertNotNull("histoCryptoRepoFiles", histoCryptoRepoFiles);
+//		final UUID localRepositoryId = getTransactionOrFail().getLocalRepoManager().getRepositoryId();
+//		HistoCryptoRepoFile result = null;
+//		for (HistoCryptoRepoFile histoCryptoRepoFile : histoCryptoRepoFiles) {
+//			final HistoFrame histoFrame = histoCryptoRepoFile.getHistoFrame();
+//			if (! localRepositoryId.equals(histoFrame.getFromRepositoryId()))
+//				continue;
+//
+//			if (result == null || result.getSignature().getSignatureCreated().compareTo(histoCryptoRepoFile.getSignature().getSignatureCreated()) < 0)
+//				result = histoCryptoRepoFile;
+//		}
+//
+//		if (result == null)
+//			throw new IllegalStateException("No matching HistoCryptoRepoFile found!");
+//
+//		return result;
+//	}
+
+//	// TODO replace this method by a specific, optimized query!
+//	private HistoCryptoRepoFile getLastHistoCryptoRepoFileRemoteOrFail(final Collection<HistoCryptoRepoFile> histoCryptoRepoFiles) {
+//		assertNotNull("histoCryptoRepoFiles", histoCryptoRepoFiles);
+//		final UUID localRepositoryId = getTransactionOrFail().getLocalRepoManager().getRepositoryId();
+//		HistoCryptoRepoFile result = null;
+//		for (HistoCryptoRepoFile histoCryptoRepoFile : histoCryptoRepoFiles) {
+//			final HistoFrame histoFrame = histoCryptoRepoFile.getHistoFrame();
+//			if (localRepositoryId.equals(histoFrame.getFromRepositoryId()))
+//				continue;
+//
+//			if (result == null || result.getSignature().getSignatureCreated().compareTo(histoCryptoRepoFile.getSignature().getSignatureCreated()) < 0)
+//				result = histoCryptoRepoFile;
+//		}
+//
+//		if (result == null)
+//			throw new IllegalStateException("No matching HistoCryptoRepoFile found!");
+//
+//		return result;
+//	}
 
 	private PlainHistoCryptoRepoFileDto createPlainHistoCryptoRepoFileDto(final HistoCryptoRepoFileDtoConverter converter, final HistoCryptoRepoFile histoCryptoRepoFile) {
 		assertNotNull("converter", converter);

@@ -105,7 +105,7 @@ public class Collision extends Entity implements WriteProtected, AutoTrackLocalR
 		try {
 			byte separatorIndex = 0;
 			return new MultiInputStream(
-					InputStreamSource.Helper.createInputStreamSource(collisionId),
+					InputStreamSource.Helper.createInputStreamSource(getCollisionId()),
 //					localRevision
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(histoCryptoRepoFile1 == null ? null : histoCryptoRepoFile1.getHistoCryptoRepoFileId()),
@@ -133,6 +133,7 @@ public class Collision extends Entity implements WriteProtected, AutoTrackLocalR
 
 	@Override
 	public void jdoPreStore() {
+		getCollisionId();
 		final CryptoRepoFile cryptoRepoFile1 = assertNotNull("histoCryptoRepoFile1", histoCryptoRepoFile1).getCryptoRepoFile();
 		final CryptoRepoFile cryptoRepoFile2 = assertNotNull("histoCryptoRepoFile2", histoCryptoRepoFile2).getCryptoRepoFile();
 		final CryptoRepoFile parent1 = assertNotNull("cryptoRepoFile1", cryptoRepoFile1).getParent();

@@ -20,6 +20,7 @@ import org.junit.Test;
 import org.subshare.core.dto.HistoFrameDto;
 import org.subshare.core.dto.PlainHistoCryptoRepoFileDto;
 import org.subshare.core.dto.PlainHistoCryptoRepoFileDtoTreeNode;
+import org.subshare.core.repo.histo.HistoExporter;
 import org.subshare.core.repo.histo.HistoExporterImpl;
 import org.subshare.core.repo.local.HistoFrameFilter;
 import org.subshare.core.repo.local.PlainHistoCryptoRepoFileFilter;
@@ -94,15 +95,18 @@ public class CollisionRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 		File tempDir0 = createTempDirectory(getClass().getSimpleName() + '.');
 		File tempDir1 = createTempDirectory(getClass().getSimpleName() + '.');
 
-		HistoExporterImpl.createHistoExporter(localSrcRoot).exportFile(
-				plainHistoCryptoRepoFileDtos.get(0).getHistoCryptoRepoFileDto().getHistoCryptoRepoFileId(), tempDir0);
-		File histoFile0 = createFile(tempDir0, "new-file");
+		try (HistoExporter histoExporter = HistoExporterImpl.createHistoExporter(localSrcRoot);) {
+			histoExporter.exportFile(
+					plainHistoCryptoRepoFileDtos.get(0).getHistoCryptoRepoFileDto().getHistoCryptoRepoFileId(), tempDir0);
 
-		HistoExporterImpl.createHistoExporter(localSrcRoot).exportFile(
-				plainHistoCryptoRepoFileDtos.get(1).getHistoCryptoRepoFileDto().getHistoCryptoRepoFileId(), tempDir1);
+			histoExporter.exportFile(
+					plainHistoCryptoRepoFileDtos.get(1).getHistoCryptoRepoFileDto().getHistoCryptoRepoFileId(), tempDir1);
+		}
+		File histoFile0 = createFile(tempDir0, "new-file");
 		File histoFile1 = createFile(tempDir1, "new-file");
 
 		assertThat(IOUtil.compareFiles(histoFile1, file1)).isTrue();
+		assertThat(IOUtil.compareFiles(histoFile0, histoFile1)).isFalse();
 
 		int lastByteOfHistoFile0 = getLastByte(histoFile0);
 		assertThat(lastByteOfHistoFile0).isEqualTo(111);
@@ -157,16 +161,19 @@ public class CollisionRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 		File tempDir1 = createTempDirectory(getClass().getSimpleName() + '.');
 		File tempDir2 = createTempDirectory(getClass().getSimpleName() + '.');
 
-		HistoExporterImpl.createHistoExporter(localSrcRoot).exportFile(
-				plainHistoCryptoRepoFileDtos.get(1).getHistoCryptoRepoFileDto().getHistoCryptoRepoFileId(), tempDir1);
-		File histoFile1 = createFile(tempDir1, "a");
+		try (HistoExporter histoExporter = HistoExporterImpl.createHistoExporter(localSrcRoot);) {
+			histoExporter.exportFile(
+					plainHistoCryptoRepoFileDtos.get(1).getHistoCryptoRepoFileDto().getHistoCryptoRepoFileId(), tempDir1);
 
-		HistoExporterImpl.createHistoExporter(localSrcRoot).exportFile(
-				plainHistoCryptoRepoFileDtos.get(2).getHistoCryptoRepoFileDto().getHistoCryptoRepoFileId(), tempDir2);
+			histoExporter.exportFile(
+					plainHistoCryptoRepoFileDtos.get(2).getHistoCryptoRepoFileDto().getHistoCryptoRepoFileId(), tempDir2);
+		}
+		File histoFile1 = createFile(tempDir1, "a");
 		File histoFile2 = createFile(tempDir2, "a");
 
 //		IOUtil.copyFile(file1, tempDir2.createFile("a.current"));
 		assertThat(IOUtil.compareFiles(histoFile2, file1)).isTrue();
+		assertThat(IOUtil.compareFiles(histoFile1, histoFile2)).isFalse();
 
 		int lastByteOfHistoFile1 = getLastByte(histoFile1);
 		assertThat(lastByteOfHistoFile1).isEqualTo(111);

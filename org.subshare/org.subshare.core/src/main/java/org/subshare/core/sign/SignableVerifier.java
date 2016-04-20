@@ -99,7 +99,7 @@ public class SignableVerifier {
 			}
 
 			if (!signer.verifySignature(signatureBytes))
-				throw new SignatureException("Signature not valid!");
+				throw new SignatureException("Signature not valid: " + signable);
 		} catch (final IOException x) {
 			throw new SignatureException(x);
 		}
