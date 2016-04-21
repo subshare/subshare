@@ -1,5 +1,7 @@
 package org.subshare.local.persistence;
 
+import static co.codewizards.cloudstore.core.util.Util.*;
+
 import javax.jdo.annotations.Index;
 import javax.jdo.annotations.Indices;
 import javax.jdo.annotations.NullValue;
@@ -57,7 +59,8 @@ public class HistoFileChunk extends Entity {
 		return histoCryptoRepoFile;
 	}
 	public void setHistoCryptoRepoFile(HistoCryptoRepoFile histoCryptoRepoFile) {
-		this.histoCryptoRepoFile = histoCryptoRepoFile;
+		if (! equal(this.histoCryptoRepoFile, histoCryptoRepoFile))
+			this.histoCryptoRepoFile = histoCryptoRepoFile;
 	}
 
 //	public NormalFile getNormalFile() {
@@ -71,14 +74,16 @@ public class HistoFileChunk extends Entity {
 		return offset;
 	}
 	public void setOffset(long offset) {
-		this.offset = offset;
+		if (! equal(this.offset, offset))
+			this.offset = offset;
 	}
 
 	public int getLength() {
 		return length;
 	}
 	public void setLength(int length) {
-		this.length = length;
+		if (! equal(this.length, length))
+			this.length = length;
 	}
 
 //	/**
@@ -96,6 +101,7 @@ public class HistoFileChunk extends Entity {
 		return fileChunkPayload;
 	}
 	public void setFileChunkPayload(FileChunkPayload fileChunkPayload) {
-		this.fileChunkPayload = fileChunkPayload;
+		if (! equal(this.fileChunkPayload, fileChunkPayload))
+			this.fileChunkPayload = fileChunkPayload;
 	}
 }

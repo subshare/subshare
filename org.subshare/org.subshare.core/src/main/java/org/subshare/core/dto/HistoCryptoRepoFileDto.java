@@ -37,6 +37,8 @@ public class HistoCryptoRepoFileDto implements Signable, Serializable {
 
 	private Date deleted;
 
+//	private List<CollisionDto> collisionDtos;
+
 	@XmlElement
 	private SignatureDto signatureDto;
 
@@ -88,6 +90,16 @@ public class HistoCryptoRepoFileDto implements Signable, Serializable {
 	public void setDeleted(Date deleted) {
 		this.deleted = deleted;
 	}
+
+//	public List<CollisionDto> getCollisionDtos() {
+//		if (collisionDtos == null) {
+//			collisionDtos = new ArrayList<>();
+//		}
+//		return collisionDtos;
+//	}
+//	public void setCollisionDtos(List<CollisionDto> collisionDtos) {
+//		this.collisionDtos = collisionDtos;
+//	}
 
 	@Override
 	public String getSignedDataType() {

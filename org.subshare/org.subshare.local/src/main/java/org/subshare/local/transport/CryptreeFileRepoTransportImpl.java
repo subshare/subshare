@@ -15,6 +15,8 @@ import org.subshare.core.LocalRepoStorageFactoryRegistry;
 import org.subshare.core.dto.SsFileChunkDto;
 import org.subshare.core.dto.SsNormalFileDto;
 import org.subshare.core.repo.transport.CryptreeClientFileRepoTransport;
+import org.subshare.local.persistence.CryptoRepoFile;
+import org.subshare.local.persistence.CryptoRepoFileDao;
 import org.subshare.local.persistence.PreliminaryCollision;
 import org.subshare.local.persistence.PreliminaryCollisionDao;
 import org.subshare.local.persistence.SsFileChunk;
@@ -140,7 +142,15 @@ public class CryptreeFileRepoTransportImpl extends FileRepoTransport implements 
 			if (preliminaryCollision == null) {
 				preliminaryCollision = new PreliminaryCollision();
 				preliminaryCollision.setPath(localPath);
-				pcDao.makePersistent(preliminaryCollision);
+				preliminaryCollision = pcDao.makePersistent(preliminaryCollision);
+			}
+
+			final RepoFileDao rfDao = tx.getDao(RepoFileDao.class);
+			final RepoFile repoFile = rfDao.getRepoFile(localRepoManager.getLocalRoot(), file);
+			if (repoFile != null) {
+				CryptoRepoFileDao crfDao = tx.getDao(CryptoRepoFileDao.class);
+				final CryptoRepoFile cryptoRepoFile = crfDao.getCryptoRepoFileOrFail(repoFile);
+				preliminaryCollision.setCryptoRepoFile(cryptoRepoFile);
 			}
 
 			tx.commit();

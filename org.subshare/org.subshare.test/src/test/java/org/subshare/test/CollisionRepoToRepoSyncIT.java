@@ -17,11 +17,13 @@ import mockit.Mock;
 import mockit.MockUp;
 
 import org.junit.Test;
+import org.subshare.core.dto.CollisionDto;
 import org.subshare.core.dto.HistoFrameDto;
 import org.subshare.core.dto.PlainHistoCryptoRepoFileDto;
 import org.subshare.core.dto.PlainHistoCryptoRepoFileDtoTreeNode;
 import org.subshare.core.repo.histo.HistoExporter;
 import org.subshare.core.repo.histo.HistoExporterImpl;
+import org.subshare.core.repo.local.CollisionFilter;
 import org.subshare.core.repo.local.HistoFrameFilter;
 import org.subshare.core.repo.local.PlainHistoCryptoRepoFileFilter;
 import org.subshare.core.repo.local.SsLocalRepoMetaData;
@@ -65,6 +67,10 @@ public class CollisionRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 		File file2 = createFile(localDestRoot, "2", "new-file");
 		createFileWithRandomContent(file2);
 		modifyFile_append(file2, 222);
+
+		SsLocalRepoMetaData localRepoMetaData = (SsLocalRepoMetaData) localRepoManagerLocal.getLocalRepoMetaData();
+		Collection<CollisionDto> collisionDtos = localRepoMetaData.getCollisionDtos(new CollisionFilter());
+		assertThat(collisionDtos).isEmpty();
 
 		syncFromLocalSrcToRemote();
 		syncFromRemoteToLocalDest(false); // should up-sync its own version
@@ -111,7 +117,8 @@ public class CollisionRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 		int lastByteOfHistoFile0 = getLastByte(histoFile0);
 		assertThat(lastByteOfHistoFile0).isEqualTo(111);
 
-		// TODO verify that a collision marker is in the meta-data!
+		collisionDtos = localRepoMetaData.getCollisionDtos(new CollisionFilter());
+		assertThat(collisionDtos).hasSize(1);
 	}
 
 	/**
@@ -128,6 +135,10 @@ public class CollisionRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 		File file2 = createFile(localDestRoot, "2", "a");
 		assertThat(file2.getIoFile()).isFile();
 		modifyFile_append(file2, 222);
+
+		SsLocalRepoMetaData localRepoMetaData = (SsLocalRepoMetaData) localRepoManagerLocal.getLocalRepoMetaData();
+		Collection<CollisionDto> collisionDtos = localRepoMetaData.getCollisionDtos(new CollisionFilter());
+		assertThat(collisionDtos).isEmpty();
 
 		syncFromLocalSrcToRemote();
 		syncFromRemoteToLocalDest(false); // should up-sync its own version
@@ -178,7 +189,8 @@ public class CollisionRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 		int lastByteOfHistoFile1 = getLastByte(histoFile1);
 		assertThat(lastByteOfHistoFile1).isEqualTo(111);
 
-		// TODO verify that a collision marker is in the meta-data!
+		collisionDtos = localRepoMetaData.getCollisionDtos(new CollisionFilter());
+		assertThat(collisionDtos).hasSize(1);
 	}
 
 	private void modifyFile_append(File file, int byteToAppend) throws IOException {

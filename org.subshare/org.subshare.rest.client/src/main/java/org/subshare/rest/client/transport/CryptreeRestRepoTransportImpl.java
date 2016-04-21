@@ -428,6 +428,10 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 			rfdwcrfosd.setRepoFileDto(directoryDto);
 			rfdwcrfosd.setCryptoRepoFileOnServerDto(histoCryptoRepoFileDto);
 
+//			final CryptoChangeSetDto cryptoChangeSetDto = cryptree.createOrUpdateCryptoRepoFile(path);
+//			putCryptoChangeSetDto(cryptoChangeSetDto);
+//			cryptree.updateLastCryptoKeySyncToRemoteRepo();
+
 			getClient().execute(new SsMakeDirectory(getRepositoryId().toString(), serverPath, rfdwcrfosd));
 
 			transaction.commit();
@@ -699,6 +703,10 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 			final HistoCryptoRepoFileDto histoCryptoRepoFileDto = cryptree.createHistoCryptoRepoFileDto(path);
 			rfdwcrfosd.setRepoFileDto(serverNormalFileDto);
 			rfdwcrfosd.setCryptoRepoFileOnServerDto(histoCryptoRepoFileDto);
+
+//			final CryptoChangeSetDto cryptoChangeSetDto = cryptree.getCryptoChangeSetDtoOrFail(path);
+//			putCryptoChangeSetDto(cryptoChangeSetDto);
+//			cryptree.updateLastCryptoKeySyncToRemoteRepo();
 
 			getClient().execute(new SsEndPutFile(getRepositoryId().toString(), serverPath, rfdwcrfosd));
 

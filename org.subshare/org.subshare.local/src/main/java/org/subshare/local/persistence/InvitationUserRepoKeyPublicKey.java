@@ -53,7 +53,8 @@ public class InvitationUserRepoKeyPublicKey extends UserRepoKeyPublicKey impleme
 		return validTo;
 	}
 	public void setValidTo(Date validTo) {
-		this.validTo = validTo;
+		if (! equal(this.validTo, validTo))
+			this.validTo = validTo;
 	}
 
 	@Override

@@ -110,7 +110,8 @@ public class HistoFrame extends Entity implements WriteProtected, AutoTrackLocal
 		return fromRepositoryId == null ? null : UUID.fromString(fromRepositoryId);
 	}
 	public void setFromRepositoryId(UUID fromRepositoryId) {
-		this.fromRepositoryId = fromRepositoryId == null ? null : fromRepositoryId.toString();
+		if (! equal(this.getFromRepositoryId(), fromRepositoryId))
+			this.fromRepositoryId = fromRepositoryId == null ? null : fromRepositoryId.toString();
 	}
 
 	@Override
@@ -142,7 +143,8 @@ public class HistoFrame extends Entity implements WriteProtected, AutoTrackLocal
 		return sealed;
 	}
 	public void setSealed(Date sealed) {
-		this.sealed = sealed;
+		if (! equal(this.sealed, sealed))
+			this.sealed = sealed;
 	}
 
 	/**

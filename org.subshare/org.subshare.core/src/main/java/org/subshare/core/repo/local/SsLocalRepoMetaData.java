@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import org.subshare.core.dto.CollisionDto;
 import org.subshare.core.dto.CryptoRepoFileDto;
 import org.subshare.core.dto.HistoFrameDto;
 import org.subshare.core.dto.PermissionType;
@@ -72,4 +73,6 @@ public interface SsLocalRepoMetaData extends LocalRepoMetaData {
 	Collection<HistoFrameDto> getHistoFrameDtos(HistoFrameFilter filter);
 
 	Collection<PlainHistoCryptoRepoFileDto> getPlainHistoCryptoRepoFileDtos(PlainHistoCryptoRepoFileFilter filter);
+
+	Collection<CollisionDto> getCollisionDtos(CollisionFilter filter);
 }

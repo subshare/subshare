@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
 
+import javax.jdo.JDOHelper;
+import javax.jdo.PersistenceManager;
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Embedded;
 import javax.jdo.annotations.Inheritance;
@@ -14,7 +16,10 @@ import javax.jdo.annotations.InheritanceStrategy;
 import javax.jdo.annotations.NullValue;
 import javax.jdo.annotations.PersistenceCapable;
 import javax.jdo.annotations.Persistent;
+import javax.jdo.annotations.Queries;
+import javax.jdo.annotations.Query;
 import javax.jdo.annotations.Unique;
+import javax.jdo.annotations.Uniques;
 import javax.jdo.listener.StoreCallback;
 
 import org.subshare.core.dto.CollisionDto;
@@ -30,7 +35,22 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 
 @PersistenceCapable
 @Inheritance(strategy = InheritanceStrategy.NEW_TABLE)
-@Unique(name = "Collision_collisionId", members = "collisionId")
+@Uniques({
+	@Unique(name = "Collision_collisionId", members = "collisionId"),
+	@Unique(name = "Collision_histoCryptoRepoFile1_histoCryptoRepoFile2", members = {"histoCryptoRepoFile1", "histoCryptoRepoFile2"})
+})
+@Queries({
+	@Query(name = "getCollision_collisionId", value = "SELECT UNIQUE WHERE this.collisionId == :collisionId"),
+	@Query(
+			name="getCollisionsChangedAfter_localRevision",
+			value="SELECT WHERE this.localRevision > :localRevision"),
+
+	@Query(
+			name = "getCollisions_histoCryptoRepoFile1_histoCryptoRepoFile2",
+			value = "SELECT UNIQUE WHERE"
+					+ "  (this.histoCryptoRepoFile1 == :histoCryptoRepoFile1 && this.histoCryptoRepoFile2 == :histoCryptoRepoFile2)"
+					+ "   || (this.histoCryptoRepoFile1 == :histoCryptoRepoFile2 && this.histoCryptoRepoFile2 == :histoCryptoRepoFile1)")
+})
 public class Collision extends Entity implements WriteProtected, AutoTrackLocalRevision, StoreCallback {
 
 	@Persistent(nullValue = NullValue.EXCEPTION)
@@ -69,20 +89,23 @@ public class Collision extends Entity implements WriteProtected, AutoTrackLocalR
 		return histoCryptoRepoFile1;
 	}
 	public void setHistoCryptoRepoFile1(HistoCryptoRepoFile histoCryptoRepoFile1) {
-		this.histoCryptoRepoFile1 = histoCryptoRepoFile1;
+		if (! equal(this.histoCryptoRepoFile1, histoCryptoRepoFile1))
+			this.histoCryptoRepoFile1 = histoCryptoRepoFile1;
 	}
 	public HistoCryptoRepoFile getHistoCryptoRepoFile2() {
 		return histoCryptoRepoFile2;
 	}
 	public void setHistoCryptoRepoFile2(HistoCryptoRepoFile histoCryptoRepoFile2) {
-		this.histoCryptoRepoFile2 = histoCryptoRepoFile2;
+		if (! equal(this.histoCryptoRepoFile2, histoCryptoRepoFile2))
+			this.histoCryptoRepoFile2 = histoCryptoRepoFile2;
 	}
 
 	public Date getResolved() {
 		return resolved;
 	}
 	public void setResolved(Date resolved) {
-		this.resolved = resolved;
+		if (! equal(this.resolved, resolved))
+			this.resolved = resolved;
 	}
 
 	@Override
@@ -127,7 +150,7 @@ public class Collision extends Entity implements WriteProtected, AutoTrackLocalR
 	}
 	@Override
 	public void setSignature(final Signature signature) {
-		if (!equal(this.signature, signature))
+		if (! equal(this.signature, signature))
 			this.signature = SignatureImpl.copy(signature);
 	}
 
@@ -142,6 +165,13 @@ public class Collision extends Entity implements WriteProtected, AutoTrackLocalR
 			throw new IllegalStateException(String.format(
 					"histoCryptoRepoFile1.cryptoRepoFile.parent != histoCryptoRepoFile2.cryptoRepoFile.parent :: histoCryptoRepoFile1=%s histoCryptoRepoFile2=%s parent1=%s parent2=%s",
 					histoCryptoRepoFile1, histoCryptoRepoFile2, parent1, parent2));
+
+		final PersistenceManager pm = JDOHelper.getPersistenceManager(this);
+		final CollisionDao collisionDao = new CollisionDao().persistenceManager(pm);
+		Collision c = collisionDao.getCollision(histoCryptoRepoFile1, histoCryptoRepoFile2);
+		if (c != null && c != this)
+			throw new IllegalStateException(String.format("There is already another Collision between these two HistoCryptoRepoFiles: %s, %s",
+					histoCryptoRepoFile1, histoCryptoRepoFile2));
 	}
 
 	@Override

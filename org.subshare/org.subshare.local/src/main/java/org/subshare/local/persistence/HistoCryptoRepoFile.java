@@ -134,7 +134,8 @@ public class HistoCryptoRepoFile extends Entity implements WriteProtected, AutoT
 		return previousHistoCryptoRepoFile;
 	}
 	public void setPreviousHistoCryptoRepoFile(final HistoCryptoRepoFile previousHistoCryptoRepoFile) {
-		this.previousHistoCryptoRepoFile = previousHistoCryptoRepoFile;
+		if (! equal(this.previousHistoCryptoRepoFile, previousHistoCryptoRepoFile))
+			this.previousHistoCryptoRepoFile = previousHistoCryptoRepoFile;
 	}
 
 	/**
@@ -177,7 +178,8 @@ public class HistoCryptoRepoFile extends Entity implements WriteProtected, AutoT
 		return deleted;
 	}
 	public void setDeleted(Date deleted) {
-		this.deleted = deleted;
+		if (! equal(this.deleted, deleted))
+			this.deleted = deleted;
 	}
 
 	@Override

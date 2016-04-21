@@ -20,7 +20,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -46,8 +45,6 @@ import org.subshare.core.sign.WriteProtected;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKey.PublicKey;
 import org.subshare.crypto.CipherOperationMode;
-import org.subshare.local.persistence.Collision;
-import org.subshare.local.persistence.CollisionDao;
 import org.subshare.local.persistence.CryptoKey;
 import org.subshare.local.persistence.CryptoKeyDao;
 import org.subshare.local.persistence.CryptoKeyDeactivation;
@@ -67,8 +64,6 @@ import org.subshare.local.persistence.PermissionDao;
 import org.subshare.local.persistence.PermissionSet;
 import org.subshare.local.persistence.PermissionSetDao;
 import org.subshare.local.persistence.PermissionSetInheritance;
-import org.subshare.local.persistence.PreliminaryCollision;
-import org.subshare.local.persistence.PreliminaryCollisionDao;
 import org.subshare.local.persistence.RepositoryOwner;
 import org.subshare.local.persistence.UserIdentityLink;
 import org.subshare.local.persistence.UserIdentityLinkDao;
@@ -314,7 +309,7 @@ public class CryptreeNode {
 		Collection<HistoCryptoRepoFile> histoCryptoRepoFiles = hcrfDao.getHistoCryptoRepoFiles(cryptoRepoFile);
 		for (HistoCryptoRepoFile histoCryptoRepoFile : histoCryptoRepoFiles) {
 			if (histoFrame.equals(histoCryptoRepoFile.getHistoFrame())) {
-				createCollisionIfNeeded(histoCryptoRepoFile);
+//				createCollisionIfNeeded(histoCryptoRepoFile);
 				return histoCryptoRepoFile; // TODO is this the right strategy? Or should we better delete and recreate? I encountered this situation when aborting an up-sync and resuming later.
 //				throw new IllegalStateException("xxx");
 			}
@@ -350,65 +345,65 @@ public class CryptreeNode {
 		currentHistoCryptoRepoFile.setHistoCryptoRepoFile(histoCryptoRepoFile);
 		chcrfDao.makePersistent(currentHistoCryptoRepoFile);
 
-		createCollisionIfNeeded(histoCryptoRepoFile);
+//		createCollisionIfNeeded(histoCryptoRepoFile);
 		context.transaction.flush(); // for early detection of an error
 		return histoCryptoRepoFile;
 	}
 
-	private void createCollisionIfNeeded(final HistoCryptoRepoFile histoCryptoRepoFileLocal) {
-//		final RepoFile repoFile = histoCryptoRepoFileLocal.getCryptoRepoFile().getRepoFile();
-//		assertNotNull("histoCryptoRepoFileLocal.cryptoRepoFile.repoFile", repoFile);
-		final RepoFile repoFile = getRepoFile();
-		assertNotNull("repoFile", repoFile);
-
-		final String localPath = repoFile.getPath();
-		final PreliminaryCollisionDao pcDao = context.transaction.getDao(PreliminaryCollisionDao.class);
-		final PreliminaryCollision preliminaryCollision = pcDao.getPreliminaryCollision(localPath);
-		if (preliminaryCollision != null) {
-			final HistoCryptoRepoFileDao hcrfDao = context.transaction.getDao(HistoCryptoRepoFileDao.class);
-			final CollisionDao collisionDao = context.transaction.getDao(CollisionDao.class);
-			final CryptoRepoFile cryptoRepoFile = getCryptoRepoFile();
-
-			final Collection<HistoCryptoRepoFile> histoCryptoRepoFiles = hcrfDao.getHistoCryptoRepoFiles(cryptoRepoFile);
-//			final HistoCryptoRepoFile histoCryptoRepoFileLocal = getLastHistoCryptoRepoFileLocalOrFail(histoCryptoRepoFiles);
-//			if (histoCryptoRepoFileLocal.getHistoFrame().getSealed() != null)
-//				throw new IllegalStateException("Why is the local HistoFrame already sealed?!???!!!");
-
-			final HistoCryptoRepoFile histoCryptoRepoFileRemote = getLastHistoCryptoRepoFileRemoteOrFail(histoCryptoRepoFiles);
-
-			// TODO check, if this collision already exists!!! only create it, if it does not yet exist!
-
-			Collision collision = new Collision();
-			collision.setHistoCryptoRepoFile1(histoCryptoRepoFileLocal);
-			collision.setHistoCryptoRepoFile2(histoCryptoRepoFileRemote);
-			sign(collision);
-			collisionDao.makePersistent(collision);
-
-			logger.info("createCollisionIfNeeded: localPath='{}' localRevision={}", localPath, cryptoRepoFile.getRepoFile().getLocalRevision());
-
-			pcDao.deletePersistent(preliminaryCollision);
-		}
-	}
-
-	// TODO replace this method by a specific, optimized query!
-	private HistoCryptoRepoFile getLastHistoCryptoRepoFileRemoteOrFail(final Collection<HistoCryptoRepoFile> histoCryptoRepoFiles) {
-		assertNotNull("histoCryptoRepoFiles", histoCryptoRepoFiles);
-		final UUID localRepositoryId = context.transaction.getLocalRepoManager().getRepositoryId();
-		HistoCryptoRepoFile result = null;
-		for (HistoCryptoRepoFile histoCryptoRepoFile : histoCryptoRepoFiles) {
-			final HistoFrame histoFrame = histoCryptoRepoFile.getHistoFrame();
-			if (localRepositoryId.equals(histoFrame.getFromRepositoryId()))
-				continue;
-
-			if (result == null || result.getSignature().getSignatureCreated().compareTo(histoCryptoRepoFile.getSignature().getSignatureCreated()) < 0)
-				result = histoCryptoRepoFile;
-		}
-
-		if (result == null)
-			throw new IllegalStateException("No matching HistoCryptoRepoFile found!");
-
-		return result;
-	}
+//	private void createCollisionIfNeeded(final HistoCryptoRepoFile histoCryptoRepoFileLocal) {
+////		final RepoFile repoFile = histoCryptoRepoFileLocal.getCryptoRepoFile().getRepoFile();
+////		assertNotNull("histoCryptoRepoFileLocal.cryptoRepoFile.repoFile", repoFile);
+//		final RepoFile repoFile = getRepoFile();
+//		assertNotNull("repoFile", repoFile);
+//
+//		final String localPath = repoFile.getPath();
+//		final PreliminaryCollisionDao pcDao = context.transaction.getDao(PreliminaryCollisionDao.class);
+//		final PreliminaryCollision preliminaryCollision = pcDao.getPreliminaryCollision(localPath);
+//		if (preliminaryCollision != null) {
+//			final HistoCryptoRepoFileDao hcrfDao = context.transaction.getDao(HistoCryptoRepoFileDao.class);
+//			final CollisionDao collisionDao = context.transaction.getDao(CollisionDao.class);
+//			final CryptoRepoFile cryptoRepoFile = getCryptoRepoFile();
+//
+//			final Collection<HistoCryptoRepoFile> histoCryptoRepoFiles = hcrfDao.getHistoCryptoRepoFiles(cryptoRepoFile);
+////			final HistoCryptoRepoFile histoCryptoRepoFileLocal = getLastHistoCryptoRepoFileLocalOrFail(histoCryptoRepoFiles);
+////			if (histoCryptoRepoFileLocal.getHistoFrame().getSealed() != null)
+////				throw new IllegalStateException("Why is the local HistoFrame already sealed?!???!!!");
+//
+//			final HistoCryptoRepoFile histoCryptoRepoFileRemote = getLastHistoCryptoRepoFileRemoteOrFail(histoCryptoRepoFiles);
+//
+//			// TODO check, if this collision already exists!!! only create it, if it does not yet exist!
+//
+//			Collision collision = new Collision();
+//			collision.setHistoCryptoRepoFile1(histoCryptoRepoFileLocal);
+//			collision.setHistoCryptoRepoFile2(histoCryptoRepoFileRemote);
+//			sign(collision);
+//			collisionDao.makePersistent(collision);
+//
+//			logger.info("createCollisionIfNeeded: localPath='{}' localRevision={}", localPath, cryptoRepoFile.getRepoFile().getLocalRevision());
+//
+//			pcDao.deletePersistent(preliminaryCollision);
+//		}
+//	}
+//
+//	// TODO replace this method by a specific, optimized query!
+//	private HistoCryptoRepoFile getLastHistoCryptoRepoFileRemoteOrFail(final Collection<HistoCryptoRepoFile> histoCryptoRepoFiles) {
+//		assertNotNull("histoCryptoRepoFiles", histoCryptoRepoFiles);
+//		final UUID localRepositoryId = context.transaction.getLocalRepoManager().getRepositoryId();
+//		HistoCryptoRepoFile result = null;
+//		for (HistoCryptoRepoFile histoCryptoRepoFile : histoCryptoRepoFiles) {
+//			final HistoFrame histoFrame = histoCryptoRepoFile.getHistoFrame();
+//			if (localRepositoryId.equals(histoFrame.getFromRepositoryId()))
+//				continue;
+//
+//			if (result == null || result.getSignature().getSignatureCreated().compareTo(histoCryptoRepoFile.getSignature().getSignatureCreated()) < 0)
+//				result = histoCryptoRepoFile;
+//		}
+//
+//		if (result == null)
+//			throw new IllegalStateException("No matching HistoCryptoRepoFile found!");
+//
+//		return result;
+//	}
 
 	private byte[] getRepoFileDtoDataForDeletedCryptoRepoFile(final HistoCryptoRepoFile previousHistoCryptoRepoFile) {
 		assertNotNull("previousHistoCryptoRepoFile", previousHistoCryptoRepoFile);

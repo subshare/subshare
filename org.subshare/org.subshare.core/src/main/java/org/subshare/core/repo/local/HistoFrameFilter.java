@@ -5,8 +5,8 @@ import java.util.Date;
 
 import org.subshare.core.sign.Signature;
 
+@SuppressWarnings("serial")
 public class HistoFrameFilter implements Serializable {
-	private static final long serialVersionUID = 1L;
 
 	private int maxResultSize = -1;
 

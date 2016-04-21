@@ -30,6 +30,8 @@ public class PreliminaryCollision extends Entity {
 	@Persistent(nullValue=NullValue.EXCEPTION)
 	private String pathSha1;
 
+	private CryptoRepoFile cryptoRepoFile;
+
 	public String getPath() {
 		return path;
 	}
@@ -41,5 +43,12 @@ public class PreliminaryCollision extends Entity {
 
 	public String getPathSha1() {
 		return pathSha1;
+	}
+
+	public CryptoRepoFile getCryptoRepoFile() {
+		return cryptoRepoFile;
+	}
+	public void setCryptoRepoFile(CryptoRepoFile cryptoRepoFile) {
+		this.cryptoRepoFile = cryptoRepoFile;
 	}
 }

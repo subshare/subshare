@@ -1,6 +1,7 @@
 package org.subshare.local;
 
 import static co.codewizards.cloudstore.core.objectfactory.ObjectFactoryUtil.*;
+import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static org.subshare.local.CryptreeNodeUtil.*;
 
@@ -28,6 +29,7 @@ import org.subshare.core.PermissionCollisionException;
 import org.subshare.core.ReadAccessDeniedException;
 import org.subshare.core.ReadUserIdentityAccessDeniedException;
 import org.subshare.core.WriteAccessDeniedException;
+import org.subshare.core.dto.CollisionDto;
 import org.subshare.core.dto.CryptoChangeSetDto;
 import org.subshare.core.dto.CryptoKeyDeactivationDto;
 import org.subshare.core.dto.CryptoKeyDto;
@@ -60,6 +62,7 @@ import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKeyPublicKeyDtoWithSignatureConverter;
 import org.subshare.core.user.UserRepoKeyPublicKeyLookup;
 import org.subshare.core.user.UserRepoKeyRing;
+import org.subshare.local.dto.CollisionDtoConverter;
 import org.subshare.local.dto.CryptoRepoFileDtoConverter;
 import org.subshare.local.dto.CurrentHistoCryptoRepoFileDtoConverter;
 import org.subshare.local.dto.HistoCryptoRepoFileDtoConverter;
@@ -69,6 +72,8 @@ import org.subshare.local.dto.UserIdentityLinkDtoConverter;
 import org.subshare.local.dto.UserRepoKeyPublicKeyDtoConverter;
 import org.subshare.local.dto.UserRepoKeyPublicKeyReplacementRequestDeletionDtoConverter;
 import org.subshare.local.dto.UserRepoKeyPublicKeyReplacementRequestDtoConverter;
+import org.subshare.local.persistence.Collision;
+import org.subshare.local.persistence.CollisionDao;
 import org.subshare.local.persistence.CryptoKey;
 import org.subshare.local.persistence.CryptoKeyDao;
 import org.subshare.local.persistence.CryptoKeyDeactivation;
@@ -92,6 +97,8 @@ import org.subshare.local.persistence.PermissionSet;
 import org.subshare.local.persistence.PermissionSetDao;
 import org.subshare.local.persistence.PermissionSetInheritance;
 import org.subshare.local.persistence.PermissionSetInheritanceDao;
+import org.subshare.local.persistence.PreliminaryCollision;
+import org.subshare.local.persistence.PreliminaryCollisionDao;
 import org.subshare.local.persistence.RepositoryOwner;
 import org.subshare.local.persistence.RepositoryOwnerDao;
 import org.subshare.local.persistence.SignableDao;
@@ -121,6 +128,7 @@ import co.codewizards.cloudstore.core.dto.NormalFileDto;
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
 import co.codewizards.cloudstore.core.dto.SymlinkDto;
 import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
 import co.codewizards.cloudstore.core.util.StringUtil;
 import co.codewizards.cloudstore.local.persistence.LocalRepository;
@@ -159,6 +167,8 @@ public class CryptreeImpl extends AbstractCryptree {
 		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(localPath);
 		final CryptoRepoFile cryptoRepoFile = cryptreeNode.getCryptoRepoFileOrCreate(true);
 
+//		cryptreeNode.createHistoCryptoRepoFileIfNeeded();
+
 		final CryptoChangeSetDto cryptoChangeSetDto = getCryptoChangeSetDto(cryptoRepoFile);
 		return cryptoChangeSetDto;
 	}
@@ -181,6 +191,16 @@ public class CryptreeImpl extends AbstractCryptree {
 		final HistoCryptoRepoFile histoCryptoRepoFile = cryptreeNode.createHistoCryptoRepoFileIfNeeded();
 		final HistoCryptoRepoFileDtoConverter converter = HistoCryptoRepoFileDtoConverter.create(getTransactionOrFail());
 		final HistoCryptoRepoFileDto result = converter.toHistoCryptoRepoFileDto(histoCryptoRepoFile);
+
+//		CollisionDao cDao = getTransactionOrFail().getDao(CollisionDao.class);
+//		CollisionFilter collisionFilter = new CollisionFilter();
+//		collisionFilter.setHistoCryptoRepoFileId(result.getHistoCryptoRepoFileId());
+//		Collection<Collision> collisions = cDao.getCollisions(collisionFilter);
+//		CollisionDtoConverter collisionDtoConverter = CollisionDtoConverter.create(getTransactionOrFail());
+//		for (Collision collision : collisions) {
+//			CollisionDto collisionDto = collisionDtoConverter.toCollisionDto(collision);
+//
+//		}
 		return result;
 	}
 
@@ -188,6 +208,9 @@ public class CryptreeImpl extends AbstractCryptree {
 	public CryptoChangeSetDto getCryptoChangeSetDtoOrFail(final String localPath) {
 		claimRepositoryOwnershipIfUnowned();
 		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(localPath);
+
+//		cryptreeNode.createHistoCryptoRepoFileIfNeeded();
+
 		final CryptoRepoFile cryptoRepoFile = cryptreeNode.getCryptoRepoFile();
 		assertNotNull("cryptoRepoFile", cryptoRepoFile);
 
@@ -420,6 +443,9 @@ public class CryptreeImpl extends AbstractCryptree {
 				histoCryptoRepoFileDto2HistoCryptoRepoFile,
 				cryptoChangeSetDto.getHistoCryptoRepoFileDtos()
 				);
+
+		for (CollisionDto collisionDto : cryptoChangeSetDto.getCollisionDtos())
+			putCollisionDto(collisionDto);
 
 		CurrentHistoCryptoRepoFileDtoConverter currentHistoCryptoRepoFileDtoConverter = CurrentHistoCryptoRepoFileDtoConverter.create(transaction);
 		for (CurrentHistoCryptoRepoFileDto currentHistoCryptoRepoFileDto : cryptoChangeSetDto.getCurrentHistoCryptoRepoFileDtos())
@@ -1486,6 +1512,18 @@ public class CryptreeImpl extends AbstractCryptree {
 		populateChangedCurrentHistoCryptoRepoFileDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 		populateChangedHistoCryptoRepoFileDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 		populateChangedHistoFrameDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
+		populateChangedCollisionDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
+	}
+
+	private void populateChangedCollisionDtos(CryptoChangeSetDto cryptoChangeSetDto, LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {
+		final CollisionDtoConverter converter = CollisionDtoConverter.create(getTransactionOrFail());
+		final CollisionDao dao = getTransactionOrFail().getDao(CollisionDao.class);
+
+		final Collection<Collision> entities = dao.getCollisionsChangedAfter(
+				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced());
+
+		for (final Collision entity : entities)
+			cryptoChangeSetDto.getCollisionDtos().add(converter.toCollisionDto(entity));
 	}
 
 	private void populateChangedHistoFrameDtos(final CryptoChangeSetDto cryptoChangeSetDto, final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {
@@ -2040,8 +2078,90 @@ public class CryptreeImpl extends AbstractCryptree {
 		}
 	}
 
+	private void convertPreliminaryCollisionsToCollisions() {
+		final LocalRepoTransaction tx = getTransactionOrFail();
+		final PreliminaryCollisionDao pcDao = tx.getDao(PreliminaryCollisionDao.class);
+		final RepoFileDao rfDao = tx.getDao(RepoFileDao.class);
+		final CryptoRepoFileDao crfDao = tx.getDao(CryptoRepoFileDao.class);
+
+		for (PreliminaryCollision preliminaryCollision : pcDao.getObjects()) {
+			File file = createFile(tx.getLocalRepoManager().getLocalRoot(), preliminaryCollision.getPath());
+			RepoFile repoFile = rfDao.getRepoFile(tx.getLocalRepoManager().getLocalRoot(), file);
+			CryptoRepoFile cryptoRepoFile = repoFile == null ? null : crfDao.getCryptoRepoFileOrFail(repoFile);
+			if (cryptoRepoFile == null)
+				cryptoRepoFile = preliminaryCollision.getCryptoRepoFile();
+
+			if (cryptoRepoFile == null)
+				throw new IllegalStateException(String.format("Could not determine CryptoRepoFile for: %s (path='%s')", preliminaryCollision, preliminaryCollision.getPath()));
+
+			CryptoRepoFile cryptoRepoFile2 = preliminaryCollision.getCryptoRepoFile();
+			if (cryptoRepoFile.equals(cryptoRepoFile2))
+				cryptoRepoFile2 = null;
+
+			createCollisionIfNeeded(cryptoRepoFile, cryptoRepoFile2, preliminaryCollision.getPath());
+
+			pcDao.deletePersistent(preliminaryCollision);
+		}
+	}
+
+	private void createCollisionIfNeeded(final CryptoRepoFile cryptoRepoFile, final CryptoRepoFile cryptoRepoFile2, final String localPath) {
+		assertNotNull("cryptoRepoFile", cryptoRepoFile);
+		final LocalRepoTransaction tx = getTransactionOrFail();
+		final CollisionDao cDao = tx.getDao(CollisionDao.class);
+		final HistoCryptoRepoFileDao hcrfDao = tx.getDao(HistoCryptoRepoFileDao.class);
+
+		Collection<HistoCryptoRepoFile> histoCryptoRepoFiles = hcrfDao.getHistoCryptoRepoFiles(cryptoRepoFile);
+		if (cryptoRepoFile2 != null) {
+			histoCryptoRepoFiles = new ArrayList<HistoCryptoRepoFile>();
+			histoCryptoRepoFiles.addAll(hcrfDao.getHistoCryptoRepoFiles(cryptoRepoFile2));
+		}
+
+		final HistoCryptoRepoFile localHistoCryptoRepoFile = getLastHistoCryptoRepoFileOrFail(histoCryptoRepoFiles, false);
+		final HistoCryptoRepoFile remoteHistoCryptoRepoFile = getLastHistoCryptoRepoFileOrFail(histoCryptoRepoFiles, true);
+
+		if (localHistoCryptoRepoFile.getHistoFrame().getSealed() != null)
+			throw new IllegalStateException("Why is the local HistoFrame already sealed?!???!!!");
+
+		Collision collision = cDao.getCollision(localHistoCryptoRepoFile, remoteHistoCryptoRepoFile);
+		if (collision == null) {
+			collision = new Collision();
+			collision.setHistoCryptoRepoFile1(localHistoCryptoRepoFile);
+			collision.setHistoCryptoRepoFile2(remoteHistoCryptoRepoFile);
+			sign(collision);
+			collision = cDao.makePersistent(collision);
+			logger.info("createCollisionIfNeeded: localPath='{}' localRevision={}", localPath, collision.getLocalRevision());
+		}
+	}
+
+	// TODO replace this method by a specific, optimized query!
+	private HistoCryptoRepoFile getLastHistoCryptoRepoFileOrFail(final Collection<HistoCryptoRepoFile> histoCryptoRepoFiles, boolean remote) {
+		assertNotNull("histoCryptoRepoFiles", histoCryptoRepoFiles);
+		final UUID localRepositoryId = getTransactionOrFail().getLocalRepoManager().getRepositoryId();
+		HistoCryptoRepoFile result = null;
+		for (HistoCryptoRepoFile histoCryptoRepoFile : histoCryptoRepoFiles) {
+			final HistoFrame histoFrame = histoCryptoRepoFile.getHistoFrame();
+			if (remote) {
+				if (localRepositoryId.equals(histoFrame.getFromRepositoryId()))
+					continue;
+			} else {
+				if (! localRepositoryId.equals(histoFrame.getFromRepositoryId()))
+					continue;
+			}
+
+			if (result == null || result.getSignature().getSignatureCreated().compareTo(histoCryptoRepoFile.getSignature().getSignatureCreated()) < 0)
+				result = histoCryptoRepoFile;
+		}
+
+		if (result == null)
+			throw new IllegalStateException("No matching HistoCryptoRepoFile found!");
+
+		return result;
+	}
+
 	@Override
 	public void sealUnsealedHistoryFrame() {
+		convertPreliminaryCollisionsToCollisions();
+
 		final LocalRepoTransaction tx = getTransactionOrFail();
 		final HistoFrameDao histoFrameDao = tx.getDao(HistoFrameDao.class);
 		final CryptreeNode rootCryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(getRootCryptoRepoFileId());
@@ -2058,6 +2178,12 @@ public class CryptreeImpl extends AbstractCryptree {
 		assertNotNull("histoFrameDto", histoFrameDto);
 		final LocalRepoTransaction tx = getTransactionOrFail();
 		HistoFrameDtoConverter.create(tx).putHistoFrameDto(histoFrameDto);
+	}
+
+	private void putCollisionDto(final CollisionDto collisionDto) {
+		assertNotNull("collisionDto", collisionDto);
+		final LocalRepoTransaction tx = getTransactionOrFail();
+		CollisionDtoConverter.create(tx).putCollisionDto(collisionDto);
 	}
 
 	@Override
