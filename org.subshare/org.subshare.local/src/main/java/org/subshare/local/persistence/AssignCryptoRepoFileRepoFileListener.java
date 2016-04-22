@@ -43,7 +43,8 @@ public class AssignCryptoRepoFileRepoFileListener extends AbstractLocalRepoTrans
 		if (repoFileName2RepoFile.isEmpty())
 			return;
 
-		final CryptoRepoFileDao cryptoRepoFileDao = getTransactionOrFail().getDao(CryptoRepoFileDao.class);
+		final LocalRepoTransaction tx = getTransactionOrFail();
+		final CryptoRepoFileDao cryptoRepoFileDao = tx.getDao(CryptoRepoFileDao.class);
 		final Collection<CryptoRepoFile> cryptoRepoFiles = cryptoRepoFileDao.getCryptoRepoFilesWithoutRepoFileAndNotDeleted();
 		for (final CryptoRepoFile cryptoRepoFile : cryptoRepoFiles) {
 			final RepoFile repoFile;
@@ -52,8 +53,10 @@ public class AssignCryptoRepoFileRepoFileListener extends AbstractLocalRepoTrans
 			else // on server-side
 				repoFile = repoFileName2RepoFile.get(cryptoRepoFile.getCryptoRepoFileId().toString());
 
-			if (repoFile != null)
+			if (repoFile != null) {
 				cryptoRepoFile.setRepoFile(repoFile);
+				tx.flush(); // we want an early failure!
+			}
 		}
 
 		repoFileName2RepoFile.clear();
@@ -72,6 +75,7 @@ public class AssignCryptoRepoFileRepoFileListener extends AbstractLocalRepoTrans
 		RepoFile repoFile = cryptoRepoFile.getRepoFile();
 		if (repoFile == null) {
 			final CryptoRepoFile parentCryptoRepoFile = cryptoRepoFile.getParent();
+			final LocalRepoTransaction tx = getTransactionOrFail();
 			if (parentCryptoRepoFile != null) {
 				final RepoFile parentRepoFile = getRepoFileViaCryptoRepoFileLocalName(parentCryptoRepoFile);
 				if (parentRepoFile == null)
@@ -82,10 +86,12 @@ public class AssignCryptoRepoFileRepoFileListener extends AbstractLocalRepoTrans
 				// even if the client checked-out a sub-directory only (and is allowed to read only this sub-dir).
 				final String localName = cryptoRepoFile.getLocalName();
 				if (localName != null)
-					repoFile = getTransactionOrFail().getDao(RepoFileDao.class).getChildRepoFile(parentRepoFile, localName);
+					repoFile = tx.getDao(RepoFileDao.class).getChildRepoFile(parentRepoFile, localName);
 			}
-			if (repoFile != null)
+			if (repoFile != null) {
 				cryptoRepoFile.setRepoFile(repoFile);
+				tx.flush(); // we want an early failure!
+			}
 		}
 		return repoFile;
 	}

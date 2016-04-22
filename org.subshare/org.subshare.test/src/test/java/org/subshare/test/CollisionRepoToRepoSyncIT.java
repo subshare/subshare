@@ -1,22 +1,31 @@
 package org.subshare.test;
 
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static org.assertj.core.api.Assertions.*;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
+import mockit.Invocation;
 import mockit.Mock;
 import mockit.MockUp;
+import mockit.integration.junit4.JMockit;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.subshare.core.dto.CollisionDto;
 import org.subshare.core.dto.HistoFrameDto;
 import org.subshare.core.dto.PlainHistoCryptoRepoFileDto;
@@ -27,14 +36,21 @@ import org.subshare.core.repo.local.CollisionFilter;
 import org.subshare.core.repo.local.HistoFrameFilter;
 import org.subshare.core.repo.local.PlainHistoCryptoRepoFileFilter;
 import org.subshare.core.repo.local.SsLocalRepoMetaData;
+import org.subshare.core.repo.sync.SsRepoToRepoSync;
 import org.subshare.local.UserRepoKeyPublicKeyHelper;
 import org.subshare.local.persistence.UserRepoKeyPublicKey;
 
+import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.objectfactory.ObjectFactory;
 import co.codewizards.cloudstore.core.oio.File;
+import co.codewizards.cloudstore.core.progress.ProgressMonitor;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
+import co.codewizards.cloudstore.core.repo.sync.RepoToRepoSync;
 import co.codewizards.cloudstore.core.util.IOUtil;
 
+@RunWith(JMockit.class)
 public class CollisionRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
+	private static final Logger logger = LoggerFactory.getLogger(CollisionRepoToRepoSyncIT.class);
 
 	@Override
 	public void before() throws Exception {
@@ -42,11 +58,212 @@ public class CollisionRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 
 		new MockUp<UserRepoKeyPublicKeyHelper>() {
 			@Mock
-			private void createUserIdentities(final UserRepoKeyPublicKey userRepoKeyPublicKey) {
+			void createUserIdentities(UserRepoKeyPublicKey userRepoKeyPublicKey) {
 				// Our mock should do nothing, because we don't have a real UserRegistry here.
 			}
 		};
+
+		new MockUp<ObjectFactory>() {
+			@Mock
+			<T> T create(Invocation invocation, Class<T> clazz, Class<?>[] parameterTypes, Object ... parameters) {
+				if (RepoToRepoSync.class.isAssignableFrom(clazz)) {
+					return clazz.cast(new MockSsRepoToRepoSync((File) parameters[0], (URL) parameters[1]));
+				}
+				return invocation.proceed();
+			}
+		};
+
+//		new MockUp<SsRepoToRepoSync>() {
+//			@Mock
+//			void syncUp(Invocation invocation, ProgressMonitor monitor) {
+//				System.out.println(">>>>>>>>>>>>> syncUp >>>>>>>>>>>>>>>>>");
+////				RepoToRepoSyncCoordinator coordinator = repoToRepoSyncCoordinatorThreadLocal.get();
+////				if (coordinator != null && ! coordinator.waitWhileSyncUpFrozen())
+////					return;
+//
+//				invocation.proceed();
+//
+////				if (coordinator != null)
+////					coordinator.setSyncUpDone(true);
+//			}
+//
+//			@Mock
+//			void syncDown(Invocation invocation, boolean fromRepoLocalSync, ProgressMonitor monitor) {
+//				System.out.println(">>>>>>>>>>>>> syncDown >>>>>>>>>>>>>>>>>");
+////				RepoToRepoSyncCoordinator coordinator = repoToRepoSyncCoordinatorThreadLocal.get();
+////				if (coordinator != null && ! coordinator.waitWhileSyncDownFrozen())
+////					return;
+//
+//				invocation.proceed();
+//
+////				if (coordinator != null)
+////					coordinator.setSyncDownDone(true);
+//			}
+//		};
 	}
+
+	private static class MockSsRepoToRepoSync extends SsRepoToRepoSync {
+
+		protected MockSsRepoToRepoSync(File localRoot, URL remoteRoot) {
+			super(localRoot, remoteRoot);
+		}
+
+		@Override
+		protected void syncUp(ProgressMonitor monitor) {
+			RepoToRepoSyncCoordinator coordinator = repoToRepoSyncCoordinatorThreadLocal.get();
+			if (coordinator != null && ! coordinator.waitWhileSyncUpFrozen())
+				return;
+
+			super.syncUp(monitor);
+
+			if (coordinator != null)
+				coordinator.setSyncUpDone(true);
+		}
+
+		@Override
+		protected void syncDown(boolean fromRepoLocalSync, ProgressMonitor monitor) {
+			RepoToRepoSyncCoordinator coordinator = repoToRepoSyncCoordinatorThreadLocal.get();
+			if (coordinator != null && ! coordinator.waitWhileSyncDownFrozen())
+				return;
+
+			super.syncDown(fromRepoLocalSync, monitor);
+
+			if (coordinator != null)
+				coordinator.setSyncDownDone(true);
+		}
+	}
+
+	private static class RepoToRepoSyncCoordinator {
+		private static final Logger logger = LoggerFactory.getLogger(CollisionRepoToRepoSyncIT.RepoToRepoSyncCoordinator.class);
+
+		private boolean syncUpFrozen = true;
+		private boolean syncUpDone;
+
+		private boolean syncDownFrozen = true;
+		private boolean syncDownDone;
+
+		private Throwable error;
+
+		protected synchronized boolean isSyncUpFrozen() {
+			return syncUpFrozen;
+		}
+		protected synchronized void setSyncUpFrozen(boolean value) {
+			logger.info("setSyncUpFrozen: value={}", value);
+			this.syncUpFrozen = value;
+			notifyAll();
+		}
+
+		protected synchronized boolean isSyncDownFrozen() {
+			return syncDownFrozen;
+		}
+		protected synchronized void setSyncDownFrozen(boolean value) {
+			logger.info("setSyncDownFrozen: value={}", value);
+			this.syncDownFrozen = value;
+			notifyAll();
+		}
+
+		protected synchronized boolean isSyncUpDone() {
+			return syncUpDone;
+		}
+		protected synchronized void setSyncUpDone(boolean value) {
+			logger.info("setSyncUpDone: value={}", value);
+			this.syncUpDone = value;
+			notifyAll();
+		}
+
+		protected synchronized boolean isSyncDownDone() {
+			return syncDownDone;
+		}
+		protected synchronized void setSyncDownDone(boolean value) {
+			logger.info("setSyncDownDone: value={}", value);
+			this.syncDownDone = value;
+			notifyAll();
+		}
+
+		public synchronized boolean waitWhileSyncUpFrozen() {
+			while (isSyncUpFrozen()) {
+				logger.info("waitWhileSyncUpFrozen: Waiting...");
+				try {
+					wait(30000);
+				} catch (InterruptedException e) {
+					logger.error("waitWhileSyncUpFrozen: " + e, e);
+					return false;
+				}
+				throwErrorIfNeeded();
+			}
+			setSyncUpFrozen(true);
+			logger.info("waitWhileSyncUpFrozen: Continuing!");
+			return true;
+		}
+
+		public synchronized boolean waitWhileSyncDownFrozen() {
+			while (isSyncDownFrozen()) {
+				logger.info("waitWhileSyncDownFrozen: Waiting...");
+				try {
+					wait(30000);
+				} catch (InterruptedException e) {
+					logger.error("waitWhileSyncDownFrozen: " + e, e);
+					return false;
+				}
+				throwErrorIfNeeded();
+			}
+			setSyncDownFrozen(true);
+			logger.info("waitWhileSyncDownFrozen: Continuing!");
+			return true;
+		}
+
+		public synchronized boolean waitForSyncUpDone() {
+			while (! isSyncUpDone()) {
+				logger.info("waitForSyncUpDone: Waiting...");
+				try {
+					wait(30000);
+				} catch (InterruptedException e) {
+					logger.error("waitForSyncUpDone: " + e, e);
+					return false;
+				}
+				throwErrorIfNeeded();
+			}
+			setSyncUpDone(false);
+			logger.info("waitForSyncUpDone: Continuing!");
+			return true;
+		}
+
+		public synchronized boolean waitForSyncDownDone() {
+			while (! isSyncDownDone()) {
+				logger.info("waitForSyncDownDone: Waiting...");
+				try {
+					wait(30000);
+				} catch (InterruptedException e) {
+					logger.error("waitForSyncDownDone: " + e, e);
+					return false;
+				}
+				throwErrorIfNeeded();
+			}
+			setSyncDownDone(false);
+			logger.info("waitForSyncDownDone: Continuing!");
+			return true;
+		}
+
+		public synchronized Throwable getError() {
+			return error;
+		}
+		public synchronized void setError(Throwable error) {
+			this.error = error;
+			notifyAll();
+		}
+
+		public void throwErrorIfNeeded() {
+			Throwable error = getError();
+			if (error != null) {
+				if (error instanceof Error)
+					throw (Error) error;
+
+				throw new RuntimeException(error);
+			}
+		}
+	}
+
+	private static final ThreadLocal<RepoToRepoSyncCoordinator> repoToRepoSyncCoordinatorThreadLocal = new ThreadLocal<>();
 
 	/**
 	 * Two clients simultaneously create a file with the same name in the same directory.
@@ -216,31 +433,175 @@ public class CollisionRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 //	public void modifiedFileVsDeletedFileCollisionOnClient() throws Exception {
 //
 //	}
-//
-//	/**
-//	 * Two clients simultaneously create a file with the same name in the same directory.
-//	 * <p>
-//	 * In contrast to {@link #newVsNewFileCollisionOnClient()}, both clients first sync-down,
-//	 * see no change on the server and then sync-up really causing two different
-//	 * {@code CryptoRepoFile} objects for the same file.
-//	 * <p>
-//	 * The collision thus happens and is detected during a following down-sync at a later time.
-//	 *
-//	 * @see #newVsNewFileCollisionOnClient()
-//	 */
-//	@Test
-//	public void newFileVsNewFileCollisionOnServer() throws Exception {
-//
-////		// Both new versions should have the same previous version, because the collision happened on the server.
-////		Set<Uid> previousHistoCryptoRepoFileIds = new HashSet<>();
-////		for (PlainHistoCryptoRepoFileDto phcrfDto : plainHistoCryptoRepoFileDtos)
-////			previousHistoCryptoRepoFileIds.add(phcrfDto.getHistoCryptoRepoFileDto().getPreviousHistoCryptoRepoFileId());
-////
-////		assertThat(previousHistoCryptoRepoFileIds).hasSize(1);
-//
-//
-//	}
-//
+
+	/**
+	 * Two clients simultaneously create a file with the same name in the same directory.
+	 * <p>
+	 * In contrast to {@link #newVsNewFileCollisionOnClient()}, both clients first sync-down,
+	 * see no change on the server and then sync-up really causing two different
+	 * {@code CryptoRepoFile} objects for the same file.
+	 * <p>
+	 * The collision thus happens and is detected during a following down-sync at a later time.
+	 *
+	 * @see #newVsNewFileCollisionOnClient()
+	 */
+	@Test
+	public void newFileVsNewFileCollisionOnServer() throws Exception {
+		prepareLocalAndDestinationRepo();
+
+		File file1 = createFile(localSrcRoot, "2", "new-file");
+		createFileWithRandomContent(file1);
+		modifyFile_append(file1, 111);
+
+		File file2 = createFile(localDestRoot, "2", "new-file");
+		createFileWithRandomContent(file2);
+		modifyFile_append(file2, 222);
+
+		SsLocalRepoMetaData localRepoMetaData = (SsLocalRepoMetaData) localRepoManagerLocal.getLocalRepoMetaData();
+		Collection<CollisionDto> collisionDtos = localRepoMetaData.getCollisionDtos(new CollisionFilter());
+		assertThat(collisionDtos).isEmpty();
+
+		RepoToRepoSyncCoordinator syncFromLocalSrcToRemoteCoordinator = new RepoToRepoSyncCoordinator();
+		SyncFromLocalSrcToRemoteThread syncFromLocalSrcToRemoteThread = new SyncFromLocalSrcToRemoteThread(syncFromLocalSrcToRemoteCoordinator);
+		syncFromLocalSrcToRemoteThread.start();
+
+		// should collide and up-sync its own version in parallel
+		RepoToRepoSyncCoordinator syncFromRemoteToLocalDestCoordinator = new RepoToRepoSyncCoordinator();
+		SyncFromRemoteToLocalDestThread syncFromRemoteToLocalDestThread = new SyncFromRemoteToLocalDestThread(syncFromRemoteToLocalDestCoordinator);
+		syncFromRemoteToLocalDestThread.start();
+
+		System.out.println("************************************************************");
+//		Thread.sleep(30000);
+		System.out.println("************************************************************");
+
+		// Both threads are waiting *before* down-syncing now. We allow them both to continue:
+		syncFromLocalSrcToRemoteCoordinator.setSyncDownFrozen(false);
+		syncFromRemoteToLocalDestCoordinator.setSyncDownFrozen(false);
+
+		// Then we wait until they're done down-syncing.
+		syncFromLocalSrcToRemoteCoordinator.waitForSyncDownDone();
+		syncFromRemoteToLocalDestCoordinator.waitForSyncDownDone();
+
+		System.out.println("*****************");
+//		Thread.sleep(60000);
+		System.out.println("*****************");
+
+		// Now they're waiting *before* up-syncing. We continue the up-sync, thus, now.
+		syncFromLocalSrcToRemoteCoordinator.setSyncUpFrozen(false);
+		syncFromRemoteToLocalDestCoordinator.setSyncUpFrozen(false);
+
+		// Again, we wait here until they're done (this time, up-syncing).
+		syncFromLocalSrcToRemoteCoordinator.waitForSyncUpDone();
+		syncFromRemoteToLocalDestCoordinator.waitForSyncUpDone();
+
+		System.out.println("*****************");
+//		Thread.sleep(60000);
+		System.out.println("*****************");
+
+		// Again, they're waiting for down-sync's green light => go!
+		syncFromLocalSrcToRemoteCoordinator.setSyncDownFrozen(false);
+		syncFromRemoteToLocalDestCoordinator.setSyncDownFrozen(false);
+
+		// ...wait until they're done.
+		syncFromLocalSrcToRemoteCoordinator.waitForSyncDownDone();
+		syncFromRemoteToLocalDestCoordinator.waitForSyncDownDone();
+
+		System.out.println("************************************************************");
+//		Thread.sleep(60000);
+		System.out.println("************************************************************");
+
+
+//		syncFromLocalSrcToRemote(); // should down-sync the change from dest-repo
+		assertDirectoriesAreEqualRecursively(
+				(remotePathPrefix2Plain.isEmpty() ? getLocalRootWithPathPrefix() : createFile(getLocalRootWithPathPrefix(), remotePathPrefix2Plain)),
+				localDestRoot);
+
+		// Verify that *both* versions are in the history.
+		List<PlainHistoCryptoRepoFileDto> plainHistoCryptoRepoFileDtos = getPlainHistoCryptoRepoFileDtos(localRepoManagerLocal, file1);
+		assertThat(plainHistoCryptoRepoFileDtos).hasSize(2);
+
+		// Both new versions should have the same previous version, because the collision happened on the server.
+		Set<Uid> previousHistoCryptoRepoFileIds = new HashSet<>();
+		for (PlainHistoCryptoRepoFileDto phcrfDto : plainHistoCryptoRepoFileDtos)
+			previousHistoCryptoRepoFileIds.add(phcrfDto.getHistoCryptoRepoFileDto().getPreviousHistoCryptoRepoFileId());
+
+		assertThat(previousHistoCryptoRepoFileIds).hasSize(1);
+
+		// Verify that the 2nd version (with 222 at the end) is the current one.
+		int lastByte1 = getLastByte(file1);
+		assertThat(lastByte1).isEqualTo(222);
+
+		int lastByte2 = getLastByte(file2);
+		assertThat(lastByte2).isEqualTo(222);
+
+		// Export both versions of the file and assert that
+		// - the current file is identical to the last one
+		// - and the first one ends on 111.
+		File tempDir0 = createTempDirectory(getClass().getSimpleName() + '.');
+		File tempDir1 = createTempDirectory(getClass().getSimpleName() + '.');
+
+		try (HistoExporter histoExporter = HistoExporterImpl.createHistoExporter(localSrcRoot);) {
+			histoExporter.exportFile(
+					plainHistoCryptoRepoFileDtos.get(0).getHistoCryptoRepoFileDto().getHistoCryptoRepoFileId(), tempDir0);
+
+			histoExporter.exportFile(
+					plainHistoCryptoRepoFileDtos.get(1).getHistoCryptoRepoFileDto().getHistoCryptoRepoFileId(), tempDir1);
+		}
+		File histoFile0 = createFile(tempDir0, "new-file");
+		File histoFile1 = createFile(tempDir1, "new-file");
+
+		assertThat(IOUtil.compareFiles(histoFile1, file1)).isTrue();
+		assertThat(IOUtil.compareFiles(histoFile0, histoFile1)).isFalse();
+
+		int lastByteOfHistoFile0 = getLastByte(histoFile0);
+		assertThat(lastByteOfHistoFile0).isEqualTo(111);
+
+		collisionDtos = localRepoMetaData.getCollisionDtos(new CollisionFilter());
+		assertThat(collisionDtos).hasSize(1);
+	}
+
+	private class SyncFromLocalSrcToRemoteThread extends Thread {
+		private final Logger logger = LoggerFactory.getLogger(SyncFromLocalSrcToRemoteThread.class);
+
+		private final RepoToRepoSyncCoordinator coordinator;
+
+		public SyncFromLocalSrcToRemoteThread(RepoToRepoSyncCoordinator coordinator) {
+			this.coordinator = assertNotNull("coordinator", coordinator);
+			repoToRepoSyncCoordinatorThreadLocal.set(coordinator);
+		}
+
+		@Override
+		public void run() {
+			try {
+				syncFromLocalSrcToRemote();
+			} catch (Throwable e) {
+				logger.error("run: " + e, e);
+				coordinator.setError(e);
+			}
+		}
+	}
+
+	private class SyncFromRemoteToLocalDestThread extends Thread {
+		private final Logger logger = LoggerFactory.getLogger(SyncFromRemoteToLocalDestThread.class);
+
+		private final RepoToRepoSyncCoordinator coordinator;
+
+		public SyncFromRemoteToLocalDestThread(RepoToRepoSyncCoordinator coordinator) {
+			this.coordinator = assertNotNull("coordinator", coordinator);
+			repoToRepoSyncCoordinatorThreadLocal.set(coordinator);
+		}
+
+		@Override
+		public void run() {
+			try {
+				syncFromRemoteToLocalDest(false);
+			} catch (Throwable e) {
+				logger.error("run: " + e, e);
+				coordinator.setError(e);
+			}
+		}
+	}
+
 //	/**
 //	 * Two clients simultaneously modify the same file.
 //	 */

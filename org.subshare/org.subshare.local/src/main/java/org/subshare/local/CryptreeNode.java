@@ -272,6 +272,7 @@ public class CryptreeNode {
 			cryptoRepoFile.setLastSyncFromRepositoryId(null);
 
 			sign(cryptoRepoFile);
+			context.transaction.flush(); // we want an early failure - not later during commit.
 		}
 		return cryptoRepoFile;
 	}
