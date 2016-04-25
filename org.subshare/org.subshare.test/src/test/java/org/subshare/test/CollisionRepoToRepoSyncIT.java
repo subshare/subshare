@@ -72,36 +72,21 @@ public class CollisionRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 				return invocation.proceed();
 			}
 		};
-
-//		new MockUp<SsRepoToRepoSync>() {
-//			@Mock
-//			void syncUp(Invocation invocation, ProgressMonitor monitor) {
-//				System.out.println(">>>>>>>>>>>>> syncUp >>>>>>>>>>>>>>>>>");
-////				RepoToRepoSyncCoordinator coordinator = repoToRepoSyncCoordinatorThreadLocal.get();
-////				if (coordinator != null && ! coordinator.waitWhileSyncUpFrozen())
-////					return;
-//
-//				invocation.proceed();
-//
-////				if (coordinator != null)
-////					coordinator.setSyncUpDone(true);
-//			}
-//
-//			@Mock
-//			void syncDown(Invocation invocation, boolean fromRepoLocalSync, ProgressMonitor monitor) {
-//				System.out.println(">>>>>>>>>>>>> syncDown >>>>>>>>>>>>>>>>>");
-////				RepoToRepoSyncCoordinator coordinator = repoToRepoSyncCoordinatorThreadLocal.get();
-////				if (coordinator != null && ! coordinator.waitWhileSyncDownFrozen())
-////					return;
-//
-//				invocation.proceed();
-//
-////				if (coordinator != null)
-////					coordinator.setSyncDownDone(true);
-//			}
-//		};
 	}
 
+	@Override
+	public void after() throws Exception {
+		for (RepoToRepoSyncCoordinator coordinator : repoToRepoSyncCoordinators)
+			coordinator.close();
+
+		repoToRepoSyncCoordinators.clear();
+		super.after();
+	}
+
+	/**
+	 * Mocking the {@link SsRepoToRepoSync} does not work - for whatever reason - hence, this
+	 * class is a "manual" mock which is introduced into Subshare using a mocked {@link ObjectFactory}.
+	 */
 	private static class MockSsRepoToRepoSync extends SsRepoToRepoSync {
 
 		protected MockSsRepoToRepoSync(File localRoot, URL remoteRoot) {
@@ -133,8 +118,8 @@ public class CollisionRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 		}
 	}
 
-	private static class RepoToRepoSyncCoordinator {
-		private static final Logger logger = LoggerFactory.getLogger(CollisionRepoToRepoSyncIT.RepoToRepoSyncCoordinator.class);
+	private class RepoToRepoSyncCoordinator {
+		private final Logger logger = LoggerFactory.getLogger(CollisionRepoToRepoSyncIT.RepoToRepoSyncCoordinator.class);
 
 		private boolean syncUpFrozen = true;
 		private boolean syncUpDone;
@@ -143,6 +128,12 @@ public class CollisionRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 		private boolean syncDownDone;
 
 		private Throwable error;
+
+		private boolean closed;
+
+		public RepoToRepoSyncCoordinator() {
+			repoToRepoSyncCoordinators.add(this);
+		}
 
 		protected synchronized boolean isSyncUpFrozen() {
 			return syncUpFrozen;
@@ -261,9 +252,32 @@ public class CollisionRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 				throw new RuntimeException(error);
 			}
 		}
+
+		public synchronized boolean isClosed() {
+			return closed;
+		}
+
+		public synchronized void close() {
+			closed = true;
+
+			if (error == null)
+				error = new RuntimeException("CLOSED!");
+
+			notifyAll();
+		}
 	}
 
-	private static final ThreadLocal<RepoToRepoSyncCoordinator> repoToRepoSyncCoordinatorThreadLocal = new ThreadLocal<>();
+	private static final ThreadLocal<RepoToRepoSyncCoordinator> repoToRepoSyncCoordinatorThreadLocal = new ThreadLocal<RepoToRepoSyncCoordinator>() {
+		@Override
+		public RepoToRepoSyncCoordinator get() {
+			RepoToRepoSyncCoordinator result = super.get();
+			if (result != null && result.isClosed())
+				return null;
+
+			return result;
+		}
+	};
+	private final List<RepoToRepoSyncCoordinator> repoToRepoSyncCoordinators = new ArrayList<RepoToRepoSyncCoordinator>();
 
 	/**
 	 * Two clients simultaneously create a file with the same name in the same directory.
