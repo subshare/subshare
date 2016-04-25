@@ -10,6 +10,8 @@ import javax.jdo.PersistenceManager;
 import javax.jdo.listener.InstanceLifecycleEvent;
 import javax.jdo.listener.StoreLifecycleListener;
 
+import org.subshare.local.CryptoRepoFileMerger;
+
 import co.codewizards.cloudstore.core.repo.local.AbstractLocalRepoTransactionListener;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
 import co.codewizards.cloudstore.local.ContextWithPersistenceManager;
@@ -49,13 +51,13 @@ public class AssignCryptoRepoFileRepoFileListener extends AbstractLocalRepoTrans
 		for (final CryptoRepoFile cryptoRepoFile : cryptoRepoFiles) {
 			final RepoFile repoFile;
 			if (cryptoRepoFile.getLocalName() != null) // on client-side!
-				repoFile = getRepoFileViaCryptoRepoFileLocalName(cryptoRepoFile);
-			else // on server-side
+				repoFile = associateRepoFileViaCryptoRepoFileLocalName(cryptoRepoFile);
+			else { // on server-side
 				repoFile = repoFileName2RepoFile.get(cryptoRepoFile.getCryptoRepoFileId().toString());
-
-			if (repoFile != null) {
-				cryptoRepoFile.setRepoFile(repoFile);
-				tx.flush(); // we want an early failure!
+				if (repoFile != null) {
+					cryptoRepoFile.setRepoFile(repoFile);
+					tx.flush(); // we want an early failure!
+				}
 			}
 		}
 
@@ -63,13 +65,13 @@ public class AssignCryptoRepoFileRepoFileListener extends AbstractLocalRepoTrans
 	}
 
 	/**
-	 * Gets the {@link RepoFile} via {@link CryptoRepoFile#getLocalName() cryptoRepoFile.localName}.
+	 * Associates and returns the {@link RepoFile} via {@link CryptoRepoFile#getLocalName() cryptoRepoFile.localName}.
 	 * <p>
 	 * This method only works and should thus only be executed on the client-side!
-	 * @param cryptoRepoFile the {@link CryptoRepoFile} for which to look up the {@link RepoFile}.
-	 * @return
+	 * @param cryptoRepoFile the {@link CryptoRepoFile} for which to look up the {@link RepoFile}. Must not be <code>null</code>.
+	 * @return the {@link RepoFile} associated with the given {@code cryptoRepoFile}. May be <code>null</code>.
 	 */
-	private RepoFile getRepoFileViaCryptoRepoFileLocalName(final CryptoRepoFile cryptoRepoFile) {
+	private RepoFile associateRepoFileViaCryptoRepoFileLocalName(final CryptoRepoFile cryptoRepoFile) {
 		assertNotNull("cryptoRepoFile", cryptoRepoFile);
 
 		RepoFile repoFile = cryptoRepoFile.getRepoFile();
@@ -77,7 +79,7 @@ public class AssignCryptoRepoFileRepoFileListener extends AbstractLocalRepoTrans
 			final CryptoRepoFile parentCryptoRepoFile = cryptoRepoFile.getParent();
 			final LocalRepoTransaction tx = getTransactionOrFail();
 			if (parentCryptoRepoFile != null) {
-				final RepoFile parentRepoFile = getRepoFileViaCryptoRepoFileLocalName(parentCryptoRepoFile);
+				final RepoFile parentRepoFile = associateRepoFileViaCryptoRepoFileLocalName(parentCryptoRepoFile);
 				if (parentRepoFile == null)
 					return null;
 
@@ -89,7 +91,7 @@ public class AssignCryptoRepoFileRepoFileListener extends AbstractLocalRepoTrans
 					repoFile = tx.getDao(RepoFileDao.class).getChildRepoFile(parentRepoFile, localName);
 			}
 			if (repoFile != null) {
-				cryptoRepoFile.setRepoFile(repoFile);
+				CryptoRepoFileMerger.createInstance(tx).associateCryptoRepoFileWithRepoFile(repoFile, cryptoRepoFile);
 				tx.flush(); // we want an early failure!
 			}
 		}

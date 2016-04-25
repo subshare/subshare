@@ -41,6 +41,7 @@ import org.subshare.local.UserRepoKeyPublicKeyHelper;
 import org.subshare.local.persistence.UserRepoKeyPublicKey;
 
 import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.io.TimeoutException;
 import co.codewizards.cloudstore.core.objectfactory.ObjectFactory;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.progress.ProgressMonitor;
@@ -96,25 +97,29 @@ public class CollisionRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 		@Override
 		protected void syncUp(ProgressMonitor monitor) {
 			RepoToRepoSyncCoordinator coordinator = repoToRepoSyncCoordinatorThreadLocal.get();
-			if (coordinator != null && ! coordinator.waitWhileSyncUpFrozen())
-				return;
+			try {
+				if (coordinator != null && ! coordinator.waitWhileSyncUpFrozen())
+					return;
 
-			super.syncUp(monitor);
-
-			if (coordinator != null)
-				coordinator.setSyncUpDone(true);
+				super.syncUp(monitor);
+			} finally {
+				if (coordinator != null)
+					coordinator.setSyncUpDone(true);
+			}
 		}
 
 		@Override
 		protected void syncDown(boolean fromRepoLocalSync, ProgressMonitor monitor) {
 			RepoToRepoSyncCoordinator coordinator = repoToRepoSyncCoordinatorThreadLocal.get();
-			if (coordinator != null && ! coordinator.waitWhileSyncDownFrozen())
-				return;
+			try {
+				if (coordinator != null && ! coordinator.waitWhileSyncDownFrozen())
+					return;
 
-			super.syncDown(fromRepoLocalSync, monitor);
-
-			if (coordinator != null)
-				coordinator.setSyncDownDone(true);
+				super.syncDown(fromRepoLocalSync, monitor);
+			} finally {
+				if (coordinator != null)
+					coordinator.setSyncDownDone(true);
+			}
 		}
 	}
 
@@ -172,6 +177,7 @@ public class CollisionRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 		}
 
 		public synchronized boolean waitWhileSyncUpFrozen() {
+			final long start = System.currentTimeMillis();
 			while (isSyncUpFrozen()) {
 				logger.info("waitWhileSyncUpFrozen: Waiting...");
 				try {
@@ -181,6 +187,8 @@ public class CollisionRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 					return false;
 				}
 				throwErrorIfNeeded();
+				if (System.currentTimeMillis() - start > 120000L)
+					throw new TimeoutException();
 			}
 			setSyncUpFrozen(true);
 			logger.info("waitWhileSyncUpFrozen: Continuing!");
@@ -188,6 +196,7 @@ public class CollisionRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 		}
 
 		public synchronized boolean waitWhileSyncDownFrozen() {
+			final long start = System.currentTimeMillis();
 			while (isSyncDownFrozen()) {
 				logger.info("waitWhileSyncDownFrozen: Waiting...");
 				try {
@@ -197,6 +206,8 @@ public class CollisionRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 					return false;
 				}
 				throwErrorIfNeeded();
+				if (System.currentTimeMillis() - start > 120000L)
+					throw new TimeoutException();
 			}
 			setSyncDownFrozen(true);
 			logger.info("waitWhileSyncDownFrozen: Continuing!");
@@ -204,6 +215,7 @@ public class CollisionRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 		}
 
 		public synchronized boolean waitForSyncUpDone() {
+			final long start = System.currentTimeMillis();
 			while (! isSyncUpDone()) {
 				logger.info("waitForSyncUpDone: Waiting...");
 				try {
@@ -213,6 +225,8 @@ public class CollisionRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 					return false;
 				}
 				throwErrorIfNeeded();
+				if (System.currentTimeMillis() - start > 120000L)
+					throw new TimeoutException();
 			}
 			setSyncUpDone(false);
 			logger.info("waitForSyncUpDone: Continuing!");
@@ -220,6 +234,7 @@ public class CollisionRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 		}
 
 		public synchronized boolean waitForSyncDownDone() {
+			final long start = System.currentTimeMillis();
 			while (! isSyncDownDone()) {
 				logger.info("waitForSyncDownDone: Waiting...");
 				try {
@@ -229,6 +244,8 @@ public class CollisionRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 					return false;
 				}
 				throwErrorIfNeeded();
+				if (System.currentTimeMillis() - start > 120000L)
+					throw new TimeoutException();
 			}
 			setSyncDownDone(false);
 			logger.info("waitForSyncDownDone: Continuing!");
@@ -271,7 +288,7 @@ public class CollisionRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 		@Override
 		public RepoToRepoSyncCoordinator get() {
 			RepoToRepoSyncCoordinator result = super.get();
-			if (result != null && result.isClosed())
+			if (result == null || result.isClosed())
 				return null;
 
 			return result;
@@ -525,7 +542,7 @@ public class CollisionRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 		System.out.println("************************************************************");
 
 
-//		syncFromLocalSrcToRemote(); // should down-sync the change from dest-repo
+//		syncFromLocalSrcToRemote(); // should down-sync the change from dest-repo ... not needed! they're guaranteed to work in parallel using the ...Coordinator!
 		assertDirectoriesAreEqualRecursively(
 				(remotePathPrefix2Plain.isEmpty() ? getLocalRootWithPathPrefix() : createFile(getLocalRootWithPathPrefix(), remotePathPrefix2Plain)),
 				localDestRoot);
@@ -571,7 +588,7 @@ public class CollisionRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 		assertThat(lastByteOfHistoFile0).isEqualTo(111);
 
 		collisionDtos = localRepoMetaData.getCollisionDtos(new CollisionFilter());
-		assertThat(collisionDtos).hasSize(1);
+		assertThat(collisionDtos).hasSize(1); // TODO shouldn't this be 2?! after all, both clients should detect a collision independently and there's no code, yet, removing one of them.
 	}
 
 	private class SyncFromLocalSrcToRemoteThread extends Thread {
@@ -581,11 +598,11 @@ public class CollisionRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 
 		public SyncFromLocalSrcToRemoteThread(RepoToRepoSyncCoordinator coordinator) {
 			this.coordinator = assertNotNull("coordinator", coordinator);
-			repoToRepoSyncCoordinatorThreadLocal.set(coordinator);
 		}
 
 		@Override
 		public void run() {
+			repoToRepoSyncCoordinatorThreadLocal.set(coordinator);
 			try {
 				syncFromLocalSrcToRemote();
 			} catch (Throwable e) {
@@ -602,11 +619,11 @@ public class CollisionRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 
 		public SyncFromRemoteToLocalDestThread(RepoToRepoSyncCoordinator coordinator) {
 			this.coordinator = assertNotNull("coordinator", coordinator);
-			repoToRepoSyncCoordinatorThreadLocal.set(coordinator);
 		}
 
 		@Override
 		public void run() {
+			repoToRepoSyncCoordinatorThreadLocal.set(coordinator);
 			try {
 				syncFromRemoteToLocalDest(false);
 			} catch (Throwable e) {

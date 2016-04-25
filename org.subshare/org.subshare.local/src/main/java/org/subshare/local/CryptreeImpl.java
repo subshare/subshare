@@ -2095,32 +2095,35 @@ public class CryptreeImpl extends AbstractCryptree {
 				throw new IllegalStateException(String.format("Could not determine CryptoRepoFile for: %s (path='%s')", preliminaryCollision, preliminaryCollision.getPath()));
 
 			CryptoRepoFile cryptoRepoFile2 = preliminaryCollision.getCryptoRepoFile();
-			if (cryptoRepoFile.equals(cryptoRepoFile2))
-				cryptoRepoFile2 = null;
+			if (! cryptoRepoFile.equals(cryptoRepoFile2))
+				throw new IllegalStateException("preliminaryCollision.cryptoRepoFile points to different CryptoRepoFile than repoFile!");
 
-			createCollisionIfNeeded(cryptoRepoFile, cryptoRepoFile2, preliminaryCollision.getPath());
+			createCollisionIfNeeded(cryptoRepoFile, preliminaryCollision.getPath(), false);
 
 			pcDao.deletePersistent(preliminaryCollision);
 		}
 	}
 
-	private void createCollisionIfNeeded(final CryptoRepoFile cryptoRepoFile, final CryptoRepoFile cryptoRepoFile2, final String localPath) {
+	public void createCollisionIfNeeded(final CryptoRepoFile cryptoRepoFile, final String localPath, boolean expectedSealedStatus) {
 		assertNotNull("cryptoRepoFile", cryptoRepoFile);
 		final LocalRepoTransaction tx = getTransactionOrFail();
 		final CollisionDao cDao = tx.getDao(CollisionDao.class);
 		final HistoCryptoRepoFileDao hcrfDao = tx.getDao(HistoCryptoRepoFileDao.class);
 
 		Collection<HistoCryptoRepoFile> histoCryptoRepoFiles = hcrfDao.getHistoCryptoRepoFiles(cryptoRepoFile);
-		if (cryptoRepoFile2 != null) {
-			histoCryptoRepoFiles = new ArrayList<HistoCryptoRepoFile>();
-			histoCryptoRepoFiles.addAll(hcrfDao.getHistoCryptoRepoFiles(cryptoRepoFile2));
-		}
+//		if (cryptoRepoFile2 != null) {
+//			histoCryptoRepoFiles = new ArrayList<HistoCryptoRepoFile>();
+//			histoCryptoRepoFiles.addAll(hcrfDao.getHistoCryptoRepoFiles(cryptoRepoFile2));
+//		}
 
 		final HistoCryptoRepoFile localHistoCryptoRepoFile = getLastHistoCryptoRepoFileOrFail(histoCryptoRepoFiles, false);
 		final HistoCryptoRepoFile remoteHistoCryptoRepoFile = getLastHistoCryptoRepoFileOrFail(histoCryptoRepoFiles, true);
 
-		if (localHistoCryptoRepoFile.getHistoFrame().getSealed() != null)
+		if (localHistoCryptoRepoFile.getHistoFrame().getSealed() != null && expectedSealedStatus == false)
 			throw new IllegalStateException("Why is the local HistoFrame already sealed?!???!!!");
+
+		if (localHistoCryptoRepoFile.getHistoFrame().getSealed() == null && expectedSealedStatus == true)
+			throw new IllegalStateException("Why is the local HistoFrame not yet sealed?!???!!!");
 
 		Collision collision = cDao.getCollision(localHistoCryptoRepoFile, remoteHistoCryptoRepoFile);
 		if (collision == null) {
