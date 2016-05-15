@@ -85,24 +85,6 @@ public class DuplicateCryptoRepoFileHandler {
 		assertNotNull("cryptoRepoFileActive", cryptoRepoFileActive);
 		assertNotNull("cryptoRepoFileDead", cryptoRepoFileDead);
 
-		// children should IMHO be handled, later, automatically.
-//		Collection<CryptoRepoFile> children = transaction.getDao(CryptoRepoFileDao.class).getChildCryptoRepoFiles(cryptoRepoFileDead);
-//		for (CryptoRepoFile child : children) {
-//			child.setParent(cryptoRepoFileActive);
-//			cryptree.sign(child);
-//		}
-
-		// We abort and re-upload, hence we simply delete the histoCryptoRepoFiles. There should be only one, anyway, in 99% of the cases.
-//		Collection<HistoCryptoRepoFile> histoCryptoRepoFiles = transaction.getDao(HistoCryptoRepoFileDao.class).getHistoCryptoRepoFiles(cryptoRepoFileDead);
-//		for (HistoCryptoRepoFile histoCryptoRepoFile : histoCryptoRepoFiles) {
-//			histoCryptoRepoFile.setCryptoRepoFile(cryptoRepoFileActive);
-//			cryptree.sign(histoCryptoRepoFile);
-//		}
-
-		// Do I need to update a CurrentHistoCryptoRepoFile?! I don't think so...
-//		// What about FileChunks? Probably not either.
-		// I'm not attempting to transfer permissions, either. This is a very rare situation anyway...
-
 		RepoFile repoFile = cryptoRepoFileActive.getRepoFile();
 		if (repoFile == null)
 			repoFile = cryptoRepoFileDead.getRepoFile();

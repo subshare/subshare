@@ -2110,11 +2110,7 @@ public class CryptreeImpl extends AbstractCryptree {
 		final CollisionDao cDao = tx.getDao(CollisionDao.class);
 		final HistoCryptoRepoFileDao hcrfDao = tx.getDao(HistoCryptoRepoFileDao.class);
 
-		Collection<HistoCryptoRepoFile> histoCryptoRepoFiles = hcrfDao.getHistoCryptoRepoFiles(cryptoRepoFile);
-//		if (cryptoRepoFile2 != null) {
-//			histoCryptoRepoFiles = new ArrayList<HistoCryptoRepoFile>();
-//			histoCryptoRepoFiles.addAll(hcrfDao.getHistoCryptoRepoFiles(cryptoRepoFile2));
-//		}
+		final Collection<HistoCryptoRepoFile> histoCryptoRepoFiles = hcrfDao.getHistoCryptoRepoFiles(cryptoRepoFile);
 
 		final HistoCryptoRepoFile localHistoCryptoRepoFile = getLastHistoCryptoRepoFile(histoCryptoRepoFiles, false);
 		final HistoCryptoRepoFile remoteHistoCryptoRepoFile = getLastHistoCryptoRepoFile(histoCryptoRepoFiles, true);
@@ -2226,7 +2222,7 @@ public class CryptreeImpl extends AbstractCryptree {
 	private void putCollisionDto(final CollisionDto collisionDto) {
 		assertNotNull("collisionDto", collisionDto);
 		final LocalRepoTransaction tx = getTransactionOrFail();
-		Collision collision = CollisionDtoConverter.create(tx).putCollisionDto(collisionDto);
+		final Collision collision = CollisionDtoConverter.create(tx).putCollisionDto(collisionDto);
 		DuplicateCryptoRepoFileHandler.createInstance(tx).deduplicateFromCollisionIfNeeded(collision);
 	}
 
