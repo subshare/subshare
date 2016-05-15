@@ -111,7 +111,7 @@ public class HistoCryptoRepoFile extends Entity implements WriteProtected, AutoT
 		if (equal(this.cryptoRepoFile, cryptoRepoFile))
 			return;
 
-//		if (this.cryptoRepoFile != null) // We must allow re-assignment because of collisions on the server and the CryptoRepoFileMerger!
+//		if (this.cryptoRepoFile != null) // We must allow re-assignment because of collisions on the server and the DuplicateCryptoRepoFileHandler!
 //			throw new IllegalStateException("this.cryptoRepoFile already assigned! Cannot re-assign!");
 
 		this.cryptoRepoFile = cryptoRepoFile;

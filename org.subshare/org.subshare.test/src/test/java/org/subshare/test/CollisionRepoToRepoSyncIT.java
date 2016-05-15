@@ -13,9 +13,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import mockit.Invocation;
 import mockit.Mock;
@@ -40,7 +38,6 @@ import org.subshare.core.repo.sync.SsRepoToRepoSync;
 import org.subshare.local.UserRepoKeyPublicKeyHelper;
 import org.subshare.local.persistence.UserRepoKeyPublicKey;
 
-import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.io.TimeoutException;
 import co.codewizards.cloudstore.core.objectfactory.ObjectFactory;
 import co.codewizards.cloudstore.core.oio.File;
@@ -52,6 +49,9 @@ import co.codewizards.cloudstore.core.util.IOUtil;
 @RunWith(JMockit.class)
 public class CollisionRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 	private static final Logger logger = LoggerFactory.getLogger(CollisionRepoToRepoSyncIT.class);
+
+//	private static final long WAIT_FOR_THREAD_TIMEOUT_MS = 120000L; // you might want to temporarily increase this for debugging!
+	private static final long WAIT_FOR_THREAD_TIMEOUT_MS = 900000L;
 
 	@Override
 	public void before() throws Exception {
@@ -66,7 +66,7 @@ public class CollisionRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 
 		new MockUp<ObjectFactory>() {
 			@Mock
-			<T> T create(Invocation invocation, Class<T> clazz, Class<?>[] parameterTypes, Object ... parameters) {
+			<T> T createObject(Invocation invocation, Class<T> clazz, Class<?>[] parameterTypes, Object ... parameters) {
 				if (RepoToRepoSync.class.isAssignableFrom(clazz)) {
 					return clazz.cast(new MockSsRepoToRepoSync((File) parameters[0], (URL) parameters[1]));
 				}
@@ -101,6 +101,8 @@ public class CollisionRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 				if (coordinator != null && ! coordinator.waitWhileSyncUpFrozen())
 					return;
 
+				sleep(random.nextInt(3000));
+
 				super.syncUp(monitor);
 			} finally {
 				if (coordinator != null)
@@ -115,11 +117,21 @@ public class CollisionRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 				if (coordinator != null && ! coordinator.waitWhileSyncDownFrozen())
 					return;
 
+				sleep(random.nextInt(3000));
+
 				super.syncDown(fromRepoLocalSync, monitor);
 			} finally {
 				if (coordinator != null)
 					coordinator.setSyncDownDone(true);
 			}
+		}
+	}
+
+	private static void sleep(long millis) {
+		try {
+			Thread.sleep(millis);
+		} catch (InterruptedException e) {
+			// do nothing
 		}
 	}
 
@@ -187,7 +199,7 @@ public class CollisionRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 					return false;
 				}
 				throwErrorIfNeeded();
-				if (System.currentTimeMillis() - start > 120000L)
+				if (System.currentTimeMillis() - start > WAIT_FOR_THREAD_TIMEOUT_MS)
 					throw new TimeoutException();
 			}
 			setSyncUpFrozen(true);
@@ -206,7 +218,7 @@ public class CollisionRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 					return false;
 				}
 				throwErrorIfNeeded();
-				if (System.currentTimeMillis() - start > 120000L)
+				if (System.currentTimeMillis() - start > WAIT_FOR_THREAD_TIMEOUT_MS)
 					throw new TimeoutException();
 			}
 			setSyncDownFrozen(true);
@@ -225,7 +237,7 @@ public class CollisionRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 					return false;
 				}
 				throwErrorIfNeeded();
-				if (System.currentTimeMillis() - start > 120000L)
+				if (System.currentTimeMillis() - start > WAIT_FOR_THREAD_TIMEOUT_MS)
 					throw new TimeoutException();
 			}
 			setSyncUpDone(false);
@@ -244,7 +256,7 @@ public class CollisionRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 					return false;
 				}
 				throwErrorIfNeeded();
-				if (System.currentTimeMillis() - start > 120000L)
+				if (System.currentTimeMillis() - start > WAIT_FOR_THREAD_TIMEOUT_MS)
 					throw new TimeoutException();
 			}
 			setSyncDownDone(false);
@@ -478,6 +490,8 @@ public class CollisionRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 	 */
 	@Test
 	public void newFileVsNewFileCollisionOnServer() throws Exception {
+		System.out.println("************************************************************");
+		System.out.println("PREPARE >>>");
 		prepareLocalAndDestinationRepo();
 
 		File file1 = createFile(localSrcRoot, "2", "new-file");
@@ -492,6 +506,9 @@ public class CollisionRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 		Collection<CollisionDto> collisionDtos = localRepoMetaData.getCollisionDtos(new CollisionFilter());
 		assertThat(collisionDtos).isEmpty();
 
+		System.out.println("<<< PREPARE");
+		System.out.println("************************************************************");
+
 		RepoToRepoSyncCoordinator syncFromLocalSrcToRemoteCoordinator = new RepoToRepoSyncCoordinator();
 		SyncFromLocalSrcToRemoteThread syncFromLocalSrcToRemoteThread = new SyncFromLocalSrcToRemoteThread(syncFromLocalSrcToRemoteCoordinator);
 		syncFromLocalSrcToRemoteThread.start();
@@ -504,6 +521,7 @@ public class CollisionRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 		System.out.println("************************************************************");
 //		Thread.sleep(30000);
 		System.out.println("************************************************************");
+		System.out.println("DOWN >>>");
 
 		// Both threads are waiting *before* down-syncing now. We allow them both to continue:
 		syncFromLocalSrcToRemoteCoordinator.setSyncDownFrozen(false);
@@ -513,9 +531,11 @@ public class CollisionRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 		syncFromLocalSrcToRemoteCoordinator.waitForSyncDownDone();
 		syncFromRemoteToLocalDestCoordinator.waitForSyncDownDone();
 
+		System.out.println("<<< DOWN");
 		System.out.println("*****************");
 //		Thread.sleep(60000);
 		System.out.println("*****************");
+		System.out.println("UP >>>");
 
 		// Now they're waiting *before* up-syncing. We continue the up-sync, thus, now.
 		syncFromLocalSrcToRemoteCoordinator.setSyncUpFrozen(false);
@@ -525,9 +545,11 @@ public class CollisionRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 		syncFromLocalSrcToRemoteCoordinator.waitForSyncUpDone();
 		syncFromRemoteToLocalDestCoordinator.waitForSyncUpDone();
 
+		System.out.println("<<< UP");
 		System.out.println("*****************");
 //		Thread.sleep(60000);
 		System.out.println("*****************");
+		System.out.println("DOWN (again) >>>");
 
 		// Again, they're waiting for down-sync's green light => go!
 		syncFromLocalSrcToRemoteCoordinator.setSyncDownFrozen(false);
@@ -537,10 +559,39 @@ public class CollisionRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 		syncFromLocalSrcToRemoteCoordinator.waitForSyncDownDone();
 		syncFromRemoteToLocalDestCoordinator.waitForSyncDownDone();
 
+		System.out.println("<<< DOWN (again)");
 		System.out.println("************************************************************");
 //		Thread.sleep(60000);
 		System.out.println("************************************************************");
 
+		// TODO check whether Collisions are created on clients, but not yet up-synced
+
+		System.out.println("*****************");
+//		Thread.sleep(60000);
+		System.out.println("*****************");
+		System.out.println("UP (again) >>>");
+
+		// Now they're waiting *before* up-syncing. We continue the up-sync, thus, now.
+		syncFromLocalSrcToRemoteCoordinator.setSyncUpFrozen(false);
+		syncFromRemoteToLocalDestCoordinator.setSyncUpFrozen(false);
+
+		// Again, we wait here until they're done (this time, up-syncing).
+		syncFromLocalSrcToRemoteCoordinator.waitForSyncUpDone();
+		syncFromRemoteToLocalDestCoordinator.waitForSyncUpDone();
+
+		System.out.println("<<< UP (again)");
+		System.out.println("*****************");
+
+		// TODO check whether Collisions are up-synced.
+
+		// make sure the threads finished.
+		syncFromLocalSrcToRemoteThread.join(WAIT_FOR_THREAD_TIMEOUT_MS);
+		syncFromRemoteToLocalDestThread.join(WAIT_FOR_THREAD_TIMEOUT_MS);
+
+		// sync *again* in order to make sure the collided file is uploaded now.
+		syncFromLocalSrcToRemote();
+		syncFromRemoteToLocalDest(false);
+		syncFromLocalSrcToRemote(); // again, in case the collision was solved on the remote-side
 
 //		syncFromLocalSrcToRemote(); // should down-sync the change from dest-repo ... not needed! they're guaranteed to work in parallel using the ...Coordinator!
 		assertDirectoriesAreEqualRecursively(
@@ -551,23 +602,37 @@ public class CollisionRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 		List<PlainHistoCryptoRepoFileDto> plainHistoCryptoRepoFileDtos = getPlainHistoCryptoRepoFileDtos(localRepoManagerLocal, file1);
 		assertThat(plainHistoCryptoRepoFileDtos).hasSize(2);
 
-		// Both new versions should have the same previous version, because the collision happened on the server.
-		Set<Uid> previousHistoCryptoRepoFileIds = new HashSet<>();
-		for (PlainHistoCryptoRepoFileDto phcrfDto : plainHistoCryptoRepoFileDtos)
-			previousHistoCryptoRepoFileIds.add(phcrfDto.getHistoCryptoRepoFileDto().getPreviousHistoCryptoRepoFileId());
+//		// Both new versions should have the same previous version, because the collision happened on the server.
+//		Set<Uid> previousHistoCryptoRepoFileIds = new HashSet<>();
+//		for (PlainHistoCryptoRepoFileDto phcrfDto : plainHistoCryptoRepoFileDtos)
+//			previousHistoCryptoRepoFileIds.add(phcrfDto.getHistoCryptoRepoFileDto().getPreviousHistoCryptoRepoFileId());
+//
+//		assertThat(previousHistoCryptoRepoFileIds).hasSize(1);
 
-		assertThat(previousHistoCryptoRepoFileIds).hasSize(1);
+		// Verify that the older one is the previous version of the newer one (the list is sorted by timestamp).
+		// Even though the collision happens on the server, the handling process ensures that they are consecutive
+		// (rather than forked siblings of the same previous version).
+		assertThat(plainHistoCryptoRepoFileDtos.get(0).getHistoCryptoRepoFileDto().getHistoCryptoRepoFileId())
+		.isEqualTo(plainHistoCryptoRepoFileDtos.get(1).getHistoCryptoRepoFileDto().getPreviousHistoCryptoRepoFileId());
 
 		// Verify that the 2nd version (with 222 at the end) is the current one.
 		int lastByte1 = getLastByte(file1);
-		assertThat(lastByte1).isEqualTo(222);
-
 		int lastByte2 = getLastByte(file2);
-		assertThat(lastByte2).isEqualTo(222);
+
+		int expectedLastByteOfPreviousVersion;
+
+		assertThat(lastByte1).isEqualTo(lastByte2);
+
+		if (lastByte1 == 111)
+			expectedLastByteOfPreviousVersion = 222;
+		else if (lastByte1 == 222)
+			expectedLastByteOfPreviousVersion = 111;
+		else
+			throw new IllegalStateException("lastByte is neither 111 nor 222, but: " + lastByte1);
 
 		// Export both versions of the file and assert that
 		// - the current file is identical to the last one
-		// - and the first one ends on 111.
+		// - and the first one ends on the other value (222, if current is 111; or 111, if current is 222).
 		File tempDir0 = createTempDirectory(getClass().getSimpleName() + '.');
 		File tempDir1 = createTempDirectory(getClass().getSimpleName() + '.');
 
@@ -585,10 +650,34 @@ public class CollisionRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 		assertThat(IOUtil.compareFiles(histoFile0, histoFile1)).isFalse();
 
 		int lastByteOfHistoFile0 = getLastByte(histoFile0);
-		assertThat(lastByteOfHistoFile0).isEqualTo(111);
+
+		System.out.println("lastByteOfHistoFile0 = " + lastByteOfHistoFile0);
+		System.out.println("lastByteOfHistoFile1 = " + lastByte1);
+
+		assertThat(lastByteOfHistoFile0).isEqualTo(expectedLastByteOfPreviousVersion);
 
 		collisionDtos = localRepoMetaData.getCollisionDtos(new CollisionFilter());
-		assertThat(collisionDtos).hasSize(1); // TODO shouldn't this be 2?! after all, both clients should detect a collision independently and there's no code, yet, removing one of them.
+		assertThat(collisionDtos).hasSize(2);
+
+		// exactly one of these two should have a duplicateCryptoRepoFileId assigned.
+		getCollisionDtoWithDuplicateCryptoRepoFileIdOrFail(collisionDtos);
+	}
+
+	private static CollisionDto getCollisionDtoWithDuplicateCryptoRepoFileIdOrFail(Collection<CollisionDto> collisionDtos) {
+		CollisionDto result = null;
+		for (CollisionDto collisionDto : collisionDtos) {
+			if (collisionDto.getDuplicateCryptoRepoFileId() != null) {
+				if (result == null)
+					result = collisionDto;
+				else
+					throw new IllegalArgumentException("collisionDtos contains multiple elements with duplicateCryptoRepoFileId != null: " + collisionDtos);
+			}
+		}
+
+		if (result == null)
+			throw new IllegalArgumentException("collisionDtos contains no element with duplicateCryptoRepoFileId != null: " + collisionDtos);
+
+		return result;
 	}
 
 	private class SyncFromLocalSrcToRemoteThread extends Thread {

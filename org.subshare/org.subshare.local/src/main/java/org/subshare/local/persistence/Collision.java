@@ -37,7 +37,9 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 @Inheritance(strategy = InheritanceStrategy.NEW_TABLE)
 @Uniques({
 	@Unique(name = "Collision_collisionId", members = "collisionId"),
-	@Unique(name = "Collision_histoCryptoRepoFile1_histoCryptoRepoFile2", members = {"histoCryptoRepoFile1", "histoCryptoRepoFile2"})
+	@Unique(
+			name = "Collision_histoCryptoRepoFile1_histoCryptoRepoFile2_duplicateCryptoRepoFileId",
+			members = {"histoCryptoRepoFile1", "histoCryptoRepoFile2", "duplicateCryptoRepoFileId"})
 })
 @Queries({
 	@Query(name = "getCollision_collisionId", value = "SELECT UNIQUE WHERE this.collisionId == :collisionId"),
@@ -48,8 +50,14 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 	@Query(
 			name = "getCollisions_histoCryptoRepoFile1_histoCryptoRepoFile2",
 			value = "SELECT UNIQUE WHERE"
-					+ "  (this.histoCryptoRepoFile1 == :histoCryptoRepoFile1 && this.histoCryptoRepoFile2 == :histoCryptoRepoFile2)"
-					+ "   || (this.histoCryptoRepoFile1 == :histoCryptoRepoFile2 && this.histoCryptoRepoFile2 == :histoCryptoRepoFile1)")
+					+ "  (this.histoCryptoRepoFile1 == :histoCryptoRepoFile1 && this.histoCryptoRepoFile2 == :histoCryptoRepoFile2 && this.duplicateCryptoRepoFileId == null)"
+					+ "   || (this.histoCryptoRepoFile1 == :histoCryptoRepoFile2 && this.histoCryptoRepoFile2 == :histoCryptoRepoFile1 && this.duplicateCryptoRepoFileId == null)"),
+
+	@Query(
+			name = "getCollisions_histoCryptoRepoFile1_duplicateCryptoRepoFileId",
+			value = "SELECT UNIQUE WHERE"
+					+ "  this.histoCryptoRepoFile1 == :histoCryptoRepoFile1 && this.histoCryptoRepoFile2 == null && this.duplicateCryptoRepoFileId == :duplicateCryptoRepoFileId")
+
 })
 public class Collision extends Entity implements WriteProtected, AutoTrackLocalRevision, StoreCallback {
 
@@ -62,8 +70,11 @@ public class Collision extends Entity implements WriteProtected, AutoTrackLocalR
 	@Persistent(nullValue = NullValue.EXCEPTION)
 	private HistoCryptoRepoFile histoCryptoRepoFile1;
 
-	@Persistent(nullValue = NullValue.EXCEPTION)
-	private HistoCryptoRepoFile histoCryptoRepoFile2;
+//	@Persistent(nullValue = NullValue.EXCEPTION)
+	private HistoCryptoRepoFile histoCryptoRepoFile2; // null, if duplicateCryptoRepoFileId present!
+
+	@Column(length = 22)
+	private String duplicateCryptoRepoFileId;
 
 	private Date resolved;
 
@@ -80,7 +91,7 @@ public class Collision extends Entity implements WriteProtected, AutoTrackLocalR
 
 	public Uid getCollisionId() {
 		if (collisionId == null)
-			collisionId = new Uid().toString();
+			collisionId = calculateCollisionId().toString();
 
 		return new Uid(collisionId);
 	}
@@ -98,6 +109,14 @@ public class Collision extends Entity implements WriteProtected, AutoTrackLocalR
 	public void setHistoCryptoRepoFile2(HistoCryptoRepoFile histoCryptoRepoFile2) {
 		if (! equal(this.histoCryptoRepoFile2, histoCryptoRepoFile2))
 			this.histoCryptoRepoFile2 = histoCryptoRepoFile2;
+	}
+
+	public Uid getDuplicateCryptoRepoFileId() {
+		return duplicateCryptoRepoFileId == null ? null : new Uid(duplicateCryptoRepoFileId);
+	}
+	public void setDuplicateCryptoRepoFileId(final Uid duplicateCryptoRepoFileId) {
+		if (! equal(this.getDuplicateCryptoRepoFileId(), duplicateCryptoRepoFileId))
+			this.duplicateCryptoRepoFileId = duplicateCryptoRepoFileId == null ? null : duplicateCryptoRepoFileId.toString();
 	}
 
 	public Date getResolved() {
@@ -137,6 +156,9 @@ public class Collision extends Entity implements WriteProtected, AutoTrackLocalR
 					InputStreamSource.Helper.createInputStreamSource(histoCryptoRepoFile2 == null ? null : histoCryptoRepoFile2.getHistoCryptoRepoFileId()),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
+					InputStreamSource.Helper.createInputStreamSource(getDuplicateCryptoRepoFileId()),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(resolved)
 					);
 		} catch (final IOException x) {
@@ -156,22 +178,54 @@ public class Collision extends Entity implements WriteProtected, AutoTrackLocalR
 
 	@Override
 	public void jdoPreStore() {
-		getCollisionId();
+		final Uid collisionId = getCollisionId();
 		final CryptoRepoFile cryptoRepoFile1 = assertNotNull("histoCryptoRepoFile1", histoCryptoRepoFile1).getCryptoRepoFile();
-		final CryptoRepoFile cryptoRepoFile2 = assertNotNull("histoCryptoRepoFile2", histoCryptoRepoFile2).getCryptoRepoFile();
+		final CryptoRepoFile cryptoRepoFile2 = histoCryptoRepoFile2 == null ? null : histoCryptoRepoFile2.getCryptoRepoFile();
 		final CryptoRepoFile parent1 = assertNotNull("cryptoRepoFile1", cryptoRepoFile1).getParent();
-		final CryptoRepoFile parent2 = assertNotNull("cryptoRepoFile2", cryptoRepoFile2).getParent();
-		if (! equal(parent1, parent2))
+		final CryptoRepoFile parent2 = cryptoRepoFile2 == null ? null : cryptoRepoFile2.getParent();
+
+		if (histoCryptoRepoFile2 == null && duplicateCryptoRepoFileId == null)
+			throw new IllegalStateException("Both histoCryptoRepoFile2 and duplicateCryptoRepoFileId are null! One of them must be non-null!");
+
+		if (histoCryptoRepoFile2 != null && duplicateCryptoRepoFileId != null)
+			throw new IllegalStateException("Both histoCryptoRepoFile2 and duplicateCryptoRepoFileId are non-null! One of them must be null!");
+
+		if (histoCryptoRepoFile2 != null && cryptoRepoFile2 == null)
+			throw new IllegalStateException("histoCryptoRepoFile2 is not null, but cryptoRepoFile2 is null!");
+
+		if (duplicateCryptoRepoFileId == null && ! equal(parent1, parent2))
 			throw new IllegalStateException(String.format(
 					"histoCryptoRepoFile1.cryptoRepoFile.parent != histoCryptoRepoFile2.cryptoRepoFile.parent :: histoCryptoRepoFile1=%s histoCryptoRepoFile2=%s parent1=%s parent2=%s",
 					histoCryptoRepoFile1, histoCryptoRepoFile2, parent1, parent2));
 
+		if (! collisionId.equals(calculateCollisionId()))
+			throw new IllegalStateException("collisionId != calculateCollisionId()");
+
 		final PersistenceManager pm = JDOHelper.getPersistenceManager(this);
 		final CollisionDao collisionDao = new CollisionDao().persistenceManager(pm);
-		Collision c = collisionDao.getCollision(histoCryptoRepoFile1, histoCryptoRepoFile2);
+		Collision c = collisionDao.getCollision(histoCryptoRepoFile1, histoCryptoRepoFile2, getDuplicateCryptoRepoFileId());
 		if (c != null && c != this)
-			throw new IllegalStateException(String.format("There is already another Collision between these two HistoCryptoRepoFiles: %s, %s",
-					histoCryptoRepoFile1, histoCryptoRepoFile2));
+			throw new IllegalStateException(String.format("There is already another Collision between these two HistoCryptoRepoFiles/duplicateCryptoRepoFileId: %s, %s, %s",
+					histoCryptoRepoFile1, histoCryptoRepoFile2, duplicateCryptoRepoFileId));
+	}
+
+	private Uid calculateCollisionId() {
+		byte[] bytes = assertNotNull("histoCryptoRepoFile1", histoCryptoRepoFile1).getHistoCryptoRepoFileId().toBytes();
+		xorIntoBytes(bytes, histoCryptoRepoFile2 == null ? null : histoCryptoRepoFile2.getHistoCryptoRepoFileId());
+		xorIntoBytes(bytes, getDuplicateCryptoRepoFileId());
+		return new Uid(bytes);
+	}
+
+	protected static void xorIntoBytes(final byte[] bytes, Uid uid) {
+		if (uid != null) {
+			final byte[] bytes2 = uid.toBytes();
+			if (bytes.length != bytes2.length)
+				throw new IllegalArgumentException("bytes.length != bytes2.length");
+
+			for (int i = 0; i < bytes.length; i++) {
+				bytes[i] = (byte) ((bytes[i] & 0xff) ^ (bytes2[i] & 0xff));
+			}
+		}
 	}
 
 	@Override
@@ -187,7 +241,7 @@ public class Collision extends Entity implements WriteProtected, AutoTrackLocalR
 	@Override
 	public Uid getCryptoRepoFileIdControllingPermissions() {
 		final CryptoRepoFile cryptoRepoFile1 = assertNotNull("histoCryptoRepoFile1", histoCryptoRepoFile1).getCryptoRepoFile();
-		final CryptoRepoFile cryptoRepoFile2 = assertNotNull("histoCryptoRepoFile2", histoCryptoRepoFile2).getCryptoRepoFile();
+		final CryptoRepoFile cryptoRepoFile2 = histoCryptoRepoFile2 == null ? cryptoRepoFile1 : histoCryptoRepoFile2.getCryptoRepoFile();
 		assertNotNull("cryptoRepoFile1", cryptoRepoFile1);
 		assertNotNull("cryptoRepoFile2", cryptoRepoFile2);
 

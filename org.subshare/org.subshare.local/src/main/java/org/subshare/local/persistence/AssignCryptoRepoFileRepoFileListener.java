@@ -10,7 +10,8 @@ import javax.jdo.PersistenceManager;
 import javax.jdo.listener.InstanceLifecycleEvent;
 import javax.jdo.listener.StoreLifecycleListener;
 
-import org.subshare.local.CryptoRepoFileMerger;
+import org.subshare.core.Cryptree;
+import org.subshare.local.DuplicateCryptoRepoFileHandler;
 
 import co.codewizards.cloudstore.core.repo.local.AbstractLocalRepoTransactionListener;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
@@ -23,6 +24,7 @@ public class AssignCryptoRepoFileRepoFileListener extends AbstractLocalRepoTrans
 	// Used primarily on server side (where the repoFileName is the unique cryptoRepoFileId)
 	// On the client side, it only matters whether it's empty (nothing to do) or not (sth. to do).
 	private final Map<String, RepoFile> repoFileName2RepoFile = new HashMap<>();
+	private Cryptree cryptree;
 
 	@Override
 	public void onBegin() {
@@ -36,8 +38,8 @@ public class AssignCryptoRepoFileRepoFileListener extends AbstractLocalRepoTrans
 
 	@Override
 	public void postStore(final InstanceLifecycleEvent event) {
-		final RepoFile repoFile = (RepoFile) event.getPersistentInstance();
-		repoFileName2RepoFile.put(repoFile.getName(), repoFile);
+		final RepoFile repoFile = (RepoFile) assertNotNull("event.persistentInstance", event.getPersistentInstance());
+		repoFileName2RepoFile.put(assertNotNull("repoFile.name", repoFile.getName()), repoFile);
 	}
 
 	@Override
@@ -79,22 +81,66 @@ public class AssignCryptoRepoFileRepoFileListener extends AbstractLocalRepoTrans
 			final CryptoRepoFile parentCryptoRepoFile = cryptoRepoFile.getParent();
 			final LocalRepoTransaction tx = getTransactionOrFail();
 			if (parentCryptoRepoFile != null) {
-				final RepoFile parentRepoFile = associateRepoFileViaCryptoRepoFileLocalName(parentCryptoRepoFile);
-				if (parentRepoFile == null)
-					return null;
-
 				// Please note: cryptoRepoFile.localName is null, if the user has no read-access to it.
 				// We currently synchronise all CryptoRepoFile instances of the entire server repository,
 				// even if the client checked-out a sub-directory only (and is allowed to read only this sub-dir).
 				final String localName = cryptoRepoFile.getLocalName();
-				if (localName != null)
+				if (localName != null) {
+					final RepoFile parentRepoFile = associateRepoFileViaCryptoRepoFileLocalName(parentCryptoRepoFile);
+//					assertNotNull("parentRepoFile", parentRepoFile); // IMHO, parents should always be readable + available, if the child is readable. TODO check why this is not the case. my test just failed because of this :-(
+					if (parentRepoFile == null)
+						return null;
+
 					repoFile = tx.getDao(RepoFileDao.class).getChildRepoFile(parentRepoFile, localName);
+				}
 			}
 			if (repoFile != null) {
-				CryptoRepoFileMerger.createInstance(tx).associateCryptoRepoFileWithRepoFile(repoFile, cryptoRepoFile);
+				DuplicateCryptoRepoFileHandler.createInstance(tx).associateCryptoRepoFileWithRepoFile(repoFile, cryptoRepoFile);
 				tx.flush(); // we want an early failure!
 			}
 		}
 		return repoFile;
 	}
+
+//	private void associateCryptoRepoFileWithRepoFile(final RepoFile repoFile, CryptoRepoFile cryptoRepoFile) {
+//		assertNotNull("repoFile", repoFile);
+//		assertNotNull("cryptoRepoFile", cryptoRepoFile);
+//
+//		final LocalRepoTransaction tx = getTransactionOrFail();
+//		final CryptoRepoFile cryptoRepoFile2 = tx.getDao(CryptoRepoFileDao.class).getCryptoRepoFile(repoFile);
+//		if (cryptoRepoFile2 != null && !cryptoRepoFile2.equals(cryptoRepoFile))
+//			cryptoRepoFile = handleCollision(cryptoRepoFile, cryptoRepoFile2);
+//
+//		cryptoRepoFile.setRepoFile(repoFile);
+//	}
+//
+//	private CryptoRepoFile handleCollision(CryptoRepoFile cryptoRepoFile, CryptoRepoFile cryptoRepoFile2) {
+//
+//
+//		return null;
+//	}
+//
+//	protected Cryptree getCryptree() {
+//		if (cryptree == null) {
+//			final LocalRepoTransaction tx = getTransactionOrFail();
+//			final UUID localRepositoryId = tx.getLocalRepoManager().getRepositoryId();
+//
+//			final RemoteRepositoryDao remoteRepositoryDao = tx.getDao(RemoteRepositoryDao.class);
+//			final Map<UUID, URL> remoteRepositoryId2RemoteRootMap = remoteRepositoryDao.getRemoteRepositoryId2RemoteRootMap();
+//			if (remoteRepositoryId2RemoteRootMap.size() != 1)
+//				throw new IllegalStateException("Not exactly one remote repository!");
+//
+//			final UUID remoteRepositoryId = remoteRepositoryId2RemoteRootMap.keySet().iterator().next();
+//			final SsRemoteRepository remoteRepository = (SsRemoteRepository) remoteRepositoryDao.getRemoteRepositoryOrFail(remoteRepositoryId);
+//			final String remotePathPrefix = remoteRepository.getRemotePathPrefix();
+//			assertNotNull("remoteRepository.remotePathPrefix", remotePathPrefix);
+//
+//			final UserRepoKeyRing userRepoKeyRing = UserRepoKeyRingLookup.Helper.getUserRepoKeyRingLookup().getUserRepoKeyRing(
+//					new UserRepoKeyRingLookupContext(localRepositoryId, remoteRepositoryId));
+//
+//			cryptree = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail().getCryptreeOrCreate(
+//					tx, remoteRepositoryId, remotePathPrefix, userRepoKeyRing);
+//		}
+//		return cryptree;
+//	}
 }

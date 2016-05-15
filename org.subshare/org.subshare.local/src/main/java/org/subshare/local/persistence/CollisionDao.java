@@ -70,6 +70,28 @@ public class CollisionDao extends Dao<Collision, CollisionDao> {
 		}
 	}
 
+	public Collision getCollisionWithDuplicateCryptoRepoFileId(HistoCryptoRepoFile histoCryptoRepoFile1, Uid duplicateCryptoRepoFileId) {
+		final Map<String, Object> params = new HashMap<>();
+		params.put("histoCryptoRepoFile1", assertNotNull("histoCryptoRepoFile1", histoCryptoRepoFile1));
+		params.put("duplicateCryptoRepoFileId", assertNotNull("duplicateCryptoRepoFileId", duplicateCryptoRepoFileId).toString());
+		final Query query = pm().newNamedQuery(getEntityClass(), "getCollisions_histoCryptoRepoFile1_duplicateCryptoRepoFileId");
+		try {
+			final Collision result = (Collision) query.executeWithMap(params);
+			return result;
+		} finally {
+			query.closeAll();
+		}
+	}
+
+	public Collision getCollision(final HistoCryptoRepoFile histoCryptoRepoFile1, final HistoCryptoRepoFile histoCryptoRepoFile2, final Uid duplicateCryptoRepoFileId) {
+		assertNotNull("histoCryptoRepoFile1", histoCryptoRepoFile1);
+
+		if (duplicateCryptoRepoFileId != null)
+			return getCollisionWithDuplicateCryptoRepoFileId(histoCryptoRepoFile1, duplicateCryptoRepoFileId);
+		else
+			return getCollision(histoCryptoRepoFile1, histoCryptoRepoFile2);
+	}
+
 	public Collection<Collision> getCollisionsChangedAfter(final long localRevision) {
 		final Query query = pm().newNamedQuery(getEntityClass(), "getCollisionsChangedAfter_localRevision");
 		try {

@@ -3,14 +3,19 @@ package org.subshare.local.dto;
 import static co.codewizards.cloudstore.core.objectfactory.ObjectFactoryUtil.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.subshare.core.dto.CollisionDto;
 import org.subshare.local.persistence.Collision;
 import org.subshare.local.persistence.CollisionDao;
+import org.subshare.local.persistence.HistoCryptoRepoFile;
 import org.subshare.local.persistence.HistoCryptoRepoFileDao;
 
+import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
 
 public class CollisionDtoConverter {
+	private static final Logger logger = LoggerFactory.getLogger(CollisionDtoConverter.class);
 
 	private final LocalRepoTransaction transaction;
 
@@ -27,7 +32,9 @@ public class CollisionDtoConverter {
 		CollisionDto result = new CollisionDto();
 		result.setCollisionId(collision.getCollisionId());
 		result.setHistoCryptoRepoFileId1(collision.getHistoCryptoRepoFile1().getHistoCryptoRepoFileId());
-		result.setHistoCryptoRepoFileId2(collision.getHistoCryptoRepoFile2().getHistoCryptoRepoFileId());
+		result.setHistoCryptoRepoFileId2(
+				collision.getHistoCryptoRepoFile2() == null ? null : collision.getHistoCryptoRepoFile2().getHistoCryptoRepoFileId());
+		result.setDuplicateCryptoRepoFileId(collision.getDuplicateCryptoRepoFileId());
 		result.setSignature(collision.getSignature());
 		return result;
 	}
@@ -35,17 +42,32 @@ public class CollisionDtoConverter {
 	public Collision putCollisionDto(final CollisionDto collisionDto) {
 		assertNotNull("collisionDto", collisionDto);
 
-		final CollisionDao dao = transaction.getDao(CollisionDao.class);
-		Collision result = dao.getCollision(collisionDto.getCollisionId());
-		if (result == null)
-			result = new Collision(collisionDto.getCollisionId());
-
+		final CollisionDao cDao = transaction.getDao(CollisionDao.class);
 		final HistoCryptoRepoFileDao hcrfDao = transaction.getDao(HistoCryptoRepoFileDao.class);
 
-		result.setHistoCryptoRepoFile1(hcrfDao.getHistoCryptoRepoFileOrFail(collisionDto.getHistoCryptoRepoFileId1()));
-		result.setHistoCryptoRepoFile2(hcrfDao.getHistoCryptoRepoFileOrFail(collisionDto.getHistoCryptoRepoFileId2()));
+		final HistoCryptoRepoFile histoCryptoRepoFile1 = hcrfDao.getHistoCryptoRepoFileOrFail(collisionDto.getHistoCryptoRepoFileId1());
+		final Uid duplicateCryptoRepoFileId = collisionDto.getDuplicateCryptoRepoFileId();
+
+		Collision result = cDao.getCollision(collisionDto.getCollisionId());
+		if (result == null) {
+//			if (duplicateCryptoRepoFileId != null) {
+//				result = cDao.getCollisionWithDuplicateCryptoRepoFileId(histoCryptoRepoFile1, duplicateCryptoRepoFileId);
+//				if (result != null) {
+//					logger.warn("putCollisionDto: Discarded duplicate Collision for same combination of histoCryptoRepoFile1 + duplicateCryptoRepoFileId! histoCryptoRepoFileId1={} duplicateCryptoRepoFileId={} keptCollisionId={}",
+//							collisionDto.getHistoCryptoRepoFileId1(), duplicateCryptoRepoFileId);
+//					result.setLocalRevision(transaction.getLocalRevision()); // make sure it's re-synced!
+//					return result;
+//				}
+//			}
+			result = new Collision(collisionDto.getCollisionId());
+		}
+
+		result.setHistoCryptoRepoFile1(histoCryptoRepoFile1);
+		result.setHistoCryptoRepoFile2(
+				collisionDto.getHistoCryptoRepoFileId2() == null ? null : hcrfDao.getHistoCryptoRepoFileOrFail(collisionDto.getHistoCryptoRepoFileId2()));
+		result.setDuplicateCryptoRepoFileId(duplicateCryptoRepoFileId);
 		result.setSignature(collisionDto.getSignature());
-		result = dao.makePersistent(result);
+		result = cDao.makePersistent(result);
 		return result;
 	}
 }

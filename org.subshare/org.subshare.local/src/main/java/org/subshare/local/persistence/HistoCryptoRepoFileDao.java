@@ -91,12 +91,23 @@ public class HistoCryptoRepoFileDao extends Dao<HistoCryptoRepoFile, HistoCrypto
 	}
 
 	@Override
-	public void deletePersistent(HistoCryptoRepoFile entity) {
+	public void deletePersistent(final HistoCryptoRepoFile entity) {
+		deleteHistoFileChunks(entity);
+		getPersistenceManager().flush();
 		super.deletePersistent(entity);
 	}
 
 	@Override
 	public void deletePersistentAll(final Collection<? extends HistoCryptoRepoFile> entities) {
+		for (HistoCryptoRepoFile entity : entities)
+			deleteHistoFileChunks(entity);
+
+		getPersistenceManager().flush();
 		super.deletePersistentAll(entities);
+	}
+
+	private void deleteHistoFileChunks(final HistoCryptoRepoFile histoCryptoRepoFile) {
+		final HistoFileChunkDao hfcDao = getDao(HistoFileChunkDao.class);
+		hfcDao.deletePersistentAll(hfcDao.getHistoFileChunks(histoCryptoRepoFile));
 	}
 }

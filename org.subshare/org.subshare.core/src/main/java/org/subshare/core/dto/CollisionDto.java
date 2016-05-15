@@ -28,6 +28,8 @@ public class CollisionDto implements Signable {
 
 	private Uid histoCryptoRepoFileId2;
 
+	private Uid duplicateCryptoRepoFileId;
+
 	private Date resolved;
 
 	public CollisionDto() {
@@ -51,6 +53,13 @@ public class CollisionDto implements Signable {
 	}
 	public void setHistoCryptoRepoFileId2(Uid histoCryptoRepoFileId2) {
 		this.histoCryptoRepoFileId2 = histoCryptoRepoFileId2;
+	}
+
+	public Uid getDuplicateCryptoRepoFileId() {
+		return duplicateCryptoRepoFileId;
+	}
+	public void setDuplicateCryptoRepoFileId(Uid duplicateCryptoRepoFileId) {
+		this.duplicateCryptoRepoFileId = duplicateCryptoRepoFileId;
 	}
 
 	@Override
@@ -80,6 +89,9 @@ public class CollisionDto implements Signable {
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(histoCryptoRepoFileId2),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
+					InputStreamSource.Helper.createInputStreamSource(duplicateCryptoRepoFileId),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(resolved)

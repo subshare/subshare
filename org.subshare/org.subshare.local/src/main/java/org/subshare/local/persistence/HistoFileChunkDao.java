@@ -34,6 +34,25 @@ public class HistoFileChunkDao extends Dao<HistoFileChunk, HistoFileChunkDao> {
 		}
 	}
 
+	public Collection<HistoFileChunk> getHistoFileChunks(final HistoCryptoRepoFile histoCryptoRepoFile) {
+		assertNotNull("histoCryptoRepoFile", histoCryptoRepoFile);
+		final Query query = pm().newNamedQuery(getEntityClass(), "getHistoFileChunks_histoCryptoRepoFile");
+		try {
+			long startTimestamp = System.currentTimeMillis();
+			@SuppressWarnings("unchecked")
+			Collection<HistoFileChunk> result = (Collection<HistoFileChunk>) query.execute(histoCryptoRepoFile);
+			logger.debug("getHistoFileChunks2: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
+
+			startTimestamp = System.currentTimeMillis();
+			result = load(result);
+			logger.debug("getHistoFileChunks2: Loading result-set with {} elements took {} ms.", result.size(), System.currentTimeMillis() - startTimestamp);
+
+			return result;
+		} finally {
+			query.closeAll();
+		}
+	}
+
 	public long getHistoFileChunkCount(final FileChunkPayload fileChunkPayload) {
 		assertNotNull("fileChunkPayload", fileChunkPayload);
 		final Query query = pm().newNamedQuery(getEntityClass(), "getHistoFileChunkCount_fileChunkPayload");

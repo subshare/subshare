@@ -23,7 +23,9 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 })
 @Queries({
 	@Query(name = "getHistoFileChunks_fileChunkPayload", value = "SELECT WHERE this.fileChunkPayload == :fileChunkPayload"),
-	@Query(name = "getHistoFileChunkCount_fileChunkPayload", value = "SELECT count(this) WHERE this.fileChunkPayload == :fileChunkPayload")
+	@Query(name = "getHistoFileChunkCount_fileChunkPayload", value = "SELECT count(this) WHERE this.fileChunkPayload == :fileChunkPayload"),
+
+	@Query(name = "getHistoFileChunks_histoCryptoRepoFile", value = "SELECT WHERE this.histoCryptoRepoFile == :histoCryptoRepoFile")
 
 //	@Query(name = "getHistoFileChunks_normalFile", value = "SELECT WHERE this.normalFile == :normalFile"),
 //

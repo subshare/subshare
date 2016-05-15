@@ -1,5 +1,6 @@
 package org.subshare.core.repo.sync;
 
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.HashUtil.*;
 import static org.subshare.core.repo.sync.PaddingUtil.*;
 
@@ -23,6 +24,7 @@ import co.codewizards.cloudstore.core.dto.NormalFileDto;
 import co.codewizards.cloudstore.core.dto.RepoFileDtoTreeNode;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.progress.ProgressMonitor;
+import co.codewizards.cloudstore.core.progress.SubProgressMonitor;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
 import co.codewizards.cloudstore.core.repo.sync.RepoToRepoSync;
 import co.codewizards.cloudstore.core.repo.transport.CollisionException;
@@ -53,6 +55,21 @@ public class SsRepoToRepoSync extends RepoToRepoSync {
 			}
 		}
 		return metaOnly;
+	}
+
+	@Override
+	public void sync(final ProgressMonitor monitor) {
+		assertNotNull("monitor", monitor);
+		monitor.beginTask("Synchronising...", 251);
+		try {
+			super.sync(new SubProgressMonitor(monitor, 201));
+
+			// We detect certain collisions on the client, only, even though they happen on the server.
+			// Therefore, we immediately sync *up* again, to make sure, the collisions are synced.
+			syncUp(new SubProgressMonitor(monitor, 50));
+		} finally {
+			monitor.done();
+		}
 	}
 
 	@Override
