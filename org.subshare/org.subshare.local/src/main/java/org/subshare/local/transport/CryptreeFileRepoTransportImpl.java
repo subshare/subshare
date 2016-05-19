@@ -10,11 +10,17 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import org.subshare.core.Cryptree;
+import org.subshare.core.CryptreeFactory;
+import org.subshare.core.CryptreeFactoryRegistry;
 import org.subshare.core.LocalRepoStorage;
 import org.subshare.core.LocalRepoStorageFactoryRegistry;
 import org.subshare.core.dto.SsFileChunkDto;
 import org.subshare.core.dto.SsNormalFileDto;
 import org.subshare.core.repo.transport.CryptreeClientFileRepoTransport;
+import org.subshare.core.user.UserRepoKeyRing;
+import org.subshare.core.user.UserRepoKeyRingLookup;
+import org.subshare.core.user.UserRepoKeyRingLookupContext;
 import org.subshare.local.persistence.CryptoRepoFile;
 import org.subshare.local.persistence.CryptoRepoFileDao;
 import org.subshare.local.persistence.PreliminaryCollision;
@@ -38,6 +44,8 @@ import co.codewizards.cloudstore.local.transport.FileRepoTransport;
 public class CryptreeFileRepoTransportImpl extends FileRepoTransport implements CryptreeClientFileRepoTransport {
 
 	private Boolean metaOnly;
+	private CryptreeFactory cryptreeFactory;
+	private UserRepoKeyRing userRepoKeyRing;
 
 	@Override
 	public void delete(String path) {
@@ -54,8 +62,46 @@ public class CryptreeFileRepoTransportImpl extends FileRepoTransport implements 
 				transaction.commit();
 			}
 		}
-		else
-			super.delete(path);
+		else {
+			try {
+				super.delete(path);
+			} catch (CollisionException x) {
+				clearCryptoRepoFileDeleted(path);
+				throw x;
+			}
+		}
+	}
+
+	public void clearCryptoRepoFileDeleted(String path) {
+		path = prefixPath(path);
+		final File localRoot = getLocalRepoManager().getLocalRoot();
+		try (final LocalRepoTransaction transaction = getLocalRepoManager().beginWriteTransaction();) {
+			getCryptree(transaction).clearCryptoRepoFileDeleted(path);
+
+			transaction.commit();
+		}
+	}
+
+	protected CryptreeFactory getCryptreeFactory() {
+		if (cryptreeFactory == null)
+			cryptreeFactory = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail();
+
+		return cryptreeFactory;
+	}
+
+	protected Cryptree getCryptree(final LocalRepoTransaction transaction) {
+		return getCryptreeFactory().getCryptreeOrCreate(transaction, getClientRepositoryIdOrFail(), getPathPrefix(), getUserRepoKeyRing());
+	}
+
+	protected UserRepoKeyRing getUserRepoKeyRing() {
+		if (userRepoKeyRing == null) {
+			final UserRepoKeyRingLookup lookup = UserRepoKeyRingLookup.Helper.getUserRepoKeyRingLookup();
+			final UserRepoKeyRingLookupContext context = new UserRepoKeyRingLookupContext(getRepositoryId(), getClientRepositoryIdOrFail());
+			userRepoKeyRing = lookup.getUserRepoKeyRing(context);
+			if (userRepoKeyRing == null)
+				throw new IllegalStateException(String.format("UserRepoKeyRingLookup.getUserRepoKeyRing(context) returned null! lookup=%s context=%s", lookup, context));
+		}
+		return userRepoKeyRing;
 	}
 
 	private void deleteRepoFileRecursively(final LocalRepoTransaction transaction, final RepoFile repoFile) {

@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.*;
 
 import java.net.URL;
 
-import org.junit.After;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,16 +23,17 @@ public class InviteUserWithNormalAndMetaOnlyRepoIT extends AbstractUserRegistryI
 
 	private static final Logger logger = LoggerFactory.getLogger(InviteUserWithNormalAndMetaOnlyRepoIT.class);
 
-	LocalRepoManager localDestLocalRepoManager;
+//	LocalRepoManager localDestLocalRepoManager;
 
-	@Override
-	@After
-	public void after() {
-		if (localDestLocalRepoManager != null) {
-			localDestLocalRepoManager.close();
-			localDestLocalRepoManager = null;
-		}
-	}
+//	@Override
+//	@After
+//	public void after() throws Exception {
+//		super.after();
+//		if (localDestLocalRepoManager != null) {
+//			localDestLocalRepoManager.close();
+//			localDestLocalRepoManager = null;
+//		}
+//	}
 
 	@Test
 	public void inviteUserAndSync_withMetaOnly_singleWritePermissionOnRoot() throws Exception {
@@ -71,8 +71,9 @@ public class InviteUserWithNormalAndMetaOnlyRepoIT extends AbstractUserRegistryI
 		// create local repo, then connect to server-repo using invitation-token and sync down!
 		createLocalDestinationRepo();
 
-		// Keep the LocalRepoManager open until @After to make sure that createFileWithRandomContent(...) works fine (I had *sometimes* test failures, otherwise).
-		localDestLocalRepoManager = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(localDestRoot);
+//		// Keep the LocalRepoManager open until @After to make sure that createFileWithRandomContent(...) works fine (I had *sometimes* test failures, otherwise).
+//		localDestLocalRepoManager = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(localDestRoot);
+		// not necessary, anymore, because done in super-class, already
 
 		// Importing the invitation with the temporary key causes a permanent key to be generated and a request
 		// to replace the temporary key by the permanent one.

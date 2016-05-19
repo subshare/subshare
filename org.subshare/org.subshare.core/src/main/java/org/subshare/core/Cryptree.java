@@ -203,6 +203,7 @@ public interface Cryptree {
 	void createSyntheticDeleteModifications(ChangeSetDto changeSetDto);
 	Collection<PlainHistoCryptoRepoFileDto> getPlainHistoCryptoRepoFileDtos(PlainHistoCryptoRepoFileFilter filter);
 	PlainHistoCryptoRepoFileDto getPlainHistoCryptoRepoFileDto(Uid histoCryptoRepoFileId);
+	void clearCryptoRepoFileDeleted(String localPath);
 
 //	void createCollisionIfNeeded(String localPath);
 }

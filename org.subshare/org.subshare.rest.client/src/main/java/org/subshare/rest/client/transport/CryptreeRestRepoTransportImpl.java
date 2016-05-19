@@ -471,8 +471,6 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 			userRepoKeyRing = lookup.getUserRepoKeyRing(context);
 			if (userRepoKeyRing == null)
 				throw new IllegalStateException(String.format("UserRepoKeyRingLookup.getUserRepoKeyRing(context) returned null! lookup=%s context=%s", lookup, context));
-
-//			return assertNotNull("cryptreeRepoTransportFactory.userRepoKeyRing", getRepoTransportFactory().getUserRepoKeyRing());
 		}
 		return userRepoKeyRing;
 	}

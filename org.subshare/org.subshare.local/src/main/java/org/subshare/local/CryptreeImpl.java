@@ -2437,4 +2437,13 @@ public class CryptreeImpl extends AbstractCryptree {
 		}
 		return repoFileDto;
 	}
+
+	@Override
+	public void clearCryptoRepoFileDeleted(String localPath) {
+		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(localPath);
+		final CryptoRepoFile cryptoRepoFile = cryptreeNode.getCryptoRepoFile();
+		assertNotNull("cryptoRepoFile", cryptoRepoFile);
+		cryptoRepoFile.setDeleted(null);
+		cryptreeNode.sign(cryptoRepoFile);
+	}
 }

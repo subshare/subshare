@@ -65,8 +65,7 @@ public abstract class AbstractIT {
 		System.setProperty("testEnvironment", Boolean.TRUE.toString());
 
 		final File configDir = createFile("build/" + jvmInstanceId + "/.subshare");
-		configDir.getParentFile().mkdir();
-		configDir.mkdir();
+		configDir.mkdirs();
 
 		try {
 			copyResource(AbstractIT.class, "/logback-test.xml", createFile(configDir, "logback.client.xml"));

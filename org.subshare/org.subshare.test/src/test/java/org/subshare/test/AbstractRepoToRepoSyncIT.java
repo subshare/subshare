@@ -44,7 +44,8 @@ public abstract class AbstractRepoToRepoSyncIT extends AbstractIT {
 	protected File localSrcRoot;
 	protected File localDestRoot;
 	protected File remoteRoot;
-	protected LocalRepoManager localRepoManagerLocal;
+	protected LocalRepoManager localSrcRepoManagerLocal;
+	protected LocalRepoManager localDestRepoManagerLocal;
 	protected String localPathPrefix;
 	protected UUID remoteRepositoryId;
 	protected String remotePathPrefix1Plain; // for local-SOURCE-repo
@@ -80,6 +81,14 @@ public abstract class AbstractRepoToRepoSyncIT extends AbstractIT {
 
 	@Override
 	public void after() throws Exception {
+		if (localSrcRepoManagerLocal != null) {
+			localSrcRepoManagerLocal.close();
+			localSrcRepoManagerLocal = null;
+		}
+		if (localDestRepoManagerLocal != null) {
+			localDestRepoManagerLocal.close();
+			localDestRepoManagerLocal = null;
+		}
 		if (userRegistryImplMockUp != null) {
 			userRegistryImplMockUp.tearDown(); // should be done automatically, but since we need to manage the reference, anyway, we do this explicitly here, too.
 			userRegistryImplMockUp = null;
@@ -140,7 +149,7 @@ public abstract class AbstractRepoToRepoSyncIT extends AbstractIT {
 		remoteRoot.mkdirs();
 		assertThat(remoteRoot.isDirectory()).isTrue();
 
-		localRepoManagerLocal = localRepoManagerFactory.createLocalRepoManagerForNewRepository(localSrcRoot);
+		localSrcRepoManagerLocal = localRepoManagerFactory.createLocalRepoManagerForNewRepository(localSrcRoot);
 		final LocalRepoManager localRepoManagerRemote = localRepoManagerFactory.createLocalRepoManagerForNewRepository(remoteRoot);
 
 		remoteRepositoryId = localRepoManagerRemote.getRepositoryId();
@@ -219,9 +228,8 @@ public abstract class AbstractRepoToRepoSyncIT extends AbstractIT {
 		localDestRoot.mkdirs();
 		assertThat(localDestRoot.isDirectory()).isTrue();
 
-		final LocalRepoManager localDestRepoManagerLocal = localRepoManagerFactory.createLocalRepoManagerForNewRepository(localDestRoot);
+		localDestRepoManagerLocal = localRepoManagerFactory.createLocalRepoManagerForNewRepository(localDestRoot);
 		assertThat(localDestRepoManagerLocal).isNotNull();
-		localDestRepoManagerLocal.close();
 
 		remoteRootURLWithPathPrefixForLocalDest = getRemoteRootURLWithPathPrefixForLocalDest(remoteRepositoryId);
 

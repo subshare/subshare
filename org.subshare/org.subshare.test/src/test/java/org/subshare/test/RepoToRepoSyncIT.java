@@ -139,7 +139,7 @@ public class RepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 
 //	@Override
 //	protected void populateLocalSourceRepo() throws Exception {
-//		final LocalRepoManager localRepoManagerLocal = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(localSrcRoot);
+//		final LocalRepoManager localSrcRepoManagerLocal = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(localSrcRoot);
 //
 ////		final File child_1 = createDirectory(localSrcRoot, "1 {11 11ä11} 1");
 ////
@@ -166,8 +166,8 @@ public class RepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 ////		createFileWithRandomContent(child_3_5, "h");
 ////		createFileWithRandomContent(child_3_5, "i");
 //
-//		localRepoManagerLocal.localSync(new LoggerProgressMonitor(logger));
-//		localRepoManagerLocal.close();
+//		localSrcRepoManagerLocal.localSync(new LoggerProgressMonitor(logger));
+//		localSrcRepoManagerLocal.close();
 //	}
 
 	@Ignore("Still working on this - collisions are still not supported!")
@@ -213,7 +213,7 @@ public class RepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 
 		createLocalSourceAndRemoteRepo();
 
-		// Opening localRepoManagerLocal to make sure it's not discarded while test is running.
+		// Opening localSrcRepoManagerLocal to make sure it's not discarded while test is running.
 		// This caused occasional build errors - especially on slower machines - when creating files
 		// 'yyyyyyyy' etc. below.
 		try (final LocalRepoManager localRepoManagerLocal = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(localSrcRoot);)
