@@ -154,6 +154,7 @@ public interface Cryptree {
 	Set<PermissionType> getGrantedPermissionTypes(String localPath, Uid userRepoKeyId);
 
 	Uid getCryptoRepoFileId(String localPath);
+	Uid getCryptoRepoFileIdOrFail(String localPath);
 	Uid getParentCryptoRepoFileId(Uid cryptoRepoFileId);
 
 	void assertHasPermission(Uid cryptoRepoFileId, Uid userRepoKeyId, PermissionType permissionType, Date timestamp) throws AccessDeniedException;

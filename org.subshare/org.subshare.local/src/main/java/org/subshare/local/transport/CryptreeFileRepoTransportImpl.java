@@ -25,16 +25,20 @@ import org.subshare.local.persistence.CryptoRepoFile;
 import org.subshare.local.persistence.CryptoRepoFileDao;
 import org.subshare.local.persistence.PreliminaryCollision;
 import org.subshare.local.persistence.PreliminaryCollisionDao;
+import org.subshare.local.persistence.PreliminaryDeletion;
+import org.subshare.local.persistence.PreliminaryDeletionDao;
 import org.subshare.local.persistence.SsFileChunk;
 import org.subshare.local.persistence.SsNormalFile;
 
 import co.codewizards.cloudstore.core.dto.FileChunkDto;
+import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransactionPostCloseAdapter;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransactionPostCloseEvent;
 import co.codewizards.cloudstore.core.repo.transport.CollisionException;
+import co.codewizards.cloudstore.core.repo.transport.DeleteModificationCollisionException;
 import co.codewizards.cloudstore.local.persistence.FileChunk;
 import co.codewizards.cloudstore.local.persistence.NormalFile;
 import co.codewizards.cloudstore.local.persistence.RepoFile;
@@ -74,7 +78,6 @@ public class CryptreeFileRepoTransportImpl extends FileRepoTransport implements 
 
 	public void clearCryptoRepoFileDeleted(String path) {
 		path = prefixPath(path);
-		final File localRoot = getLocalRepoManager().getLocalRoot();
 		try (final LocalRepoTransaction transaction = getLocalRepoManager().beginWriteTransaction();) {
 			getCryptree(transaction).clearCryptoRepoFileDeleted(path);
 
@@ -146,7 +149,7 @@ public class CryptreeFileRepoTransportImpl extends FileRepoTransport implements 
 		transaction.addPostCloseListener(new LocalRepoTransactionPostCloseAdapter() {
 			@Override
 			public void postRollback(LocalRepoTransactionPostCloseEvent event) {
-				createAndPersistPreliminaryCollision(event.getLocalRepoManager(), file);
+				createAndPersistPreliminaryCollision(event.getLocalRepoManager(), file, null, null);
 			}
 			@Override
 			public void postCommit(LocalRepoTransactionPostCloseEvent event) {
@@ -179,9 +182,15 @@ public class CryptreeFileRepoTransportImpl extends FileRepoTransport implements 
 //		}
 //	}
 
-	protected void createAndPersistPreliminaryCollision(final LocalRepoManager localRepoManager, final File file) {
+	protected void createAndPersistPreliminaryCollision(final LocalRepoManager localRepoManager, final File file, String localPath, Uid cryptoRepoFileId) {
+		assertNotNull("localRepoManager", localRepoManager);
+		if (localPath == null)
+			assertNotNull("localPath/file", file);
+
 		try (final LocalRepoTransaction tx = localRepoManager.beginWriteTransaction();) {
-			final String localPath = '/' + localRepoManager.getLocalRoot().relativize(file).replace(FILE_SEPARATOR_CHAR, '/');
+			if (localPath == null)
+				localPath = '/' + localRepoManager.getLocalRoot().relativize(file).replace(FILE_SEPARATOR_CHAR, '/');
+
 			final PreliminaryCollisionDao pcDao = tx.getDao(PreliminaryCollisionDao.class);
 
 			PreliminaryCollision preliminaryCollision = pcDao.getPreliminaryCollision(localPath);
@@ -191,12 +200,18 @@ public class CryptreeFileRepoTransportImpl extends FileRepoTransport implements 
 				preliminaryCollision = pcDao.makePersistent(preliminaryCollision);
 			}
 
-			final RepoFileDao rfDao = tx.getDao(RepoFileDao.class);
-			final RepoFile repoFile = rfDao.getRepoFile(localRepoManager.getLocalRoot(), file);
-			if (repoFile != null) {
-				CryptoRepoFileDao crfDao = tx.getDao(CryptoRepoFileDao.class);
-				final CryptoRepoFile cryptoRepoFile = crfDao.getCryptoRepoFileOrFail(repoFile);
+			final CryptoRepoFileDao crfDao = tx.getDao(CryptoRepoFileDao.class);
+			if (cryptoRepoFileId != null) {
+				CryptoRepoFile cryptoRepoFile = crfDao.getCryptoRepoFileOrFail(cryptoRepoFileId);
 				preliminaryCollision.setCryptoRepoFile(cryptoRepoFile);
+			}
+			else if (file != null) {
+				final RepoFileDao rfDao = tx.getDao(RepoFileDao.class);
+				final RepoFile repoFile = rfDao.getRepoFile(localRepoManager.getLocalRoot(), file);
+				if (repoFile != null) {
+					final CryptoRepoFile cryptoRepoFile = crfDao.getCryptoRepoFileOrFail(repoFile);
+					preliminaryCollision.setCryptoRepoFile(cryptoRepoFile);
+				}
 			}
 
 			tx.commit();
@@ -275,4 +290,37 @@ public class CryptreeFileRepoTransportImpl extends FileRepoTransport implements 
 		}
 	}
 
+	@Override
+	protected void assertNoDeleteModificationCollision(LocalRepoTransaction transaction, UUID fromRepositoryId, final String path) throws CollisionException {
+		// super.assertNoDeleteModificationCollision(transaction, fromRepositoryId, path); // DeleteModification is *NOT* used by Subshare!
+
+		final Uid cryptoRepoFileId = getCryptree(transaction).getCryptoRepoFileId(path);
+		if (cryptoRepoFileId == null)
+			return;
+
+		final PreliminaryDeletionDao pdDao = transaction.getDao(PreliminaryDeletionDao.class);
+		final CryptoRepoFile cryptoRepoFile = transaction.getDao(CryptoRepoFileDao.class).getCryptoRepoFileOrFail(cryptoRepoFileId);
+		CryptoRepoFile crf = cryptoRepoFile;
+		while (crf != null) {
+			final String candidateLocalPath = crf.getLocalPathOrFail();
+			final PreliminaryDeletion preliminaryDeletion = pdDao.getPreliminaryDeletion(crf);
+			if (crf.getDeleted() != null || preliminaryDeletion != null) {
+				transaction.addPostCloseListener(new LocalRepoTransactionPostCloseAdapter() {
+					@Override
+					public void postRollback(LocalRepoTransactionPostCloseEvent event) {
+						createAndPersistPreliminaryCollision(event.getLocalRepoManager(), null, path, cryptoRepoFileId);
+					}
+					@Override
+					public void postCommit(LocalRepoTransactionPostCloseEvent event) {
+						throw new IllegalStateException("Commit is not allowed, anymore!");
+					}
+				});
+
+				throw new DeleteModificationCollisionException(
+						String.format("The associated CryptoRepoFile or one of its parents is marked as deleted! repositoryId=%s path='%s' deletedPath='%s'", fromRepositoryId, path, candidateLocalPath));
+			}
+
+			crf = crf.getParent();
+		}
+	}
 }

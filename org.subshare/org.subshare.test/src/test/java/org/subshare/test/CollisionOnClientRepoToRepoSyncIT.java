@@ -69,7 +69,6 @@ public class CollisionOnClientRepoToRepoSyncIT extends CollisionRepoToRepoSyncIT
 		assertThat(plainHistoCryptoRepoFileDtos).hasSize(2);
 
 		// Verify that the older one is the previous version of the newer one (the list is sorted by timestamp).
-		// Since the collision happens on the client, they are consecutive (rather than forked siblings of the same previous version).
 		assertThat(plainHistoCryptoRepoFileDtos.get(0).getHistoCryptoRepoFileDto().getHistoCryptoRepoFileId())
 		.isEqualTo(plainHistoCryptoRepoFileDtos.get(1).getHistoCryptoRepoFileDto().getPreviousHistoCryptoRepoFileId());
 
@@ -144,7 +143,6 @@ public class CollisionOnClientRepoToRepoSyncIT extends CollisionRepoToRepoSyncIT
 		assertThat(plainHistoCryptoRepoFileDtos).hasSize(3);
 
 		// Verify that the older one is the previous version of the newer one (the list is sorted by timestamp).
-		// Since the collision happens on the client, they are consecutive (rather than forked siblings of the same previous version).
 		assertThat(plainHistoCryptoRepoFileDtos.get(0).getHistoCryptoRepoFileDto().getHistoCryptoRepoFileId())
 		.isEqualTo(plainHistoCryptoRepoFileDtos.get(1).getHistoCryptoRepoFileDto().getPreviousHistoCryptoRepoFileId());
 
@@ -174,7 +172,6 @@ public class CollisionOnClientRepoToRepoSyncIT extends CollisionRepoToRepoSyncIT
 		File histoFile1 = createFile(tempDir1, "a");
 		File histoFile2 = createFile(tempDir2, "a");
 
-//		IOUtil.copyFile(file1, tempDir2.createFile("a.current"));
 		assertThat(IOUtil.compareFiles(histoFile2, file1)).isTrue();
 		assertThat(IOUtil.compareFiles(histoFile1, histoFile2)).isFalse();
 
@@ -224,12 +221,16 @@ public class CollisionOnClientRepoToRepoSyncIT extends CollisionRepoToRepoSyncIT
 		assertThat(plainHistoCryptoRepoFileDtos).hasSize(3);
 
 		// Verify that the older one is the previous version of the newer one (the list is sorted by timestamp).
-		// Since the collision happens on the client, they are consecutive (rather than forked siblings of the same previous version).
 		assertThat(plainHistoCryptoRepoFileDtos.get(0).getHistoCryptoRepoFileDto().getHistoCryptoRepoFileId())
 		.isEqualTo(plainHistoCryptoRepoFileDtos.get(1).getHistoCryptoRepoFileDto().getPreviousHistoCryptoRepoFileId());
 
 		assertThat(plainHistoCryptoRepoFileDtos.get(1).getHistoCryptoRepoFileDto().getHistoCryptoRepoFileId())
 		.isEqualTo(plainHistoCryptoRepoFileDtos.get(2).getHistoCryptoRepoFileDto().getPreviousHistoCryptoRepoFileId());
+
+		// Verify deleted status.
+		assertThat(plainHistoCryptoRepoFileDtos.get(0).getHistoCryptoRepoFileDto().getDeleted()).isNull();
+		assertThat(plainHistoCryptoRepoFileDtos.get(1).getHistoCryptoRepoFileDto().getDeleted()).isNotNull();
+		assertThat(plainHistoCryptoRepoFileDtos.get(2).getHistoCryptoRepoFileDto().getDeleted()).isNull();
 
 		// Verify that the 2nd version (with 222 at the end) is the current one.
 		int lastByte1 = getLastByte(file1);
@@ -241,36 +242,111 @@ public class CollisionOnClientRepoToRepoSyncIT extends CollisionRepoToRepoSyncIT
 		// Export both versions of the file and assert that
 		// - the current file is identical to the last one
 		// - and the first one ends on 111.
-		File tempDir1 = createTempDirectory(getClass().getSimpleName() + '.');
+		File tempDir0 = createTempDirectory(getClass().getSimpleName() + '.');
 		File tempDir2 = createTempDirectory(getClass().getSimpleName() + '.');
 
 		try (HistoExporter histoExporter = HistoExporterImpl.createHistoExporter(localSrcRoot);) {
 			histoExporter.exportFile(
-					plainHistoCryptoRepoFileDtos.get(1).getHistoCryptoRepoFileDto().getHistoCryptoRepoFileId(), tempDir1);
+					plainHistoCryptoRepoFileDtos.get(0).getHistoCryptoRepoFileDto().getHistoCryptoRepoFileId(), tempDir0);
 
 			histoExporter.exportFile(
 					plainHistoCryptoRepoFileDtos.get(2).getHistoCryptoRepoFileDto().getHistoCryptoRepoFileId(), tempDir2);
 		}
-		File histoFile1 = createFile(tempDir1, "a");
+		File histoFile0 = createFile(tempDir0, "a");
 		File histoFile2 = createFile(tempDir2, "a");
 
-//		IOUtil.copyFile(file1, tempDir2.createFile("a.current"));
 		assertThat(IOUtil.compareFiles(histoFile2, file1)).isTrue();
-		assertThat(IOUtil.compareFiles(histoFile1, histoFile2)).isFalse();
+		assertThat(IOUtil.compareFiles(histoFile0, histoFile2)).isFalse();
 
-		assertThat(histoFile1.length() + 1).isEqualTo(file1.length());
+		assertThat(histoFile0.length() + 1).isEqualTo(file1.length());
 
 		collisionDtos = localRepoMetaData.getCollisionDtos(new CollisionFilter());
 		assertThat(collisionDtos).hasSize(1);
+
+		// TODO check CollisionDto and make sure, it links the right HistoCryptoRepoFiles with each other!
 	}
 
-//	/**
-//	 * The first client modifies the file, uploads to the server, the 2nd client deletes it
-//	 * and then syncs.
-//	 */
-//	@Test
-//	public void modifiedFileVsDeletedFileCollisionOnClient() throws Exception {
-//
-//	}
+	/**
+	 * The first client modifies the file, uploads to the server, the 2nd client deletes it
+	 * and then syncs.
+	 */
+	@Test
+	public void modifiedFileVsDeletedFileCollisionOnClient() throws Exception {
+		prepareLocalAndDestinationRepo();
+
+		File file1 = createFile(localSrcRoot, "2", "a");
+		assertThat(file1.getIoFile()).isFile();
+		modifyFile_append(file1, 111);
+
+		File file2 = createFile(localDestRoot, "2", "a");
+		assertThat(file2.getIoFile()).isFile();
+		file2.delete();
+		assertThat(file2.getIoFile()).doesNotExist();
+
+		// Verify that *one* version is in the history.
+		List<PlainHistoCryptoRepoFileDto> plainHistoCryptoRepoFileDtos = getPlainHistoCryptoRepoFileDtos(localSrcRepoManagerLocal, file1);
+		assertThat(plainHistoCryptoRepoFileDtos).hasSize(1);
+		plainHistoCryptoRepoFileDtos = getPlainHistoCryptoRepoFileDtos(localDestRepoManagerLocal, file2);
+		assertThat(plainHistoCryptoRepoFileDtos).hasSize(1);
+
+		// Verify that there is no collision, yet.
+		SsLocalRepoMetaData localRepoMetaData = (SsLocalRepoMetaData) localSrcRepoManagerLocal.getLocalRepoMetaData();
+		Collection<CollisionDto> collisionDtos = localRepoMetaData.getCollisionDtos(new CollisionFilter());
+		assertThat(collisionDtos).isEmpty();
+
+		syncFromLocalSrcToRemote();
+		syncFromRemoteToLocalDest(false); // should up-sync its own version
+		syncFromLocalSrcToRemote(); // should down-sync the change from dest-repo
+		assertDirectoriesAreEqualRecursively(
+				(remotePathPrefix2Plain.isEmpty() ? getLocalRootWithPathPrefix() : createFile(getLocalRootWithPathPrefix(), remotePathPrefix2Plain)),
+				localDestRoot);
+
+		// Verify that *both* versions are in the history - one is the deletion itself (modeled as a HistoCryptoRepoFile).
+		plainHistoCryptoRepoFileDtos = getPlainHistoCryptoRepoFileDtos(localSrcRepoManagerLocal, file1);
+		assertThat(plainHistoCryptoRepoFileDtos).hasSize(3);
+
+		// Verify that the older one is the previous version of the newer one (the list is sorted by timestamp).
+		// Since the collision happens on the client, they are consecutive (rather than forked siblings of the same previous version).
+		assertThat(plainHistoCryptoRepoFileDtos.get(0).getHistoCryptoRepoFileDto().getHistoCryptoRepoFileId())
+		.isEqualTo(plainHistoCryptoRepoFileDtos.get(1).getHistoCryptoRepoFileDto().getPreviousHistoCryptoRepoFileId());
+
+		assertThat(plainHistoCryptoRepoFileDtos.get(1).getHistoCryptoRepoFileDto().getHistoCryptoRepoFileId())
+		.isEqualTo(plainHistoCryptoRepoFileDtos.get(2).getHistoCryptoRepoFileDto().getPreviousHistoCryptoRepoFileId());
+
+		// Verify deleted status.
+		assertThat(plainHistoCryptoRepoFileDtos.get(0).getHistoCryptoRepoFileDto().getDeleted()).isNull();
+		assertThat(plainHistoCryptoRepoFileDtos.get(1).getHistoCryptoRepoFileDto().getDeleted()).isNull();
+		assertThat(plainHistoCryptoRepoFileDtos.get(2).getHistoCryptoRepoFileDto().getDeleted()).isNotNull();
+
+		// Verify that the deletion is the current state - in both working copies.
+		assertThat(file1.getIoFile()).doesNotExist();
+		assertThat(file2.getIoFile()).doesNotExist();
+
+		// Export both versions of the file and assert that
+		// - the current file is identical to the last one
+		// - and the first one ends on 111.
+		File tempDir0 = createTempDirectory(getClass().getSimpleName() + '.');
+		File tempDir2 = createTempDirectory(getClass().getSimpleName() + '.');
+
+
+		try (HistoExporter histoExporter = HistoExporterImpl.createHistoExporter(localSrcRoot);) {
+			histoExporter.exportFile(
+					plainHistoCryptoRepoFileDtos.get(0).getHistoCryptoRepoFileDto().getHistoCryptoRepoFileId(), tempDir0);
+
+			histoExporter.exportFile(
+					plainHistoCryptoRepoFileDtos.get(1).getHistoCryptoRepoFileDto().getHistoCryptoRepoFileId(), tempDir2);
+		}
+		File histoFile0 = createFile(tempDir0, "a");
+		File histoFile1 = createFile(tempDir2, "a");
+
+		assertThat(IOUtil.compareFiles(histoFile0, histoFile1)).isFalse();
+
+		assertThat(histoFile0.length() + 1).isEqualTo(histoFile1.length());
+
+		collisionDtos = localRepoMetaData.getCollisionDtos(new CollisionFilter());
+		assertThat(collisionDtos).hasSize(1);
+
+		// TODO check CollisionDto and make sure, it links the right HistoCryptoRepoFiles with each other!
+	}
 
 }

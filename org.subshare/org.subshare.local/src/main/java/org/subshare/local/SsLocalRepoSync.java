@@ -243,6 +243,11 @@ public class SsLocalRepoSync extends LocalRepoSync {
 		// 'Modification' for more details!
 		//
 		// Note: The delete-tracking is done via CryptoRepoFile.deleted and HistoCryptoRepoFile.deleted!
+//		//
+//		// We *temporarily* create a DeleteModification and convert it to CryptoRepoFile.deleted *later*.
+//		// This is necessary, because the CryptoRepoFile might be overwritten during down-sync, before
+//		// our delete-info can be processed.
+//		super.createDeleteModifications(repoFile);
 	}
 
 	@Override

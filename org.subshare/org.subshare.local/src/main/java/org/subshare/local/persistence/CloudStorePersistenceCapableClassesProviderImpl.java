@@ -19,6 +19,8 @@ public class CloudStorePersistenceCapableClassesProviderImpl extends AbstractClo
 				Permission.class,
 				PermissionSet.class,
 				PermissionSetInheritance.class,
+				PreliminaryCollision.class,
+				PreliminaryDeletion.class,
 				RepositoryOwner.class,
 				TempFileChunk.class,
 				UserIdentity.class,

@@ -132,7 +132,8 @@ public class CryptoRepoFile extends Entity implements WriteProtected, AutoTrackL
 		return parent;
 	}
 	public void setParent(final CryptoRepoFile parent) {
-		this.parent = parent;
+		if (! equal(this.parent, parent))
+			this.parent = parent;
 	}
 
 	/**
@@ -150,7 +151,8 @@ public class CryptoRepoFile extends Entity implements WriteProtected, AutoTrackL
 		return localName;
 	}
 	public void setLocalName(final String localName) {
-		this.localName = localName;
+		if (! equal(this.localName, localName))
+			this.localName = localName;
 	}
 
 	/**
@@ -176,7 +178,8 @@ public class CryptoRepoFile extends Entity implements WriteProtected, AutoTrackL
 		return repoFile;
 	}
 	public void setRepoFile(final RepoFile repoFile) {
-		this.repoFile = repoFile;
+		if (! equal(this.repoFile, repoFile))
+			this.repoFile = repoFile;
 	}
 
 	/**
@@ -319,7 +322,8 @@ public class CryptoRepoFile extends Entity implements WriteProtected, AutoTrackL
 		return directory;
 	}
 	public void setDirectory(final boolean directory) {
-		this.directory = directory;
+		if (! equal(this.directory, directory))
+			this.directory = directory;
 	}
 
 	@Override
@@ -336,7 +340,8 @@ public class CryptoRepoFile extends Entity implements WriteProtected, AutoTrackL
 		return deleted;
 	}
 	public void setDeleted(Date deleted) {
-		this.deleted = deleted;
+		if (! equal(this.deleted, deleted))
+			this.deleted = deleted;
 	}
 
 //	public HistoCryptoRepoFile getCryptoRepoFileOnServer() {
@@ -386,7 +391,7 @@ public class CryptoRepoFile extends Entity implements WriteProtected, AutoTrackL
 	}
 	@Override
 	public void setSignature(final Signature signature) {
-		if (!equal(this.signature, signature))
+		if (! equal(this.signature, signature))
 			this.signature = SignatureImpl.copy(signature);
 	}
 

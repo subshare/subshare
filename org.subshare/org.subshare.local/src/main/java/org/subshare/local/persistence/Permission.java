@@ -34,8 +34,9 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 
 @PersistenceCapable
 @Inheritance(strategy=InheritanceStrategy.NEW_TABLE)
-@Unique(name="Permission_permissionId", members="permissionId")
+@Unique(name="UK_Permission_permissionId", members="permissionId")
 @Indices({
+	@Index(name="Permission_permissionId", members="permissionId"),
 	@Index(name="Permission_permissionType", members="permissionType"),
 	@Index(name="Permission_localRevision", members="localRevision"),
 	@Index(name="Permission_validFrom", members="validFrom"),

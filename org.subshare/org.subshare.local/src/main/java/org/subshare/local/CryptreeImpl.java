@@ -99,6 +99,8 @@ import org.subshare.local.persistence.PermissionSetInheritance;
 import org.subshare.local.persistence.PermissionSetInheritanceDao;
 import org.subshare.local.persistence.PreliminaryCollision;
 import org.subshare.local.persistence.PreliminaryCollisionDao;
+import org.subshare.local.persistence.PreliminaryDeletion;
+import org.subshare.local.persistence.PreliminaryDeletionDao;
 import org.subshare.local.persistence.RepositoryOwner;
 import org.subshare.local.persistence.RepositoryOwnerDao;
 import org.subshare.local.persistence.SignableDao;
@@ -1115,6 +1117,16 @@ public class CryptreeImpl extends AbstractCryptree {
 		CryptoRepoFile cryptoRepoFile = cryptoRepoFileDao.getCryptoRepoFile(cryptoRepoFileId);
 		if (cryptoRepoFile == null)
 			cryptoRepoFile = new CryptoRepoFile(cryptoRepoFileId);
+//		else {
+//			RemoteRepository remoteRepository = transaction.getDao(RemoteRepositoryDao.class).getRemoteRepository(getRemoteRepositoryId());
+//			if (cryptoRepoFile.getLocalRevision() > remoteRepository.getLocalRevision()) {
+//				// We must not overwrite an eventual *delete* modification. This is a collision and our policy is that
+//				// collisions are silently ignored, i.e. we don't download and upload the new revision to the server, only
+//				// MARKING it by a Collision object in the database. This is done, later, though.
+//				logger.warn("putCryptoRepoFileDto: CryptoRepoFile {} was locally changed after last sync! Not overwriting local changes!", cryptoRepoFile.getCryptoRepoFileId());
+//				return cryptoRepoFile;
+//			}
+//		}
 
 		final Uid cryptoKeyId = assertNotNull("cryptoRepoFileDto.cryptoKeyId", cryptoRepoFileDto.getCryptoKeyId());
 		cryptoRepoFile.setCryptoKey(cryptoKeyDao.getCryptoKey(cryptoKeyId)); // may be null, now, if it is persisted later!
@@ -1953,10 +1965,17 @@ public class CryptreeImpl extends AbstractCryptree {
 	}
 
 	@Override
-	public Uid getCryptoRepoFileId(final String localPath) {
+	public Uid getCryptoRepoFileIdOrFail(final String localPath) {
 		assertNotNull("localPath", localPath);
 		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(localPath);
 		final CryptoRepoFile cryptoRepoFile = cryptreeNode.getCryptoRepoFile();
+		return cryptoRepoFile == null ? null : cryptoRepoFile.getCryptoRepoFileId();
+	}
+
+	@Override
+	public Uid getCryptoRepoFileId(final String localPath) {
+		assertNotNull("localPath", localPath);
+		final CryptoRepoFile cryptoRepoFile = getCryptreeContext().getCryptoRepoFile(localPath);
 		return cryptoRepoFile == null ? null : cryptoRepoFile.getCryptoRepoFileId();
 	}
 
@@ -2027,6 +2046,8 @@ public class CryptreeImpl extends AbstractCryptree {
 
 	@Override
 	public CryptoChangeSetDto createHistoCryptoRepoFilesForDeletedCryptoRepoFiles() {
+		convertPreliminaryDeletions();
+
 		final LocalRepoTransaction tx = getTransactionOrFail();
 		final CryptoRepoFileDao cryptoRepoFileDao = tx.getDao(CryptoRepoFileDao.class);
 		final Collection<CryptoRepoFile> deletedCryptoRepoFiles = cryptoRepoFileDao.getDeletedCryptoRepoFilesWithoutDeletedHistoCryptoRepoFiles();
@@ -2078,7 +2099,7 @@ public class CryptreeImpl extends AbstractCryptree {
 		}
 	}
 
-	private void convertPreliminaryCollisionsToCollisions() {
+	private void convertPreliminaryCollisions() {
 		final LocalRepoTransaction tx = getTransactionOrFail();
 		final PreliminaryCollisionDao pcDao = tx.getDao(PreliminaryCollisionDao.class);
 		final RepoFileDao rfDao = tx.getDao(RepoFileDao.class);
@@ -2199,7 +2220,7 @@ public class CryptreeImpl extends AbstractCryptree {
 
 	@Override
 	public void sealUnsealedHistoryFrame() {
-		convertPreliminaryCollisionsToCollisions();
+		convertPreliminaryCollisions();
 
 		final LocalRepoTransaction tx = getTransactionOrFail();
 		final HistoFrameDao histoFrameDao = tx.getDao(HistoFrameDao.class);
@@ -2231,10 +2252,36 @@ public class CryptreeImpl extends AbstractCryptree {
 		assertNotNull("localPath", localPath);
 		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(localPath);
 		final CryptoRepoFile cryptoRepoFile = cryptreeNode.getCryptoRepoFile();
-		if (cryptoRepoFile != null && cryptoRepoFile.getDeleted() == null) {
-			cryptoRepoFile.setDeleted(new Date());
-			cryptreeNode.sign(cryptoRepoFile);
+//		if (cryptoRepoFile != null && cryptoRepoFile.getDeleted() == null) {
+//			cryptoRepoFile.setDeleted(new Date());
+//			cryptreeNode.sign(cryptoRepoFile);
+//		}
+		if (cryptoRepoFile != null) {
+			PreliminaryDeletionDao pdDao = getTransactionOrFail().getDao(PreliminaryDeletionDao.class);
+			PreliminaryDeletion preliminaryDeletion = pdDao.getPreliminaryDeletion(cryptoRepoFile);
+			if (preliminaryDeletion == null) {
+				preliminaryDeletion = new PreliminaryDeletion();
+				preliminaryDeletion.setCryptoRepoFile(cryptoRepoFile);
+				pdDao.makePersistent(preliminaryDeletion);
+			}
 		}
+	}
+
+	private void convertPreliminaryDeletions() {
+		final LocalRepoTransaction tx = getTransactionOrFail();
+		final PreliminaryDeletionDao pdDao = tx.getDao(PreliminaryDeletionDao.class);
+		final CryptreeContext cryptreeContext = getCryptreeContext();
+		for (PreliminaryDeletion preliminaryDeletion : pdDao.getObjects()) {
+			final CryptoRepoFile cryptoRepoFile = preliminaryDeletion.getCryptoRepoFile();
+			final CryptreeNode cryptreeNode = cryptreeContext.getCryptreeNodeOrCreate(cryptoRepoFile.getCryptoRepoFileId());
+			if (cryptoRepoFile != null && cryptoRepoFile.getDeleted() == null) {
+				cryptoRepoFile.setDeleted(new Date());
+				cryptoRepoFile.setLastSyncFromRepositoryId(null);
+				cryptreeNode.sign(cryptoRepoFile);
+			}
+			pdDao.deletePersistent(preliminaryDeletion);
+		}
+		tx.flush();
 	}
 
 	@Override
@@ -2443,7 +2490,16 @@ public class CryptreeImpl extends AbstractCryptree {
 		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(localPath);
 		final CryptoRepoFile cryptoRepoFile = cryptreeNode.getCryptoRepoFile();
 		assertNotNull("cryptoRepoFile", cryptoRepoFile);
-		cryptoRepoFile.setDeleted(null);
-		cryptreeNode.sign(cryptoRepoFile);
+
+		PreliminaryDeletionDao pdDao = getTransactionOrFail().getDao(PreliminaryDeletionDao.class);
+		PreliminaryDeletion preliminaryDeletion = pdDao.getPreliminaryDeletion(cryptoRepoFile);
+		if (preliminaryDeletion != null)
+			pdDao.deletePersistent(preliminaryDeletion);
+
+		if (cryptoRepoFile.getDeleted() != null) {
+			cryptoRepoFile.setDeleted(null);
+			cryptoRepoFile.setLastSyncFromRepositoryId(null);
+			cryptreeNode.sign(cryptoRepoFile);
+		}
 	}
 }

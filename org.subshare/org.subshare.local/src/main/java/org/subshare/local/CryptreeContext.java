@@ -196,9 +196,14 @@ public class CryptreeContext {
 	}
 
 	public CryptoRepoFile getCryptoRepoFileOrFail(final String localPath) {
+		final CryptoRepoFile cryptoRepoFile = getCryptoRepoFile(localPath);
+		assertNotNull("cryptoRepoFile", cryptoRepoFile);
+		return cryptoRepoFile;
+	}
+
+	public CryptoRepoFile getCryptoRepoFile(final String localPath) {
 		final CryptoRepoFileDao cryptoRepoFileDao = transaction.getDao(CryptoRepoFileDao.class);
 		final CryptoRepoFile cryptoRepoFile = cryptoRepoFileDao.getCryptoRepoFile(prefixLocalPath(localPath));
-		assertNotNull("cryptoRepoFile", cryptoRepoFile);
 		return cryptoRepoFile;
 	}
 

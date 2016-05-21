@@ -38,12 +38,13 @@ public class DeleteRepoFileListener extends AbstractLocalRepoTransactionListener
 		final CryptoRepoFileDao cryptoRepoFileDao = tx.getDao(CryptoRepoFileDao.class);
 		final CryptoRepoFile cryptoRepoFile = cryptoRepoFileDao.getCryptoRepoFile(repoFile);
 		if (cryptoRepoFile != null) {
-//			cryptoRepoFileDao.deletePersistent(cryptoRepoFile);
-//			tx.flush();
-			if (cryptoRepoFile.getDeleted() == null)
+//			if (cryptoRepoFile.getDeleted() == null) // this is done later, now.
+//				throw new IllegalStateException(String.format("%s not marked as deleted!", cryptoRepoFile));
+			PreliminaryDeletion preliminaryDeletion = tx.getDao(PreliminaryDeletionDao.class).getPreliminaryDeletion(cryptoRepoFile);
+			if (preliminaryDeletion == null && cryptoRepoFile.getDeleted() == null)
 				throw new IllegalStateException(String.format("%s not marked as deleted!", cryptoRepoFile));
 
-			cryptoRepoFile.setRepoFile(null);
+			cryptoRepoFile.setRepoFile(null); // this must be done, now, because we cannot delete the RepoFile otherwise due to a constraint-violation
 		}
 	}
 

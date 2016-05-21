@@ -174,7 +174,7 @@ public class SsLocalRepoMetaDataImpl extends LocalRepoMetaDataImpl implements Ss
 		final Set<PermissionType> result = EnumSet.noneOf(PermissionType.class);
 		try (final LocalRepoTransaction tx = beginReadTransaction();) {
 			final Cryptree cryptree = getCryptree(tx);
-			final Uid cryptoRepoFileId = cryptree.getCryptoRepoFileId(localPath);
+			final Uid cryptoRepoFileId = cryptree.getCryptoRepoFileIdOrFail(localPath);
 			final Uid parentCryptoRepoFileId = cryptree.getParentCryptoRepoFileId(cryptoRepoFileId);
 			if (parentCryptoRepoFileId == null)
 				return Collections.emptySet();
