@@ -41,6 +41,7 @@ import org.subshare.core.dto.SsNormalFileDto;
 import org.subshare.core.dto.SsRepoFileDto;
 import org.subshare.core.dto.SsRequestRepoConnectionRepositoryDto;
 import org.subshare.core.pgp.PgpKey;
+import org.subshare.core.repo.local.SsLocalRepoMetaData;
 import org.subshare.core.repo.transport.CryptreeRestRepoTransport;
 import org.subshare.core.sign.PgpSignableSigner;
 import org.subshare.core.sign.Signable;
@@ -79,7 +80,10 @@ import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManagerFactory;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoRegistryImpl;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
+import co.codewizards.cloudstore.core.repo.local.LocalRepoTransactionPostCloseAdapter;
+import co.codewizards.cloudstore.core.repo.local.LocalRepoTransactionPostCloseEvent;
 import co.codewizards.cloudstore.core.repo.transport.AbstractRepoTransport;
+import co.codewizards.cloudstore.core.repo.transport.CollisionException;
 import co.codewizards.cloudstore.core.util.IOUtil;
 import co.codewizards.cloudstore.rest.client.CloudStoreRestClient;
 import co.codewizards.cloudstore.rest.client.request.RequestRepoConnection;
@@ -146,6 +150,10 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 	@Override
 	public ChangeSetDto getChangeSetDto(final boolean localSync) {
 		final ChangeSetDto changeSetDto = getRestRepoTransport().getChangeSetDto(localSync);
+
+		logger.debug("getChangeSetDto: clientRepositoryId={} serverRepositoryId={}: {}",
+				getClientRepositoryId(), getRepositoryId(), changeSetDto);
+
 		syncCryptoKeysFromRemoteRepo();
 		return decryptChangeSetDto(changeSetDto);
 	}
@@ -182,6 +190,9 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 		final CryptoChangeSetDto cryptoChangeSetDto = getClient().execute(new GetCryptoChangeSetDto(getRepositoryId().toString()));
 		final LocalRepoManager localRepoManager = getLocalRepoManager();
 
+		logger.debug("syncCryptoKeysFromRemoteRepo: clientRepositoryId={} serverRepositoryId={}: {}",
+				getClientRepositoryId(), getRepositoryId(), cryptoChangeSetDto);
+
 		try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
 			final Cryptree cryptree = getCryptree(transaction);
 			cryptree.initLocalRepositoryType();
@@ -215,12 +226,25 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 			final Set<Long> nonDecryptableRepoFileIds = new HashSet<Long>();
 
 			final RepoFileDtoTreeNode tree = RepoFileDtoTreeNode.createTree(changeSetDto.getRepoFileDtos());
+			Set<RepoFileDtoTreeNode> deletedDuplicateCryptoRepoFileNodes = new HashSet<>();
 			if (tree != null) {
 				for (final RepoFileDtoTreeNode node : tree) {
+					if (deletedDuplicateCryptoRepoFileNodes.contains(node))
+						continue;
+
 					final RepoFileDto repoFileDto = node.getRepoFileDto();
 
-					// We silently ignore those missing signatures that are allowed to be ignored silently ;-)
-					verifySignatureAndTreeStructureAndPermission(cryptree, signableVerifier, node);
+					try {
+						// We silently ignore those missing signatures that are allowed to be ignored silently ;-)
+						verifySignatureAndTreeStructureAndPermission(cryptree, signableVerifier, node);
+					} catch (CollisionException x) {
+						logger.warn("decryptChangeSetDto: " + x);
+						for (RepoFileDtoTreeNode nodeOrChild : node) {
+							deletedDuplicateCryptoRepoFileNodes.add(nodeOrChild);
+							changeSetDto.getRepoFileDtos().remove(nodeOrChild.getRepoFileDto());
+						}
+						continue;
+					}
 
 					if (nonDecryptableRepoFileIds.contains(repoFileDto.getParentId())) {
 						nonDecryptableRepoFileIds.add(repoFileDto.getId()); // transitive for all children and children's children
@@ -242,6 +266,9 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 
 			transaction.commit();
 		}
+
+		logger.debug("decryptChangeSetDto: clientRepositoryId={} serverRepositoryId={}: {}",
+				getClientRepositoryId(), getRepositoryId(), decryptedChangeSetDto);
 
 		return decryptedChangeSetDto;
 	}
@@ -310,6 +337,9 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 
 			final Signature signature = ssRepoFileDto.getSignature();
 			final Uid cryptoRepoFileId = repoFileDto.getName().isEmpty() ? cryptree.getRootCryptoRepoFileId() : new Uid(repoFileDto.getName());
+
+			cryptree.assertIsNotDeletedDuplicateCryptoRepoFile(cryptoRepoFileId);
+
 			cryptree.assertHasPermission(
 					cryptoRepoFileId, signature.getSigningUserRepoKeyId(), PermissionType.write, signature.getSignatureCreated());
 			// TODO wouldn't it be better to use cryptree.assertSignatureOk(...) instead?! Need to implement WriteProtected, of course...
@@ -431,6 +461,9 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 //			final CryptoChangeSetDto cryptoChangeSetDto = cryptree.createOrUpdateCryptoRepoFile(path);
 //			putCryptoChangeSetDto(cryptoChangeSetDto);
 //			cryptree.updateLastCryptoKeySyncToRemoteRepo();
+
+			logger.debug("makeDirectory: clientRepositoryId={} serverRepositoryId={} path='{}' serverPath='{}'",
+					getClientRepositoryId(), getRepositoryId(), path, serverPath);
 
 			getClient().execute(new SsMakeDirectory(getRepositoryId().toString(), serverPath, rfdwcrfosd));
 
@@ -601,6 +634,10 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 			final SsNormalFileDto serverNormalFileDto = createNormalFileDtoForPutFile(
 					cryptree, path, serverPath,
 					assertNotNegative(fromNormalFileDto.getLengthWithPadding()) );
+
+			logger.debug("beginPutFile: clientRepositoryId={} serverRepositoryId={} path='{}' serverPath='{}'",
+					getClientRepositoryId(), getRepositoryId(), path, serverPath);
+
 			getClient().execute(new SsBeginPutFile(getRepositoryId().toString(), serverPath, serverNormalFileDto));
 
 			transaction.commit();
@@ -662,8 +699,34 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 
 			// Note: we *MUST* store the file chunks server-side in separate chunk-files/BLOBs permanently!
 			// The reason is that the chunks might be bigger (and usually are!) than the unencrypted files.
-			final String unprefixedServerPath = unprefixPath(cryptree.getServerPath(path)); // it's automatically prefixed *again*, thus we must prefix it here (if we don't want to somehow suppress the automatic prefixing, which is probably quite a lot of work).
-			getRestRepoTransport().putFileData(unprefixedServerPath, offset, encryptedFileData);
+			final String serverPath = cryptree.getServerPath(path);
+			final String unprefixedServerPath = unprefixPath(serverPath); // it's automatically prefixed *again*, thus we must prefix it here (if we don't want to somehow suppress the automatic prefixing, which is probably quite a lot of work).
+
+			logger.debug("putFileData: clientRepositoryId={} serverRepositoryId={} path='{}' serverPath='{}'",
+					getClientRepositoryId(), getRepositoryId(), path, serverPath);
+
+			try {
+				getRestRepoTransport().putFileData(unprefixedServerPath, offset, encryptedFileData);
+			} catch (CollisionException x) {
+				transaction.addPostCloseListener(new LocalRepoTransactionPostCloseAdapter() {
+					@Override
+					public void postRollback(LocalRepoTransactionPostCloseEvent event) {
+						final LocalRepoManager localRepoManager = event.getLocalRepoManager();
+						try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
+							final Cryptree cryptree = getCryptree(transaction);
+							cryptree.getLocalRepoStorage().clearTempFileChunkDtos(path);
+
+							transaction.commit();
+						}
+						((SsLocalRepoMetaData) localRepoManager.getLocalRepoMetaData()).scheduleReupload(path);
+					}
+					@Override
+					public void postCommit(LocalRepoTransactionPostCloseEvent event) {
+						throw new IllegalStateException("Commit is not allowed, anymore!");
+					}
+				});
+				throw x;
+			}
 
 			// Store the "tempFileChunkDto" locally here (no need to encrypt+upload).
 			cryptree.getLocalRepoStorage().putTempFileChunkDto(path, offset);
@@ -705,6 +768,9 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 //			final CryptoChangeSetDto cryptoChangeSetDto = cryptree.getCryptoChangeSetDtoOrFail(path);
 //			putCryptoChangeSetDto(cryptoChangeSetDto);
 //			cryptree.updateLastCryptoKeySyncToRemoteRepo();
+
+			logger.debug("endPutFile: clientRepositoryId={} serverRepositoryId={} path='{}' serverPath='{}'",
+					getClientRepositoryId(), getRepositoryId(), path, serverPath);
 
 			getClient().execute(new SsEndPutFile(getRepositoryId().toString(), serverPath, rfdwcrfosd));
 

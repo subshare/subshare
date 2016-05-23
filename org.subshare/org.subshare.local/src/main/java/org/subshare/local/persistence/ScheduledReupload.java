@@ -13,24 +13,24 @@ import javax.jdo.annotations.Query;
 import javax.jdo.annotations.Unique;
 
 import co.codewizards.cloudstore.local.persistence.Entity;
+import co.codewizards.cloudstore.local.persistence.RepoFile;
 
 @PersistenceCapable
 @Inheritance(strategy = InheritanceStrategy.NEW_TABLE)
-@Unique(name = "UK_PreliminaryDeletion_cryptoRepoFile", members = "cryptoRepoFile")
-@Index(name = "PreliminaryDeletion_cryptoRepoFile", members = "cryptoRepoFile")
+@Unique(name = "UK_ScheduledReupload_repoFile", members = "repoFile")
+@Index(name = "ScheduledReupload_repoFile", members = "repoFile")
 @Queries({
-	@Query(name = "getPreliminaryDeletion_cryptoRepoFile", value = "SELECT UNIQUE WHERE this.cryptoRepoFile == :cryptoRepoFile")
+	@Query(name = "getScheduledReupload_repoFile", value = "SELECT UNIQUE WHERE this.repoFile == :repoFile")
 })
-public class PreliminaryDeletion extends Entity {
+public class ScheduledReupload extends Entity {
 
 	@Persistent(nullValue=NullValue.EXCEPTION)
-	private CryptoRepoFile cryptoRepoFile;
+	private RepoFile repoFile;
 
-	public CryptoRepoFile getCryptoRepoFile() {
-		return cryptoRepoFile;
+	public RepoFile getRepoFile() {
+		return repoFile;
 	}
-
-	public void setCryptoRepoFile(CryptoRepoFile cryptoRepoFile) {
-		this.cryptoRepoFile = assertNotNull("cryptoRepoFile", cryptoRepoFile);
+	public void setRepoFile(RepoFile repoFile) {
+		this.repoFile = assertNotNull("repoFile", repoFile);
 	}
 }

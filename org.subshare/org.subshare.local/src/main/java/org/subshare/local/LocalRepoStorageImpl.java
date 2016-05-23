@@ -8,14 +8,14 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.UUID;
 
-import org.subshare.core.AbstractLocalRepoStorage;
-import org.subshare.local.dto.SsFileChunkDtoConverter;
-import org.subshare.local.persistence.SsLocalRepository;
-import org.subshare.local.persistence.LocalRepositoryType;
-import org.subshare.local.persistence.TempFileChunk;
-import org.subshare.local.persistence.TempFileChunkDao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.subshare.core.AbstractLocalRepoStorage;
+import org.subshare.local.dto.SsFileChunkDtoConverter;
+import org.subshare.local.persistence.LocalRepositoryType;
+import org.subshare.local.persistence.SsLocalRepository;
+import org.subshare.local.persistence.TempFileChunk;
+import org.subshare.local.persistence.TempFileChunkDao;
 
 import co.codewizards.cloudstore.core.dto.FileChunkDto;
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
@@ -141,11 +141,14 @@ public class LocalRepoStorageImpl extends AbstractLocalRepoStorage {
 		final LocalRepoTransaction transaction = getTransactionOrFail();
 		final TempFileChunkDao tfcDao = transaction.getDao(TempFileChunkDao.class);
 		final RepoFile repoFile = getRepoFile(localPath);
-		if (repoFile == null)
+		if (repoFile == null) {
+			logger.debug("clearTempFileChunkDtos: localPath='{}': Nothing to delete!", localPath);
 			return; // nothing to delete ;-)
+		}
 
 		final NormalFile normalFile = (NormalFile) repoFile;
 		final Collection<TempFileChunk> tempFileChunks = tfcDao.getTempFileChunks(normalFile, remoteRepositoryId);
+		logger.debug("clearTempFileChunkDtos: localPath='{}': Deleting {} tempFileChunks!", localPath, tempFileChunks.size());
 		tfcDao.deletePersistentAll(tempFileChunks);
 		transaction.flush();
 	}

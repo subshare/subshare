@@ -132,6 +132,7 @@ import co.codewizards.cloudstore.core.dto.SymlinkDto;
 import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
+import co.codewizards.cloudstore.core.repo.transport.CollisionException;
 import co.codewizards.cloudstore.core.util.StringUtil;
 import co.codewizards.cloudstore.local.persistence.LocalRepository;
 import co.codewizards.cloudstore.local.persistence.LocalRepositoryDao;
@@ -319,6 +320,8 @@ public class CryptreeImpl extends AbstractCryptree {
 		populateChangedCryptoRepoFileDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 
 		populateCryptoChangeSetDtoWithAllButCryptoRepoFiles(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
+
+		logger.debug("getCryptoChangeSetDtoWithCryptoRepoFiles(): {}", cryptoChangeSetDto);
 		return cryptoChangeSetDto;
 	}
 
@@ -1506,6 +1509,8 @@ public class CryptreeImpl extends AbstractCryptree {
 		final CryptoChangeSetDto cryptoChangeSetDto = new CryptoChangeSetDto();
 		cryptoChangeSetDto.getCryptoRepoFileDtos().add(CryptoRepoFileDtoConverter.create().toCryptoRepoFileDto(cryptoRepoFile));
 		populateCryptoChangeSetDtoWithAllButCryptoRepoFiles(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
+
+		logger.debug("getCryptoChangeSetDto({}): {}", cryptoRepoFile, cryptoChangeSetDto);
 		return cryptoChangeSetDto;
 	}
 
@@ -1934,6 +1939,14 @@ public class CryptreeImpl extends AbstractCryptree {
 	}
 
 	@Override
+	public void assertIsNotDeletedDuplicateCryptoRepoFile(Uid cryptoRepoFileId) {
+		assertNotNull("cryptoRepoFileId", cryptoRepoFileId);
+		Collection<Collision> collisions = getCryptreeContext().transaction.getDao(CollisionDao.class).getCollisionsWithDuplicateCryptoRepoFileId(cryptoRepoFileId);
+		if (! collisions.isEmpty())
+			throw new CollisionException("CryptoRepoFile was deleted due to being a duplicate! cryptoRepoFileId = " + cryptoRepoFileId);
+	}
+
+	@Override
 	public void assertHasPermission(
 			final Uid cryptoRepoFileId,
 			final Uid userRepoKeyId,
@@ -1944,6 +1957,7 @@ public class CryptreeImpl extends AbstractCryptree {
 		assertNotNull("userRepoKeyId", userRepoKeyId);
 		assertNotNull("permissionType", permissionType);
 		assertNotNull("timestamp", timestamp);
+
 		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(cryptoRepoFileId);
 		cryptreeNode.assertHasPermission(false, userRepoKeyId, permissionType, timestamp);
 	}
@@ -2181,7 +2195,8 @@ public class CryptreeImpl extends AbstractCryptree {
 			collision.setDuplicateCryptoRepoFileId(duplicateCryptoRepoFileId);
 			sign(collision);
 			collision = cDao.makePersistent(collision);
-			logger.info("createCollisionIfNeeded: localPath='{}' localRevision={}", localPath, collision.getLocalRevision());
+			logger.info("createCollisionIfNeeded: localPath='{}' histoCryptoRepoFile1={} histoCryptoRepoFile2={} duplicateCryptoRepoFileId={} localRevision={}",
+					localPath, histoCryptoRepoFile1, histoCryptoRepoFile2, duplicateCryptoRepoFileId, collision.getLocalRevision());
 		}
 		return collision;
 	}

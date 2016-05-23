@@ -111,5 +111,12 @@ public class CollisionDto implements Signable {
 		this.signatureDto = SignatureDto.copyIfNeeded(signature);
 	}
 
-
+	@Override
+	public String toString() {
+		return this.getClass().getSimpleName() + "[collisionId=" + collisionId
+				+ ", histoCryptoRepoFileId1=" + histoCryptoRepoFileId1
+				+ ", histoCryptoRepoFileId2=" + histoCryptoRepoFileId2
+				+ ", duplicateCryptoRepoFileId=" + duplicateCryptoRepoFileId
+				+ "]";
+	}
 }

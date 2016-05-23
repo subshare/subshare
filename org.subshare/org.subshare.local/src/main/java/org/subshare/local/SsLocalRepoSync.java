@@ -11,6 +11,8 @@ import java.util.UUID;
 import javax.jdo.FetchPlan;
 import javax.jdo.PersistenceManager;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.subshare.core.Cryptree;
 import org.subshare.core.CryptreeFactory;
 import org.subshare.core.CryptreeFactoryRegistry;
@@ -19,6 +21,8 @@ import org.subshare.core.user.UserRepoKeyRing;
 import org.subshare.core.user.UserRepoKeyRingLookup;
 import org.subshare.core.user.UserRepoKeyRingLookupContext;
 import org.subshare.local.persistence.LocalRepositoryType;
+import org.subshare.local.persistence.ScheduledReupload;
+import org.subshare.local.persistence.ScheduledReuploadDao;
 import org.subshare.local.persistence.SsFileChunk;
 import org.subshare.local.persistence.SsLocalRepository;
 import org.subshare.local.persistence.SsNormalFile;
@@ -40,10 +44,14 @@ import co.codewizards.cloudstore.local.persistence.RepoFile;
 
 public class SsLocalRepoSync extends LocalRepoSync {
 
+	private static final Logger logger = LoggerFactory.getLogger(SsLocalRepoSync.class);
+
 //	private boolean repoFileContextWasApplied;
 	private SsLocalRepository localRepository;
 	private UserRepoKeyRing userRepoKeyRing;
 	private CryptreeFactory cryptreeFactory;
+
+	private boolean processScheduledReuploadsDone;
 
 	protected SsLocalRepoSync(final LocalRepoTransaction transaction) {
 		super(transaction);
@@ -54,7 +62,33 @@ public class SsLocalRepoSync extends LocalRepoSync {
 		if (isMetaOnly())
 			return;
 
+		processScheduledReuploads();
+
 		super.sync(monitor);
+	}
+
+	private void processScheduledReuploads() {
+		if (processScheduledReuploadsDone)
+			return;
+
+
+		final ScheduledReuploadDao srDao = transaction.getDao(ScheduledReuploadDao.class);
+		Collection<ScheduledReupload> scheduledReuploads = srDao.getObjects();
+
+		logger.debug("processScheduledReuploads: scheduledReuploads.size={} ", scheduledReuploads.size());
+
+		final long localRevision = transaction.getLocalRevision();
+
+		for (final ScheduledReupload scheduledReupload : scheduledReuploads) {
+			if (logger.isDebugEnabled())
+				logger.debug("processScheduledReuploads: scheduledReupload.repoFile.path='{}' localRevision={}", scheduledReupload.getRepoFile().getPath(), localRevision);
+
+			scheduledReupload.getRepoFile().setLocalRevision(localRevision);
+			srDao.deletePersistent(scheduledReupload);
+		}
+		transaction.flush();
+
+		processScheduledReuploadsDone = true;
 	}
 
 	private SsLocalRepository getLocalRepository() {
@@ -74,6 +108,8 @@ public class SsLocalRepoSync extends LocalRepoSync {
 			final RepoFile repoFile = repoFileDao.getRepoFile(localRoot, file);
 			return repoFile; // might be null!
 		}
+
+		processScheduledReuploads();
 
 		if (resursiveChildren) {
 			if (getLocalRepository().getLocalRepositoryType() == LocalRepositoryType.SERVER)

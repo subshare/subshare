@@ -101,8 +101,19 @@ public class CollisionOnClientRepoToRepoSyncIT extends CollisionRepoToRepoSyncIT
 		int lastByteOfHistoFile0 = getLastByte(histoFile0);
 		assertThat(lastByteOfHistoFile0).isEqualTo(111);
 
+		// Verify that there is exactly one collision.
 		collisionDtos = localRepoMetaData.getCollisionDtos(new CollisionFilter());
 		assertThat(collisionDtos).hasSize(1);
+
+		// Verify that this collision is correct.
+		CollisionDto collisionDto = collisionDtos.iterator().next();
+		assertThat(collisionDto.getDuplicateCryptoRepoFileId()).isNull();
+
+		assertThat(collisionDto.getHistoCryptoRepoFileId1())
+		.isEqualTo(plainHistoCryptoRepoFileDtos.get(1).getHistoCryptoRepoFileDto().getHistoCryptoRepoFileId());
+
+		assertThat(collisionDto.getHistoCryptoRepoFileId2())
+		.isEqualTo(plainHistoCryptoRepoFileDtos.get(0).getHistoCryptoRepoFileDto().getHistoCryptoRepoFileId());
 	}
 
 	/**
@@ -180,6 +191,16 @@ public class CollisionOnClientRepoToRepoSyncIT extends CollisionRepoToRepoSyncIT
 
 		collisionDtos = localRepoMetaData.getCollisionDtos(new CollisionFilter());
 		assertThat(collisionDtos).hasSize(1);
+
+		// Verify that this collision is correct.
+		CollisionDto collisionDto = collisionDtos.iterator().next();
+		assertThat(collisionDto.getDuplicateCryptoRepoFileId()).isNull();
+
+		assertThat(collisionDto.getHistoCryptoRepoFileId1())
+		.isEqualTo(plainHistoCryptoRepoFileDtos.get(2).getHistoCryptoRepoFileDto().getHistoCryptoRepoFileId());
+
+		assertThat(collisionDto.getHistoCryptoRepoFileId2())
+		.isEqualTo(plainHistoCryptoRepoFileDtos.get(1).getHistoCryptoRepoFileDto().getHistoCryptoRepoFileId());
 	}
 
 	/**
@@ -263,7 +284,15 @@ public class CollisionOnClientRepoToRepoSyncIT extends CollisionRepoToRepoSyncIT
 		collisionDtos = localRepoMetaData.getCollisionDtos(new CollisionFilter());
 		assertThat(collisionDtos).hasSize(1);
 
-		// TODO check CollisionDto and make sure, it links the right HistoCryptoRepoFiles with each other!
+		// Verify that this collision is correct.
+		CollisionDto collisionDto = collisionDtos.iterator().next();
+		assertThat(collisionDto.getDuplicateCryptoRepoFileId()).isNull();
+
+		assertThat(collisionDto.getHistoCryptoRepoFileId1())
+		.isEqualTo(plainHistoCryptoRepoFileDtos.get(2).getHistoCryptoRepoFileDto().getHistoCryptoRepoFileId());
+
+		assertThat(collisionDto.getHistoCryptoRepoFileId2())
+		.isEqualTo(plainHistoCryptoRepoFileDtos.get(1).getHistoCryptoRepoFileDto().getHistoCryptoRepoFileId());
 	}
 
 	/**
@@ -346,7 +375,15 @@ public class CollisionOnClientRepoToRepoSyncIT extends CollisionRepoToRepoSyncIT
 		collisionDtos = localRepoMetaData.getCollisionDtos(new CollisionFilter());
 		assertThat(collisionDtos).hasSize(1);
 
-		// TODO check CollisionDto and make sure, it links the right HistoCryptoRepoFiles with each other!
+		// Verify that this collision is correct.
+		CollisionDto collisionDto = collisionDtos.iterator().next();
+		assertThat(collisionDto.getDuplicateCryptoRepoFileId()).isNull();
+
+		assertThat(collisionDto.getHistoCryptoRepoFileId1())
+		.isEqualTo(plainHistoCryptoRepoFileDtos.get(2).getHistoCryptoRepoFileDto().getHistoCryptoRepoFileId());
+
+		assertThat(collisionDto.getHistoCryptoRepoFileId2())
+		.isEqualTo(plainHistoCryptoRepoFileDtos.get(1).getHistoCryptoRepoFileDto().getHistoCryptoRepoFileId());
 	}
 
 }

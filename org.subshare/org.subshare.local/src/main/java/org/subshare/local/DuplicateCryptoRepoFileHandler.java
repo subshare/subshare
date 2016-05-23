@@ -9,6 +9,8 @@ import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.subshare.core.Cryptree;
 import org.subshare.core.CryptreeFactoryRegistry;
 import org.subshare.core.user.UserRepoKeyRing;
@@ -17,6 +19,8 @@ import org.subshare.core.user.UserRepoKeyRingLookupContext;
 import org.subshare.local.persistence.Collision;
 import org.subshare.local.persistence.CryptoRepoFile;
 import org.subshare.local.persistence.CryptoRepoFileDao;
+import org.subshare.local.persistence.ScheduledReupload;
+import org.subshare.local.persistence.ScheduledReuploadDao;
 import org.subshare.local.persistence.SsRemoteRepository;
 
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
@@ -24,6 +28,8 @@ import co.codewizards.cloudstore.local.persistence.RemoteRepositoryDao;
 import co.codewizards.cloudstore.local.persistence.RepoFile;
 
 public class DuplicateCryptoRepoFileHandler {
+
+	private static final Logger logger = LoggerFactory.getLogger(DuplicateCryptoRepoFileHandler.class);
 
 	private final LocalRepoTransaction transaction;
 	private final Cryptree cryptree;
@@ -85,6 +91,9 @@ public class DuplicateCryptoRepoFileHandler {
 		assertNotNull("cryptoRepoFileActive", cryptoRepoFileActive);
 		assertNotNull("cryptoRepoFileDead", cryptoRepoFileDead);
 
+		logger.debug("deduplicate: cryptoRepoFileActive={} cryptoRepoFileDead={}",
+				cryptoRepoFileActive, cryptoRepoFileDead);
+
 		RepoFile repoFile = cryptoRepoFileActive.getRepoFile();
 		if (repoFile == null)
 			repoFile = cryptoRepoFileDead.getRepoFile();
@@ -116,11 +125,25 @@ public class DuplicateCryptoRepoFileHandler {
 		if (cryptoRepoFileDead == null)
 			return; // already deleted => nothing to do
 
+		logger.debug("deduplicateFromCollisionIfNeeded: cryptoRepoFileActive={} cryptoRepoFileDead={}",
+				cryptoRepoFileActive, cryptoRepoFileDead);
+
 		if (cryptree.getUserRepoKeyRing() != null) { // only if running on client! on the server, we cannot sign!
 			Collection<CryptoRepoFile> children = crfDao.getChildCryptoRepoFiles(cryptoRepoFileDead);
 			for (CryptoRepoFile child : children) {
 				child.setParent(cryptoRepoFileActive);
 				cryptree.sign(child);
+			}
+
+			RepoFile repoFile = cryptoRepoFileDead.getRepoFile();
+			if (repoFile != null) {
+				ScheduledReuploadDao srDao = transaction.getDao(ScheduledReuploadDao.class);
+				ScheduledReupload scheduledReupload = srDao.getScheduledReupload(repoFile);
+				if (scheduledReupload == null) {
+					scheduledReupload = new ScheduledReupload();
+					scheduledReupload.setRepoFile(repoFile);
+					srDao.makePersistent(scheduledReupload);
+				}
 			}
 		}
 

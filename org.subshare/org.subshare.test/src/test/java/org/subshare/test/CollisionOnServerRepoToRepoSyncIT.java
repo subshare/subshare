@@ -20,6 +20,7 @@ import org.subshare.core.repo.histo.HistoExporterImpl;
 import org.subshare.core.repo.local.CollisionFilter;
 import org.subshare.core.repo.local.SsLocalRepoMetaData;
 
+import co.codewizards.cloudstore.core.io.TimeoutException;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.util.IOUtil;
 
@@ -51,7 +52,7 @@ public class CollisionOnServerRepoToRepoSyncIT extends CollisionRepoToRepoSyncIT
 	 * The collision thus happens and is detected during a following down-sync at a later time.
 	 */
 	@Test
-	public void newFileVsNewFileCollisionOnServer() throws Exception {
+	public void newFileVsNewFileUploadedCollisionOnServer() throws Exception {
 		System.out.println("************************************************************");
 		System.out.println("PREPARE >>>");
 		prepareLocalAndDestinationRepo();
@@ -153,7 +154,172 @@ public class CollisionOnServerRepoToRepoSyncIT extends CollisionRepoToRepoSyncIT
 		// sync *again* in order to make sure the collided file is uploaded now.
 		syncFromLocalSrcToRemote();
 		syncFromRemoteToLocalDest(false);
-		syncFromLocalSrcToRemote(); // again, in case the collision was solved on the remote-side
+		syncFromLocalSrcToRemote(); // again, in case the collision was solved on the dest-side
+
+//		syncFromLocalSrcToRemote(); // should down-sync the change from dest-repo ... not needed! they're guaranteed to work in parallel using the ...Coordinator!
+		assertDirectoriesAreEqualRecursively(
+				(remotePathPrefix2Plain.isEmpty() ? getLocalRootWithPathPrefix() : createFile(getLocalRootWithPathPrefix(), remotePathPrefix2Plain)),
+				localDestRoot);
+
+		// Verify that *both* versions are in the history.
+		List<PlainHistoCryptoRepoFileDto> plainHistoCryptoRepoFileDtos = getPlainHistoCryptoRepoFileDtos(localSrcRepoManagerLocal, file1);
+		assertThat(plainHistoCryptoRepoFileDtos).hasSize(2);
+
+//		// Both new versions should have the same previous version, because the collision happened on the server.
+//		Set<Uid> previousHistoCryptoRepoFileIds = new HashSet<>();
+//		for (PlainHistoCryptoRepoFileDto phcrfDto : plainHistoCryptoRepoFileDtos)
+//			previousHistoCryptoRepoFileIds.add(phcrfDto.getHistoCryptoRepoFileDto().getPreviousHistoCryptoRepoFileId());
+//
+//		assertThat(previousHistoCryptoRepoFileIds).hasSize(1);
+
+		// Verify that the older one is the previous version of the newer one (the list is sorted by timestamp).
+		// Even though the collision happens on the server, the handling process ensures that they are consecutive
+		// (rather than forked siblings of the same previous version).
+		assertThat(plainHistoCryptoRepoFileDtos.get(0).getHistoCryptoRepoFileDto().getHistoCryptoRepoFileId())
+		.isEqualTo(plainHistoCryptoRepoFileDtos.get(1).getHistoCryptoRepoFileDto().getPreviousHistoCryptoRepoFileId());
+
+		// Verify that the 2nd version (with 222 at the end) is the current one.
+		int lastByte1 = getLastByte(file1);
+		int lastByte2 = getLastByte(file2);
+
+		int expectedLastByteOfPreviousVersion;
+
+		assertThat(lastByte1).isEqualTo(lastByte2);
+
+		if (lastByte1 == 111)
+			expectedLastByteOfPreviousVersion = 222;
+		else if (lastByte1 == 222)
+			expectedLastByteOfPreviousVersion = 111;
+		else
+			throw new IllegalStateException("lastByte is neither 111 nor 222, but: " + lastByte1);
+
+		// Export both versions of the file and assert that
+		// - the current file is identical to the last one
+		// - and the first one ends on the other value (222, if current is 111; or 111, if current is 222).
+		File tempDir0 = createTempDirectory(getClass().getSimpleName() + '.');
+		File tempDir1 = createTempDirectory(getClass().getSimpleName() + '.');
+
+		try (HistoExporter histoExporter = HistoExporterImpl.createHistoExporter(localSrcRoot);) {
+			histoExporter.exportFile(
+					plainHistoCryptoRepoFileDtos.get(0).getHistoCryptoRepoFileDto().getHistoCryptoRepoFileId(), tempDir0);
+
+			histoExporter.exportFile(
+					plainHistoCryptoRepoFileDtos.get(1).getHistoCryptoRepoFileDto().getHistoCryptoRepoFileId(), tempDir1);
+		}
+		File histoFile0 = createFile(tempDir0, "new-file");
+		File histoFile1 = createFile(tempDir1, "new-file");
+
+		assertThat(IOUtil.compareFiles(histoFile1, file1)).isTrue();
+		assertThat(IOUtil.compareFiles(histoFile0, histoFile1)).isFalse();
+
+		int lastByteOfHistoFile0 = getLastByte(histoFile0);
+
+		System.out.println("lastByteOfHistoFile0 = " + lastByteOfHistoFile0);
+		System.out.println("lastByteOfHistoFile1 = " + lastByte1);
+
+		assertThat(lastByteOfHistoFile0).isEqualTo(expectedLastByteOfPreviousVersion);
+
+		collisionDtos = localRepoMetaData.getCollisionDtos(new CollisionFilter());
+		assertThat(collisionDtos).hasSize(2);
+
+		// exactly one of these two should have a duplicateCryptoRepoFileId assigned.
+		getCollisionDtoWithDuplicateCryptoRepoFileIdOrFail(collisionDtos);
+	}
+
+	@Test
+	public void newFileVsNewFileUploadingCollisionOnServer() throws Exception {
+		System.out.println("************************************************************");
+		System.out.println("PREPARE >>>");
+		prepareLocalAndDestinationRepo();
+
+		final boolean scenarioB = random.nextBoolean();
+		System.out.println("scenarioB = " + scenarioB);
+
+		File file1 = createFile(localSrcRoot, "2", "new-file");
+		createFileWithRandomContent(file1);
+		if (scenarioB)
+			modifyFile_append(file1, 111);
+		else
+			modifyFile_append(file1, 111, 100 * 1024 * 1024); // append large amount of bytes (each byte value 111)
+
+		File file2 = createFile(localDestRoot, "2", "new-file");
+		createFileWithRandomContent(file2);
+		if (! scenarioB)
+			modifyFile_append(file2, 222);
+		else
+			modifyFile_append(file2, 222, 100 * 1024 * 1024); // append large amount of bytes (each byte value 222)
+
+		SsLocalRepoMetaData localRepoMetaData = (SsLocalRepoMetaData) localSrcRepoManagerLocal.getLocalRepoMetaData();
+		Collection<CollisionDto> collisionDtos = localRepoMetaData.getCollisionDtos(new CollisionFilter());
+		assertThat(collisionDtos).isEmpty();
+
+		System.out.println("<<< PREPARE");
+		System.out.println("************************************************************");
+
+		RepoToRepoSyncCoordinator syncFromLocalSrcToRemoteCoordinator = repoToRepoSyncCoordinatorSupport.createRepoToRepoSyncCoordinator();
+		SyncFromLocalSrcToRemoteThread syncFromLocalSrcToRemoteThread = new SyncFromLocalSrcToRemoteThread(syncFromLocalSrcToRemoteCoordinator);
+		syncFromLocalSrcToRemoteThread.start();
+
+		// should collide and up-sync its own version in parallel
+		RepoToRepoSyncCoordinator syncFromRemoteToLocalDestCoordinator = repoToRepoSyncCoordinatorSupport.createRepoToRepoSyncCoordinator();
+		SyncFromRemoteToLocalDestThread syncFromRemoteToLocalDestThread = new SyncFromRemoteToLocalDestThread(syncFromRemoteToLocalDestCoordinator);
+		syncFromRemoteToLocalDestThread.start();
+
+		System.out.println("************************************************************");
+//		Thread.sleep(30000);
+		System.out.println("************************************************************");
+		System.out.println("DOWN >>>");
+
+		// Both threads are waiting *before* down-syncing now. We allow them both to continue:
+		syncFromLocalSrcToRemoteCoordinator.setSyncDownFrozen(false);
+		syncFromRemoteToLocalDestCoordinator.setSyncDownFrozen(false);
+
+		syncFromLocalSrcToRemoteCoordinator.setSyncDownFreezeEnabled(false);
+		syncFromRemoteToLocalDestCoordinator.setSyncDownFreezeEnabled(false);
+
+		// Then we wait until they're done down-syncing.
+		syncFromLocalSrcToRemoteCoordinator.waitForSyncDownDone();
+		syncFromRemoteToLocalDestCoordinator.waitForSyncDownDone();
+
+		System.out.println("<<< DOWN");
+		System.out.println("*****************");
+//		Thread.sleep(60000);
+		System.out.println("*****************");
+		System.out.println("CONTINUE SYNC >>>");
+
+		// Now they're waiting *before* up-syncing. We continue the up-sync, thus, now.
+		syncFromLocalSrcToRemoteCoordinator.setSyncUpFrozen(false);
+		syncFromRemoteToLocalDestCoordinator.setSyncUpFrozen(false);
+
+		syncFromLocalSrcToRemoteCoordinator.setSyncUpFreezeEnabled(false);
+		syncFromRemoteToLocalDestCoordinator.setSyncUpFreezeEnabled(false);
+
+		// Here, we do *not* wait until they're done, but only until the first block was uploaded.
+		syncFromLocalSrcToRemoteCoordinator.waitForUploadedFileChunkCountGreaterOrEqual(1);
+		syncFromRemoteToLocalDestCoordinator.waitForUploadedFileChunkCountGreaterOrEqual(1);
+
+		// wait for the threads to finish.
+		syncFromLocalSrcToRemoteThread.join(RepoToRepoSyncCoordinator.WAIT_FOR_THREAD_TIMEOUT_MS);
+		syncFromRemoteToLocalDestThread.join(RepoToRepoSyncCoordinator.WAIT_FOR_THREAD_TIMEOUT_MS);
+
+		if (syncFromLocalSrcToRemoteThread.isAlive() || syncFromRemoteToLocalDestThread.isAlive())
+			throw new TimeoutException("Threads not finished in time! syncFromLocalSrcToRemoteThread.alive=" + syncFromLocalSrcToRemoteThread.isAlive() + " syncFromRemoteToLocalDestThread.alive=" + syncFromRemoteToLocalDestThread.isAlive());
+
+		syncFromLocalSrcToRemoteCoordinator.throwErrorIfNeeded();
+		syncFromRemoteToLocalDestCoordinator.throwErrorIfNeeded();
+
+		System.out.println("************************************************************");
+		System.out.println("************************************************************");
+		System.out.println("SYNC AGAIN >>>");
+
+		// sync *again* in order to make sure the collided file is uploaded now.
+		syncFromLocalSrcToRemote();
+		syncFromRemoteToLocalDest(false);
+		syncFromLocalSrcToRemote(); // again, in case the collision was solved on the dest-side
+
+		System.out.println("<<< SYNC AGAIN");
+		System.out.println("************************************************************");
+		System.out.println("************************************************************");
 
 //		syncFromLocalSrcToRemote(); // should down-sync the change from dest-repo ... not needed! they're guaranteed to work in parallel using the ...Coordinator!
 		assertDirectoriesAreEqualRecursively(

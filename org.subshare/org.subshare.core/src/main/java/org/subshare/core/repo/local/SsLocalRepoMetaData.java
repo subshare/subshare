@@ -75,4 +75,6 @@ public interface SsLocalRepoMetaData extends LocalRepoMetaData {
 	Collection<PlainHistoCryptoRepoFileDto> getPlainHistoCryptoRepoFileDtos(PlainHistoCryptoRepoFileFilter filter);
 
 	Collection<CollisionDto> getCollisionDtos(CollisionFilter filter);
+
+	void scheduleReupload(String localPath);
 }

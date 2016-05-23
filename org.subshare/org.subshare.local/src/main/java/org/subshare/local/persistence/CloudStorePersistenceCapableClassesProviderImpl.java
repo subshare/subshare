@@ -7,8 +7,8 @@ public class CloudStorePersistenceCapableClassesProviderImpl extends AbstractClo
 	@Override
 	public Class<?>[] getPersistenceCapableClasses() {
 		return new Class<?>[] {
-				// The various sub-classes of CloudStore-entities do not need to be enlisted here, because they are
-				// already resolved using the ClassExtension mechanism. We thus only need CC-specific classes here.
+				// The various sub-classes of CloudStore-entities do not need to be enlisted here, because they are already
+				// resolved using the ClassExtension mechanism. We thus only need classes newly introduced by Subshare here.
 				CryptoKey.class,
 				CryptoLink.class,
 				FileChunkPayload.class,

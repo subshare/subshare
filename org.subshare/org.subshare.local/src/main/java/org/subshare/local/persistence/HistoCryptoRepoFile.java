@@ -272,8 +272,9 @@ public class HistoCryptoRepoFile extends Entity implements WriteProtected, AutoT
 
 	@Override
 	public String toString() {
-		return String.format("%s{cryptoRepoFileId=%s}",
+		return String.format("%s{histoCryptoRepoFileId=%s, cryptoRepoFileId=%s}",
 				super.toString(),
+				histoCryptoRepoFileId,
 				cryptoRepoFile == null ? null : cryptoRepoFile.getCryptoRepoFileId());
 	}
 }

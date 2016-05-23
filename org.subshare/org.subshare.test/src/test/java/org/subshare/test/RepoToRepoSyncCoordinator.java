@@ -6,8 +6,7 @@ import org.slf4j.LoggerFactory;
 import co.codewizards.cloudstore.core.io.TimeoutException;
 
 public class RepoToRepoSyncCoordinator {
-	public static final long WAIT_FOR_THREAD_TIMEOUT_MS = 120000L; // you might want to temporarily increase this for debugging!
-//	public static final long WAIT_FOR_THREAD_TIMEOUT_MS = 900000L;
+	public static final long WAIT_FOR_THREAD_TIMEOUT_MS = 600000L;
 
 	private final Logger logger = LoggerFactory.getLogger(RepoToRepoSyncCoordinator.class);
 
@@ -17,9 +16,15 @@ public class RepoToRepoSyncCoordinator {
 	private boolean syncDownFrozen = true;
 	private boolean syncDownDone;
 
+	private boolean syncUpFreezeEnabled = true;
+	private boolean syncDownFreezeEnabled = true;
+
 	private Throwable error;
 
 	private boolean closed;
+
+	private int downloadedFileChunkCount;
+	private int uploadedFileChunkCount;
 
 	protected RepoToRepoSyncCoordinator() {
 	}
@@ -61,6 +66,9 @@ public class RepoToRepoSyncCoordinator {
 	}
 
 	public synchronized boolean waitWhileSyncUpFrozen() {
+		if (! isSyncUpFreezeEnabled())
+			return true;
+
 		final long start = System.currentTimeMillis();
 		while (isSyncUpFrozen()) {
 			logger.info("waitWhileSyncUpFrozen: Waiting...");
@@ -80,6 +88,9 @@ public class RepoToRepoSyncCoordinator {
 	}
 
 	public synchronized boolean waitWhileSyncDownFrozen() {
+		if (! isSyncDownFreezeEnabled())
+			return true;
+
 		final long start = System.currentTimeMillis();
 		while (isSyncDownFrozen()) {
 			logger.info("waitWhileSyncDownFrozen: Waiting...");
@@ -169,5 +180,85 @@ public class RepoToRepoSyncCoordinator {
 
 	public void bindToCurrentThread() {
 		RepoToRepoSyncCoordinatorSupport.repoToRepoSyncCoordinatorThreadLocal.set(this);
+	}
+
+	public synchronized boolean waitForUploadedFileChunkCountGreaterOrEqual(int minimum) {
+		final long start = System.currentTimeMillis();
+		while (getUploadedFileChunkCount() < minimum) {
+			logger.info("waitForUploadedFileChunkCountGreaterOrEqual: Waiting...");
+			try {
+				wait(30000);
+			} catch (InterruptedException e) {
+				logger.error("waitForUploadedFileChunkCountGreaterOrEqual: " + e, e);
+				return false;
+			}
+			throwErrorIfNeeded();
+			if (System.currentTimeMillis() - start > WAIT_FOR_THREAD_TIMEOUT_MS)
+				throw new TimeoutException();
+		}
+		logger.info("waitForUploadedFileChunkCountGreaterOrEqual: Continuing!");
+		return true;
+	}
+
+	public synchronized boolean waitForDownloadedFileChunkCountGreaterOrEqual(int minimum) {
+		final long start = System.currentTimeMillis();
+		while (getDownloadedFileChunkCount() < minimum) {
+			logger.info("waitForUploadedFileChunkCountGreaterOrEqual: Waiting...");
+			try {
+				wait(30000);
+			} catch (InterruptedException e) {
+				logger.error("waitForUploadedFileChunkCountGreaterOrEqual: " + e, e);
+				return false;
+			}
+			throwErrorIfNeeded();
+			if (System.currentTimeMillis() - start > WAIT_FOR_THREAD_TIMEOUT_MS)
+				throw new TimeoutException();
+		}
+		logger.info("waitForUploadedFileChunkCountGreaterOrEqual: Continuing!");
+		return true;
+	}
+
+	public synchronized int getUploadedFileChunkCount() {
+		return uploadedFileChunkCount;
+	}
+
+	public synchronized int getDownloadedFileChunkCount() {
+		return downloadedFileChunkCount;
+	}
+
+	public synchronized void resetUploadedFileChunkCount() {
+		uploadedFileChunkCount = 0;
+	}
+
+	public synchronized void resetDownloadedFileChunkCount() {
+		downloadedFileChunkCount = 0;
+	}
+
+	public synchronized void incUploadedFileChunkCount() {
+		++uploadedFileChunkCount;
+
+		notifyAll();
+	}
+
+	public synchronized void incDownloadedFileChunkCount() {
+		++downloadedFileChunkCount;
+
+		notifyAll();
+	}
+
+	public synchronized boolean isSyncUpFreezeEnabled() {
+		return syncUpFreezeEnabled;
+	}
+
+	public synchronized void setSyncUpFreezeEnabled(boolean syncUpFreezeEnabled) {
+		this.syncUpFreezeEnabled = syncUpFreezeEnabled;
+	}
+
+	public synchronized boolean isSyncDownFreezeEnabled() {
+		return syncDownFreezeEnabled;
+	}
+
+	public synchronized void setSyncDownFreezeEnabled(boolean syncDownFreezeEnabled) {
+		this.syncDownFreezeEnabled = syncDownFreezeEnabled;
 	}
 }

@@ -10,6 +10,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.subshare.core.Cryptree;
 import org.subshare.core.CryptreeFactory;
 import org.subshare.core.CryptreeFactoryRegistry;
@@ -46,6 +48,8 @@ import co.codewizards.cloudstore.local.persistence.RepoFileDao;
 import co.codewizards.cloudstore.local.transport.FileRepoTransport;
 
 public class CryptreeFileRepoTransportImpl extends FileRepoTransport implements CryptreeClientFileRepoTransport {
+
+	private static final Logger logger = LoggerFactory.getLogger(CryptreeFileRepoTransportImpl.class);
 
 	private Boolean metaOnly;
 	private CryptreeFactory cryptreeFactory;
@@ -186,6 +190,10 @@ public class CryptreeFileRepoTransportImpl extends FileRepoTransport implements 
 		assertNotNull("localRepoManager", localRepoManager);
 		if (localPath == null)
 			assertNotNull("localPath/file", file);
+
+		logger.debug("createAndPersistPreliminaryCollision: localRoot='{}' localRepositoryId={} file='{}' localPath='{}' cryptoRepoFileId={}",
+				localRepoManager.getLocalRoot(), getRepositoryId(), (file == null ? "" : file.getAbsolutePath()),
+						(localPath == null ? "" : localPath), cryptoRepoFileId);
 
 		try (final LocalRepoTransaction tx = localRepoManager.beginWriteTransaction();) {
 			if (localPath == null)

@@ -12,10 +12,15 @@ import mockit.MockUp;
 
 import org.subshare.core.repo.sync.SsRepoToRepoSync;
 
+import co.codewizards.cloudstore.core.dto.FileChunkDto;
+import co.codewizards.cloudstore.core.dto.NormalFileDto;
+import co.codewizards.cloudstore.core.dto.RepoFileDtoTreeNode;
 import co.codewizards.cloudstore.core.objectfactory.ObjectFactory;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.progress.ProgressMonitor;
 import co.codewizards.cloudstore.core.repo.sync.RepoToRepoSync;
+import co.codewizards.cloudstore.core.repo.transport.CollisionException;
+import co.codewizards.cloudstore.core.repo.transport.RepoTransport;
 
 public class RepoToRepoSyncCoordinatorSupport {
 
@@ -67,6 +72,35 @@ public class RepoToRepoSyncCoordinatorSupport {
 
 		protected MockSsRepoToRepoSync(File localRoot, URL remoteRoot) {
 			super(localRoot, remoteRoot);
+		}
+
+		@Override
+		protected void beginPutFile(RepoTransport fromRepoTransport, RepoTransport toRepoTransport,
+				RepoFileDtoTreeNode repoFileDtoTreeNode, String path, NormalFileDto fromNormalFileDto) throws CollisionException {
+			RepoToRepoSyncCoordinator coordinator = repoToRepoSyncCoordinatorThreadLocal.get();
+			if (coordinator != null) {
+				if (localRepoTransport == fromRepoTransport)
+					coordinator.resetUploadedFileChunkCount();
+				else
+					coordinator.resetDownloadedFileChunkCount();
+			}
+
+			super.beginPutFile(fromRepoTransport, toRepoTransport, repoFileDtoTreeNode, path, fromNormalFileDto);
+		}
+
+		@Override
+		protected void putFileData(RepoTransport fromRepoTransport, RepoTransport toRepoTransport,
+				RepoFileDtoTreeNode repoFileDtoTreeNode, String path, FileChunkDto fileChunkDto, byte[] fileData) {
+			RepoToRepoSyncCoordinator coordinator = repoToRepoSyncCoordinatorThreadLocal.get();
+
+			super.putFileData(fromRepoTransport, toRepoTransport, repoFileDtoTreeNode, path, fileChunkDto, fileData);
+
+			if (coordinator != null) {
+				if (localRepoTransport == fromRepoTransport)
+					coordinator.incUploadedFileChunkCount();
+				else
+					coordinator.incDownloadedFileChunkCount();
+			}
 		}
 
 		@Override

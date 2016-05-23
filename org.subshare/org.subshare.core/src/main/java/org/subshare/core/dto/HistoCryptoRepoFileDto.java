@@ -158,7 +158,9 @@ public class HistoCryptoRepoFileDto implements Signable, Serializable {
 
 	@Override
 	public String toString() {
-		return "HistoCryptoRepoFileDto[cryptoRepoFileId=" + cryptoRepoFileId
-				+ ", cryptoKeyId=" + cryptoKeyId + "]";
+		return "HistoCryptoRepoFileDto[histoCryptoRepoFileId=" + histoCryptoRepoFileId
+				+ ", cryptoRepoFileId=" + cryptoRepoFileId
+				+ ", cryptoKeyId=" + cryptoKeyId
+				+ "]";
 	}
 }

@@ -48,15 +48,20 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 			value="SELECT WHERE this.localRevision > :localRevision"),
 
 	@Query(
-			name = "getCollisions_histoCryptoRepoFile1_histoCryptoRepoFile2",
+			name = "getCollision_histoCryptoRepoFile1_histoCryptoRepoFile2",
 			value = "SELECT UNIQUE WHERE"
 					+ "  (this.histoCryptoRepoFile1 == :histoCryptoRepoFile1 && this.histoCryptoRepoFile2 == :histoCryptoRepoFile2 && this.duplicateCryptoRepoFileId == null)"
 					+ "   || (this.histoCryptoRepoFile1 == :histoCryptoRepoFile2 && this.histoCryptoRepoFile2 == :histoCryptoRepoFile1 && this.duplicateCryptoRepoFileId == null)"),
 
 	@Query(
-			name = "getCollisions_histoCryptoRepoFile1_duplicateCryptoRepoFileId",
+			name = "getCollision_histoCryptoRepoFile1_duplicateCryptoRepoFileId",
 			value = "SELECT UNIQUE WHERE"
-					+ "  this.histoCryptoRepoFile1 == :histoCryptoRepoFile1 && this.histoCryptoRepoFile2 == null && this.duplicateCryptoRepoFileId == :duplicateCryptoRepoFileId")
+					+ "  this.histoCryptoRepoFile1 == :histoCryptoRepoFile1 && this.histoCryptoRepoFile2 == null && this.duplicateCryptoRepoFileId == :duplicateCryptoRepoFileId"),
+
+	@Query(
+			name = "getCollisions_duplicateCryptoRepoFileId",
+			value = "SELECT WHERE"
+					+ "  this.histoCryptoRepoFile2 == null && this.duplicateCryptoRepoFileId == :duplicateCryptoRepoFileId")
 
 })
 public class Collision extends Entity implements WriteProtected, AutoTrackLocalRevision, StoreCallback {

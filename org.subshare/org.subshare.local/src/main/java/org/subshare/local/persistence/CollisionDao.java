@@ -58,10 +58,12 @@ public class CollisionDao extends Dao<Collision, CollisionDao> {
 	 * @return the {@code Collision} between the two {@code HistoCryptoRepoFile} instances or <code>null</code>, if there is none.
 	 */
 	public Collision getCollision(final HistoCryptoRepoFile histoCryptoRepoFile1, final HistoCryptoRepoFile histoCryptoRepoFile2) {
+		assertNotNull("histoCryptoRepoFile1", histoCryptoRepoFile1);
+		assertNotNull("histoCryptoRepoFile2", histoCryptoRepoFile2);
 		final Map<String, Object> params = new HashMap<>();
 		params.put("histoCryptoRepoFile1", assertNotNull("histoCryptoRepoFile1", histoCryptoRepoFile1));
 		params.put("histoCryptoRepoFile2", assertNotNull("histoCryptoRepoFile2", histoCryptoRepoFile2));
-		final Query query = pm().newNamedQuery(getEntityClass(), "getCollisions_histoCryptoRepoFile1_histoCryptoRepoFile2");
+		final Query query = pm().newNamedQuery(getEntityClass(), "getCollision_histoCryptoRepoFile1_histoCryptoRepoFile2");
 		try {
 			final Collision result = (Collision) query.executeWithMap(params);
 			return result;
@@ -71,12 +73,33 @@ public class CollisionDao extends Dao<Collision, CollisionDao> {
 	}
 
 	public Collision getCollisionWithDuplicateCryptoRepoFileId(HistoCryptoRepoFile histoCryptoRepoFile1, Uid duplicateCryptoRepoFileId) {
+		assertNotNull("histoCryptoRepoFile1", histoCryptoRepoFile1);
+		assertNotNull("duplicateCryptoRepoFileId", duplicateCryptoRepoFileId);
 		final Map<String, Object> params = new HashMap<>();
 		params.put("histoCryptoRepoFile1", assertNotNull("histoCryptoRepoFile1", histoCryptoRepoFile1));
 		params.put("duplicateCryptoRepoFileId", assertNotNull("duplicateCryptoRepoFileId", duplicateCryptoRepoFileId).toString());
-		final Query query = pm().newNamedQuery(getEntityClass(), "getCollisions_histoCryptoRepoFile1_duplicateCryptoRepoFileId");
+		final Query query = pm().newNamedQuery(getEntityClass(), "getCollision_histoCryptoRepoFile1_duplicateCryptoRepoFileId");
 		try {
 			final Collision result = (Collision) query.executeWithMap(params);
+			return result;
+		} finally {
+			query.closeAll();
+		}
+	}
+
+	public Collection<Collision> getCollisionsWithDuplicateCryptoRepoFileId(Uid cryptoRepoFileId) {
+		assertNotNull("cryptoRepoFileId", cryptoRepoFileId);
+		final Query query = pm().newNamedQuery(getEntityClass(), "getCollisions_duplicateCryptoRepoFileId");
+		try {
+			long startTimestamp = System.currentTimeMillis();
+			@SuppressWarnings("unchecked")
+			Collection<Collision> result = (Collection<Collision>) query.execute(cryptoRepoFileId.toString());
+			logger.debug("getCollisionsWithDuplicateCryptoRepoFileId: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
+
+			startTimestamp = System.currentTimeMillis();
+			result = load(result);
+			logger.debug("getCollisionsWithDuplicateCryptoRepoFileId: Loading result-set with {} elements took {} ms.", result.size(), System.currentTimeMillis() - startTimestamp);
+
 			return result;
 		} finally {
 			query.closeAll();

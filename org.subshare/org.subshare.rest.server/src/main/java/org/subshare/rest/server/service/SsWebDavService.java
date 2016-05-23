@@ -69,6 +69,8 @@ public class SsWebDavService extends WebDavService {
 					cryptoRepoFileId = new Uid(uidStr);
 				}
 
+				cryptree.assertIsNotDeletedDuplicateCryptoRepoFile(cryptoRepoFileId);
+
 				cryptree.assertHasPermission(
 						cryptoRepoFileId, signingUserRepoKeyPublicKey.getUserRepoKeyId(),
 						PermissionType.write, signatureCreated);

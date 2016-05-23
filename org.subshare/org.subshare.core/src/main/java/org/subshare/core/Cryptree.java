@@ -205,6 +205,7 @@ public interface Cryptree {
 	Collection<PlainHistoCryptoRepoFileDto> getPlainHistoCryptoRepoFileDtos(PlainHistoCryptoRepoFileFilter filter);
 	PlainHistoCryptoRepoFileDto getPlainHistoCryptoRepoFileDto(Uid histoCryptoRepoFileId);
 	void clearCryptoRepoFileDeleted(String localPath);
+	void assertIsNotDeletedDuplicateCryptoRepoFile(Uid cryptoRepoFileId);
 
 //	void createCollisionIfNeeded(String localPath);
 }

@@ -2,6 +2,7 @@ package org.subshare.test;
 
 import static org.assertj.core.api.Assertions.*;
 
+import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
@@ -51,6 +52,13 @@ public abstract class CollisionRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT
 	protected static void modifyFile_append(File file, int byteToAppend) throws IOException {
 		try (OutputStream out = file.createOutputStream(true)) { // append
 			out.write(byteToAppend);
+		}
+	}
+
+	protected static void modifyFile_append(File file, int byteToAppend, int length) throws IOException {
+		try (OutputStream out = new BufferedOutputStream(file.createOutputStream(true))) { // append
+			for (int i = 0; i < length; ++i)
+				out.write(byteToAppend);
 		}
 	}
 

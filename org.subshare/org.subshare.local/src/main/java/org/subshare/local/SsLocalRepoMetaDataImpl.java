@@ -16,6 +16,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.subshare.core.AccessDeniedException;
 import org.subshare.core.Cryptree;
 import org.subshare.core.CryptreeFactoryRegistry;
@@ -43,8 +45,11 @@ import org.subshare.local.persistence.CryptoRepoFile;
 import org.subshare.local.persistence.CryptoRepoFileDao;
 import org.subshare.local.persistence.HistoFrame;
 import org.subshare.local.persistence.HistoFrameDao;
+import org.subshare.local.persistence.ScheduledReupload;
+import org.subshare.local.persistence.ScheduledReuploadDao;
 
 import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
 import co.codewizards.cloudstore.local.LocalRepoMetaDataImpl;
 import co.codewizards.cloudstore.local.persistence.RemoteRepository;
@@ -53,6 +58,8 @@ import co.codewizards.cloudstore.local.persistence.RepoFile;
 import co.codewizards.cloudstore.local.persistence.RepoFileDao;
 
 public class SsLocalRepoMetaDataImpl extends LocalRepoMetaDataImpl implements SsLocalRepoMetaData {
+
+	private static final Logger logger = LoggerFactory.getLogger(SsLocalRepoMetaDataImpl.class);
 
 	private UUID remoteRepositoryId;
 	private URL remoteRoot;
@@ -204,6 +211,29 @@ public class SsLocalRepoMetaDataImpl extends LocalRepoMetaDataImpl implements Ss
 		try (final LocalRepoTransaction tx = beginWriteTransaction();) {
 			final Cryptree cryptree = getCryptree(tx);
 			cryptree.grantPermission(localPath, permissionType, publicKey);
+			tx.commit();
+		}
+	}
+
+	@Override
+	public void scheduleReupload(String localPath) {
+		logger.debug("scheduleReupload: localPath='{}' ", localPath);
+		try (final LocalRepoTransaction tx = beginWriteTransaction();) {
+			final File localRoot = tx.getLocalRepoManager().getLocalRoot();
+			final File file = localRoot.createFile(localPath);
+			final RepoFile repoFile = tx.getDao(RepoFileDao.class).getRepoFile(localRoot, file);
+			if (repoFile != null) {
+				ScheduledReuploadDao srDao = tx.getDao(ScheduledReuploadDao.class);
+				ScheduledReupload scheduledReupload = srDao.getScheduledReupload(repoFile);
+				if (scheduledReupload == null) {
+					scheduledReupload = new ScheduledReupload();
+					scheduledReupload.setRepoFile(repoFile);
+				}
+				srDao.makePersistent(scheduledReupload);
+			}
+			else
+				logger.warn("scheduleReupload: localRoot='{}' localPath='{}' ignored, becaue RepoFile not found!", localRoot.getPath(), localPath);
+
 			tx.commit();
 		}
 	}

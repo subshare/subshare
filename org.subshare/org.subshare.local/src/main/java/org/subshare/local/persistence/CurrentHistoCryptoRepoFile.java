@@ -13,6 +13,10 @@ import javax.jdo.annotations.Queries;
 import javax.jdo.annotations.Query;
 import javax.jdo.annotations.Unique;
 import javax.jdo.annotations.Uniques;
+import javax.jdo.listener.StoreCallback;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import co.codewizards.cloudstore.local.persistence.AutoTrackLocalRevision;
 import co.codewizards.cloudstore.local.persistence.Entity;
@@ -32,7 +36,9 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 			name="getCurrentHistoCryptoRepoFilesChangedAfter_localRevision",
 			value="SELECT WHERE this.localRevision > :localRevision")
 })
-public class CurrentHistoCryptoRepoFile extends Entity implements AutoTrackLocalRevision { // TODO implement WriteProtected, too!
+public class CurrentHistoCryptoRepoFile extends Entity implements AutoTrackLocalRevision, StoreCallback { // TODO implement WriteProtected, too!
+
+	private static final Logger logger = LoggerFactory.getLogger(CurrentHistoCryptoRepoFile.class);
 
 	@Persistent(nullValue=NullValue.EXCEPTION)
 	private CryptoRepoFile cryptoRepoFile;
@@ -73,5 +79,11 @@ public class CurrentHistoCryptoRepoFile extends Entity implements AutoTrackLocal
 	public void setLocalRevision(final long localRevision) {
 		if (! equal(this.localRevision, localRevision))
 			this.localRevision = localRevision;
+	}
+
+	@Override
+	public void jdoPreStore() {
+		logger.debug("jdoPreStore: {} {}",
+				cryptoRepoFile, histoCryptoRepoFile);
 	}
 }

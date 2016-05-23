@@ -15,11 +15,21 @@
 	</logger>
 -->
 
+<!--
 	<logger name="org.subshare.core.pgp" level="DEBUG"/>
 	<logger name="org.subshare.core.pgp.gnupg.TrustDbFactory" level="ALL"/>
-<!--
 	<logger name="org.subshare.local" level="DEBUG"/>
 -->
+
+<!--
+	<logger name="org.subshare.local.SsLocalRepoMetaDataImpl" level="DEBUG"/>
+	<logger name="org.subshare.local.CryptreeImpl" level="DEBUG"/>
+	<logger name="org.subshare.rest.client.transport.CryptreeRestRepoTransportImpl" level="DEBUG"/>
+	<logger name="org.subshare.local.transport.CryptreeFileRepoTransportImpl" level="DEBUG"/>
+	<logger name="org.subshare.local.persistence.CurrentHistoCryptoRepoFile" level="DEBUG"/>
+-->
+
+	<logger name="co.codewizards.cloudstore.local.LocalRepoManagerImpl" level="WARN"/>
 
 	<root level="INFO">
 		<appender-ref ref="STDOUT" />
