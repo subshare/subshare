@@ -1,7 +1,12 @@
 package org.subshare.local.persistence;
 
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
 
+import java.io.IOException;
+import java.io.InputStream;
+
+import javax.jdo.annotations.Embedded;
 import javax.jdo.annotations.Index;
 import javax.jdo.annotations.Indices;
 import javax.jdo.annotations.Inheritance;
@@ -17,7 +22,14 @@ import javax.jdo.listener.StoreCallback;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.subshare.core.dto.CurrentHistoCryptoRepoFileDto;
+import org.subshare.core.dto.PermissionType;
+import org.subshare.core.io.InputStreamSource;
+import org.subshare.core.io.MultiInputStream;
+import org.subshare.core.sign.Signature;
+import org.subshare.core.sign.WriteProtected;
 
+import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.local.persistence.AutoTrackLocalRevision;
 import co.codewizards.cloudstore.local.persistence.Entity;
 
@@ -36,7 +48,7 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 			name="getCurrentHistoCryptoRepoFilesChangedAfter_localRevision",
 			value="SELECT WHERE this.localRevision > :localRevision")
 })
-public class CurrentHistoCryptoRepoFile extends Entity implements AutoTrackLocalRevision, StoreCallback { // TODO implement WriteProtected, too!
+public class CurrentHistoCryptoRepoFile extends Entity implements WriteProtected, AutoTrackLocalRevision, StoreCallback {
 
 	private static final Logger logger = LoggerFactory.getLogger(CurrentHistoCryptoRepoFile.class);
 
@@ -47,6 +59,10 @@ public class CurrentHistoCryptoRepoFile extends Entity implements AutoTrackLocal
 	private HistoCryptoRepoFile histoCryptoRepoFile;
 
 	private long localRevision;
+
+	@Persistent(nullValue=NullValue.EXCEPTION)
+	@Embedded(nullIndicatorColumn="signatureCreated")
+	private SignatureImpl signature;
 
 	public CurrentHistoCryptoRepoFile() {
 	}
@@ -85,5 +101,69 @@ public class CurrentHistoCryptoRepoFile extends Entity implements AutoTrackLocal
 	public void jdoPreStore() {
 		logger.debug("jdoPreStore: {} {}",
 				cryptoRepoFile, histoCryptoRepoFile);
+
+		final Uid cryptoRepoFileId = assertNotNull("cryptoRepoFile", cryptoRepoFile).getCryptoRepoFileId();
+		final CryptoRepoFile crf = assertNotNull("histoCryptoRepoFile", histoCryptoRepoFile).getCryptoRepoFile();
+		assertNotNull("histoCryptoRepoFile.cryptoRepoFile", crf);
+
+		if (! cryptoRepoFileId.equals(crf.getCryptoRepoFileId()))
+			throw new IllegalStateException(String.format("cryptoRepoFile.cryptoRepoFileId != histoCryptoRepoFile.cryptoRepoFile.cryptoRepoFileId :: %s != %s",
+					cryptoRepoFileId, crf.getCryptoRepoFileId()));
+	}
+
+	@Override
+	public String getSignedDataType() {
+		return CurrentHistoCryptoRepoFileDto.SIGNED_DATA_TYPE;
+	}
+
+	@Override
+	public int getSignedDataVersion() {
+		return 0;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * <b>Important:</b> The implementation in {@code CurrentHistoCryptoRepoFile} must exactly match the one in {@code CurrentHistoCryptoRepoFileDto}!
+	 */
+	@Override
+	public InputStream getSignedData(final int signedDataVersion) {
+		try {
+			final Uid cryptoRepoFileId = assertNotNull("cryptoRepoFile", cryptoRepoFile).getCryptoRepoFileId();
+			final Uid histoCryptoRepoFileId = assertNotNull("histoCryptoRepoFile", histoCryptoRepoFile).getHistoCryptoRepoFileId();
+
+			assertNotNull("cryptoRepoFileId", cryptoRepoFileId);
+			assertNotNull("histoCryptoRepoFileId", histoCryptoRepoFileId);
+
+			byte separatorIndex = 0;
+			return new MultiInputStream(
+					InputStreamSource.Helper.createInputStreamSource(cryptoRepoFileId),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
+					InputStreamSource.Helper.createInputStreamSource(histoCryptoRepoFileId)
+					);
+		} catch (final IOException x) {
+			throw new RuntimeException(x);
+		}
+	}
+
+	@Override
+	public Signature getSignature() {
+		return signature;
+	}
+	@Override
+	public void setSignature(final Signature signature) {
+		if (!equal(this.signature, signature))
+			this.signature = SignatureImpl.copy(signature);
+	}
+
+	@Override
+	public Uid getCryptoRepoFileIdControllingPermissions() {
+		return assertNotNull("cryptoRepoFileId", assertNotNull("cryptoRepoFile", cryptoRepoFile).getCryptoRepoFileId());
+	}
+
+	@Override
+	public PermissionType getPermissionTypeRequiredForWrite() {
+		return PermissionType.write;
 	}
 }

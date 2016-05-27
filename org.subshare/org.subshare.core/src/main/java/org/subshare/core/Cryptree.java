@@ -9,7 +9,7 @@ import org.subshare.core.dto.CryptoChangeSetDto;
 import org.subshare.core.dto.CryptoKeyDto;
 import org.subshare.core.dto.CryptoLinkDto;
 import org.subshare.core.dto.CryptoRepoFileDto;
-import org.subshare.core.dto.HistoCryptoRepoFileDto;
+import org.subshare.core.dto.CurrentHistoCryptoRepoFileDto;
 import org.subshare.core.dto.HistoFrameDto;
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.dto.PlainHistoCryptoRepoFileDto;
@@ -188,8 +188,8 @@ public interface Cryptree {
 	void sign(WriteProtected writeProtected) throws AccessDeniedException;
 	void assertSignatureOk(WriteProtected writeProtected) throws SignatureException, AccessDeniedException;
 
-	HistoCryptoRepoFileDto createHistoCryptoRepoFileDto(String localPath);
-//	HistoCryptoRepoFileDto getCurrentHistoCryptoRepoFileDto(String localPath);
+	CurrentHistoCryptoRepoFileDto createCurrentHistoCryptoRepoFileDto(String localPath, boolean withHistoCryptoRepoFileDto);
+
 	RepoFileDto getDecryptedRepoFileOnServerDtoOrFail(Uid cryptoRepoFileId) throws AccessDeniedException;
 	RepoFileDto getDecryptedRepoFileOnServerDto(String localPath);
 	Uid getOwnerUserRepoKeyId();

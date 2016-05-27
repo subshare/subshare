@@ -32,9 +32,9 @@ import org.subshare.core.crypto.EncrypterOutputStream;
 import org.subshare.core.crypto.RandomIvFactory;
 import org.subshare.core.dto.CreateRepositoryRequestDto;
 import org.subshare.core.dto.CryptoChangeSetDto;
-import org.subshare.core.dto.HistoCryptoRepoFileDto;
+import org.subshare.core.dto.CurrentHistoCryptoRepoFileDto;
 import org.subshare.core.dto.PermissionType;
-import org.subshare.core.dto.RepoFileDtoWithCryptoRepoFileOnServerDto;
+import org.subshare.core.dto.RepoFileDtoWithCurrentHistoCryptoRepoFileDto;
 import org.subshare.core.dto.SsDeleteModificationDto;
 import org.subshare.core.dto.SsDirectoryDto;
 import org.subshare.core.dto.SsNormalFileDto;
@@ -449,23 +449,19 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 			cryptree.updateLastCryptoKeySyncToRemoteRepo();
 
 //			createUnsealedCurrentHistoryFrameDtoIfNeeded(cryptree);
-			final HistoCryptoRepoFileDto histoCryptoRepoFileDto = cryptree.createHistoCryptoRepoFileDto(path);
+			final CurrentHistoCryptoRepoFileDto chcrfDto = cryptree.createCurrentHistoCryptoRepoFileDto(path, true);
 
 			final String serverPath = cryptree.getServerPath(path);
-			SsDirectoryDto directoryDto = createDirectoryDtoForMakeDirectory(cryptree, path, serverPath);
+			final SsDirectoryDto directoryDto = createDirectoryDtoForMakeDirectory(cryptree, path, serverPath);
 
-			RepoFileDtoWithCryptoRepoFileOnServerDto rfdwcrfosd = new RepoFileDtoWithCryptoRepoFileOnServerDto();
-			rfdwcrfosd.setRepoFileDto(directoryDto);
-			rfdwcrfosd.setCryptoRepoFileOnServerDto(histoCryptoRepoFileDto);
-
-//			final CryptoChangeSetDto cryptoChangeSetDto = cryptree.createOrUpdateCryptoRepoFile(path);
-//			putCryptoChangeSetDto(cryptoChangeSetDto);
-//			cryptree.updateLastCryptoKeySyncToRemoteRepo();
+			final RepoFileDtoWithCurrentHistoCryptoRepoFileDto rfdwchcrfd = new RepoFileDtoWithCurrentHistoCryptoRepoFileDto();
+			rfdwchcrfd.setRepoFileDto(directoryDto);
+			rfdwchcrfd.setCurrentHistoCryptoRepoFileDto(chcrfDto);
 
 			logger.debug("makeDirectory: clientRepositoryId={} serverRepositoryId={} path='{}' serverPath='{}'",
 					getClientRepositoryId(), getRepositoryId(), path, serverPath);
 
-			getClient().execute(new SsMakeDirectory(getRepositoryId().toString(), serverPath, rfdwcrfosd));
+			getClient().execute(new SsMakeDirectory(getRepositoryId().toString(), serverPath, rfdwchcrfd));
 
 			transaction.commit();
 		}
@@ -759,11 +755,11 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 					cryptree, path, serverPath,
 					assertNotNegative(((SsNormalFileDto) fromNormalFileDto).getLengthWithPadding()) );
 
-			RepoFileDtoWithCryptoRepoFileOnServerDto rfdwcrfosd = new RepoFileDtoWithCryptoRepoFileOnServerDto();
+			RepoFileDtoWithCurrentHistoCryptoRepoFileDto rfdwchcrfd = new RepoFileDtoWithCurrentHistoCryptoRepoFileDto();
 
-			final HistoCryptoRepoFileDto histoCryptoRepoFileDto = cryptree.createHistoCryptoRepoFileDto(path);
-			rfdwcrfosd.setRepoFileDto(serverNormalFileDto);
-			rfdwcrfosd.setCryptoRepoFileOnServerDto(histoCryptoRepoFileDto);
+			final CurrentHistoCryptoRepoFileDto chcrfDto = cryptree.createCurrentHistoCryptoRepoFileDto(path, true);
+			rfdwchcrfd.setRepoFileDto(serverNormalFileDto);
+			rfdwchcrfd.setCurrentHistoCryptoRepoFileDto(chcrfDto);
 
 //			final CryptoChangeSetDto cryptoChangeSetDto = cryptree.getCryptoChangeSetDtoOrFail(path);
 //			putCryptoChangeSetDto(cryptoChangeSetDto);
@@ -772,7 +768,7 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 			logger.debug("endPutFile: clientRepositoryId={} serverRepositoryId={} path='{}' serverPath='{}'",
 					getClientRepositoryId(), getRepositoryId(), path, serverPath);
 
-			getClient().execute(new SsEndPutFile(getRepositoryId().toString(), serverPath, rfdwcrfosd));
+			getClient().execute(new SsEndPutFile(getRepositoryId().toString(), serverPath, rfdwchcrfd));
 
 			cryptree.getLocalRepoStorage().clearTempFileChunkDtos(path);
 

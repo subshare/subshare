@@ -1,7 +1,7 @@
 package org.subshare.local;
 
-import static co.codewizards.cloudstore.core.oio.OioFileFactory.createFile;
-import static org.assertj.core.api.Assertions.assertThat;
+import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -34,12 +34,16 @@ import co.codewizards.cloudstore.core.repo.local.LocalRepoManagerFactory;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
 
 public abstract class AbstractTest {
+
+	protected static String jvmInstanceDir;
+
 	static {
 		final Uid jvmInstanceId = new Uid(); // for parallel test execution ;-)
-		System.setProperty(ConfigDir.SYSTEM_PROPERTY_CONFIG_DIR, "build/" + jvmInstanceId + "/.cloudstore");
+		jvmInstanceDir = "build/jvm/" + jvmInstanceId;
+		System.setProperty(ConfigDir.SYSTEM_PROPERTY_CONFIG_DIR, jvmInstanceDir + "/.cloudstore");
 		System.setProperty(LocalRepoManager.SYSTEM_PROPERTY_KEY_SIZE, "1024");
 		System.setProperty("testEnvironment", Boolean.TRUE.toString());
-		createFile("build/" + jvmInstanceId).mkdir();
+		createFile(jvmInstanceDir).mkdirs();
 	}
 
 	protected static final SecureRandom random = new SecureRandom();

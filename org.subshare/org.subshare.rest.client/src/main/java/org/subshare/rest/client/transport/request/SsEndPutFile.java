@@ -8,8 +8,9 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.subshare.core.dto.CurrentHistoCryptoRepoFileDto;
+import org.subshare.core.dto.RepoFileDtoWithCurrentHistoCryptoRepoFileDto;
 import org.subshare.core.dto.SsNormalFileDto;
-import org.subshare.core.dto.RepoFileDtoWithCryptoRepoFileOnServerDto;
 
 import co.codewizards.cloudstore.core.dto.DateTime;
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
@@ -17,20 +18,23 @@ import co.codewizards.cloudstore.rest.client.request.EndPutFile;
 
 public class SsEndPutFile extends EndPutFile {
 
-//	private final SsNormalFileDto normalFileDto;
-	protected final RepoFileDtoWithCryptoRepoFileOnServerDto repoFileDtoWithCryptoRepoFileOnServerDto;
+	protected final RepoFileDtoWithCurrentHistoCryptoRepoFileDto repoFileDtoWithCurrentHistoCryptoRepoFileDto;
 
-	public SsEndPutFile(final String repositoryName, final String path, final RepoFileDtoWithCryptoRepoFileOnServerDto repoFileDtoWithCryptoRepoFileOnServerDto) {
+	public SsEndPutFile(final String repositoryName, final String path, final RepoFileDtoWithCurrentHistoCryptoRepoFileDto repoFileDtoWithCurrentHistoCryptoRepoFileDto) {
 		super(repositoryName, path, new DateTime(new Date(0)), 0, null);
 //		this.normalFileDto = assertNotNull("normalFileDto", normalFileDto);
 
-		this.repoFileDtoWithCryptoRepoFileOnServerDto = assertNotNull("repoFileDtoWithCryptoRepoFileOnServerDto", repoFileDtoWithCryptoRepoFileOnServerDto);
+		this.repoFileDtoWithCurrentHistoCryptoRepoFileDto = assertNotNull("repoFileDtoWithCurrentHistoCryptoRepoFileDto", repoFileDtoWithCurrentHistoCryptoRepoFileDto);
 
-		assertNotNull("repoFileDtoWithCryptoRepoFileOnServerDto.cryptoRepoFileOnServerDto",
-				repoFileDtoWithCryptoRepoFileOnServerDto.getCryptoRepoFileOnServerDto());
+		final CurrentHistoCryptoRepoFileDto currentHistoCryptoRepoFileDto = assertNotNull(
+				"repoFileDtoWithCurrentHistoCryptoRepoFileDto.currentHistoCryptoRepoFileDto",
+				repoFileDtoWithCurrentHistoCryptoRepoFileDto.getCurrentHistoCryptoRepoFileDto());
 
-		RepoFileDto rfdto = assertNotNull("repoFileDtoWithCryptoRepoFileOnServerDto.repoFileDto",
-				repoFileDtoWithCryptoRepoFileOnServerDto.getRepoFileDto());
+		assertNotNull("repoFileDtoWithCurrentHistoCryptoRepoFileDto.currentHistoCryptoRepoFileDto.histoCryptoRepoFileDto",
+				currentHistoCryptoRepoFileDto.getHistoCryptoRepoFileDto());
+
+		final RepoFileDto rfdto = assertNotNull("repoFileDtoWithCurrentHistoCryptoRepoFileDto.repoFileDto",
+				repoFileDtoWithCurrentHistoCryptoRepoFileDto.getRepoFileDto());
 
 		if (! (rfdto instanceof SsNormalFileDto))
 			throw new IllegalArgumentException("repoFileDtoWithCryptoRepoFileOnServerDto.repoFileDto is not an instance of SsNormalFileDto, but: " + rfdto.getClass().getName());
@@ -40,6 +44,6 @@ public class SsEndPutFile extends EndPutFile {
 	public Response _execute() {
 		return assignCredentials(
 				createWebTarget("_endPutFile", urlEncode(repositoryName), encodePath(path))
-				.request()).put(Entity.entity(repoFileDtoWithCryptoRepoFileOnServerDto, MediaType.APPLICATION_XML_TYPE));
+				.request()).put(Entity.entity(repoFileDtoWithCurrentHistoCryptoRepoFileDto, MediaType.APPLICATION_XML_TYPE));
 	}
 }

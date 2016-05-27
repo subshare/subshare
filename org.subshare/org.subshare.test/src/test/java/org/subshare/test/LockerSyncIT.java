@@ -68,14 +68,14 @@ public class LockerSyncIT extends AbstractIT {
 
 	protected void setLocation(Location location) {
 		this.location = assertNotNull("location", location);
-		System.setProperty(ConfigDir.SYSTEM_PROPERTY_CONFIG_DIR, "build/" + jvmInstanceId + '/' + location + "/.cloudstore");
-		System.setProperty(Config.SYSTEM_PROPERTY_PREFIX + GnuPgDir.CONFIG_KEY_GNU_PG_DIR, "build/" + jvmInstanceId + '/' + location + "/.gnupg");
+		System.setProperty(ConfigDir.SYSTEM_PROPERTY_CONFIG_DIR, jvmInstanceDir + '/' + location + "/.cloudstore");
+		System.setProperty(Config.SYSTEM_PROPERTY_PREFIX + GnuPgDir.CONFIG_KEY_GNU_PG_DIR, jvmInstanceDir + '/' + location + "/.gnupg");
 	}
 
 	@Override
 	@Before
 	public void before() throws Exception {
-		System.setProperty(Config.SYSTEM_PROPERTY_PREFIX + LockerDir.CONFIG_KEY_LOCKER_DIR, "build/" + jvmInstanceId + "/locker");
+		System.setProperty(Config.SYSTEM_PROPERTY_PREFIX + LockerDir.CONFIG_KEY_LOCKER_DIR, jvmInstanceDir + "/locker");
 
 		setLocation(Location.server);
 

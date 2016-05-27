@@ -77,7 +77,7 @@ public class CryptoKeyDto implements Signable {
 
 	@Override
 	public String getSignedDataType() {
-		return CryptoKeyDto.SIGNED_DATA_TYPE;
+		return SIGNED_DATA_TYPE;
 	}
 
 	@Override

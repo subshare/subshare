@@ -55,16 +55,18 @@ public abstract class AbstractIT {
 
 	private static final Logger logger = LoggerFactory.getLogger(AbstractIT.class);
 
-	protected static Uid jvmInstanceId;
+	protected static String jvmInstanceDir;
 
 	static {
-		jvmInstanceId = new Uid(); // for parallel test execution ;-)
-		System.setProperty(ConfigDir.SYSTEM_PROPERTY_CONFIG_DIR, "build/" + jvmInstanceId + "/.subshare");
-		System.setProperty(Config.SYSTEM_PROPERTY_PREFIX + GnuPgDir.CONFIG_KEY_GNU_PG_DIR, "build/" + jvmInstanceId + "/.gnupg");
+		final Uid jvmInstanceId = new Uid(); // for parallel test execution ;-)
+		jvmInstanceDir = "build/jvm/" + jvmInstanceId;
+		final String configDirString = jvmInstanceDir + "/.subshare";
+		System.setProperty(ConfigDir.SYSTEM_PROPERTY_CONFIG_DIR, configDirString);
+		System.setProperty(Config.SYSTEM_PROPERTY_PREFIX + GnuPgDir.CONFIG_KEY_GNU_PG_DIR, jvmInstanceDir + "/.gnupg");
 		System.setProperty(LocalRepoManager.SYSTEM_PROPERTY_KEY_SIZE, "1024");
 		System.setProperty("testEnvironment", Boolean.TRUE.toString());
 
-		final File configDir = createFile("build/" + jvmInstanceId + "/.subshare");
+		final File configDir = createFile(configDirString);
 		configDir.mkdirs();
 
 		try {

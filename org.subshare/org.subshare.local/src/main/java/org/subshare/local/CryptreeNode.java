@@ -344,6 +344,9 @@ public class CryptreeNode {
 		histoCryptoRepoFile = hcrfDao.makePersistent(histoCryptoRepoFile);
 
 		currentHistoCryptoRepoFile.setHistoCryptoRepoFile(histoCryptoRepoFile);
+
+		sign(currentHistoCryptoRepoFile);
+
 		chcrfDao.makePersistent(currentHistoCryptoRepoFile);
 
 //		createCollisionIfNeeded(histoCryptoRepoFile);

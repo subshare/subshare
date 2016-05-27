@@ -64,7 +64,7 @@ public class CollisionDto implements Signable {
 
 	@Override
 	public String getSignedDataType() {
-		return CollisionDto.SIGNED_DATA_TYPE;
+		return SIGNED_DATA_TYPE;
 	}
 
 	@Override

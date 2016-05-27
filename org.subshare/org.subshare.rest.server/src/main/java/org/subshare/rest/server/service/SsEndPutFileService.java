@@ -11,9 +11,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import org.subshare.core.dto.CurrentHistoCryptoRepoFileDto;
+import org.subshare.core.dto.RepoFileDtoWithCurrentHistoCryptoRepoFileDto;
 import org.subshare.core.dto.SsNormalFileDto;
-import org.subshare.core.dto.HistoCryptoRepoFileDto;
-import org.subshare.core.dto.RepoFileDtoWithCryptoRepoFileOnServerDto;
 import org.subshare.core.repo.transport.CryptreeServerFileRepoTransport;
 
 import co.codewizards.cloudstore.core.dto.DateTime;
@@ -27,19 +27,23 @@ public class SsEndPutFileService extends EndPutFileService {
 
 	@PUT
 	@Path("{path:.*}")
-	public void endPutFile(@PathParam("path") String path, final RepoFileDtoWithCryptoRepoFileOnServerDto repoFileDtoWithCryptoRepoFileOnServerDto)
+	public void endPutFile(@PathParam("path") String path, final RepoFileDtoWithCurrentHistoCryptoRepoFileDto repoFileDtoWithCurrentHistoCryptoRepoFileDto)
 	{
 		assertNotNull("path", path);
-		assertNotNull("repoFileDtoWithCryptoRepoFileOnServerDto", repoFileDtoWithCryptoRepoFileOnServerDto);
+		assertNotNull("repoFileDtoWithCurrentHistoCryptoRepoFileDto", repoFileDtoWithCurrentHistoCryptoRepoFileDto);
 
-		HistoCryptoRepoFileDto histoCryptoRepoFileDto = assertNotNull("repoFileDtoWithCryptoRepoFileOnServerDto.cryptoRepoFileOnServerDto",
-				repoFileDtoWithCryptoRepoFileOnServerDto.getCryptoRepoFileOnServerDto());
+		final CurrentHistoCryptoRepoFileDto currentHistoCryptoRepoFileDto = assertNotNull(
+				"repoFileDtoWithCurrentHistoCryptoRepoFileDto.currentHistoCryptoRepoFileDto",
+				repoFileDtoWithCurrentHistoCryptoRepoFileDto.getCurrentHistoCryptoRepoFileDto());
 
-		RepoFileDto rfdto = assertNotNull("repoFileDtoWithCryptoRepoFileOnServerDto.repoFileDto",
-				repoFileDtoWithCryptoRepoFileOnServerDto.getRepoFileDto());
+		assertNotNull("repoFileDtoWithCurrentHistoCryptoRepoFileDto.currentHistoCryptoRepoFileDto.histoCryptoRepoFileDto",
+				currentHistoCryptoRepoFileDto.getHistoCryptoRepoFileDto());
+
+		RepoFileDto rfdto = assertNotNull("repoFileDtoWithCurrentHistoCryptoRepoFileDto.repoFileDto",
+				repoFileDtoWithCurrentHistoCryptoRepoFileDto.getRepoFileDto());
 
 		if (! (rfdto instanceof SsNormalFileDto))
-			throw new IllegalArgumentException("repoFileDtoWithCryptoRepoFileOnServerDto.repoFileDto is not an instance of SsNormalFileDto, but: " + rfdto.getClass().getName());
+			throw new IllegalArgumentException("repoFileDtoWithCurrentHistoCryptoRepoFileDto.repoFileDto is not an instance of SsNormalFileDto, but: " + rfdto.getClass().getName());
 
 		final SsNormalFileDto normalFileDto = (SsNormalFileDto) rfdto;
 
@@ -54,7 +58,7 @@ public class SsEndPutFileService extends EndPutFileService {
 		final CryptreeServerFileRepoTransport repoTransport = (CryptreeServerFileRepoTransport) authenticateAndCreateLocalRepoTransport();
 		try {
 			path = repoTransport.unprefixPath(path);
-			repoTransport.endPutFile(path, normalFileDto, histoCryptoRepoFileDto);
+			repoTransport.endPutFile(path, normalFileDto, currentHistoCryptoRepoFileDto);
 		} finally {
 			repoTransport.close();
 		}

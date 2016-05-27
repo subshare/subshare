@@ -9,9 +9,9 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import org.subshare.core.dto.CurrentHistoCryptoRepoFileDto;
+import org.subshare.core.dto.RepoFileDtoWithCurrentHistoCryptoRepoFileDto;
 import org.subshare.core.dto.SsDirectoryDto;
-import org.subshare.core.dto.HistoCryptoRepoFileDto;
-import org.subshare.core.dto.RepoFileDtoWithCryptoRepoFileOnServerDto;
 import org.subshare.core.repo.transport.CryptreeServerFileRepoTransport;
 
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
@@ -23,26 +23,30 @@ import co.codewizards.cloudstore.rest.server.service.MakeDirectoryService;
 public class SsMakeDirectoryService extends MakeDirectoryService {
 
 	@POST
-	public void makeDirectory(final RepoFileDtoWithCryptoRepoFileOnServerDto repoFileDtoWithCryptoRepoFileOnServerDto)
+	public void makeDirectory(final RepoFileDtoWithCurrentHistoCryptoRepoFileDto repoFileDtoWithCurrentHistoCryptoRepoFileDto)
 	{
-		makeDirectory("", repoFileDtoWithCryptoRepoFileOnServerDto);
+		makeDirectory("", repoFileDtoWithCurrentHistoCryptoRepoFileDto);
 	}
 
 	@POST
 	@Path("{path:.*}")
-	public void makeDirectory(@PathParam("path") String path, final RepoFileDtoWithCryptoRepoFileOnServerDto repoFileDtoWithCryptoRepoFileOnServerDto)
+	public void makeDirectory(@PathParam("path") String path, final RepoFileDtoWithCurrentHistoCryptoRepoFileDto repoFileDtoWithCurrentHistoCryptoRepoFileDto)
 	{
 		assertNotNull("path", path);
-		assertNotNull("repoFileDtoWithCryptoRepoFileOnServerDto", repoFileDtoWithCryptoRepoFileOnServerDto);
+		assertNotNull("repoFileDtoWithCurrentHistoCryptoRepoFileDto", repoFileDtoWithCurrentHistoCryptoRepoFileDto);
 
-		final HistoCryptoRepoFileDto histoCryptoRepoFileDto = assertNotNull("repoFileDtoWithCryptoRepoFileOnServerDto.cryptoRepoFileOnServerDto",
-				repoFileDtoWithCryptoRepoFileOnServerDto.getCryptoRepoFileOnServerDto());
+		final CurrentHistoCryptoRepoFileDto currentHistoCryptoRepoFileDto = assertNotNull(
+				"repoFileDtoWithCurrentHistoCryptoRepoFileDto.currentHistoCryptoRepoFileDto",
+				repoFileDtoWithCurrentHistoCryptoRepoFileDto.getCurrentHistoCryptoRepoFileDto());
 
-		final RepoFileDto rfdto = assertNotNull("repoFileDtoWithCryptoRepoFileOnServerDto.repoFileDto",
-				repoFileDtoWithCryptoRepoFileOnServerDto.getRepoFileDto());
+		assertNotNull("repoFileDtoWithCurrentHistoCryptoRepoFileDto.currentHistoCryptoRepoFileDto.histoCryptoRepoFileDto",
+				currentHistoCryptoRepoFileDto.getHistoCryptoRepoFileDto());
+
+		final RepoFileDto rfdto = assertNotNull("repoFileDtoWithCurrentHistoCryptoRepoFileDto.repoFileDto",
+				repoFileDtoWithCurrentHistoCryptoRepoFileDto.getRepoFileDto());
 
 		if (! (rfdto instanceof SsDirectoryDto))
-			throw new IllegalArgumentException("repoFileDtoWithCryptoRepoFileOnServerDto.repoFileDto is not an instance of SsDirectoryDto, but: " + rfdto.getClass().getName());
+			throw new IllegalArgumentException("repoFileDtoWithCurrentHistoCryptoRepoFileDto.repoFileDto is not an instance of SsDirectoryDto, but: " + rfdto.getClass().getName());
 
 		final SsDirectoryDto directoryDto = (SsDirectoryDto) rfdto;
 
@@ -55,7 +59,7 @@ public class SsMakeDirectoryService extends MakeDirectoryService {
 
 		try (final CryptreeServerFileRepoTransport repoTransport = (CryptreeServerFileRepoTransport) authenticateAndCreateLocalRepoTransport();) {
 			path = repoTransport.unprefixPath(path);
-			repoTransport.makeDirectory(path, directoryDto, histoCryptoRepoFileDto);
+			repoTransport.makeDirectory(path, directoryDto, currentHistoCryptoRepoFileDto);
 		}
 	}
 

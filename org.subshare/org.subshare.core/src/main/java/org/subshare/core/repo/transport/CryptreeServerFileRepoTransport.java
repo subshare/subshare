@@ -1,6 +1,6 @@
 package org.subshare.core.repo.transport;
 
-import org.subshare.core.dto.HistoCryptoRepoFileDto;
+import org.subshare.core.dto.CurrentHistoCryptoRepoFileDto;
 import org.subshare.core.dto.SsDeleteModificationDto;
 import org.subshare.core.dto.SsDirectoryDto;
 import org.subshare.core.dto.SsNormalFileDto;
@@ -11,9 +11,9 @@ public interface CryptreeServerFileRepoTransport extends CryptreeFileRepoTranspo
 	void delete(SsDeleteModificationDto deleteModificationDto);
 
 	void makeDirectory(String path, SsDirectoryDto directoryDto,
-			HistoCryptoRepoFileDto histoCryptoRepoFileDto);
+			CurrentHistoCryptoRepoFileDto currentHistoCryptoRepoFileDto);
 
-	void endPutFile(String path, SsNormalFileDto normalFileDto, HistoCryptoRepoFileDto histoCryptoRepoFileDto);
+	void endPutFile(String path, SsNormalFileDto normalFileDto, CurrentHistoCryptoRepoFileDto currentHistoCryptoRepoFileDto);
 
 	byte[] getHistoFileData(Uid histoCryptoRepoFileId, long offset);
 }

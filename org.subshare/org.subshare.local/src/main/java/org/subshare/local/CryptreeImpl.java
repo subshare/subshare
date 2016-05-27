@@ -189,21 +189,26 @@ public class CryptreeImpl extends AbstractCryptree {
 //	}
 
 	@Override
-	public HistoCryptoRepoFileDto createHistoCryptoRepoFileDto(String localPath) {
+	public CurrentHistoCryptoRepoFileDto createCurrentHistoCryptoRepoFileDto(String localPath, boolean withHistoCryptoRepoFileDto) {
 		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(localPath);
-		final HistoCryptoRepoFile histoCryptoRepoFile = cryptreeNode.createHistoCryptoRepoFileIfNeeded();
-		final HistoCryptoRepoFileDtoConverter converter = HistoCryptoRepoFileDtoConverter.create(getTransactionOrFail());
-		final HistoCryptoRepoFileDto result = converter.toHistoCryptoRepoFileDto(histoCryptoRepoFile);
 
-//		CollisionDao cDao = getTransactionOrFail().getDao(CollisionDao.class);
-//		CollisionFilter collisionFilter = new CollisionFilter();
-//		collisionFilter.setHistoCryptoRepoFileId(result.getHistoCryptoRepoFileId());
-//		Collection<Collision> collisions = cDao.getCollisions(collisionFilter);
-//		CollisionDtoConverter collisionDtoConverter = CollisionDtoConverter.create(getTransactionOrFail());
-//		for (Collision collision : collisions) {
-//			CollisionDto collisionDto = collisionDtoConverter.toCollisionDto(collision);
-//
-//		}
+		final HistoCryptoRepoFile histoCryptoRepoFile = cryptreeNode.createHistoCryptoRepoFileIfNeeded();
+//		final HistoCryptoRepoFileDtoConverter hcrfDtoConverter = HistoCryptoRepoFileDtoConverter.create(getTransactionOrFail());
+//		final HistoCryptoRepoFileDto hcrfDto = hcrfDtoConverter.toHistoCryptoRepoFileDto(histoCryptoRepoFile);
+
+		final CurrentHistoCryptoRepoFile currentHistoCryptoRepoFile = cryptreeNode.getCurrentHistoCryptoRepoFile();
+		final CurrentHistoCryptoRepoFileDtoConverter chcrfDtoConverter = CurrentHistoCryptoRepoFileDtoConverter.create(getTransactionOrFail());
+		final CurrentHistoCryptoRepoFileDto result = chcrfDtoConverter.toCurrentHistoCryptoRepoFileDto(currentHistoCryptoRepoFile, withHistoCryptoRepoFileDto);
+
+		if (withHistoCryptoRepoFileDto) {
+			if (! result.getHistoCryptoRepoFileDto().getHistoCryptoRepoFileId().equals(histoCryptoRepoFile.getHistoCryptoRepoFileId()))
+				throw new IllegalStateException("result.histoCryptoRepoFileDto.histoCryptoRepoFileId != histoCryptoRepoFile.histoCryptoRepoFileId");
+		}
+		else {
+			if (! result.getHistoCryptoRepoFileId().equals(histoCryptoRepoFile.getHistoCryptoRepoFileId()))
+				throw new IllegalStateException("result.histoCryptoRepoFileId != histoCryptoRepoFile.histoCryptoRepoFileId");
+		}
+
 		return result;
 	}
 
@@ -454,7 +459,7 @@ public class CryptreeImpl extends AbstractCryptree {
 
 		CurrentHistoCryptoRepoFileDtoConverter currentHistoCryptoRepoFileDtoConverter = CurrentHistoCryptoRepoFileDtoConverter.create(transaction);
 		for (CurrentHistoCryptoRepoFileDto currentHistoCryptoRepoFileDto : cryptoChangeSetDto.getCurrentHistoCryptoRepoFileDtos())
-			currentHistoCryptoRepoFileDtoConverter.putCurrentCryptoRepoFileOnServer(currentHistoCryptoRepoFileDto);
+			currentHistoCryptoRepoFileDtoConverter.putCurrentHistoCryptoRepoFile(currentHistoCryptoRepoFileDto);
 
 		if (! isOnServer()) {
 			final SsLocalRepository localRepository = (SsLocalRepository) transaction.getDao(LocalRepositoryDao.class).getLocalRepositoryOrFail();
@@ -1582,7 +1587,7 @@ public class CryptreeImpl extends AbstractCryptree {
 				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced()); // , getRemoteRepositoryIdOrFail());
 
 		for (final CurrentHistoCryptoRepoFile entity : entities)
-			cryptoChangeSetDto.getCurrentHistoCryptoRepoFileDtos().add(converter.toCurrentHistoCryptoRepoFileDto(entity));
+			cryptoChangeSetDto.getCurrentHistoCryptoRepoFileDtos().add(converter.toCurrentHistoCryptoRepoFileDto(entity, false));
 	}
 
 	private void populateChangedUserRepoKeyPublicKeyDtos(final CryptoChangeSetDto cryptoChangeSetDto, final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {
@@ -2086,7 +2091,7 @@ public class CryptreeImpl extends AbstractCryptree {
 			final CryptoRepoFile cryptoRepoFile = histoCryptoRepoFile.getCryptoRepoFile();
 			final CurrentHistoCryptoRepoFile currentHistoCryptoRepoFile = chcrfDao.getCurrentHistoCryptoRepoFile(cryptoRepoFile);
 			cryptoChangeSetDto.getHistoCryptoRepoFileDtos().add(hcrfdConverter.toHistoCryptoRepoFileDto(histoCryptoRepoFile));
-			cryptoChangeSetDto.getCurrentHistoCryptoRepoFileDtos().add(chcrfdConverter.toCurrentHistoCryptoRepoFileDto(currentHistoCryptoRepoFile));
+			cryptoChangeSetDto.getCurrentHistoCryptoRepoFileDtos().add(chcrfdConverter.toCurrentHistoCryptoRepoFileDto(currentHistoCryptoRepoFile, false));
 		}
 		return cryptoChangeSetDto;
 	}

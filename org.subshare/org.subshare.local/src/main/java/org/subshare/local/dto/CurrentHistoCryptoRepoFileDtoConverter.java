@@ -4,6 +4,7 @@ import static co.codewizards.cloudstore.core.objectfactory.ObjectFactoryUtil.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import org.subshare.core.dto.CurrentHistoCryptoRepoFileDto;
+import org.subshare.core.dto.HistoCryptoRepoFileDto;
 import org.subshare.local.persistence.CryptoRepoFile;
 import org.subshare.local.persistence.CryptoRepoFileDao;
 import org.subshare.local.persistence.CurrentHistoCryptoRepoFile;
@@ -25,32 +26,59 @@ public class CurrentHistoCryptoRepoFileDtoConverter {
 		this.transaction = assertNotNull("transaction", transaction);
 	}
 
-	public CurrentHistoCryptoRepoFileDto toCurrentHistoCryptoRepoFileDto(final CurrentHistoCryptoRepoFile currentHistoCryptoRepoFile) {
+	public CurrentHistoCryptoRepoFileDto toCurrentHistoCryptoRepoFileDto(final CurrentHistoCryptoRepoFile currentHistoCryptoRepoFile, boolean withHistoCryptoRepoFileDto) {
 		assertNotNull("currentHistoCryptoRepoFile", currentHistoCryptoRepoFile);
 		final CurrentHistoCryptoRepoFileDto result = new CurrentHistoCryptoRepoFileDto();
 
-		result.setHistoCryptoRepoFileId(currentHistoCryptoRepoFile.getHistoCryptoRepoFile().getHistoCryptoRepoFileId());
-		result.setCryptoRepoFileId(currentHistoCryptoRepoFile.getCryptoRepoFile().getCryptoRepoFileId());
+		final HistoCryptoRepoFile histoCryptoRepoFile = assertNotNull("currentHistoCryptoRepoFile.histoCryptoRepoFile", currentHistoCryptoRepoFile.getHistoCryptoRepoFile());
+		final CryptoRepoFile cryptoRepoFile = assertNotNull("currentHistoCryptoRepoFile.cryptoRepoFile", currentHistoCryptoRepoFile.getCryptoRepoFile());
+
+		if (withHistoCryptoRepoFileDto) {
+			final HistoCryptoRepoFileDto histoCryptoRepoFileDto = HistoCryptoRepoFileDtoConverter.create(transaction).toHistoCryptoRepoFileDto(histoCryptoRepoFile);
+			result.setHistoCryptoRepoFileDto(histoCryptoRepoFileDto);
+		}
+		else {
+			result.setHistoCryptoRepoFileId(histoCryptoRepoFile.getHistoCryptoRepoFileId());
+			result.setCryptoRepoFileId(cryptoRepoFile.getCryptoRepoFileId());
+		}
+
+		result.setSignature(currentHistoCryptoRepoFile.getSignature());
 
 		return result;
 	}
 
-	public CurrentHistoCryptoRepoFile putCurrentCryptoRepoFileOnServer(final CurrentHistoCryptoRepoFileDto currentHistoCryptoRepoFileDto) {
+	public CurrentHistoCryptoRepoFile putCurrentHistoCryptoRepoFile(final CurrentHistoCryptoRepoFileDto currentHistoCryptoRepoFileDto) {
 		assertNotNull("cryptoRepoFileOnServerDto", currentHistoCryptoRepoFileDto);
 		final CurrentHistoCryptoRepoFileDao currentHistoCryptoRepoFileDao = transaction.getDao(CurrentHistoCryptoRepoFileDao.class);
 		final HistoCryptoRepoFileDao histoCryptoRepoFileDao = transaction.getDao(HistoCryptoRepoFileDao.class);
 		final CryptoRepoFileDao cryptoRepoFileDao = transaction.getDao(CryptoRepoFileDao.class);
 
-		final CryptoRepoFile cryptoRepoFile = cryptoRepoFileDao.getCryptoRepoFileOrFail(currentHistoCryptoRepoFileDto.getCryptoRepoFileId());
-		final HistoCryptoRepoFile histoCryptoRepoFile = histoCryptoRepoFileDao.getHistoCryptoRepoFileOrFail(currentHistoCryptoRepoFileDto.getHistoCryptoRepoFileId());
+		final HistoCryptoRepoFileDto histoCryptoRepoFileDto = currentHistoCryptoRepoFileDto.getHistoCryptoRepoFileDto();
+
+		final CryptoRepoFile cryptoRepoFile;
+		final HistoCryptoRepoFile histoCryptoRepoFile;
+		if (histoCryptoRepoFileDto != null) {
+			histoCryptoRepoFile = HistoCryptoRepoFileDtoConverter.create(transaction).putHistoCryptoRepoFile(histoCryptoRepoFileDto);
+			cryptoRepoFile = histoCryptoRepoFile.getCryptoRepoFile();
+		}
+		else {
+			cryptoRepoFile = cryptoRepoFileDao.getCryptoRepoFileOrFail(currentHistoCryptoRepoFileDto.getCryptoRepoFileId());
+			histoCryptoRepoFile = histoCryptoRepoFileDao.getHistoCryptoRepoFileOrFail(currentHistoCryptoRepoFileDto.getHistoCryptoRepoFileId());
+		}
 
 		CurrentHistoCryptoRepoFile currentHistoCryptoRepoFile = currentHistoCryptoRepoFileDao.getCurrentHistoCryptoRepoFile(cryptoRepoFile);
 		if (currentHistoCryptoRepoFile == null) {
 			currentHistoCryptoRepoFile = new CurrentHistoCryptoRepoFile();
 			currentHistoCryptoRepoFile.setCryptoRepoFile(cryptoRepoFile);
 		}
+		else {
+			if (! cryptoRepoFile.equals(currentHistoCryptoRepoFile.getCryptoRepoFile()))
+				throw new IllegalArgumentException(String.format("cryptoRepoFile != currentHistoCryptoRepoFile.cryptoRepoFile :: %s != %s :: %s",
+						cryptoRepoFile, currentHistoCryptoRepoFile.getCryptoRepoFile(), currentHistoCryptoRepoFile));
+		}
 
 		currentHistoCryptoRepoFile.setHistoCryptoRepoFile(histoCryptoRepoFile);
+		currentHistoCryptoRepoFile.setSignature(currentHistoCryptoRepoFileDto.getSignature());
 
 		currentHistoCryptoRepoFile = currentHistoCryptoRepoFileDao.makePersistent(currentHistoCryptoRepoFile);
 

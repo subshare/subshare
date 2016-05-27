@@ -20,6 +20,10 @@ import mockit.Mock;
 import mockit.MockUp;
 import mockit.integration.junit4.JMockit;
 
+import org.junit.BeforeClass;
+import org.junit.ComparisonFailure;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.subshare.core.pgp.Pgp;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpKeyId;
@@ -30,10 +34,6 @@ import org.subshare.core.pgp.gnupg.GnuPgDir;
 import org.subshare.core.pgp.sync.PgpSync;
 import org.subshare.core.server.Server;
 import org.subshare.core.server.ServerImpl;
-import org.junit.BeforeClass;
-import org.junit.ComparisonFailure;
-import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import co.codewizards.cloudstore.core.config.ConfigDir;
 import co.codewizards.cloudstore.core.oio.File;
@@ -55,14 +55,14 @@ public class PgpSyncIT extends AbstractIT {
 
 	@BeforeClass
 	public static void beforePgpSyncIT() throws Exception {
-		clientGnuPgDirFile = createFile("build/" + jvmInstanceId + "/client/.gnupg");
+		clientGnuPgDirFile = createFile(jvmInstanceDir + "/client/.gnupg");
 		clientGnuPgDirFile.mkdirs();
-		serverGnuPgDirFile = createFile("build/" + jvmInstanceId + "/server/.gnupg");
+		serverGnuPgDirFile = createFile(jvmInstanceDir + "/server/.gnupg");
 		serverGnuPgDirFile.mkdirs();
 
-		clientConfigDir = createFile("build/" + jvmInstanceId + "/client/.subshare");
+		clientConfigDir = createFile(jvmInstanceDir + "/client/.subshare");
 		clientConfigDir.mkdirs();
-		serverConfigDir = createFile("build/" + jvmInstanceId + "/server/.subshare");
+		serverConfigDir = createFile(jvmInstanceDir + "/server/.subshare");
 		serverConfigDir.mkdirs();
 
 		new MockUp<ConfigDir>() {
