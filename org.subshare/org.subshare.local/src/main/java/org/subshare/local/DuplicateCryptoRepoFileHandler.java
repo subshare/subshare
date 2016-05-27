@@ -19,6 +19,8 @@ import org.subshare.core.user.UserRepoKeyRingLookupContext;
 import org.subshare.local.persistence.Collision;
 import org.subshare.local.persistence.CryptoRepoFile;
 import org.subshare.local.persistence.CryptoRepoFileDao;
+import org.subshare.local.persistence.HistoCryptoRepoFile;
+import org.subshare.local.persistence.HistoCryptoRepoFileDao;
 import org.subshare.local.persistence.ScheduledReupload;
 import org.subshare.local.persistence.ScheduledReuploadDao;
 import org.subshare.local.persistence.SsRemoteRepository;
@@ -58,10 +60,11 @@ public class DuplicateCryptoRepoFileHandler {
 		if (cryptoRepoFile2 != null && !cryptoRepoFile2.equals(cryptoRepoFile))
 			cryptoRepoFile = deduplicate(cryptoRepoFile, cryptoRepoFile2);
 
-		cryptoRepoFile.setRepoFile(repoFile);
+		if (cryptoRepoFile != null)
+			cryptoRepoFile.setRepoFile(repoFile);
 	}
 
-	public CryptoRepoFile deduplicate(final CryptoRepoFile cryptoRepoFile1, final CryptoRepoFile cryptoRepoFile2) {
+	protected CryptoRepoFile deduplicate(final CryptoRepoFile cryptoRepoFile1, final CryptoRepoFile cryptoRepoFile2) {
 		assignCryptoRepoFiles(cryptoRepoFile1, cryptoRepoFile2);
 		final CryptoRepoFile result = deduplicate();
 		return result;
@@ -93,6 +96,14 @@ public class DuplicateCryptoRepoFileHandler {
 
 		logger.debug("deduplicate: cryptoRepoFileActive={} cryptoRepoFileDead={}",
 				cryptoRepoFileActive, cryptoRepoFileDead);
+
+		final HistoCryptoRepoFileDao hcrfDao = transaction.getDao(HistoCryptoRepoFileDao.class);
+		final Collection<HistoCryptoRepoFile> histoCryptoRepoFiles = hcrfDao.getHistoCryptoRepoFiles(cryptoRepoFileActive);
+		if (histoCryptoRepoFiles.isEmpty()) {
+			logger.warn("deduplicate: cryptoRepoFileActive={} does not yet have any HistoCryptoRepoFile associated! Must postpone this operation!",
+					cryptoRepoFileActive);
+			return null;
+		}
 
 		RepoFile repoFile = cryptoRepoFileActive.getRepoFile();
 		if (repoFile == null)

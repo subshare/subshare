@@ -2171,7 +2171,9 @@ public class CryptreeImpl extends AbstractCryptree {
 			histoCryptoRepoFile2 = null;
 		}
 
-		assertNotNull("histoCryptoRepoFile1", histoCryptoRepoFile1);
+		assertNotNull("histoCryptoRepoFile1", histoCryptoRepoFile1,
+				"cryptoRepoFile=%s duplicateCryptoRepoFile=%s localPath=%s localHistoCryptoRepoFile=%s remoteHistoCryptoRepoFile=%s",
+				cryptoRepoFile, duplicateCryptoRepoFile, localPath, localHistoCryptoRepoFile, remoteHistoCryptoRepoFile);
 
 		if (duplicateCryptoRepoFile != null) {
 			if (duplicateCryptoRepoFile.getCryptoRepoFileId().equals(getCryptoRepoFileId(histoCryptoRepoFile1))) {
