@@ -138,6 +138,34 @@ public class CryptreeFileRepoTransportImpl extends FileRepoTransport implements 
 	}
 
 	@Override
+	protected void mkDir(LocalRepoTransaction transaction, UUID clientRepositoryId, File file, Date lastModified) {
+//		// CloudStore does not check for directory collisions, but silently ignores them (since the
+//		// timestamp is the only thing that can collide and is assumed to be unimportant). Because of
+//		// the different way Subshare handles collisions, Subshare wants to detect this type of collisions,
+//		// too. Hence, we invoke the check here.
+//
+//		if (lastModified != null) { // this method is invoked recursively - we only want to react on the primary invocation
+//			if (file.isDirectory() && ! file.isSymbolicLink()) { // it exists and is a directory
+//				final File localRoot = getLocalRepoManager().getLocalRoot();
+//				if (! localRoot.equals(file)) { // we ignore the local root, because we otherwise *always* have a collision on the first down-sync and the local root does not really matter. corner-case too rare and too unimportant to properly handle ;-)
+//					RepoFile repoFile = transaction.getDao(RepoFileDao.class).getRepoFile(localRoot, file);
+//					if (repoFile == null) { // it was newly created between the last LocalSync and this mkDir invocation!
+//						// currently ignored - really rare corner case ;-)
+//					}
+//					if (repoFile instanceof Directory) { // this is the only type of collision we have to check now.
+//						detectAndHandleFileCollision(transaction, clientRepositoryId, file, repoFile);
+//					}
+//				}
+//			}
+//		}
+//
+//		// hmmm... IMHO this sucks. Too many collisions in situations, probably no user ever cares about.
+//		// I thus commented out the above check.
+
+		super.mkDir(transaction, clientRepositoryId, file, lastModified);
+	}
+
+	@Override
 	protected void detectAndHandleFileCollision(
 			LocalRepoTransaction transaction, UUID fromRepositoryId, File file,
 			RepoFile normalFileOrSymlink) {

@@ -13,6 +13,7 @@ import javax.jdo.listener.StoreLifecycleListener;
 import org.subshare.core.Cryptree;
 import org.subshare.local.DuplicateCryptoRepoFileHandler;
 
+import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.repo.local.AbstractLocalRepoTransactionListener;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
 import co.codewizards.cloudstore.local.ContextWithPersistenceManager;
@@ -24,13 +25,15 @@ public class AssignCryptoRepoFileRepoFileListener extends AbstractLocalRepoTrans
 	// Used primarily on server side (where the repoFileName is the unique cryptoRepoFileId)
 	// On the client side, it only matters whether it's empty (nothing to do) or not (sth. to do).
 	private final Map<String, RepoFile> repoFileName2RepoFile = new HashMap<>();
+	private final Map<Uid, CryptoRepoFile> cryptoRepoFileId2CryptoRepoFile = new HashMap<>();
+
 	private Cryptree cryptree;
 
 	@Override
 	public void onBegin() {
 		final LocalRepoTransaction tx = getTransactionOrFail();
 		final PersistenceManager pm = ((ContextWithPersistenceManager)tx).getPersistenceManager();
-		pm.addInstanceLifecycleListener(this, RepoFile.class);
+		pm.addInstanceLifecycleListener(this, RepoFile.class, CryptoRepoFile.class);
 	}
 
 	@Override
@@ -38,13 +41,20 @@ public class AssignCryptoRepoFileRepoFileListener extends AbstractLocalRepoTrans
 
 	@Override
 	public void postStore(final InstanceLifecycleEvent event) {
-		final RepoFile repoFile = (RepoFile) assertNotNull("event.persistentInstance", event.getPersistentInstance());
-		repoFileName2RepoFile.put(assertNotNull("repoFile.name", repoFile.getName()), repoFile);
+		final Object persistable = assertNotNull("event.persistentInstance", event.getPersistentInstance());
+		if (persistable instanceof RepoFile) {
+			final RepoFile repoFile = (RepoFile) persistable;
+			repoFileName2RepoFile.put(assertNotNull("repoFile.name", repoFile.getName()), repoFile);
+		}
+		else if (persistable instanceof CryptoRepoFile) {
+			final CryptoRepoFile cryptoRepoFile = (CryptoRepoFile) persistable;
+			cryptoRepoFileId2CryptoRepoFile.put(assertNotNull("cryptoRepoFile.cryptoRepoFileId", cryptoRepoFile.getCryptoRepoFileId()), cryptoRepoFile);
+		}
 	}
 
 	@Override
 	public void onCommit() {
-		if (repoFileName2RepoFile.isEmpty())
+		if (repoFileName2RepoFile.isEmpty() && cryptoRepoFileId2CryptoRepoFile.isEmpty())
 			return;
 
 		final LocalRepoTransaction tx = getTransactionOrFail();
@@ -64,6 +74,7 @@ public class AssignCryptoRepoFileRepoFileListener extends AbstractLocalRepoTrans
 		}
 
 		repoFileName2RepoFile.clear();
+		cryptoRepoFileId2CryptoRepoFile.clear();
 	}
 
 	/**

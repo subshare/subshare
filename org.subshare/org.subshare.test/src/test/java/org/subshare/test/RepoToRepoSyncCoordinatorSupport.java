@@ -10,6 +10,8 @@ import mockit.Invocation;
 import mockit.Mock;
 import mockit.MockUp;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.subshare.core.repo.sync.SsRepoToRepoSync;
 
 import co.codewizards.cloudstore.core.dto.FileChunkDto;
@@ -23,6 +25,8 @@ import co.codewizards.cloudstore.core.repo.transport.CollisionException;
 import co.codewizards.cloudstore.core.repo.transport.RepoTransport;
 
 public class RepoToRepoSyncCoordinatorSupport {
+
+	private static final Logger logger = LoggerFactory.getLogger(RepoToRepoSyncCoordinatorSupport.class);
 
 	private static final Random random = new SecureRandom();
 
@@ -140,7 +144,7 @@ public class RepoToRepoSyncCoordinatorSupport {
 		try {
 			Thread.sleep(millis);
 		} catch (InterruptedException e) {
-			// do nothing
+			logger.warn("sleep: " + e, e);
 		}
 	}
 }

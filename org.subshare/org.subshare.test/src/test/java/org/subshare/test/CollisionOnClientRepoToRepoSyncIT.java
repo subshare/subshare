@@ -32,7 +32,8 @@ public class CollisionOnClientRepoToRepoSyncIT extends CollisionRepoToRepoSyncIT
 	 * The 1st client syncs completely, first. Then the 2nd client syncs completely. Thus,
 	 * the collision happens during the down-sync on the 2nd client.
 	 *
-	 * @see #newVsNewFileCollisionOnServer()
+	 * @see CollisionOnServerRepoToRepoSyncIT#newFileVsNewFileUploadedCollisionOnServer()
+	 * @see CollisionOnServerRepoToRepoSyncIT#newFileVsNewFileUploadingCollisionOnServer()
 	 */
 	@Test
 	public void newFileVsNewFileCollisionOnClient() throws Exception {
@@ -386,4 +387,91 @@ public class CollisionOnClientRepoToRepoSyncIT extends CollisionRepoToRepoSyncIT
 		.isEqualTo(plainHistoCryptoRepoFileDtos.get(1).getHistoCryptoRepoFileDto().getHistoCryptoRepoFileId());
 	}
 
+	/**
+	 * Two clients simultaneously create a directory with the same name in the same directory.
+	 * <p>
+	 * The 1st client syncs completely, first. Then the 2nd client syncs completely. Thus,
+	 * the collision happens during the down-sync on the 2nd client.
+	 */
+	@Test
+	public void newDirectoryVsNewDirectoryCollisionOnClient() throws Exception {
+		prepareLocalAndDestinationRepo();
+
+		File dir1 = createFile(localSrcRoot, "2", "new-dir");
+		createDirectory(dir1);
+		dir1.setLastModified(10101);
+
+		File dir2 = createFile(localDestRoot, "2", "new-dir");
+		createDirectory(dir2);
+		dir2.setLastModified(20202);
+
+		// Verify that *no* version is in the history, yet. The file is new!
+		List<PlainHistoCryptoRepoFileDto> plainHistoCryptoRepoFileDtos = getPlainHistoCryptoRepoFileDtos(localSrcRepoManagerLocal, dir1);
+		assertThat(plainHistoCryptoRepoFileDtos).hasSize(0);
+		plainHistoCryptoRepoFileDtos = getPlainHistoCryptoRepoFileDtos(localDestRepoManagerLocal, dir2);
+		assertThat(plainHistoCryptoRepoFileDtos).hasSize(0);
+
+		// Verify that there is *no* collision, yet.
+		SsLocalRepoMetaData localRepoMetaData = (SsLocalRepoMetaData) localSrcRepoManagerLocal.getLocalRepoMetaData();
+		Collection<CollisionDto> collisionDtos = localRepoMetaData.getCollisionDtos(new CollisionFilter());
+		assertThat(collisionDtos).isEmpty();
+
+		syncFromLocalSrcToRemote();
+		syncFromRemoteToLocalDest(false); // should up-sync its own version
+		syncFromLocalSrcToRemote(); // should down-sync the change from dest-repo
+		assertDirectoriesAreEqualRecursively(
+				(remotePathPrefix2Plain.isEmpty() ? getLocalRootWithPathPrefix() : createFile(getLocalRootWithPathPrefix(), remotePathPrefix2Plain)),
+				localDestRoot);
+
+//		// Verify that *both* versions are in the history.
+//		plainHistoCryptoRepoFileDtos = getPlainHistoCryptoRepoFileDtos(localSrcRepoManagerLocal, dir1);
+//		assertThat(plainHistoCryptoRepoFileDtos).hasSize(2);
+//
+//		// Verify that the older one is the previous version of the newer one (the list is sorted by timestamp).
+//		assertThat(plainHistoCryptoRepoFileDtos.get(0).getHistoCryptoRepoFileDto().getHistoCryptoRepoFileId())
+//		.isEqualTo(plainHistoCryptoRepoFileDtos.get(1).getHistoCryptoRepoFileDto().getPreviousHistoCryptoRepoFileId());
+//
+//		long lastModified0 = plainHistoCryptoRepoFileDtos.get(0).getRepoFileDto().getLastModified().getTime();
+//		long lastModified1 = plainHistoCryptoRepoFileDtos.get(1).getRepoFileDto().getLastModified().getTime();
+//
+//		assertThat(lastModified0).isEqualTo(10101);
+//		assertThat(lastModified1).isEqualTo(20202);
+//
+//		// Verify that the 2nd version is the current one.
+//		assertThat(dir1.lastModified()).isEqualTo(20202);
+//		assertThat(dir2.lastModified()).isEqualTo(dir1.lastModified());
+//
+//		// Verify that there is exactly one collision.
+//		collisionDtos = localRepoMetaData.getCollisionDtos(new CollisionFilter());
+//		assertThat(collisionDtos).hasSize(1);
+//
+//		// Verify that this collision is correct.
+//		CollisionDto collisionDto = collisionDtos.iterator().next();
+//		assertThat(collisionDto.getDuplicateCryptoRepoFileId()).isNull();
+//
+//		assertThat(collisionDto.getHistoCryptoRepoFileId1())
+//		.isEqualTo(plainHistoCryptoRepoFileDtos.get(1).getHistoCryptoRepoFileDto().getHistoCryptoRepoFileId());
+//
+//		assertThat(collisionDto.getHistoCryptoRepoFileId2())
+//		.isEqualTo(plainHistoCryptoRepoFileDtos.get(0).getHistoCryptoRepoFileDto().getHistoCryptoRepoFileId());
+
+		// Collisions of directory timestamps are not assumed to be real collisions. We currently ignore them.
+		// Hence, this should *not* qualify as a collision - there should be no change - the new version is silently
+		// discarded (and the timestamp from the first repo used).
+
+		// Verify that *one* version is in the history.
+		plainHistoCryptoRepoFileDtos = getPlainHistoCryptoRepoFileDtos(localSrcRepoManagerLocal, dir1);
+		assertThat(plainHistoCryptoRepoFileDtos).hasSize(1);
+
+		long lastModified0 = plainHistoCryptoRepoFileDtos.get(0).getRepoFileDto().getLastModified().getTime();
+		assertThat(lastModified0).isEqualTo(10101);
+
+		// Verify that dirs in both working copies have the same timestamp.
+		assertThat(dir1.lastModified()).isEqualTo(10101);
+		assertThat(dir2.lastModified()).isEqualTo(dir1.lastModified());
+
+		// And check that there's still no collision.
+		collisionDtos = localRepoMetaData.getCollisionDtos(new CollisionFilter());
+		assertThat(collisionDtos).isEmpty();
+	}
 }
