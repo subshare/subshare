@@ -19,6 +19,7 @@ import org.subshare.core.dto.SsDeleteModificationDto;
 import org.subshare.core.dto.SsDirectoryDto;
 import org.subshare.core.dto.SsNormalFileDto;
 import org.subshare.core.dto.SsRepoFileDto;
+import org.subshare.core.dto.SsSymlinkDto;
 import org.subshare.core.repo.transport.CryptreeServerFileRepoTransport;
 import org.subshare.local.dto.CurrentHistoCryptoRepoFileDtoConverter;
 import org.subshare.local.persistence.CryptoRepoFile;
@@ -32,6 +33,7 @@ import org.subshare.local.persistence.HistoFileChunk;
 import org.subshare.local.persistence.HistoFileChunkDao;
 import org.subshare.local.persistence.SsDirectory;
 import org.subshare.local.persistence.SsNormalFile;
+import org.subshare.local.persistence.SsSymlink;
 import org.subshare.local.persistence.TempFileChunk;
 import org.subshare.local.persistence.TempFileChunkDao;
 
@@ -47,6 +49,7 @@ import co.codewizards.cloudstore.local.persistence.FileChunk;
 import co.codewizards.cloudstore.local.persistence.NormalFile;
 import co.codewizards.cloudstore.local.persistence.RepoFile;
 import co.codewizards.cloudstore.local.persistence.RepoFileDao;
+import co.codewizards.cloudstore.local.persistence.Symlink;
 import co.codewizards.cloudstore.local.transport.FileRepoTransport;
 
 public class DbFileRepoTransportImpl extends FileRepoTransport implements CryptreeServerFileRepoTransport {
@@ -141,12 +144,6 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 
 	@Override
 	public void makeDirectory(String path, Date lastModified) {
-//		final RepoFileContext context = RepoFileContext.getContext();
-//		assertNotNull("RepoFileContext.getContext()", context);
-//
-//		final SsDirectoryDto directoryDto = (SsDirectoryDto) context.getSsRepoFileDto();
-//		final HistoCryptoRepoFileDto cryptoRepoFileOnServerDto = context.getCryptoRepoFileOnServerDto();
-//		makeDirectory(path, directoryDto, cryptoRepoFileOnServerDto);
 		throw new IllegalStateException("This method should not be invoked on the server!");
 	}
 
@@ -178,7 +175,7 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 					throw new IllegalStateException("parentRepoFile is no Directory! " + parentRepoFile); // TODO collision?! special handling?!
 			}
 
-			// TODO detect collisions!
+			// TODO detect collisions! - sure?! We cannot handle collisions on the server!
 			RepoFile repoFile = repoFileDao.getRepoFile(localRoot, file);
 			if (repoFile != null && ! (repoFile instanceof Directory)) {
 				repoFileDao.deletePersistent(repoFile);
@@ -191,16 +188,13 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 				directory.setParent(parentRepoFile);
 				directory.setName(directoryDto.getName());
 			}
-			directory.setLastModified(new Date(0)); // no need in Subshare ;-) (but there's a not-null-constraint in the DB)
+			directory.setLastModified(SsRepoFileDto.DUMMY_LAST_MODIFIED); // no need in Subshare ;-) (but there's a not-null-constraint in the DB)
 			directory.setLastSyncFromRepositoryId(clientRepositoryId);
 			directory.setSignature(directoryDto.getSignature());
 
 			repoFileDao.makePersistent(directory); // just in case, it is not yet persistent ;-) if it already is, this is a no-op.
 
 			CurrentHistoCryptoRepoFileDtoConverter.create(transaction).putCurrentHistoCryptoRepoFile(currentHistoCryptoRepoFileDto);
-//			final HistoCryptoRepoFile histoCryptoRepoFile = HistoCryptoRepoFileDtoConverter.create(transaction).putHistoCryptoRepoFile(histoCryptoRepoFileDto);
-//			// TODO must sign CurrentHistoCryptoRepoFile on client-side and upload!
-//			createOrUpdateCurrentHistoCryptoRepoFile(transaction, histoCryptoRepoFile);
 
 			transaction.commit();
 		}
@@ -234,16 +228,66 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 
 	@Override
 	public void makeSymlink(String path, String target, Date lastModified) {
-		throw new UnsupportedOperationException("NYI");
-//		super.makeSymlink(path, target, lastModified);
+		throw new IllegalStateException("This method should not be invoked on the server!");
+	}
+
+	@Override
+	public void makeSymlink(String path, SsSymlinkDto symlinkDto, CurrentHistoCryptoRepoFileDto currentHistoCryptoRepoFileDto) {
+		assertNotNull("path", path);
+		assertNotNull("symlinkDto", symlinkDto);
+		assertNotNull("currentHistoCryptoRepoFileDto", currentHistoCryptoRepoFileDto);
+		assertNotNull("currentHistoCryptoRepoFileDto.histoCryptoRepoFileDto", currentHistoCryptoRepoFileDto.getHistoCryptoRepoFileDto());
+
+		path = prefixPath(path);
+		final File file = getFile(path); // null-check already inside getFile(...) - no need for another check here
+		final File parentFile = file.getParentFile();
+		final File localRoot = getLocalRepoManager().getLocalRoot();
+		final UUID clientRepositoryId = getClientRepositoryIdOrFail();
+
+		assertThatUnsignedPathMatchesSignedSsRepoFileDto(path, file, parentFile, symlinkDto);
+
+		final boolean isRoot = file.equals(localRoot); // we continue even with the root (even though this *always* exists) to allow for updating timestamps and similar.
+
+		try ( final LocalRepoTransaction transaction = getLocalRepoManager().beginWriteTransaction(); ) {
+			final RepoFileDao repoFileDao = transaction.getDao(RepoFileDao.class);
+
+			final RepoFile parentRepoFile = isRoot ? null : repoFileDao.getRepoFile(localRoot, parentFile);
+			if (! isRoot) {
+				assertNotNull("parentRepoFile", parentRepoFile); // TODO or is this a collision which requires a special exception?! Might be an attack, too: We sign only the direct parent - parents of parents (in path) are not signed. Hence, this might be a broken path!
+
+				if (! (parentRepoFile instanceof Directory))
+					throw new IllegalStateException("parentRepoFile is no Directory! " + parentRepoFile); // TODO collision?! special handling?!
+			}
+
+			// TODO detect collisions! - sure?! We cannot handle collisions on the server!
+			RepoFile repoFile = repoFileDao.getRepoFile(localRoot, file);
+			if (repoFile != null && ! (repoFile instanceof Symlink)) {
+				repoFileDao.deletePersistent(repoFile);
+				repoFile = null;
+			}
+
+			SsSymlink symlink = (SsSymlink) repoFile;
+			if (symlink == null) {
+				repoFile = symlink = createObject(SsSymlink.class);
+				symlink.setParent(parentRepoFile);
+				symlink.setName(symlinkDto.getName());
+			}
+			symlink.setLastModified(new Date(0)); // no need in Subshare ;-) (but there's a not-null-constraint in the DB)
+			symlink.setTarget(symlinkDto.getTarget()); // no need in Subshare ;-) (but there's a not-null-constraint in the DB)
+			symlink.setLastSyncFromRepositoryId(clientRepositoryId);
+			symlink.setSignature(symlinkDto.getSignature());
+
+			repoFileDao.makePersistent(symlink); // just in case, it is not yet persistent ;-) if it already is, this is a no-op.
+
+			CurrentHistoCryptoRepoFileDtoConverter.create(transaction).putCurrentHistoCryptoRepoFile(currentHistoCryptoRepoFileDto);
+
+			transaction.commit();
+		}
+
 	}
 
 	@Override
 	public void beginPutFile(final String path) {
-//		final RepoFileContext context = RepoFileContext.getContext();
-//		assertNotNull("RepoFileContext.getContext()", context);
-//		final SsNormalFileDto normalFileDto = (SsNormalFileDto) context.getSsRepoFileDto();
-//		beginPutFile(path, normalFileDto);
 		throw new IllegalStateException("This method should not be invoked on the server!");
 	}
 
@@ -282,9 +326,10 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 				normalFile.setParent(parentRepoFile);
 				normalFile.setName(normalFileDto.getName());
 			}
-			normalFile.setLength(0); // we don't store this on the server-side in Subshare for security reasons!
+			normalFile.setLength(normalFileDto.getLength()); // this is the length-with-padding, actually! not the real length!
+//			normalFile.setLengthWithPadding(normalFileDto.getLengthWithPadding()); // this is not used outside encrypted data.
 			normalFile.setSha1("X"); // we don't store this on the server-side in Subshare for security reasons! but there's a not-null-constraint.
-			normalFile.setLastModified(new Date(0)); // we don't store this on the server-side in Subshare for security reasons!
+			normalFile.setLastModified(normalFileDto.getLastModified()); // this is always a dummy-value, but it's part of the signature => copy it.
 			normalFile.setSignature(normalFileDto.getSignature());
 
 //			if (!newFile && !normalFile.isInProgress()) // TODO collision detection?!

@@ -3,6 +3,7 @@ package org.subshare.gui.histo.exp;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import org.subshare.core.repo.LocalRepo;
+import org.subshare.core.repo.histo.ExportFileParam;
 import org.subshare.core.repo.histo.HistoExporter;
 import org.subshare.gui.histo.exp.destination.ExportFromHistoryDestinationWizardPage;
 import org.subshare.gui.ls.HistoExporterLs;
@@ -33,7 +34,7 @@ public class ExportFromHistoryWizard extends Wizard {
 		final LocalRepo localRepo = exportFromHistoryData.getLocalRepo();
 		try (final HistoExporter histoExporter = HistoExporterLs.createHistoExporter(localRepo.getLocalRoot())) {
 			for (final Uid histoCryptoRepoFileId : exportFromHistoryData.getHistoCryptoRepoFileIds()) {
-				histoExporter.exportFile(histoCryptoRepoFileId, exportDirectory);
+				histoExporter.exportFile(new ExportFileParam(histoCryptoRepoFileId, exportDirectory));
 			}
 		}
 	}

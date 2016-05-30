@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.subshare.core.dto.CollisionDto;
 import org.subshare.core.dto.PlainHistoCryptoRepoFileDto;
+import org.subshare.core.repo.histo.ExportFileParam;
 import org.subshare.core.repo.histo.HistoExporter;
 import org.subshare.core.repo.histo.HistoExporterImpl;
 import org.subshare.core.repo.local.CollisionFilter;
@@ -200,11 +201,11 @@ public class CollisionOnServerRepoToRepoSyncIT extends CollisionRepoToRepoSyncIT
 		File tempDir1 = createTempDirectory(getClass().getSimpleName() + '.');
 
 		try (HistoExporter histoExporter = HistoExporterImpl.createHistoExporter(localSrcRoot);) {
-			histoExporter.exportFile(
-					plainHistoCryptoRepoFileDtos.get(0).getHistoCryptoRepoFileDto().getHistoCryptoRepoFileId(), tempDir0);
+			histoExporter.exportFile(new ExportFileParam(
+					plainHistoCryptoRepoFileDtos.get(0).getHistoCryptoRepoFileDto().getHistoCryptoRepoFileId(), tempDir0));
 
-			histoExporter.exportFile(
-					plainHistoCryptoRepoFileDtos.get(1).getHistoCryptoRepoFileDto().getHistoCryptoRepoFileId(), tempDir1);
+			histoExporter.exportFile(new ExportFileParam(
+					plainHistoCryptoRepoFileDtos.get(1).getHistoCryptoRepoFileDto().getHistoCryptoRepoFileId(), tempDir1));
 		}
 		File histoFile0 = createFile(tempDir0, "new-file");
 		File histoFile1 = createFile(tempDir1, "new-file");
@@ -365,11 +366,11 @@ public class CollisionOnServerRepoToRepoSyncIT extends CollisionRepoToRepoSyncIT
 		File tempDir1 = createTempDirectory(getClass().getSimpleName() + '.');
 
 		try (HistoExporter histoExporter = HistoExporterImpl.createHistoExporter(localSrcRoot);) {
-			histoExporter.exportFile(
-					plainHistoCryptoRepoFileDtos.get(0).getHistoCryptoRepoFileDto().getHistoCryptoRepoFileId(), tempDir0);
+			histoExporter.exportFile(new ExportFileParam(
+					plainHistoCryptoRepoFileDtos.get(0).getHistoCryptoRepoFileDto().getHistoCryptoRepoFileId(), tempDir0));
 
-			histoExporter.exportFile(
-					plainHistoCryptoRepoFileDtos.get(1).getHistoCryptoRepoFileDto().getHistoCryptoRepoFileId(), tempDir1);
+			histoExporter.exportFile(new ExportFileParam(
+					plainHistoCryptoRepoFileDtos.get(1).getHistoCryptoRepoFileDto().getHistoCryptoRepoFileId(), tempDir1));
 		}
 		File histoFile0 = createFile(tempDir0, "new-file");
 		File histoFile1 = createFile(tempDir1, "new-file");

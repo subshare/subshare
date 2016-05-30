@@ -15,8 +15,8 @@ import javax.jdo.annotations.Inheritance;
 import javax.jdo.annotations.InheritanceStrategy;
 import javax.jdo.annotations.PersistenceCapable;
 
-import org.subshare.core.dto.SsSymlinkDto;
 import org.subshare.core.dto.PermissionType;
+import org.subshare.core.dto.SsSymlinkDto;
 import org.subshare.core.io.InputStreamSource;
 import org.subshare.core.io.MultiInputStream;
 import org.subshare.core.sign.Signature;
@@ -56,7 +56,13 @@ public class SsSymlink extends Symlink implements SsRepoFile {
 					InputStreamSource.Helper.createInputStreamSource(getName()),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
-					InputStreamSource.Helper.createInputStreamSource(getParent() == null ? null : getParent().getName())
+					InputStreamSource.Helper.createInputStreamSource(getParent() == null ? null : getParent().getName()),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
+					InputStreamSource.Helper.createInputStreamSource(getTarget()),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
+					InputStreamSource.Helper.createInputStreamSource(getLastModified())
 					);
 		} catch (final IOException x) {
 			throw new RuntimeException(x);

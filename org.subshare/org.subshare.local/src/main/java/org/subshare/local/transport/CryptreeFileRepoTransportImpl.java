@@ -33,6 +33,7 @@ import org.subshare.local.persistence.SsFileChunk;
 import org.subshare.local.persistence.SsNormalFile;
 
 import co.codewizards.cloudstore.core.dto.FileChunkDto;
+import co.codewizards.cloudstore.core.dto.RepoFileDto;
 import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
@@ -41,8 +42,13 @@ import co.codewizards.cloudstore.core.repo.local.LocalRepoTransactionPostCloseAd
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransactionPostCloseEvent;
 import co.codewizards.cloudstore.core.repo.transport.CollisionException;
 import co.codewizards.cloudstore.core.repo.transport.DeleteModificationCollisionException;
+import co.codewizards.cloudstore.local.LocalRepoSync;
 import co.codewizards.cloudstore.local.persistence.FileChunk;
+import co.codewizards.cloudstore.local.persistence.LastSyncToRemoteRepo;
+import co.codewizards.cloudstore.local.persistence.LastSyncToRemoteRepoDao;
 import co.codewizards.cloudstore.local.persistence.NormalFile;
+import co.codewizards.cloudstore.local.persistence.RemoteRepository;
+import co.codewizards.cloudstore.local.persistence.RemoteRepositoryDao;
 import co.codewizards.cloudstore.local.persistence.RepoFile;
 import co.codewizards.cloudstore.local.persistence.RepoFileDao;
 import co.codewizards.cloudstore.local.transport.FileRepoTransport;
@@ -119,6 +125,27 @@ public class CryptreeFileRepoTransportImpl extends FileRepoTransport implements 
 		repoFileDao.deletePersistent(repoFile);
 	}
 
+	@Override
+	protected RepoFile syncRepoFile(final LocalRepoTransaction transaction, final File file) {
+		assertNotNull("transaction", transaction);
+		assertNotNull("file", file);
+
+		final File localRoot = getLocalRepoManager().getLocalRoot();
+		final RepoFileDao rfDao = transaction.getDao(RepoFileDao.class);
+		RepoFile repoFile = rfDao.getRepoFile(localRoot, file);
+		// If the type changed, we must delete the RepoFile here before invoking the super-method,
+		// because this would otherwise cause an invocation of Cryptree.preDelete(...) causing
+		// the actual file to be deleted.
+
+		if (repoFile != null && ! LocalRepoSync.create(transaction).isRepoFileTypeCorrect(repoFile, file)) {
+			rfDao.deletePersistent(repoFile);
+			repoFile = null;
+			transaction.flush();
+		}
+		repoFile = super.syncRepoFile(transaction, file);
+		return repoFile;
+	}
+
 	private boolean isMetaOnly() {
 		if (metaOnly == null) {
 //			final Iterator<UUID> repoIdIt = getLocalRepoManager().getRemoteRepositoryId2RemoteRootMap().keySet().iterator();
@@ -159,7 +186,7 @@ public class CryptreeFileRepoTransportImpl extends FileRepoTransport implements 
 //			}
 //		}
 //
-//		// hmmm... IMHO this sucks. Too many collisions in situations, probably no user ever cares about.
+//		// hmmm... IMHO this sucks. Too many collisions in situations probably no user ever cares about.
 //		// I thus commented out the above check.
 
 		super.mkDir(transaction, clientRepositoryId, file, lastModified);
@@ -190,6 +217,25 @@ public class CryptreeFileRepoTransportImpl extends FileRepoTransport implements 
 		});
 
 		throw new CollisionException();
+	}
+
+	@Override
+	protected void handleFileTypeCollision(LocalRepoTransaction transaction, UUID fromRepositoryId, File file, Class<? extends RepoFileDto> fromFileType) {
+		// In contrast to CloudStore, Subshare does not rename the collision-file immediately. Therefore,
+		// this method is invoked when a type-collision was already handled somewhere else and we're re-downloading
+		// here.
+
+		final RemoteRepository remoteRepository = transaction.getDao(RemoteRepositoryDao.class).getRemoteRepositoryOrFail(fromRepositoryId);
+		final LastSyncToRemoteRepo lastSyncToRemoteRepo = transaction.getDao(LastSyncToRemoteRepoDao.class).getLastSyncToRemoteRepo(remoteRepository);
+
+		final File localRoot = getLocalRepoManager().getLocalRoot();
+		final RepoFile repoFile = transaction.getDao(RepoFileDao.class).getRepoFile(localRoot, file);
+
+		if (lastSyncToRemoteRepo != null && repoFile.getLocalRevision() <= lastSyncToRemoteRepo.getLocalRepositoryRevisionSynced()) {
+			file.deleteRecursively();
+			return;
+		}
+		super.handleFileTypeCollision(transaction, fromRepositoryId, file, fromFileType);
 	}
 
 //	protected void createAndPersistCollision(final LocalRepoManager localRepoManager, final UUID fromRepositoryId, final File file) {

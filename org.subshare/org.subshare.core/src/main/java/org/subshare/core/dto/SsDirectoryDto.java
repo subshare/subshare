@@ -72,7 +72,10 @@ public class SsDirectoryDto extends DirectoryDto implements SsRepoFileDto {
 					InputStreamSource.Helper.createInputStreamSource(getName()),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
-					InputStreamSource.Helper.createInputStreamSource(parentName)
+					InputStreamSource.Helper.createInputStreamSource(parentName),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
+					InputStreamSource.Helper.createInputStreamSource(getLastModified())
 					);
 		} catch (final IOException x) {
 			throw new RuntimeException(x);

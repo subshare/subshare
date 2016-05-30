@@ -11,26 +11,26 @@ import javax.ws.rs.core.MediaType;
 
 import org.subshare.core.dto.CurrentHistoCryptoRepoFileDto;
 import org.subshare.core.dto.RepoFileDtoWithCurrentHistoCryptoRepoFileDto;
-import org.subshare.core.dto.SsDirectoryDto;
+import org.subshare.core.dto.SsSymlinkDto;
 import org.subshare.core.repo.transport.CryptreeServerFileRepoTransport;
 
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
-import co.codewizards.cloudstore.rest.server.service.MakeDirectoryService;
+import co.codewizards.cloudstore.rest.server.service.MakeSymlinkService;
 
-@Path("_makeDirectory/{repositoryName}") // need to redeclare - seems not to be inherited
+@Path("_makeSymlink/{repositoryName}") // need to redeclare - seems not to be inherited
 @Consumes(MediaType.APPLICATION_XML)
 @Produces(MediaType.APPLICATION_XML)
-public class SsMakeDirectoryService extends MakeDirectoryService {
+public class SsMakeSymlinkService extends MakeSymlinkService {
 
 	@POST
-	public void makeDirectory(final RepoFileDtoWithCurrentHistoCryptoRepoFileDto repoFileDtoWithCurrentHistoCryptoRepoFileDto)
+	public void makeSymlink(final RepoFileDtoWithCurrentHistoCryptoRepoFileDto repoFileDtoWithCurrentHistoCryptoRepoFileDto)
 	{
-		makeDirectory("", repoFileDtoWithCurrentHistoCryptoRepoFileDto);
+		makeSymlink("", repoFileDtoWithCurrentHistoCryptoRepoFileDto);
 	}
 
 	@POST
 	@Path("{path:.*}")
-	public void makeDirectory(@PathParam("path") String path, final RepoFileDtoWithCurrentHistoCryptoRepoFileDto repoFileDtoWithCurrentHistoCryptoRepoFileDto)
+	public void makeSymlink(@PathParam("path") String path, final RepoFileDtoWithCurrentHistoCryptoRepoFileDto repoFileDtoWithCurrentHistoCryptoRepoFileDto)
 	{
 		assertNotNull("path", path);
 		assertNotNull("repoFileDtoWithCurrentHistoCryptoRepoFileDto", repoFileDtoWithCurrentHistoCryptoRepoFileDto);
@@ -45,36 +45,29 @@ public class SsMakeDirectoryService extends MakeDirectoryService {
 		final RepoFileDto rfdto = assertNotNull("repoFileDtoWithCurrentHistoCryptoRepoFileDto.repoFileDto",
 				repoFileDtoWithCurrentHistoCryptoRepoFileDto.getRepoFileDto());
 
-		if (! (rfdto instanceof SsDirectoryDto))
-			throw new IllegalArgumentException("repoFileDtoWithCurrentHistoCryptoRepoFileDto.repoFileDto is not an instance of SsDirectoryDto, but: " + rfdto.getClass().getName());
+		if (! (rfdto instanceof SsSymlinkDto))
+			throw new IllegalArgumentException("repoFileDtoWithCurrentHistoCryptoRepoFileDto.repoFileDto is not an instance of SsSymlinkDto, but: " + rfdto.getClass().getName());
 
-		final SsDirectoryDto directoryDto = (SsDirectoryDto) rfdto;
-
-//		RepoFileContext.setContext(new RepoFileContext(path, rfdto, cryptoRepoFileOnServerDto));
-//		try {
-//			super.makeDirectory(path);
-//		} finally {
-//			RepoFileContext.setContext(null);
-//		}
+		final SsSymlinkDto symlinkDto = (SsSymlinkDto) rfdto;
 
 		try (final CryptreeServerFileRepoTransport repoTransport = (CryptreeServerFileRepoTransport) authenticateAndCreateLocalRepoTransport();) {
 			path = repoTransport.unprefixPath(path);
-			repoTransport.makeDirectory(path, directoryDto, currentHistoCryptoRepoFileDto);
+			repoTransport.makeSymlink(path, symlinkDto, currentHistoCryptoRepoFileDto);
 		}
 	}
 
 	@Override
 	@POST
-	@Path("_SsMakeDirectoryService_NOT_SUPPORTED_1")
-	public void makeDirectory()
+	@Path("_SsMakeSymlinkService_NOT_SUPPORTED_1")
+	public void makeSymlink()
 	{
 		throw new UnsupportedOperationException("Missing DTO!");
 	}
 
 	@Override
 	@POST
-	@Path("_SsMakeDirectoryService_NOT_SUPPORTED_2")
-	public void makeDirectory(@PathParam("path") final String path)
+	@Path("_SsMakeSymlinkService_NOT_SUPPORTED_2")
+	public void makeSymlink(@PathParam("path") final String path)
 	{
 		throw new UnsupportedOperationException("Missing DTO!");
 	}

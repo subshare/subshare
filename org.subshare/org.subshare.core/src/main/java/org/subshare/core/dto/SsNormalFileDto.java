@@ -47,7 +47,7 @@ public class SsNormalFileDto extends NormalFileDto implements SsRepoFileDto {
 	/**
 	 * {@inheritDoc}
 	 * <p>
-	 * <b>Important:</b> The implementation in {@code SsDirectory} must exactly match the one in {@code SsDirectoryDto}!
+	 * <b>Important:</b> The implementation in {@code SsNormalFile} must exactly match the one in {@code SsNormalFileDto}!
 	 */
 	@Override
 	public InputStream getSignedData(final int signedDataVersion) {
@@ -57,8 +57,17 @@ public class SsNormalFileDto extends NormalFileDto implements SsRepoFileDto {
 					InputStreamSource.Helper.createInputStreamSource(getName()),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
-					InputStreamSource.Helper.createInputStreamSource(parentName)
-					); // TODO add length! We truncate the data on the server-side based on it!
+					InputStreamSource.Helper.createInputStreamSource(parentName),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
+					InputStreamSource.Helper.createInputStreamSource(getLength()),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
+					InputStreamSource.Helper.createInputStreamSource(getLengthWithPadding()),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
+					InputStreamSource.Helper.createInputStreamSource(getLastModified())
+					);
 		} catch (final IOException x) {
 			throw new RuntimeException(x);
 		}

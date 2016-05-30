@@ -19,4 +19,15 @@ public class ScheduledReuploadDao extends Dao<ScheduledReupload, ScheduledReuplo
 			query.closeAll();
 		}
 	}
+
+	public ScheduledReupload scheduleReupload(final RepoFile repoFile) {
+		assertNotNull("repoFile", repoFile);
+		ScheduledReupload scheduledReupload = getScheduledReupload(repoFile);
+		if (scheduledReupload == null) {
+			scheduledReupload = new ScheduledReupload();
+			scheduledReupload.setRepoFile(repoFile);
+			scheduledReupload = makePersistent(scheduledReupload);
+		}
+		return scheduledReupload;
+	}
 }

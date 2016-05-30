@@ -19,10 +19,11 @@ import org.subshare.core.user.UserRepoKeyRing;
 import org.subshare.core.user.UserRepoKeyRingLookup;
 import org.subshare.core.user.UserRepoKeyRingLookupContext;
 
+import co.codewizards.cloudstore.core.dto.DirectoryDto;
 import co.codewizards.cloudstore.core.dto.FileChunkDto;
 import co.codewizards.cloudstore.core.dto.NormalFileDto;
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
-import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.dto.SymlinkDto;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManagerFactory;
@@ -97,34 +98,47 @@ public class HistoExporterImpl implements HistoExporter {
 	}
 
 	@Override
-	public void exportFile(final Uid histoCryptoRepoFileId, final File exportDirectory) throws IOException {
-		// TODO use param-object
+	public void exportFile(final ExportFileParam exportFileParam) throws IOException {
 		// TODO support directories and take options into account (e.g. entire dirs [complete snapshots])
-		assertNotNull("histoCryptoRepoFileId", histoCryptoRepoFileId);
-		assertNotNull("exportDirectory", exportDirectory);
+		assertNotNull("exportFileParam", exportFileParam);
+		assertNotNull("exportFileParam.histoCryptoRepoFileId", exportFileParam.getHistoCryptoRepoFileId());
+		assertNotNull("exportFileParam.exportDirectory", exportFileParam.getExportDirectory());
 
 		try (final LocalRepoTransaction tx = localRepoManager.beginReadTransaction();) {
-			final PlainHistoCryptoRepoFileDto plainHistoCryptoRepoFileDto = getCryptree(tx).getPlainHistoCryptoRepoFileDto(histoCryptoRepoFileId);
+			final PlainHistoCryptoRepoFileDto plainHistoCryptoRepoFileDto = getCryptree(tx).getPlainHistoCryptoRepoFileDto(exportFileParam.getHistoCryptoRepoFileId());
 			final RepoFileDto repoFileDto = plainHistoCryptoRepoFileDto.getRepoFileDto();
 			assertNotNull("plainHistoCryptoRepoFileDto.repoFileDto", repoFileDto);
 
-			if (!(repoFileDto instanceof NormalFileDto))
-				throw new UnsupportedOperationException("NYI");
+			final File exportFile = createFile(exportFileParam.getExportDirectory(), repoFileDto.getName());
 
-			final NormalFileDto normalFileDto = (NormalFileDto) repoFileDto;
+			if (repoFileDto instanceof DirectoryDto) {
+				if (exportFileParam.isRecursive())
+					throw new UnsupportedOperationException("NYI");
 
-			File exportFile = createFile(exportDirectory, normalFileDto.getName());
-			try (final RandomAccessFile raf = exportFile.createRandomAccessFile("rw")) {
-				for (final FileChunkDto fileChunkDto : assertNotNull("normalFileDto.fileChunkDtos", normalFileDto.getFileChunkDtos())) {
-					// TODO first try to get the chunk from the current local file - only download it, if it's different or missing locally!
-					// TODO check, which chunks already contain the data - and skip downloading the histoFileData, whenever possible.
-					byte[] histoFileData = remoteRepoTransport.getHistoFileData(histoCryptoRepoFileId, fileChunkDto.getOffset());
-					histoFileData = removePadding(histoFileData);
-					raf.seek(fileChunkDto.getOffset());
-					raf.write(histoFileData);
-				}
-				raf.setLength(normalFileDto.getLength()); // in case the file existed and was too long, we need to truncate.
+				exportFile.mkdir();
 			}
+			else if (repoFileDto instanceof SymlinkDto) {
+				final SymlinkDto symlinkDto = (SymlinkDto) repoFileDto;
+
+				exportFile.createSymbolicLink(symlinkDto.getTarget());
+			}
+			else if (repoFileDto instanceof NormalFileDto) {
+				final NormalFileDto normalFileDto = (NormalFileDto) repoFileDto;
+
+				try (final RandomAccessFile raf = exportFile.createRandomAccessFile("rw")) {
+					for (final FileChunkDto fileChunkDto : assertNotNull("normalFileDto.fileChunkDtos", normalFileDto.getFileChunkDtos())) {
+						// TODO first try to get the chunk from the current local file - only download it, if it's different or missing locally!
+						// TODO check, which chunks already contain the data - and skip downloading the histoFileData, whenever possible.
+						byte[] histoFileData = remoteRepoTransport.getHistoFileData(exportFileParam.getHistoCryptoRepoFileId(), fileChunkDto.getOffset());
+						histoFileData = removePadding(histoFileData);
+						raf.seek(fileChunkDto.getOffset());
+						raf.write(histoFileData);
+					}
+					raf.setLength(normalFileDto.getLength()); // in case the file existed and was too long, we need to truncate.
+				}
+			}
+
+			exportFile.setLastModifiedNoFollow(repoFileDto.getLastModified().getTime());
 		}
 	}
 }

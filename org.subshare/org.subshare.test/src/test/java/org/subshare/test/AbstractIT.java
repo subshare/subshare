@@ -284,6 +284,20 @@ public abstract class AbstractIT {
 		return dir;
 	}
 
+	protected File createRelativeSymlink(final File symlink, final File target) throws IOException {
+		assertThat(symlink.existsNoFollow()).isFalse();
+		final File symlinkParent = symlink.getParentFile();
+
+		final String relativeTargetString = symlinkParent.relativize(target);
+		symlink.createSymbolicLink(relativeTargetString);
+
+		assertThat(symlink.getAbsoluteFile()).isEqualTo(symlink.getAbsoluteFile());
+		assertThat(symlink.existsNoFollow()).isTrue();
+		assertThat(symlink.isSymbolicLink()).isTrue();
+		addToFilesInRepo(symlink);
+		return symlink;
+	}
+
 	protected File createFileWithRandomContent(final File parent, final String name) throws IOException {
 		final File file = createFile(parent, name);
 		return createFileWithRandomContent(file);

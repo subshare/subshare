@@ -40,6 +40,7 @@ import org.subshare.core.dto.SsDirectoryDto;
 import org.subshare.core.dto.SsNormalFileDto;
 import org.subshare.core.dto.SsRepoFileDto;
 import org.subshare.core.dto.SsRequestRepoConnectionRepositoryDto;
+import org.subshare.core.dto.SsSymlinkDto;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.repo.local.SsLocalRepoMetaData;
 import org.subshare.core.repo.transport.CryptreeRestRepoTransport;
@@ -65,6 +66,7 @@ import org.subshare.rest.client.transport.request.SsBeginPutFile;
 import org.subshare.rest.client.transport.request.SsDelete;
 import org.subshare.rest.client.transport.request.SsEndPutFile;
 import org.subshare.rest.client.transport.request.SsMakeDirectory;
+import org.subshare.rest.client.transport.request.SsMakeSymlink;
 
 import co.codewizards.cloudstore.core.auth.SignatureException;
 import co.codewizards.cloudstore.core.dto.ChangeSetDto;
@@ -448,7 +450,6 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 			putCryptoChangeSetDto(cryptoChangeSetDto);
 			cryptree.updateLastCryptoKeySyncToRemoteRepo();
 
-//			createUnsealedCurrentHistoryFrameDtoIfNeeded(cryptree);
 			final CurrentHistoCryptoRepoFileDto chcrfDto = cryptree.createCurrentHistoCryptoRepoFileDto(path, true);
 
 			final String serverPath = cryptree.getServerPath(path);
@@ -477,9 +478,59 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 		final File pf = f.getParentFile();
 		directoryDto.setParentName(pf == null ? null : pf.getName());
 
+		directoryDto.setLastModified(SsDirectoryDto.DUMMY_LAST_MODIFIED);
+
 		final SignableSigner signableSigner = new SignableSigner(userRepoKey);
 		signableSigner.sign(directoryDto);
 		return directoryDto;
+	}
+
+	@Override
+	public void makeSymlink(final String path, final String target, final Date lastModified) {
+		final LocalRepoManager localRepoManager = getLocalRepoManager();
+		try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
+			final Cryptree cryptree = getCryptree(transaction);
+
+			cryptree.createUnsealedHistoFrameIfNeeded();
+
+			final CryptoChangeSetDto cryptoChangeSetDto = cryptree.createOrUpdateCryptoRepoFile(path);
+			putCryptoChangeSetDto(cryptoChangeSetDto);
+			cryptree.updateLastCryptoKeySyncToRemoteRepo();
+
+			final CurrentHistoCryptoRepoFileDto chcrfDto = cryptree.createCurrentHistoCryptoRepoFileDto(path, true);
+
+			final String serverPath = cryptree.getServerPath(path);
+			final SsSymlinkDto symlinkDto = createSymlinkDtoForMakeSymlink(cryptree, path, serverPath);
+
+			final RepoFileDtoWithCurrentHistoCryptoRepoFileDto rfdwchcrfd = new RepoFileDtoWithCurrentHistoCryptoRepoFileDto();
+			rfdwchcrfd.setRepoFileDto(symlinkDto);
+			rfdwchcrfd.setCurrentHistoCryptoRepoFileDto(chcrfDto);
+
+			logger.debug("makeSymlink: clientRepositoryId={} serverRepositoryId={} path='{}' serverPath='{}'",
+					getClientRepositoryId(), getRepositoryId(), path, serverPath);
+
+			getClient().execute(new SsMakeSymlink(getRepositoryId().toString(), serverPath, rfdwchcrfd));
+
+			transaction.commit();
+		}
+	}
+
+	private SsSymlinkDto createSymlinkDtoForMakeSymlink(Cryptree cryptree, String path, String serverPath) {
+		final UserRepoKey userRepoKey = cryptree.getUserRepoKeyOrFail(path, PermissionType.write);
+		final SsSymlinkDto symlinkDto = new SsSymlinkDto();
+
+		final File f = createFile(serverPath);
+		symlinkDto.setName(f.getName());
+
+		final File pf = f.getParentFile();
+		symlinkDto.setParentName(pf == null ? null : pf.getName());
+
+		symlinkDto.setTarget(SsSymlinkDto.DUMMY_TARGET);
+		symlinkDto.setLastModified(SsSymlinkDto.DUMMY_LAST_MODIFIED);
+
+		final SignableSigner signableSigner = new SignableSigner(userRepoKey);
+		signableSigner.sign(symlinkDto);
+		return symlinkDto;
 	}
 
 	protected CryptreeFactory getCryptreeFactory() {
@@ -656,7 +707,7 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 //		}
 //	}
 
-	protected SsNormalFileDto createNormalFileDtoForPutFile(final Cryptree cryptree, final String localPath, final String serverPath, long length) {
+	protected SsNormalFileDto createNormalFileDtoForPutFile(final Cryptree cryptree, final String localPath, final String serverPath, long lengthWithPadding) {
 		final UserRepoKey userRepoKey = cryptree.getUserRepoKeyOrFail(localPath, PermissionType.write);
 
 //		length = roundLengthToChunkMaxLength(length);
@@ -669,11 +720,14 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 		final File pf = f.getParentFile();
 		normalFileDto.setParentName(pf == null ? null : pf.getName());
 
+		// Calculating the SHA1 of the encrypted data is too complicated and unnecessary. We thus omit it (now optional in CloudStore).
+		normalFileDto.setLength(lengthWithPadding);
+
+		normalFileDto.setLastModified(SsRepoFileDto.DUMMY_LAST_MODIFIED);
+
 		final SignableSigner signableSigner = new SignableSigner(userRepoKey);
 		signableSigner.sign(normalFileDto);
 
-		// Calculating the SHA1 of the encrypted data is too complicated and unnecessary. We thus omit it (now optional in CloudStore).
-		normalFileDto.setLength(length);
 		return normalFileDto;
 	}
 
@@ -897,12 +951,6 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 			transaction.commit();
 		}
 		getRestRepoTransport().endSyncToRepository(fromLocalRevision);
-	}
-
-	@Override
-	public void makeSymlink(final String path, final String target, final Date lastModified) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("NYI");
 	}
 
 	@Override

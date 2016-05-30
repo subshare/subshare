@@ -18,6 +18,8 @@ import co.codewizards.cloudstore.core.dto.SymlinkDto;
 public class SsSymlinkDto extends SymlinkDto implements SsRepoFileDto {
 	public static final String SIGNED_DATA_TYPE = "Symlink";
 
+	public static final String DUMMY_TARGET = "!";
+
 	private String parentName;
 
 	@XmlElement
@@ -45,7 +47,7 @@ public class SsSymlinkDto extends SymlinkDto implements SsRepoFileDto {
 	/**
 	 * {@inheritDoc}
 	 * <p>
-	 * <b>Important:</b> The implementation in {@code SsDirectory} must exactly match the one in {@code SsDirectoryDto}!
+	 * <b>Important:</b> The implementation in {@code SsSymlink} must exactly match the one in {@code SsSymlinkDto}!
 	 */
 	@Override
 	public InputStream getSignedData(final int signedDataVersion) {
@@ -55,7 +57,13 @@ public class SsSymlinkDto extends SymlinkDto implements SsRepoFileDto {
 					InputStreamSource.Helper.createInputStreamSource(getName()),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
-					InputStreamSource.Helper.createInputStreamSource(parentName)
+					InputStreamSource.Helper.createInputStreamSource(parentName),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
+					InputStreamSource.Helper.createInputStreamSource(getTarget()),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
+					InputStreamSource.Helper.createInputStreamSource(getLastModified())
 					);
 		} catch (final IOException x) {
 			throw new RuntimeException(x);

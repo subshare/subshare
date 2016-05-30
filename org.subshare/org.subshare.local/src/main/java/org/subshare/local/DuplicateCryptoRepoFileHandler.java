@@ -21,7 +21,6 @@ import org.subshare.local.persistence.CryptoRepoFile;
 import org.subshare.local.persistence.CryptoRepoFileDao;
 import org.subshare.local.persistence.HistoCryptoRepoFile;
 import org.subshare.local.persistence.HistoCryptoRepoFileDao;
-import org.subshare.local.persistence.ScheduledReupload;
 import org.subshare.local.persistence.ScheduledReuploadDao;
 import org.subshare.local.persistence.SsRemoteRepository;
 
@@ -147,15 +146,8 @@ public class DuplicateCryptoRepoFileHandler {
 			}
 
 			RepoFile repoFile = cryptoRepoFileDead.getRepoFile();
-			if (repoFile != null) {
-				ScheduledReuploadDao srDao = transaction.getDao(ScheduledReuploadDao.class);
-				ScheduledReupload scheduledReupload = srDao.getScheduledReupload(repoFile);
-				if (scheduledReupload == null) {
-					scheduledReupload = new ScheduledReupload();
-					scheduledReupload.setRepoFile(repoFile);
-					srDao.makePersistent(scheduledReupload);
-				}
-			}
+			if (repoFile != null)
+				transaction.getDao(ScheduledReuploadDao.class).scheduleReupload(repoFile);
 		}
 
 		crfDao.deletePersistent(cryptoRepoFileDead);

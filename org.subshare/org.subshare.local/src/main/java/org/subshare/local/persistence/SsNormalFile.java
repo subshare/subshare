@@ -16,8 +16,8 @@ import javax.jdo.annotations.Inheritance;
 import javax.jdo.annotations.InheritanceStrategy;
 import javax.jdo.annotations.PersistenceCapable;
 
-import org.subshare.core.dto.SsNormalFileDto;
 import org.subshare.core.dto.PermissionType;
+import org.subshare.core.dto.SsNormalFileDto;
 import org.subshare.core.io.InputStreamSource;
 import org.subshare.core.io.MultiInputStream;
 import org.subshare.core.sign.Signature;
@@ -50,7 +50,7 @@ public class SsNormalFile extends NormalFile implements SsRepoFile {
 	/**
 	 * {@inheritDoc}
 	 * <p>
-	 * <b>Important:</b> The implementation in {@code SsDirectory} must exactly match the one in {@code SsDirectoryDto}!
+	 * <b>Important:</b> The implementation in {@code SsNormalFile} must exactly match the one in {@code SsNormalFileDto}!
 	 */
 	@Override
 	public InputStream getSignedData(final int signedDataVersion) {
@@ -60,7 +60,16 @@ public class SsNormalFile extends NormalFile implements SsRepoFile {
 					InputStreamSource.Helper.createInputStreamSource(getName()),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
-					InputStreamSource.Helper.createInputStreamSource(getParent() == null ? null : getParent().getName())
+					InputStreamSource.Helper.createInputStreamSource(getParent() == null ? null : getParent().getName()),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
+					InputStreamSource.Helper.createInputStreamSource(getLength()),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
+					InputStreamSource.Helper.createInputStreamSource(getLengthWithPadding()),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
+					InputStreamSource.Helper.createInputStreamSource(getLastModified())
 					);
 		} catch (final IOException x) {
 			throw new RuntimeException(x);

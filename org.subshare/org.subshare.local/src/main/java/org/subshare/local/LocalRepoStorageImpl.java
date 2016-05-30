@@ -56,7 +56,7 @@ public class LocalRepoStorageImpl extends AbstractLocalRepoStorage {
 		final UUID remoteRepositoryId = getRemoteRepositoryIdOrFail();
 		final TempFileChunkDao tfcDao = getTransactionOrFail().getDao(TempFileChunkDao.class);
 		final RepoFile repoFile = getRepoFile(localPath);
-		if (repoFile == null)
+		if (! (repoFile instanceof NormalFile)) // it may be null - or an instance of SsDirectory or SsSymlink, if its type just changed.
 			return Collections.emptyList();
 
 		final NormalFile normalFile = (NormalFile) repoFile;
