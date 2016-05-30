@@ -57,6 +57,7 @@
 				<Tooltip text="Refresh all data shown here."/> 
 			</tooltip>
 		</Button>
+		<Button fx:id="exportFromHistoryButton"/> 
 		<VBox.margin>
 			<Insets left="8" right="8" top="8" bottom="8"/> 
 		</VBox.margin>
@@ -78,6 +79,7 @@
 				</GridPane>
 			</content>
 		</Tab>
+		<Tab fx:id="historyTab" text="History"/> 
 		<Tab fx:id="securityTab" text="Security"/> 
 	</TabPane>
 </fx:root>

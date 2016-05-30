@@ -1,10 +1,14 @@
 package org.subshare.core.repo.histo;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+
+import java.io.Serializable;
+
 import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.oio.File;
 
-public class ExportFileParam {
+@SuppressWarnings("serial")
+public class ExportFileParam implements Serializable {
 
 	private Uid histoCryptoRepoFileId;
 	private File exportDirectory;

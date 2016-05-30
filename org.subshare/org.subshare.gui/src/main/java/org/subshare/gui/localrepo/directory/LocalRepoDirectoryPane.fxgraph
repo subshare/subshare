@@ -44,6 +44,8 @@ dynamic component LocalRepoDirectoryPane resourcefile 'messages.properties' {
 				tooltip : Tooltip { text : "Refresh all data shown here." },
 				onAction : controllermethod refreshButtonClicked
 			},
+			Button id exportFromHistoryButton,
+
 			static margin : Insets { left : 8, right : 8, top : 8, bottom : 8 }
 		},
 
@@ -72,6 +74,10 @@ dynamic component LocalRepoDirectoryPane resourcefile 'messages.properties' {
 						static vgrow : "ALWAYS"
 					}
 				}
+			},
+
+			Tab id historyTab {
+				text : "History"
 			},
 
 			Tab id securityTab {

@@ -2,6 +2,7 @@ package org.subshare.gui.histo;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static org.subshare.gui.util.FxmlUtil.*;
+import static org.subshare.gui.util.PlatformUtil.*;
 
 import java.net.URL;
 import java.util.Collection;
@@ -9,6 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
+import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.ObservableList;
@@ -44,6 +46,8 @@ import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 public class HistoFramePane extends BorderPane {
 
 	private LocalRepo localRepo;
+	private String localPath;
+	private boolean populatePending;
 
 	private final ObjectProperty<Uid> histoFrameId = new SimpleObjectProperty<Uid>(this, "histoFrameId") {
 		@Override
@@ -57,8 +61,29 @@ public class HistoFramePane extends BorderPane {
 		return localRepo;
 	}
 	public void setLocalRepo(final LocalRepo localRepo) {
+		assertFxApplicationThread();
 		this.localRepo = localRepo;
-		populateTreeTableViewAsync();
+		populatePending = true;
+		Platform.runLater(() -> postSetLocalRepoOrLocalPath());
+	}
+
+	public String getLocalPath() {
+		return localPath;
+	}
+	public void setLocalPath(String localPath) {
+		assertFxApplicationThread();
+		this.localPath = localPath;
+		populatePending = true;
+		Platform.runLater(() -> postSetLocalRepoOrLocalPath());
+	}
+
+	private void postSetLocalRepoOrLocalPath() {
+		assertFxApplicationThread();
+		if (populatePending) {
+			populatePending = false;
+
+			populateTreeTableViewAsync();
+		}
 	}
 
 	@FXML

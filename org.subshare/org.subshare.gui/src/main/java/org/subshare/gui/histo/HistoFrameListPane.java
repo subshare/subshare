@@ -18,6 +18,7 @@ import java.util.TimerTask;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
+import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
@@ -47,6 +48,10 @@ import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 public class HistoFrameListPane extends VBox {
 
 	private LocalRepo localRepo;
+
+	private String localPath;
+
+	private boolean populatePending;
 
 	@FXML
 	private TableView<HistoFrameListItem> tableView;
@@ -147,12 +152,34 @@ public class HistoFrameListPane extends VBox {
 		tableView.getItems().clear();
 
 		if (localRepo != null) {
-			populateTableViewAsync();
-
 			final UUID localRepositoryId = localRepo.getRepositoryId();
 			final LocalRepoCommitEventManager localRepoCommitEventManager = LocalRepoCommitEventManagerLs.getLocalRepoCommitEventManager();
 			weakLocalRepoCommitEventListener = new WeakLocalRepoCommitEventListener(localRepoCommitEventManager, localRepositoryId, localRepoCommitEventListener);
 			weakLocalRepoCommitEventListener.addLocalRepoCommitEventListener();
+		}
+
+		populatePending = true;
+		Platform.runLater(() -> postSetLocalRepoOrLocalPath());
+	}
+
+	public String getLocalPath() {
+		return localPath;
+	}
+	public void setLocalPath(String localPath) {
+		assertFxApplicationThread();
+		this.localPath = localPath;
+		tableView.getItems().clear();
+
+		populatePending = true;
+		Platform.runLater(() -> postSetLocalRepoOrLocalPath());
+	}
+
+	private void postSetLocalRepoOrLocalPath() {
+		assertFxApplicationThread();
+		if (populatePending) {
+			populatePending = false;
+
+			populateTableViewAsync();
 		}
 	}
 
@@ -264,12 +291,18 @@ public class HistoFrameListPane extends VBox {
 	}
 
 	private void populateTableViewAsync() {
+		if (localRepo == null)
+			return;
+
 		new Service<List<HistoFrameDto>>() {
 			@Override
 			protected Task<List<HistoFrameDto>> createTask() {
 				return new SsTask<List<HistoFrameDto>>() {
 					@Override
 					protected List<HistoFrameDto> call() throws Exception {
+						if (localRepo == null)
+							return Collections.emptyList();
+
 						try (final LocalRepoManager localRepoManager = createLocalRepoManager()) {
 							final SsLocalRepoMetaData localRepoMetaData = (SsLocalRepoMetaData) localRepoManager.getLocalRepoMetaData();
 							final List<HistoFrameDto> histoFrameDtos = new ArrayList<>(localRepoMetaData.getHistoFrameDtos(filter));

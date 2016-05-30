@@ -10,6 +10,7 @@ import java.util.List;
 import javafx.beans.InvalidationListener;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextField;
@@ -20,6 +21,8 @@ import org.subshare.gui.filetree.DirectoryFileTreeItem;
 import org.subshare.gui.filetree.FileFileTreeItem;
 import org.subshare.gui.filetree.FileTreeItem;
 import org.subshare.gui.filetree.FileTreePane;
+import org.subshare.gui.histo.HistoryPaneContainer;
+import org.subshare.gui.histo.HistoryPaneSupport;
 import org.subshare.gui.invitation.issue.IssueInvitationData;
 import org.subshare.gui.invitation.issue.IssueInvitationWizard;
 import org.subshare.gui.ls.RepoSyncDaemonLs;
@@ -29,7 +32,7 @@ import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import co.codewizards.cloudstore.core.repo.sync.RepoSyncDaemon;
 
-public class LocalRepoDirectoryPane extends VBox {
+public class LocalRepoDirectoryPane extends VBox implements HistoryPaneContainer {
 
 	private final LocalRepo localRepo;
 	private final File file;
@@ -41,6 +44,9 @@ public class LocalRepoDirectoryPane extends VBox {
 	private Tab generalTab;
 
 	@FXML
+	private Tab historyTab;
+
+	@FXML
 	private Tab securityTab;
 
 	@FXML
@@ -49,7 +55,13 @@ public class LocalRepoDirectoryPane extends VBox {
 	@FXML
 	private FileTreePane fileTreePane;
 
+	@FXML
+	private Button exportFromHistoryButton;
+
 	private WeakReference<SecurityPane> securityPaneRef;
+
+	@SuppressWarnings("unused")
+	private final HistoryPaneSupport historyPaneSupport;
 
 	public LocalRepoDirectoryPane(final LocalRepo localRepo, final File file) {
 		this.localRepo = assertNotNull("localRepo", localRepo);
@@ -62,7 +74,10 @@ public class LocalRepoDirectoryPane extends VBox {
 		fileTreePane.setUseCase(String.format("localRepo:%s:%s", localRepo.getRepositoryId(), path)); //$NON-NLS-1$
 		fileTreePane.setRootFileTreeItem(new RootDirectoryFileTreeItem(fileTreePane, file));
 
+		historyPaneSupport = new HistoryPaneSupport(this);
+
 		tabPane.getSelectionModel().selectedItemProperty().addListener((InvalidationListener) observable -> createOrForgetSecurityPane());
+		createOrForgetSecurityPane();
 	}
 
 	private void createOrForgetSecurityPane() {
@@ -132,5 +147,30 @@ public class LocalRepoDirectoryPane extends VBox {
 					&& ((FileFileTreeItem) fti).getFile().getName().equals(LocalRepoManager.META_DIR_NAME));
 			return children;
 		}
+	}
+
+	@Override
+	public LocalRepo getLocalRepo() {
+		return localRepo;
+	}
+
+	@Override
+	public String getLocalPath() {
+		return localRepo.getLocalPath(file);
+	}
+
+	@Override
+	public TabPane getTabPane() {
+		return tabPane;
+	}
+
+	@Override
+	public Tab getHistoryTab() {
+		return historyTab;
+	}
+
+	@Override
+	public Button getExportFromHistoryButton() {
+		return exportFromHistoryButton;
 	}
 }
