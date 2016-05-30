@@ -11,6 +11,7 @@ public class PlainHistoCryptoRepoFileFilter implements Serializable {
 
 	private Uid histoFrameId;
 	private boolean fillParents = true;
+	private String localPath;
 
 	public PlainHistoCryptoRepoFileFilter() {
 	}
@@ -41,5 +42,10 @@ public class PlainHistoCryptoRepoFileFilter implements Serializable {
 		this.fillParents = fillToRoot;
 	}
 
-
+	public String getLocalPath() {
+		return localPath;
+	}
+	public void setLocalPath(String localPath) {
+		this.localPath = localPath;
+	}
 }

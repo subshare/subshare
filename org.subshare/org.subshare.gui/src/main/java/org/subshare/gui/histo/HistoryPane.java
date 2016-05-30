@@ -34,6 +34,14 @@ public class HistoryPane extends SplitPane {
 		histoFramePane.setLocalRepo(localRepo);
 	}
 
+	public String getLocalPath() {
+		return histoFrameListPane.getLocalPath();
+	}
+	public void setLocalPath(String localPath) {
+		histoFrameListPane.setLocalPath(localPath);
+		histoFramePane.setLocalPath(localPath);
+	}
+
 	public ReadOnlyObjectProperty<HistoFrameListItem> selectedHistoFrameListItemProperty() {
 		return histoFrameListPane.selectedItemProperty();
 	}

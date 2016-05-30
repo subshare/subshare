@@ -182,6 +182,7 @@ public class HistoFramePane extends BorderPane {
 		filter = new PlainHistoCryptoRepoFileFilter();
 		filter.setFillParents(true);
 		filter.setHistoFrameId(histoFrameId);
+		filter.setLocalPath(localPath);
 
 		new Service<HistoCryptoRepoFileTreeItem>() {
 			private final PlainHistoCryptoRepoFileFilter filter = HistoFramePane.this.filter;

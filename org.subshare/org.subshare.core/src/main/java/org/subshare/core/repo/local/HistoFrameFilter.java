@@ -13,6 +13,8 @@ public class HistoFrameFilter implements Serializable {
 	private Date signatureCreatedFrom;
 	private Date signatureCreatedTo;
 
+	private String localPath;
+
 	/**
 	 * Gets the maximum size of the query result (a {@code Collection<HistoFrameDto>}).
 	 * The newest entries are included (and older entries omitted).
@@ -56,5 +58,12 @@ public class HistoFrameFilter implements Serializable {
 	}
 	public void setSignatureCreatedTo(Date signatureCreatedTo) {
 		this.signatureCreatedTo = signatureCreatedTo;
+	}
+
+	public String getLocalPath() {
+		return localPath;
+	}
+	public void setLocalPath(String localPath) {
+		this.localPath = localPath;
 	}
 }

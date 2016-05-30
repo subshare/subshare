@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.local.persistence.Dao;
+import co.codewizards.cloudstore.local.persistence.RemoteRepository;
 import co.codewizards.cloudstore.local.persistence.RepoFile;
 
 public class CryptoRepoFileDao extends Dao<CryptoRepoFile, CryptoRepoFileDao> {
@@ -139,6 +140,36 @@ public class CryptoRepoFileDao extends Dao<CryptoRepoFile, CryptoRepoFileDao> {
 		return rootCryptoRepoFile;
 	}
 
+	public CryptoRepoFile getCryptoRepoFile(final RemoteRepository remoteRepository, final String localPath) {
+		assertNotNull("remoteRepository", remoteRepository);
+		assertNotNull("localPath", localPath);
+		final String localPathPrefix = remoteRepository.getLocalPathPrefix();
+		if ("/".equals(localPathPrefix))
+			throw new IllegalStateException("This should never be slash! For the root, it should be empty!");
+
+		final StringBuilder prefixedLocalPath = new StringBuilder();
+		prefixedLocalPath.append(localPathPrefix);
+		if (prefixedLocalPath.length() > 0
+				&& prefixedLocalPath.charAt(prefixedLocalPath.length() - 1) != '/'
+				&& localPath.length() > 0
+				&& localPath.charAt(0) != '/')
+			prefixedLocalPath.append('/');
+
+		prefixedLocalPath.append(localPath);
+
+		return getCryptoRepoFile(prefixedLocalPath.toString());
+	}
+
+	/**
+	 * Gets the {@link CryptoRepoFile} corresponding to the given {@code localPath}.
+	 * <p>
+	 * <b>Important:</b> This {@code localPath} is global and independent from the current working copy's
+	 * check-out-root. This is, because {@code CryptoRepoFile}s are global.
+	 * @param localPath local path, independent from where the current working-copy is checked out. Thus it's always
+	 * relative to the <code>server</code>'s repository-root. Must not be <code>null</code>.
+	 * @return the {@link CryptoRepoFile} corresponding to the given {@code localPath}. May be <code>null</code>, if
+	 * there is no such {@link CryptoRepoFile}.
+	 */
 	public CryptoRepoFile getCryptoRepoFile(final String localPath) {
 		return _getCryptoRepoFile(assertNotNull("localPath", localPath), localPath);
 	}

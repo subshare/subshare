@@ -88,6 +88,7 @@ public class HistoryPaneSupport {
 		if (historyPane == null) {
 			historyPane = new HistoryPane();
 			historyPane.setLocalRepo(localRepo);
+			historyPane.setLocalPath(container.getLocalPath());
 			historyPaneRef = new WeakReference<>(historyPane);
 		}
 

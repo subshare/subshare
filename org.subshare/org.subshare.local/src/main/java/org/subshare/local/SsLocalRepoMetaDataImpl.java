@@ -50,6 +50,7 @@ import org.subshare.local.persistence.ScheduledReuploadDao;
 
 import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.oio.File;
+import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
 import co.codewizards.cloudstore.local.LocalRepoMetaDataImpl;
 import co.codewizards.cloudstore.local.persistence.RemoteRepository;
@@ -355,7 +356,8 @@ public class SsLocalRepoMetaDataImpl extends LocalRepoMetaDataImpl implements Ss
 	@Override
 	public Collection<HistoFrameDto> getHistoFrameDtos(final HistoFrameFilter filter) {
 		assertNotNull("filter", filter);
-		try (final LocalRepoTransaction tx = getLocalRepoManagerOrFail().beginReadTransaction();) {
+		final LocalRepoManager localRepoManager = getLocalRepoManagerOrFail();
+		try (final LocalRepoTransaction tx = localRepoManager.beginReadTransaction();) {
 			final HistoFrameDao hfDao = tx.getDao(HistoFrameDao.class);
 			final Collection<HistoFrame> histoFrames = hfDao.getHistoFrames(filter);
 			final List<HistoFrameDto> result = new ArrayList<>(histoFrames.size());

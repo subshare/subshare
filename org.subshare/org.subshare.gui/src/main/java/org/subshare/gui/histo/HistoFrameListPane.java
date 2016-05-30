@@ -49,8 +49,6 @@ public class HistoFrameListPane extends VBox {
 
 	private LocalRepo localRepo;
 
-	private String localPath;
-
 	private boolean populatePending;
 
 	@FXML
@@ -163,11 +161,11 @@ public class HistoFrameListPane extends VBox {
 	}
 
 	public String getLocalPath() {
-		return localPath;
+		return this.filter.getLocalPath();
 	}
 	public void setLocalPath(String localPath) {
 		assertFxApplicationThread();
-		this.localPath = localPath;
+		this.filter.setLocalPath(localPath);
 		tableView.getItems().clear();
 
 		populatePending = true;

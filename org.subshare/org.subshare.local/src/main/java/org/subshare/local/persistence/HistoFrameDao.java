@@ -2,10 +2,13 @@ package org.subshare.local.persistence;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
+import java.net.URL;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.jdo.Query;
@@ -16,6 +19,8 @@ import org.subshare.core.repo.local.HistoFrameFilter;
 
 import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.local.persistence.Dao;
+import co.codewizards.cloudstore.local.persistence.RemoteRepository;
+import co.codewizards.cloudstore.local.persistence.RemoteRepositoryDao;
 
 public class HistoFrameDao extends Dao<HistoFrame, HistoFrameDao> {
 
@@ -93,6 +98,7 @@ public class HistoFrameDao extends Dao<HistoFrame, HistoFrameDao> {
 		try {
 			final StringBuilder q = new StringBuilder();
 			final Map<String, Object> p = new HashMap<>();
+			final Map<String, Class<?>> v = new HashMap<>();
 
 			if (filter.getMaxResultSize() > 0) {
 				query.setRange(0, filter.getMaxResultSize());
@@ -115,6 +121,30 @@ public class HistoFrameDao extends Dao<HistoFrame, HistoFrameDao> {
 				p.put("signatureCreatedTo", filter.getSignatureCreatedTo());
 			}
 
+			if (filter.getLocalPath() != null) {
+				final RemoteRepository remoteRepository = getUniqueRemoteRepositoryOrFail();
+				final CryptoRepoFile crf1 = getDao(CryptoRepoFileDao.class).getCryptoRepoFile(remoteRepository, filter.getLocalPath());
+				assertNotNull("cryptoRepoFile", crf1, "remoteRepository=%s filter.localPath='%s'", remoteRepository, filter.getLocalPath());
+
+				if (q.length() > 0)
+					q.append(" && ");
+
+				q.append("this == hcrf.histoFrame && :crfOids.contains(hcrf.cryptoRepoFile.id)");
+				p.put("crfOids", getChildCryptoRepoFileOidsRecursively(crf1));
+				v.put("hcrf", HistoCryptoRepoFile.class);
+			}
+
+			if (! v.isEmpty()) {
+				StringBuilder sb = new StringBuilder();
+				for (Map.Entry<String, Class<?>> me : v.entrySet()) {
+					sb.append(me.getValue().getName()).append(' ').append(me.getKey()).append(';');
+				}
+				query.declareVariables(sb.toString());
+			}
+
+			if (q.length() > 0)
+				query.setFilter(q.toString());
+
 			long startTimestamp = System.currentTimeMillis();
 			@SuppressWarnings("unchecked")
 			Collection<HistoFrame> result = (List<HistoFrame>) query.executeWithMap(p);
@@ -129,4 +159,41 @@ public class HistoFrameDao extends Dao<HistoFrame, HistoFrameDao> {
 			query.closeAll();
 		}
 	}
+
+	private Set<Long> getChildCryptoRepoFileOidsRecursively(final CryptoRepoFile cryptoRepoFile) {
+		assertNotNull("cryptoRepoFile", cryptoRepoFile);
+		final Query query = pm().newQuery(CryptoRepoFile.class);
+		query.setResult("this.id");
+		query.setFilter(":parentOids.contains(this.parent.id)");
+
+		final Set<Long> filterOids = new HashSet<>();
+		filterOids.add(cryptoRepoFile.getId());
+
+		final Set<Long> result = new HashSet<>();
+		result.addAll(filterOids);
+
+		populateChildCryptoRepoFileOidsRecursively(result, filterOids, query);
+		return result;
+	}
+
+	private void populateChildCryptoRepoFileOidsRecursively(final Set<Long> result, final Set<Long> filterOids, final Query query) {
+		@SuppressWarnings("unchecked")
+		final Collection<Long> newOidCol = (Collection<Long>) query.execute(filterOids);
+		final Set<Long> newOidSet = new HashSet<>(newOidCol);
+		newOidSet.removeAll(filterOids);
+		result.addAll(newOidSet);
+		if (! newOidSet.isEmpty())
+			populateChildCryptoRepoFileOidsRecursively(result, newOidSet, query);
+	}
+
+	private RemoteRepository getUniqueRemoteRepositoryOrFail() {
+		final RemoteRepositoryDao rrDao = getDao(RemoteRepositoryDao.class);
+		final Map<UUID, URL> remoteRepositoryId2RemoteRootMap = rrDao.getRemoteRepositoryId2RemoteRootMap();
+		if (remoteRepositoryId2RemoteRootMap.size() != 1)
+			throw new IllegalStateException("There is not exactly one remote repository!");
+
+		final RemoteRepository remoteRepository = rrDao.getRemoteRepositoryOrFail(remoteRepositoryId2RemoteRootMap.keySet().iterator().next());
+		return remoteRepository;
+	}
+
 }
