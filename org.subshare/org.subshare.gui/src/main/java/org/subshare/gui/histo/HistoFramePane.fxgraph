@@ -34,6 +34,13 @@ dynamic component HistoFramePane resourcefile 'messages.properties' {
 						cellValueFactory : TreeItemPropertyValueFactory<HistoCryptoRepoFileTreeItem, Long> {
 							property : "length"
 						}
+					},
+					TreeTableColumn<HistoCryptoRepoFileTreeItem, String> id tempTreeTableColumn { // TODO remove this temporary column again! or turn it into a real status column. 
+						text : "Temp",
+						prefWidth : 100,
+						cellValueFactory : TreeItemPropertyValueFactory<HistoCryptoRepoFileTreeItem, Long> {
+							property : "temp"
+						}
 					}
 				]
 			}

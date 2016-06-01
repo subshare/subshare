@@ -141,7 +141,7 @@ public class CollisionDao extends Dao<Collision, CollisionDao> {
 			final Map<String, Object> qp = new HashMap<>();
 
 			appendToQueryFilter_histoCryptoRepoFileId(qf, qp, filter.getHistoCryptoRepoFileId());
-			appendToQueryFilter_cryptoRepoFileId(qf, qp, filter.getHistoCryptoRepoFileId());
+			appendToQueryFilter_cryptoRepoFileId(qf, qp, filter.getCryptoRepoFileId());
 
 			if (qf.length() > 0)
 				query.setFilter(qf.toString());

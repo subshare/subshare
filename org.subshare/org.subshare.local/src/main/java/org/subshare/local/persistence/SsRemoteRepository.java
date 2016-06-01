@@ -1,5 +1,7 @@
 package org.subshare.local.persistence;
 
+import static co.codewizards.cloudstore.core.util.Util.*;
+
 import java.util.UUID;
 
 import javax.jdo.annotations.Discriminator;
@@ -27,6 +29,7 @@ public class SsRemoteRepository extends RemoteRepository {
 		return remotePathPrefix;
 	}
 	public void setRemotePathPrefix(String remotePathPrefix) {
-		this.remotePathPrefix = remotePathPrefix;
+		if (! equal(this.remotePathPrefix, remotePathPrefix))
+			this.remotePathPrefix = remotePathPrefix;
 	}
 }

@@ -25,6 +25,11 @@
 						<TreeItemPropertyValueFactory property="length"/> 
 					</cellValueFactory>
 				</TreeTableColumn>
+				<TreeTableColumn fx:id="tempTreeTableColumn" text="Temp" prefWidth="100"> 
+					<cellValueFactory>
+						<TreeItemPropertyValueFactory property="temp"/> 
+					</cellValueFactory>
+				</TreeTableColumn>
 			</columns>
 		</TreeTableView>
 	</center>

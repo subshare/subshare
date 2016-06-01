@@ -104,6 +104,13 @@ public class HistoCryptoRepoFileTreeItem extends TreeItem<HistoCryptoRepoFileTre
 		return null;
 	}
 
+	public String getTemp() {
+		if (plainHistoCryptoRepoFileDto.getCollisionDtos().isEmpty())
+			return "OK";
+		else
+			return "Collision!";
+	}
+
 	@Override
 	public String toString() {
 		return String.format("%s[name='%s']", this.getClass().getSimpleName(), getName());

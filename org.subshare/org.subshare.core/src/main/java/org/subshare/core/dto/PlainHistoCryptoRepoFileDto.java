@@ -1,6 +1,8 @@
 package org.subshare.core.dto;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
 import co.codewizards.cloudstore.core.dto.Uid;
@@ -14,6 +16,8 @@ public class PlainHistoCryptoRepoFileDto implements Serializable {
 	private HistoCryptoRepoFileDto histoCryptoRepoFileDto;
 
 	private RepoFileDto repoFileDto;
+
+	private List<CollisionDto> collisionDtos;
 
 	public PlainHistoCryptoRepoFileDto() {
 	}
@@ -44,5 +48,15 @@ public class PlainHistoCryptoRepoFileDto implements Serializable {
 	}
 	public void setRepoFileDto(RepoFileDto repoFileDto) {
 		this.repoFileDto = repoFileDto;
+	}
+
+	public List<CollisionDto> getCollisionDtos() {
+		if (collisionDtos == null)
+			collisionDtos = new ArrayList<>();
+
+		return collisionDtos;
+	}
+	public void setCollisionDtos(List<CollisionDto> collisionDtos) {
+		this.collisionDtos = collisionDtos;
 	}
 }

@@ -54,6 +54,7 @@ import org.subshare.core.dto.UserIdentityPayloadDto;
 import org.subshare.core.dto.UserRepoKeyPublicKeyDto;
 import org.subshare.core.dto.UserRepoKeyPublicKeyReplacementRequestDeletionDto;
 import org.subshare.core.dto.UserRepoKeyPublicKeyReplacementRequestDto;
+import org.subshare.core.repo.local.CollisionFilter;
 import org.subshare.core.repo.local.PlainHistoCryptoRepoFileFilter;
 import org.subshare.core.sign.Signature;
 import org.subshare.core.sign.WriteProtected;
@@ -1043,7 +1044,7 @@ public class CryptreeImpl extends AbstractCryptree {
 	}
 
 	@Override
-	public void registerRemotePathPrefix(final String pathPrefix) {
+	public void registerRemotePathPrefix(final String pathPrefix) { // TODO this is bad, because whenever the remote-path-prefix changes, the localRevision is updated and then the collision detection fails. Maybe move this somewhere else?
 		assertNotNull("pathPrefix", pathPrefix);
 		final RemoteRepositoryDao remoteRepositoryDao = getTransactionOrFail().getDao(RemoteRepositoryDao.class);
 		final RemoteRepository remoteRepository = remoteRepositoryDao.getRemoteRepositoryOrFail(getServerRepositoryIdOrFail());
@@ -2501,10 +2502,29 @@ public class CryptreeImpl extends AbstractCryptree {
 		final CryptoRepoFile parentCryptoRepoFile = histoCryptoRepoFile.getCryptoRepoFile().getParent();
 		plainHistoCryptoRepoFileDto.setParentCryptoRepoFileId(parentCryptoRepoFile == null ? null : parentCryptoRepoFile.getCryptoRepoFileId());
 		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(cryptoRepoFileId);
-		final RepoFileDto repoFileDto = tryDecryptHistoCryptoRepoFile(cryptreeNode, histoCryptoRepoFile);
 
+		final RepoFileDto repoFileDto = tryDecryptHistoCryptoRepoFile(cryptreeNode, histoCryptoRepoFile);
 		plainHistoCryptoRepoFileDto.setRepoFileDto(repoFileDto);
+
+		plainHistoCryptoRepoFileDto.setCollisionDtos(getCollisionDtos(histoCryptoRepoFile));
 		return plainHistoCryptoRepoFileDto;
+	}
+
+	private List<CollisionDto> getCollisionDtos(HistoCryptoRepoFile histoCryptoRepoFile) {
+		assertNotNull("histoCryptoRepoFile", histoCryptoRepoFile);
+		final LocalRepoTransaction tx = getTransactionOrFail();
+		final CollisionDao collisionDao = tx.getDao(CollisionDao.class);
+		final CollisionDtoConverter collisionDtoConverter = CollisionDtoConverter.create(tx);
+
+		final CollisionFilter collisionFilter = new CollisionFilter();
+		collisionFilter.setHistoCryptoRepoFileId(histoCryptoRepoFile.getHistoCryptoRepoFileId());
+		final Collection<Collision> collisions = collisionDao.getCollisions(collisionFilter);
+
+		final List<CollisionDto> result = new ArrayList<>(collisions.size());
+		for (Collision collision : collisions)
+			result.add(collisionDtoConverter.toCollisionDto(collision));
+
+		return result;
 	}
 
 	private RepoFileDto tryDecryptHistoCryptoRepoFile(CryptreeNode cryptreeNode, HistoCryptoRepoFile histoCryptoRepoFile) {
