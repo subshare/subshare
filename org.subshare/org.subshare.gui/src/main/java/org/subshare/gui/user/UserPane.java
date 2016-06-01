@@ -17,26 +17,6 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Set;
 
-import javafx.application.Platform;
-import javafx.beans.InvalidationListener;
-import javafx.beans.property.adapter.JavaBeanStringProperty;
-import javafx.beans.property.adapter.JavaBeanStringPropertyBuilder;
-import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
-import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
-import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.SelectionMode;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TextField;
-import javafx.scene.control.TreeItem;
-import javafx.scene.control.cell.TextFieldTableCell;
-import javafx.scene.layout.GridPane;
-import javafx.stage.FileChooser;
-import javafx.stage.Window;
-
 import org.subshare.core.pgp.CreatePgpKeyParam;
 import org.subshare.core.pgp.Pgp;
 import org.subshare.core.pgp.PgpKey;
@@ -65,6 +45,25 @@ import org.subshare.gui.wizard.WizardState;
 
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.progress.ProgressMonitor;
+import javafx.application.Platform;
+import javafx.beans.InvalidationListener;
+import javafx.beans.property.adapter.JavaBeanStringProperty;
+import javafx.beans.property.adapter.JavaBeanStringPropertyBuilder;
+import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
+import javafx.scene.control.Button;
+import javafx.scene.control.SelectionMode;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
+import javafx.scene.control.TreeItem;
+import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.scene.layout.GridPane;
+import javafx.stage.FileChooser;
+import javafx.stage.Window;
 
 public class UserPane extends GridPane {
 
@@ -164,6 +163,9 @@ public class UserPane extends GridPane {
 	private Set<PgpKey> getSelectedPgpKeys() {
 		final Set<PgpKey> result = new LinkedHashSet<PgpKey>();
 		for (final TreeItem<PgpKeyTreeItem<?>> treeItem : pgpKeyTreePane.getTreeTableView().getSelectionModel().getSelectedItems()) {
+			if (treeItem == null) // this should IMHO never happen, but JavaFX seems to really behave this way - sometimes - very rarely!
+				continue;
+
 			final PgpKeyTreeItem<?> pgpKeyTreeItem = treeItem.getValue();
 			final PgpKeyPgpKeyTreeItem pgpKeyPgpKeyTreeItem = pgpKeyTreeItem.getThisOrParentPgpKeyTreeItemOfType(PgpKeyPgpKeyTreeItem.class);
 			assertNotNull("pgpKeyPgpKeyTreeItem", pgpKeyPgpKeyTreeItem);

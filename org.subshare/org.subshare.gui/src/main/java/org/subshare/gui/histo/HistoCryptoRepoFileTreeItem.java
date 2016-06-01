@@ -2,7 +2,6 @@ package org.subshare.gui.histo;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
-import javafx.scene.control.TreeItem;
 
 import org.subshare.core.dto.HistoCryptoRepoFileDto;
 import org.subshare.core.dto.PlainHistoCryptoRepoFileDto;
@@ -10,6 +9,7 @@ import org.subshare.core.dto.PlainHistoCryptoRepoFileDto;
 import co.codewizards.cloudstore.core.dto.NormalFileDto;
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
 import co.codewizards.cloudstore.core.dto.Uid;
+import javafx.scene.control.TreeItem;
 
 public class HistoCryptoRepoFileTreeItem extends TreeItem<HistoCryptoRepoFileTreeItem> {
 
@@ -51,6 +51,28 @@ public class HistoCryptoRepoFileTreeItem extends TreeItem<HistoCryptoRepoFileTre
 		return plainHistoCryptoRepoFileDto.getRepoFileDto();
 	}
 
+	public HistoCryptoRepoFileTreeItem getChildOrFail(final String name) {
+		final HistoCryptoRepoFileTreeItem child = getChild(name);
+		if (child == null)
+			throw new IllegalArgumentException(String.format("There is no child with name='%s'! children=%s", name, getChildren()));
+
+		return child;
+	}
+
+	public HistoCryptoRepoFileTreeItem getChild(final String name) {
+		assertNotNull("name", name);
+		for (final TreeItem<HistoCryptoRepoFileTreeItem> c : getChildren()) {
+			final HistoCryptoRepoFileTreeItem child = (HistoCryptoRepoFileTreeItem) c;
+			final RepoFileDto repoFileDto = child.getPlainHistoCryptoRepoFileDto().getRepoFileDto();
+			if (repoFileDto == null)
+				continue;
+
+			if (name.equals(repoFileDto.getName()))
+					return child;
+		}
+		return null;
+	}
+
 	public Action getAction() {
 		final HistoCryptoRepoFileDto histoCryptoRepoFileDto = plainHistoCryptoRepoFileDto.getHistoCryptoRepoFileDto();
 
@@ -80,5 +102,10 @@ public class HistoCryptoRepoFileTreeItem extends TreeItem<HistoCryptoRepoFileTre
 			return normalFileDto.getLength();
 		}
 		return null;
+	}
+
+	@Override
+	public String toString() {
+		return String.format("%s[name='%s']", this.getClass().getSimpleName(), getName());
 	}
 }

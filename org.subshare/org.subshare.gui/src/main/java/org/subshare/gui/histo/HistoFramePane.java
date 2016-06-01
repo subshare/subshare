@@ -1,6 +1,7 @@
 package org.subshare.gui.histo;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static co.codewizards.cloudstore.core.util.StringUtil.*;
 import static org.subshare.gui.util.FxmlUtil.*;
 import static org.subshare.gui.util.PlatformUtil.*;
 
@@ -10,6 +11,20 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
+import org.subshare.core.dto.PlainHistoCryptoRepoFileDto;
+import org.subshare.core.repo.LocalRepo;
+import org.subshare.core.repo.local.PlainHistoCryptoRepoFileFilter;
+import org.subshare.core.repo.local.SsLocalRepoMetaData;
+import org.subshare.gui.IconSize;
+import org.subshare.gui.concurrent.SsTask;
+import org.subshare.gui.filetree.FileIconRegistry;
+import org.subshare.gui.ls.LocalRepoManagerFactoryLs;
+
+import co.codewizards.cloudstore.core.dto.DirectoryDto;
+import co.codewizards.cloudstore.core.dto.NormalFileDto;
+import co.codewizards.cloudstore.core.dto.SymlinkDto;
+import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -27,21 +42,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.util.Callback;
-
-import org.subshare.core.dto.PlainHistoCryptoRepoFileDto;
-import org.subshare.core.repo.LocalRepo;
-import org.subshare.core.repo.local.PlainHistoCryptoRepoFileFilter;
-import org.subshare.core.repo.local.SsLocalRepoMetaData;
-import org.subshare.gui.IconSize;
-import org.subshare.gui.concurrent.SsTask;
-import org.subshare.gui.filetree.FileIconRegistry;
-import org.subshare.gui.ls.LocalRepoManagerFactoryLs;
-
-import co.codewizards.cloudstore.core.dto.DirectoryDto;
-import co.codewizards.cloudstore.core.dto.NormalFileDto;
-import co.codewizards.cloudstore.core.dto.SymlinkDto;
-import co.codewizards.cloudstore.core.dto.Uid;
-import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 
 public class HistoFramePane extends BorderPane {
 
@@ -238,6 +238,15 @@ public class HistoFramePane extends BorderPane {
 
 				parentItem.getChildren().add(item);
 			}
+		}
+
+		if (! isEmpty(localPath) && ! root.getChildren().isEmpty()) {
+			HistoCryptoRepoFileTreeItem newRoot = root;
+			for (String pathSegment : localPath.split("/")) {
+				newRoot = newRoot.getChildOrFail(pathSegment);
+			}
+			root.getChildren().clear();
+			root.getChildren().add(newRoot);
 		}
 		return root;
 	}

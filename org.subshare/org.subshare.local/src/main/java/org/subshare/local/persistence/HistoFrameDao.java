@@ -1,6 +1,7 @@
 package org.subshare.local.persistence;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static co.codewizards.cloudstore.core.util.StringUtil.*;
 
 import java.net.URL;
 import java.util.Collection;
@@ -18,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import org.subshare.core.repo.local.HistoFrameFilter;
 
 import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.util.CollectionUtil;
 import co.codewizards.cloudstore.local.persistence.Dao;
 import co.codewizards.cloudstore.local.persistence.RemoteRepository;
 import co.codewizards.cloudstore.local.persistence.RemoteRepositoryDao;
@@ -92,8 +94,35 @@ public class HistoFrameDao extends Dao<HistoFrame, HistoFrameDao> {
 		}
 	}
 
-	public Collection<HistoFrame> getHistoFrames(HistoFrameFilter filter) {
+	public Collection<HistoFrame> getHistoFrames(final HistoFrameFilter filter) {
 		assertNotNull("filter", filter);
+
+		if ("/".equals(filter.getLocalPath())) // the root is normally simply "", but we are tolerant to "/".
+			filter.setLocalPath("");
+
+		final Set<HistoFrame> result = new HashSet<>();
+
+		if (! isEmpty(filter.getLocalPath())) { // null means no filtering and "" means localPath is root (/), i.e. no filter either.
+			final RemoteRepository remoteRepository = getUniqueRemoteRepositoryOrFail();
+			final CryptoRepoFile crf1 = getDao(CryptoRepoFileDao.class).getCryptoRepoFile(remoteRepository, filter.getLocalPath());
+			assertNotNull("cryptoRepoFile", crf1, "remoteRepository=%s filter.localPath='%s'", remoteRepository, filter.getLocalPath());
+
+			final Set<Long> childCryptoRepoFileOids = getChildCryptoRepoFileOidsRecursively(crf1);
+			for (final Set<Long> subChildCryptoRepoFileOids : CollectionUtil.splitSet(childCryptoRepoFileOids, 1000))
+				populateHistoFrames(result, filter, subChildCryptoRepoFileOids);
+		}
+		else
+			populateHistoFrames(result, filter, null);
+
+		return result;
+	}
+
+
+	private void populateHistoFrames(final Set<HistoFrame> result, final HistoFrameFilter filter, final Set<Long> childCryptoRepoFileOids) {
+		assertNotNull("result", result);
+		assertNotNull("filter", filter);
+//		childCryptoRepoFileOids may be null!
+
 		final Query query = pm().newQuery(getEntityClass());
 		try {
 			final StringBuilder q = new StringBuilder();
@@ -121,16 +150,12 @@ public class HistoFrameDao extends Dao<HistoFrame, HistoFrameDao> {
 				p.put("signatureCreatedTo", filter.getSignatureCreatedTo());
 			}
 
-			if (filter.getLocalPath() != null) {
-				final RemoteRepository remoteRepository = getUniqueRemoteRepositoryOrFail();
-				final CryptoRepoFile crf1 = getDao(CryptoRepoFileDao.class).getCryptoRepoFile(remoteRepository, filter.getLocalPath());
-				assertNotNull("cryptoRepoFile", crf1, "remoteRepository=%s filter.localPath='%s'", remoteRepository, filter.getLocalPath());
-
+			if (childCryptoRepoFileOids != null) {
 				if (q.length() > 0)
 					q.append(" && ");
 
 				q.append("this == hcrf.histoFrame && :crfOids.contains(hcrf.cryptoRepoFile.id)");
-				p.put("crfOids", getChildCryptoRepoFileOidsRecursively(crf1));
+				p.put("crfOids", childCryptoRepoFileOids);
 				v.put("hcrf", HistoCryptoRepoFile.class);
 			}
 
@@ -147,14 +172,14 @@ public class HistoFrameDao extends Dao<HistoFrame, HistoFrameDao> {
 
 			long startTimestamp = System.currentTimeMillis();
 			@SuppressWarnings("unchecked")
-			Collection<HistoFrame> result = (List<HistoFrame>) query.executeWithMap(p);
+			Collection<HistoFrame> r = (List<HistoFrame>) query.executeWithMap(p);
 			logger.debug("getHistoFrames: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
 
 			startTimestamp = System.currentTimeMillis();
-			result = load(result);
-			logger.debug("getHistoFrames: Loading result-set with {} elements took {} ms.", result.size(), System.currentTimeMillis() - startTimestamp);
+			r = load(r);
+			logger.debug("getHistoFrames: Loading result-set with {} elements took {} ms.", r.size(), System.currentTimeMillis() - startTimestamp);
 
-			return result;
+			result.addAll(r);
 		} finally {
 			query.closeAll();
 		}

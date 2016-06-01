@@ -2325,6 +2325,9 @@ public class CryptreeImpl extends AbstractCryptree {
 		assertNotNull("filter", filter);
 		final Uid histoFrameId = assertNotNull("filter.histoFrameId", filter.getHistoFrameId());
 
+		if ("/".equals(filter.getLocalPath())) // the root is normally simply "", but we are tolerant to "/".
+			filter.setLocalPath("");
+
 		final LocalRepoTransaction tx = getTransactionOrFail();
 		final HistoCryptoRepoFileDao hcrfDao = tx.getDao(HistoCryptoRepoFileDao.class);
 
@@ -2333,9 +2336,22 @@ public class CryptreeImpl extends AbstractCryptree {
 
 		final Map<Uid, PlainHistoCryptoRepoFileDto> cryptoRepoFileId2PlainHistoCryptoRepoFileDto = new HashMap<>();
 
+		final CryptreeNode filterLocalPathCryptreeNode = (StringUtil.isEmpty(filter.getLocalPath())
+				? null : getCryptreeContext().getCryptreeNodeOrCreate(filter.getLocalPath()));
+
+		final CryptoRepoFile filterLocalPathCryptoRepoFile = (filterLocalPathCryptreeNode == null
+				? null
+				: assertNotNull("filterLocalPathCryptreeNode.cryptoRepoFile", filterLocalPathCryptreeNode.getCryptoRepoFile()));
+
 		final List<PlainHistoCryptoRepoFileDto> result = new ArrayList<>(histoCryptoRepoFiles.size());
 		final HistoCryptoRepoFileDtoConverter converter = HistoCryptoRepoFileDtoConverter.create(tx);
 		for (final HistoCryptoRepoFile histoCryptoRepoFile : histoCryptoRepoFiles) {
+			if (filterLocalPathCryptoRepoFile != null) {
+				if (! filterLocalPathCryptoRepoFile.equals(histoCryptoRepoFile.getCryptoRepoFile())
+						&& ! isParentRecursively(filterLocalPathCryptoRepoFile, histoCryptoRepoFile.getCryptoRepoFile()))
+					continue;
+			}
+
 			final PlainHistoCryptoRepoFileDto plainHistoCryptoRepoFileDto = createPlainHistoCryptoRepoFileDto(
 					converter, histoCryptoRepoFile);
 
@@ -2379,6 +2395,19 @@ public class CryptreeImpl extends AbstractCryptree {
 			}
 		}
 		return result;
+	}
+
+	private boolean isParentRecursively(CryptoRepoFile parentCandidate, CryptoRepoFile childCandidate) {
+		assertNotNull("parentCandidate", parentCandidate);
+		assertNotNull("childCandidate", childCandidate);
+
+		while (childCandidate != null) {
+			if (parentCandidate.equals(childCandidate.getParent()))
+				return true;
+
+			childCandidate = childCandidate.getParent();
+		}
+		return false;
 	}
 
 	@Override
