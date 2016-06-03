@@ -3,7 +3,9 @@ package org.subshare.local.persistence;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.jdo.Query;
@@ -305,5 +307,31 @@ public class CryptoRepoFileDao extends Dao<CryptoRepoFile, CryptoRepoFileDao> {
 		} finally {
 			query.closeAll();
 		}
+	}
+
+	public Set<Long> getChildCryptoRepoFileOidsRecursively(final CryptoRepoFile cryptoRepoFile) {
+		assertNotNull("cryptoRepoFile", cryptoRepoFile);
+		final Query query = pm().newQuery(CryptoRepoFile.class);
+		query.setResult("this.id");
+		query.setFilter(":parentOids.contains(this.parent.id)");
+
+		final Set<Long> filterOids = new HashSet<>();
+		filterOids.add(cryptoRepoFile.getId());
+
+		final Set<Long> result = new HashSet<>();
+		result.addAll(filterOids);
+
+		populateChildCryptoRepoFileOidsRecursively(result, filterOids, query);
+		return result;
+	}
+
+	private void populateChildCryptoRepoFileOidsRecursively(final Set<Long> result, final Set<Long> filterOids, final Query query) {
+		@SuppressWarnings("unchecked")
+		final Collection<Long> newOidCol = (Collection<Long>) query.execute(filterOids);
+		final Set<Long> newOidSet = new HashSet<>(newOidCol);
+		newOidSet.removeAll(filterOids);
+		result.addAll(newOidSet);
+		if (! newOidSet.isEmpty())
+			populateChildCryptoRepoFileOidsRecursively(result, newOidSet, query);
 	}
 }

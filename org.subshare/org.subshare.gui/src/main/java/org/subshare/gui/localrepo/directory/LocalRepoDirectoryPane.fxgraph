@@ -20,7 +20,7 @@ import javafx.scene.layout.HBox
 import javafx.scene.control.Label
 
 import org.subshare.core.dto.PermissionType
-import org.subshare.gui.filetree.FileTreePane
+import org.subshare.gui.filetree.repoaware.RepoAwareFileTreePane
 import org.subshare.gui.userlist.UserListPane
 import org.subshare.gui.selectuser.SelectUserPane
 import org.subshare.gui.localrepo.directory.PermissionTypeItem
@@ -63,7 +63,7 @@ dynamic component LocalRepoDirectoryPane resourcefile 'messages.properties' {
 						static hgrow : "ALWAYS"
 					},
 
-					FileTreePane id fileTreePane {
+					RepoAwareFileTreePane id fileTreePane {
 						selectionMode: "MULTIPLE",
 						refreshButtonVisible : false,
 		

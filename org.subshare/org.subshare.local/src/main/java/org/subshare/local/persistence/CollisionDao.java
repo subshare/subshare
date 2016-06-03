@@ -4,7 +4,9 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import javax.jdo.Query;
 
@@ -13,7 +15,9 @@ import org.slf4j.LoggerFactory;
 import org.subshare.core.repo.local.CollisionFilter;
 
 import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.util.CollectionUtil;
 import co.codewizards.cloudstore.local.persistence.Dao;
+import co.codewizards.cloudstore.local.persistence.RemoteRepository;
 
 public class CollisionDao extends Dao<Collision, CollisionDao> {
 
@@ -133,7 +137,43 @@ public class CollisionDao extends Dao<Collision, CollisionDao> {
 		}
 	}
 
-	public Collection<Collision> getCollisions(final CollisionFilter filter) {
+	public Collection<Collision> getCollisions(CollisionFilter filter) {
+		assertNotNull("filter", filter);
+
+		final Set<Collision> result = new HashSet<>();
+		CryptoRepoFile filterCryptoRepoFile = null;
+
+		if (filter.getLocalPath() != null) {
+			filter = filter.clone(); // we modify it, hence we must clone
+			if (filter.getCryptoRepoFileId() != null)
+				throw new IllegalArgumentException("filter.localPath and filter.cryptoRepoFileId must not both be set! Exactly one of them!");
+
+			filterCryptoRepoFile = getCryptoRepoFileForLocalPath(filter.getLocalPath());
+			if (filterCryptoRepoFile == null)
+				return result; // not yet uploaded, symlink, whatever reason => can be no collision, either - maybe we change the symlink-behaviour, later...
+
+			filter.setLocalPath(null);
+			filter.setCryptoRepoFileId(filterCryptoRepoFile.getCryptoRepoFileId());
+		}
+
+		if (filter.getCryptoRepoFileId() != null && filter.isIncludeChildrenRecursively()) {
+			final CryptoRepoFileDao crfDao = getDao(CryptoRepoFileDao.class);
+
+			if (filterCryptoRepoFile == null)
+				filterCryptoRepoFile = crfDao.getCryptoRepoFileOrFail(filter.getCryptoRepoFileId());
+
+			final Set<Long> childCryptoRepoFileOids = crfDao.getChildCryptoRepoFileOidsRecursively(filterCryptoRepoFile);
+			for (final Set<Long> partialChildCryptoRepoFileOids : CollectionUtil.splitSet(childCryptoRepoFileOids, 1000))
+				populateCollisions(result, filter, partialChildCryptoRepoFileOids);
+		}
+		else
+			populateCollisions(result, filter, null);
+
+		return result;
+	}
+
+
+	protected void populateCollisions(Set<Collision> result, final CollisionFilter filter, final Set<Long> childCryptoRepoFileOids) {
 		assertNotNull("filter", filter);
 		final Query query = pm().newQuery(Collision.class);
 		try {
@@ -141,24 +181,45 @@ public class CollisionDao extends Dao<Collision, CollisionDao> {
 			final Map<String, Object> qp = new HashMap<>();
 
 			appendToQueryFilter_histoCryptoRepoFileId(qf, qp, filter.getHistoCryptoRepoFileId());
-			appendToQueryFilter_cryptoRepoFileId(qf, qp, filter.getCryptoRepoFileId());
+
+			if (childCryptoRepoFileOids == null)
+				appendToQueryFilter_cryptoRepoFileId(qf, qp, filter.getCryptoRepoFileId());
+			else
+				appendToQueryFilter_cryptoRepoFileOids(qf, qp, childCryptoRepoFileOids);
+
+			appendToQueryFilter_resolved(qf, qp, filter.getResolved());
 
 			if (qf.length() > 0)
 				query.setFilter(qf.toString());
 
 			long startTimestamp = System.currentTimeMillis();
 			@SuppressWarnings("unchecked")
-			Collection<Collision> result = (Collection<Collision>) query.executeWithMap(qp);
+			Collection<Collision> r = (Collection<Collision>) query.executeWithMap(qp);
 			logger.debug("getCollisionsChangedAfter: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
 
 			startTimestamp = System.currentTimeMillis();
-			result = load(result);
+			r = load(r);
 			logger.debug("getCollisionsChangedAfter: Loading result-set with {} elements took {} ms.", result.size(), System.currentTimeMillis() - startTimestamp);
 
-			return result;
+			result.addAll(r);
 		} finally {
 			query.closeAll();
 		}
+	}
+
+	private static void appendToQueryFilter_cryptoRepoFileOids(final StringBuilder qf, final Map<String, Object> qp, final Set<Long> cryptoRepoFileOids) {
+		assertNotNull("qf", qf);
+		assertNotNull("qp", qp);
+		assertNotNull("cryptoRepoFileOids", cryptoRepoFileOids);
+
+		appendAndIfNeeded(qf);
+
+		qf.append(" (")
+		.append("  :crfOids.contains(this.histoCryptoRepoFile1.cryptoRepoFile.id)")
+		.append("  || :crfOids.contains(this.histoCryptoRepoFile2.cryptoRepoFile.id)")
+		.append(") ");
+
+		qp.put("crfOids", cryptoRepoFileOids);
 	}
 
 	private static void appendToQueryFilter_histoCryptoRepoFileId(final StringBuilder qf, final Map<String, Object> qp, final Uid histoCryptoRepoFileId) {
@@ -169,10 +230,10 @@ public class CollisionDao extends Dao<Collision, CollisionDao> {
 
 		appendAndIfNeeded(qf);
 
-		qf.append("(")
+		qf.append(" (")
 		.append("  this.histoCryptoRepoFile1.histoCryptoRepoFileId == :histoCryptoRepoFileId")
 		.append("  || this.histoCryptoRepoFile2.histoCryptoRepoFileId == :histoCryptoRepoFileId")
-		.append(")");
+		.append(") ");
 
 		qp.put("histoCryptoRepoFileId", histoCryptoRepoFileId.toString());
 	}
@@ -185,12 +246,43 @@ public class CollisionDao extends Dao<Collision, CollisionDao> {
 
 		appendAndIfNeeded(qf);
 
-		qf.append("(")
+		qf.append(" (")
 		.append("  this.histoCryptoRepoFile1.cryptoRepoFile.cryptoRepoFileId == :cryptoRepoFileId")
 		.append("  || this.histoCryptoRepoFile2.cryptoRepoFile.cryptoRepoFileId == :cryptoRepoFileId")
-		.append(")");
+		.append(") ");
 
 		qp.put("cryptoRepoFileId", cryptoRepoFileId.toString());
+	}
+
+	private CryptoRepoFile getCryptoRepoFileForLocalPath(final String localPath) {
+		if (localPath == null)
+			return null;
+
+		final RemoteRepository remoteRepository = getDao(SsRemoteRepositoryDao.class).getUniqueRemoteRepositoryOrFail();
+		final CryptoRepoFile crf1 = getDao(CryptoRepoFileDao.class).getCryptoRepoFile(remoteRepository, localPath);
+		// crf1 might indeed be null, which is currently the case, if there is a symlink in the localPath.
+		// Additionally, it might be null, because there was nothing uploaded, yet.
+//		assertNotNull("cryptoRepoFile", crf1, "remoteRepository=%s filter.localPath='%s'", remoteRepository, localPath);
+
+		return crf1;
+	}
+
+	private void appendToQueryFilter_resolved(StringBuilder qf, Map<String, Object> qp, Boolean resolved) {
+		assertNotNull("qf", qf);
+		assertNotNull("qp", qp);
+		if (resolved == null)
+			return;
+
+		appendAndIfNeeded(qf);
+
+		qf.append(" this.resolved ");
+
+		if (resolved == true)
+			qf.append(" != ");
+		else
+			qf.append(" == ");
+
+		qf.append("null ");
 	}
 
 	private static void appendAndIfNeeded(final StringBuilder qf) {

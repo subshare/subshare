@@ -7,20 +7,12 @@ import static org.subshare.gui.util.PlatformUtil.*;
 import java.lang.ref.WeakReference;
 import java.util.List;
 
-import javafx.beans.InvalidationListener;
-import javafx.event.ActionEvent;
-import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.Tab;
-import javafx.scene.control.TabPane;
-import javafx.scene.control.TextField;
-import javafx.scene.layout.VBox;
-
 import org.subshare.core.repo.LocalRepo;
 import org.subshare.gui.filetree.DirectoryFileTreeItem;
 import org.subshare.gui.filetree.FileFileTreeItem;
 import org.subshare.gui.filetree.FileTreeItem;
 import org.subshare.gui.filetree.FileTreePane;
+import org.subshare.gui.filetree.repoaware.RepoAwareFileTreePane;
 import org.subshare.gui.histo.HistoryPaneContainer;
 import org.subshare.gui.histo.HistoryPaneSupport;
 import org.subshare.gui.invitation.issue.IssueInvitationData;
@@ -31,6 +23,14 @@ import org.subshare.gui.wizard.WizardDialog;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import co.codewizards.cloudstore.core.repo.sync.RepoSyncDaemon;
+import javafx.beans.InvalidationListener;
+import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
+import javafx.scene.control.Button;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.VBox;
 
 public class LocalRepoDirectoryPane extends VBox implements HistoryPaneContainer {
 
@@ -53,7 +53,7 @@ public class LocalRepoDirectoryPane extends VBox implements HistoryPaneContainer
 	private TextField pathTextField;
 
 	@FXML
-	private FileTreePane fileTreePane;
+	private RepoAwareFileTreePane fileTreePane;
 
 	@FXML
 	private Button exportFromHistoryButton;
@@ -73,6 +73,7 @@ public class LocalRepoDirectoryPane extends VBox implements HistoryPaneContainer
 
 		fileTreePane.setUseCase(String.format("localRepo:%s:%s", localRepo.getRepositoryId(), path)); //$NON-NLS-1$
 		fileTreePane.setRootFileTreeItem(new RootDirectoryFileTreeItem(fileTreePane, file));
+		fileTreePane.setLocalRepo(localRepo);
 
 		historyPaneSupport = new HistoryPaneSupport(this);
 

@@ -19,33 +19,33 @@ dynamic component FileTreePane resourcefile 'messages.properties' {
 	BorderPane {
 		prefWidth : 520,
 		
-		center : TreeTableView < FileTreeItem<?> > id treeTableView {
+		center : TreeTableView<FileTreeItem<?>> id treeTableView {
 				columns : [
-					TreeTableColumn < Object, String > id nameTreeTableColumn {
+					TreeTableColumn<FileTreeItem<?>, String> id nameTreeTableColumn {
 						text : "Name",
 						prefWidth : 300,
-						cellValueFactory : TreeItemPropertyValueFactory < FileTreeItem<?>, String > {
+						cellValueFactory : TreeItemPropertyValueFactory<FileTreeItem<?>, String> {
 							property : "name"
 						}
 					},
-					TreeTableColumn < Object, String > id sizeTreeTableColumn {
+					TreeTableColumn<FileTreeItem<?>, String> id sizeTreeTableColumn {
 						text : "Size",
 						prefWidth : 100,
-						cellValueFactory : TreeItemPropertyValueFactory < FileTreeItem<?>, String > {
+						cellValueFactory : TreeItemPropertyValueFactory<FileTreeItem<?>, String> {
 							property : "size"
 						}
 					},
-//					TreeTableColumn < Object, String > id createdTreeTableColumn {
+//					TreeTableColumn<FileTreeItem<?>, String> id createdTreeTableColumn {
 //						text : "Created",
 //						prefWidth : 100,
-//						cellValueFactory : TreeItemPropertyValueFactory < FileTreeItem<?>, String > {
+//						cellValueFactory : TreeItemPropertyValueFactory<FileTreeItem<?>, String> {
 //							property : "created"
 //						}
 //					},
-					TreeTableColumn < Object, String > id lastModifiedTreeTableColumn {
+					TreeTableColumn<FileTreeItem<?>, String> id lastModifiedTreeTableColumn {
 						text : "Modified",
 						prefWidth : 120,
-						cellValueFactory : TreeItemPropertyValueFactory < FileTreeItem<?>, String > {
+						cellValueFactory : TreeItemPropertyValueFactory<FileTreeItem<?>, String> {
 							property : "lastModified"
 						}
 					}

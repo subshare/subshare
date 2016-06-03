@@ -15,7 +15,7 @@
 <?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.VBox?>
-<?import org.subshare.gui.filetree.FileTreePane?>
+<?import org.subshare.gui.filetree.repoaware.RepoAwareFileTreePane?>
 <?scenebuilder-preview-i18n-resource messages.properties?>
 
 <fx:root xmlns:fx="http://javafx.com/fxml" type="VBox">
@@ -71,11 +71,11 @@
 							<Insets left="8" top="8" right="8" bottom="8"/> 
 						</GridPane.margin>
 					</TextField>
-					<FileTreePane fx:id="fileTreePane" selectionMode="MULTIPLE" refreshButtonVisible="false" GridPane.columnIndex="0" GridPane.rowIndex="2" GridPane.hgrow="ALWAYS" GridPane.vgrow="ALWAYS"> 
+					<RepoAwareFileTreePane fx:id="fileTreePane" selectionMode="MULTIPLE" refreshButtonVisible="false" GridPane.columnIndex="0" GridPane.rowIndex="2" GridPane.hgrow="ALWAYS" GridPane.vgrow="ALWAYS"> 
 						<GridPane.margin>
 							<Insets left="8" right="8" bottom="8"/> 
 						</GridPane.margin>
-					</FileTreePane>
+					</RepoAwareFileTreePane>
 				</GridPane>
 			</content>
 		</Tab>

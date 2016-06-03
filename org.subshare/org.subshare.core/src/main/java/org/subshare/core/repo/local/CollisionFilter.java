@@ -5,11 +5,17 @@ import java.io.Serializable;
 import co.codewizards.cloudstore.core.dto.Uid;
 
 @SuppressWarnings("serial")
-public class CollisionFilter implements Serializable {
+public class CollisionFilter implements Serializable, Cloneable {
 
 	private Uid cryptoRepoFileId;
 
 	private Uid histoCryptoRepoFileId;
+
+	private String localPath;
+
+	private Boolean resolved;
+
+	private boolean includeChildrenRecursively;
 
 	public Uid getCryptoRepoFileId() {
 		return cryptoRepoFileId;
@@ -25,4 +31,42 @@ public class CollisionFilter implements Serializable {
 		this.histoCryptoRepoFileId = histoCryptoRepoFileId;
 	}
 
+	public String getLocalPath() {
+		return localPath;
+	}
+	public void setLocalPath(String localPath) {
+		this.localPath = localPath;
+	}
+
+	public Boolean getResolved() {
+		return resolved;
+	}
+	public void setResolved(Boolean resolved) {
+		this.resolved = resolved;
+	}
+
+	/**
+	 * Whether to include {@code Collision}s associated with sub-directories or files within the specified
+	 * directory or any of its sub-directories.
+	 * <p>
+	 * Can be used in combination with {@link #getLocalPath() localPath} or {@link #getCryptoRepoFileId() cryptoRepoFileId};
+	 * @return
+	 */
+	public boolean isIncludeChildrenRecursively() {
+		return includeChildrenRecursively;
+	}
+	public void setIncludeChildrenRecursively(boolean includeChildrenRecursively) {
+		this.includeChildrenRecursively = includeChildrenRecursively;
+	}
+
+	@Override
+	public CollisionFilter clone() {
+		final CollisionFilter clone;
+		try {
+			clone = (CollisionFilter) super.clone();
+		} catch (CloneNotSupportedException e) {
+			throw new RuntimeException(e); // should really never happen!
+		}
+		return clone;
+	}
 }

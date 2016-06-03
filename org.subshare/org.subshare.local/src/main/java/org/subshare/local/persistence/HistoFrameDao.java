@@ -3,7 +3,6 @@ package org.subshare.local.persistence;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
 
-import java.net.URL;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -22,7 +21,6 @@ import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.util.CollectionUtil;
 import co.codewizards.cloudstore.local.persistence.Dao;
 import co.codewizards.cloudstore.local.persistence.RemoteRepository;
-import co.codewizards.cloudstore.local.persistence.RemoteRepositoryDao;
 
 public class HistoFrameDao extends Dao<HistoFrame, HistoFrameDao> {
 
@@ -103,13 +101,14 @@ public class HistoFrameDao extends Dao<HistoFrame, HistoFrameDao> {
 		final Set<HistoFrame> result = new HashSet<>();
 
 		if (! isEmpty(filter.getLocalPath())) { // null means no filtering and "" means localPath is root (/), i.e. no filter either.
-			final RemoteRepository remoteRepository = getUniqueRemoteRepositoryOrFail();
-			final CryptoRepoFile crf1 = getDao(CryptoRepoFileDao.class).getCryptoRepoFile(remoteRepository, filter.getLocalPath());
+			final RemoteRepository remoteRepository = getDao(SsRemoteRepositoryDao.class).getUniqueRemoteRepositoryOrFail();
+			final CryptoRepoFileDao crfDao = getDao(CryptoRepoFileDao.class);
+			final CryptoRepoFile crf1 = crfDao.getCryptoRepoFile(remoteRepository, filter.getLocalPath());
 			assertNotNull("cryptoRepoFile", crf1, "remoteRepository=%s filter.localPath='%s'", remoteRepository, filter.getLocalPath());
 
-			final Set<Long> childCryptoRepoFileOids = getChildCryptoRepoFileOidsRecursively(crf1);
-			for (final Set<Long> subChildCryptoRepoFileOids : CollectionUtil.splitSet(childCryptoRepoFileOids, 1000))
-				populateHistoFrames(result, filter, subChildCryptoRepoFileOids);
+			final Set<Long> childCryptoRepoFileOids = crfDao.getChildCryptoRepoFileOidsRecursively(crf1);
+			for (final Set<Long> partialChildCryptoRepoFileOids : CollectionUtil.splitSet(childCryptoRepoFileOids, 1000))
+				populateHistoFrames(result, filter, partialChildCryptoRepoFileOids);
 		}
 		else
 			populateHistoFrames(result, filter, null);
@@ -185,40 +184,6 @@ public class HistoFrameDao extends Dao<HistoFrame, HistoFrameDao> {
 		}
 	}
 
-	private Set<Long> getChildCryptoRepoFileOidsRecursively(final CryptoRepoFile cryptoRepoFile) {
-		assertNotNull("cryptoRepoFile", cryptoRepoFile);
-		final Query query = pm().newQuery(CryptoRepoFile.class);
-		query.setResult("this.id");
-		query.setFilter(":parentOids.contains(this.parent.id)");
 
-		final Set<Long> filterOids = new HashSet<>();
-		filterOids.add(cryptoRepoFile.getId());
-
-		final Set<Long> result = new HashSet<>();
-		result.addAll(filterOids);
-
-		populateChildCryptoRepoFileOidsRecursively(result, filterOids, query);
-		return result;
-	}
-
-	private void populateChildCryptoRepoFileOidsRecursively(final Set<Long> result, final Set<Long> filterOids, final Query query) {
-		@SuppressWarnings("unchecked")
-		final Collection<Long> newOidCol = (Collection<Long>) query.execute(filterOids);
-		final Set<Long> newOidSet = new HashSet<>(newOidCol);
-		newOidSet.removeAll(filterOids);
-		result.addAll(newOidSet);
-		if (! newOidSet.isEmpty())
-			populateChildCryptoRepoFileOidsRecursively(result, newOidSet, query);
-	}
-
-	private RemoteRepository getUniqueRemoteRepositoryOrFail() {
-		final RemoteRepositoryDao rrDao = getDao(RemoteRepositoryDao.class);
-		final Map<UUID, URL> remoteRepositoryId2RemoteRootMap = rrDao.getRemoteRepositoryId2RemoteRootMap();
-		if (remoteRepositoryId2RemoteRootMap.size() != 1)
-			throw new IllegalStateException("There is not exactly one remote repository!");
-
-		final RemoteRepository remoteRepository = rrDao.getRemoteRepositoryOrFail(remoteRepositoryId2RemoteRootMap.keySet().iterator().next());
-		return remoteRepository;
-	}
 
 }

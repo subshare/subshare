@@ -17,6 +17,14 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.subshare.gui.filetree.RefreshListener.RefreshEvent;
+
+import co.codewizards.cloudstore.core.oio.File;
+import co.codewizards.cloudstore.core.oio.FileFilter;
+import co.codewizards.cloudstore.core.ref.IdentityWeakReference;
+import co.codewizards.cloudstore.core.util.IOUtil;
 import javafx.beans.InvalidationListener;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
@@ -43,21 +51,13 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TreeItem;
+import javafx.scene.control.TreeTableColumn;
 import javafx.scene.control.TreeTableView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.subshare.gui.filetree.RefreshListener.RefreshEvent;
-
-import co.codewizards.cloudstore.core.oio.File;
-import co.codewizards.cloudstore.core.oio.FileFilter;
-import co.codewizards.cloudstore.core.ref.IdentityWeakReference;
-import co.codewizards.cloudstore.core.util.IOUtil;
 
 public class FileTreePane extends BorderPane {
 
@@ -88,6 +88,15 @@ public class FileTreePane extends BorderPane {
 
 	@FXML
 	private Button deleteButton;
+
+	@FXML
+	private TreeTableColumn<FileTreeItem<?>, String> nameTreeTableColumn;
+
+	@FXML
+	private TreeTableColumn<FileTreeItem<?>, String> sizeTreeTableColumn;
+
+	@FXML
+	private TreeTableColumn<FileTreeItem<?>, String> lastModifiedTreeTableColumn;
 
 	private final BooleanProperty showHiddenFilesProperty = new SimpleBooleanProperty(this, "showHiddenFiles", false);
 
@@ -289,7 +298,7 @@ public class FileTreePane extends BorderPane {
 		treeTableView.getSelectionModel().setSelectionMode(selectionMode);
 	}
 
-	public TreeTableView<FileTreeItem<?>> getTreeTableView() {
+	protected TreeTableView<FileTreeItem<?>> getTreeTableView() {
 		return treeTableView;
 	}
 
@@ -514,5 +523,17 @@ public class FileTreePane extends BorderPane {
 			directory = directory.getParentFile();
 
 		return directory;
+	}
+
+	protected TreeTableColumn<FileTreeItem<?>, String> getNameTreeTableColumn() {
+		return nameTreeTableColumn;
+	}
+
+	protected TreeTableColumn<FileTreeItem<?>, String> getSizeTreeTableColumn() {
+		return sizeTreeTableColumn;
+	}
+
+	protected TreeTableColumn<FileTreeItem<?>, String> getLastModifiedTreeTableColumn() {
+		return lastModifiedTreeTableColumn;
 	}
 }
