@@ -1,6 +1,7 @@
 package org.subshare.gui.histo;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static co.codewizards.cloudstore.core.util.CollectionUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
 import static org.subshare.gui.util.FxmlUtil.*;
 import static org.subshare.gui.util.PlatformUtil.*;
@@ -8,6 +9,7 @@ import static org.subshare.gui.util.PlatformUtil.*;
 import java.net.URL;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
@@ -48,6 +50,8 @@ public class HistoFramePane extends BorderPane {
 	private LocalRepo localRepo;
 	private String localPath;
 	private boolean populatePending;
+	private Image collisionUnresolvedIcon;
+	private Image collisionResolvedIcon;
 
 	private final ObjectProperty<Uid> histoFrameId = new SimpleObjectProperty<Uid>(this, "histoFrameId") {
 		@Override
@@ -123,26 +127,23 @@ public class HistoFramePane extends BorderPane {
 					} else {
 						setText(value);
 
-						final String iconId;
-						if (treeItem.getRepoFileDto() instanceof DirectoryDto)
-							iconId = FileIconRegistry.ICON_ID_DIRECTORY;
-						else if (treeItem.getRepoFileDto() instanceof NormalFileDto)
-							iconId = FileIconRegistry.ICON_ID_FILE;
-						else if (treeItem.getRepoFileDto() instanceof SymlinkDto)
-							iconId = null; // TODO treat symlinks differently!
-						else
-							iconId = null;
+						final List<Image> icons = asListWithoutNullElements(
+								getFileIcon(treeItem),
+								action2ActionIcon.get(treeItem.getAction()),
+								getCollisionIcon(treeItem)
+								);
 
-						final Image fileIcon = iconId == null ? null : FileIconRegistry.getInstance().getIcon(iconId, IconSize._16x16);
-						final Image actionIcon = action2ActionIcon.get(treeItem.getAction());
-						if (fileIcon != null && actionIcon != null)
-							setGraphic(new HBox(new ImageView(actionIcon), new ImageView(fileIcon)));
-						else if (fileIcon != null)
-							setGraphic(new ImageView(fileIcon));
-						else if (actionIcon != null)
-							setGraphic(new ImageView(actionIcon));
-						else
+						if (icons.isEmpty())
 							setGraphic(null);
+						else if (icons.size() == 1)
+							setGraphic(new ImageView(icons.get(0)));
+						else {
+							final HBox box = new HBox();
+							for (final Image icon : icons)
+								box.getChildren().add(new ImageView(icon));
+
+							setGraphic(box);
+						}
 					}
 				}
 			};
@@ -254,5 +255,56 @@ public class HistoFramePane extends BorderPane {
 	private LocalRepoManager createLocalRepoManager() {
 		final LocalRepo localRepo = assertNotNull("localRepo", getLocalRepo());
 		return LocalRepoManagerFactoryLs.getLocalRepoManagerFactory().createLocalRepoManagerForExistingRepository(localRepo.getLocalRoot());
+	}
+
+	private Image getCollisionIcon(final HistoCryptoRepoFileTreeItem treeItem) {
+		assertNotNull("treeItem", treeItem);
+		if (! treeItem.hasCollision())
+			return null;
+
+		if (treeItem.hasUnresolvedCollision())
+			return getCollisionUnresolvedIcon();
+
+		return getCollisionResolvedIcon();
+	}
+
+	private Image getFileIcon(final HistoCryptoRepoFileTreeItem treeItem) {
+		assertNotNull("treeItem", treeItem);
+		final String iconId;
+		if (treeItem.getRepoFileDto() instanceof DirectoryDto)
+			iconId = FileIconRegistry.ICON_ID_DIRECTORY;
+		else if (treeItem.getRepoFileDto() instanceof NormalFileDto)
+			iconId = FileIconRegistry.ICON_ID_FILE;
+		else if (treeItem.getRepoFileDto() instanceof SymlinkDto)
+			iconId = FileIconRegistry.ICON_ID_SYMLINK;
+		else
+			iconId = null;
+
+		final Image fileIcon = iconId == null ? null : FileIconRegistry.getInstance().getIcon(iconId, IconSize._16x16);
+		return fileIcon;
+	}
+
+	private Image getCollisionUnresolvedIcon() {
+		if (collisionUnresolvedIcon == null) {
+			final String fileName = "collision-unresolved_16x16.png"; //$NON-NLS-1$;
+			final URL url = HistoFramePane.class.getResource(fileName);
+			if (url == null)
+				throw new IllegalArgumentException(String.format("Resource '%s' not found!", fileName));
+
+			collisionUnresolvedIcon = new Image(url.toExternalForm());
+		}
+		return collisionUnresolvedIcon;
+	}
+
+	private Image getCollisionResolvedIcon() {
+		if (collisionResolvedIcon == null) {
+			final String fileName = "collision-resolved_16x16.png"; //$NON-NLS-1$;
+			final URL url = HistoFramePane.class.getResource(fileName);
+			if (url == null)
+				throw new IllegalArgumentException(String.format("Resource '%s' not found!", fileName));
+
+			collisionResolvedIcon = new Image(url.toExternalForm());
+		}
+		return collisionResolvedIcon;
 	}
 }

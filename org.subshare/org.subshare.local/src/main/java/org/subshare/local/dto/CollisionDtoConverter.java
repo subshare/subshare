@@ -35,6 +35,7 @@ public class CollisionDtoConverter {
 		result.setHistoCryptoRepoFileId2(
 				collision.getHistoCryptoRepoFile2() == null ? null : collision.getHistoCryptoRepoFile2().getHistoCryptoRepoFileId());
 		result.setDuplicateCryptoRepoFileId(collision.getDuplicateCryptoRepoFileId());
+		result.setResolved(collision.getResolved());
 		result.setSignature(collision.getSignature());
 		return result;
 	}
@@ -66,6 +67,7 @@ public class CollisionDtoConverter {
 		result.setHistoCryptoRepoFile2(
 				collisionDto.getHistoCryptoRepoFileId2() == null ? null : hcrfDao.getHistoCryptoRepoFileOrFail(collisionDto.getHistoCryptoRepoFileId2()));
 		result.setDuplicateCryptoRepoFileId(duplicateCryptoRepoFileId);
+		result.setResolved(collisionDto.getResolved());
 		result.setSignature(collisionDto.getSignature());
 		result = cDao.makePersistent(result);
 		return result;

@@ -3,6 +3,9 @@ package org.subshare.gui.histo;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
 
+import java.util.List;
+
+import org.subshare.core.dto.CollisionDto;
 import org.subshare.core.dto.HistoCryptoRepoFileDto;
 import org.subshare.core.dto.PlainHistoCryptoRepoFileDto;
 
@@ -12,6 +15,8 @@ import co.codewizards.cloudstore.core.dto.Uid;
 import javafx.scene.control.TreeItem;
 
 public class HistoCryptoRepoFileTreeItem extends TreeItem<HistoCryptoRepoFileTreeItem> {
+
+	private Boolean hasUnresolvedCollision;
 
 	public static class Root extends HistoCryptoRepoFileTreeItem {
 	}
@@ -88,6 +93,26 @@ public class HistoCryptoRepoFileTreeItem extends TreeItem<HistoCryptoRepoFileTre
 		return Action.ADD;
 	}
 
+	public boolean hasCollision() {
+		return ! plainHistoCryptoRepoFileDto.getCollisionDtos().isEmpty();
+	}
+
+	public boolean hasUnresolvedCollision() {
+		if (hasUnresolvedCollision == null)
+			hasUnresolvedCollision = determineHasUnresolvedCollision();
+
+		return hasUnresolvedCollision;
+	}
+
+	private boolean determineHasUnresolvedCollision() {
+		final List<CollisionDto> collisionDtos = plainHistoCryptoRepoFileDto.getCollisionDtos();
+		for (CollisionDto collisionDto : collisionDtos) {
+			if (collisionDto.getResolved() == null)
+				return true;
+		}
+		return false;
+	}
+
 	public String getName() {
 		final RepoFileDto repoFileDto = plainHistoCryptoRepoFileDto.getRepoFileDto();
 		return repoFileDto == null
@@ -102,13 +127,6 @@ public class HistoCryptoRepoFileTreeItem extends TreeItem<HistoCryptoRepoFileTre
 			return normalFileDto.getLength();
 		}
 		return null;
-	}
-
-	public String getTemp() {
-		if (plainHistoCryptoRepoFileDto.getCollisionDtos().isEmpty())
-			return "OK";
-		else
-			return "Collision!";
 	}
 
 	@Override

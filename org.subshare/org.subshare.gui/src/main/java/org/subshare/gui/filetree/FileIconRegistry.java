@@ -6,18 +6,22 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
-import javafx.scene.image.Image;
-
 import org.subshare.gui.IconSize;
 
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.util.IOUtil;
+import javafx.scene.image.Image;
 
 public class FileIconRegistry {
 
 	public static final String ICON_ID_DIRECTORY = "directory";
 	public static final String ICON_ID_HOME = "home";
 	public static final String ICON_ID_FILE = "file-empty";
+
+	public static final String ICON_ID_SYMLINK_TO_FILE = "symlink"; // TODO change image!
+	public static final String ICON_ID_SYMLINK_TO_DIRECTORY = "symlink"; // TODO change image!
+	public static final String ICON_ID_SYMLINK_BROKEN = "symlink"; // TODO change image!
+	public static final String ICON_ID_SYMLINK = "symlink"; // TODO remove this?
 
 	private static final FileIconRegistry instance = new FileIconRegistry();
 	private final Map<String, Map<IconSize, Image>> iconId2IconSize2Image = new HashMap<>();
@@ -90,9 +94,20 @@ public class FileIconRegistry {
 		if (file.isDirectory()) {
 			if (IOUtil.getUserHome().equals(file))
 				return ICON_ID_HOME;
-			else
-				return ICON_ID_DIRECTORY;
+			else {
+				if (file.isSymbolicLink())
+					return ICON_ID_SYMLINK_TO_DIRECTORY;
+				else
+					return ICON_ID_DIRECTORY;
+			}
 		}
+
+		if (file.isFile() && file.isSymbolicLink())
+			return ICON_ID_SYMLINK_TO_FILE;
+
+		if (file.isSymbolicLink()) // neither isDirectory() nor isFile() was true => broken
+			return ICON_ID_SYMLINK_BROKEN;
+
 		return ICON_ID_FILE;
 	}
 }

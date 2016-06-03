@@ -2,6 +2,7 @@ package org.subshare.core.dto;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.util.Date;
 
 import javax.xml.bind.annotation.XmlElement;
@@ -15,8 +16,9 @@ import org.subshare.core.sign.Signature;
 
 import co.codewizards.cloudstore.core.dto.Uid;
 
+@SuppressWarnings("serial") // used for LocalServer-communication, only - and they (LocalServer-server & -client) always use the very same JARs.
 @XmlRootElement
-public class CollisionDto implements Signable {
+public class CollisionDto implements Signable, Serializable {
 	public static final String SIGNED_DATA_TYPE = "Collision";
 
 	private Uid collisionId;
@@ -60,6 +62,13 @@ public class CollisionDto implements Signable {
 	}
 	public void setDuplicateCryptoRepoFileId(Uid duplicateCryptoRepoFileId) {
 		this.duplicateCryptoRepoFileId = duplicateCryptoRepoFileId;
+	}
+
+	public Date getResolved() {
+		return resolved;
+	}
+	public void setResolved(Date resolved) {
+		this.resolved = resolved;
 	}
 
 	@Override

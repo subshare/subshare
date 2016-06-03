@@ -1,6 +1,7 @@
 package org.subshare.gui.error;
 
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
+import static org.subshare.gui.util.PlatformUtil.*;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -12,6 +13,12 @@ import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.subshare.gui.util.PlatformUtil;
+
+import co.codewizards.cloudstore.core.dto.Error;
+import co.codewizards.cloudstore.core.dto.RemoteExceptionUtil;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -21,13 +28,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.subshare.gui.util.PlatformUtil;
-
-import co.codewizards.cloudstore.core.dto.Error;
-import co.codewizards.cloudstore.core.dto.RemoteExceptionUtil;
 
 public class ErrorHandler {
 
@@ -128,6 +128,12 @@ public class ErrorHandler {
 		return fullyQualifiedClassNamePattern.matcher(string).matches();
 	}
 
+	/**
+	 * Handle the error.
+	 * <p>
+	 * This method might be called on every thread. It delegates to {@link #_doHandleError()}
+	 * on the JavaFX UI thread.
+	 */
 	protected void doHandleError() {
 		logger.error("doHandleError: " + error, error);
 		PlatformUtil.runAndWait(new Runnable() {
@@ -138,12 +144,30 @@ public class ErrorHandler {
 		});
 	}
 
+	/**
+	 * Handle the error.
+	 * <p>
+	 * This method is called on the JavaFX UI thread.
+	 */
 	protected void _doHandleError() {
+		assertFxApplicationThread();
 		buildAlert();
-		alert.showAndWait();
+		// Unfortunately, we cannot access Toolkit.canStartNestedEventLoop(), because this is
+		// an internal class (package com.sun.javafx.tk). We therefore have to try and if it
+		// does not work, fall back to a normal show() - without waiting.
+		try {
+			alert.showAndWait();
+		} catch (IllegalStateException x) {
+//			13:09:48.657 [JavaFX Application Thread] ERROR o.s.g.e.ErrorHandler - doHandleError: java.lang.IllegalStateException: showAndWait is not allowed during animation or layout processing
+//			java.lang.IllegalStateException: showAndWait is not allowed during animation or layout processing
+//				at javafx.scene.control.Dialog.showAndWait(Dialog.java:328) [jfxrt.jar:na]
+
+			alert.show();
+		}
 	}
 
 	protected void buildAlert() {
+		assertFxApplicationThread();
 		alert = new Alert(AlertType.ERROR);
 		alert.setHeaderText(getHeaderText());
 		alert.setContentText(getContentText());
