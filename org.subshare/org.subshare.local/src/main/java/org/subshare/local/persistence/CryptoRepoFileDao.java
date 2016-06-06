@@ -311,6 +311,8 @@ public class CryptoRepoFileDao extends Dao<CryptoRepoFile, CryptoRepoFileDao> {
 
 	public Set<Long> getChildCryptoRepoFileOidsRecursively(final CryptoRepoFile cryptoRepoFile) {
 		assertNotNull("cryptoRepoFile", cryptoRepoFile);
+		long startTimestamp = System.currentTimeMillis();
+
 		final Query query = pm().newQuery(CryptoRepoFile.class);
 		query.setResult("this.id");
 		query.setFilter(":parentOids.contains(this.parent.id)");
@@ -322,6 +324,8 @@ public class CryptoRepoFileDao extends Dao<CryptoRepoFile, CryptoRepoFileDao> {
 		result.addAll(filterOids);
 
 		populateChildCryptoRepoFileOidsRecursively(result, filterOids, query);
+
+		logger.info("getChildCryptoRepoFileOidsRecursively: Querying {} elements took {} ms.", result.size(), System.currentTimeMillis() - startTimestamp);
 		return result;
 	}
 

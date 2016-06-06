@@ -6,6 +6,10 @@ import static co.codewizards.cloudstore.core.util.Util.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import javax.jdo.JDOHelper;
 import javax.jdo.PersistenceManager;
@@ -13,6 +17,8 @@ import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Embedded;
 import javax.jdo.annotations.Inheritance;
 import javax.jdo.annotations.InheritanceStrategy;
+import javax.jdo.annotations.Join;
+import javax.jdo.annotations.NotPersistent;
 import javax.jdo.annotations.NullValue;
 import javax.jdo.annotations.PersistenceCapable;
 import javax.jdo.annotations.Persistent;
@@ -62,7 +68,6 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 			name = "getCollisions_duplicateCryptoRepoFileId",
 			value = "SELECT WHERE"
 					+ "  this.histoCryptoRepoFile2 == null && this.duplicateCryptoRepoFileId == :duplicateCryptoRepoFileId")
-
 })
 public class Collision extends Entity implements WriteProtected, AutoTrackLocalRevision, StoreCallback {
 
@@ -87,6 +92,12 @@ public class Collision extends Entity implements WriteProtected, AutoTrackLocalR
 	@Embedded(nullIndicatorColumn = "signatureCreated")
 	private SignatureImpl signature;
 
+	@Join
+	private Set<CryptoRepoFile> cryptoRepoFilePath;
+
+	@NotPersistent
+	private SortedSet<CryptoRepoFile> _cryptoRepoFilePath;
+
 	public Collision() {
 	}
 
@@ -105,9 +116,24 @@ public class Collision extends Entity implements WriteProtected, AutoTrackLocalR
 		return histoCryptoRepoFile1;
 	}
 	public void setHistoCryptoRepoFile1(HistoCryptoRepoFile histoCryptoRepoFile1) {
-		if (! equal(this.histoCryptoRepoFile1, histoCryptoRepoFile1))
+		if (! equal(this.histoCryptoRepoFile1, histoCryptoRepoFile1)) {
 			this.histoCryptoRepoFile1 = histoCryptoRepoFile1;
+			updateCryptoRepoFilePath();
+		}
 	}
+
+	private void updateCryptoRepoFilePath() {
+		if (cryptoRepoFilePath == null)
+			cryptoRepoFilePath = new HashSet<>();
+
+		cryptoRepoFilePath.clear();
+		if (histoCryptoRepoFile1 != null)
+			cryptoRepoFilePath.addAll(histoCryptoRepoFile1.getCryptoRepoFile().getPathList());
+
+		_cryptoRepoFilePath = null;
+		getCryptoRepoFilePath();
+	}
+
 	public HistoCryptoRepoFile getHistoCryptoRepoFile2() {
 		return histoCryptoRepoFile2;
 	}
@@ -130,6 +156,19 @@ public class Collision extends Entity implements WriteProtected, AutoTrackLocalR
 	public void setResolved(Date resolved) {
 		if (! equal(this.resolved, resolved))
 			this.resolved = resolved;
+	}
+
+	public SortedSet<CryptoRepoFile> getCryptoRepoFilePath() {
+		SortedSet<CryptoRepoFile> result = _cryptoRepoFilePath;
+		if (result == null) {
+			result = new TreeSet<>(new CryptoRepoFilePathComparator());
+
+			if (cryptoRepoFilePath != null)
+				result.addAll(cryptoRepoFilePath);
+
+			_cryptoRepoFilePath = result;
+		}
+		return result;
 	}
 
 	@Override
@@ -265,4 +304,11 @@ public class Collision extends Entity implements WriteProtected, AutoTrackLocalR
 	public PermissionType getPermissionTypeRequiredForWrite() {
 		return PermissionType.write;
 	}
+
+//	public String getLocalPath() {
+//		return localPath;
+//	}
+//	public void setLocalPath(String localPath) {
+//		this.localPath = localPath;
+//	}
 }
