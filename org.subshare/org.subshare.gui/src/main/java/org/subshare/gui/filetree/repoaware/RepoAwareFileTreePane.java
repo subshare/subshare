@@ -62,6 +62,8 @@ public class RepoAwareFileTreePane extends FileTreePane {
 
 							setGraphic(box);
 						}
+						else
+							setGraphic(null);
 					}
 				}
 
@@ -97,13 +99,16 @@ public class RepoAwareFileTreePane extends FileTreePane {
 
 			filter.setIncludeChildrenRecursively(true);
 			Collection<CollisionDto> collisionDtos = localRepoMetaData.getCollisionDtos(filter);
-			if (! collisionDtos.isEmpty())
-				return getCollisionUnresolvedIcon();
+			if (! collisionDtos.isEmpty()) {
+				// There is a collision either directly associated or somewhere in the sub-tree.
 
-//			filter.setIncludeChildrenRecursively(true);
-//			collisionDtos = localRepoMetaData.getCollisionDtos(filter);
-//			if (! collisionDtos.isEmpty())
-//				return getCollisionUnresolvedInChildIcon();
+				filter.setIncludeChildrenRecursively(false);
+				collisionDtos = localRepoMetaData.getCollisionDtos(filter);
+				if (collisionDtos.isEmpty())
+					return getCollisionUnresolvedInChildIcon();
+				else
+					return getCollisionUnresolvedIcon();
+			}
 		}
 		return null;
 	}
@@ -120,17 +125,17 @@ public class RepoAwareFileTreePane extends FileTreePane {
 		return collisionUnresolvedIcon;
 	}
 
-//	public Image getCollisionUnresolvedInChildIcon() {
-//		if (collisionUnresolvedInChildIcon == null) {
-//			final String fileName = "collision-unresolved-child_16x16.png"; //$NON-NLS-1$;
-//			final URL url = RepoAwareFileTreePane.class.getResource(fileName);
-//			if (url == null)
-//				throw new IllegalArgumentException(String.format("Resource '%s' not found!", fileName));
-//
-//			collisionUnresolvedInChildIcon = new Image(url.toExternalForm());
-//		}
-//		return collisionUnresolvedInChildIcon;
-//	}
+	public Image getCollisionUnresolvedInChildIcon() {
+		if (collisionUnresolvedInChildIcon == null) {
+			final String fileName = "collision-unresolved-child_16x16.png"; //$NON-NLS-1$;
+			final URL url = RepoAwareFileTreePane.class.getResource(fileName);
+			if (url == null)
+				throw new IllegalArgumentException(String.format("Resource '%s' not found!", fileName));
+
+			collisionUnresolvedInChildIcon = new Image(url.toExternalForm());
+		}
+		return collisionUnresolvedInChildIcon;
+	}
 
 	private LocalRepoManager createLocalRepoManager() {
 		final LocalRepo localRepo = assertNotNull("localRepo", getLocalRepo());
