@@ -92,6 +92,7 @@ public class HistoCryptoRepoFileDao extends Dao<HistoCryptoRepoFile, HistoCrypto
 
 	@Override
 	public void deletePersistent(final HistoCryptoRepoFile entity) {
+		deletePlainHistoCryptoRepoFile(entity);
 		deleteHistoFileChunks(entity);
 		getPersistenceManager().flush();
 		super.deletePersistent(entity);
@@ -99,9 +100,10 @@ public class HistoCryptoRepoFileDao extends Dao<HistoCryptoRepoFile, HistoCrypto
 
 	@Override
 	public void deletePersistentAll(final Collection<? extends HistoCryptoRepoFile> entities) {
-		for (HistoCryptoRepoFile entity : entities)
+		for (HistoCryptoRepoFile entity : entities) {
+			deletePlainHistoCryptoRepoFile(entity);
 			deleteHistoFileChunks(entity);
-
+		}
 		getPersistenceManager().flush();
 		super.deletePersistentAll(entities);
 	}
@@ -109,6 +111,13 @@ public class HistoCryptoRepoFileDao extends Dao<HistoCryptoRepoFile, HistoCrypto
 	private void deleteHistoFileChunks(final HistoCryptoRepoFile histoCryptoRepoFile) {
 		final HistoFileChunkDao hfcDao = getDao(HistoFileChunkDao.class);
 		hfcDao.deletePersistentAll(hfcDao.getHistoFileChunks(histoCryptoRepoFile));
+	}
+
+	private void deletePlainHistoCryptoRepoFile(final HistoCryptoRepoFile histoCryptoRepoFile) {
+		final PlainHistoCryptoRepoFileDao phcrfDao = getDao(PlainHistoCryptoRepoFileDao.class);
+		final PlainHistoCryptoRepoFile phcrf = phcrfDao.getPlainHistoCryptoRepoFile(histoCryptoRepoFile);
+		if (phcrf != null)
+			phcrfDao.deletePersistent(phcrf);
 	}
 
 	public Collection<HistoCryptoRepoFile> getHistoCryptoRepoFilesWithoutPlainHistoCryptoRepoFile() {
