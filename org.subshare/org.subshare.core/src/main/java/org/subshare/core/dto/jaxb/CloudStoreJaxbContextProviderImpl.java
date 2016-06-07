@@ -16,6 +16,7 @@ import org.subshare.core.dto.InvitationUserRepoKeyPublicKeyDto;
 import org.subshare.core.dto.LongDto;
 import org.subshare.core.dto.PgpKeyStateDto;
 import org.subshare.core.dto.PgpKeyStateRegistryDto;
+import org.subshare.core.dto.PlainHistoCryptoRepoFileDto;
 import org.subshare.core.dto.RepoFileDtoWithCurrentHistoCryptoRepoFileDto;
 import org.subshare.core.dto.ServerRegistryDto;
 import org.subshare.core.dto.ServerRepoDto;
@@ -58,6 +59,7 @@ public class CloudStoreJaxbContextProviderImpl extends AbstractCloudStoreJaxbCon
 				HistoFrameDto.class,
 				InvitationUserRepoKeyPublicKeyDto.class,
 				LongDto.class,
+				PlainHistoCryptoRepoFileDto.class,
 				PgpKeyStateDto.class,
 				PgpKeyStateRegistryDto.class,
 				RepoFileDtoWithCurrentHistoCryptoRepoFileDto.class,

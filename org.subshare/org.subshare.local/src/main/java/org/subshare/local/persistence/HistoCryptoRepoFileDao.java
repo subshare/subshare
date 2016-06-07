@@ -110,4 +110,22 @@ public class HistoCryptoRepoFileDao extends Dao<HistoCryptoRepoFile, HistoCrypto
 		final HistoFileChunkDao hfcDao = getDao(HistoFileChunkDao.class);
 		hfcDao.deletePersistentAll(hfcDao.getHistoFileChunks(histoCryptoRepoFile));
 	}
+
+	public Collection<HistoCryptoRepoFile> getHistoCryptoRepoFilesWithoutPlainHistoCryptoRepoFile() {
+		final Query query = pm().newNamedQuery(getEntityClass(), "getHistoCryptoRepoFilesWithoutPlainHistoCryptoRepoFile");
+		try {
+			long startTimestamp = System.currentTimeMillis();
+			@SuppressWarnings("unchecked")
+			Collection<HistoCryptoRepoFile> result = (Collection<HistoCryptoRepoFile>) query.execute();
+			logger.debug("getHistoCryptoRepoFilesWithoutPlainHistoCryptoRepoFile: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
+
+			startTimestamp = System.currentTimeMillis();
+			result = load(result);
+			logger.debug("getHistoCryptoRepoFilesWithoutPlainHistoCryptoRepoFile: Loading result-set with {} elements took {} ms.", result.size(), System.currentTimeMillis() - startTimestamp);
+
+			return result;
+		} finally {
+			query.closeAll();
+		}
+	}
 }

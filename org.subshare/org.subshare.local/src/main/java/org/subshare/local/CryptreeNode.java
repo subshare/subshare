@@ -32,19 +32,26 @@ import org.subshare.core.ReadAccessDeniedException;
 import org.subshare.core.ReadUserIdentityAccessDeniedException;
 import org.subshare.core.WriteAccessDeniedException;
 import org.subshare.core.crypto.CryptoConfigUtil;
+import org.subshare.core.dto.CollisionDto;
 import org.subshare.core.dto.CryptoKeyPart;
 import org.subshare.core.dto.CryptoKeyRole;
 import org.subshare.core.dto.PermissionType;
+import org.subshare.core.dto.PlainHistoCryptoRepoFileDto;
 import org.subshare.core.dto.SignatureDto;
 import org.subshare.core.dto.SsDirectoryDto;
 import org.subshare.core.dto.SsNormalFileDto;
 import org.subshare.core.dto.SsRepoFileDto;
 import org.subshare.core.dto.SsSymlinkDto;
+import org.subshare.core.repo.local.CollisionFilter;
 import org.subshare.core.sign.Signable;
 import org.subshare.core.sign.WriteProtected;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKey.PublicKey;
 import org.subshare.crypto.CipherOperationMode;
+import org.subshare.local.dto.CollisionDtoConverter;
+import org.subshare.local.dto.HistoCryptoRepoFileDtoConverter;
+import org.subshare.local.persistence.Collision;
+import org.subshare.local.persistence.CollisionDao;
 import org.subshare.local.persistence.CryptoKey;
 import org.subshare.local.persistence.CryptoKeyDao;
 import org.subshare.local.persistence.CryptoKeyDeactivation;
@@ -64,6 +71,8 @@ import org.subshare.local.persistence.PermissionDao;
 import org.subshare.local.persistence.PermissionSet;
 import org.subshare.local.persistence.PermissionSetDao;
 import org.subshare.local.persistence.PermissionSetInheritance;
+import org.subshare.local.persistence.PlainHistoCryptoRepoFile;
+import org.subshare.local.persistence.PlainHistoCryptoRepoFileDao;
 import org.subshare.local.persistence.PreliminaryDeletion;
 import org.subshare.local.persistence.PreliminaryDeletionDao;
 import org.subshare.local.persistence.RepositoryOwner;
@@ -355,9 +364,76 @@ public class CryptreeNode {
 
 		chcrfDao.makePersistent(currentHistoCryptoRepoFile);
 
+		updatePlainHistoCryptoRepoFile(histoCryptoRepoFile);
+
 //		createCollisionIfNeeded(histoCryptoRepoFile);
 		context.transaction.flush(); // for early detection of an error
 		return histoCryptoRepoFile;
+	}
+
+	public PlainHistoCryptoRepoFile updatePlainHistoCryptoRepoFile(final HistoCryptoRepoFile histoCryptoRepoFile) {
+		assertNotNull("histoCryptoRepoFile", histoCryptoRepoFile);
+		final PlainHistoCryptoRepoFileDao phcrfDao = getContext().transaction.getDao(PlainHistoCryptoRepoFileDao.class);
+		PlainHistoCryptoRepoFile phcrf = phcrfDao.getPlainHistoCryptoRepoFile(histoCryptoRepoFile);
+		if (phcrf == null) {
+			phcrf = new PlainHistoCryptoRepoFile();
+			phcrf.setHistoCryptoRepoFile(histoCryptoRepoFile);
+		}
+
+		phcrf.setPlainHistoCryptoRepoFileDto(createPlainHistoCryptoRepoFileDto(histoCryptoRepoFile));
+		phcrf = phcrfDao.makePersistent(phcrf);
+		return phcrf;
+	}
+
+	private PlainHistoCryptoRepoFileDto createPlainHistoCryptoRepoFileDto(final HistoCryptoRepoFile histoCryptoRepoFile) {
+		assertNotNull("histoCryptoRepoFile", histoCryptoRepoFile);
+
+		final HistoCryptoRepoFileDtoConverter converter = HistoCryptoRepoFileDtoConverter.create(getContext().transaction);
+
+		final PlainHistoCryptoRepoFileDto plainHistoCryptoRepoFileDto = new PlainHistoCryptoRepoFileDto();
+		plainHistoCryptoRepoFileDto.setHistoCryptoRepoFileDto(converter.toHistoCryptoRepoFileDto(histoCryptoRepoFile));
+
+		final Uid cryptoRepoFileId = histoCryptoRepoFile.getCryptoRepoFile().getCryptoRepoFileId();
+		plainHistoCryptoRepoFileDto.setCryptoRepoFileId(cryptoRepoFileId);
+		final CryptoRepoFile parentCryptoRepoFile = histoCryptoRepoFile.getCryptoRepoFile().getParent();
+		plainHistoCryptoRepoFileDto.setParentCryptoRepoFileId(parentCryptoRepoFile == null ? null : parentCryptoRepoFile.getCryptoRepoFileId());
+
+		final RepoFileDto repoFileDto = tryDecryptHistoCryptoRepoFile(histoCryptoRepoFile);
+		plainHistoCryptoRepoFileDto.setRepoFileDto(repoFileDto);
+
+		plainHistoCryptoRepoFileDto.setCollisionDtos(getCollisionDtos(histoCryptoRepoFile));
+		return plainHistoCryptoRepoFileDto;
+	}
+
+	private List<CollisionDto> getCollisionDtos(HistoCryptoRepoFile histoCryptoRepoFile) {
+		assertNotNull("histoCryptoRepoFile", histoCryptoRepoFile);
+		final CollisionDao collisionDao = getContext().transaction.getDao(CollisionDao.class);
+		final CollisionDtoConverter collisionDtoConverter = CollisionDtoConverter.create(getContext().transaction);
+
+		final CollisionFilter collisionFilter = new CollisionFilter();
+		collisionFilter.setHistoCryptoRepoFileId(histoCryptoRepoFile.getHistoCryptoRepoFileId());
+		final Collection<Collision> collisions = collisionDao.getCollisions(collisionFilter);
+
+		final List<CollisionDto> result = new ArrayList<>(collisions.size());
+		for (Collision collision : collisions)
+			result.add(collisionDtoConverter.toCollisionDto(collision));
+
+		return result;
+	}
+
+	private RepoFileDto tryDecryptHistoCryptoRepoFile(HistoCryptoRepoFile histoCryptoRepoFile) {
+		assertNotNull("histoCryptoRepoFile", histoCryptoRepoFile);
+
+		RepoFileDto repoFileDto = null;
+		try {
+			repoFileDto = getHistoCryptoRepoFileRepoFileDto(histoCryptoRepoFile);
+		} catch (ReadAccessDeniedException x) {
+			if (logger.isDebugEnabled())
+				logger.info("tryDecryptHistoCryptoRepoFile: " + x, x);
+			else
+				logger.info("tryDecryptHistoCryptoRepoFile: " + x);
+		}
+		return repoFileDto;
 	}
 
 //	private void createCollisionIfNeeded(final HistoCryptoRepoFile histoCryptoRepoFileLocal) {

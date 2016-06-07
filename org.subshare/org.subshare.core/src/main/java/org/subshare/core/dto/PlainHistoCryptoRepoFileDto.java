@@ -4,10 +4,13 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.xml.bind.annotation.XmlRootElement;
+
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
 import co.codewizards.cloudstore.core.dto.Uid;
 
 @SuppressWarnings("serial")
+@XmlRootElement
 public class PlainHistoCryptoRepoFileDto implements Serializable {
 
 	private Uid cryptoRepoFileId;

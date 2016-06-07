@@ -61,7 +61,10 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 	@Query(name="getHistoCryptoRepoFiles_histoFrame", value="SELECT WHERE this.histoFrame == :histoFrame"),
 	@Query(
 			name="getHistoCryptoRepoFilesChangedAfter_localRevision",
-			value="SELECT WHERE this.localRevision > :localRevision")
+			value="SELECT WHERE this.localRevision > :localRevision"),
+	@Query(
+			name="getHistoCryptoRepoFilesWithoutPlainHistoCryptoRepoFile",
+			value="SELECT WHERE 0 == (SELECT count(p) FROM org.subshare.local.persistence.PlainHistoCryptoRepoFile p WHERE p.histoCryptoRepoFile == this)")
 })
 public class HistoCryptoRepoFile extends Entity implements WriteProtected, AutoTrackLocalRevision, StoreCallback {
 
