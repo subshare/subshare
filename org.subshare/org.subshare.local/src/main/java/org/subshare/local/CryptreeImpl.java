@@ -2565,19 +2565,8 @@ public class CryptreeImpl extends AbstractCryptree {
 
 	@Override
 	public void clearCryptoRepoFileDeleted(String localPath) {
+		assertNotNull("localPath", localPath);
 		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(localPath);
-		final CryptoRepoFile cryptoRepoFile = cryptreeNode.getCryptoRepoFile();
-		assertNotNull("cryptoRepoFile", cryptoRepoFile);
-
-		PreliminaryDeletionDao pdDao = getTransactionOrFail().getDao(PreliminaryDeletionDao.class);
-		PreliminaryDeletion preliminaryDeletion = pdDao.getPreliminaryDeletion(cryptoRepoFile);
-		if (preliminaryDeletion != null)
-			pdDao.deletePersistent(preliminaryDeletion);
-
-		if (cryptoRepoFile.getDeleted() != null) {
-			cryptoRepoFile.setDeleted(null);
-			cryptoRepoFile.setLastSyncFromRepositoryId(null);
-			cryptreeNode.sign(cryptoRepoFile);
-		}
+		cryptreeNode.clearCryptoRepoFileDeleted();
 	}
 }

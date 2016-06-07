@@ -64,6 +64,8 @@ import org.subshare.local.persistence.PermissionDao;
 import org.subshare.local.persistence.PermissionSet;
 import org.subshare.local.persistence.PermissionSetDao;
 import org.subshare.local.persistence.PermissionSetInheritance;
+import org.subshare.local.persistence.PreliminaryDeletion;
+import org.subshare.local.persistence.PreliminaryDeletionDao;
 import org.subshare.local.persistence.RepositoryOwner;
 import org.subshare.local.persistence.UserIdentityLink;
 import org.subshare.local.persistence.UserIdentityLinkDao;
@@ -249,6 +251,10 @@ public class CryptreeNode {
 				// dummy value temporarily to avoid allowing NULL. It's set to the real value in
 				// the same transaction, anyway. Hence we should never end up with this in the DB.
 				cryptoRepoFile.setSignature(new SignatureDto(new Date(0), new Uid(0, 0), new byte[] { 7 }));
+			}
+			else {
+				cryptoRepoFile.setDeleted(null);
+				deletePreliminaryDeletions();
 			}
 
 			cryptoRepoFile.setRepoFile(repoFile); // repoFile is guaranteed to be *not* null, because of getCryptoRepoFile() above.
@@ -1479,5 +1485,28 @@ public class CryptreeNode {
 			}
 		}
 		return userRepoKey;
+	}
+
+	public void clearCryptoRepoFileDeleted() {
+		final CryptoRepoFile cryptoRepoFile = getCryptoRepoFile();
+		assertNotNull("cryptoRepoFile", cryptoRepoFile);
+
+		deletePreliminaryDeletions();
+
+		if (cryptoRepoFile.getDeleted() != null) {
+			cryptoRepoFile.setDeleted(null);
+			cryptoRepoFile.setLastSyncFromRepositoryId(null);
+			sign(cryptoRepoFile);
+		}
+	}
+
+	protected void deletePreliminaryDeletions() {
+		final CryptoRepoFile cryptoRepoFile = getCryptoRepoFile();
+		assertNotNull("cryptoRepoFile", cryptoRepoFile);
+
+		PreliminaryDeletionDao pdDao = getContext().transaction.getDao(PreliminaryDeletionDao.class);
+		PreliminaryDeletion preliminaryDeletion = pdDao.getPreliminaryDeletion(cryptoRepoFile);
+		if (preliminaryDeletion != null)
+			pdDao.deletePersistent(preliminaryDeletion);
 	}
 }
