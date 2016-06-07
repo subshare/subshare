@@ -2344,17 +2344,23 @@ public class CryptreeImpl extends AbstractCryptree {
 				? null
 				: assertNotNull("filterLocalPathCryptreeNode.cryptoRepoFile", filterLocalPathCryptreeNode.getCryptoRepoFile()));
 
+//		final PlainHistoCryptoRepoFileDtoCache plainHistoCryptoRepoFileDtoCache = PlainHistoCryptoRepoFileDtoCache.getInstance();
 		final List<PlainHistoCryptoRepoFileDto> result = new ArrayList<>(histoCryptoRepoFiles.size());
 		final HistoCryptoRepoFileDtoConverter converter = HistoCryptoRepoFileDtoConverter.create(tx);
 		for (final HistoCryptoRepoFile histoCryptoRepoFile : histoCryptoRepoFiles) {
-			if (filterLocalPathCryptoRepoFile != null) {
-				if (! filterLocalPathCryptoRepoFile.equals(histoCryptoRepoFile.getCryptoRepoFile())
-						&& ! isParentRecursively(filterLocalPathCryptoRepoFile, histoCryptoRepoFile.getCryptoRepoFile()))
-					continue;
-			}
+			if (filterLocalPathCryptoRepoFile != null
+					&& ! isParentOrEqual(filterLocalPathCryptoRepoFile, histoCryptoRepoFile.getCryptoRepoFile()))
+				continue;
 
-			final PlainHistoCryptoRepoFileDto plainHistoCryptoRepoFileDto = createPlainHistoCryptoRepoFileDto(
-					converter, histoCryptoRepoFile);
+			PlainHistoCryptoRepoFileDto plainHistoCryptoRepoFileDto = createPlainHistoCryptoRepoFileDto(converter, histoCryptoRepoFile);
+
+//			PlainHistoCryptoRepoFileDto plainHistoCryptoRepoFileDto = plainHistoCryptoRepoFileDtoCache
+//					.getPlainHistoCryptoRepoFileDto(histoCryptoRepoFile.getId());
+//
+//			if (plainHistoCryptoRepoFileDto == null) {
+//				plainHistoCryptoRepoFileDto = createPlainHistoCryptoRepoFileDto(converter, histoCryptoRepoFile);
+//				plainHistoCryptoRepoFileDtoCache.putPlainHistoCryptoRepoFileDto(histoCryptoRepoFile.getId(), plainHistoCryptoRepoFileDto);
+//			}
 
 			cryptoRepoFileId2PlainHistoCryptoRepoFileDto.put(plainHistoCryptoRepoFileDto.getCryptoRepoFileId(), plainHistoCryptoRepoFileDto);
 			result.add(plainHistoCryptoRepoFileDto);
@@ -2398,15 +2404,16 @@ public class CryptreeImpl extends AbstractCryptree {
 		return result;
 	}
 
-	private boolean isParentRecursively(CryptoRepoFile parentCandidate, CryptoRepoFile childCandidate) {
+	private boolean isParentOrEqual(final CryptoRepoFile parentCandidate, final CryptoRepoFile childCandidate) {
 		assertNotNull("parentCandidate", parentCandidate);
 		assertNotNull("childCandidate", childCandidate);
 
-		while (childCandidate != null) {
-			if (parentCandidate.equals(childCandidate.getParent()))
+		CryptoRepoFile crf = childCandidate;
+		while (crf != null) {
+			if (parentCandidate.equals(crf))
 				return true;
 
-			childCandidate = childCandidate.getParent();
+			crf = crf.getParent();
 		}
 		return false;
 	}

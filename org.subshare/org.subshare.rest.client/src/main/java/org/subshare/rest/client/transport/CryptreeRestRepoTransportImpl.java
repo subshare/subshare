@@ -163,14 +163,21 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 	@Override
 	public void prepareForChangeSetDto(ChangeSetDto changeSetDto) {
 		final LocalRepoManager localRepoManager = getLocalRepoManager();
+		final CryptoChangeSetDto cryptoChangeSetDto;
 		try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
 			final Cryptree cryptree = getCryptree(transaction);
-			final CryptoChangeSetDto cryptoChangeSetDto = cryptree.createHistoCryptoRepoFilesForDeletedCryptoRepoFiles();
-			if (cryptoChangeSetDto != null) {
+			cryptoChangeSetDto = cryptree.createHistoCryptoRepoFilesForDeletedCryptoRepoFiles();
+
+			transaction.commit();
+		}
+
+		if (cryptoChangeSetDto != null) {
+			try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
+				final Cryptree cryptree = getCryptree(transaction);
 				putCryptoChangeSetDto(cryptoChangeSetDto);
 				cryptree.updateLastCryptoKeySyncToRemoteRepo();
+				transaction.commit();
 			}
-			transaction.commit();
 		}
 	}
 
@@ -441,12 +448,19 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 	@Override
 	public void makeDirectory(final String path, final Date lastModified) {
 		final LocalRepoManager localRepoManager = getLocalRepoManager();
+		final CryptoChangeSetDto cryptoChangeSetDto;
 		try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
 			final Cryptree cryptree = getCryptree(transaction);
 
 			cryptree.createUnsealedHistoFrameIfNeeded();
 
-			final CryptoChangeSetDto cryptoChangeSetDto = cryptree.createOrUpdateCryptoRepoFile(path);
+			cryptoChangeSetDto = cryptree.createOrUpdateCryptoRepoFile(path);
+			transaction.commit();
+		}
+
+		try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
+			final Cryptree cryptree = getCryptree(transaction);
+
 			putCryptoChangeSetDto(cryptoChangeSetDto);
 			cryptree.updateLastCryptoKeySyncToRemoteRepo();
 
@@ -488,12 +502,20 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 	@Override
 	public void makeSymlink(final String path, final String target, final Date lastModified) {
 		final LocalRepoManager localRepoManager = getLocalRepoManager();
+		final CryptoChangeSetDto cryptoChangeSetDto;
 		try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
 			final Cryptree cryptree = getCryptree(transaction);
 
 			cryptree.createUnsealedHistoFrameIfNeeded();
 
-			final CryptoChangeSetDto cryptoChangeSetDto = cryptree.createOrUpdateCryptoRepoFile(path);
+			cryptoChangeSetDto = cryptree.createOrUpdateCryptoRepoFile(path);
+
+			transaction.commit();
+		}
+
+		try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
+			final Cryptree cryptree = getCryptree(transaction);
+
 			putCryptoChangeSetDto(cryptoChangeSetDto);
 			cryptree.updateLastCryptoKeySyncToRemoteRepo();
 
@@ -669,13 +691,19 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 	@Override
 	public void beginPutFile(final String path, SsNormalFileDto fromNormalFileDto) {
 		final LocalRepoManager localRepoManager = getLocalRepoManager();
+		final CryptoChangeSetDto cryptoChangeSetDto;
 		try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
 			final Cryptree cryptree = getCryptree(transaction);
-			final CryptoChangeSetDto cryptoChangeSetDto = cryptree.createOrUpdateCryptoRepoFile(path);
+			cryptoChangeSetDto = cryptree.createOrUpdateCryptoRepoFile(path);
+
+			transaction.commit();
+		}
+
+		try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
+			final Cryptree cryptree = getCryptree(transaction);
+
 			putCryptoChangeSetDto(cryptoChangeSetDto);
 			cryptree.updateLastCryptoKeySyncToRemoteRepo();
-
-//			createUnsealedCurrentHistoryFrameDtoIfNeeded(cryptree);
 
 			final String serverPath = cryptree.getServerPath(path);
 			final SsNormalFileDto serverNormalFileDto = createNormalFileDtoForPutFile(
@@ -794,12 +822,18 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 	public void endPutFile(final String path, final NormalFileDto fromNormalFileDto) {
 		// TODO handle path correctly => pathPrefix on both sides possible!!!
 		final LocalRepoManager localRepoManager = getLocalRepoManager();
+		final CryptoChangeSetDto cryptoChangeSetDto;
 		try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
 			final Cryptree cryptree = getCryptree(transaction);
 
 			cryptree.createUnsealedHistoFrameIfNeeded();
 
-			final CryptoChangeSetDto cryptoChangeSetDto = cryptree.getCryptoChangeSetDtoOrFail(path);
+			cryptoChangeSetDto = cryptree.getCryptoChangeSetDtoOrFail(path);
+			transaction.commit();
+		}
+
+		try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
+			final Cryptree cryptree = getCryptree(transaction);
 			putCryptoChangeSetDto(cryptoChangeSetDto);
 			cryptree.updateLastCryptoKeySyncToRemoteRepo();
 
@@ -939,12 +973,18 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 		// there was no beginPutFile(...), makeDirectory(...) or similar. Thus, we must make
 		// sure, now, that the crypto-meta-data is uploaded.
 		final LocalRepoManager localRepoManager = getLocalRepoManager();
+		final CryptoChangeSetDto cryptoChangeSetDto;
 		try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
 			final Cryptree cryptree = getCryptree(transaction);
 
 			cryptree.sealUnsealedHistoryFrame();
 
-			final CryptoChangeSetDto cryptoChangeSetDto = cryptree.getCryptoChangeSetDtoWithCryptoRepoFiles();
+			cryptoChangeSetDto = cryptree.getCryptoChangeSetDtoWithCryptoRepoFiles();
+			transaction.commit();
+		}
+
+		try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
+			final Cryptree cryptree = getCryptree(transaction);
 			putCryptoChangeSetDto(cryptoChangeSetDto);
 			cryptree.updateLastCryptoKeySyncToRemoteRepo();
 

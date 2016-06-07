@@ -2,6 +2,7 @@ package org.subshare.gui.histo;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
+import static co.codewizards.cloudstore.core.util.Util.*;
 import static javafx.application.Platform.*;
 import static org.subshare.gui.util.FxmlUtil.*;
 import static org.subshare.gui.util.PlatformUtil.*;
@@ -18,17 +19,6 @@ import java.util.TimerTask;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
-import javafx.application.Platform;
-import javafx.beans.property.ReadOnlyObjectProperty;
-import javafx.concurrent.Service;
-import javafx.concurrent.Task;
-import javafx.fxml.FXML;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.layout.VBox;
-import javafx.util.Callback;
-
 import org.subshare.core.dto.HistoFrameDto;
 import org.subshare.core.repo.LocalRepo;
 import org.subshare.core.repo.listener.LocalRepoCommitEventListener;
@@ -44,6 +34,16 @@ import org.subshare.gui.ls.UserRegistryLs;
 
 import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
+import javafx.application.Platform;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.concurrent.Service;
+import javafx.concurrent.Task;
+import javafx.fxml.FXML;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.layout.VBox;
+import javafx.util.Callback;
 
 public class HistoFrameListPane extends VBox {
 
@@ -140,6 +140,8 @@ public class HistoFrameListPane extends VBox {
 	}
 	public void setLocalRepo(final LocalRepo localRepo) {
 		assertFxApplicationThread();
+		if (equal(this.localRepo, localRepo))
+			return;
 
 		if (weakLocalRepoCommitEventListener != null) {
 			weakLocalRepoCommitEventListener.removeLocalRepoCommitEventListener();

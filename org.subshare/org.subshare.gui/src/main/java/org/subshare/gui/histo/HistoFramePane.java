@@ -3,6 +3,7 @@ package org.subshare.gui.histo;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.CollectionUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
+import static co.codewizards.cloudstore.core.util.Util.*;
 import static org.subshare.gui.util.FxmlUtil.*;
 import static org.subshare.gui.util.PlatformUtil.*;
 
@@ -66,6 +67,9 @@ public class HistoFramePane extends BorderPane {
 	}
 	public void setLocalRepo(final LocalRepo localRepo) {
 		assertFxApplicationThread();
+		if (equal(this.localRepo, localRepo))
+			return;
+
 		this.localRepo = localRepo;
 		populatePending = true;
 		Platform.runLater(() -> postSetLocalRepoOrLocalPath());
@@ -76,6 +80,9 @@ public class HistoFramePane extends BorderPane {
 	}
 	public void setLocalPath(String localPath) {
 		assertFxApplicationThread();
+		if (equal(this.localPath, localPath))
+			return;
+
 		this.localPath = localPath;
 		populatePending = true;
 		Platform.runLater(() -> postSetLocalRepoOrLocalPath());

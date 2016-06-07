@@ -171,11 +171,11 @@ public class CollisionDao extends Dao<Collision, CollisionDao> {
 			long startTimestamp = System.currentTimeMillis();
 			@SuppressWarnings("unchecked")
 			Collection<Collision> result = (Collection<Collision>) query.executeWithMap(qp);
-			logger.info("populateCollisions: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
+			logger.info("getCollisions: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
 
 			startTimestamp = System.currentTimeMillis();
 			result = load(result);
-			logger.info("populateCollisions: Loading result-set with {} elements took {} ms.", result.size(), System.currentTimeMillis() - startTimestamp);
+			logger.info("getCollisions: Loading result-set with {} elements took {} ms.", result.size(), System.currentTimeMillis() - startTimestamp);
 
 			return result;
 		} finally {

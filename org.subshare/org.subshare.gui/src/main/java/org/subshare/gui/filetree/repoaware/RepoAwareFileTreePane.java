@@ -101,10 +101,10 @@ public class RepoAwareFileTreePane extends FileTreePane {
 			Collection<CollisionDto> collisionDtos = localRepoMetaData.getCollisionDtos(filter);
 			if (! collisionDtos.isEmpty()) {
 				// There is a collision either directly associated or somewhere in the sub-tree.
-
+				// => Query again to find out, if it is directly associated.
 				filter.setIncludeChildrenRecursively(false);
 				collisionDtos = localRepoMetaData.getCollisionDtos(filter);
-				if (collisionDtos.isEmpty())
+				if (collisionDtos.isEmpty()) // not found => not directly associated => in child (sub-tree)
 					return getCollisionUnresolvedInChildIcon();
 				else
 					return getCollisionUnresolvedIcon();
