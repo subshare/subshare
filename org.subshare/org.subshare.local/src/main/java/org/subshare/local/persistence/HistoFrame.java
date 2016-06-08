@@ -59,8 +59,8 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 @Queries({
 	@Query(name="getHistoFrame_histoFrameId", value="SELECT UNIQUE WHERE this.histoFrameId == :histoFrameId"),
 	@Query(
-			name="getHistoFramesChangedAfter_localRevision",
-			value="SELECT WHERE this.localRevision > :localRevision"),
+			name="getHistoFramesChangedAfter_localRevision_exclLastSyncFromRepositoryId",
+			value="SELECT WHERE this.localRevision > :localRevision && (this.lastSyncFromRepositoryId == null || this.lastSyncFromRepositoryId != :lastSyncFromRepositoryId)"), // TODO this necessary == null is IMHO a DN bug!
 
 	@Query(
 			name="getHistoFrame_fromRepositoryId_sealed",
@@ -72,9 +72,16 @@ public class HistoFrame extends Entity implements WriteProtected, AutoTrackLocal
 	@Column(length=22)
 	private String histoFrameId;
 
-//	private HistoFrame previousHistoFrame;
-
 	private long localRevision;
+
+	// TODO 1: The direct partner-repository from which this was synced, should be a real relation to the RemoteRepository,
+	// because this is more efficient (not a String, but a long id).
+	// TODO 2: We should additionally store (and forward) the origin repositoryId (UUID/String) to use this feature during
+	// circular syncs over multiple repos - e.g. repoA ---> repoB ---> repoC ---> repoA (again) - this circle would currently
+	// cause https://github.com/cloudstore/cloudstore/issues/25 again (because issue 25 is only solved for direct partners - not indirect).
+	// TODO 3: We should switch from UUID to Uid everywhere (most importantly the repositoryId).
+	// Careful, though: Uid's String-representation is case-sensitive! Due to Windows, it must thus not be used for file names!
+	private String lastSyncFromRepositoryId;
 
 	@Persistent(nullValue=NullValue.EXCEPTION)
 	private String fromRepositoryId;
@@ -98,13 +105,6 @@ public class HistoFrame extends Entity implements WriteProtected, AutoTrackLocal
 
 		return new Uid(histoFrameId);
 	}
-
-//	public HistoFrame getPreviousHistoFrame() {
-//		return previousHistoFrame;
-//	}
-//	public void setPreviousHistoFrame(HistoFrame previousHistoFrame) {
-//		this.previousHistoFrame = previousHistoFrame;
-//	}
 
 	public UUID getFromRepositoryId() {
 		return fromRepositoryId == null ? null : UUID.fromString(fromRepositoryId);
@@ -159,10 +159,6 @@ public class HistoFrame extends Entity implements WriteProtected, AutoTrackLocal
 			return new MultiInputStream(
 					InputStreamSource.Helper.createInputStreamSource(getHistoFrameId()),
 
-//					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
-//					InputStreamSource.Helper.createInputStreamSource(
-//							previousHistoFrame == null ? null : previousHistoFrame.getHistoFrameId()),
-
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(getFromRepositoryId()),
 
@@ -193,4 +189,13 @@ public class HistoFrame extends Entity implements WriteProtected, AutoTrackLocal
 	public PermissionType getPermissionTypeRequiredForWrite() {
 		return PermissionType.write;
 	}
+
+	public UUID getLastSyncFromRepositoryId() {
+		return lastSyncFromRepositoryId == null ? null : UUID.fromString(lastSyncFromRepositoryId);
+	}
+	public void setLastSyncFromRepositoryId(final UUID repositoryId) {
+		if (! equal(this.getLastSyncFromRepositoryId(), repositoryId))
+			this.lastSyncFromRepositoryId = repositoryId == null ? null : repositoryId.toString();
+	}
+
 }

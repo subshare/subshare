@@ -353,12 +353,14 @@ public class CryptreeNode {
 			repoFileDtoData = createRepoFileDtoDataForCryptoRepoFile(true);
 
 		histoCryptoRepoFile.setRepoFileDtoData(assertNotNull("encrypt(...)", encrypt(repoFileDtoData, plainCryptoKey)));
+		histoCryptoRepoFile.setLastSyncFromRepositoryId(null);
 
 		sign(histoCryptoRepoFile);
 
 		histoCryptoRepoFile = hcrfDao.makePersistent(histoCryptoRepoFile);
 
 		currentHistoCryptoRepoFile.setHistoCryptoRepoFile(histoCryptoRepoFile);
+		currentHistoCryptoRepoFile.setLastSyncFromRepositoryId(null);
 
 		sign(currentHistoCryptoRepoFile);
 
@@ -655,6 +657,7 @@ public class CryptreeNode {
 		cryptoKeyDeactivation.setCryptoKey(cryptoKey);
 		sign(cryptoKeyDeactivation);
 		cryptoKey.setCryptoKeyDeactivation(cryptoKeyDeactivation);
+		cryptoKey.setLastSyncFromRepositoryId(null);
 	}
 
 	private void createSubdirKeyAndBacklinkKeyIfNeededChildrenRecursively() {

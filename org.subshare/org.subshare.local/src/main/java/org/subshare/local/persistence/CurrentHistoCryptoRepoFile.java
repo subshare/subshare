@@ -5,6 +5,7 @@ import static co.codewizards.cloudstore.core.util.Util.*;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.UUID;
 
 import javax.jdo.annotations.Embedded;
 import javax.jdo.annotations.Index;
@@ -45,8 +46,8 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 @Queries({
 	@Query(name="getCurrentHistoCryptoRepoFile_cryptoRepoFile", value="SELECT UNIQUE WHERE this.cryptoRepoFile == :cryptoRepoFile"),
 	@Query(
-			name="getCurrentHistoCryptoRepoFilesChangedAfter_localRevision",
-			value="SELECT WHERE this.localRevision > :localRevision")
+			name="getCurrentHistoCryptoRepoFilesChangedAfter_localRevision_exclLastSyncFromRepositoryId",
+			value="SELECT WHERE this.localRevision > :localRevision && (this.lastSyncFromRepositoryId == null || this.lastSyncFromRepositoryId != :lastSyncFromRepositoryId)") // TODO this necessary == null is IMHO a DN bug!
 })
 public class CurrentHistoCryptoRepoFile extends Entity implements WriteProtected, AutoTrackLocalRevision, StoreCallback {
 
@@ -59,6 +60,15 @@ public class CurrentHistoCryptoRepoFile extends Entity implements WriteProtected
 	private HistoCryptoRepoFile histoCryptoRepoFile;
 
 	private long localRevision;
+
+	// TODO 1: The direct partner-repository from which this was synced, should be a real relation to the RemoteRepository,
+	// because this is more efficient (not a String, but a long id).
+	// TODO 2: We should additionally store (and forward) the origin repositoryId (UUID/String) to use this feature during
+	// circular syncs over multiple repos - e.g. repoA ---> repoB ---> repoC ---> repoA (again) - this circle would currently
+	// cause https://github.com/cloudstore/cloudstore/issues/25 again (because issue 25 is only solved for direct partners - not indirect).
+	// TODO 3: We should switch from UUID to Uid everywhere (most importantly the repositoryId).
+	// Careful, though: Uid's String-representation is case-sensitive! Due to Windows, it must thus not be used for file names!
+	private String lastSyncFromRepositoryId;
 
 	@Persistent(nullValue=NullValue.EXCEPTION)
 	@Embedded(nullIndicatorColumn="signatureCreated")
@@ -155,6 +165,14 @@ public class CurrentHistoCryptoRepoFile extends Entity implements WriteProtected
 	public void setSignature(final Signature signature) {
 		if (!equal(this.signature, signature))
 			this.signature = SignatureImpl.copy(signature);
+	}
+
+	public UUID getLastSyncFromRepositoryId() {
+		return lastSyncFromRepositoryId == null ? null : UUID.fromString(lastSyncFromRepositoryId);
+	}
+	public void setLastSyncFromRepositoryId(final UUID repositoryId) {
+		if (! equal(this.getLastSyncFromRepositoryId(), repositoryId))
+			this.lastSyncFromRepositoryId = repositoryId == null ? null : repositoryId.toString();
 	}
 
 	@Override

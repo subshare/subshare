@@ -22,9 +22,7 @@ import org.subshare.core.dto.SsRepoFileDto;
 import org.subshare.core.dto.SsSymlinkDto;
 import org.subshare.core.repo.transport.CryptreeServerFileRepoTransport;
 import org.subshare.local.dto.CurrentHistoCryptoRepoFileDtoConverter;
-import org.subshare.local.persistence.CryptoRepoFile;
 import org.subshare.local.persistence.CurrentHistoCryptoRepoFile;
-import org.subshare.local.persistence.CurrentHistoCryptoRepoFileDao;
 import org.subshare.local.persistence.FileChunkPayload;
 import org.subshare.local.persistence.FileChunkPayloadDao;
 import org.subshare.local.persistence.HistoCryptoRepoFile;
@@ -194,7 +192,8 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 
 			repoFileDao.makePersistent(directory); // just in case, it is not yet persistent ;-) if it already is, this is a no-op.
 
-			CurrentHistoCryptoRepoFileDtoConverter.create(transaction).putCurrentHistoCryptoRepoFile(currentHistoCryptoRepoFileDto);
+			CurrentHistoCryptoRepoFile currentHistoCryptoRepoFile = CurrentHistoCryptoRepoFileDtoConverter.create(transaction).putCurrentHistoCryptoRepoFile(currentHistoCryptoRepoFileDto);
+			currentHistoCryptoRepoFile.setLastSyncFromRepositoryId(clientRepositoryId);
 
 			transaction.commit();
 		}
@@ -279,7 +278,8 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 
 			repoFileDao.makePersistent(symlink); // just in case, it is not yet persistent ;-) if it already is, this is a no-op.
 
-			CurrentHistoCryptoRepoFileDtoConverter.create(transaction).putCurrentHistoCryptoRepoFile(currentHistoCryptoRepoFileDto);
+			CurrentHistoCryptoRepoFile currentHistoCryptoRepoFile = CurrentHistoCryptoRepoFileDtoConverter.create(transaction).putCurrentHistoCryptoRepoFile(currentHistoCryptoRepoFileDto);
+			currentHistoCryptoRepoFile.setLastSyncFromRepositoryId(clientRepositoryId);
 
 			transaction.commit();
 		}
@@ -509,6 +509,7 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 			tempFileChunkDao.deletePersistentAll(tempFileChunks);
 
 			CurrentHistoCryptoRepoFile currentHistoCryptoRepoFile = CurrentHistoCryptoRepoFileDtoConverter.create(transaction).putCurrentHistoCryptoRepoFile(currentHistoCryptoRepoFileDto);
+			currentHistoCryptoRepoFile.setLastSyncFromRepositoryId(clientRepositoryId);
 			HistoCryptoRepoFile histoCryptoRepoFile = currentHistoCryptoRepoFile.getHistoCryptoRepoFile();
 //			final HistoCryptoRepoFile histoCryptoRepoFile = HistoCryptoRepoFileDtoConverter.create(transaction).putHistoCryptoRepoFile(histoCryptoRepoFileDto);
 //
@@ -540,18 +541,6 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 
 			transaction.commit();
 		}
-	}
-
-	private void createOrUpdateCurrentHistoCryptoRepoFile(final LocalRepoTransaction transaction, final HistoCryptoRepoFile histoCryptoRepoFile) {
-		CryptoRepoFile cryptoRepoFile = histoCryptoRepoFile.getCryptoRepoFile();
-		CurrentHistoCryptoRepoFileDao chcrfDao = transaction.getDao(CurrentHistoCryptoRepoFileDao.class);
-		CurrentHistoCryptoRepoFile currentHistoCryptoRepoFile = chcrfDao.getCurrentHistoCryptoRepoFile(cryptoRepoFile);
-		if (currentHistoCryptoRepoFile == null) {
-			currentHistoCryptoRepoFile = new CurrentHistoCryptoRepoFile();
-			currentHistoCryptoRepoFile.setCryptoRepoFile(cryptoRepoFile);
-		}
-		currentHistoCryptoRepoFile.setHistoCryptoRepoFile(histoCryptoRepoFile);
-		chcrfDao.makePersistent(currentHistoCryptoRepoFile);
 	}
 
 	@Override

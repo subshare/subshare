@@ -12,6 +12,8 @@ import java.util.Arrays;
 import org.bouncycastle.crypto.CipherParameters;
 import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
 import org.bouncycastle.crypto.params.KeyParameter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.subshare.core.crypto.AsymCombiDecrypterInputStream;
 import org.subshare.core.crypto.AsymCombiEncrypterOutputStream;
 import org.subshare.core.crypto.CipherTransformation;
@@ -25,8 +27,6 @@ import org.subshare.core.user.UserRepoKey;
 import org.subshare.local.persistence.CryptoKey;
 import org.subshare.local.persistence.CryptoLink;
 import org.subshare.local.persistence.UserRepoKeyPublicKey;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class CryptreeNodeUtil {
 
@@ -199,6 +199,7 @@ public class CryptreeNodeUtil {
 		cryptoLink.setToCryptoKey(toPlainCryptoKey.getCryptoKey());
 		cryptoLink.setToCryptoKeyData(encrypt(toPlainCryptoKey.getEncodedKey(), fromPlainCryptoKey));
 		cryptoLink.setToCryptoKeyPart(toPlainCryptoKey.getCryptoKeyPart());
+		cryptoLink.setLastSyncFromRepositoryId(null);
 		cryptreeNode.sign(cryptoLink);
 		toPlainCryptoKey.getCryptoKey().getInCryptoLinks().add(cryptoLink);
 		assertToCryptoKeyBelongsToThisCryptreeNode(cryptreeNode, cryptoLink);
@@ -227,6 +228,7 @@ public class CryptreeNodeUtil {
 		cryptoLink.setToCryptoKey(toPlainCryptoKey.getCryptoKey());
 		cryptoLink.setToCryptoKeyData(encryptLarge(toPlainCryptoKey.getEncodedKey(), fromUserRepoKeyPublicKey));
 		cryptoLink.setToCryptoKeyPart(toPlainCryptoKey.getCryptoKeyPart());
+		cryptoLink.setLastSyncFromRepositoryId(null);
 		cryptreeNode.sign(cryptoLink);
 		toPlainCryptoKey.getCryptoKey().getInCryptoLinks().add(cryptoLink);
 		assertToCryptoKeyBelongsToThisCryptreeNode(cryptreeNode, cryptoLink);
@@ -244,6 +246,7 @@ public class CryptreeNodeUtil {
 		cryptoLink.setToCryptoKey(toPlainCryptoKey.getCryptoKey());
 		cryptoLink.setToCryptoKeyData(toPlainCryptoKey.getEncodedKey());
 		cryptoLink.setToCryptoKeyPart(toPlainCryptoKey.getCryptoKeyPart());
+		cryptoLink.setLastSyncFromRepositoryId(null);
 		cryptreeNode.sign(cryptoLink);
 		toPlainCryptoKey.getCryptoKey().getInCryptoLinks().add(cryptoLink);
 		assertToCryptoKeyBelongsToThisCryptreeNode(cryptreeNode, cryptoLink);

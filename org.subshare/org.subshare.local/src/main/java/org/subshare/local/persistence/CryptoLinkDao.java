@@ -6,13 +6,14 @@ import static co.codewizards.cloudstore.core.util.Util.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 
 import javax.jdo.Query;
 
-import org.subshare.core.dto.CryptoKeyPart;
-import org.subshare.core.dto.CryptoKeyRole;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.subshare.core.dto.CryptoKeyPart;
+import org.subshare.core.dto.CryptoKeyRole;
 
 import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.local.persistence.Dao;
@@ -52,12 +53,15 @@ public class CryptoLinkDao extends Dao<CryptoLink, CryptoLinkDao> {
 	 * @return those {@link CryptoLink}s which were modified after the given {@code localRevision}. Never
 	 * <code>null</code>, but maybe empty.
 	 */
-	public Collection<CryptoLink> getCryptoLinksChangedAfter(final long localRevision) {
-		final Query query = pm().newNamedQuery(getEntityClass(), "getCryptoLinksChangedAfter_localRevision");
+	public Collection<CryptoLink> getCryptoLinksChangedAfterExclLastSyncFromRepositoryId(
+			final long localRevision, final UUID exclLastSyncFromRepositoryId) {
+		assertNotNull("exclLastSyncFromRepositoryId", exclLastSyncFromRepositoryId);
+
+		final Query query = pm().newNamedQuery(getEntityClass(), "getCryptoLinksChangedAfter_localRevision_exclLastSyncFromRepositoryId");
 		try {
 			long startTimestamp = System.currentTimeMillis();
 			@SuppressWarnings("unchecked")
-			Collection<CryptoLink> cryptoLinks = (Collection<CryptoLink>) query.execute(localRevision);
+			Collection<CryptoLink> cryptoLinks = (Collection<CryptoLink>) query.execute(localRevision, exclLastSyncFromRepositoryId.toString());
 			logger.debug("getCryptoLinksChangedAfter: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
 
 			startTimestamp = System.currentTimeMillis();

@@ -23,7 +23,6 @@ public class HistoFrameDto implements Signable, Serializable {
 	public static final String SIGNED_DATA_TYPE = "HistoFrame";
 
 	private Uid histoFrameId;
-//	private Uid previousHistoFrameId;
 	private UUID fromRepositoryId;
 	private Date sealed;
 
@@ -36,13 +35,6 @@ public class HistoFrameDto implements Signable, Serializable {
 	public void setHistoFrameId(Uid histoFrameId) {
 		this.histoFrameId = histoFrameId;
 	}
-
-//	public Uid getPreviousHistoFrameId() {
-//		return previousHistoFrameId;
-//	}
-//	public void setPreviousHistoFrameId(Uid previousHistoFrameId) {
-//		this.previousHistoFrameId = previousHistoFrameId;
-//	}
 
 	public UUID getFromRepositoryId() {
 		return fromRepositoryId;
@@ -79,9 +71,6 @@ public class HistoFrameDto implements Signable, Serializable {
 			byte separatorIndex = 0;
 			return new MultiInputStream(
 					InputStreamSource.Helper.createInputStreamSource(histoFrameId),
-
-//					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
-//					InputStreamSource.Helper.createInputStreamSource(previousHistoFrameId),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(fromRepositoryId),

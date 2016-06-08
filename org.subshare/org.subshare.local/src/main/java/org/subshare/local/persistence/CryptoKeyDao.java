@@ -5,12 +5,13 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.jdo.Query;
 
-import org.subshare.core.dto.CryptoKeyRole;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.subshare.core.dto.CryptoKeyRole;
 
 import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.local.persistence.Dao;
@@ -70,12 +71,15 @@ public class CryptoKeyDao extends Dao<CryptoKey, CryptoKeyDao> {
 	 * @return those {@link CryptoKey}s which were modified after the given {@code localRevision}. Never
 	 * <code>null</code>, but maybe empty.
 	 */
-	public Collection<CryptoKey> getCryptoKeysChangedAfter(final long localRevision) {
-		final Query query = pm().newNamedQuery(getEntityClass(), "getCryptoKeysChangedAfter_localRevision");
+	public Collection<CryptoKey> getCryptoKeysChangedAfterExclLastSyncFromRepositoryId(
+			final long localRevision, final UUID exclLastSyncFromRepositoryId) {
+		assertNotNull("exclLastSyncFromRepositoryId", exclLastSyncFromRepositoryId);
+
+		final Query query = pm().newNamedQuery(getEntityClass(), "getCryptoKeysChangedAfter_localRevision_exclLastSyncFromRepositoryId");
 		try {
 			long startTimestamp = System.currentTimeMillis();
 			@SuppressWarnings("unchecked")
-			Collection<CryptoKey> cryptoKeys = (Collection<CryptoKey>) query.execute(localRevision);
+			Collection<CryptoKey> cryptoKeys = (Collection<CryptoKey>) query.execute(localRevision, exclLastSyncFromRepositoryId.toString());
 			logger.debug("getCryptoKeysChangedAfter: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
 
 			startTimestamp = System.currentTimeMillis();

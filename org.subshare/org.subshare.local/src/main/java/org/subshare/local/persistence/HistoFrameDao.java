@@ -26,12 +26,15 @@ public class HistoFrameDao extends Dao<HistoFrame, HistoFrameDao> {
 
 	private static final Logger logger = LoggerFactory.getLogger(HistoFrameDao.class);
 
-	public Collection<HistoFrame> getHistoFramesChangedAfter(final long localRevision) {
-		final Query query = pm().newNamedQuery(getEntityClass(), "getHistoFramesChangedAfter_localRevision");
+	public Collection<HistoFrame> getHistoFramesChangedAfterExclLastSyncFromRepositoryId(
+			final long localRevision, final UUID exclLastSyncFromRepositoryId) {
+		assertNotNull("exclLastSyncFromRepositoryId", exclLastSyncFromRepositoryId);
+
+		final Query query = pm().newNamedQuery(getEntityClass(), "getHistoFramesChangedAfter_localRevision_exclLastSyncFromRepositoryId");
 		try {
 			long startTimestamp = System.currentTimeMillis();
 			@SuppressWarnings("unchecked")
-			Collection<HistoFrame> result = (Collection<HistoFrame>) query.execute(localRevision);
+			Collection<HistoFrame> result = (Collection<HistoFrame>) query.execute(localRevision, exclLastSyncFromRepositoryId.toString());
 			logger.debug("getHistoFramesChangedAfter: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
 
 			startTimestamp = System.currentTimeMillis();

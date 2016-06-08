@@ -79,6 +79,7 @@ abstract class PlainCryptoKeyFactory {
 		cryptoKey.setCryptoRepoFile(getCryptreeNodeOrFail().getCryptoRepoFile());
 		cryptoKey.setCryptoKeyRole(cryptoKeyRole);
 		cryptoKey.setCryptoKeyType(cryptoKeyType);
+		cryptoKey.setLastSyncFromRepositoryId(null);
 
 		getCryptreeNodeOrFail().sign(cryptoKey);
 

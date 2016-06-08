@@ -3,6 +3,7 @@ package org.subshare.local.persistence;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.util.Collection;
+import java.util.UUID;
 
 import javax.jdo.Query;
 
@@ -15,14 +16,15 @@ public class CurrentHistoCryptoRepoFileDao extends Dao<CurrentHistoCryptoRepoFil
 
 	private static final Logger logger = LoggerFactory.getLogger(CurrentHistoCryptoRepoFileDao.class);
 
-	public Collection<CurrentHistoCryptoRepoFile> getCurrentHistoCryptoRepoFilesChangedAfter(
-			final long localRevision) {
+	public Collection<CurrentHistoCryptoRepoFile> getCurrentHistoCryptoRepoFilesChangedAfterExclLastSyncFromRepositoryId(
+			final long localRevision, final UUID exclLastSyncFromRepositoryId) {
+		assertNotNull("exclLastSyncFromRepositoryId", exclLastSyncFromRepositoryId);
 
-		final Query query = pm().newNamedQuery(getEntityClass(), "getCurrentHistoCryptoRepoFilesChangedAfter_localRevision");
+		final Query query = pm().newNamedQuery(getEntityClass(), "getCurrentHistoCryptoRepoFilesChangedAfter_localRevision_exclLastSyncFromRepositoryId");
 		try {
 			long startTimestamp = System.currentTimeMillis();
 			@SuppressWarnings("unchecked")
-			Collection<CurrentHistoCryptoRepoFile> result = (Collection<CurrentHistoCryptoRepoFile>) query.execute(localRevision);
+			Collection<CurrentHistoCryptoRepoFile> result = (Collection<CurrentHistoCryptoRepoFile>) query.execute(localRevision, exclLastSyncFromRepositoryId.toString());
 			logger.debug("getCurrentHistoCryptoRepoFilesChangedAfter: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
 
 			startTimestamp = System.currentTimeMillis();

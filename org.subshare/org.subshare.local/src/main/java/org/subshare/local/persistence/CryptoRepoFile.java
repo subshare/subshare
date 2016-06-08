@@ -344,13 +344,6 @@ public class CryptoRepoFile extends Entity implements WriteProtected, AutoTrackL
 			this.deleted = deleted;
 	}
 
-//	public HistoCryptoRepoFile getCryptoRepoFileOnServer() {
-//		return cryptoRepoFileOnServer;
-//	}
-//	public void setCryptoRepoFileOnServer(final HistoCryptoRepoFile cryptoRepoFileOnServer) {
-//		this.cryptoRepoFileOnServer = cryptoRepoFileOnServer;
-//	}
-
 	/**
 	 * {@inheritDoc}
 	 * <p>
