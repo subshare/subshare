@@ -81,7 +81,10 @@ public class RepoAwareFileTreePane extends FileTreePane {
 						try { icon = get(); } catch (InterruptedException | ExecutionException e) { throw new RuntimeException(e); }
 						final ImageView iconImageView = icon == null ? null : new ImageView(icon);
 
-						treeItem2CollisionIconImageView.put(treeItem, iconImageView);
+						if (iconImageView == null)
+							treeItem2CollisionIconImageView.remove(treeItem);
+						else
+							treeItem2CollisionIconImageView.put(treeItem, iconImageView);
 
 						final FileTreeItem<?> currentTreeItem = treeTableCell.getTreeTableRow().getItem();
 						if (currentTreeItem == treeItem)
