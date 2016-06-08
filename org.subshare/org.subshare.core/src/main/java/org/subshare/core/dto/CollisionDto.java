@@ -34,6 +34,8 @@ public class CollisionDto implements Signable, Serializable {
 
 	private Date resolved;
 
+	private String comment;
+
 	public CollisionDto() {
 	}
 
@@ -71,6 +73,13 @@ public class CollisionDto implements Signable, Serializable {
 		this.resolved = resolved;
 	}
 
+	public String getComment() {
+		return comment;
+	}
+	public void setComment(String comment) {
+		this.comment = comment;
+	}
+
 	@Override
 	public String getSignedDataType() {
 		return SIGNED_DATA_TYPE;
@@ -103,7 +112,10 @@ public class CollisionDto implements Signable, Serializable {
 					InputStreamSource.Helper.createInputStreamSource(duplicateCryptoRepoFileId),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
-					InputStreamSource.Helper.createInputStreamSource(resolved)
+					InputStreamSource.Helper.createInputStreamSource(resolved),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
+					InputStreamSource.Helper.createInputStreamSource(comment)
 					);
 		} catch (final IOException x) {
 			throw new RuntimeException(x);

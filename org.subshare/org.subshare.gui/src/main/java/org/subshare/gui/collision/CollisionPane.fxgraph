@@ -1,0 +1,43 @@
+package org.subshare.gui.collision
+
+import javafx.scene.layout.GridPane
+import javafx.scene.text.Text
+import javafx.geometry.Insets
+import javafx.scene.control.CheckBox
+import javafx.scene.control.Tooltip
+import javafx.scene.control.TextArea
+
+dynamic component CollisionPane resourcefile 'messages.properties' {
+	GridPane {
+		hgap : 8,
+		vgap : 8,
+		padding : Insets { left : 8, top : 8, right : 8, bottom : 8 },
+		
+		Text id headerText {
+			text : rstring 'CollisionPane.headerText.text',
+			wrappingWidth : 600,
+			static columnIndex : 0,
+			static rowIndex : 0,
+			static columnSpan : 3,
+			static hgrow : "ALWAYS"
+		},
+
+		CheckBox id resolvedCheckBox {
+			text : rstring "CollisionPane.resolvedCheckBox.text",
+			tooltip : Tooltip { text : rstring "CollisionPane.resolvedCheckBox.tooltip.text" },
+			static columnIndex : 0,
+			static rowIndex : 1
+		},
+
+		Text id commentTitleText {
+			text : rstring "CollisionPane.commentTitleText.text",
+			static columnIndex : 0,
+			static rowIndex : 2
+		},
+		TextArea id commentTextArea {
+			promptText : "You may want to comment this collision - e.g. explain how you solved it.",
+			static columnIndex : 0,
+			static rowIndex : 3
+		}
+	}
+}

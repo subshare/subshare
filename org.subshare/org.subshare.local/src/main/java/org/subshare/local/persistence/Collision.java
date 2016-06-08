@@ -5,6 +5,7 @@ import static co.codewizards.cloudstore.core.util.Util.*;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -98,6 +99,9 @@ public class Collision extends Entity implements WriteProtected, AutoTrackLocalR
 	@NotPersistent
 	private SortedSet<CryptoRepoFile> _cryptoRepoFilePath;
 
+	@Column(jdbcType="CLOB")
+	private String comment;
+
 	public Collision() {
 	}
 
@@ -166,6 +170,7 @@ public class Collision extends Entity implements WriteProtected, AutoTrackLocalR
 			if (cryptoRepoFilePath != null)
 				result.addAll(cryptoRepoFilePath);
 
+			result = Collections.unmodifiableSortedSet(result);
 			_cryptoRepoFilePath = result;
 		}
 		return result;
@@ -203,7 +208,10 @@ public class Collision extends Entity implements WriteProtected, AutoTrackLocalR
 					InputStreamSource.Helper.createInputStreamSource(getDuplicateCryptoRepoFileId()),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
-					InputStreamSource.Helper.createInputStreamSource(resolved)
+					InputStreamSource.Helper.createInputStreamSource(resolved),
+
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
+					InputStreamSource.Helper.createInputStreamSource(comment)
 					);
 		} catch (final IOException x) {
 			throw new RuntimeException(x);
@@ -270,6 +278,14 @@ public class Collision extends Entity implements WriteProtected, AutoTrackLocalR
 				bytes[i] = (byte) ((bytes[i] & 0xff) ^ (bytes2[i] & 0xff));
 			}
 		}
+	}
+
+	public String getComment() {
+		return comment;
+	}
+	public void setComment(final String comment) {
+		if (! equal(this.comment, comment))
+			this.comment = comment;
 	}
 
 	@Override
