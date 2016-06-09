@@ -1,11 +1,15 @@
 package org.subshare.core.repo.local;
 
 import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Set;
 
 import co.codewizards.cloudstore.core.dto.Uid;
 
 @SuppressWarnings("serial")
 public class CollisionFilter implements Serializable, Cloneable {
+
+	private Set<Uid> collisionIds;
 
 	private Uid cryptoRepoFileId;
 
@@ -16,6 +20,13 @@ public class CollisionFilter implements Serializable, Cloneable {
 	private Boolean resolved;
 
 	private boolean includeChildrenRecursively;
+
+	public Set<Uid> getCollisionIds() {
+		return collisionIds;
+	}
+	public void setCollisionIds(Set<Uid> collisionIds) {
+		this.collisionIds = collisionIds;
+	}
 
 	public Uid getCryptoRepoFileId() {
 		return cryptoRepoFileId;
@@ -67,6 +78,10 @@ public class CollisionFilter implements Serializable, Cloneable {
 		} catch (CloneNotSupportedException e) {
 			throw new RuntimeException(e); // should really never happen!
 		}
+
+		if (this.collisionIds != null)
+			clone.collisionIds = new HashSet<>(this.collisionIds);
+
 		return clone;
 	}
 }

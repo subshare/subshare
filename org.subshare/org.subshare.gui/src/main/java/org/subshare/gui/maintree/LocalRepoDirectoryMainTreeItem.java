@@ -15,6 +15,7 @@ import org.subshare.core.repo.LocalRepo;
 import org.subshare.core.repo.local.CollisionFilter;
 import org.subshare.core.repo.local.SsLocalRepoMetaData;
 import org.subshare.gui.IconSize;
+import org.subshare.gui.concurrent.SsTask;
 import org.subshare.gui.filetree.FileIconRegistry;
 import org.subshare.gui.filetree.repoaware.RepoAwareFileTreePane;
 import org.subshare.gui.localrepo.directory.LocalRepoDirectoryPane;
@@ -122,7 +123,7 @@ public class LocalRepoDirectoryMainTreeItem extends MainTreeItem<File> {
 		new Service<Image>() {
 			@Override
 			protected Task<Image> createTask() {
-				return new Task<Image>() {
+				return new SsTask<Image>() {
 					@Override
 					protected Image call() throws Exception {
 						return _getCollisionIcon();

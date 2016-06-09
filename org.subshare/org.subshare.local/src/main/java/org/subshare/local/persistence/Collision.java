@@ -99,8 +99,8 @@ public class Collision extends Entity implements WriteProtected, AutoTrackLocalR
 	@NotPersistent
 	private SortedSet<CryptoRepoFile> _cryptoRepoFilePath;
 
-	@Column(jdbcType="CLOB")
-	private String comment;
+//	@Column(jdbcType="CLOB") // NOT plaintext!!! need a different mechanism
+//	private String comment;
 
 	public Collision() {
 	}
@@ -208,10 +208,10 @@ public class Collision extends Entity implements WriteProtected, AutoTrackLocalR
 					InputStreamSource.Helper.createInputStreamSource(getDuplicateCryptoRepoFileId()),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
-					InputStreamSource.Helper.createInputStreamSource(resolved),
+					InputStreamSource.Helper.createInputStreamSource(resolved)
 
-					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
-					InputStreamSource.Helper.createInputStreamSource(comment)
+//					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
+//					InputStreamSource.Helper.createInputStreamSource(comment)
 					);
 		} catch (final IOException x) {
 			throw new RuntimeException(x);
@@ -280,13 +280,13 @@ public class Collision extends Entity implements WriteProtected, AutoTrackLocalR
 		}
 	}
 
-	public String getComment() {
-		return comment;
-	}
-	public void setComment(final String comment) {
-		if (! equal(this.comment, comment))
-			this.comment = comment;
-	}
+//	public String getComment() {
+//		return comment;
+//	}
+//	public void setComment(final String comment) {
+//		if (! equal(this.comment, comment))
+//			this.comment = comment;
+//	}
 
 	@Override
 	public long getLocalRevision() {

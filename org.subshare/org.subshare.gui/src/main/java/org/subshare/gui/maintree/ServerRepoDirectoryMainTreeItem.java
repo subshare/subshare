@@ -12,14 +12,6 @@ import java.util.TimerTask;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
-import javafx.collections.ObservableList;
-import javafx.concurrent.Service;
-import javafx.concurrent.Task;
-import javafx.scene.Parent;
-import javafx.scene.control.TreeItem;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
-
 import org.subshare.core.repo.ServerRepo;
 import org.subshare.core.repo.listener.LocalRepoCommitEventListener;
 import org.subshare.core.repo.listener.LocalRepoCommitEventManager;
@@ -27,10 +19,18 @@ import org.subshare.core.repo.listener.WeakLocalRepoCommitEventListener;
 import org.subshare.core.repo.metaonly.ServerRepoFile;
 import org.subshare.core.repo.metaonly.ServerRepoFileType;
 import org.subshare.core.server.Server;
+import org.subshare.gui.concurrent.SsTask;
 import org.subshare.gui.ls.LocalRepoCommitEventManagerLs;
 import org.subshare.gui.serverrepo.directory.ServerRepoDirectoryPane;
 
 import co.codewizards.cloudstore.core.collection.ListMerger;
+import javafx.collections.ObservableList;
+import javafx.concurrent.Service;
+import javafx.concurrent.Task;
+import javafx.scene.Parent;
+import javafx.scene.control.TreeItem;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 
 public class ServerRepoDirectoryMainTreeItem extends MainTreeItem<ServerRepoFile> {
 
@@ -118,7 +118,7 @@ public class ServerRepoDirectoryMainTreeItem extends MainTreeItem<ServerRepoFile
 			new Service<List<TreeItem<String>>>() {
 				@Override
 				protected Task<List<TreeItem<String>>> createTask() {
-					return new Task<List<TreeItem<String>>>() {
+					return new SsTask<List<TreeItem<String>>>() {
 						@Override
 						protected List<TreeItem<String>> call() throws Exception {
 							return loadChildren();

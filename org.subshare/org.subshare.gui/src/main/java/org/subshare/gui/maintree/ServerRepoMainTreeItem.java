@@ -7,6 +7,17 @@ import static org.subshare.gui.util.PlatformUtil.*;
 
 import java.util.concurrent.ExecutionException;
 
+import org.subshare.core.repo.ServerRepo;
+import org.subshare.core.repo.listener.LocalRepoCommitEventListener;
+import org.subshare.core.repo.listener.LocalRepoCommitEventManager;
+import org.subshare.core.repo.listener.WeakLocalRepoCommitEventListener;
+import org.subshare.core.repo.metaonly.ServerRepoFile;
+import org.subshare.core.server.Server;
+import org.subshare.gui.concurrent.SsTask;
+import org.subshare.gui.ls.LocalRepoCommitEventManagerLs;
+import org.subshare.gui.ls.MetaOnlyRepoManagerLs;
+import org.subshare.gui.serverrepo.ServerRepoPane;
+
 import javafx.collections.ObservableList;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
@@ -14,16 +25,6 @@ import javafx.scene.Parent;
 import javafx.scene.control.TreeItem;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-
-import org.subshare.core.repo.ServerRepo;
-import org.subshare.core.repo.listener.LocalRepoCommitEventListener;
-import org.subshare.core.repo.listener.LocalRepoCommitEventManager;
-import org.subshare.core.repo.listener.WeakLocalRepoCommitEventListener;
-import org.subshare.core.repo.metaonly.ServerRepoFile;
-import org.subshare.core.server.Server;
-import org.subshare.gui.ls.LocalRepoCommitEventManagerLs;
-import org.subshare.gui.ls.MetaOnlyRepoManagerLs;
-import org.subshare.gui.serverrepo.ServerRepoPane;
 
 public class ServerRepoMainTreeItem extends MainTreeItem<ServerRepo> {
 
@@ -64,7 +65,7 @@ public class ServerRepoMainTreeItem extends MainTreeItem<ServerRepo> {
 			new Service<ServerRepoFile>() {
 				@Override
 				protected Task<ServerRepoFile> createTask() {
-					return new Task<ServerRepoFile>() {
+					return new SsTask<ServerRepoFile>() {
 						@Override
 						protected ServerRepoFile call() throws Exception {
 							return MetaOnlyRepoManagerLs.getMetaOnlyRepoManager().getRootServerRepoFile(getServerRepo());

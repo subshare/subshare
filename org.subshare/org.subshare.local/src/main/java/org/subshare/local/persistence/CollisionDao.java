@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import javax.jdo.Query;
 
@@ -148,6 +149,8 @@ public class CollisionDao extends Dao<Collision, CollisionDao> {
 			final Map<String, Object> qp = new HashMap<>();
 			final Map<String, Class<?>> qv = new HashMap<>();
 
+			appendToQueryFilter_collisionIds(qf, qp, qv, filter.getCollisionIds());
+
 			appendToQueryFilter_histoCryptoRepoFileId(qf, qp, qv, filter.getHistoCryptoRepoFileId());
 
 			if (filter.isIncludeChildrenRecursively())
@@ -202,6 +205,21 @@ public class CollisionDao extends Dao<Collision, CollisionDao> {
 			filter.setCryptoRepoFileId(filterCryptoRepoFile.getCryptoRepoFileId());
 		}
 		return filter;
+	}
+
+	private static void appendToQueryFilter_collisionIds(final StringBuilder qf, final Map<String, Object> qp, final Map<String, Class<?>> qv, final Set<Uid> collisionIds) {
+		assertNotNull("qf", qf);
+		assertNotNull("qp", qp);
+		if (collisionIds == null)
+			return;
+
+		final Set<String> collisionIdsAsString = new HashSet<>(collisionIds.size());
+		for (Uid collisionId : collisionIds)
+			collisionIdsAsString.add(collisionId.toString());
+
+		appendAndIfNeeded(qf);
+		qf.append(" :collisionIds.contains(this.collisionId) ");
+		qp.put("collisionIds", collisionIdsAsString);
 	}
 
 	private static void appendToQueryFilter_histoCryptoRepoFileId(final StringBuilder qf, final Map<String, Object> qp, final Map<String, Class<?>> qv, final Uid histoCryptoRepoFileId) {

@@ -1,19 +1,30 @@
 package org.subshare.core.repo.local;
 
 import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.subshare.core.dto.PlainHistoCryptoRepoFileDto;
 
 import co.codewizards.cloudstore.core.dto.Uid;
 
 @SuppressWarnings("serial")
-public class PlainHistoCryptoRepoFileFilter implements Serializable {
+public class PlainHistoCryptoRepoFileFilter implements Serializable, Cloneable {
 
+	private Set<Uid> histoCryptoRepoFileIds;
 	private Uid histoFrameId;
 	private boolean fillParents = true;
 	private String localPath;
+	private Set<Uid> collisionIds;
 
 	public PlainHistoCryptoRepoFileFilter() {
+	}
+
+	public Set<Uid> getHistoCryptoRepoFileIds() {
+		return histoCryptoRepoFileIds;
+	}
+	public void setHistoCryptoRepoFileIds(Set<Uid> histoCryptoRepoFileIds) {
+		this.histoCryptoRepoFileIds = histoCryptoRepoFileIds;
 	}
 
 	public Uid getHistoFrameId() {
@@ -47,5 +58,31 @@ public class PlainHistoCryptoRepoFileFilter implements Serializable {
 	}
 	public void setLocalPath(String localPath) {
 		this.localPath = localPath;
+	}
+
+	public Set<Uid> getCollisionIds() {
+		return collisionIds;
+	}
+	public void setCollisionIds(Set<Uid> collisionIds) {
+		this.collisionIds = collisionIds;
+	}
+
+
+	@Override
+	public PlainHistoCryptoRepoFileFilter clone() {
+		final PlainHistoCryptoRepoFileFilter clone;
+		try {
+			clone = (PlainHistoCryptoRepoFileFilter) super.clone();
+		} catch (CloneNotSupportedException e) {
+			throw new RuntimeException(e); // should really never happen!
+		}
+
+		if (this.histoCryptoRepoFileIds != null)
+			clone.histoCryptoRepoFileIds = new HashSet<>(this.histoCryptoRepoFileIds);
+
+		if (this.collisionIds != null)
+			clone.collisionIds = new HashSet<>(this.collisionIds);
+
+		return clone;
 	}
 }

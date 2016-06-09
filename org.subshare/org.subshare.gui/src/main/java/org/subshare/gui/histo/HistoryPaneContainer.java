@@ -1,10 +1,10 @@
 package org.subshare.gui.histo;
 
+import org.subshare.core.repo.LocalRepo;
+
 import javafx.scene.control.Button;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
-
-import org.subshare.core.repo.LocalRepo;
 
 public interface HistoryPaneContainer {
 
@@ -32,6 +32,12 @@ public interface HistoryPaneContainer {
 	 * @return the tab containing the {@link HistoryPane}. Must not be <code>null</code>.
 	 */
 	Tab getHistoryTab();
+
+	/**
+	 * Gets the button launching the wizard for (un)resolving a collision.
+	 * @return the button launching the wizard for (un)resolving a collision. Must not be <code>null</code>.
+	 */
+	Button getResolveCollisionInHistoryButton();
 
 	/**
 	 * Gets the button launching the export-wizard.

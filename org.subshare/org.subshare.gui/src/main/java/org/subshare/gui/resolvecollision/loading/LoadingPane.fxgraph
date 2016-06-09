@@ -1,0 +1,22 @@
+package org.subshare.gui.resolvecollision.loading
+
+import javafx.scene.layout.GridPane
+import javafx.geometry.Insets
+import javafx.scene.text.Text
+
+dynamic component LoadingPane resourcefile 'messages.properties' {
+	GridPane {
+		hgap : 8,
+		vgap : 8,
+		padding : Insets { left : 8, top : 8, right : 8, bottom : 8 },
+
+		Text id loadingText {
+			text : rstring 'LoadingPane.loadingText.text',
+			wrappingWidth : 600,
+			static columnIndex : 0,
+			static rowIndex : 0,
+			static columnSpan : 3,
+			static hgrow : "ALWAYS"
+		}
+	}
+}

@@ -44,6 +44,12 @@ dynamic component LocalRepoDirectoryPane resourcefile 'messages.properties' {
 				tooltip : Tooltip { text : "Refresh all data shown here." },
 				onAction : controllermethod refreshButtonClicked
 			},
+			Button id resolveCollisionInFileTreeButton {
+				graphic : ImageView { image : Image { url : "@collision-resolved_24x24.png" } },
+				tooltip : Tooltip { text : "Resolve collision(s)." },
+				onAction : controllermethod resolveCollisionInFileTreeButtonClicked
+			},
+			Button id resolveCollisionInHistoryButton,
 			Button id exportFromHistoryButton,
 
 			static margin : Insets { left : 8, right : 8, top : 8, bottom : 8 }

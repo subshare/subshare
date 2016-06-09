@@ -1,15 +1,18 @@
 package org.subshare.gui.filetree.repoaware;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static org.subshare.gui.util.PlatformUtil.*;
 
 import java.net.URL;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.concurrent.ExecutionException;
 
 import org.subshare.core.dto.CollisionDto;
 import org.subshare.core.repo.LocalRepo;
 import org.subshare.core.repo.local.CollisionFilter;
 import org.subshare.core.repo.local.SsLocalRepoMetaData;
+import org.subshare.gui.concurrent.SsTask;
 import org.subshare.gui.filetree.FileFileTreeItem;
 import org.subshare.gui.filetree.FileTreeItem;
 import org.subshare.gui.filetree.FileTreePane;
@@ -31,6 +34,7 @@ public class RepoAwareFileTreePane extends FileTreePane {
 	private static Image collisionUnresolvedIcon;
 	private static Image collisionUnresolvedInChildIcon;
 
+	private final WeakIdentityHashMap<FileTreeItem<?>, CollisionDtoSet> treeItem2CollisionDtoSet = new WeakIdentityHashMap<>();
 	private final WeakIdentityHashMap<FileTreeItem<?>, ImageView> treeItem2CollisionIconImageView = new WeakIdentityHashMap<>();
 
 	// *Important*
@@ -66,19 +70,26 @@ public class RepoAwareFileTreePane extends FileTreePane {
 	};
 
 	private void updateGraphicAsync(final TreeTableCell<FileTreeItem<?>, String> treeTableCell, final FileTreeItem<?> treeItem) {
-		new Service<Image>() {
+		new Service<CollisionDtoSet>() {
 			@Override
-			protected Task<Image> createTask() {
-				return new Task<Image>() {
+			protected Task<CollisionDtoSet> createTask() {
+				return new SsTask<CollisionDtoSet>() {
 					@Override
-					protected Image call() throws Exception {
-						return _getCollisionIcon(treeItem);
+					protected CollisionDtoSet call() throws Exception {
+						return _getCollisionDtoSet(treeItem);
 					}
 
 					@Override
 					protected void succeeded() {
-						final Image icon;
-						try { icon = get(); } catch (InterruptedException | ExecutionException e) { throw new RuntimeException(e); }
+						final CollisionDtoSet collisionDtoSet;
+						try { collisionDtoSet = get(); } catch (InterruptedException | ExecutionException e) { throw new RuntimeException(e); }
+
+						if (collisionDtoSet == null)
+							treeItem2CollisionDtoSet.remove(treeItem);
+						else
+							treeItem2CollisionDtoSet.put(treeItem, collisionDtoSet);
+
+						final Image icon = _getCollisionIcon(collisionDtoSet);
 						final ImageView iconImageView = icon == null ? null : new ImageView(icon);
 
 						if (iconImageView == null)
@@ -95,6 +106,12 @@ public class RepoAwareFileTreePane extends FileTreePane {
 		}.start();
 	}
 
+	public CollisionDtoSet getCollisionDtoSet(final FileTreeItem<?> treeItem) {
+		assertNotNull("treeItem", treeItem);
+		assertFxApplicationThread();
+		return treeItem2CollisionDtoSet.get(treeItem);
+	}
+
 	public RepoAwareFileTreePane() {
 		getNameTreeTableColumn().setCellFactory(nameColumnCellFactory);
 	}
@@ -106,7 +123,20 @@ public class RepoAwareFileTreePane extends FileTreePane {
 		this.localRepo = localRepo;
 	}
 
-	private Image _getCollisionIcon(final FileTreeItem<?> treeItem) {
+	private Image _getCollisionIcon(final CollisionDtoSet collisionDtoSet) {
+		if (collisionDtoSet == null)
+			return null;
+
+		if (collisionDtoSet.getAllCollisionDtos().isEmpty()) // none - neither directly associated nor in child.
+			return null;
+
+		if (collisionDtoSet.getDirectCollisionDtos().isEmpty()) // not directly associated, but in child (sub-tree)
+			return getCollisionUnresolvedInChildIcon();
+
+		return getCollisionUnresolvedIcon(); // directly associated.
+	}
+
+	private CollisionDtoSet _getCollisionDtoSet(final FileTreeItem<?> treeItem) {
 		assertNotNull("treeItem", treeItem);
 
 		if (! (treeItem instanceof FileFileTreeItem))
@@ -123,19 +153,16 @@ public class RepoAwareFileTreePane extends FileTreePane {
 				filter.setResolved(false);
 
 				filter.setIncludeChildrenRecursively(true);
-				Collection<CollisionDto> collisionDtos = localRepoMetaData.getCollisionDtos(filter);
-				if (! collisionDtos.isEmpty()) {
-					// There is a collision either directly associated or somewhere in the sub-tree.
-					// => Query again to find out, if it is directly associated.
-					filter.setIncludeChildrenRecursively(false);
-					collisionDtos = localRepoMetaData.getCollisionDtos(filter);
-					if (collisionDtos.isEmpty()) // not found => not directly associated => in child (sub-tree)
-						return getCollisionUnresolvedInChildIcon();
-					else
-						return getCollisionUnresolvedIcon();
-				}
+				Collection<CollisionDto> allCollisionDtos = localRepoMetaData.getCollisionDtos(filter);
+				if (allCollisionDtos.isEmpty())
+					return new CollisionDtoSet(Collections.emptyList(), Collections.emptyList());
+
+				// There is a collision either directly associated or somewhere in the sub-tree.
+				// => Query again to find out, if it is directly associated.
+				filter.setIncludeChildrenRecursively(false);
+				Collection<CollisionDto> directCollisionDtos = localRepoMetaData.getCollisionDtos(filter);
+				return new CollisionDtoSet(allCollisionDtos, directCollisionDtos);
 			}
-			return null;
 		}
 	}
 
@@ -166,5 +193,12 @@ public class RepoAwareFileTreePane extends FileTreePane {
 	private LocalRepoManager createLocalRepoManager() {
 		final LocalRepo localRepo = assertNotNull("localRepo", getLocalRepo());
 		return LocalRepoManagerFactoryLs.getLocalRepoManagerFactory().createLocalRepoManagerForExistingRepository(localRepo.getLocalRoot());
+	}
+
+	@Override
+	public void refresh() {
+		treeItem2CollisionDtoSet.clear();
+		treeItem2CollisionIconImageView.clear();
+		super.refresh();
 	}
 }

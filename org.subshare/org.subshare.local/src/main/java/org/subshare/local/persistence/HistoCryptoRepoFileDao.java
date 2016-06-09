@@ -3,6 +3,8 @@ package org.subshare.local.persistence;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.jdo.Query;
@@ -135,6 +137,29 @@ public class HistoCryptoRepoFileDao extends Dao<HistoCryptoRepoFile, HistoCrypto
 			startTimestamp = System.currentTimeMillis();
 			result = load(result);
 			logger.debug("getHistoCryptoRepoFilesWithoutPlainHistoCryptoRepoFile: Loading result-set with {} elements took {} ms.", result.size(), System.currentTimeMillis() - startTimestamp);
+
+			return result;
+		} finally {
+			query.closeAll();
+		}
+	}
+
+	public Collection<HistoCryptoRepoFile> getHistoCryptoRepoFilesByCollisions(final Set<Uid> collisionIds) {
+		assertNotNull("collisionIds", collisionIds);
+		final Set<String> collisionIdsAsString = new HashSet<>(collisionIds.size());
+		for (final Uid collisionId : collisionIds)
+			collisionIdsAsString.add(collisionId.toString());
+
+		final Query query = pm().newNamedQuery(getEntityClass(), "getHistoCryptoRepoFilesByCollisions");
+		try {
+			long startTimestamp = System.currentTimeMillis();
+			@SuppressWarnings("unchecked")
+			Collection<HistoCryptoRepoFile> result = (Collection<HistoCryptoRepoFile>) query.execute(collisionIdsAsString);
+			logger.debug("getHistoCryptoRepoFilesByCollisions: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
+
+			startTimestamp = System.currentTimeMillis();
+			result = load(result);
+			logger.debug("getHistoCryptoRepoFilesByCollisions: Loading result-set with {} elements took {} ms.", result.size(), System.currentTimeMillis() - startTimestamp);
 
 			return result;
 		} finally {

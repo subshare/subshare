@@ -48,6 +48,7 @@
 				<Tooltip text="Invite someone to share this repository.&#010;&#010;You'll select another user and an invitation token is going to be created for this user."/> 
 			</tooltip>
 		</Button>
+		<Button fx:id="resolveCollisionInHistoryButton"/> 
 		<Button fx:id="exportFromHistoryButton"/> 
 		<VBox.margin>
 			<Insets left="8" right="8" top="8" bottom="8"/> 

@@ -16,6 +16,30 @@ import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.UnaryOperator;
 
+import org.subshare.core.repo.LocalRepo;
+import org.subshare.core.repo.sync.RepoSyncTimer;
+import org.subshare.gui.IconSize;
+import org.subshare.gui.control.TimePeriodTextField;
+import org.subshare.gui.error.ErrorHandler;
+import org.subshare.gui.histo.HistoryPaneContainer;
+import org.subshare.gui.histo.HistoryPaneSupport;
+import org.subshare.gui.invitation.issue.IssueInvitationData;
+import org.subshare.gui.invitation.issue.IssueInvitationWizard;
+import org.subshare.gui.ls.ConfigLs;
+import org.subshare.gui.ls.RepoSyncDaemonLs;
+import org.subshare.gui.ls.RepoSyncTimerLs;
+import org.subshare.gui.severity.SeverityImageRegistry;
+import org.subshare.gui.util.FileStringConverter;
+import org.subshare.gui.wizard.WizardDialog;
+
+import co.codewizards.cloudstore.core.Severity;
+import co.codewizards.cloudstore.core.TimePeriod;
+import co.codewizards.cloudstore.core.config.Config;
+import co.codewizards.cloudstore.core.dto.Error;
+import co.codewizards.cloudstore.core.oio.File;
+import co.codewizards.cloudstore.core.repo.sync.RepoSyncActivity;
+import co.codewizards.cloudstore.core.repo.sync.RepoSyncDaemon;
+import co.codewizards.cloudstore.core.repo.sync.RepoSyncState;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.binding.Bindings;
@@ -45,31 +69,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 
-import org.subshare.core.repo.LocalRepo;
-import org.subshare.core.repo.sync.RepoSyncTimer;
-import org.subshare.gui.IconSize;
-import org.subshare.gui.control.TimePeriodTextField;
-import org.subshare.gui.error.ErrorHandler;
-import org.subshare.gui.histo.HistoryPaneContainer;
-import org.subshare.gui.histo.HistoryPaneSupport;
-import org.subshare.gui.invitation.issue.IssueInvitationData;
-import org.subshare.gui.invitation.issue.IssueInvitationWizard;
-import org.subshare.gui.ls.ConfigLs;
-import org.subshare.gui.ls.RepoSyncDaemonLs;
-import org.subshare.gui.ls.RepoSyncTimerLs;
-import org.subshare.gui.severity.SeverityImageRegistry;
-import org.subshare.gui.util.FileStringConverter;
-import org.subshare.gui.wizard.WizardDialog;
-
-import co.codewizards.cloudstore.core.Severity;
-import co.codewizards.cloudstore.core.TimePeriod;
-import co.codewizards.cloudstore.core.config.Config;
-import co.codewizards.cloudstore.core.dto.Error;
-import co.codewizards.cloudstore.core.oio.File;
-import co.codewizards.cloudstore.core.repo.sync.RepoSyncActivity;
-import co.codewizards.cloudstore.core.repo.sync.RepoSyncDaemon;
-import co.codewizards.cloudstore.core.repo.sync.RepoSyncState;
-
 public class LocalRepoPane extends VBox implements HistoryPaneContainer {
 	private static final AtomicInteger nextLocalRepoPaneIndex = new AtomicInteger();
 	private final int localRepoPaneIndex = nextLocalRepoPaneIndex.getAndIncrement();
@@ -83,6 +82,9 @@ public class LocalRepoPane extends VBox implements HistoryPaneContainer {
 
 	@FXML
 	private Button inviteButton;
+
+	@FXML
+	private Button resolveCollisionInHistoryButton;
 
 	@FXML
 	private Button exportFromHistoryButton;
@@ -391,6 +393,11 @@ public class LocalRepoPane extends VBox implements HistoryPaneContainer {
 	@Override
 	public TabPane getTabPane() {
 		return tabPane;
+	}
+
+	@Override
+	public Button getResolveCollisionInHistoryButton() {
+		return resolveCollisionInHistoryButton;
 	}
 
 	@Override

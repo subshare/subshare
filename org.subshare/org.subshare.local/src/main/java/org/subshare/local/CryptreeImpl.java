@@ -2349,17 +2349,54 @@ public class CryptreeImpl extends AbstractCryptree {
 	@Override
 	public Collection<PlainHistoCryptoRepoFileDto> getPlainHistoCryptoRepoFileDtos(PlainHistoCryptoRepoFileFilter filter) {
 		assertNotNull("filter", filter);
-		final Uid histoFrameId = assertNotNull("filter.histoFrameId", filter.getHistoFrameId());
 
-		if ("/".equals(filter.getLocalPath())) // the root is normally simply "", but we are tolerant to "/".
+		if ("/".equals(filter.getLocalPath())) { // the root is normally simply "", but we are tolerant to "/".
+			filter = filter.clone();
 			filter.setLocalPath("");
+		}
 
 		final LocalRepoTransaction tx = getTransactionOrFail();
 		final HistoCryptoRepoFileDao hcrfDao = tx.getDao(HistoCryptoRepoFileDao.class);
 
-		final HistoFrame histoFrame = tx.getDao(HistoFrameDao.class).getHistoFrameOrFail(histoFrameId);
-		final Collection<HistoCryptoRepoFile> histoCryptoRepoFiles = hcrfDao.getHistoCryptoRepoFiles(histoFrame);
+		final Uid histoFrameId = filter.getHistoFrameId();
+		if (histoFrameId != null) {
+			if (filter.getHistoCryptoRepoFileIds() != null)
+				throw new UnsupportedOperationException("Filtering by both histoFrameId and histoCryptoRepoFileIds is currently not supported!");
 
+			if (filter.getCollisionIds() != null)
+				throw new UnsupportedOperationException("Filtering by both histoFrameId and collisionIds is currently not supported!");
+
+			final HistoFrame histoFrame = tx.getDao(HistoFrameDao.class).getHistoFrameOrFail(histoFrameId);
+			final Collection<HistoCryptoRepoFile> histoCryptoRepoFiles = hcrfDao.getHistoCryptoRepoFiles(histoFrame);
+			return getPlainHistoCryptoRepoFileDtos(histoCryptoRepoFiles, filter);
+		}
+
+		final Set<Uid> histoCryptoRepoFileIds = filter.getHistoCryptoRepoFileIds();
+		if (histoCryptoRepoFileIds != null) {
+			if (filter.getCollisionIds() != null)
+				throw new UnsupportedOperationException("Filtering by both histoCryptoRepoFileIds and collisionIds is currently not supported!");
+
+			final List<HistoCryptoRepoFile> histoCryptoRepoFiles = new ArrayList<>(histoCryptoRepoFileIds.size());
+			for (final Uid histoCryptoRepoFileId : histoCryptoRepoFileIds) {
+				final HistoCryptoRepoFile histoCryptoRepoFile = hcrfDao.getHistoCryptoRepoFile(histoCryptoRepoFileId);
+				if (histoCryptoRepoFile != null)
+					histoCryptoRepoFiles.add(histoCryptoRepoFile);
+			}
+			return getPlainHistoCryptoRepoFileDtos(histoCryptoRepoFiles, filter);
+		}
+
+		final Set<Uid> collisionIds = filter.getCollisionIds();
+		if (collisionIds != null) {
+			final Collection<HistoCryptoRepoFile> histoCryptoRepoFiles = hcrfDao.getHistoCryptoRepoFilesByCollisions(collisionIds);
+			return getPlainHistoCryptoRepoFileDtos(histoCryptoRepoFiles, filter);
+		}
+
+		throw new IllegalArgumentException("No constraints! Cannot query *all* PlainHistoCryptoRepoFiles!");
+	}
+
+	private Collection<PlainHistoCryptoRepoFileDto> getPlainHistoCryptoRepoFileDtos(final Collection<HistoCryptoRepoFile> histoCryptoRepoFiles, PlainHistoCryptoRepoFileFilter filter) {
+		final LocalRepoTransaction tx = getTransactionOrFail();
+		final HistoCryptoRepoFileDao hcrfDao = tx.getDao(HistoCryptoRepoFileDao.class);
 		final Map<Uid, PlainHistoCryptoRepoFileDto> cryptoRepoFileId2PlainHistoCryptoRepoFileDto = new HashMap<>();
 
 		final CryptreeNode filterLocalPathCryptreeNode = (StringUtil.isEmpty(filter.getLocalPath())
@@ -2444,5 +2481,28 @@ public class CryptreeImpl extends AbstractCryptree {
 		assertNotNull("localPath", localPath);
 		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(localPath);
 		cryptreeNode.clearCryptoRepoFileDeleted();
+	}
+
+	@Override
+	public void setCollisionResolved(Uid collisionId, boolean resolved) {
+		final CollisionDao cDao = getTransactionOrFail().getDao(CollisionDao.class);
+		final Collision collision = cDao.getCollisionOrFail(collisionId);
+
+		if (resolved && collision.getResolved() != null)
+			return;
+
+		if (! resolved && collision.getResolved() == null)
+			return;
+
+		collision.setResolved(resolved ? new Date() : null);
+		sign(collision);
+
+		getCryptreeContext().getCryptreeNodeOrCreate(collision.getHistoCryptoRepoFile1().getCryptoRepoFile().getCryptoRepoFileId())
+		.updatePlainHistoCryptoRepoFile(collision.getHistoCryptoRepoFile1());
+
+		if (collision.getHistoCryptoRepoFile2() != null) {
+			getCryptreeContext().getCryptreeNodeOrCreate(collision.getHistoCryptoRepoFile2().getCryptoRepoFile().getCryptoRepoFileId())
+			.updatePlainHistoCryptoRepoFile(collision.getHistoCryptoRepoFile2());
+		}
 	}
 }

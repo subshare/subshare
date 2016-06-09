@@ -77,4 +77,6 @@ public interface SsLocalRepoMetaData extends LocalRepoMetaData {
 	Collection<CollisionDto> getCollisionDtos(CollisionFilter filter);
 
 	void scheduleReupload(String localPath);
+
+	void setCollisionResolved(Uid collisionId, boolean resolved);
 }

@@ -57,6 +57,19 @@
 				<Tooltip text="Refresh all data shown here."/> 
 			</tooltip>
 		</Button>
+		<Button fx:id="resolveCollisionInFileTreeButton" onAction="#resolveCollisionInFileTreeButtonClicked"> 
+			<graphic>
+				<ImageView> 
+					<image>
+						<Image url="@collision-resolved_24x24.png"/> 
+					</image>
+				</ImageView>
+			</graphic>
+			<tooltip>
+				<Tooltip text="Resolve collision(s)."/> 
+			</tooltip>
+		</Button>
+		<Button fx:id="resolveCollisionInHistoryButton"/> 
 		<Button fx:id="exportFromHistoryButton"/> 
 		<VBox.margin>
 			<Insets left="8" right="8" top="8" bottom="8"/> 

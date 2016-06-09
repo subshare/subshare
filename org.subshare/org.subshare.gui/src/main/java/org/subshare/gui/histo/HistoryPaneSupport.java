@@ -10,6 +10,18 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.subshare.core.dto.CollisionDto;
+import org.subshare.core.dto.HistoCryptoRepoFileDto;
+import org.subshare.core.dto.PlainHistoCryptoRepoFileDto;
+import org.subshare.core.repo.LocalRepo;
+import org.subshare.gui.histo.exp.ExportFromHistoryData;
+import org.subshare.gui.histo.exp.ExportFromHistoryWizard;
+import org.subshare.gui.resolvecollision.ResolveCollisionData;
+import org.subshare.gui.resolvecollision.ResolveCollisionWizard;
+import org.subshare.gui.wizard.WizardDialog;
+
+import co.codewizards.cloudstore.core.dto.NormalFileDto;
+import co.codewizards.cloudstore.core.dto.Uid;
 import javafx.beans.InvalidationListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableSet;
@@ -21,21 +33,13 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.control.TreeItem;
 import javafx.scene.image.ImageView;
 
-import org.subshare.core.dto.HistoCryptoRepoFileDto;
-import org.subshare.core.repo.LocalRepo;
-import org.subshare.gui.histo.exp.ExportFromHistoryData;
-import org.subshare.gui.histo.exp.ExportFromHistoryWizard;
-import org.subshare.gui.wizard.WizardDialog;
-
-import co.codewizards.cloudstore.core.dto.NormalFileDto;
-import co.codewizards.cloudstore.core.dto.Uid;
-
 public class HistoryPaneSupport {
 
 	private final HistoryPaneContainer container;
 	private final LocalRepo localRepo;
 	private final TabPane tabPane;
 	private final Tab historyTab;
+	private final Button resolveCollisionInHistoryButton;
 	private final Button exportFromHistoryButton;
 
 	private WeakReference<HistoryPane> historyPaneRef;
@@ -43,6 +47,7 @@ public class HistoryPaneSupport {
 	private final InvalidationListener selectedHistoCryptoRepoFileTreeItemsInvalidationListener = observable -> selectedHistoCryptoRepoFileTreeItemsChanged();
 
 	private final ObservableSet<Uid> selectedHistoCryptoRepoFileIds = FXCollections.observableSet(new HashSet<Uid>());
+	private final ObservableSet<Uid> selectedCollisionIds = FXCollections.observableSet(new HashSet<Uid>());
 
 	public HistoryPaneSupport(final HistoryPaneContainer container) {
 		assertFxApplicationThread();
@@ -50,12 +55,24 @@ public class HistoryPaneSupport {
 		this.localRepo = assertNotNull("container.localRepo", this.container.getLocalRepo());
 		this.tabPane = assertNotNull("container.tabPane", this.container.getTabPane());
 		this.historyTab = assertNotNull("container.historyTab", this.container.getHistoryTab());
+		this.resolveCollisionInHistoryButton = assertNotNull("container.resolveCollisionInHistoryButton", this.container.getResolveCollisionInHistoryButton());
 		this.exportFromHistoryButton = assertNotNull("container.exportFromHistoryButton", this.container.getExportFromHistoryButton());
 
 		tabPane.getSelectionModel().selectedItemProperty().addListener((InvalidationListener) observable -> createOrForgetHistoryPane());
 		selectedHistoCryptoRepoFileIds.addListener((InvalidationListener) observable -> selectedHistoCryptoRepoFileIdsChanged());
+		selectedCollisionIds.addListener((InvalidationListener) observable -> selectedCollisionIdsChanged());
+		configureResolveCollisionInHistoryButton();
 		configureExportFromHistoryButton();
 		createOrForgetHistoryPane();
+	}
+
+	private void configureResolveCollisionInHistoryButton() {
+		final String imageName = "collision-resolved_24x24.png";
+		final URL imageUrl = HistoryPaneSupport.class.getResource(imageName); //$NON-NLS-1$
+		assertNotNull("imageUrl", imageUrl, "imageName = %s", imageName);
+		resolveCollisionInHistoryButton.setGraphic(new ImageView(imageUrl.toString()));
+		resolveCollisionInHistoryButton.setTooltip(new Tooltip("Resolve the selected collision(s). You may also undo resolutions."));
+		resolveCollisionInHistoryButton.setOnAction(event -> resolveCollisionInHistoryButtonClicked(event));
 	}
 
 	private void configureExportFromHistoryButton() {
@@ -80,7 +97,7 @@ public class HistoryPaneSupport {
 
 		if (historyTab != tabPane.getSelectionModel().getSelectedItem()) {
 			historyTab.setContent(null);
-			exportFromHistoryButton.setVisible(false);
+			setButtonsVisible(false);
 			selectedHistoCryptoRepoFileIds.clear();
 			return;
 		}
@@ -97,9 +114,17 @@ public class HistoryPaneSupport {
 		if (historyTab.getContent() == null)
 			historyTab.setContent(historyPane);
 
-		exportFromHistoryButton.setVisible(true);
+		setButtonsVisible(true);
 		selectedHistoCryptoRepoFileTreeItemsChanged();
 		selectedHistoCryptoRepoFileIdsChanged();
+		selectedCollisionIdsChanged();
+	}
+
+	private void setButtonsVisible(boolean visible) {
+		resolveCollisionInHistoryButton.setVisible(visible);
+		resolveCollisionInHistoryButton.setManaged(visible);
+		exportFromHistoryButton.setVisible(visible);
+		exportFromHistoryButton.setManaged(visible);
 	}
 
 	private void selectedHistoCryptoRepoFileTreeItemsChanged() {
@@ -111,20 +136,34 @@ public class HistoryPaneSupport {
 		else
 			selectedTreeItems = historyPane.getSelectedHistoCryptoRepoFileTreeItems();
 
-		final Set<Uid> newSelectedHistoCryptoRepoFileIds = new HashSet<Uid>();
+		final Set<Uid> newSelectedHistoCryptoRepoFileIds = new HashSet<>();
+		final Set<Uid> newCollisionIds = new HashSet<>();
 		for (final TreeItem<HistoCryptoRepoFileTreeItem> treeItem : selectedTreeItems) {
 			if (treeItem == null) // this should IMHO really never happen, but it does :-(
 				continue;
 
 			final HistoCryptoRepoFileTreeItem ti = treeItem.getValue();
 			final HistoCryptoRepoFileDto histoCryptoRepoFileDto = ti.getHistoCryptoRepoFileDto();
+			final PlainHistoCryptoRepoFileDto plainHistoCryptoRepoFileDto = ti.getPlainHistoCryptoRepoFileDto();
 			if (histoCryptoRepoFileDto != null
 					&& ti.getPlainHistoCryptoRepoFileDto().getRepoFileDto() instanceof NormalFileDto) // TODO support all types!
 				newSelectedHistoCryptoRepoFileIds.add(histoCryptoRepoFileDto.getHistoCryptoRepoFileId());
+
+			if (plainHistoCryptoRepoFileDto != null) {
+				for (CollisionDto collisionDto : plainHistoCryptoRepoFileDto.getCollisionDtos())
+					newCollisionIds.add(collisionDto.getCollisionId());
+			}
 		}
 
 		selectedHistoCryptoRepoFileIds.retainAll(newSelectedHistoCryptoRepoFileIds);
 		selectedHistoCryptoRepoFileIds.addAll(newSelectedHistoCryptoRepoFileIds);
+
+		selectedCollisionIds.retainAll(newCollisionIds);
+		selectedCollisionIds.addAll(newCollisionIds);
+	}
+
+	private void selectedCollisionIdsChanged() {
+		resolveCollisionInHistoryButton.setDisable(selectedCollisionIds.isEmpty());
 	}
 
 	private void selectedHistoCryptoRepoFileIdsChanged() {
@@ -135,6 +174,13 @@ public class HistoryPaneSupport {
 		final ExportFromHistoryData exportFromHistoryData = new ExportFromHistoryData(localRepo);
 		exportFromHistoryData.getHistoCryptoRepoFileIds().addAll(selectedHistoCryptoRepoFileIds);
 		final ExportFromHistoryWizard wizard = new ExportFromHistoryWizard(exportFromHistoryData);
+		final WizardDialog dialog = new WizardDialog(tabPane.getScene().getWindow(), wizard);
+		dialog.show(); // no need to wait ;-)
+	}
+
+	private void resolveCollisionInHistoryButtonClicked(final ActionEvent event) {
+		final ResolveCollisionData resolveCollisionData = new ResolveCollisionData(localRepo, new HashSet<>(selectedCollisionIds));
+		final ResolveCollisionWizard wizard = new ResolveCollisionWizard(resolveCollisionData);
 		final WizardDialog dialog = new WizardDialog(tabPane.getScene().getWindow(), wizard);
 		dialog.show(); // no need to wait ;-)
 	}

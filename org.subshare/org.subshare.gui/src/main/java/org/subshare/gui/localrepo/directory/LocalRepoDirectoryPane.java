@@ -5,25 +5,35 @@ import static org.subshare.gui.util.FxmlUtil.*;
 import static org.subshare.gui.util.PlatformUtil.*;
 
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
+import org.subshare.core.dto.CollisionDto;
 import org.subshare.core.repo.LocalRepo;
 import org.subshare.gui.filetree.DirectoryFileTreeItem;
 import org.subshare.gui.filetree.FileFileTreeItem;
 import org.subshare.gui.filetree.FileTreeItem;
 import org.subshare.gui.filetree.FileTreePane;
+import org.subshare.gui.filetree.repoaware.CollisionDtoSet;
 import org.subshare.gui.filetree.repoaware.RepoAwareFileTreePane;
 import org.subshare.gui.histo.HistoryPaneContainer;
 import org.subshare.gui.histo.HistoryPaneSupport;
 import org.subshare.gui.invitation.issue.IssueInvitationData;
 import org.subshare.gui.invitation.issue.IssueInvitationWizard;
 import org.subshare.gui.ls.RepoSyncDaemonLs;
+import org.subshare.gui.resolvecollision.ResolveCollisionData;
+import org.subshare.gui.resolvecollision.ResolveCollisionWizard;
 import org.subshare.gui.wizard.WizardDialog;
 
+import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import co.codewizards.cloudstore.core.repo.sync.RepoSyncDaemon;
 import javafx.beans.InvalidationListener;
+import javafx.collections.ObservableSet;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -56,6 +66,15 @@ public class LocalRepoDirectoryPane extends VBox implements HistoryPaneContainer
 	private RepoAwareFileTreePane fileTreePane;
 
 	@FXML
+	private Button resolveCollisionInFileTreeButton;
+
+	@FXML
+	private Button resolveCollisionInHistoryButton;
+
+	@FXML
+	private Button refreshButton;
+
+	@FXML
 	private Button exportFromHistoryButton;
 
 	private WeakReference<SecurityPane> securityPaneRef;
@@ -74,11 +93,16 @@ public class LocalRepoDirectoryPane extends VBox implements HistoryPaneContainer
 		fileTreePane.setUseCase(String.format("localRepo:%s:%s", localRepo.getRepositoryId(), path)); //$NON-NLS-1$
 		fileTreePane.setRootFileTreeItem(new RootDirectoryFileTreeItem(fileTreePane, file));
 		fileTreePane.setLocalRepo(localRepo);
+		fileTreePane.getSelectedFiles().addListener((InvalidationListener) observable -> updateResolveCollisionInFileTreeButtonDisable());
+		updateResolveCollisionInFileTreeButtonDisable();
 
 		historyPaneSupport = new HistoryPaneSupport(this);
 
 		tabPane.getSelectionModel().selectedItemProperty().addListener((InvalidationListener) observable -> createOrForgetSecurityPane());
 		createOrForgetSecurityPane();
+
+		tabPane.getSelectionModel().selectedItemProperty().addListener((InvalidationListener) observable -> updateButtonVisible());
+		updateButtonVisible();
 	}
 
 	private void createOrForgetSecurityPane() {
@@ -104,6 +128,38 @@ public class LocalRepoDirectoryPane extends VBox implements HistoryPaneContainer
 			securityTab.setContent(securityPane);
 	}
 
+	private void updateButtonVisible() {
+		refreshButton.setVisible(tabPane.getSelectionModel().getSelectedItem() == generalTab);
+		refreshButton.setManaged(refreshButton.isVisible());
+
+		resolveCollisionInFileTreeButton.setVisible(tabPane.getSelectionModel().getSelectedItem() == generalTab);
+		resolveCollisionInFileTreeButton.setManaged(resolveCollisionInFileTreeButton.isVisible());
+	}
+
+	private void updateResolveCollisionInFileTreeButtonDisable() {
+		final Collection<CollisionDto> collisionDtos = getSelectedFileTreeCollisionDtos();
+		resolveCollisionInFileTreeButton.setDisable(collisionDtos.isEmpty());
+	}
+
+	private Collection<CollisionDto> getSelectedFileTreeCollisionDtos() {
+		final ObservableSet<File> selectedFiles = fileTreePane.getSelectedFiles();
+		final List<CollisionDto> collisionDtos = new ArrayList<>();
+		final Set<Uid> collisionIds = new HashSet<>();
+		for (final File file : selectedFiles) {
+			final FileTreeItem<?> treeItem = fileTreePane.getRootFileTreeItem().findFirst(file);
+			if (treeItem != null) {
+				final CollisionDtoSet collisionDtoSet = fileTreePane.getCollisionDtoSet(treeItem);
+				if (collisionDtoSet != null) {
+					for (CollisionDto collisionDto : collisionDtoSet.getAllCollisionDtos()) {
+						if (collisionIds.add(collisionDto.getCollisionId()))
+							collisionDtos.add(collisionDto);
+					}
+				}
+			}
+		}
+		return collisionDtos;
+	}
+
 	@FXML
 	private void syncButtonClicked(final ActionEvent event) {
 		startSync();
@@ -124,6 +180,19 @@ public class LocalRepoDirectoryPane extends VBox implements HistoryPaneContainer
 	@FXML
 	private void refreshButtonClicked(final ActionEvent event) {
 		fileTreePane.refresh();
+	}
+
+	@FXML
+	private void resolveCollisionInFileTreeButtonClicked(final ActionEvent event) {
+		final Collection<CollisionDto> collisionDtos = getSelectedFileTreeCollisionDtos();
+		final Set<Uid> collisionIds = new HashSet<>(collisionDtos.size());
+		for (CollisionDto collisionDto : collisionDtos)
+			collisionIds.add(collisionDto.getCollisionId());
+
+		final ResolveCollisionData resolveCollisionData = new ResolveCollisionData(localRepo, collisionIds);
+		final ResolveCollisionWizard wizard = new ResolveCollisionWizard(resolveCollisionData);
+		final WizardDialog dialog = new WizardDialog(tabPane.getScene().getWindow(), wizard);
+		dialog.show(); // no need to wait ;-)
 	}
 
 	private static class RootDirectoryFileTreeItem extends DirectoryFileTreeItem {
@@ -168,6 +237,11 @@ public class LocalRepoDirectoryPane extends VBox implements HistoryPaneContainer
 	@Override
 	public Tab getHistoryTab() {
 		return historyTab;
+	}
+
+	@Override
+	public Button getResolveCollisionInHistoryButton() {
+		return resolveCollisionInHistoryButton;
 	}
 
 	@Override

@@ -393,4 +393,13 @@ public class SsLocalRepoMetaDataImpl extends LocalRepoMetaDataImpl implements Ss
 			return result;
 		}
 	}
+
+	@Override
+	public void setCollisionResolved(Uid collisionId, boolean resolved) {
+		try (final LocalRepoTransaction tx = getLocalRepoManagerOrFail().beginWriteTransaction();) {
+			final Cryptree cryptree = getCryptree(tx);
+			cryptree.setCollisionResolved(collisionId, resolved);
+			tx.commit();
+		}
+	}
 }

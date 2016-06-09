@@ -352,6 +352,7 @@ public class FileTreePane extends BorderPane {
 	@FXML
 	private void refreshButtonClicked(final ActionEvent event) {
 		fireRefreshEvent();
+		treeTableView.refresh();
 	}
 
 	@FXML

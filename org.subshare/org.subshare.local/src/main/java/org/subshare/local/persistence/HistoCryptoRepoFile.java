@@ -60,6 +60,14 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 	@Query(name="getHistoCryptoRepoFile_histoCryptoRepoFileId", value="SELECT UNIQUE WHERE this.histoCryptoRepoFileId == :histoCryptoRepoFileId"),
 	@Query(name="getHistoCryptoRepoFiles_cryptoRepoFile", value="SELECT WHERE this.cryptoRepoFile == :cryptoRepoFile"),
 	@Query(name="getHistoCryptoRepoFiles_histoFrame", value="SELECT WHERE this.histoFrame == :histoFrame"),
+
+	@Query(name="getHistoCryptoRepoFilesByCollisions",
+			value="SELECT WHERE"
+					+ "  collisionIds.contains(collision.collisionId)"
+					+ "  && (this == collision.histoCryptoRepoFile1 || this == collision.histoCryptoRepoFile2) "
+					+ "VARIABLES org.subshare.local.persistence.Collision collision "
+					+ "PARAMETERS java.util.Set collisionIds"),
+
 	@Query(
 			name="getHistoCryptoRepoFilesChangedAfter_localRevision_exclLastSyncFromRepositoryId",
 			value="SELECT WHERE this.localRevision > :localRevision && (this.lastSyncFromRepositoryId == null || this.lastSyncFromRepositoryId != :lastSyncFromRepositoryId)"), // TODO this necessary == null is IMHO a DN bug!

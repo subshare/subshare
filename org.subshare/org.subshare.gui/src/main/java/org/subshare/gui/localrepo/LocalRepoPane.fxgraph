@@ -32,6 +32,7 @@ dynamic component LocalRepoPane resourcefile 'messages.properties' {
 				tooltip : Tooltip { text : "Invite someone to share this repository.&#010;&#010;You'll select another user and an invitation token is going to be created for this user." },
 				onAction : controllermethod inviteButtonClicked
 			},
+			Button id resolveCollisionInHistoryButton,
 			Button id exportFromHistoryButton,
 
 			static margin : Insets { left : 8, right : 8, top : 8, bottom : 8 }

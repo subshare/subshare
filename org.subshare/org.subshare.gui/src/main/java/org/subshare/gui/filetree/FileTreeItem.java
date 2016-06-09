@@ -5,13 +5,13 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import co.codewizards.cloudstore.core.oio.File;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.control.TreeItem;
-import co.codewizards.cloudstore.core.oio.File;
 
 public class FileTreeItem<T> extends TreeItem<FileTreeItem<?>> {
 
@@ -130,7 +130,7 @@ public class FileTreeItem<T> extends TreeItem<FileTreeItem<?>> {
 
 		// TODO we should avoid loading all children! we should check by a path-test whether
 		// this is actually possible before we dive into the children. strange though - I thought
-		// I had already done this...
+		// I had already done this... YES, it is implemented in FileFileTreeItem!
 		for (final TreeItem<FileTreeItem<?>> child : getChildren()) {
 			final FileTreeItem<?> treeItem = child.getValue().findFirst(file);
 			if (treeItem != null)
