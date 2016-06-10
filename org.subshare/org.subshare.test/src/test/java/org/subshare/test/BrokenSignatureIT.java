@@ -6,17 +6,17 @@ import static mockit.Deencapsulation.*;
 import static org.assertj.core.api.Assertions.*;
 
 import java.io.OutputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import javax.jdo.JDOHelper;
 import javax.jdo.PersistenceManager;
 
-import mockit.Invocation;
-import mockit.Mock;
-import mockit.MockUp;
-
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.subshare.core.DataKey;
@@ -55,7 +55,12 @@ import co.codewizards.cloudstore.local.persistence.FileChunk;
 import co.codewizards.cloudstore.local.persistence.NormalFile;
 import co.codewizards.cloudstore.local.persistence.NormalFileDao;
 import co.codewizards.cloudstore.local.persistence.RepoFile;
+import mockit.Invocation;
+import mockit.Mock;
+import mockit.MockUp;
+import mockit.integration.junit4.JMockit;
 
+@RunWith(JMockit.class)
 public class BrokenSignatureIT extends AbstractRepoToRepoSyncIT {
 
 	private static final Logger logger = LoggerFactory.getLogger(BrokenSignatureIT.class);
@@ -490,10 +495,26 @@ public class BrokenSignatureIT extends AbstractRepoToRepoSyncIT {
 	private void touchEntity(final Object entity) {
 		((AutoTrackLocalRevision)entity).setLocalRevision(Long.MAX_VALUE);
 
-		if (entity instanceof RepoFile)
-			((RepoFile) entity).setLastSyncFromRepositoryId(null);
+		Method setLastSyncFromRepositoryIdMethod;
+		try {
+			setLastSyncFromRepositoryIdMethod = entity.getClass().getMethod("setLastSyncFromRepositoryId", UUID.class);
+		} catch (NoSuchMethodException e) {
+			logger.info("{} does not have method setLastSyncFromRepositoryId(...)!", entity.getClass().getName());
+			return;
+		} catch (SecurityException e) {
+			throw new RuntimeException(e);
+		}
 
-		if (entity instanceof CryptoRepoFile)
-			((CryptoRepoFile) entity).setLastSyncFromRepositoryId(null);
+		try {
+			setLastSyncFromRepositoryIdMethod.invoke(entity, new Object[] { null });
+		} catch (IllegalAccessException | InvocationTargetException e) {
+			throw new RuntimeException(e);
+		}
+
+//		if (entity instanceof RepoFile)
+//			((RepoFile) entity).setLastSyncFromRepositoryId(null);
+//
+//		if (entity instanceof CryptoRepoFile)
+//			((CryptoRepoFile) entity).setLastSyncFromRepositoryId(null);
 	}
 }

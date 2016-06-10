@@ -4,6 +4,13 @@ allprojects {
 	apply plugin: 'java'
 	apply plugin: 'maven'
 	apply plugin: "jacoco"
+	apply plugin: 'eclipse'
+	
+	eclipse {
+		classpath {
+			downloadSources = true
+		}
+	}
 
 	group = 'org.subshare'
 	version = '0.9.0-SNAPSHOT'
@@ -60,18 +67,12 @@ allprojects {
 subprojects {
 	apply plugin: 'eclipse'
 
-	eclipse {
-		classpath {
-			downloadSources = true
-		}
-	}
-
 	dependencies {
 		compile "org.slf4j:slf4j-api:$slf4jVersion"
 //		compile "org.apache.commons:commons-lang3:3.4"
 		compile "org.apache.commons:commons-collections4:4.0"
 		// jmockit must be *before* junit.
-		testCompile 'org.jmockit:jmockit:1.12', 'junit:junit:4.11', 'org.assertj:assertj-core:1.5.0'
+		testCompile 'org.jmockit:jmockit:1.24', 'junit:junit:4.12', 'org.assertj:assertj-core:2.4.1' // <!-- assertj 3.4.1 requires Java 8 - using the newest one that works with Java 7. -->
 		testCompile "org.slf4j:log4j-over-slf4j:$slf4jVersion", "ch.qos.logback:logback-classic:$logbackVersion"
 	}
 

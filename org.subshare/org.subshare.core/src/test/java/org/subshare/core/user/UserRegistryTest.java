@@ -9,6 +9,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 import org.subshare.core.gpg.GnuPgTest;
 import org.subshare.core.pgp.Pgp;
 import org.subshare.core.pgp.PgpAuthenticationCallback;
@@ -18,10 +22,6 @@ import org.subshare.core.pgp.PgpKeyValidity;
 import org.subshare.core.pgp.PgpOwnerTrust;
 import org.subshare.core.pgp.PgpRegistry;
 import org.subshare.core.pgp.gnupg.GnuPgDir;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
 
 import co.codewizards.cloudstore.core.config.Config;
 import co.codewizards.cloudstore.core.config.ConfigDir;
@@ -44,7 +44,7 @@ public class UserRegistryTest {
 		createFile(ConfigDir.getInstance().getFile(), UserRegistry.USER_REGISTRY_FILE_NAME).delete();
 		initPgp();
 	}
-	
+
 	@After
 	public void after() throws Exception {
 		PgpRegistry.getInstance().clearCache();
@@ -134,7 +134,7 @@ public class UserRegistryTest {
 		Collection<User> users2 = userRegistry2.getUsersByEmail(email1);
 		assertThat(users2).hasSize(1);
 		final User user2 = users2.iterator().next();
-		assertThat(user2).isEqualToComparingFieldByField(user1);
+		assertThat(user2).isEqualToIgnoringGivenFields(user1, "userRepoKeyRingChangeListener", "beanSupport");
 	}
 
 	private void initPgp() throws IOException {
