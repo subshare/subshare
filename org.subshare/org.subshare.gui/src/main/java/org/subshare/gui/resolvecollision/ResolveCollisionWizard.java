@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 import org.subshare.core.dto.CollisionDto;
+import org.subshare.core.dto.CollisionPrivateDto;
 import org.subshare.core.dto.PlainHistoCryptoRepoFileDto;
 import org.subshare.core.repo.LocalRepo;
 import org.subshare.core.repo.local.PlainHistoCryptoRepoFileFilter;
@@ -75,10 +76,23 @@ public class ResolveCollisionWizard extends Wizard {
 									else
 										throw new IllegalStateException("WTF?!");
 								}
+
+								for (CollisionPrivateDto cpDto : plainHistoCryptoRepoFileDto.getCollisionPrivateDtos()) {
+									final Uid collisionId = cpDto.getCollisionId();
+									final CollisionDtoWithPlainHistoCryptoRepoFileDto dto = collisionId2Dto.get(collisionId);
+									assertNotNull("collisionId2Dto[" + collisionId + "]", dto);
+									dto.setCollisionPrivateDto(cpDto);
+								}
 							}
 
 							final List<CollisionDtoWithPlainHistoCryptoRepoFileDto> collisionDtoWithPlainHistoCryptoRepoFileDtos = new ArrayList<>(
 									collisionId2Dto.values());
+
+							for (final CollisionDtoWithPlainHistoCryptoRepoFileDto dto : collisionDtoWithPlainHistoCryptoRepoFileDtos) {
+								assertNotNull("dto.collisionDto", dto.getCollisionDto());
+								assertNotNull("dto.collisionPrivateDto", dto.getCollisionPrivateDto());
+								assertNotNull("dto.plainHistoCryptoRepoFileDto1", dto.getPlainHistoCryptoRepoFileDto1());
+							}
 							return collisionDtoWithPlainHistoCryptoRepoFileDtos;
 						}
 					}
@@ -121,8 +135,8 @@ public class ResolveCollisionWizard extends Wizard {
 
 			final List<CollisionData> collisionDatas = resolveCollisionData.getCollisionDatas();
 			for (final CollisionData collisionData : collisionDatas) {
-				final CollisionDto collisionDto = collisionData.getCollisionDtoWithPlainHistoCryptoRepoFileDto().getCollisionDto();
-				localRepoMetaData.setCollisionResolved(collisionDto.getCollisionId(), collisionDto.getResolved() != null);
+				final CollisionPrivateDto collisionPrivateDto = collisionData.getCollisionDtoWithPlainHistoCryptoRepoFileDto().getCollisionPrivateDto();
+				localRepoMetaData.putCollisionPrivateDto(collisionPrivateDto);
 			}
 		}
 	}

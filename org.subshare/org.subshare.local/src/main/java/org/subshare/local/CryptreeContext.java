@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.subshare.core.Cryptree;
+import org.subshare.core.dto.jaxb.CollisionPrivateDtoIo;
 import org.subshare.core.sign.SignableSigner;
 import org.subshare.core.sign.SignableVerifier;
 import org.subshare.core.user.UserRegistry;
@@ -38,6 +39,7 @@ public class CryptreeContext {
 	public final String remotePathPrefix; // never null on client; always null on server
 	public final boolean isOnServer;
 	public final RepoFileDtoIo repoFileDtoIo; // never null
+	public final CollisionPrivateDtoIo collisionPrivateDtoIo; // never null
 	public final SignableVerifier signableVerifier; // never null
 
 	private RepositoryOwner repositoryOwner; // lazily initialised
@@ -67,6 +69,7 @@ public class CryptreeContext {
 		this.remotePathPrefix = remotePathPrefix;
 		this.isOnServer = isOnServer;
 		this.repoFileDtoIo = new RepoFileDtoIo();
+		this.collisionPrivateDtoIo = new CollisionPrivateDtoIo();
 		this.signableVerifier = new SignableVerifier(new UserRepoKeyPublicKeyLookupImpl(transaction));
 
 		if (userRepoKeyRing != null && userRepoKeyRing.getPermanentUserRepoKeys(serverRepositoryId).isEmpty())

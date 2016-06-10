@@ -14,6 +14,7 @@ public class PlainHistoCryptoRepoFileFilter implements Serializable, Cloneable {
 	private Set<Uid> histoCryptoRepoFileIds;
 	private Uid histoFrameId;
 	private boolean fillParents = true;
+	private boolean withFileChunkDtos;
 	private String localPath;
 	private Set<Uid> collisionIds;
 
@@ -67,6 +68,12 @@ public class PlainHistoCryptoRepoFileFilter implements Serializable, Cloneable {
 		this.collisionIds = collisionIds;
 	}
 
+	public boolean isWithFileChunkDtos() {
+		return withFileChunkDtos;
+	}
+	public void setWithFileChunkDtos(boolean withFileChunkDtos) {
+		this.withFileChunkDtos = withFileChunkDtos;
+	}
 
 	@Override
 	public PlainHistoCryptoRepoFileFilter clone() {

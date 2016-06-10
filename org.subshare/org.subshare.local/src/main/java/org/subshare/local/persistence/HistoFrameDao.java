@@ -104,7 +104,10 @@ public class HistoFrameDao extends Dao<HistoFrame, HistoFrameDao> {
 		final Set<HistoFrame> result = new HashSet<>();
 
 		if (! isEmpty(filter.getLocalPath())) { // null means no filtering and "" means localPath is root (/), i.e. no filter either.
-			final RemoteRepository remoteRepository = getDao(SsRemoteRepositoryDao.class).getUniqueRemoteRepositoryOrFail();
+			final RemoteRepository remoteRepository = getDao(SsRemoteRepositoryDao.class).getUniqueRemoteRepository();
+			if (remoteRepository == null)
+				return result;
+
 			final CryptoRepoFileDao crfDao = getDao(CryptoRepoFileDao.class);
 			final CryptoRepoFile crf1 = crfDao.getCryptoRepoFile(remoteRepository, filter.getLocalPath());
 			assertNotNull("cryptoRepoFile", crf1, "remoteRepository=%s filter.localPath='%s'", remoteRepository, filter.getLocalPath());

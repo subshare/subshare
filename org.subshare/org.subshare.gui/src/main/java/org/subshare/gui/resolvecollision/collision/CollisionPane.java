@@ -5,15 +5,13 @@ import static org.subshare.gui.util.FxmlUtil.*;
 
 import java.util.Date;
 
-import org.subshare.core.dto.CollisionDto;
-import org.subshare.core.repo.LocalRepo;
-import org.subshare.gui.ls.LocalRepoManagerFactoryLs;
+import org.subshare.core.dto.CollisionPrivateDto;
 import org.subshare.gui.resolvecollision.CollisionDtoWithPlainHistoCryptoRepoFileDto;
 
-import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import javafx.beans.InvalidationListener;
 import javafx.fxml.FXML;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.TextArea;
 import javafx.scene.layout.GridPane;
 
 public class CollisionPane extends GridPane {
@@ -23,43 +21,41 @@ public class CollisionPane extends GridPane {
 	@FXML
 	private CheckBox resolvedCheckBox;
 
-//	@FXML
-//	private TextArea commentTextArea;
+	@FXML
+	private TextArea commentTextArea;
 
 	public CollisionPane(final CollisionData collisionData) {
 		loadDynamicComponentFxml(CollisionPane.class, this);
 		this.collisionData = assertNotNull("collisionData", collisionData);
 
 		final CollisionDtoWithPlainHistoCryptoRepoFileDto collisionDtoWithPlainHistoCryptoRepoFileDto = collisionData.getCollisionDtoWithPlainHistoCryptoRepoFileDto();
-		final CollisionDto collisionDto = collisionDtoWithPlainHistoCryptoRepoFileDto.getCollisionDto();
+		final CollisionPrivateDto collisionPrivateDto = collisionDtoWithPlainHistoCryptoRepoFileDto.getCollisionPrivateDto();
 
-		resolvedCheckBox.setSelected(collisionDto.getResolved() != null);
+		resolvedCheckBox.setSelected(collisionPrivateDto.getResolved() != null);
 		resolvedCheckBox.selectedProperty().addListener((InvalidationListener) observable -> updateResolved());
 
-//		commentTextArea.setText(collisionDto.getComment());
-//		resolvedCheckBox.textProperty().addListener((InvalidationListener) observable -> updateComment());
-	}
-
-	private LocalRepoManager createLocalRepoManager() {
-		final LocalRepo localRepo = assertNotNull("collisionData.localRepo", collisionData.getLocalRepo());
-		return LocalRepoManagerFactoryLs.getLocalRepoManagerFactory().createLocalRepoManagerForExistingRepository(localRepo.getLocalRoot());
+		commentTextArea.setText(collisionPrivateDto.getComment());
+		commentTextArea.textProperty().addListener((InvalidationListener) observable -> updateComment());
 	}
 
 	private void updateResolved() {
 		final CollisionDtoWithPlainHistoCryptoRepoFileDto collisionDtoWithPlainHistoCryptoRepoFileDto = collisionData.getCollisionDtoWithPlainHistoCryptoRepoFileDto();
-		final CollisionDto collisionDto = collisionDtoWithPlainHistoCryptoRepoFileDto.getCollisionDto();
+		final CollisionPrivateDto collisionPrivateDto = collisionDtoWithPlainHistoCryptoRepoFileDto.getCollisionPrivateDto();
 
 		final boolean newResolved = resolvedCheckBox.selectedProperty().get();
 		if (newResolved)
-			collisionDto.setResolved(new Date());
+			collisionPrivateDto.setResolved(new Date());
 		else
-			collisionDto.setResolved(null);
+			collisionPrivateDto.setResolved(null);
 	}
 
-//	private void updateComment() {
-//		final String newComment = commentTextArea.getText();
-//		collisionData.getCollisionDto().setComment(newComment);
-//	}
+	private void updateComment() {
+		final CollisionDtoWithPlainHistoCryptoRepoFileDto collisionDtoWithPlainHistoCryptoRepoFileDto = collisionData.getCollisionDtoWithPlainHistoCryptoRepoFileDto();
+		final CollisionPrivateDto collisionPrivateDto = collisionDtoWithPlainHistoCryptoRepoFileDto.getCollisionPrivateDto();
+
+		final String newComment = commentTextArea.getText();
+		collisionPrivateDto.setComment(newComment);
+	}
 
 	@Override
 	public void requestFocus() {

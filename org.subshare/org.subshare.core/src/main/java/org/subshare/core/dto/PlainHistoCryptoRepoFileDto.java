@@ -22,6 +22,8 @@ public class PlainHistoCryptoRepoFileDto implements Serializable {
 
 	private List<CollisionDto> collisionDtos;
 
+	private List<CollisionPrivateDto> collisionPrivateDtos;
+
 	public PlainHistoCryptoRepoFileDto() {
 	}
 
@@ -61,5 +63,15 @@ public class PlainHistoCryptoRepoFileDto implements Serializable {
 	}
 	public void setCollisionDtos(List<CollisionDto> collisionDtos) {
 		this.collisionDtos = collisionDtos;
+	}
+
+	public List<CollisionPrivateDto> getCollisionPrivateDtos() {
+		if (collisionPrivateDtos == null)
+			collisionPrivateDtos = new ArrayList<>();
+
+		return collisionPrivateDtos;
+	}
+	public void setCollisionPrivateDtos(List<CollisionPrivateDto> collisionPrivateDtos) {
+		this.collisionPrivateDtos = collisionPrivateDtos;
 	}
 }

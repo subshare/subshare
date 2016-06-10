@@ -5,7 +5,7 @@ import static co.codewizards.cloudstore.core.util.StringUtil.*;
 
 import java.util.List;
 
-import org.subshare.core.dto.CollisionDto;
+import org.subshare.core.dto.CollisionPrivateDto;
 import org.subshare.core.dto.HistoCryptoRepoFileDto;
 import org.subshare.core.dto.PlainHistoCryptoRepoFileDto;
 
@@ -105,9 +105,9 @@ public class HistoCryptoRepoFileTreeItem extends TreeItem<HistoCryptoRepoFileTre
 	}
 
 	private boolean determineHasUnresolvedCollision() {
-		final List<CollisionDto> collisionDtos = plainHistoCryptoRepoFileDto.getCollisionDtos();
-		for (CollisionDto collisionDto : collisionDtos) {
-			if (collisionDto.getResolved() == null)
+		final List<CollisionPrivateDto> cpDtos = plainHistoCryptoRepoFileDto.getCollisionPrivateDtos();
+		for (CollisionPrivateDto cpDto : cpDtos) {
+			if (cpDto.getResolved() == null)
 				return true;
 		}
 		return false;

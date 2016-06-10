@@ -11,13 +11,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.subshare.core.dto.CollisionDto;
+import org.subshare.core.dto.CollisionPrivateDto;
 import org.subshare.core.repo.LocalRepo;
 import org.subshare.gui.filetree.DirectoryFileTreeItem;
 import org.subshare.gui.filetree.FileFileTreeItem;
 import org.subshare.gui.filetree.FileTreeItem;
 import org.subshare.gui.filetree.FileTreePane;
-import org.subshare.gui.filetree.repoaware.CollisionDtoSet;
+import org.subshare.gui.filetree.repoaware.CollisionPrivateDtoSet;
 import org.subshare.gui.filetree.repoaware.RepoAwareFileTreePane;
 import org.subshare.gui.histo.HistoryPaneContainer;
 import org.subshare.gui.histo.HistoryPaneSupport;
@@ -137,27 +137,27 @@ public class LocalRepoDirectoryPane extends VBox implements HistoryPaneContainer
 	}
 
 	private void updateResolveCollisionInFileTreeButtonDisable() {
-		final Collection<CollisionDto> collisionDtos = getSelectedFileTreeCollisionDtos();
-		resolveCollisionInFileTreeButton.setDisable(collisionDtos.isEmpty());
+		final Collection<CollisionPrivateDto> collisionPrivateDtos = getSelectedFileTreeCollisionPrivateDtos();
+		resolveCollisionInFileTreeButton.setDisable(collisionPrivateDtos.isEmpty());
 	}
 
-	private Collection<CollisionDto> getSelectedFileTreeCollisionDtos() {
+	private Collection<CollisionPrivateDto> getSelectedFileTreeCollisionPrivateDtos() {
 		final ObservableSet<File> selectedFiles = fileTreePane.getSelectedFiles();
-		final List<CollisionDto> collisionDtos = new ArrayList<>();
+		final List<CollisionPrivateDto> collisionPrivateDtos = new ArrayList<>();
 		final Set<Uid> collisionIds = new HashSet<>();
 		for (final File file : selectedFiles) {
 			final FileTreeItem<?> treeItem = fileTreePane.getRootFileTreeItem().findFirst(file);
 			if (treeItem != null) {
-				final CollisionDtoSet collisionDtoSet = fileTreePane.getCollisionDtoSet(treeItem);
-				if (collisionDtoSet != null) {
-					for (CollisionDto collisionDto : collisionDtoSet.getAllCollisionDtos()) {
-						if (collisionIds.add(collisionDto.getCollisionId()))
-							collisionDtos.add(collisionDto);
+				final CollisionPrivateDtoSet collisionPrivateDtoSet = fileTreePane.getCollisionDtoSet(treeItem);
+				if (collisionPrivateDtoSet != null) {
+					for (CollisionPrivateDto collisionPrivateDto : collisionPrivateDtoSet.getAllCollisionPrivateDtos()) {
+						if (collisionIds.add(collisionPrivateDto.getCollisionId()))
+							collisionPrivateDtos.add(collisionPrivateDto);
 					}
 				}
 			}
 		}
-		return collisionDtos;
+		return collisionPrivateDtos;
 	}
 
 	@FXML
@@ -184,10 +184,10 @@ public class LocalRepoDirectoryPane extends VBox implements HistoryPaneContainer
 
 	@FXML
 	private void resolveCollisionInFileTreeButtonClicked(final ActionEvent event) {
-		final Collection<CollisionDto> collisionDtos = getSelectedFileTreeCollisionDtos();
-		final Set<Uid> collisionIds = new HashSet<>(collisionDtos.size());
-		for (CollisionDto collisionDto : collisionDtos)
-			collisionIds.add(collisionDto.getCollisionId());
+		final Collection<CollisionPrivateDto> collisionPrivateDtos = getSelectedFileTreeCollisionPrivateDtos();
+		final Set<Uid> collisionIds = new HashSet<>(collisionPrivateDtos.size());
+		for (CollisionPrivateDto collisionPrivateDto : collisionPrivateDtos)
+			collisionIds.add(collisionPrivateDto.getCollisionId());
 
 		final ResolveCollisionData resolveCollisionData = new ResolveCollisionData(localRepo, collisionIds);
 		final ResolveCollisionWizard wizard = new ResolveCollisionWizard(resolveCollisionData);

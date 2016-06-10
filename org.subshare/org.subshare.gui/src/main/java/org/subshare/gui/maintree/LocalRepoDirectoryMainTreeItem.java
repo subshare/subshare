@@ -10,9 +10,9 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-import org.subshare.core.dto.CollisionDto;
+import org.subshare.core.dto.CollisionPrivateDto;
 import org.subshare.core.repo.LocalRepo;
-import org.subshare.core.repo.local.CollisionFilter;
+import org.subshare.core.repo.local.CollisionPrivateFilter;
 import org.subshare.core.repo.local.SsLocalRepoMetaData;
 import org.subshare.gui.IconSize;
 import org.subshare.gui.concurrent.SsTask;
@@ -148,18 +148,18 @@ public class LocalRepoDirectoryMainTreeItem extends MainTreeItem<File> {
 
 			try (final LocalRepoManager localRepoManager = createLocalRepoManager()) {
 				final SsLocalRepoMetaData localRepoMetaData = (SsLocalRepoMetaData) localRepoManager.getLocalRepoMetaData();
-				final CollisionFilter filter = new CollisionFilter();
+				final CollisionPrivateFilter filter = new CollisionPrivateFilter();
 				filter.setLocalPath(localPath);
 				filter.setResolved(false);
 
 				filter.setIncludeChildrenRecursively(true);
-				Collection<CollisionDto> collisionDtos = localRepoMetaData.getCollisionDtos(filter);
-				if (! collisionDtos.isEmpty()) {
+				Collection<CollisionPrivateDto> cpDtos = localRepoMetaData.getCollisionPrivateDtos(filter);
+				if (! cpDtos.isEmpty()) {
 					// There is a collision either directly associated or somewhere in the sub-tree.
 					// => Query again to find out, if it is directly associated.
 					filter.setIncludeChildrenRecursively(false);
-					collisionDtos = localRepoMetaData.getCollisionDtos(filter);
-					if (collisionDtos.isEmpty()) // not found => not directly associated => in child (sub-tree)
+					cpDtos = localRepoMetaData.getCollisionPrivateDtos(filter);
+					if (cpDtos.isEmpty()) // not found => not directly associated => in child (sub-tree)
 						return RepoAwareFileTreePane.getCollisionUnresolvedInChildIcon();
 					else
 						return RepoAwareFileTreePane.getCollisionUnresolvedIcon();

@@ -6,7 +6,6 @@ import static co.codewizards.cloudstore.core.util.Util.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.SortedSet;
@@ -30,6 +29,7 @@ import javax.jdo.annotations.Uniques;
 import javax.jdo.listener.StoreCallback;
 
 import org.subshare.core.dto.CollisionDto;
+import org.subshare.core.dto.CollisionPrivateDto;
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.io.InputStreamSource;
 import org.subshare.core.io.MultiInputStream;
@@ -87,20 +87,22 @@ public class Collision extends Entity implements WriteProtected, AutoTrackLocalR
 	@Column(length = 22)
 	private String duplicateCryptoRepoFileId;
 
-	private Date resolved;
+	@Persistent(nullValue=NullValue.EXCEPTION)
+	private CryptoKey cryptoKey; // might be different than the one of cryptoRepoFile, when it was just changed => keep separately.
+
+	@Persistent(nullValue=NullValue.EXCEPTION)
+	@Column(jdbcType="BLOB")
+	private byte[] collisionPrivateDtoData;
 
 	@Persistent(nullValue = NullValue.EXCEPTION)
 	@Embedded(nullIndicatorColumn = "signatureCreated")
 	private SignatureImpl signature;
 
 	@Join
-	private Set<CryptoRepoFile> cryptoRepoFilePath;
+	private Set<CryptoRepoFile> cryptoRepoFilePath; // TODO move into CollisionPrivate
 
 	@NotPersistent
 	private SortedSet<CryptoRepoFile> _cryptoRepoFilePath;
-
-//	@Column(jdbcType="CLOB") // NOT plaintext!!! need a different mechanism
-//	private String comment;
 
 	public Collision() {
 	}
@@ -154,14 +156,6 @@ public class Collision extends Entity implements WriteProtected, AutoTrackLocalR
 			this.duplicateCryptoRepoFileId = duplicateCryptoRepoFileId == null ? null : duplicateCryptoRepoFileId.toString();
 	}
 
-	public Date getResolved() {
-		return resolved;
-	}
-	public void setResolved(Date resolved) {
-		if (! equal(this.resolved, resolved))
-			this.resolved = resolved;
-	}
-
 	public SortedSet<CryptoRepoFile> getCryptoRepoFilePath() {
 		SortedSet<CryptoRepoFile> result = _cryptoRepoFilePath;
 		if (result == null) {
@@ -174,6 +168,26 @@ public class Collision extends Entity implements WriteProtected, AutoTrackLocalR
 			_cryptoRepoFilePath = result;
 		}
 		return result;
+	}
+
+	public CryptoKey getCryptoKey() {
+		return cryptoKey;
+	}
+	public void setCryptoKey(CryptoKey cryptoKey) {
+		if (! equal(this.cryptoKey, cryptoKey))
+			this.cryptoKey = cryptoKey;
+	}
+
+	/**
+	 * Gets the encrypted JAXB-encoded and gzipped {@link CollisionPrivateDto}.
+	 * @return the encrypted JAXB-encoded and gzipped {@link CollisionPrivateDto}.
+	 */
+	public byte[] getCollisionPrivateDtoData() {
+		return collisionPrivateDtoData;
+	}
+	public void setCollisionPrivateDtoData(byte[] collisionPrivateDtoData) {
+		if (! equal(this.collisionPrivateDtoData, collisionPrivateDtoData))
+			this.collisionPrivateDtoData = collisionPrivateDtoData;
 	}
 
 	@Override
@@ -208,10 +222,10 @@ public class Collision extends Entity implements WriteProtected, AutoTrackLocalR
 					InputStreamSource.Helper.createInputStreamSource(getDuplicateCryptoRepoFileId()),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
-					InputStreamSource.Helper.createInputStreamSource(resolved)
+					InputStreamSource.Helper.createInputStreamSource(assertNotNull("cryptoKey", cryptoKey).getCryptoKeyId()),
 
-//					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
-//					InputStreamSource.Helper.createInputStreamSource(comment)
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
+					InputStreamSource.Helper.createInputStreamSource(collisionPrivateDtoData)
 					);
 		} catch (final IOException x) {
 			throw new RuntimeException(x);
@@ -280,14 +294,6 @@ public class Collision extends Entity implements WriteProtected, AutoTrackLocalR
 		}
 	}
 
-//	public String getComment() {
-//		return comment;
-//	}
-//	public void setComment(final String comment) {
-//		if (! equal(this.comment, comment))
-//			this.comment = comment;
-//	}
-
 	@Override
 	public long getLocalRevision() {
 		return localRevision;
@@ -320,11 +326,4 @@ public class Collision extends Entity implements WriteProtected, AutoTrackLocalR
 	public PermissionType getPermissionTypeRequiredForWrite() {
 		return PermissionType.write;
 	}
-
-//	public String getLocalPath() {
-//		return localPath;
-//	}
-//	public void setLocalPath(String localPath) {
-//		this.localPath = localPath;
-//	}
 }

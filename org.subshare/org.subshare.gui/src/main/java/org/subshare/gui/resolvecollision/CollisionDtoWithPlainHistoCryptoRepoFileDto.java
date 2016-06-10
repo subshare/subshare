@@ -1,11 +1,13 @@
 package org.subshare.gui.resolvecollision;
 
 import org.subshare.core.dto.CollisionDto;
+import org.subshare.core.dto.CollisionPrivateDto;
 import org.subshare.core.dto.PlainHistoCryptoRepoFileDto;
 
 public class CollisionDtoWithPlainHistoCryptoRepoFileDto {
 
 	private CollisionDto collisionDto;
+	private CollisionPrivateDto collisionPrivateDto;
 	private PlainHistoCryptoRepoFileDto plainHistoCryptoRepoFileDto1;
 	private PlainHistoCryptoRepoFileDto plainHistoCryptoRepoFileDto2;
 
@@ -18,6 +20,14 @@ public class CollisionDtoWithPlainHistoCryptoRepoFileDto {
 	public void setCollisionDto(CollisionDto collisionDto) {
 		this.collisionDto = collisionDto;
 	}
+
+	public CollisionPrivateDto getCollisionPrivateDto() {
+		return collisionPrivateDto;
+	}
+	public void setCollisionPrivateDto(CollisionPrivateDto collisionPrivateDto) {
+		this.collisionPrivateDto = collisionPrivateDto;
+	}
+
 	public PlainHistoCryptoRepoFileDto getPlainHistoCryptoRepoFileDto1() {
 		return plainHistoCryptoRepoFileDto1;
 	}

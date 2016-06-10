@@ -3,7 +3,6 @@ package org.subshare.core.dto;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
-import java.util.Date;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -32,9 +31,9 @@ public class CollisionDto implements Signable, Serializable {
 
 	private Uid duplicateCryptoRepoFileId;
 
-	private Date resolved;
+	private Uid cryptoKeyId;
 
-//	private String comment; NO plain-text here!
+	private byte[] collisionPrivateDtoData;
 
 	public CollisionDto() {
 	}
@@ -66,19 +65,23 @@ public class CollisionDto implements Signable, Serializable {
 		this.duplicateCryptoRepoFileId = duplicateCryptoRepoFileId;
 	}
 
-	public Date getResolved() {
-		return resolved;
+	public Uid getCryptoKeyId() {
+		return cryptoKeyId;
 	}
-	public void setResolved(Date resolved) {
-		this.resolved = resolved;
+	public void setCryptoKeyId(Uid cryptoKeyId) {
+		this.cryptoKeyId = cryptoKeyId;
 	}
 
-//	public String getComment() {
-//		return comment;
-//	}
-//	public void setComment(String comment) {
-//		this.comment = comment;
-//	}
+	/**
+	 * Gets the encrypted JAXB-encoded and gzipped {@link CollisionPrivateDto}.
+	 * @return the encrypted JAXB-encoded and gzipped {@link CollisionPrivateDto}.
+	 */
+	public byte[] getCollisionPrivateDtoData() {
+		return collisionPrivateDtoData;
+	}
+	public void setCollisionPrivateDtoData(byte[] collisionPrivateDtoData) {
+		this.collisionPrivateDtoData = collisionPrivateDtoData;
+	}
 
 	@Override
 	public String getSignedDataType() {
@@ -112,10 +115,10 @@ public class CollisionDto implements Signable, Serializable {
 					InputStreamSource.Helper.createInputStreamSource(duplicateCryptoRepoFileId),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
-					InputStreamSource.Helper.createInputStreamSource(resolved)
+					InputStreamSource.Helper.createInputStreamSource(cryptoKeyId),
 
-//					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
-//					InputStreamSource.Helper.createInputStreamSource(comment)
+					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
+					InputStreamSource.Helper.createInputStreamSource(collisionPrivateDtoData)
 					);
 		} catch (final IOException x) {
 			throw new RuntimeException(x);

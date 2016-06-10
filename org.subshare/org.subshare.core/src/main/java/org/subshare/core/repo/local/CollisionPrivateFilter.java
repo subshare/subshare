@@ -7,7 +7,7 @@ import java.util.Set;
 import co.codewizards.cloudstore.core.dto.Uid;
 
 @SuppressWarnings("serial")
-public class CollisionFilter implements Serializable, Cloneable {
+public class CollisionPrivateFilter implements Serializable, Cloneable {
 
 	private Set<Uid> collisionIds;
 
@@ -17,7 +17,7 @@ public class CollisionFilter implements Serializable, Cloneable {
 
 	private String localPath;
 
-//	private Boolean resolved;
+	private Boolean resolved;
 
 	private boolean includeChildrenRecursively;
 
@@ -49,12 +49,12 @@ public class CollisionFilter implements Serializable, Cloneable {
 		this.localPath = localPath;
 	}
 
-//	public Boolean getResolved() {
-//		return resolved;
-//	}
-//	public void setResolved(Boolean resolved) {
-//		this.resolved = resolved;
-//	}
+	public Boolean getResolved() {
+		return resolved;
+	}
+	public void setResolved(Boolean resolved) {
+		this.resolved = resolved;
+	}
 
 	/**
 	 * Whether to include {@code Collision}s associated with sub-directories or files within the specified
@@ -71,10 +71,10 @@ public class CollisionFilter implements Serializable, Cloneable {
 	}
 
 	@Override
-	public CollisionFilter clone() {
-		final CollisionFilter clone;
+	public CollisionPrivateFilter clone() {
+		final CollisionPrivateFilter clone;
 		try {
-			clone = (CollisionFilter) super.clone();
+			clone = (CollisionPrivateFilter) super.clone();
 		} catch (CloneNotSupportedException e) {
 			throw new RuntimeException(e); // should really never happen!
 		}

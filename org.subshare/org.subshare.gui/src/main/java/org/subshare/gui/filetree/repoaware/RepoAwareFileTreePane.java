@@ -8,9 +8,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.concurrent.ExecutionException;
 
-import org.subshare.core.dto.CollisionDto;
+import org.subshare.core.dto.CollisionPrivateDto;
 import org.subshare.core.repo.LocalRepo;
-import org.subshare.core.repo.local.CollisionFilter;
+import org.subshare.core.repo.local.CollisionPrivateFilter;
 import org.subshare.core.repo.local.SsLocalRepoMetaData;
 import org.subshare.gui.concurrent.SsTask;
 import org.subshare.gui.filetree.FileFileTreeItem;
@@ -34,7 +34,7 @@ public class RepoAwareFileTreePane extends FileTreePane {
 	private static Image collisionUnresolvedIcon;
 	private static Image collisionUnresolvedInChildIcon;
 
-	private final WeakIdentityHashMap<FileTreeItem<?>, CollisionDtoSet> treeItem2CollisionDtoSet = new WeakIdentityHashMap<>();
+	private final WeakIdentityHashMap<FileTreeItem<?>, CollisionPrivateDtoSet> treeItem2CollisionDtoSet = new WeakIdentityHashMap<>();
 	private final WeakIdentityHashMap<FileTreeItem<?>, ImageView> treeItem2CollisionIconImageView = new WeakIdentityHashMap<>();
 
 	// *Important*
@@ -70,26 +70,26 @@ public class RepoAwareFileTreePane extends FileTreePane {
 	};
 
 	private void updateGraphicAsync(final TreeTableCell<FileTreeItem<?>, String> treeTableCell, final FileTreeItem<?> treeItem) {
-		new Service<CollisionDtoSet>() {
+		new Service<CollisionPrivateDtoSet>() {
 			@Override
-			protected Task<CollisionDtoSet> createTask() {
-				return new SsTask<CollisionDtoSet>() {
+			protected Task<CollisionPrivateDtoSet> createTask() {
+				return new SsTask<CollisionPrivateDtoSet>() {
 					@Override
-					protected CollisionDtoSet call() throws Exception {
+					protected CollisionPrivateDtoSet call() throws Exception {
 						return _getCollisionDtoSet(treeItem);
 					}
 
 					@Override
 					protected void succeeded() {
-						final CollisionDtoSet collisionDtoSet;
-						try { collisionDtoSet = get(); } catch (InterruptedException | ExecutionException e) { throw new RuntimeException(e); }
+						final CollisionPrivateDtoSet collisionPrivateDtoSet;
+						try { collisionPrivateDtoSet = get(); } catch (InterruptedException | ExecutionException e) { throw new RuntimeException(e); }
 
-						if (collisionDtoSet == null)
+						if (collisionPrivateDtoSet == null)
 							treeItem2CollisionDtoSet.remove(treeItem);
 						else
-							treeItem2CollisionDtoSet.put(treeItem, collisionDtoSet);
+							treeItem2CollisionDtoSet.put(treeItem, collisionPrivateDtoSet);
 
-						final Image icon = _getCollisionIcon(collisionDtoSet);
+						final Image icon = _getCollisionIcon(collisionPrivateDtoSet);
 						final ImageView iconImageView = icon == null ? null : new ImageView(icon);
 
 						if (iconImageView == null)
@@ -106,7 +106,7 @@ public class RepoAwareFileTreePane extends FileTreePane {
 		}.start();
 	}
 
-	public CollisionDtoSet getCollisionDtoSet(final FileTreeItem<?> treeItem) {
+	public CollisionPrivateDtoSet getCollisionDtoSet(final FileTreeItem<?> treeItem) {
 		assertNotNull("treeItem", treeItem);
 		assertFxApplicationThread();
 		return treeItem2CollisionDtoSet.get(treeItem);
@@ -123,20 +123,20 @@ public class RepoAwareFileTreePane extends FileTreePane {
 		this.localRepo = localRepo;
 	}
 
-	private Image _getCollisionIcon(final CollisionDtoSet collisionDtoSet) {
-		if (collisionDtoSet == null)
+	private Image _getCollisionIcon(final CollisionPrivateDtoSet collisionPrivateDtoSet) {
+		if (collisionPrivateDtoSet == null)
 			return null;
 
-		if (collisionDtoSet.getAllCollisionDtos().isEmpty()) // none - neither directly associated nor in child.
+		if (collisionPrivateDtoSet.getAllCollisionPrivateDtos().isEmpty()) // none - neither directly associated nor in child.
 			return null;
 
-		if (collisionDtoSet.getDirectCollisionDtos().isEmpty()) // not directly associated, but in child (sub-tree)
+		if (collisionPrivateDtoSet.getDirectCollisionPrivateDtos().isEmpty()) // not directly associated, but in child (sub-tree)
 			return getCollisionUnresolvedInChildIcon();
 
 		return getCollisionUnresolvedIcon(); // directly associated.
 	}
 
-	private CollisionDtoSet _getCollisionDtoSet(final FileTreeItem<?> treeItem) {
+	private CollisionPrivateDtoSet _getCollisionDtoSet(final FileTreeItem<?> treeItem) {
 		assertNotNull("treeItem", treeItem);
 
 		if (! (treeItem instanceof FileFileTreeItem))
@@ -148,20 +148,20 @@ public class RepoAwareFileTreePane extends FileTreePane {
 
 			try (final LocalRepoManager localRepoManager = createLocalRepoManager()) {
 				final SsLocalRepoMetaData localRepoMetaData = (SsLocalRepoMetaData) localRepoManager.getLocalRepoMetaData();
-				final CollisionFilter filter = new CollisionFilter();
+				final CollisionPrivateFilter filter = new CollisionPrivateFilter();
 				filter.setLocalPath(localPath);
 				filter.setResolved(false);
 
 				filter.setIncludeChildrenRecursively(true);
-				Collection<CollisionDto> allCollisionDtos = localRepoMetaData.getCollisionDtos(filter);
+				Collection<CollisionPrivateDto> allCollisionDtos = localRepoMetaData.getCollisionPrivateDtos(filter);
 				if (allCollisionDtos.isEmpty())
-					return new CollisionDtoSet(Collections.emptyList(), Collections.emptyList());
+					return new CollisionPrivateDtoSet(Collections.emptyList(), Collections.emptyList());
 
 				// There is a collision either directly associated or somewhere in the sub-tree.
 				// => Query again to find out, if it is directly associated.
 				filter.setIncludeChildrenRecursively(false);
-				Collection<CollisionDto> directCollisionDtos = localRepoMetaData.getCollisionDtos(filter);
-				return new CollisionDtoSet(allCollisionDtos, directCollisionDtos);
+				Collection<CollisionPrivateDto> directCollisionDtos = localRepoMetaData.getCollisionPrivateDtos(filter);
+				return new CollisionPrivateDtoSet(allCollisionDtos, directCollisionDtos);
 			}
 		}
 	}

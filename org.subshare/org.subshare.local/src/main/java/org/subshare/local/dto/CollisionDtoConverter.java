@@ -8,6 +8,8 @@ import org.slf4j.LoggerFactory;
 import org.subshare.core.dto.CollisionDto;
 import org.subshare.local.persistence.Collision;
 import org.subshare.local.persistence.CollisionDao;
+import org.subshare.local.persistence.CryptoKey;
+import org.subshare.local.persistence.CryptoKeyDao;
 import org.subshare.local.persistence.HistoCryptoRepoFile;
 import org.subshare.local.persistence.HistoCryptoRepoFileDao;
 
@@ -35,7 +37,8 @@ public class CollisionDtoConverter {
 		result.setHistoCryptoRepoFileId2(
 				collision.getHistoCryptoRepoFile2() == null ? null : collision.getHistoCryptoRepoFile2().getHistoCryptoRepoFileId());
 		result.setDuplicateCryptoRepoFileId(collision.getDuplicateCryptoRepoFileId());
-		result.setResolved(collision.getResolved());
+		result.setCryptoKeyId(assertNotNull("collision.cryptoKey", collision.getCryptoKey()).getCryptoKeyId());
+		result.setCollisionPrivateDtoData(collision.getCollisionPrivateDtoData());
 		result.setSignature(collision.getSignature());
 		return result;
 	}
@@ -48,6 +51,8 @@ public class CollisionDtoConverter {
 
 		final HistoCryptoRepoFile histoCryptoRepoFile1 = hcrfDao.getHistoCryptoRepoFileOrFail(collisionDto.getHistoCryptoRepoFileId1());
 		final Uid duplicateCryptoRepoFileId = collisionDto.getDuplicateCryptoRepoFileId();
+
+		final CryptoKeyDao cryptoKeyDao = transaction.getDao(CryptoKeyDao.class);
 
 		Collision result = cDao.getCollision(collisionDto.getCollisionId());
 		if (result == null) {
@@ -67,7 +72,11 @@ public class CollisionDtoConverter {
 		result.setHistoCryptoRepoFile2(
 				collisionDto.getHistoCryptoRepoFileId2() == null ? null : hcrfDao.getHistoCryptoRepoFileOrFail(collisionDto.getHistoCryptoRepoFileId2()));
 		result.setDuplicateCryptoRepoFileId(duplicateCryptoRepoFileId);
-		result.setResolved(collisionDto.getResolved());
+
+		final CryptoKey cryptoKey = cryptoKeyDao.getCryptoKeyOrFail(collisionDto.getCryptoKeyId());
+		result.setCryptoKey(cryptoKey);
+
+		result.setCollisionPrivateDtoData(collisionDto.getCollisionPrivateDtoData());
 		result.setSignature(collisionDto.getSignature());
 		result = cDao.makePersistent(result);
 		return result;

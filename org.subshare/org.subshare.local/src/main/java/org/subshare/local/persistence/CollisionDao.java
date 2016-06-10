@@ -139,7 +139,7 @@ public class CollisionDao extends Dao<Collision, CollisionDao> {
 	public Collection<Collision> getCollisions(CollisionFilter filter) {
 		assertNotNull("filter", filter);
 
-		filter = getCollisions_prepareFilter(filter);
+		filter = prepareFilter(filter);
 		if (filter == null)
 			return new HashSet<>();
 
@@ -158,7 +158,7 @@ public class CollisionDao extends Dao<Collision, CollisionDao> {
 			else
 				appendToQueryFilter_cryptoRepoFileId_nonRecursive(qf, qp, qv, filter.getCryptoRepoFileId());
 
-			appendToQueryFilter_resolved(qf, qp, qv, filter.getResolved());
+//			appendToQueryFilter_resolved(qf, qp, qv, filter.getResolved());
 
 			if (qf.length() > 0)
 				query.setFilter(qf.toString());
@@ -186,7 +186,7 @@ public class CollisionDao extends Dao<Collision, CollisionDao> {
 		}
 	}
 
-	private CollisionFilter getCollisions_prepareFilter(CollisionFilter filter) {
+	private CollisionFilter prepareFilter(CollisionFilter filter) {
 		assertNotNull("filter", filter);
 
 		if (filter.getLocalPath() != null && filter.getCryptoRepoFileId() != null)
@@ -274,7 +274,10 @@ public class CollisionDao extends Dao<Collision, CollisionDao> {
 		if (localPath == null)
 			return null;
 
-		final RemoteRepository remoteRepository = getDao(SsRemoteRepositoryDao.class).getUniqueRemoteRepositoryOrFail();
+		final RemoteRepository remoteRepository = getDao(SsRemoteRepositoryDao.class).getUniqueRemoteRepository();
+		if (remoteRepository == null)
+			return null;
+
 		final CryptoRepoFile crf1 = getDao(CryptoRepoFileDao.class).getCryptoRepoFile(remoteRepository, localPath);
 		// crf1 might indeed be null, which is currently the case, if there is a symlink in the localPath.
 		// Additionally, it might be null, because there was nothing uploaded, yet.
@@ -283,24 +286,24 @@ public class CollisionDao extends Dao<Collision, CollisionDao> {
 		return crf1;
 	}
 
-	private void appendToQueryFilter_resolved(StringBuilder qf, Map<String, Object> qp, final Map<String, Class<?>> qv, Boolean resolved) {
-		assertNotNull("qf", qf);
-		assertNotNull("qp", qp);
-		assertNotNull("qv", qv);
-		if (resolved == null)
-			return;
-
-		appendAndIfNeeded(qf);
-
-		qf.append(" this.resolved ");
-
-		if (resolved == true)
-			qf.append(" != ");
-		else
-			qf.append(" == ");
-
-		qf.append("null ");
-	}
+//	private void appendToQueryFilter_resolved(StringBuilder qf, Map<String, Object> qp, final Map<String, Class<?>> qv, Boolean resolved) {
+//		assertNotNull("qf", qf);
+//		assertNotNull("qp", qp);
+//		assertNotNull("qv", qv);
+//		if (resolved == null)
+//			return;
+//
+//		appendAndIfNeeded(qf);
+//
+//		qf.append(" this.resolved ");
+//
+//		if (resolved == true)
+//			qf.append(" != ");
+//		else
+//			qf.append(" == ");
+//
+//		qf.append("null ");
+//	}
 
 	private static void appendAndIfNeeded(final StringBuilder qf) {
 		assertNotNull("qf", qf);

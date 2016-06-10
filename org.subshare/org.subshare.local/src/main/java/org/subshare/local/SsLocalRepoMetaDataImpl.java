@@ -24,11 +24,13 @@ import org.subshare.core.CryptreeFactoryRegistry;
 import org.subshare.core.LocalRepoStorage;
 import org.subshare.core.LocalRepoStorageFactoryRegistry;
 import org.subshare.core.dto.CollisionDto;
+import org.subshare.core.dto.CollisionPrivateDto;
 import org.subshare.core.dto.CryptoRepoFileDto;
 import org.subshare.core.dto.HistoFrameDto;
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.dto.PlainHistoCryptoRepoFileDto;
 import org.subshare.core.repo.local.CollisionFilter;
+import org.subshare.core.repo.local.CollisionPrivateFilter;
 import org.subshare.core.repo.local.HistoFrameFilter;
 import org.subshare.core.repo.local.PlainHistoCryptoRepoFileFilter;
 import org.subshare.core.repo.local.SsLocalRepoMetaData;
@@ -37,10 +39,13 @@ import org.subshare.core.user.UserRepoKeyRing;
 import org.subshare.core.user.UserRepoKeyRingLookup;
 import org.subshare.core.user.UserRepoKeyRingLookupContext;
 import org.subshare.local.dto.CollisionDtoConverter;
+import org.subshare.local.dto.CollisionPrivateDtoConverter;
 import org.subshare.local.dto.CryptoRepoFileDtoConverter;
 import org.subshare.local.dto.HistoFrameDtoConverter;
 import org.subshare.local.persistence.Collision;
 import org.subshare.local.persistence.CollisionDao;
+import org.subshare.local.persistence.CollisionPrivate;
+import org.subshare.local.persistence.CollisionPrivateDao;
 import org.subshare.local.persistence.CryptoRepoFile;
 import org.subshare.local.persistence.CryptoRepoFileDao;
 import org.subshare.local.persistence.HistoFrame;
@@ -379,6 +384,21 @@ public class SsLocalRepoMetaDataImpl extends LocalRepoMetaDataImpl implements Ss
 	}
 
 	@Override
+	public Collection<CollisionPrivateDto> getCollisionPrivateDtos(CollisionPrivateFilter filter) {
+		assertNotNull("filter", filter);
+		try (final LocalRepoTransaction tx = getLocalRepoManagerOrFail().beginReadTransaction();) {
+			final CollisionPrivateDao cDao = tx.getDao(CollisionPrivateDao.class);
+			final Collection<CollisionPrivate> pcps = cDao.getCollisionPrivates(filter);
+			final List<CollisionPrivateDto> result = new ArrayList<>(pcps.size());
+			final CollisionPrivateDtoConverter cpDtoConverter = CollisionPrivateDtoConverter.create(tx);
+			for (final CollisionPrivate pcp : pcps)
+				result.add(cpDtoConverter.toCollisionPrivateDto(pcp));
+
+			return result;
+		}
+	}
+
+	@Override
 	public Collection<CollisionDto> getCollisionDtos(CollisionFilter filter) {
 		assertNotNull("filter", filter);
 		try (final LocalRepoTransaction tx = getLocalRepoManagerOrFail().beginReadTransaction();) {
@@ -395,10 +415,11 @@ public class SsLocalRepoMetaDataImpl extends LocalRepoMetaDataImpl implements Ss
 	}
 
 	@Override
-	public void setCollisionResolved(Uid collisionId, boolean resolved) {
+	public void putCollisionPrivateDto(final CollisionPrivateDto collisionPrivateDto) {
+		assertNotNull("collisionPrivateDto", collisionPrivateDto);
 		try (final LocalRepoTransaction tx = getLocalRepoManagerOrFail().beginWriteTransaction();) {
 			final Cryptree cryptree = getCryptree(tx);
-			cryptree.setCollisionResolved(collisionId, resolved);
+			cryptree.putCollisionPrivateDto(collisionPrivateDto);
 			tx.commit();
 		}
 	}

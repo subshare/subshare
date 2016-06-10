@@ -72,7 +72,7 @@ subprojects {
 //		compile "org.apache.commons:commons-lang3:3.4"
 		compile "org.apache.commons:commons-collections4:4.0"
 		// jmockit must be *before* junit.
-		testCompile 'org.jmockit:jmockit:1.24', 'junit:junit:4.12', 'org.assertj:assertj-core:2.4.1' // <!-- assertj 3.4.1 requires Java 8 - using the newest one that works with Java 7. -->
+		testCompile 'org.jmockit:jmockit:1.24', 'junit:junit:4.12', 'org.assertj:assertj-core:2.4.1' // assertj 3.4.1 requires Java 8 - using the newest one that works with Java 7.
 		testCompile "org.slf4j:log4j-over-slf4j:$slf4jVersion", "ch.qos.logback:logback-classic:$logbackVersion"
 	}
 

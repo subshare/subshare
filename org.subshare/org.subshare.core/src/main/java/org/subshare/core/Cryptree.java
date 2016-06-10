@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.Set;
 import java.util.UUID;
 
+import org.subshare.core.dto.CollisionPrivateDto;
 import org.subshare.core.dto.CryptoChangeSetDto;
 import org.subshare.core.dto.CryptoKeyDto;
 import org.subshare.core.dto.CryptoLinkDto;
@@ -206,7 +207,7 @@ public interface Cryptree {
 	PlainHistoCryptoRepoFileDto getPlainHistoCryptoRepoFileDto(Uid histoCryptoRepoFileId);
 	void clearCryptoRepoFileDeleted(String localPath);
 	void assertIsNotDeletedDuplicateCryptoRepoFile(Uid cryptoRepoFileId);
-	void setCollisionResolved(Uid collisionId, boolean resolved);
+	void putCollisionPrivateDto(CollisionPrivateDto collisionPrivateDto);
 
 //	void createCollisionIfNeeded(String localPath);
 }

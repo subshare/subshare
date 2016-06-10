@@ -6,6 +6,7 @@ import static co.codewizards.cloudstore.core.util.Util.*;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 
+import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Index;
 import javax.jdo.annotations.Indices;
 import javax.jdo.annotations.Inheritance;
@@ -41,6 +42,7 @@ public class PlainHistoCryptoRepoFile extends Entity implements StoreCallback {
 	private HistoCryptoRepoFile histoCryptoRepoFile;
 
 	@Persistent(nullValue=NullValue.EXCEPTION)
+	@Column(jdbcType = "BLOB")
 	private byte[] plainHistoCryptoRepoFileDtoData;
 
 	public PlainHistoCryptoRepoFile() {
@@ -66,9 +68,8 @@ public class PlainHistoCryptoRepoFile extends Entity implements StoreCallback {
 
 	public void setPlainHistoCryptoRepoFileDto(final PlainHistoCryptoRepoFileDto dto) {
 		assertNotNull("dto", dto);
-		final PlainHistoCryptoRepoFileDtoIo io = new PlainHistoCryptoRepoFileDtoIo();
 		final ByteArrayOutputStream out = new ByteArrayOutputStream();
-		io.serializeWithGz(dto, out);
+		new PlainHistoCryptoRepoFileDtoIo().serializeWithGz(dto, out);
 		plainHistoCryptoRepoFileDtoData = out.toByteArray();
 	}
 

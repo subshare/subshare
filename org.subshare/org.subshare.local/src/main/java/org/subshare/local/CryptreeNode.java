@@ -7,7 +7,6 @@ import static org.subshare.local.CryptreeNodeUtil.*;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -20,7 +19,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.zip.GZIPInputStream;
+import java.util.UUID;
 import java.util.zip.GZIPOutputStream;
 
 import org.slf4j.Logger;
@@ -32,7 +31,7 @@ import org.subshare.core.ReadAccessDeniedException;
 import org.subshare.core.ReadUserIdentityAccessDeniedException;
 import org.subshare.core.WriteAccessDeniedException;
 import org.subshare.core.crypto.CryptoConfigUtil;
-import org.subshare.core.dto.CollisionDto;
+import org.subshare.core.dto.CollisionPrivateDto;
 import org.subshare.core.dto.CryptoKeyPart;
 import org.subshare.core.dto.CryptoKeyRole;
 import org.subshare.core.dto.PermissionType;
@@ -49,9 +48,12 @@ import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKey.PublicKey;
 import org.subshare.crypto.CipherOperationMode;
 import org.subshare.local.dto.CollisionDtoConverter;
+import org.subshare.local.dto.CollisionPrivateDtoConverter;
 import org.subshare.local.dto.HistoCryptoRepoFileDtoConverter;
 import org.subshare.local.persistence.Collision;
 import org.subshare.local.persistence.CollisionDao;
+import org.subshare.local.persistence.CollisionPrivate;
+import org.subshare.local.persistence.CollisionPrivateDao;
 import org.subshare.local.persistence.CryptoKey;
 import org.subshare.local.persistence.CryptoKeyDao;
 import org.subshare.local.persistence.CryptoKeyDeactivation;
@@ -86,6 +88,7 @@ import co.codewizards.cloudstore.core.auth.SignatureException;
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
 import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.oio.File;
+import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
 import co.codewizards.cloudstore.core.util.ISO8601;
 import co.codewizards.cloudstore.local.dto.RepoFileDtoConverter;
 import co.codewizards.cloudstore.local.persistence.Directory;
@@ -181,14 +184,8 @@ public class CryptreeNode {
 					cryptoRepoFile.getCryptoRepoFileId()));
 
 		final byte[] plainRepoFileDtoData = assertNotNull("decrypt(...)", decrypt(cryptoRepoFile.getRepoFileDtoData(), plainCryptoKey));
-		try {
-			final InputStream in = new GZIPInputStream(new ByteArrayInputStream(plainRepoFileDtoData));
-			final RepoFileDto repoFileDto = context.repoFileDtoIo.deserialize(in);
-			in.close();
-			return repoFileDto;
-		} catch (final IOException x) {
-			throw new RuntimeException(x);
-		}
+		final RepoFileDto repoFileDto = context.repoFileDtoIo.deserializeWithGz(new ByteArrayInputStream(plainRepoFileDtoData));
+		return repoFileDto;
 	}
 
 	public RepoFileDto getHistoCryptoRepoFileRepoFileDto(final HistoCryptoRepoFile histoCryptoRepoFile) throws AccessDeniedException {
@@ -200,14 +197,8 @@ public class CryptreeNode {
 					histoCryptoRepoFile.getHistoCryptoRepoFileId()));
 
 		final byte[] plainRepoFileDtoData = assertNotNull("decrypt(...)", decrypt(histoCryptoRepoFile.getRepoFileDtoData(), plainCryptoKey));
-		try {
-			final InputStream in = new GZIPInputStream(new ByteArrayInputStream(plainRepoFileDtoData));
-			final RepoFileDto repoFileDto = context.repoFileDtoIo.deserialize(in);
-			in.close();
-			return repoFileDto;
-		} catch (final IOException x) {
-			throw new RuntimeException(x);
-		}
+		final RepoFileDto repoFileDto = context.repoFileDtoIo.deserializeWithGz(new ByteArrayInputStream(plainRepoFileDtoData));
+		return repoFileDto;
 	}
 
 	public RepoFileDto getRepoFileDtoOnServer() throws AccessDeniedException {
@@ -224,14 +215,8 @@ public class CryptreeNode {
 					histoCryptoRepoFile.getCryptoRepoFile().getCryptoRepoFileId()));
 
 		final byte[] plainRepoFileDtoData = assertNotNull("decrypt(...)", decrypt(histoCryptoRepoFile.getRepoFileDtoData(), plainCryptoKey));
-		try {
-			final InputStream in = new GZIPInputStream(new ByteArrayInputStream(plainRepoFileDtoData));
-			final RepoFileDto repoFileDto = context.repoFileDtoIo.deserialize(in);
-			in.close();
-			return repoFileDto;
-		} catch (final IOException x) {
-			throw new RuntimeException(x);
-		}
+		final RepoFileDto repoFileDto = context.repoFileDtoIo.deserializeWithGz(new ByteArrayInputStream(plainRepoFileDtoData));
+		return repoFileDto;
 	}
 
 	public CryptoRepoFile getCryptoRepoFile() {
@@ -373,6 +358,169 @@ public class CryptreeNode {
 		return histoCryptoRepoFile;
 	}
 
+	public Collision createCollisionIfNeeded(final CryptoRepoFile duplicateCryptoRepoFile, final String localPath, boolean expectedSealedStatus) {
+		final LocalRepoTransaction tx = context.transaction;
+		final CryptoRepoFile cryptoRepoFile = getCryptoRepoFile();
+
+		final CollisionDao cDao = tx.getDao(CollisionDao.class);
+		final HistoCryptoRepoFileDao hcrfDao = tx.getDao(HistoCryptoRepoFileDao.class);
+
+		final Collection<HistoCryptoRepoFile> histoCryptoRepoFiles = hcrfDao.getHistoCryptoRepoFiles(cryptoRepoFile);
+
+		final HistoCryptoRepoFile localHistoCryptoRepoFile = getLastHistoCryptoRepoFile(histoCryptoRepoFiles, false);
+		final HistoCryptoRepoFile remoteHistoCryptoRepoFile = getLastHistoCryptoRepoFile(histoCryptoRepoFiles, true);
+
+		if (localHistoCryptoRepoFile != null) {
+			if (localHistoCryptoRepoFile.getHistoFrame().getSealed() != null && expectedSealedStatus == false)
+				throw new IllegalStateException("Why is the local HistoFrame already sealed?!???!!!");
+
+			if (localHistoCryptoRepoFile.getHistoFrame().getSealed() == null && expectedSealedStatus == true)
+				throw new IllegalStateException("Why is the local HistoFrame not yet sealed?!???!!!");
+		}
+
+		HistoCryptoRepoFile histoCryptoRepoFile1 = localHistoCryptoRepoFile;
+		HistoCryptoRepoFile histoCryptoRepoFile2 = remoteHistoCryptoRepoFile;
+
+		if (histoCryptoRepoFile1 == null) {
+			histoCryptoRepoFile1 = histoCryptoRepoFile2;
+			histoCryptoRepoFile2 = null;
+		}
+
+		assertNotNull("histoCryptoRepoFile1", histoCryptoRepoFile1,
+				"cryptoRepoFile=%s duplicateCryptoRepoFile=%s localPath=%s localHistoCryptoRepoFile=%s remoteHistoCryptoRepoFile=%s",
+				cryptoRepoFile, duplicateCryptoRepoFile, localPath, localHistoCryptoRepoFile, remoteHistoCryptoRepoFile);
+
+		if (duplicateCryptoRepoFile != null) {
+			if (duplicateCryptoRepoFile.getCryptoRepoFileId().equals(getCryptoRepoFileId(histoCryptoRepoFile1))) {
+				histoCryptoRepoFile1 = histoCryptoRepoFile2;
+				histoCryptoRepoFile2 = null;
+			}
+			else if (histoCryptoRepoFile2 == null || duplicateCryptoRepoFile.getCryptoRepoFileId().equals(getCryptoRepoFileId(histoCryptoRepoFile2)))
+				histoCryptoRepoFile2 = null;
+			else
+				throw new IllegalStateException("duplicateCryptoRepoFile neither matches histoCryptoRepoFile1 nor histoCryptoRepoFile2!\nduplicateCryptoRepoFile=" + duplicateCryptoRepoFile + "\nhistoCryptoRepoFile1=" + histoCryptoRepoFile1 + "\nhistoCryptoRepoFile2=" + histoCryptoRepoFile2);
+
+			if (duplicateCryptoRepoFile.getCryptoRepoFileId().equals(getCryptoRepoFileId(histoCryptoRepoFile1)))
+				throw new IllegalStateException("duplicateCryptoRepoFile matches histoCryptoRepoFile1!\nduplicateCryptoRepoFile=" + duplicateCryptoRepoFile + "\nhistoCryptoRepoFile1=" + histoCryptoRepoFile1 + "\nhistoCryptoRepoFile2=" + histoCryptoRepoFile2);
+		}
+		else
+			assertNotNull("histoCryptoRepoFile2", histoCryptoRepoFile2);
+
+		assertNotNull("histoCryptoRepoFile1", histoCryptoRepoFile1);
+
+		final Uid duplicateCryptoRepoFileId = duplicateCryptoRepoFile == null ? null : duplicateCryptoRepoFile.getCryptoRepoFileId();
+		Collision collision = cDao.getCollision(histoCryptoRepoFile1, histoCryptoRepoFile2, duplicateCryptoRepoFileId);
+		if (collision == null) {
+			collision = new Collision();
+			collision.setHistoCryptoRepoFile1(histoCryptoRepoFile1);
+			collision.setHistoCryptoRepoFile2(histoCryptoRepoFile2);
+			collision.setDuplicateCryptoRepoFileId(duplicateCryptoRepoFileId);
+
+			putCollisionPrivateDto(collision, new CollisionPrivateDto()); // signs the Collision
+			collision = cDao.makePersistent(collision);
+			logger.info("createCollisionIfNeeded: localPath='{}' histoCryptoRepoFile1={} histoCryptoRepoFile2={} duplicateCryptoRepoFileId={} localRevision={}",
+					localPath, histoCryptoRepoFile1, histoCryptoRepoFile2, duplicateCryptoRepoFileId, collision.getLocalRevision());
+		}
+
+		updateCollisionPrivate(collision);
+		context.transaction.flush(); // for early detection of an error
+		return collision;
+	}
+
+	public void putCollisionPrivateDto(final Collision collision, final CollisionPrivateDto collisionPrivateDto) {
+		assertNotNull("collision", collision);
+		assertNotNull("collisionPrivateDto", collisionPrivateDto);
+
+		if (collisionPrivateDto.getCollisionId() == null)
+			collisionPrivateDto.setCollisionId(collision.getCollisionId());
+		else if (! collisionPrivateDto.getCollisionId().equals(collision.getCollisionId()))
+			throw new IllegalArgumentException("collisionPrivateDto.collisionId != collision.collisionId");
+
+		final PlainCryptoKey plainCryptoKey = getActivePlainCryptoKeyOrCreate(CryptoKeyRole.dataKey, CipherOperationMode.ENCRYPT);
+		final CryptoKey cryptoKey = assertNotNull("plainCryptoKey", plainCryptoKey).getCryptoKey();
+		collision.setCryptoKey(assertNotNull("plainCryptoKey.cryptoKey", cryptoKey));
+
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		context.collisionPrivateDtoIo.serializeWithGz(collisionPrivateDto, out);
+
+		collision.setCollisionPrivateDtoData(assertNotNull("encrypt(...)", encrypt(out.toByteArray(), plainCryptoKey)));
+		sign(collision);
+
+		updateCollisionPrivate(collision);
+	}
+
+	public CollisionPrivateDto getCollisionPrivateDto(final Collision collision) {
+		assertNotNull("collision", collision);
+
+		final PlainCryptoKey plainCryptoKey = getPlainCryptoKeyForDecrypting(collision.getCryptoKey());
+		if (plainCryptoKey == null)
+			throw new ReadAccessDeniedException(String.format("The Collision with collisionId=%s could not be decrypted! Access rights missing?!",
+					collision.getCollisionId()));
+
+		final byte[] plainDtoData = assertNotNull("decrypt(...)", decrypt(collision.getCollisionPrivateDtoData(), plainCryptoKey));
+		CollisionPrivateDto collisionPrivateDto = context.collisionPrivateDtoIo.deserializeWithGz(new ByteArrayInputStream(plainDtoData));
+		return collisionPrivateDto;
+	}
+
+	private static Uid getCryptoRepoFileId(final HistoCryptoRepoFile histoCryptoRepoFile) {
+		if (histoCryptoRepoFile == null)
+			return null;
+
+		return histoCryptoRepoFile.getCryptoRepoFile().getCryptoRepoFileId();
+	}
+
+	// TODO replace this method by a specific, optimized query!
+	private HistoCryptoRepoFile getLastHistoCryptoRepoFile(final Collection<HistoCryptoRepoFile> histoCryptoRepoFiles, boolean remote) {
+		assertNotNull("histoCryptoRepoFiles", histoCryptoRepoFiles);
+		final UUID localRepositoryId = context.transaction.getLocalRepoManager().getRepositoryId();
+		HistoCryptoRepoFile result = null;
+		for (HistoCryptoRepoFile histoCryptoRepoFile : histoCryptoRepoFiles) {
+			final HistoFrame histoFrame = histoCryptoRepoFile.getHistoFrame();
+			if (remote) {
+				if (localRepositoryId.equals(histoFrame.getFromRepositoryId()))
+					continue;
+			} else {
+				if (! localRepositoryId.equals(histoFrame.getFromRepositoryId()))
+					continue;
+			}
+
+			if (result == null || result.getSignature().getSignatureCreated().compareTo(histoCryptoRepoFile.getSignature().getSignatureCreated()) < 0)
+				result = histoCryptoRepoFile;
+		}
+
+//		if (result == null)
+//			throw new IllegalStateException("No matching HistoCryptoRepoFile found!");
+
+		return result;
+	}
+
+	public CollisionPrivate updateCollisionPrivate(final Collision collision) {
+		assertNotNull("collision", collision);
+
+		if (! getCryptoRepoFile().equals(collision.getHistoCryptoRepoFile1().getCryptoRepoFile()))
+			throw new IllegalArgumentException("this.cryptoRepoFile != collision.histoCryptoRepoFile1.cryptoRepoFile");
+
+		final CollisionPrivateDao cpDao = getContext().transaction.getDao(CollisionPrivateDao.class);
+
+		CollisionPrivate cp = cpDao.getCollisionPrivate(collision);
+
+		final CollisionPrivateDto collisionPrivateDto = tryDecryptCollisionPrivateDto(collision);
+		if (collisionPrivateDto == null) {
+			if (cp != null)
+				cpDao.deletePersistent(cp);
+		}
+		else
+			cp = CollisionPrivateDtoConverter.create(getContext().transaction).putCollisionPrivateDto(collision, collisionPrivateDto);
+
+		updatePlainHistoCryptoRepoFile(collision.getHistoCryptoRepoFile1());
+
+		if (collision.getHistoCryptoRepoFile2() != null) {
+			getContext().getCryptreeNodeOrCreate(collision.getHistoCryptoRepoFile2().getCryptoRepoFile().getCryptoRepoFileId())
+			.updatePlainHistoCryptoRepoFile(collision.getHistoCryptoRepoFile2());
+		}
+		return cp;
+	}
+
 	public PlainHistoCryptoRepoFile updatePlainHistoCryptoRepoFile(final HistoCryptoRepoFile histoCryptoRepoFile) {
 		assertNotNull("histoCryptoRepoFile", histoCryptoRepoFile);
 		final PlainHistoCryptoRepoFileDao phcrfDao = getContext().transaction.getDao(PlainHistoCryptoRepoFileDao.class);
@@ -381,12 +529,17 @@ public class CryptreeNode {
 			phcrf = new PlainHistoCryptoRepoFile();
 			phcrf.setHistoCryptoRepoFile(histoCryptoRepoFile);
 		}
-
 		phcrf.setPlainHistoCryptoRepoFileDto(createPlainHistoCryptoRepoFileDto(histoCryptoRepoFile));
 		phcrf = phcrfDao.makePersistent(phcrf);
 		return phcrf;
 	}
 
+	/**
+	 * Creates a {@link PlainHistoCryptoRepoFileDto} which is then stored (as gzipped XML) in a {@link PlainHistoCryptoRepoFile}.
+	 * This allows for very fast loading of the history (there might be *many* items especially in the first HistoFrame).
+	 * @param histoCryptoRepoFile the {@link HistoCryptoRepoFile} to read and (try to) decrypt. Must not be <code>null</code>.
+	 * @return the {@link PlainHistoCryptoRepoFileDto} - never <code>null</code>.
+	 */
 	private PlainHistoCryptoRepoFileDto createPlainHistoCryptoRepoFileDto(final HistoCryptoRepoFile histoCryptoRepoFile) {
 		assertNotNull("histoCryptoRepoFile", histoCryptoRepoFile);
 
@@ -401,29 +554,38 @@ public class CryptreeNode {
 		plainHistoCryptoRepoFileDto.setParentCryptoRepoFileId(parentCryptoRepoFile == null ? null : parentCryptoRepoFile.getCryptoRepoFileId());
 
 		final RepoFileDto repoFileDto = tryDecryptHistoCryptoRepoFile(histoCryptoRepoFile);
+
+//		if (repoFileDto instanceof SsNormalFileDto) // no need to store these *LARGE* details in the PlainHistoCryptoRepoFile.
+//			((SsNormalFileDto) repoFileDto).getFileChunkDtos().clear(); // YES, they ARE NEEDED! for the history export!
+
 		plainHistoCryptoRepoFileDto.setRepoFileDto(repoFileDto);
 
-		plainHistoCryptoRepoFileDto.setCollisionDtos(getCollisionDtos(histoCryptoRepoFile));
+		populateCollisionDtos(plainHistoCryptoRepoFileDto, histoCryptoRepoFile);
+
 		return plainHistoCryptoRepoFileDto;
 	}
 
-	private List<CollisionDto> getCollisionDtos(HistoCryptoRepoFile histoCryptoRepoFile) {
+	private void populateCollisionDtos(final PlainHistoCryptoRepoFileDto plainHistoCryptoRepoFileDto, final HistoCryptoRepoFile histoCryptoRepoFile) {
 		assertNotNull("histoCryptoRepoFile", histoCryptoRepoFile);
-		final CollisionDao collisionDao = getContext().transaction.getDao(CollisionDao.class);
+		final CollisionDao cDao = getContext().transaction.getDao(CollisionDao.class);
+		final CollisionPrivateDao cpDao = getContext().transaction.getDao(CollisionPrivateDao.class);
 		final CollisionDtoConverter collisionDtoConverter = CollisionDtoConverter.create(getContext().transaction);
+		final CollisionPrivateDtoConverter cpDtoConverter = CollisionPrivateDtoConverter.create(getContext().transaction);
 
 		final CollisionFilter collisionFilter = new CollisionFilter();
 		collisionFilter.setHistoCryptoRepoFileId(histoCryptoRepoFile.getHistoCryptoRepoFileId());
-		final Collection<Collision> collisions = collisionDao.getCollisions(collisionFilter);
+		final Collection<Collision> collisions = cDao.getCollisions(collisionFilter);
 
-		final List<CollisionDto> result = new ArrayList<>(collisions.size());
-		for (Collision collision : collisions)
-			result.add(collisionDtoConverter.toCollisionDto(collision));
+		for (final Collision collision : collisions) {
+			plainHistoCryptoRepoFileDto.getCollisionDtos().add(collisionDtoConverter.toCollisionDto(collision));
 
-		return result;
+			final CollisionPrivate collisionPrivate = cpDao.getCollisionPrivate(collision);
+			if (collisionPrivate != null)
+				plainHistoCryptoRepoFileDto.getCollisionPrivateDtos().add(cpDtoConverter.toCollisionPrivateDto(collisionPrivate));
+		}
 	}
 
-	private RepoFileDto tryDecryptHistoCryptoRepoFile(HistoCryptoRepoFile histoCryptoRepoFile) {
+	private RepoFileDto tryDecryptHistoCryptoRepoFile(final HistoCryptoRepoFile histoCryptoRepoFile) {
 		assertNotNull("histoCryptoRepoFile", histoCryptoRepoFile);
 
 		RepoFileDto repoFileDto = null;
@@ -436,6 +598,21 @@ public class CryptreeNode {
 				logger.info("tryDecryptHistoCryptoRepoFile: " + x);
 		}
 		return repoFileDto;
+	}
+
+	private CollisionPrivateDto tryDecryptCollisionPrivateDto(final Collision collision) {
+		assertNotNull("collision", collision);
+
+		CollisionPrivateDto collisionPrivateDto = null;
+		try {
+			collisionPrivateDto = getCollisionPrivateDto(collision);
+		} catch (ReadAccessDeniedException x) {
+			if (logger.isDebugEnabled())
+				logger.info("tryDecryptCollisionPrivateDto: " + x, x);
+			else
+				logger.info("tryDecryptCollisionPrivateDto: " + x);
+		}
+		return collisionPrivateDto;
 	}
 
 //	private void createCollisionIfNeeded(final HistoCryptoRepoFile histoCryptoRepoFileLocal) {

@@ -126,7 +126,7 @@ public class HistoExporterImpl implements HistoExporter {
 				final NormalFileDto normalFileDto = (NormalFileDto) repoFileDto;
 
 				try (final RandomAccessFile raf = exportFile.createRandomAccessFile("rw")) {
-					for (final FileChunkDto fileChunkDto : assertNotNull("normalFileDto.fileChunkDtos", normalFileDto.getFileChunkDtos())) {
+					for (final FileChunkDto fileChunkDto : normalFileDto.getFileChunkDtos()) {
 						// TODO first try to get the chunk from the current local file - only download it, if it's different or missing locally!
 						// TODO check, which chunks already contain the data - and skip downloading the histoFileData, whenever possible.
 						byte[] histoFileData = remoteRepoTransport.getHistoFileData(exportFileParam.getHistoCryptoRepoFileId(), fileChunkDto.getOffset());

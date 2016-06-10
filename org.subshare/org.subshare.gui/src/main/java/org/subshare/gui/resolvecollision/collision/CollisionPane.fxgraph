@@ -28,17 +28,17 @@ dynamic component CollisionPane resourcefile 'messages.properties' {
 			tooltip : Tooltip { text : rstring "CollisionPane.resolvedCheckBox.tooltip.text" },
 			static columnIndex : 0,
 			static rowIndex : 1
-		}
+		},
 
-//		Text id commentTitleText {
-//			text : rstring "CollisionPane.commentTitleText.text",
-//			static columnIndex : 0,
-//			static rowIndex : 2
-//		},
-//		TextArea id commentTextArea {
-//			promptText : "You may want to comment this collision - e.g. explain how you solved it.",
-//			static columnIndex : 0,
-//			static rowIndex : 3
-//		}
+		Text id commentTitleText {
+			text : rstring "CollisionPane.commentTitleText.text",
+			static columnIndex : 0,
+			static rowIndex : 2
+		},
+		TextArea id commentTextArea {
+			promptText : "You may want to comment this collision - e.g. explain how you solved it.",
+			static columnIndex : 0,
+			static rowIndex : 3
+		}
 	}
 }
