@@ -8,28 +8,25 @@ public class UserRepoInvitation {
 
 	private final URL serverUrl;
 
+	private final String serverPath;
+
 	private final UserRepoKey invitationUserRepoKey;
 
-//	private final UserRepoKey.PublicKey signingUserRepoKeyPublicKey;
-
-	public UserRepoInvitation(final URL serverUrl, final UserRepoKey invitationUserRepoKey) { // , final UserRepoKey.PublicKey signingUserRepoKeyPublicKey) {
+	public UserRepoInvitation(final URL serverUrl, final String serverPath, final UserRepoKey invitationUserRepoKey) {
 		this.serverUrl = assertNotNull("serverUrl", serverUrl);
+		this.serverPath = assertNotNull("serverPath", serverPath);
 		this.invitationUserRepoKey = assertNotNull("invitationUserRepoKey", invitationUserRepoKey);
-//		this.signingUserRepoKeyPublicKey = assertNotNull("signingUserRepoKeyPublicKey", signingUserRepoKeyPublicKey);
-//
-//		if (!signingUserRepoKeyPublicKey.getUserRepoKeyId().equals(invitationUserRepoKey.getPublicKey().getSignature().getSigningUserRepoKeyId()))
-//			throw new IllegalArgumentException("signingUserRepoKeyPublicKey.userRepoKeyId != invitationUserRepoKey.publicKey.signature.signingUserRepoKeyId");
 	}
 
 	public URL getServerUrl() {
 		return serverUrl;
 	}
 
+	public String getServerPath() {
+		return serverPath;
+	}
+
 	public UserRepoKey getInvitationUserRepoKey() {
 		return invitationUserRepoKey;
 	}
-
-//	public UserRepoKey.PublicKey getSigningUserRepoKeyPublicKey() {
-//		return signingUserRepoKeyPublicKey;
-//	}
 }

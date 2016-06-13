@@ -27,6 +27,8 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.subshare.core.Cryptree;
 import org.subshare.core.CryptreeFactoryRegistry;
 import org.subshare.core.dto.PermissionType;
@@ -55,12 +57,10 @@ import org.subshare.core.user.UserRepoInvitationManager;
 import org.subshare.core.user.UserRepoInvitationToken;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKeyRing;
-import org.subshare.local.persistence.SsRemoteRepository;
 import org.subshare.local.persistence.InvitationUserRepoKeyPublicKey;
+import org.subshare.local.persistence.SsRemoteRepository;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyDao;
 import org.subshare.local.persistence.VerifySignableAndWriteProtectedEntityListener;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import co.codewizards.cloudstore.core.auth.SignatureException;
 import co.codewizards.cloudstore.core.dto.jaxb.CloudStoreJaxbContext;
@@ -237,7 +237,7 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 		final UserRepoInvitation userRepoInvitation = fromUserRepoInvitationData(out.toByteArray());
 		final ServerRepo serverRepo = importUserRepoInvitation(userRepoInvitation);
 //		connectLocalRepoWithServerRepo(userRepoInvitation, serverRepo);
-		final URL remoteURL = userRepoInvitation.getServerUrl();
+		final URL remoteURL = appendEncodedPath(userRepoInvitation.getServerUrl(), userRepoInvitation.getServerPath());
 		ServerRepoManagerImpl.connectLocalRepositoryWithServerRepository(localRepoManager, serverRepo.getRepositoryId(), remoteURL);
 		return serverRepo;
 	}
@@ -412,9 +412,8 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 				throw new IllegalStateException("Could not determine the remoteRoot for the remoteRepositoryId " + cryptree.getRemoteRepositoryId());
 
 			final String serverPath = cryptree.getServerPath(localPath);
-			final URL completeUrl = appendNonEncodedPath(remoteRoot, serverPath);
 
-			userRepoInvitation = new UserRepoInvitation(completeUrl, invitationUserRepoKey); // signingUserRepoKeyPublicKey.getPublicKey());
+			userRepoInvitation = new UserRepoInvitation(remoteRoot, serverPath, invitationUserRepoKey); // signingUserRepoKeyPublicKey.getPublicKey());
 			logger.info("createUserRepoInvitation: grantingUser={} grantingUserRepoKeyIds={} invitedUser={} invitationUserRepoKey={}",
 					grantingUser, grantingUser.getUserRepoKeyRing().getUserRepoKeys(), user, invitationUserRepoKey);
 
@@ -460,6 +459,9 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 
 	protected ServerRepo importUserRepoInvitation(final UserRepoInvitation userRepoInvitation) {
 		assertNotNull("userRepoInvitation", userRepoInvitation);
+		logger.info("importUserRepoInvitation: serverUrl='{}' serverPath='{}' invitationUserRepoKey={}",
+				userRepoInvitation.getServerUrl(), userRepoInvitation.getServerPath(), userRepoInvitation.getInvitationUserRepoKey());
+
 		final PgpKey decryptPgpKey = determineDecryptPgpKey(userRepoInvitation);
 		final User user = findUserWithPgpKeyOrFail(decryptPgpKey);
 
