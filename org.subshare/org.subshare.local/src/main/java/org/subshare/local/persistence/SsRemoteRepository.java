@@ -29,7 +29,10 @@ public class SsRemoteRepository extends RemoteRepository {
 		return remotePathPrefix;
 	}
 	public void setRemotePathPrefix(String remotePathPrefix) {
-		if (! equal(this.remotePathPrefix, remotePathPrefix))
+		if (this.remotePathPrefix == null)
 			this.remotePathPrefix = remotePathPrefix;
+		else if (! equal(this.remotePathPrefix, remotePathPrefix))
+			throw new IllegalStateException(String.format("Cannot change remotePathPrefix! Assigned is '%s'; tried to assign '%s'.", this.remotePathPrefix, remotePathPrefix));
+//			this.remotePathPrefix = remotePathPrefix;
 	}
 }

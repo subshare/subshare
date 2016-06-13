@@ -9,6 +9,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
@@ -67,7 +68,6 @@ import co.codewizards.cloudstore.core.dto.jaxb.CloudStoreJaxbContext;
 import co.codewizards.cloudstore.core.io.NoCloseInputStream;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
-import co.codewizards.cloudstore.local.persistence.RemoteRepository;
 import co.codewizards.cloudstore.local.persistence.RemoteRepositoryDao;
 
 public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager {
@@ -406,21 +406,25 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 			cryptree.grantPermission(localPath, permissionType, invitationUserRepoKey.getPublicKey());
 
 			final RemoteRepositoryDao remoteRepositoryDao = transaction.getDao(RemoteRepositoryDao.class);
-			final RemoteRepository remoteRepository = remoteRepositoryDao.getRemoteRepositoryOrFail(cryptree.getRemoteRepositoryId());
+			final SsRemoteRepository remoteRepository = (SsRemoteRepository) remoteRepositoryDao.getRemoteRepositoryOrFail(cryptree.getRemoteRepositoryId());
 			final URL remoteRoot = remoteRepository.getRemoteRoot();
 			if (remoteRoot == null)
 				throw new IllegalStateException("Could not determine the remoteRoot for the remoteRepositoryId " + cryptree.getRemoteRepositoryId());
 
-			final ServerRegistry serverRegistry = ServerRegistryImpl.getInstance();
-			final Server server = serverRegistry.getServerForRemoteRoot(remoteRoot);
-			if (server == null)
-				throw new IllegalStateException("Could not find server in ServerRegistry for remoteRoot: " + remoteRoot);
+			String remotePathPrefix = assertNotNull("remoteRepository.remotePathPrefix", remoteRepository.getRemotePathPrefix());
+			URL serverUrl = removePathSuffix(remoteRoot, remotePathPrefix);
+			serverUrl = removePathSuffix(serverUrl, remoteRepository.getRepositoryId().toString());
+
+//			final ServerRegistry serverRegistry = ServerRegistryImpl.getInstance();
+//			final Server server = serverRegistry.getServerForRemoteRoot(remoteRoot);
+//			if (server == null)
+//				throw new IllegalStateException("Could not find server in ServerRegistry for remoteRoot: " + remoteRoot);
 
 			final String serverPath = cryptree.getServerPath(localPath);
 			final URL completeUrl = appendEncodedPath(remoteRoot, serverPath);
-			final String serverPathWithRepositoryName = getPathAfterPrefix(completeUrl, server.getUrl());
+			final String serverPathWithRepositoryName = getPathAfterPrefix(completeUrl, serverUrl);
 
-			userRepoInvitation = new UserRepoInvitation(server.getUrl(), serverPathWithRepositoryName, invitationUserRepoKey); // signingUserRepoKeyPublicKey.getPublicKey());
+			userRepoInvitation = new UserRepoInvitation(serverUrl, serverPathWithRepositoryName, invitationUserRepoKey); // signingUserRepoKeyPublicKey.getPublicKey());
 			logger.info("createUserRepoInvitation: grantingUser={} grantingUserRepoKeyIds={} invitedUser={} invitationUserRepoKey={}",
 					grantingUser, grantingUser.getUserRepoKeyRing().getUserRepoKeys(), user, invitationUserRepoKey);
 
@@ -430,6 +434,32 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 			this.transaction = null;
 		}
 		return userRepoInvitation;
+	}
+
+	private URL removePathSuffix(final URL url, String pathSuffix) {
+		assertNotNull("url", url);
+		assertNotNull("suffix", pathSuffix);
+
+		String urlStr = url.toString();
+		while (urlStr.endsWith("/"))
+			urlStr = urlStr.substring(0, urlStr.length() - 1);
+
+		while (pathSuffix.endsWith("/"))
+			pathSuffix = pathSuffix.substring(0, pathSuffix.length() - 1);
+
+		if (! urlStr.endsWith(pathSuffix))
+			throw new IllegalArgumentException(String.format("url '%s' does not end with suffix '%s'!", urlStr, pathSuffix));
+
+		String resultStr = urlStr.substring(0, urlStr.length() - pathSuffix.length());
+
+		if (resultStr.endsWith("/"))
+			resultStr = resultStr.substring(0, resultStr.length() - 1);
+
+		try {
+			return new URL(resultStr);
+		} catch (MalformedURLException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	private String getPathAfterPrefix(final URL completeUrl, final URL prefixUrl) {
