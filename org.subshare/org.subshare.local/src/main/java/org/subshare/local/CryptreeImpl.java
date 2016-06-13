@@ -718,7 +718,8 @@ public class CryptreeImpl extends AbstractCryptree {
 			getCryptreeContext().getSignableSigner(oldUserRepoKey).sign(permission);
 		}
 
-		getCryptreeContext().userRepoKeyRing.removeUserRepoKey(oldUserRepoKey);
+//		getCryptreeContext().userRepoKeyRing.removeUserRepoKey(oldUserRepoKey); // hmmm... this seems problematic. commented it out. it should be removed later, when the new
+
 //		final User user = getCryptreeContext().getUserRegistry().getUserByUserRepoKeyIdOrFail(request.getOldKey().getUserRepoKeyId());
 //		final UserRepoKeyRing userRepoKeyRing = user.getUserRepoKeyRing();
 //		final List<UserRepoKey> oldUrKeys = new ArrayList<>();
@@ -926,8 +927,14 @@ public class CryptreeImpl extends AbstractCryptree {
 
 		final Collection<UserRepoKeyPublicKeyReplacementRequest> otherRequests = urkpkrrDao.getUserRepoKeyPublicKeyReplacementRequestsForOldKey(oldKey);
 		if (otherRequests.isEmpty()) {
+			final Uid oldUserRepoKeyId = oldKey.getUserRepoKeyId();
+
 			transaction.getDao(UserRepoKeyPublicKeyDao.class).deletePersistent(oldKey);
 			transaction.flush();
+
+			final UserRepoKeyRing userRepoKeyRing = getCryptreeContext().userRepoKeyRing;
+			if (userRepoKeyRing != null) // there is none on the server-side.
+				userRepoKeyRing.removeUserRepoKey(oldUserRepoKeyId);
 		}
 		else
 			logger.warn("deleteUserRepoKeyPublicKeyReplacementRequestWithOldKey: Not deleting oldKey={}, because there are other requests referencing it! {}",
