@@ -411,9 +411,16 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 			if (remoteRoot == null)
 				throw new IllegalStateException("Could not determine the remoteRoot for the remoteRepositoryId " + cryptree.getRemoteRepositoryId());
 
-			final String serverPath = cryptree.getServerPath(localPath);
+			final ServerRegistry serverRegistry = ServerRegistryImpl.getInstance();
+			final Server server = serverRegistry.getServerForRemoteRoot(remoteRoot);
+			if (server == null)
+				throw new IllegalStateException("Could not find server in ServerRegistry for remoteRoot: " + remoteRoot);
 
-			userRepoInvitation = new UserRepoInvitation(remoteRoot, serverPath, invitationUserRepoKey); // signingUserRepoKeyPublicKey.getPublicKey());
+			final String serverPath = cryptree.getServerPath(localPath);
+			final URL completeUrl = appendEncodedPath(remoteRoot, serverPath);
+			final String serverPathWithRepositoryName = getPathAfterPrefix(completeUrl, server.getUrl());
+
+			userRepoInvitation = new UserRepoInvitation(server.getUrl(), serverPathWithRepositoryName, invitationUserRepoKey); // signingUserRepoKeyPublicKey.getPublicKey());
 			logger.info("createUserRepoInvitation: grantingUser={} grantingUserRepoKeyIds={} invitedUser={} invitationUserRepoKey={}",
 					grantingUser, grantingUser.getUserRepoKeyRing().getUserRepoKeys(), user, invitationUserRepoKey);
 
@@ -423,6 +430,22 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 			this.transaction = null;
 		}
 		return userRepoInvitation;
+	}
+
+	private String getPathAfterPrefix(final URL completeUrl, final URL prefixUrl) {
+		assertNotNull("completeUrl", completeUrl);
+		assertNotNull("prefixUrl", prefixUrl);
+		final String completeUrlStr = completeUrl.toExternalForm();
+		final String prefixUrlStr = prefixUrl.toExternalForm();
+
+		if (prefixUrlStr.endsWith("/"))
+			throw new IllegalStateException("prefixUrlStr.endsWith(\"/\") :: " + prefixUrlStr);
+
+		if (! completeUrlStr.startsWith(prefixUrlStr))
+			throw new IllegalStateException("! completeUrlStr.startsWith(prefixUrlStr) :: " + completeUrlStr + " :: " + prefixUrlStr);
+
+		final String result = completeUrlStr.substring(prefixUrlStr.length());
+		return result;
 	}
 
 	private User createCryptreeAndDetermineGrantingUser(final String localPath) {
