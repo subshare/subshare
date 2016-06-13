@@ -75,7 +75,7 @@
 			<Insets left="8" right="8" top="8" bottom="8"/> 
 		</VBox.margin>
 	</FlowPane>
-	<TabPane fx:id="tabPane" tabClosingPolicy="UNAVAILABLE"> 
+	<TabPane fx:id="tabPane" tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS"> 
 		<Tab fx:id="generalTab" text="General"> 
 			<content>
 				<GridPane> 

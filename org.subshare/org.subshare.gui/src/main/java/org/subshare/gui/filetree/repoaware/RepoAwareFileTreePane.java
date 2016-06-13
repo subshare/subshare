@@ -76,6 +76,9 @@ public class RepoAwareFileTreePane extends FileTreePane {
 				return new SsTask<CollisionPrivateDtoSet>() {
 					@Override
 					protected CollisionPrivateDtoSet call() throws Exception {
+						if (localRepo == null)
+							return new CollisionPrivateDtoSet(Collections.emptyList(), Collections.emptyList());
+
 						return _getCollisionDtoSet(treeItem);
 					}
 

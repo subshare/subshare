@@ -136,6 +136,10 @@ dynamic component LocalRepoPane resourcefile 'messages.properties' {
 
 			Tab id historyTab {
 				text : "History"
+			},
+
+			Tab id userRepoKeyListTab {
+				text : "UserRepoKeys"
 			}
 		}
 	}

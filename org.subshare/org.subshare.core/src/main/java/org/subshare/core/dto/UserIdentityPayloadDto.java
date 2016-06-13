@@ -1,5 +1,6 @@
 package org.subshare.core.dto;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -7,8 +8,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.subshare.core.pgp.PgpKeyId;
 
+@SuppressWarnings("serial")
 @XmlRootElement
-public class UserIdentityPayloadDto {
+public class UserIdentityPayloadDto implements Serializable {
 
 	private String firstName;
 

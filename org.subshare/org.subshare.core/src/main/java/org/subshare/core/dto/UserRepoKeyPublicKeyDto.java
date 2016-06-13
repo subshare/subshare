@@ -1,5 +1,6 @@
 package org.subshare.core.dto;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.UUID;
 
@@ -7,8 +8,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import co.codewizards.cloudstore.core.dto.Uid;
 
+@SuppressWarnings("serial")
 @XmlRootElement
-public class UserRepoKeyPublicKeyDto {
+public class UserRepoKeyPublicKeyDto implements Serializable {
 	private Uid userRepoKeyId;
 	private UUID repositoryId;
 	private byte[] publicKeyData; // for storage in repo DB

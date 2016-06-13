@@ -5,8 +5,10 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
 import static org.subshare.gui.util.FxmlUtil.*;
+import static org.subshare.gui.util.PlatformUtil.*;
 
 import java.beans.PropertyChangeListener;
+import java.lang.ref.WeakReference;
 import java.text.DateFormat;
 import java.util.Date;
 import java.util.List;
@@ -25,6 +27,7 @@ import org.subshare.gui.histo.HistoryPaneContainer;
 import org.subshare.gui.histo.HistoryPaneSupport;
 import org.subshare.gui.invitation.issue.IssueInvitationData;
 import org.subshare.gui.invitation.issue.IssueInvitationWizard;
+import org.subshare.gui.localrepo.userrepokeylist.UserRepoKeyListPane;
 import org.subshare.gui.ls.ConfigLs;
 import org.subshare.gui.ls.RepoSyncDaemonLs;
 import org.subshare.gui.ls.RepoSyncTimerLs;
@@ -99,6 +102,9 @@ public class LocalRepoPane extends VBox implements HistoryPaneContainer {
 	private Tab historyTab;
 
 	@FXML
+	private Tab userRepoKeyListTab;
+
+	@FXML
 	private TextField nameTextField;
 
 	@FXML
@@ -144,6 +150,8 @@ public class LocalRepoPane extends VBox implements HistoryPaneContainer {
 	@SuppressWarnings("unused")
 	private final HistoryPaneSupport historyPaneSupport;
 
+	private WeakReference<UserRepoKeyListPane> userRepoKeyListPaneRef;
+
 	public LocalRepoPane(final LocalRepo localRepo) {
 		this.localRepo = assertNotNull("localRepo", localRepo);
 		this.repoSyncDaemon = RepoSyncDaemonLs.getRepoSyncDaemon();
@@ -173,6 +181,28 @@ public class LocalRepoPane extends VBox implements HistoryPaneContainer {
 		syncStateSeverityLabel.addEventFilter(MouseEvent.MOUSE_CLICKED, syncStateMouseEventFilter);
 
 		historyPaneSupport = new HistoryPaneSupport(this);
+
+		tabPane.getSelectionModel().selectedItemProperty().addListener((InvalidationListener) observable -> createOrForgetUserRepoKeyListPane());
+		createOrForgetUserRepoKeyListPane();
+	}
+
+	private void createOrForgetUserRepoKeyListPane() {
+		assertFxApplicationThread();
+
+		if (userRepoKeyListTab != tabPane.getSelectionModel().getSelectedItem()) {
+			userRepoKeyListTab.setContent(null);
+			return;
+		}
+
+		UserRepoKeyListPane userRepoKeyListPane = userRepoKeyListPaneRef == null ? null : userRepoKeyListPaneRef.get();
+		if (userRepoKeyListPane == null) {
+			userRepoKeyListPane = new UserRepoKeyListPane();
+			userRepoKeyListPane.setLocalRepo(localRepo);
+			userRepoKeyListPaneRef = new WeakReference<>(userRepoKeyListPane);
+		}
+
+		if (userRepoKeyListTab.getContent() == null)
+			userRepoKeyListTab.setContent(userRepoKeyListPane);
 	}
 
 	@SuppressWarnings("unchecked")

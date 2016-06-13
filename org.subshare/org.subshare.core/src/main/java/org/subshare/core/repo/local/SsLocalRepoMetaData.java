@@ -10,6 +10,7 @@ import java.util.UUID;
 import org.subshare.core.dto.CollisionDto;
 import org.subshare.core.dto.CollisionPrivateDto;
 import org.subshare.core.dto.CryptoRepoFileDto;
+import org.subshare.core.dto.DebugUserRepoKeyDto;
 import org.subshare.core.dto.HistoFrameDto;
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.dto.PlainHistoCryptoRepoFileDto;
@@ -82,4 +83,6 @@ public interface SsLocalRepoMetaData extends LocalRepoMetaData {
 	void scheduleReupload(String localPath);
 
 	void putCollisionPrivateDto(CollisionPrivateDto collisionPrivateDto);
+
+	Collection<DebugUserRepoKeyDto> getDebugUserRepoKeyDtos();
 }

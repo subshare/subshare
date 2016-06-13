@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -23,12 +24,15 @@ import org.subshare.core.Cryptree;
 import org.subshare.core.CryptreeFactoryRegistry;
 import org.subshare.core.LocalRepoStorage;
 import org.subshare.core.LocalRepoStorageFactoryRegistry;
+import org.subshare.core.ReadUserIdentityAccessDeniedException;
 import org.subshare.core.dto.CollisionDto;
 import org.subshare.core.dto.CollisionPrivateDto;
 import org.subshare.core.dto.CryptoRepoFileDto;
+import org.subshare.core.dto.DebugUserRepoKeyDto;
 import org.subshare.core.dto.HistoFrameDto;
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.dto.PlainHistoCryptoRepoFileDto;
+import org.subshare.core.dto.UserIdentityPayloadDto;
 import org.subshare.core.repo.local.CollisionFilter;
 import org.subshare.core.repo.local.CollisionPrivateFilter;
 import org.subshare.core.repo.local.HistoFrameFilter;
@@ -50,8 +54,13 @@ import org.subshare.local.persistence.CryptoRepoFile;
 import org.subshare.local.persistence.CryptoRepoFileDao;
 import org.subshare.local.persistence.HistoFrame;
 import org.subshare.local.persistence.HistoFrameDao;
+import org.subshare.local.persistence.InvitationUserRepoKeyPublicKey;
 import org.subshare.local.persistence.ScheduledReupload;
 import org.subshare.local.persistence.ScheduledReuploadDao;
+import org.subshare.local.persistence.UserIdentity;
+import org.subshare.local.persistence.UserIdentityDao;
+import org.subshare.local.persistence.UserRepoKeyPublicKey;
+import org.subshare.local.persistence.UserRepoKeyPublicKeyDao;
 
 import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.oio.File;
@@ -421,6 +430,108 @@ public class SsLocalRepoMetaDataImpl extends LocalRepoMetaDataImpl implements Ss
 			final Cryptree cryptree = getCryptree(tx);
 			cryptree.putCollisionPrivateDto(collisionPrivateDto);
 			tx.commit();
+		}
+	}
+
+	@Override
+	public Collection<DebugUserRepoKeyDto> getDebugUserRepoKeyDtos() {
+		try (final LocalRepoTransaction tx = getLocalRepoManagerOrFail().beginReadTransaction();) {
+			final Cryptree cryptree = getCryptree(tx);
+			final UserRepoKeyPublicKeyDao urkpkDao = tx.getDao(UserRepoKeyPublicKeyDao.class);
+			final UserIdentityDao uiDao = tx.getDao(UserIdentityDao.class);
+
+			final Map<Uid, DebugUserRepoKeyDto> userRepoKeyId2DebugUserRepoKeyDto = new HashMap<>();
+
+			DebugUserRepoKeyDto dto = new DebugUserRepoKeyDto();
+			final Uid ownerUserRepoKeyId = cryptree.getOwnerUserRepoKeyId();
+			if (ownerUserRepoKeyId != null) {
+				dto.setUserRepoKeyId(ownerUserRepoKeyId);
+				dto.setOwner(true);
+				userRepoKeyId2DebugUserRepoKeyDto.put(dto.getUserRepoKeyId(), dto);
+			}
+
+			for (final UserRepoKeyPublicKey userRepoKeyPublicKey : urkpkDao.getObjects()) {
+				final Uid userRepoKeyId = userRepoKeyPublicKey.getUserRepoKeyId();
+				dto = userRepoKeyId2DebugUserRepoKeyDto.get(userRepoKeyId);
+				if (dto == null) {
+					dto = new DebugUserRepoKeyDto();
+					dto.setUserRepoKeyId(userRepoKeyId);
+					userRepoKeyId2DebugUserRepoKeyDto.put(dto.getUserRepoKeyId(), dto);
+				}
+				dto.setInDatabase(true);
+				dto.setServerRepositoryId(userRepoKeyPublicKey.getServerRepositoryId());
+				dto.setInvitation(userRepoKeyPublicKey instanceof InvitationUserRepoKeyPublicKey);
+
+				final Collection<UserIdentity> userIdentities = uiDao.getUserIdentitiesOf(userRepoKeyPublicKey);
+				dto.setUserIdentityCount(userIdentities.size());
+
+				try {
+					final UserIdentityPayloadDto userIdentityPayloadDto = cryptree.getUserIdentityPayloadDtoOrFail(userRepoKeyId);
+					dto.setUserIdentityPayloadDto(userIdentityPayloadDto);
+				} catch (ReadUserIdentityAccessDeniedException x) {
+					doNothing();
+				}
+			}
+
+			final UserRepoKeyRing userRepoKeyRing = cryptree.getUserRepoKeyRing();
+			for (final UserRepoKey userRepoKey : userRepoKeyRing.getUserRepoKeys()) {
+				final Uid userRepoKeyId = userRepoKey.getUserRepoKeyId();
+				dto = userRepoKeyId2DebugUserRepoKeyDto.get(userRepoKeyId);
+				if (dto == null) {
+					dto = new DebugUserRepoKeyDto();
+					dto.setUserRepoKeyId(userRepoKeyId);
+					userRepoKeyId2DebugUserRepoKeyDto.put(dto.getUserRepoKeyId(), dto);
+				}
+				dto.setInKeyRing(true);
+
+				if (dto.isInDatabase()) {
+					if (dto.isInvitation() != userRepoKey.isInvitation())
+						throw new IllegalStateException("dto.inDatabase && dto.invitation != userRepoKey.invitation");
+				}
+				else
+					dto.setInvitation(userRepoKey.isInvitation());
+
+				if (dto.getServerRepositoryId() == null)
+					userRepoKey.getServerRepositoryId();
+				else if (! dto.getServerRepositoryId().equals(userRepoKey.getServerRepositoryId()))
+					throw new IllegalStateException("dto.serverRepositoryId != userRepoKey.serverRepositoryId");
+			}
+
+//			for (final UserRepoKey userRepoKey : userRepoKeyRing.getInvitationUserRepoKeys(getRemoteRepositoryId(tx))) {
+//				final Uid userRepoKeyId = userRepoKey.getUserRepoKeyId();
+//				dto = userRepoKeyId2DebugUserRepoKeyDto.get(userRepoKeyId);
+//				if (dto == null) {
+//					dto = new DebugUserRepoKeyDto();
+//					dto.setUserRepoKeyId(userRepoKeyId);
+//					userRepoKeyId2DebugUserRepoKeyDto.put(dto.getUserRepoKeyId(), dto);
+//				}
+//				dto.setInvitation(true);
+//
+//				if (dto.getServerRepositoryId() == null)
+//					userRepoKey.getServerRepositoryId();
+//				else if (! dto.getServerRepositoryId().equals(userRepoKey.getServerRepositoryId()))
+//					throw new IllegalStateException("dto.serverRepositoryId != userRepoKey.serverRepositoryId");
+//			}
+//
+//			for (final UserRepoKey userRepoKey : userRepoKeyRing.getPermanentUserRepoKeys(getRemoteRepositoryId(tx))) {
+//				final Uid userRepoKeyId = userRepoKey.getUserRepoKeyId();
+//				dto = userRepoKeyId2DebugUserRepoKeyDto.get(userRepoKeyId);
+//				if (dto == null) {
+//					dto = new DebugUserRepoKeyDto();
+//					dto.setUserRepoKeyId(userRepoKeyId);
+//					userRepoKeyId2DebugUserRepoKeyDto.put(dto.getUserRepoKeyId(), dto);
+//				}
+//				dto.setPermanent(true);
+//
+//				if (dto.getServerRepositoryId() == null)
+//					userRepoKey.getServerRepositoryId();
+//				else if (! dto.getServerRepositoryId().equals(userRepoKey.getServerRepositoryId()))
+//					throw new IllegalStateException("dto.serverRepositoryId != userRepoKey.serverRepositoryId");
+//			}
+
+
+			tx.commit();
+			return new ArrayList<>(userRepoKeyId2DebugUserRepoKeyDto.values());
 		}
 	}
 }

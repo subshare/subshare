@@ -88,7 +88,9 @@ dynamic component LocalRepoDirectoryPane resourcefile 'messages.properties' {
 
 			Tab id securityTab {
 				text : "Security"
-			}
+			},
+			
+			static vgrow : "ALWAYS"
 		}
 	}
 }
