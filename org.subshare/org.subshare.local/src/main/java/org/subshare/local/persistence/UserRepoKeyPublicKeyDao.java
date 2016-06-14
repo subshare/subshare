@@ -71,6 +71,7 @@ public class UserRepoKeyPublicKeyDao extends Dao<UserRepoKeyPublicKey, UserRepoK
 	public void deletePersistent(final UserRepoKeyPublicKey entity) {
 		deleteDependentObjects(entity);
 		pm().flush();
+		assertNothingSigned(entity);
 		super.deletePersistent(entity);
 	}
 
@@ -80,6 +81,10 @@ public class UserRepoKeyPublicKeyDao extends Dao<UserRepoKeyPublicKey, UserRepoK
 			deleteDependentObjects(userRepoKeyPublicKey);
 
 		pm().flush();
+
+		for (UserRepoKeyPublicKey userRepoKeyPublicKey : entities)
+			assertNothingSigned(userRepoKeyPublicKey);
+
 		super.deletePersistentAll(entities);
 	}
 
@@ -97,6 +102,16 @@ public class UserRepoKeyPublicKeyDao extends Dao<UserRepoKeyPublicKey, UserRepoK
 		// UserIdentity.ofUserRepoKeyPublicKey might reference the deleted userRepoKeyPublicKey, but
 		// a UserIdentity is automatically deleted, if the last UserIdentityLink to it is deleted
 		// (preventing orphans to stay forever). Thus, we do not need to handle UserIdentity here.
+	}
+
+	protected void assertNothingSigned(final UserRepoKeyPublicKey userRepoKeyPublicKey) {
+		final Uid signingUserRepoKeyId = userRepoKeyPublicKey.getUserRepoKeyId();
+		final Collection<CryptoLink> cryptoLinks = getDao(CryptoLinkDao.class).getCryptoLinksSignedBy(signingUserRepoKeyId);
+		if (! cryptoLinks.isEmpty())
+			throw new IllegalStateException(String.format("Cannot delete UserRepoKeyPublicKey with userRepoKeyId=%s, because these objects are signed with this key: %s",
+					signingUserRepoKeyId, cryptoLinks));
+
+		// TODO we might want to look for more entities...
 	}
 
 //	public UserRepoKeyPublicKey getUserRepoKeyPublicKeyOrCreate(final UserRepoKey.PublicKey publicKey) {

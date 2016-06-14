@@ -770,8 +770,10 @@ public class CryptreeImpl extends AbstractCryptree {
 		// Re-sign the CryptoLinks that are currently signed with the invitation-user-repo-key.
 		// We use the same key that we used to sign the old key, because this prevents an attacker from knowing that 2 of our keys belong together.
 		cryptoLinks = cryptoLinkDao.getCryptoLinksSignedBy(request.getOldKey().getUserRepoKeyId());
-		for (final CryptoLink cryptoLink : cryptoLinks)
+		for (final CryptoLink cryptoLink : cryptoLinks) {
+			cryptoLink.setLastSyncFromRepositoryId(null);
 			getCryptreeContext().getSignableSigner(oldKeySigningUserRepoKey).sign(cryptoLink);
+		}
 
 
 		// *** other permissions = Permission instances ***
