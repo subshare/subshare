@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
@@ -46,6 +47,15 @@ public class PgpSync implements Sync {
 
 	private final String lastSyncLocalLocalRevisionPropertyKey;
 	private final String lastSyncServerLocalRevisionPropertyKey;
+
+	private static volatile Set<PgpKeyId> downSyncPgpKeyIds = Collections.emptySet(); // TODO this is a very dirty work-around! refactor and make this clean!
+
+	public static Set<PgpKeyId> getDownSyncPgpKeyIds() {
+		return downSyncPgpKeyIds;
+	}
+	public static void setDownSyncPgpKeyIds(final Set<PgpKeyId> downSyncPgpKeyIds) {
+		PgpSync.downSyncPgpKeyIds = downSyncPgpKeyIds == null ? Collections.<PgpKeyId>emptySet() : Collections.unmodifiableSet(new HashSet<>(downSyncPgpKeyIds));
+	}
 
 	public PgpSync(final Server server) {
 		this.server = assertNotNull("server", server);
@@ -83,6 +93,9 @@ public class PgpSync implements Sync {
 	}
 
 	private boolean isKeysMissing() {
+		if (! getDownSyncPgpKeyIds().isEmpty())
+			return true;
+
 		final Set<PgpKeyId> knownMasterKeyIds = getLocalPgpTransport().getMasterKeyIds();
 		final Set<PgpKeyId> missingMasterKeyIds = new HashSet<PgpKeyId>();
 		for (final User user : UserRegistryImpl.getInstance().getUsers()) {
@@ -99,6 +112,8 @@ public class PgpSync implements Sync {
 	}
 
 	private void sync(final PgpTransport from, final long fromLastSyncLocalRevision, final PgpTransport to) {
+		final Set<PgpKeyId> downSyncPgpKeyIds = getDownSyncPgpKeyIds();
+
 		// We always sync all keys that are *locally* known - TODO maybe add a constraint to this later?
 		// From these keys, only the ones having changed after the last sync are up/downloaded.
 		final Set<PgpKeyId> knownMasterKeyIds = getLocalPgpTransport().getMasterKeyIds();
@@ -121,6 +136,7 @@ public class PgpSync implements Sync {
 						missingMasterKeyIds.add(pgpKeyId);
 				}
 			}
+			missingMasterKeyIds.addAll(downSyncPgpKeyIds);
 
 			if (! missingMasterKeyIds.isEmpty()) {
 				for (Set<PgpKeyId> masterKeyIds : splitSet(missingMasterKeyIds, 1000)) {

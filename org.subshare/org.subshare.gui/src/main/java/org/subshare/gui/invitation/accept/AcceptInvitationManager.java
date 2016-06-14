@@ -8,6 +8,8 @@ import java.io.InputStream;
 
 import org.bouncycastle.util.io.Streams;
 import org.subshare.core.user.UserRepoInvitationToken;
+import org.subshare.gui.ls.LockerSyncDaemonLs;
+import org.subshare.gui.ls.PgpSyncDaemonLs;
 import org.subshare.gui.ls.RepoSyncDaemonLs;
 import org.subshare.gui.ls.ServerRepoManagerLs;
 
@@ -35,6 +37,10 @@ public class AcceptInvitationManager {
 		// ...immediately sync after creation. This happens in the background (this method is non-blocking).
 		final RepoSyncDaemon repoSyncDaemon = RepoSyncDaemonLs.getRepoSyncDaemon();
 		repoSyncDaemon.startSync(directory);
+
+		// ...and make sure, the lockers are up-to-date
+		PgpSyncDaemonLs.getPgpSyncDaemon().sync();
+		LockerSyncDaemonLs.getLockerSyncDaemon().sync();
 	}
 
 	private UserRepoInvitationToken readUserRepoInvitationToken(File file) {

@@ -61,7 +61,7 @@ public interface PgpDecoder {
 	 * <p>
 	 * Please note, that usually only one of the signatures is
 	 * verified (and in most cases, there's only one signature, anyway).
-	 * @return
+	 * @return the key IDs having been used for signing. Never <code>null</code>, but maybe empty.
 	 */
 	Set<PgpKeyId> getSignPgpKeyIds();
 

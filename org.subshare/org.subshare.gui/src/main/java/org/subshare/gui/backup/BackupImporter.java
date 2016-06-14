@@ -8,6 +8,7 @@ import java.io.InputStream;
 
 import org.subshare.core.locker.LockerContent;
 import org.subshare.core.server.ServerRegistryLockerContent;
+import org.subshare.gui.ls.UserRegistryLs;
 
 import co.codewizards.cloudstore.core.oio.File;
 
@@ -24,6 +25,8 @@ public class BackupImporter extends AbstractBackupImExporter {
 		try (InputStream in = backupFile.createInputStream();) {
 			backupDataFile = new BackupDataFile(in);
 		}
+
+		UserRegistryLs.getUserRegistry(); // instantiating it before loading the PGP-keys to prevent it from populating itself from PGP keys (during init).
 
 		final byte[] pgpKeyData = backupDataFile.getData(ENTRY_NAME_PGP_KEYS);
 		assertNotNull("backupDataFile.getData(ENTRY_NAME_PGP_KEYS)", pgpKeyData);

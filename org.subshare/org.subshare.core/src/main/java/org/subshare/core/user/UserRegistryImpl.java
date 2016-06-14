@@ -7,6 +7,7 @@ import static co.codewizards.cloudstore.core.util.StringUtil.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -33,11 +34,14 @@ import org.subshare.core.dto.UserRepoKeyDto;
 import org.subshare.core.dto.UserRepoKeyPublicKeyDto;
 import org.subshare.core.dto.jaxb.UserRegistryDtoIo;
 import org.subshare.core.fbor.FileBasedObjectRegistry;
+import org.subshare.core.io.NullOutputStream;
 import org.subshare.core.pgp.Pgp;
+import org.subshare.core.pgp.PgpDecoder;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpKeyId;
 import org.subshare.core.pgp.PgpRegistry;
 import org.subshare.core.pgp.PgpUserId;
+import org.subshare.core.pgp.sync.PgpSync;
 import org.subshare.core.pgp.sync.PgpSyncDaemonImpl;
 import org.subshare.core.user.ImportUsersFromPgpKeysResult.ImportedUser;
 import org.subshare.core.user.UserRepoKey.PublicKeyWithSignature;
@@ -527,6 +531,22 @@ public class UserRegistryImpl extends FileBasedObjectRegistry implements UserReg
 	protected synchronized void mergeFrom(final UserRegistryDto userRegistryDto) {
 		assertNotNull("userRegistryDto", userRegistryDto);
 
+		final Set<PgpKeyId> pgpKeyIds = new HashSet<>();
+		for (UserDto userDto : userRegistryDto.getUserDtos()) {
+			if (userDto.getUserRepoKeyRingDto() != null) {
+				for (UserRepoKeyDto userRepoKeyDto : userDto.getUserRepoKeyRingDto().getUserRepoKeyDtos())
+					pgpKeyIds.addAll(getSigningPgpKeyIds(userRepoKeyDto.getSignedPublicKeyData()));
+			}
+			for (UserRepoKeyPublicKeyDto userRepoKeyPublicKeyDto : userDto.getUserRepoKeyPublicKeyDtos())
+				pgpKeyIds.addAll(getSigningPgpKeyIds(userRepoKeyPublicKeyDto.getSignedPublicKeyData()));
+		}
+		try {
+			PgpSync.setDownSyncPgpKeyIds(pgpKeyIds);
+			PgpSyncDaemonImpl.getInstance().sync();
+		} finally {
+			PgpSync.setDownSyncPgpKeyIds(null);
+		}
+
 		final Set<Uid> deletedUserIdSet = new HashSet<>(this.deletedUserIds.size());
 		for (final DeletedUid deletedUid : this.deletedUserIds)
 			deletedUserIdSet.add(deletedUid.getUid());
@@ -586,6 +606,21 @@ public class UserRegistryImpl extends FileBasedObjectRegistry implements UserReg
 
 		if (hasMissingPgpKeys())
 			PgpSyncDaemonImpl.getInstance().sync();
+	}
+
+	private Set<PgpKeyId> getSigningPgpKeyIds(final byte[] signedData) {
+		if (signedData == null)
+			return Collections.emptySet();
+
+		final Pgp pgp = PgpRegistry.getInstance().getPgpOrFail();
+		PgpDecoder decoder = pgp.createDecoder(new ByteArrayInputStream(signedData), new NullOutputStream());
+		decoder.setFailOnMissingSignPgpKey(false);
+		try {
+			decoder.decode();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+		return decoder.getSignPgpKeyIds();
 	}
 
 	private boolean hasMissingPgpKeys() {
