@@ -23,7 +23,6 @@ import org.subshare.core.pgp.PgpEncoder;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpRegistry;
 import org.subshare.core.sign.Signature;
-import org.subshare.core.user.UserRepoKey.PublicKeyWithSignature;
 import org.subshare.crypto.CryptoRegistry;
 
 import co.codewizards.cloudstore.core.auth.SignatureException;
@@ -79,18 +78,22 @@ public class UserRepoKeyImpl implements UserRepoKey {
 		this.keyPair = new AsymmetricCipherKeyPair(verifyPublicKeyData(), decryptVerifyPrivateKeyData());
 	}
 
+	@Override
 	public Uid getUserRepoKeyId() {
 		return userRepoKeyId;
 	}
 
+	@Override
 	public UUID getServerRepositoryId() {
 		return serverRepositoryId;
 	}
 
+	@Override
 	public AsymmetricCipherKeyPair getKeyPair() {
 		return keyPair;
 	}
 
+	@Override
 	public PublicKeyWithSignature getPublicKey() {
 		if (publicKey == null)
 			publicKey = new PublicKeyWithSignatureImpl(
@@ -100,6 +103,7 @@ public class UserRepoKeyImpl implements UserRepoKey {
 		return publicKey;
 	}
 
+	@Override
 	public boolean isInvitation() {
 		return invitation;
 	}
@@ -109,6 +113,7 @@ public class UserRepoKeyImpl implements UserRepoKey {
 	 * keys.
 	 * @return
 	 */
+	@Override
 	public Date getValidTo() {
 		return validTo;
 	}
@@ -186,9 +191,11 @@ public class UserRepoKeyImpl implements UserRepoKey {
 		}
 	}
 
+	@Override
 	public byte[] getEncryptedSignedPrivateKeyData() {
 		return encryptedSignedPrivateKeyData;
 	}
+	@Override
 	public byte[] getSignedPublicKeyData() {
 		return signedPublicKeyData;
 	}
@@ -208,24 +215,34 @@ public class UserRepoKeyImpl implements UserRepoKey {
 			this.invitation = invitation;
 		}
 
+		@Override
 		public Uid getUserRepoKeyId() {
 			return userRepoKeyId;
 		}
 
+		@Override
 		public UUID getServerRepositoryId() {
 			return serverRepositoryId;
 		}
 
+		@Override
 		public AsymmetricKeyParameter getPublicKey() {
 			return publicKey;
 		}
 
+		@Override
 		public Date getValidTo() {
 			return validTo;
 		}
 
+		@Override
 		public boolean isInvitation() {
 			return invitation;
+		}
+
+		@Override
+		public String toString() {
+			return String.format("%s[userRepoKeyId=%s, invitation=%s, validTo=%s]", this.getClass().getSimpleName(), userRepoKeyId, invitation, validTo);
 		}
 	}
 
@@ -247,9 +264,11 @@ public class UserRepoKeyImpl implements UserRepoKey {
 			this.signedPublicKeyData = assertNotNull("signedPublicKeyData", signedPublicKeyData);
 		}
 
+		@Override
 		public byte[] getSignedPublicKeyData() {
 			return signedPublicKeyData;
 		}
+		@Override
 		public byte[] getPublicKeyData() {
 			// publicKeyData is of course the same publicKey-data as the one in signedPublicKeyData, but it is not PGP-signed.
 			if (publicKeyData == null)

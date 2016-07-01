@@ -208,6 +208,7 @@ public interface Cryptree {
 	void clearCryptoRepoFileDeleted(String localPath);
 	void assertIsNotDeletedDuplicateCryptoRepoFile(Uid cryptoRepoFileId);
 	void putCollisionPrivateDto(CollisionPrivateDto collisionPrivateDto);
+	void removeOrphanedInvitationUserRepoKeyPublicKeys();
 
 //	void createCollisionIfNeeded(String localPath);
 }

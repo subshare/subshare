@@ -823,6 +823,37 @@ public class CryptreeImpl extends AbstractCryptree {
 		deleteUserRepoKeyPublicKeyReplacementRequestWithOldKey(request);
 	}
 
+	@Override
+	public void removeOrphanedInvitationUserRepoKeyPublicKeys() {
+		final long start = System.currentTimeMillis();
+		final LocalRepoTransaction tx = getTransactionOrFail();
+		final RemoteRepositoryDao rrDao = tx.getDao(RemoteRepositoryDao.class);
+
+		final Set<UUID> serverRepositoryIds = new HashSet<>(1); // currently, we support only 1!
+		for (RemoteRepository serverRepository : rrDao.getObjects())
+			serverRepositoryIds.add(serverRepository.getRepositoryId());
+
+		final UserRepoKeyPublicKeyDao urkpkDao = tx.getDao(UserRepoKeyPublicKeyDao.class);
+		for (final User user : getCryptreeContext().getUserRegistry().getUsers()) {
+			final List<UserRepoKey.PublicKeyWithSignature> userRepoKeyPublicKeysToBeRemoved = new ArrayList<>();
+			for (final UserRepoKey.PublicKeyWithSignature pk : user.getUserRepoKeyPublicKeys()) {
+				if (pk.isInvitation() && serverRepositoryIds.contains(pk.getServerRepositoryId())) {
+					final UserRepoKeyPublicKey urkpk = urkpkDao.getUserRepoKeyPublicKey(pk.getUserRepoKeyId());
+					if (urkpk == null)
+						userRepoKeyPublicKeysToBeRemoved.add(pk);
+				}
+			}
+			if (! userRepoKeyPublicKeysToBeRemoved.isEmpty()) {
+				user.getUserRepoKeyPublicKeys().removeAll(userRepoKeyPublicKeysToBeRemoved);
+
+				logger.warn("removeOrphanedInvitationUserRepoKeyPublicKeys: Removed {} public keys from user {}! removed={} kept={}",
+						userRepoKeyPublicKeysToBeRemoved.size(), user, userRepoKeyPublicKeysToBeRemoved, user.getUserRepoKeyPublicKeys());
+			}
+		}
+		getCryptreeContext().getUserRegistry().writeIfNeeded();
+		logger.debug("removeOrphanedInvitationUserRepoKeyPublicKeys took {} ms.", System.currentTimeMillis() - start);
+	}
+
 //	private void transferUserIdentities(final UserRepoKeyPublicKeyReplacementRequest request) {
 //		final UserIdentityLinkDao uiDao = getCryptreeContext().transaction.getDao(UserIdentityLinkDao.class);
 //		final Collection<UserIdentityLink> userIdentities = uiDao.getUserIdentitiesFor(request.getOldKey());

@@ -23,21 +23,6 @@ import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import javafx.application.Platform;
-import javafx.beans.InvalidationListener;
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleIntegerProperty;
-import javafx.fxml.FXML;
-import javafx.scene.Scene;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.SelectionMode;
-import javafx.scene.control.TableView;
-import javafx.scene.layout.GridPane;
-import javafx.stage.Modality;
-import javafx.stage.Window;
-
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.repo.LocalRepo;
 import org.subshare.core.repo.listener.LocalRepoCommitEventListener;
@@ -56,6 +41,20 @@ import org.subshare.gui.util.PlatformUtil;
 import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
+import javafx.application.Platform;
+import javafx.beans.InvalidationListener;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.fxml.FXML;
+import javafx.scene.Scene;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.SelectionMode;
+import javafx.scene.control.TableView;
+import javafx.scene.layout.GridPane;
+import javafx.stage.Modality;
+import javafx.stage.Window;
 
 public abstract class SecurityPane extends GridPane {
 
@@ -514,25 +513,29 @@ public abstract class SecurityPane extends GridPane {
 				for (Map.Entry<User, Set<Uid>> me : user2UserRepoKeyIds.entrySet()) {
 					final User user = me.getKey();
 					final Set<Uid> userRepoKeyIds = me.getValue();
-					final UserListItem uli = new UserListItem(user);
-					uli.getUserRepoKeyIds().addAll(userRepoKeyIds);
+					try {
+						final UserListItem uli = new UserListItem(user);
+						uli.getUserRepoKeyIds().addAll(userRepoKeyIds);
 
-					if (userRepoKeyIds.contains(localRepoMetaData.getOwnerUserRepoKeyId()))
-						uli.setOwner(true);
-					else {
-						for (Uid userRepoKeyId : userRepoKeyIds) {
-							Set<PermissionType> pts = localRepoMetaData.getGrantedPermissionTypes(localPath, userRepoKeyId);
-							uli.getGrantedPermissionTypes().addAll(pts);
+						if (userRepoKeyIds.contains(localRepoMetaData.getOwnerUserRepoKeyId()))
+							uli.setOwner(true);
+						else {
+							for (Uid userRepoKeyId : userRepoKeyIds) {
+								Set<PermissionType> pts = localRepoMetaData.getGrantedPermissionTypes(localPath, userRepoKeyId);
+								uli.getGrantedPermissionTypes().addAll(pts);
 
-							pts = localRepoMetaData.getEffectivePermissionTypes(localPath, userRepoKeyId);
-							uli.getEffectivePermissionTypes().addAll(pts);
+								pts = localRepoMetaData.getEffectivePermissionTypes(localPath, userRepoKeyId);
+								uli.getEffectivePermissionTypes().addAll(pts);
 
-							pts = localRepoMetaData.getInheritedPermissionTypes(localPath, userRepoKeyId);
-							uli.getInheritedPermissionTypes().addAll(pts);
+								pts = localRepoMetaData.getInheritedPermissionTypes(localPath, userRepoKeyId);
+								uli.getInheritedPermissionTypes().addAll(pts);
+							}
 						}
-					}
 
-					userListItems.add(uli);
+						userListItems.add(uli);
+					} catch (Exception x) {
+						throw new RuntimeException("Failed to load permissions for user " + user +  " (userRepoKeyIds=" + userRepoKeyIds + "): " + x, x);
+					}
 				}
 
 				Platform.runLater(() -> addOrUpdateUserListItems(userListItems));

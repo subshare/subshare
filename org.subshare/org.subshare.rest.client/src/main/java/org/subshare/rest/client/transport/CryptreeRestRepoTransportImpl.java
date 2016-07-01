@@ -980,6 +980,9 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 			cryptree.sealUnsealedHistoryFrame();
 
 			cryptoChangeSetDto = cryptree.getCryptoChangeSetDtoWithCryptoRepoFiles();
+
+			cryptree.removeOrphanedInvitationUserRepoKeyPublicKeys(); // TODO is this location good or should we move this somewhere else?
+
 			transaction.commit();
 		}
 
