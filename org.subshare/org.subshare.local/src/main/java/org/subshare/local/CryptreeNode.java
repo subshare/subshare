@@ -39,10 +39,7 @@ import org.subshare.core.dto.CryptoKeyRole;
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.dto.PlainHistoCryptoRepoFileDto;
 import org.subshare.core.dto.SignatureDto;
-import org.subshare.core.dto.SsDirectoryDto;
-import org.subshare.core.dto.SsNormalFileDto;
 import org.subshare.core.dto.SsRepoFileDto;
-import org.subshare.core.dto.SsSymlinkDto;
 import org.subshare.core.repo.local.CollisionFilter;
 import org.subshare.core.sign.Signable;
 import org.subshare.core.sign.WriteProtected;
@@ -175,6 +172,11 @@ public class CryptreeNode {
 		return repoFile;
 	}
 
+	/**
+	 * Gets the RepoFileDto containing meta-data only (the current version of it).
+	 * @return the DTO or <code>null</code>, if there is no CryptoRepoFile (i.e. {@link #getCryptoRepoFile()} returns <code>null</code>.
+	 * @throws AccessDeniedException
+	 */
 	public RepoFileDto getRepoFileDto() throws AccessDeniedException {
 		final CryptoRepoFile cryptoRepoFile = getCryptoRepoFile();
 		if (cryptoRepoFile == null)
@@ -335,7 +337,8 @@ public class CryptreeNode {
 
 		final byte[] repoFileDtoData;
 		if (deleted != null)
-			repoFileDtoData = getRepoFileDtoDataForDeletedCryptoRepoFile(previousHistoCryptoRepoFile);
+//			repoFileDtoData = getRepoFileDtoDataForDeletedCryptoRepoFile(previousHistoCryptoRepoFile);
+			repoFileDtoData = serializeRepoFileDto(assertNotNull("getRepoFileDto()", getRepoFileDto()));
 		else
 			repoFileDtoData = createRepoFileDtoDataForCryptoRepoFile(true);
 
@@ -617,79 +620,24 @@ public class CryptreeNode {
 		return collisionPrivateDto;
 	}
 
-//	private void createCollisionIfNeeded(final HistoCryptoRepoFile histoCryptoRepoFileLocal) {
-////		final RepoFile repoFile = histoCryptoRepoFileLocal.getCryptoRepoFile().getRepoFile();
-////		assertNotNull("histoCryptoRepoFileLocal.cryptoRepoFile.repoFile", repoFile);
-//		final RepoFile repoFile = getRepoFile();
-//		assertNotNull("repoFile", repoFile);
+//	private byte[] getRepoFileDtoDataForDeletedCryptoRepoFile(final HistoCryptoRepoFile previousHistoCryptoRepoFile) {
+//		// previousHistoCryptoRepoFile may be null, if it was never completely uploaded - hmmmm... why don't we *always* use the info from getRepoFileDto()?!
 //
-//		final String localPath = repoFile.getPath();
-//		final PreliminaryCollisionDao pcDao = context.transaction.getDao(PreliminaryCollisionDao.class);
-//		final PreliminaryCollision preliminaryCollision = pcDao.getPreliminaryCollision(localPath);
-//		if (preliminaryCollision != null) {
-//			final HistoCryptoRepoFileDao hcrfDao = context.transaction.getDao(HistoCryptoRepoFileDao.class);
-//			final CollisionDao collisionDao = context.transaction.getDao(CollisionDao.class);
-//			final CryptoRepoFile cryptoRepoFile = getCryptoRepoFile();
-//
-//			final Collection<HistoCryptoRepoFile> histoCryptoRepoFiles = hcrfDao.getHistoCryptoRepoFiles(cryptoRepoFile);
-////			final HistoCryptoRepoFile histoCryptoRepoFileLocal = getLastHistoCryptoRepoFileLocalOrFail(histoCryptoRepoFiles);
-////			if (histoCryptoRepoFileLocal.getHistoFrame().getSealed() != null)
-////				throw new IllegalStateException("Why is the local HistoFrame already sealed?!???!!!");
-//
-//			final HistoCryptoRepoFile histoCryptoRepoFileRemote = getLastHistoCryptoRepoFileRemoteOrFail(histoCryptoRepoFiles);
-//
-//			// TODO check, if this collision already exists!!! only create it, if it does not yet exist!
-//
-//			Collision collision = new Collision();
-//			collision.setHistoCryptoRepoFile1(histoCryptoRepoFileLocal);
-//			collision.setHistoCryptoRepoFile2(histoCryptoRepoFileRemote);
-//			sign(collision);
-//			collisionDao.makePersistent(collision);
-//
-//			logger.info("createCollisionIfNeeded: localPath='{}' localRevision={}", localPath, cryptoRepoFile.getRepoFile().getLocalRevision());
-//
-//			pcDao.deletePersistent(preliminaryCollision);
+//		final RepoFileDto repoFileDto = previousHistoCryptoRepoFile == null ? getRepoFileDto() : getHistoCryptoRepoFileRepoFileDto(previousHistoCryptoRepoFile);
+//		if (repoFileDto instanceof SsDirectoryDto)
+//			; // nothing to do
+//		else if (repoFileDto instanceof SsNormalFileDto) {
+//			SsNormalFileDto normalFileDto = (SsNormalFileDto) repoFileDto;
+//			normalFileDto.setFileChunkDtos(null);
+//			normalFileDto.setTempFileChunkDtos(null); // they should always be null, anyway.
 //		}
+//		else if (repoFileDto instanceof SsSymlinkDto)
+//			; // nothing to do
+//		else
+//			throw new IllegalStateException("Unexpected repoFileDto type: " + repoFileDto);
+//
+//		return serializeRepoFileDto(repoFileDto);
 //	}
-//
-//	// TODO replace this method by a specific, optimized query!
-//	private HistoCryptoRepoFile getLastHistoCryptoRepoFileRemoteOrFail(final Collection<HistoCryptoRepoFile> histoCryptoRepoFiles) {
-//		assertNotNull("histoCryptoRepoFiles", histoCryptoRepoFiles);
-//		final UUID localRepositoryId = context.transaction.getLocalRepoManager().getRepositoryId();
-//		HistoCryptoRepoFile result = null;
-//		for (HistoCryptoRepoFile histoCryptoRepoFile : histoCryptoRepoFiles) {
-//			final HistoFrame histoFrame = histoCryptoRepoFile.getHistoFrame();
-//			if (localRepositoryId.equals(histoFrame.getFromRepositoryId()))
-//				continue;
-//
-//			if (result == null || result.getSignature().getSignatureCreated().compareTo(histoCryptoRepoFile.getSignature().getSignatureCreated()) < 0)
-//				result = histoCryptoRepoFile;
-//		}
-//
-//		if (result == null)
-//			throw new IllegalStateException("No matching HistoCryptoRepoFile found!");
-//
-//		return result;
-//	}
-
-	private byte[] getRepoFileDtoDataForDeletedCryptoRepoFile(final HistoCryptoRepoFile previousHistoCryptoRepoFile) {
-		assertNotNull("previousHistoCryptoRepoFile", previousHistoCryptoRepoFile);
-
-		RepoFileDto repoFileDto = getHistoCryptoRepoFileRepoFileDto(previousHistoCryptoRepoFile);
-		if (repoFileDto instanceof SsDirectoryDto)
-			; // nothing to do
-		else if (repoFileDto instanceof SsNormalFileDto) {
-			SsNormalFileDto normalFileDto = (SsNormalFileDto) repoFileDto;
-			normalFileDto.setFileChunkDtos(null);
-			normalFileDto.setTempFileChunkDtos(null); // they should always be null, anyway.
-		}
-		else if (repoFileDto instanceof SsSymlinkDto)
-			; // nothing to do
-		else
-			throw new IllegalStateException("Unexpected repoFileDto type: " + repoFileDto);
-
-		return serializeRepoFileDto(repoFileDto);
-	}
 
 	private void grantReadPermission(final UserRepoKey.PublicKey publicKey) {
 		assertNotNull("publicKey", publicKey);
