@@ -22,6 +22,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.zip.GZIPOutputStream;
 
+import javax.jdo.JDOHelper;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.subshare.core.AccessDeniedException;
@@ -1071,8 +1073,13 @@ public class CryptreeNode {
 
 	public CryptreeNode getParent() {
 		if (parent == null) {
-			final RepoFile parentRepoFile = repoFile == null ? null : repoFile.getParent();
-			final CryptoRepoFile parentCryptoRepoFile =  cryptoRepoFile == null ? null : cryptoRepoFile.getParent();
+			if (repoFile != null && JDOHelper.isDeleted(repoFile)) {
+				getCryptoRepoFile();
+				assertNotNull("cryptoRepoFile", cryptoRepoFile);
+			}
+
+			final RepoFile parentRepoFile = repoFile == null || JDOHelper.isDeleted(repoFile) ? null : repoFile.getParent();
+			final CryptoRepoFile parentCryptoRepoFile = cryptoRepoFile == null ? null : cryptoRepoFile.getParent();
 
 			if (parentRepoFile != null || parentCryptoRepoFile != null)
 				parent = context.getCryptreeNodeOrCreate(null, this, parentRepoFile, parentCryptoRepoFile);
