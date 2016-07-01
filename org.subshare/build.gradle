@@ -13,8 +13,8 @@ allprojects {
 	}
 
 	group = 'org.subshare'
-//	version = '0.9.2-SNAPSHOT'
-	version = '0.9.1'
+	version = '0.9.2-SNAPSHOT'
+//	version = '0.9.2'
 
 	sourceCompatibility = JavaVersion.VERSION_1_7
 	targetCompatibility = JavaVersion.VERSION_1_7
