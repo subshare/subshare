@@ -36,6 +36,7 @@ import org.subshare.local.persistence.UserRepoKeyPublicKey;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyDao;
 
 import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
 
 public class UserRepoKeyPublicKeyHelper {
 
@@ -367,7 +368,44 @@ public class UserRepoKeyPublicKeyHelper {
 		final Collection<UserIdentityLink> userIdentityLinks = uilDao.getUserIdentityLinksOf(ofUserRepoKeyPublicKey);
 
 		// TODO create deletion markers for sync!
+//		uilDao.deletePersistentAll(userIdentityLinks);
+	}
 
-		uilDao.deletePersistentAll(userIdentityLinks);
+	public void updateUserRepoKeyRingFromUserIdentities() {
+		final LocalRepoTransaction transaction = getContext().transaction;
+		final UserRepoKeyPublicKeyDao urkpkDao = transaction.getDao(UserRepoKeyPublicKeyDao.class);
+		for (final UserRepoKeyPublicKey userRepoKeyPublicKey : urkpkDao.getObjects()) {
+			final Uid userRepoKeyId = userRepoKeyPublicKey.getUserRepoKeyId();
+			User user = getContext().getUserRegistry().getUserByUserRepoKeyId(userRepoKeyId);
+			if (user != null)
+				continue;
+
+//			UserRepoKey userRepoKey = getContext().userRepoKeyRing.getUserRepoKey(userRepoKeyId);
+//			if (userRepoKey != null)
+//				continue;
+
+			final UserIdentityPayloadDto userIdentityPayloadDto = getUserIdentityPayloadDto(userRepoKeyPublicKey);
+			if (userIdentityPayloadDto == null)
+				continue; // missing permissions!
+
+			Collection<User> users = getContext().getUserRegistry().getUsersByPgpKeyIds(new HashSet<>(userIdentityPayloadDto.getPgpKeyIds()));
+			if (users.isEmpty()) {
+				user = getContext().getUserRegistry().createUser();
+				user.getPgpKeyIds().addAll(userIdentityPayloadDto.getPgpKeyIds());
+				user.setFirstName(userIdentityPayloadDto.getFirstName());
+				user.setLastName(userIdentityPayloadDto.getLastName());
+				user.getEmails().addAll(userIdentityPayloadDto.getEmails());
+			}
+			else
+				user = users.iterator().next();
+
+			// TODO we should automatically download these PGP keys (and import the users into the user-registry)!
+			// Maybe we could trigger this automatically, i.e. do it, when sth. is added to user.pgpKeyIds?!
+			// hmmm... maybe this already happens?!
+
+			final UserRepoKeyPublicKeyDtoWithSignatureConverter converter = new UserRepoKeyPublicKeyDtoWithSignatureConverter();
+			final UserRepoKey.PublicKeyWithSignature pk = converter.fromUserRepoKeyPublicKeyDto(userIdentityPayloadDto.getUserRepoKeyPublicKeyDto());
+			user.getUserRepoKeyPublicKeys().add(pk);
+		}
 	}
 }
