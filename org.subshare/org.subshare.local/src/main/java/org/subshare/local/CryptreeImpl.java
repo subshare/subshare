@@ -523,7 +523,8 @@ public class CryptreeImpl extends AbstractCryptree {
 
 		issue_5_cleanUpExpiredInvitationUserRepoKeys();
 
-		new UserRepoKeyPublicKeyHelper(getCryptreeContext()).updateUserRepoKeyRingFromUserIdentities();
+		if (! isOnServer())
+			new UserRepoKeyPublicKeyHelper(getCryptreeContext()).updateUserRepoKeyRingFromUserIdentities();
 
 		getCryptreeContext().getUserRegistry().writeIfNeeded();
 	}
