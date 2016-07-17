@@ -12,6 +12,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -520,7 +521,44 @@ public class CryptreeImpl extends AbstractCryptree {
 		for (UserRepoKeyPublicKeyReplacementRequestDeletionDto requestDeletionDto : cryptoChangeSetDto.getUserRepoKeyPublicKeyReplacementRequestDeletionDtos())
 			putUserRepoKeyPublicKeyReplacementRequestDeletionDto(requestDeletionDto);
 
+		issue_5_cleanUpExpiredInvitationUserRepoKeys();
+
 		getCryptreeContext().getUserRegistry().writeIfNeeded();
+	}
+
+	private void issue_5_cleanUpExpiredInvitationUserRepoKeys() {
+		// This is a quick'n'dirty data-fix for the broken data of issue 5: https://github.com/subshare/subshare/issues/5
+		// There is currently no clean code to really remove expired InvitationUserRepoKeys!
+		// TODO This method is going to be removed completely in a newer version!
+		if (new Date().after(new Date(2017, 1, 1)))
+			return;
+
+		final LocalRepoTransaction transaction = getTransactionOrFail();
+		final UserRepoKeyPublicKeyDao urkpkDao = transaction.getDao(UserRepoKeyPublicKeyDao.class);
+		final Date candidateInvitationThresholdDate = new Date(2016, 7, 31);
+		final Date now = new Date();
+		final long deleteReserveMillis = 7L * 24L * 3600L * 1000L;
+		final List<InvitationUserRepoKeyPublicKey> invitationKeysToDelete = new LinkedList<>();
+		for (final UserRepoKeyPublicKey userRepoKeyPublicKey : urkpkDao.getObjects()) {
+			if (! (userRepoKeyPublicKey instanceof InvitationUserRepoKeyPublicKey))
+				continue;
+
+			final InvitationUserRepoKeyPublicKey invitationUserRepoKeyPublicKey = (InvitationUserRepoKeyPublicKey) userRepoKeyPublicKey;
+			if (! invitationUserRepoKeyPublicKey.getCreated().before(candidateInvitationThresholdDate))
+				continue;
+
+			Date validTo = invitationUserRepoKeyPublicKey.getValidTo();
+			if (validTo == null)
+				validTo = new Date(invitationUserRepoKeyPublicKey.getCreated().getTime() + (31L * 24L * 3600L * 1000L));
+
+			if (now.getTime() - validTo.getTime() < deleteReserveMillis)
+				continue;
+
+			invitationKeysToDelete.add(invitationUserRepoKeyPublicKey);
+		}
+
+		for (InvitationUserRepoKeyPublicKey invitationUserRepoKeyPublicKey : invitationKeysToDelete)
+			deleteUserRepoKeyPublicKeyReplacementRequestWithOldKey(null, invitationUserRepoKeyPublicKey);
 	}
 
 	private void putHistoCryptoRepoFileDtos(
