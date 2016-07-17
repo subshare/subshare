@@ -5,6 +5,7 @@ import static co.codewizards.cloudstore.core.util.StringUtil.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -16,6 +17,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.subshare.core.observable.ModificationEventType;
 import org.subshare.core.observable.ObservableList;
 import org.subshare.core.observable.standard.StandardPostModificationEvent;
@@ -27,6 +30,8 @@ import co.codewizards.cloudstore.core.config.ConfigDir;
 import co.codewizards.cloudstore.core.oio.File;
 
 public class LocalRepoRegistryImpl implements LocalRepoRegistry {
+	private static final Logger logger = LoggerFactory.getLogger(LocalRepoRegistryImpl.class);
+
 	private final PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
 
 	private co.codewizards.cloudstore.core.repo.local.LocalRepoRegistry backendLocalRepoRegistry;
@@ -89,7 +94,20 @@ public class LocalRepoRegistryImpl implements LocalRepoRegistry {
 	}
 
 	private boolean isMetaOnly(File localRoot) {
-		final String configDirStr = ConfigDir.getInstance().getFile().getAbsolutePath() + java.io.File.separatorChar;
+		try {
+			localRoot = localRoot.getCanonicalFile();
+		} catch (IOException e) {
+			logger.warn("isMetaOnly: Canonicalising '" + localRoot.getAbsolutePath() + "' failed: " + e, e);
+		}
+
+		File configDir = ConfigDir.getInstance().getFile();
+		try {
+			configDir = configDir.getCanonicalFile();
+		} catch (IOException e) {
+			logger.warn("isMetaOnly: Canonicalising '" + configDir.getAbsolutePath() + "' failed: " + e, e);
+		}
+
+		final String configDirStr = configDir.getAbsolutePath() + java.io.File.separatorChar;
 		return localRoot.getAbsolutePath().startsWith(configDirStr);
 	}
 
