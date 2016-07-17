@@ -41,7 +41,7 @@ public class InviteUserWithNormalAndMetaOnlyRepoIT extends AbstractUserRegistryI
 		logger.info("*** >>> inviteUserAndSync_withMetaOnly_singleWritePermissionOnRoot >>> ***");
 
 		// *** OWNER machine with owner's repository ***
-		switchLocationToOwner();
+		switchLocationTo(TestUser.marco);
 
 		createLocalSourceAndRemoteRepo();
 		populateLocalSourceRepo();
@@ -52,7 +52,7 @@ public class InviteUserWithNormalAndMetaOnlyRepoIT extends AbstractUserRegistryI
 //
 //		assertUserIdentityInRepoIs(remoteRoot, 1);
 
-		UserRepoInvitationToken userRepoInvitationToken = createUserRepoInvitationToken("", PermissionType.write);
+		UserRepoInvitationToken userRepoInvitationToken = createUserRepoInvitationToken("", PermissionType.write, TestUser.khaled);
 
 //		assertInvitationUserRepoKeyPublicKeyInRepoIs(localSrcRoot, 1);
 //		assertUserIdentityInRepoIs(localSrcRoot, 2);
@@ -67,7 +67,7 @@ public class InviteUserWithNormalAndMetaOnlyRepoIT extends AbstractUserRegistryI
 
 
 		// *** FRIEND machine with friend's repository ***
-		switchLocationToFriend();
+		switchLocationTo(TestUser.khaled);
 		// create local repo, then connect to server-repo using invitation-token and sync down!
 		createLocalDestinationRepo();
 
@@ -127,7 +127,7 @@ public class InviteUserWithNormalAndMetaOnlyRepoIT extends AbstractUserRegistryI
 
 
 		// *** OWNER machine with owner's repository ***
-		switchLocationToOwner();
+		switchLocationTo(TestUser.marco);
 
 //		// ...but is not yet in source repo.
 //		assertInvitationUserRepoKeyPublicKeyInRepoIs(localSrcRoot, 1);
@@ -164,7 +164,7 @@ public class InviteUserWithNormalAndMetaOnlyRepoIT extends AbstractUserRegistryI
 
 
 		// *** FRIEND machine with friend's repository ***
-		switchLocationToFriend();
+		switchLocationTo(TestUser.khaled);
 
 		// This sync now can decrypt everything.
 		try (final RepoToRepoSync repoToRepoSync = createRepoToRepoSync(localDestMetaOnly, remoteRootURLForLocalDestMetaOnly);) {

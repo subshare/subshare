@@ -3,6 +3,9 @@ package org.subshare.test;
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static org.assertj.core.api.Assertions.*;
 
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.user.UserRepoInvitationToken;
 import org.subshare.local.persistence.InvitationUserRepoKeyPublicKey;
@@ -10,9 +13,6 @@ import org.subshare.local.persistence.UserRepoKeyPublicKey;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyDao;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyReplacementRequestDao;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyReplacementRequestDeletionDao;
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
@@ -29,7 +29,7 @@ public class InviteUserAndSyncIT extends AbstractUserRegistryIT {
 		logger.info("*** >>> inviteUserAndSync_singleWritePermissionOnRoot >>> ***");
 
 		// *** OWNER machine with owner's repository ***
-		switchLocationToOwner();
+		switchLocationTo(TestUser.marco);
 
 		createLocalSourceAndRemoteRepo();
 		populateLocalSourceRepo();
@@ -41,7 +41,7 @@ public class InviteUserAndSyncIT extends AbstractUserRegistryIT {
 
 		assertUserIdentityInRepoIs(remoteRoot, 1);
 
-		UserRepoInvitationToken userRepoInvitationToken = createUserRepoInvitationToken("", PermissionType.write);
+		UserRepoInvitationToken userRepoInvitationToken = createUserRepoInvitationToken("", PermissionType.write, TestUser.khaled);
 
 		assertInvitationUserRepoKeyPublicKeyInRepoIs(localSrcRoot, 1);
 		assertUserIdentityInRepoIs(localSrcRoot, 2);
@@ -56,7 +56,7 @@ public class InviteUserAndSyncIT extends AbstractUserRegistryIT {
 
 
 		// *** FRIEND machine with friend's repository ***
-		switchLocationToFriend();
+		switchLocationTo(TestUser.khaled);
 		// create local repo, then connect to server-repo using invitation-token and sync down!
 		createLocalDestinationRepo();
 
@@ -99,7 +99,7 @@ public class InviteUserAndSyncIT extends AbstractUserRegistryIT {
 
 
 		// *** OWNER machine with owner's repository ***
-		switchLocationToOwner();
+		switchLocationTo(TestUser.marco);
 
 		// ...but is not yet in source repo.
 		assertInvitationUserRepoKeyPublicKeyInRepoIs(localSrcRoot, 1);
@@ -136,7 +136,7 @@ public class InviteUserAndSyncIT extends AbstractUserRegistryIT {
 
 
 		// *** FRIEND machine with friend's repository ***
-		switchLocationToFriend();
+		switchLocationTo(TestUser.khaled);
 
 		File destFile2ccc = srcFile2ccc == null ? null : createFile(localDestRoot, "2/ccc");
 		if (destFile2ccc != null)
@@ -167,7 +167,7 @@ public class InviteUserAndSyncIT extends AbstractUserRegistryIT {
 		logger.info("*** >>> inviteUserAndSync_singleReadPermissionOnRoot >>> ***");
 
 		// *** OWNER machine with owner's repository ***
-		switchLocationToOwner();
+		switchLocationTo(TestUser.marco);
 
 		createLocalSourceAndRemoteRepo();
 		populateLocalSourceRepo();
@@ -179,7 +179,7 @@ public class InviteUserAndSyncIT extends AbstractUserRegistryIT {
 
 		assertUserIdentityInRepoIs(remoteRoot, 1);
 
-		UserRepoInvitationToken userRepoInvitationToken = createUserRepoInvitationToken("", PermissionType.read);
+		UserRepoInvitationToken userRepoInvitationToken = createUserRepoInvitationToken("", PermissionType.read, TestUser.khaled);
 
 		assertInvitationUserRepoKeyPublicKeyInRepoIs(localSrcRoot, 1);
 		assertUserIdentityInRepoIs(localSrcRoot, 2);
@@ -194,7 +194,7 @@ public class InviteUserAndSyncIT extends AbstractUserRegistryIT {
 
 
 		// *** FRIEND machine with friend's repository ***
-		switchLocationToFriend();
+		switchLocationTo(TestUser.khaled);
 		// create local repo, then connect to server-repo using invitation-token and sync down!
 		createLocalDestinationRepo();
 
@@ -229,7 +229,7 @@ public class InviteUserAndSyncIT extends AbstractUserRegistryIT {
 
 
 		// *** OWNER machine with owner's repository ***
-		switchLocationToOwner();
+		switchLocationTo(TestUser.marco);
 
 		// ...but is not yet in source repo.
 		assertInvitationUserRepoKeyPublicKeyInRepoIs(localSrcRoot, 1);
@@ -259,7 +259,7 @@ public class InviteUserAndSyncIT extends AbstractUserRegistryIT {
 
 
 		// *** FRIEND machine with friend's repository ***
-		switchLocationToFriend();
+		switchLocationTo(TestUser.khaled);
 
 		File destFile2ccc = srcFile2ccc == null ? null : createFile(localDestRoot, "2/ccc");
 		if (destFile2ccc != null)
@@ -293,7 +293,7 @@ public class InviteUserAndSyncIT extends AbstractUserRegistryIT {
 		logger.info("*** >>> inviteUserAndSync_twoReadPermissionsOnSubdirs >>> ***");
 
 		// *** OWNER machine with owner's repository ***
-		switchLocationToOwner();
+		switchLocationTo(TestUser.marco);
 
 		createLocalSourceAndRemoteRepo();
 		populateLocalSourceRepo();
@@ -302,7 +302,7 @@ public class InviteUserAndSyncIT extends AbstractUserRegistryIT {
 
 		assertInvitationUserRepoKeyPublicKeyInRepoIs(localSrcRoot, 0);
 
-		UserRepoInvitationToken userRepoInvitationToken = createUserRepoInvitationToken("1 {11 11ä11} 1", PermissionType.read);
+		UserRepoInvitationToken userRepoInvitationToken = createUserRepoInvitationToken("1 {11 11ä11} 1", PermissionType.read, TestUser.khaled);
 
 		assertInvitationUserRepoKeyPublicKeyInRepoIs(localSrcRoot, 1);
 
@@ -312,7 +312,7 @@ public class InviteUserAndSyncIT extends AbstractUserRegistryIT {
 
 
 		// *** FRIEND machine with friend's repository ***
-		switchLocationToFriend();
+		switchLocationTo(TestUser.khaled);
 		// TODO create local repo, connect to server-repo using invitation-token and sync down!
 		createLocalDestinationRepo();
 
@@ -342,7 +342,7 @@ public class InviteUserAndSyncIT extends AbstractUserRegistryIT {
 
 
 		// *** OWNER machine with owner's repository ***
-		switchLocationToOwner();
+		switchLocationTo(TestUser.marco);
 
 		// ...but is not yet in source repo.
 		assertInvitationUserRepoKeyPublicKeyInRepoIs(localSrcRoot, 1);
@@ -368,7 +368,7 @@ public class InviteUserAndSyncIT extends AbstractUserRegistryIT {
 
 
 		// *** FRIEND machine with friend's repository ***
-		switchLocationToFriend();
+		switchLocationTo(TestUser.khaled);
 
 //		File destFile2ccc = srcFile2ccc == null ? null : createFile(localDestRoot, "2/ccc");
 //		if (destFile2ccc != null)

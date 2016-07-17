@@ -4,16 +4,17 @@ import static org.assertj.core.api.Assertions.*;
 
 import java.util.LinkedList;
 
-import mockit.Invocation;
-import mockit.Mock;
-import mockit.MockUp;
-
+import org.junit.Test;
 import org.subshare.core.dto.CryptoChangeSetDto;
 import org.subshare.core.dto.PermissionType;
+import org.subshare.core.user.User;
 import org.subshare.core.user.UserRepoInvitationToken;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.local.CryptreeImpl;
-import org.junit.Test;
+
+import mockit.Invocation;
+import mockit.Mock;
+import mockit.MockUp;
 
 public class ReadUserIdentityIT extends AbstractUserRegistryIT {
 
@@ -29,7 +30,7 @@ public class ReadUserIdentityIT extends AbstractUserRegistryIT {
 		};
 
 		// *** OWNER machine with owner's repository ***
-		switchLocationToOwner();
+		switchLocationTo(TestUser.marco);
 
 		createLocalSourceAndRemoteRepo();
 		populateLocalSourceRepo();
@@ -40,7 +41,7 @@ public class ReadUserIdentityIT extends AbstractUserRegistryIT {
 		assertUserIdentityInRepoIs(remoteRoot, 1);
 
 		// Create invitation token.
-		UserRepoInvitationToken userRepoInvitationToken = createUserRepoInvitationToken("", PermissionType.read);
+		UserRepoInvitationToken userRepoInvitationToken = createUserRepoInvitationToken("", PermissionType.read, TestUser.khaled);
 
 		// Need to sync the data for the invitation-token! Otherwise the token is useless!
 		syncFromLocalSrcToRemote();
@@ -52,7 +53,7 @@ public class ReadUserIdentityIT extends AbstractUserRegistryIT {
 
 
 		// *** FRIEND machine with friend's repository ***
-		switchLocationToFriend();
+		switchLocationTo(TestUser.khaled);
 		// create local repo, then connect to server-repo using invitation-token and sync down!
 		createLocalDestinationRepo();
 
@@ -69,9 +70,10 @@ public class ReadUserIdentityIT extends AbstractUserRegistryIT {
 
 
 		// *** OWNER machine with owner's repository ***
-		switchLocationToOwner();
+		switchLocationTo(TestUser.marco);
 
 		// grant permission *FIRST*, because this invitation-key is about to be replaced (we want to test this)!
+		User friend = getUser(TestUser.khaled);
 		assertThat(friend.getUserRepoKeyPublicKeys()).hasSize(1);
 		UserRepoKey.PublicKeyWithSignature friendPublicKeyForInvitation = friend.getUserRepoKeyPublicKeys().get(0);
 		assertThat(friendPublicKeyForInvitation.isInvitation()).isTrue();
@@ -85,10 +87,11 @@ public class ReadUserIdentityIT extends AbstractUserRegistryIT {
 		assertThat(friend.getUserRepoKeyPublicKeys()).hasSize(1);
 		UserRepoKey.PublicKeyWithSignature friendPublicKeyPermanent = friend.getUserRepoKeyPublicKeys().get(0);
 		assertThat(friendPublicKeyPermanent.isInvitation()).isFalse();
+		friend = null; // the user should not linger, because it is bound to a certain UserRegistry - and we're switching it back and forth.
 
 
 		// *** FRIEND machine with friend's repository ***
-		switchLocationToFriend();
+		switchLocationTo(TestUser.khaled);
 
 		syncFromRemoteToLocalDest();
 
@@ -96,7 +99,7 @@ public class ReadUserIdentityIT extends AbstractUserRegistryIT {
 
 
 		// *** OWNER machine with owner's repository ***
-		switchLocationToOwner();
+		switchLocationTo(TestUser.marco);
 
 		revokePermission("", PermissionType.readUserIdentity, friendPublicKeyPermanent);
 
@@ -109,7 +112,7 @@ public class ReadUserIdentityIT extends AbstractUserRegistryIT {
 
 
 		// *** FRIEND machine with friend's repository ***
-		switchLocationToFriend();
+		switchLocationTo(TestUser.khaled);
 
 		syncFromRemoteToLocalDest();
 
@@ -128,7 +131,7 @@ public class ReadUserIdentityIT extends AbstractUserRegistryIT {
 
 
 		// *** OWNER machine with owner's repository ***
-		switchLocationToOwner();
+		switchLocationTo(TestUser.marco);
 
 		cryptoChangeSetDtos.clear();
 

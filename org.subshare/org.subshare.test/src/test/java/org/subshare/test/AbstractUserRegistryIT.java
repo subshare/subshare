@@ -6,13 +6,14 @@ import static org.subshare.test.PgpTestUtil.*;
 
 import java.net.URL;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import mockit.Mock;
-import mockit.MockUp;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.subshare.core.Cryptree;
 import org.subshare.core.CryptreeFactoryRegistry;
 import org.subshare.core.ReadUserIdentityAccessDeniedException;
@@ -29,14 +30,12 @@ import org.subshare.core.user.UserRepoInvitationManager;
 import org.subshare.core.user.UserRepoInvitationToken;
 import org.subshare.core.user.UserRepoKeyRing;
 import org.subshare.core.user.UserRepoKeyRingLookup;
-import org.subshare.local.persistence.SsRemoteRepository;
 import org.subshare.local.persistence.CryptoRepoFile;
 import org.subshare.local.persistence.CryptoRepoFileDao;
+import org.subshare.local.persistence.SsRemoteRepository;
 import org.subshare.local.persistence.UserIdentityLinkDao;
 import org.subshare.local.persistence.UserRepoKeyPublicKey;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyDao;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import co.codewizards.cloudstore.core.config.ConfigDir;
 import co.codewizards.cloudstore.core.dto.Uid;
@@ -45,16 +44,19 @@ import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
 import co.codewizards.cloudstore.local.persistence.RemoteRepository;
 import co.codewizards.cloudstore.local.persistence.RemoteRepositoryDao;
+import mockit.Mock;
+import mockit.MockUp;
 
 public class AbstractUserRegistryIT extends AbstractRepoToRepoSyncIT {
 
 	private static final Logger logger = LoggerFactory.getLogger(AbstractUserRegistryIT.class);
 
-	protected UserRegistry ownerUserRegistry;
-	protected User owner;
-	protected UserRegistry friendUserRegistry;
-	protected User friend;
+	protected User user;
 	protected UserRegistry userRegistry;
+
+	protected Map<TestUser, UserRegistry> testUser2UserRegistry = new HashMap<>();
+	protected Map<UserRegistry, TestUser> userRegistry2TestUser = new IdentityHashMap<>();
+	protected Map<TestUser, String> testUser2Email = new HashMap<>();
 
 	@Override
 	public void before() throws Exception {
@@ -65,27 +67,26 @@ public class AbstractUserRegistryIT extends AbstractRepoToRepoSyncIT {
 		    @Mock
 		    UserRegistry getInstance() {
 		    	UserRegistry ur = userRegistry;
+		    	TestUser testUser = userRegistry2TestUser.get(ur);
 
-		    	String userRegistryName = null;
-
-		    	if (ownerUserRegistry == ur)
-		    		userRegistryName = "ownerUserRegistry";
-
-		    	if (friendUserRegistry == ur)
-		    		userRegistryName = "friendUserRegistry";
-
-		    	logger.info("Mocked UserRegistry returning userRegistry: {} (={})", ur, userRegistryName);
+		    	logger.info("Mocked UserRegistry returning userRegistry: {} (of {})", ur, testUser);
 		        return ur;
 		    }
 		};
 
 		super.before();
 
-		ownerUserRegistry = createUserRegistry("marco", "test12345");
-		owner = getFirstUserHavingPrivateKey(ownerUserRegistry);
-
-		friendUserRegistry = createUserRegistry("khaled", "test678");
-		friend = getFirstUserHavingPrivateKey(friendUserRegistry);
+		for (final TestUser testUser : TestUser.values()) {
+			final UserRegistry userRegistry = createUserRegistry(testUser);
+			assertThat(userRegistry).isNotNull();
+			final User user = getFirstUserHavingPrivateKey(userRegistry);
+			assertThat(user).isNotNull();
+			assertThat(user.getEmails()).isNotEmpty();
+			final String email = user.getEmails().get(0);
+			testUser2UserRegistry.put(testUser, userRegistry);
+			userRegistry2TestUser.put(userRegistry, testUser);
+			testUser2Email.put(testUser, email);
+		}
 
 		logger.info("*** <<< before <<< ***");
 		logger.info("*** <<<<<<<<<<<<<< ***");
@@ -99,28 +100,26 @@ public class AbstractUserRegistryIT extends AbstractRepoToRepoSyncIT {
 		configDir.mkdir();
 	}
 
-	protected void switchLocationToOwner() throws Exception {
-		userRegistry = ownerUserRegistry;
-		assignOwnerAndFriendFromCurrentUserRegistry();
-		setupPgp("marco", "test12345");
-		UserRepoKeyRingLookup.Helper.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(owner.getUserRepoKeyRingOrCreate()));
+	protected void switchLocationTo(final TestUser testUser) throws Exception {
+		userRegistry = testUser2UserRegistry.get(testUser);
+		assertThat(userRegistry).isNotNull();
+		setupPgp(testUser.name(), testUser.getPgpPrivateKeyPassword());
+
+		user = getUser(testUser);
+		UserRepoKeyRingLookup.Helper.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(user.getUserRepoKeyRingOrCreate()));
 	}
 
-	protected void switchLocationToFriend() throws Exception {
-		userRegistry = friendUserRegistry;
-		assignOwnerAndFriendFromCurrentUserRegistry();
-		setupPgp("khaled", "test678");
-		UserRepoKeyRingLookup.Helper.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(friend.getUserRepoKeyRingOrCreate()));
-	}
+	protected User getUser(final TestUser testUser) {
+		assertThat(userRegistry).isNotNull();
 
-	private void assignOwnerAndFriendFromCurrentUserRegistry() {
-		Collection<User> users = userRegistry.getUsersByEmail(owner.getEmails().get(0));
-		assertThat(users).hasSize(1);
-		owner = users.iterator().next();
+		final String email = testUser2Email.get(testUser);
+		assertThat(email).isNotNull();
 
-		users = userRegistry.getUsersByEmail(friend.getEmails().get(0));
+		final Collection<User> users = userRegistry.getUsersByEmail(email);
 		assertThat(users).hasSize(1);
-		friend = users.iterator().next();
+		final User user = users.iterator().next();
+		assertThat(user).isNotNull();
+		return user;
 	}
 
 	protected void assertUserIdentitiesReadable(File repoRoot) {
@@ -197,21 +196,35 @@ public class AbstractUserRegistryIT extends AbstractRepoToRepoSyncIT {
 		throw new IllegalStateException("There is no user having a private key!");
 	}
 
-	protected UserRegistry createUserRegistry(String ownerName, final String passphrase) throws Exception {
-		setupPgp(ownerName, passphrase);
+	protected UserRegistry createUserRegistry(TestUser testUser) throws Exception {
+		setupPgp(testUser.name(), testUser.getPgpPrivateKeyPassword());
 
-		UserRegistry userRegistry = new UserRegistryImpl() { // protected constructor => subclass ;-)
+		UserRegistry userRegistry = new UserRegistryImpl() {
+			@Override
+			protected void read() {
+				// We don't read (but invoke callbacks and import PGP keys) ...
+				preRead();
+				markClean();
+				postRead();
+				readPgpUsers();
+			}
+			@Override
+			protected synchronized void write() {
+				// ... and we don't write!
+				markClean();
+			}
 		};
 		return userRegistry;
 	}
 
-	protected UserRepoInvitationToken createUserRepoInvitationToken(final String localPath, PermissionType permissionType) {
+	protected UserRepoInvitationToken createUserRepoInvitationToken(final String localPath, PermissionType permissionType, TestUser invitedTestUser) {
+		final User invitedUser = getUser(invitedTestUser);
 		final UserRepoInvitationToken userRepoInvitationToken;
 		try (final LocalRepoManager localRepoManager = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(localSrcRoot);)
 		{
-			final UserRepoInvitationManager userRepoInvitationManager = UserRepoInvitationManager.Helper.getInstance(ownerUserRegistry, localRepoManager);
+			final UserRepoInvitationManager userRepoInvitationManager = UserRepoInvitationManager.Helper.getInstance(userRegistry, localRepoManager);
 			final Set<PgpKey> userPgpKeys = null;
-			userRepoInvitationToken = userRepoInvitationManager.createUserRepoInvitationToken(localPath, friend, userPgpKeys, permissionType, 24 * 3600 * 1000);
+			userRepoInvitationToken = userRepoInvitationManager.createUserRepoInvitationToken(localPath, invitedUser, userPgpKeys, permissionType, 24 * 3600 * 1000);
 		}
 		return userRepoInvitationToken;
 	}
@@ -219,7 +232,7 @@ public class AbstractUserRegistryIT extends AbstractRepoToRepoSyncIT {
 	protected void importUserRepoInvitationToken(UserRepoInvitationToken userRepoInvitationToken) throws Exception {
 		try (final LocalRepoManager localRepoManager = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(localDestRoot);)
 		{
-			final UserRepoInvitationManager userRepoInvitationManager = UserRepoInvitationManager.Helper.getInstance(friendUserRegistry, localRepoManager);
+			final UserRepoInvitationManager userRepoInvitationManager = UserRepoInvitationManager.Helper.getInstance(userRegistry, localRepoManager);
 			userRepoInvitationManager.importUserRepoInvitationToken(userRepoInvitationToken);
 		}
 
@@ -275,14 +288,15 @@ public class AbstractUserRegistryIT extends AbstractRepoToRepoSyncIT {
 	@Override
 	protected UserRepoKeyRing createUserRepoKeyRing(UUID serverRepositoryId) {
 		// super-method uses TestUserRegistry => override and use real UserRegistry here!
-		final User user;
-		if (userRegistry == ownerUserRegistry)
-			user = owner;
-		else if (userRegistry == friendUserRegistry)
-			user = friend;
-		else
-			throw new IllegalStateException("userRegistry is neither ownerUserRegistry nor friendUserRegistry!");
+//		final User user;
+//		if (userRegistry == ownerUserRegistry)
+//			user = owner;
+//		else if (userRegistry == friendUserRegistry)
+//			user = friend;
+//		else
+//			throw new IllegalStateException("userRegistry is neither ownerUserRegistry nor friendUserRegistry!");
 
+		assertThat(user).isNotNull();
 		user.createUserRepoKey(serverRepositoryId);
 		return user.getUserRepoKeyRing();
 	}
