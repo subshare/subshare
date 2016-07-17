@@ -368,7 +368,7 @@ public class UserRepoKeyPublicKeyHelper {
 		final Collection<UserIdentityLink> userIdentityLinks = uilDao.getUserIdentityLinksOf(ofUserRepoKeyPublicKey);
 
 		// TODO create deletion markers for sync!
-//		uilDao.deletePersistentAll(userIdentityLinks);
+		uilDao.deletePersistentAll(userIdentityLinks);
 	}
 
 	public void updateUserRepoKeyRingFromUserIdentities() {
