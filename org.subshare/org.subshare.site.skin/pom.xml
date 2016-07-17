@@ -6,10 +6,10 @@
 	<parent>
 		<groupId>org.subshare</groupId>
 		<artifactId>org.subshare.parent</artifactId>
-<!--
 		<version>0.9.3-SNAPSHOT</version>
+<!--
+		<version>0.9.3</version>
 -->
-		<version>0.9.2</version>
 		<relativePath>../org.subshare.parent</relativePath>
 	</parent>
 
