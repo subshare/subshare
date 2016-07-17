@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.*;
 import java.util.LinkedList;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.subshare.core.dto.CryptoChangeSetDto;
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.user.User;
@@ -15,7 +16,9 @@ import org.subshare.local.CryptreeImpl;
 import mockit.Invocation;
 import mockit.Mock;
 import mockit.MockUp;
+import mockit.integration.junit4.JMockit;
 
+@RunWith(JMockit.class)
 public class ReadUserIdentityIT extends AbstractUserRegistryIT {
 
 	@Test
@@ -37,8 +40,10 @@ public class ReadUserIdentityIT extends AbstractUserRegistryIT {
 		syncFromLocalSrcToRemote();
 //		determineRemotePathPrefix2Encrypted(); // handled differently inside importUserRepoInvitationToken(...)
 
-		assertUserIdentityInRepoIs(localSrcRoot, 1);
-		assertUserIdentityInRepoIs(remoteRoot, 1);
+		assertUserIdentityCountInRepoIs(localSrcRoot, 1);
+		assertUserIdentityLinkCountInRepoIs(localSrcRoot, 1);
+		assertUserIdentityCountInRepoIs(remoteRoot, 1);
+		assertUserIdentityLinkCountInRepoIs(remoteRoot, 1);
 
 		// Create invitation token.
 		UserRepoInvitationToken userRepoInvitationToken = createUserRepoInvitationToken("", PermissionType.read, TestUser.khaled);
@@ -48,8 +53,10 @@ public class ReadUserIdentityIT extends AbstractUserRegistryIT {
 
 		assertUserIdentitiesReadable(localSrcRoot);
 
-		assertUserIdentityInRepoIs(localSrcRoot, 2);
-		assertUserIdentityInRepoIs(remoteRoot, 2);
+		assertUserIdentityCountInRepoIs(localSrcRoot, 2);
+		assertUserIdentityLinkCountInRepoIs(localSrcRoot, 3);
+		assertUserIdentityCountInRepoIs(remoteRoot, 2);
+		assertUserIdentityLinkCountInRepoIs(remoteRoot, 3);
 
 
 		// *** FRIEND machine with friend's repository ***
@@ -63,8 +70,10 @@ public class ReadUserIdentityIT extends AbstractUserRegistryIT {
 		// and sync.
 		syncFromRemoteToLocalDest();
 
-		assertUserIdentityInRepoIs(localDestRoot, 3);
-		assertUserIdentityInRepoIs(remoteRoot, 3);
+		assertUserIdentityCountInRepoIs(localDestRoot, 3);
+		assertUserIdentityLinkCountInRepoIs(localDestRoot, 5);
+		assertUserIdentityCountInRepoIs(remoteRoot, 3);
+		assertUserIdentityLinkCountInRepoIs(remoteRoot, 5);
 
 		assertUserIdentitiesNotReadable(localDestRoot);
 

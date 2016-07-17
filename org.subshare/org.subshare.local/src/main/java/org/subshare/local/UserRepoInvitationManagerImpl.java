@@ -60,6 +60,8 @@ import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKeyRing;
 import org.subshare.local.persistence.InvitationUserRepoKeyPublicKey;
 import org.subshare.local.persistence.SsRemoteRepository;
+import org.subshare.local.persistence.UserIdentityDao;
+import org.subshare.local.persistence.UserIdentityLinkDao;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyDao;
 import org.subshare.local.persistence.VerifySignableAndWriteProtectedEntityListener;
 
@@ -555,6 +557,19 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 			final VerifySignableAndWriteProtectedEntityListener verifySignableAndWriteProtectedEntityListener = transaction.getContextObject(VerifySignableAndWriteProtectedEntityListener.class);
 			assertNotNull("verifySignableAndWriteProtectedEntityListener", verifySignableAndWriteProtectedEntityListener);
 			verifySignableAndWriteProtectedEntityListener.removeSignable(invitationUserRepoKeyPublicKey);
+
+			// UserIdentity[Link] objects are implicitly created. We don't want this (yet) and delete them. They're
+			// going to be (re)created automatically, later.
+			final UserIdentityDao uiDao = transaction.getDao(UserIdentityDao.class);
+			final UserIdentityLinkDao uilDao = transaction.getDao(UserIdentityLinkDao.class);
+			uilDao.deletePersistentAll(uilDao.getObjects()); transaction.flush();
+			uiDao.deletePersistentAll(uiDao.getObjects()); transaction.flush();
+
+//			for (UserIdentity userIdentity : transaction.getDao(UserIdentityDao.class).getObjects())
+//				verifySignableAndWriteProtectedEntityListener.removeSignable(userIdentity);
+//
+//			for (UserIdentityLink userIdentityLink : transaction.getDao(UserIdentityLinkDao.class).getObjects())
+//				verifySignableAndWriteProtectedEntityListener.removeSignable(userIdentityLink);
 
 			transaction.commit();
 		} finally {

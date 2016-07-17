@@ -37,21 +37,27 @@ public class InviteUserAndSyncIT extends AbstractUserRegistryIT {
 //		determineRemotePathPrefix2Encrypted(); // handled differently inside importUserRepoInvitationToken(...)
 
 		assertInvitationUserRepoKeyPublicKeyInRepoIs(localSrcRoot, 0);
-		assertUserIdentityInRepoIs(localSrcRoot, 1);
 
-		assertUserIdentityInRepoIs(remoteRoot, 1);
+		assertUserIdentityCountInRepoIs(localSrcRoot, 1);
+		assertUserIdentityLinkCountInRepoIs(localSrcRoot, 1);
+
+		assertUserIdentityCountInRepoIs(remoteRoot, 1);
+		assertUserIdentityLinkCountInRepoIs(remoteRoot, 1);
 
 		UserRepoInvitationToken userRepoInvitationToken = createUserRepoInvitationToken("", PermissionType.write, TestUser.khaled);
 
 		assertInvitationUserRepoKeyPublicKeyInRepoIs(localSrcRoot, 1);
-		assertUserIdentityInRepoIs(localSrcRoot, 2);
+		assertUserIdentityCountInRepoIs(localSrcRoot, 2);
+		assertUserIdentityLinkCountInRepoIs(localSrcRoot, 3); // it's allowed to read itself, even without permissions!
 
 		// We *must* sync again, otherwise the invitation is meaningless: The invitation-UserRepoKey is not yet in the remote DB,
 		// thus neither in the local destination and thus it cannot be used to decrypt the crypto-links.
 		syncFromLocalSrcToRemote();
 
-		assertUserIdentityInRepoIs(remoteRoot, 2);
-		assertUserIdentityInRepoIs(localSrcRoot, 2);
+		assertUserIdentityCountInRepoIs(remoteRoot, 2);
+		assertUserIdentityLinkCountInRepoIs(remoteRoot, 3);
+		assertUserIdentityCountInRepoIs(localSrcRoot, 2);
+		assertUserIdentityLinkCountInRepoIs(localSrcRoot, 3);
 		assertUserIdentitiesReadable(localSrcRoot);
 
 
@@ -65,14 +71,15 @@ public class InviteUserAndSyncIT extends AbstractUserRegistryIT {
 		// to replace the temporary key by the permanent one.
 		assertInvitationUserRepoKeyPublicKeyInRepoIs(localDestRoot, 0);
 		assertReplacementRequestInRepoIs(localDestRoot, 0);
-		assertUserIdentityInRepoIs(localDestRoot, 0);
+		assertUserIdentityLinkCountInRepoIs(localDestRoot, 0);
 
 		importUserRepoInvitationToken(userRepoInvitationToken);
 
 		assertInvitationUserRepoKeyPublicKeyInRepoIs(localDestRoot, 1);
 		assertReplacementRequestInRepoIs(localDestRoot, 1);
 		assertReplacementRequestDeletionInRepoIs(localDestRoot, 0);
-		assertUserIdentityInRepoIs(localDestRoot, 0);
+		assertUserIdentityCountInRepoIs(localDestRoot, 0);
+		assertUserIdentityLinkCountInRepoIs(localDestRoot, 0);
 
 		assertReplacementRequestInRepoIs(remoteRoot, 0);
 
@@ -89,8 +96,10 @@ public class InviteUserAndSyncIT extends AbstractUserRegistryIT {
 		assertReplacementRequestInRepoIs(remoteRoot, 1);
 		assertReplacementRequestDeletionInRepoIs(remoteRoot, 0);
 
-		assertUserIdentityInRepoIs(localDestRoot, 3);
-		assertUserIdentityInRepoIs(remoteRoot, 3);
+		assertUserIdentityCountInRepoIs(localDestRoot, 3);
+		assertUserIdentityLinkCountInRepoIs(localDestRoot, 5);
+		assertUserIdentityCountInRepoIs(remoteRoot, 3);
+		assertUserIdentityLinkCountInRepoIs(remoteRoot, 5);
 
 		// Now we sync 'destFile2xxxreverse' up to the server.
 		syncFromRemoteToLocalDest(false);
@@ -105,7 +114,8 @@ public class InviteUserAndSyncIT extends AbstractUserRegistryIT {
 		assertInvitationUserRepoKeyPublicKeyInRepoIs(localSrcRoot, 1);
 		assertReplacementRequestInRepoIs(localSrcRoot, 0);
 		assertReplacementRequestDeletionInRepoIs(localSrcRoot, 0);
-		assertUserIdentityInRepoIs(localSrcRoot, 2);
+		assertUserIdentityCountInRepoIs(localSrcRoot, 2);
+		assertUserIdentityLinkCountInRepoIs(localSrcRoot, 3);
 
 		File srcFile2xxxreverse = createFile(localSrcRoot, "2/xxxreverse");
 		assertThat(srcFile2xxxreverse.exists()).isFalse(); // should not yet exist
@@ -123,7 +133,8 @@ public class InviteUserAndSyncIT extends AbstractUserRegistryIT {
 		assertInvitationUserRepoKeyPublicKeyInRepoIs(localSrcRoot, 0);
 		assertReplacementRequestInRepoIs(localSrcRoot, 0);
 		assertReplacementRequestDeletionInRepoIs(localSrcRoot, 1);
-		assertUserIdentityInRepoIs(localSrcRoot, 2); // the one from the invitation should be deleted => 2 instead of 3
+		assertUserIdentityCountInRepoIs(localSrcRoot, 2); // the one from the invitation should be deleted => 2 instead of 3
+		assertUserIdentityLinkCountInRepoIs(localSrcRoot, 3);
 		assertUserIdentitiesReadable(localSrcRoot);
 
 
@@ -131,7 +142,8 @@ public class InviteUserAndSyncIT extends AbstractUserRegistryIT {
 		assertInvitationUserRepoKeyPublicKeyInRepoIs(remoteRoot, 0);
 		assertReplacementRequestInRepoIs(remoteRoot, 0);
 		assertReplacementRequestDeletionInRepoIs(remoteRoot, 1);
-		assertUserIdentityInRepoIs(remoteRoot, 2); // the one from the invitation should be deleted => 2 instead of 3
+		assertUserIdentityCountInRepoIs(remoteRoot, 2); // the one from the invitation should be deleted => 2 instead of 3
+		assertUserIdentityLinkCountInRepoIs(remoteRoot, 3);
 
 
 
@@ -147,7 +159,8 @@ public class InviteUserAndSyncIT extends AbstractUserRegistryIT {
 		assertInvitationUserRepoKeyPublicKeyInRepoIs(localDestRoot, 0);
 		assertReplacementRequestInRepoIs(localDestRoot, 0);
 		assertReplacementRequestDeletionInRepoIs(localDestRoot, 1);
-		assertUserIdentityInRepoIs(localDestRoot, 2); // the one from the invitation should be deleted => 2 instead of 3
+		assertUserIdentityCountInRepoIs(localDestRoot, 2); // the one from the invitation should be deleted => 2 instead of 3
+		assertUserIdentityLinkCountInRepoIs(localDestRoot, 3);
 
 		assertUserIdentitiesNotReadable(localDestRoot);
 
@@ -175,21 +188,24 @@ public class InviteUserAndSyncIT extends AbstractUserRegistryIT {
 //		determineRemotePathPrefix2Encrypted(); // handled differently inside importUserRepoInvitationToken(...)
 
 		assertInvitationUserRepoKeyPublicKeyInRepoIs(localSrcRoot, 0);
-		assertUserIdentityInRepoIs(localSrcRoot, 1);
+		assertUserIdentityCountInRepoIs(localSrcRoot, 1);
+		assertUserIdentityLinkCountInRepoIs(localSrcRoot, 1);
 
-		assertUserIdentityInRepoIs(remoteRoot, 1);
+		assertUserIdentityCountInRepoIs(remoteRoot, 1);
+		assertUserIdentityLinkCountInRepoIs(remoteRoot, 1);
 
 		UserRepoInvitationToken userRepoInvitationToken = createUserRepoInvitationToken("", PermissionType.read, TestUser.khaled);
 
 		assertInvitationUserRepoKeyPublicKeyInRepoIs(localSrcRoot, 1);
-		assertUserIdentityInRepoIs(localSrcRoot, 2);
+		assertUserIdentityCountInRepoIs(localSrcRoot, 2);
+		assertUserIdentityLinkCountInRepoIs(localSrcRoot, 3); // it's allowed to read itself, even without permissions!
 
 		// We *must* sync again, otherwise the invitation is meaningless: The invitation-UserRepoKey is not yet in the remote DB,
 		// thus neither in the local destination and thus it cannot be used to decrypt the crypto-links.
 		syncFromLocalSrcToRemote();
 
-		assertUserIdentityInRepoIs(remoteRoot, 2);
-		assertUserIdentityInRepoIs(localSrcRoot, 2);
+		assertUserIdentityLinkCountInRepoIs(remoteRoot, 3);
+		assertUserIdentityLinkCountInRepoIs(localSrcRoot, 3);
 		assertUserIdentitiesReadable(localSrcRoot);
 
 
@@ -203,7 +219,7 @@ public class InviteUserAndSyncIT extends AbstractUserRegistryIT {
 		// to replace the temporary key by the permanent one.
 		assertInvitationUserRepoKeyPublicKeyInRepoIs(localDestRoot, 0);
 		assertReplacementRequestInRepoIs(localDestRoot, 0);
-		assertUserIdentityInRepoIs(localDestRoot, 0);
+		assertUserIdentityLinkCountInRepoIs(localDestRoot, 0);
 
 		importUserRepoInvitationToken(userRepoInvitationToken);
 
@@ -223,8 +239,10 @@ public class InviteUserAndSyncIT extends AbstractUserRegistryIT {
 		assertReplacementRequestInRepoIs(remoteRoot, 1);
 		assertReplacementRequestDeletionInRepoIs(remoteRoot, 0);
 
-		assertUserIdentityInRepoIs(localDestRoot, 3);
-		assertUserIdentityInRepoIs(remoteRoot, 3);
+		assertUserIdentityCountInRepoIs(localDestRoot, 3);
+		assertUserIdentityLinkCountInRepoIs(localDestRoot, 5);
+		assertUserIdentityCountInRepoIs(remoteRoot, 3);
+		assertUserIdentityLinkCountInRepoIs(remoteRoot, 5);
 		assertUserIdentitiesNotReadable(localDestRoot);
 
 
@@ -235,7 +253,8 @@ public class InviteUserAndSyncIT extends AbstractUserRegistryIT {
 		assertInvitationUserRepoKeyPublicKeyInRepoIs(localSrcRoot, 1);
 		assertReplacementRequestInRepoIs(localSrcRoot, 0);
 		assertReplacementRequestDeletionInRepoIs(localSrcRoot, 0);
-		assertUserIdentityInRepoIs(localSrcRoot, 2);
+		assertUserIdentityCountInRepoIs(localSrcRoot, 2);
+		assertUserIdentityLinkCountInRepoIs(localSrcRoot, 3);
 
 		// It takes a different path, depending on whether there are file modifications or not (i.e. only meta-data changed).
 		// This is not a nice way to test all possible paths, but the tests are already too slow ;-)
@@ -247,7 +266,8 @@ public class InviteUserAndSyncIT extends AbstractUserRegistryIT {
 		assertInvitationUserRepoKeyPublicKeyInRepoIs(localSrcRoot, 0);
 		assertReplacementRequestInRepoIs(localSrcRoot, 0);
 		assertReplacementRequestDeletionInRepoIs(localSrcRoot, 1);
-		assertUserIdentityInRepoIs(localSrcRoot, 2); // the one from the invitation should be deleted => 2 instead of 3
+		assertUserIdentityCountInRepoIs(localSrcRoot, 2); // the one from the invitation should be deleted => 2 instead of 3
+		assertUserIdentityLinkCountInRepoIs(localSrcRoot, 3);
 		assertUserIdentitiesReadable(localSrcRoot);
 
 
@@ -255,7 +275,8 @@ public class InviteUserAndSyncIT extends AbstractUserRegistryIT {
 		assertInvitationUserRepoKeyPublicKeyInRepoIs(remoteRoot, 0);
 		assertReplacementRequestInRepoIs(remoteRoot, 0);
 		assertReplacementRequestDeletionInRepoIs(remoteRoot, 1);
-		assertUserIdentityInRepoIs(remoteRoot, 2); // the one from the invitation should be deleted => 2 instead of 3
+		assertUserIdentityCountInRepoIs(remoteRoot, 2); // the one from the invitation should be deleted => 2 instead of 3
+		assertUserIdentityLinkCountInRepoIs(remoteRoot, 3);
 
 
 		// *** FRIEND machine with friend's repository ***
@@ -270,7 +291,8 @@ public class InviteUserAndSyncIT extends AbstractUserRegistryIT {
 		assertInvitationUserRepoKeyPublicKeyInRepoIs(localDestRoot, 0);
 		assertReplacementRequestInRepoIs(localDestRoot, 0);
 		assertReplacementRequestDeletionInRepoIs(localDestRoot, 1);
-		assertUserIdentityInRepoIs(localDestRoot, 2); // the one from the invitation should be deleted => 2 instead of 3
+		assertUserIdentityCountInRepoIs(localDestRoot, 2); // the one from the invitation should be deleted => 2 instead of 3
+		assertUserIdentityLinkCountInRepoIs(localDestRoot, 3);
 
 		assertUserIdentitiesNotReadable(localDestRoot);
 
@@ -283,14 +305,19 @@ public class InviteUserAndSyncIT extends AbstractUserRegistryIT {
 		logger.info("*** <<<<<<<<<<<<<<<<<<<<<<<<< ***");
 	}
 
+
 // TODO For this test, I first have to refactor the way the repo-connection is established: (1) It should connect
 // to the URL from the invitation-token. (2) The request-accept-connection-handling from CloudStore should be replaced
 // by a Subshare-specific handshake mechanism that allows everyone having read access (=> use UserRepoKeyPublicKey-based signature/encryption)
 // to connect.
+//	@Test
+//	public void inviteUserAndSync_twoReadPermissionsOnSubdirs() throws Exception {
+
+
 	@Test
-	public void inviteUserAndSync_twoReadPermissionsOnSubdirs() throws Exception {
+	public void inviteUserAndSync_singleReadPermissionOnSubdir() throws Exception {
 		logger.info("*** >>>>>>>>>>>>>>>>>>>>>>>>> ***");
-		logger.info("*** >>> inviteUserAndSync_twoReadPermissionsOnSubdirs >>> ***");
+		logger.info("*** >>> inviteUserAndSync_singleReadPermissionOnSubdir >>> ***");
 
 		// *** OWNER machine with owner's repository ***
 		switchLocationTo(TestUser.marco);
@@ -385,7 +412,7 @@ public class InviteUserAndSyncIT extends AbstractUserRegistryIT {
 //			assertThat(IOUtil.compareFiles(srcFile2ccc, destFile2ccc)).isTrue();
 //		}
 
-		logger.info("*** <<< inviteUserAndSync_twoReadPermissionsOnSubdirs <<< ***");
+		logger.info("*** <<< inviteUserAndSync_singleReadPermissionOnSubdir <<< ***");
 		logger.info("*** <<<<<<<<<<<<<<<<<<<<<<<<< ***");
 	}
 

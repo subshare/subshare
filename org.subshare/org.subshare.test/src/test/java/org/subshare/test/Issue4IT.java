@@ -49,7 +49,7 @@ public class Issue4IT extends AbstractRepoToRepoSyncIT {
 	}
 
 	@Test
-	public void syncFileDeletedAfterLocalSync() throws Exception {
+	public void issue_4_syncFileDeletedAfterLocalSync() throws Exception {
 		createLocalSourceAndRemoteRepo();
 		populateLocalSourceRepo();
 

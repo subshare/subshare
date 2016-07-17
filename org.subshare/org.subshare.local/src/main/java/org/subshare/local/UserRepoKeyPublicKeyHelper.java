@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -87,6 +88,7 @@ public class UserRepoKeyPublicKeyHelper {
 		final UserRepoKeyPublicKeyDao urkpkDao = context.transaction.getDao(UserRepoKeyPublicKeyDao.class);
 		for (UserRepoKeyPublicKey userRepoKeyPublicKey : urkpkDao.getObjects()) {
 			if (! hasPermission) {
+				// Even though the permission to read user-identities is missing, I create my own user-identities!
 				final UserRepoKey userRepoKey = getContext().userRepoKeyRing.getUserRepoKey(userRepoKeyPublicKey.getUserRepoKeyId());
 				if (userRepoKey == null)
 					continue;
@@ -98,13 +100,14 @@ public class UserRepoKeyPublicKeyHelper {
 	private void createUserIdentities(final UserRepoKeyPublicKey userRepoKeyPublicKey) {
 		assertNotNull("userRepoKeyPublicKey", userRepoKeyPublicKey);
 
-		final Set<UserRepoKeyPublicKey> forUserRepoKeyPublicKeys = getForUserRepoKeyPublicKeysForUserIdentityLinkCreation();
+		final Set<UserRepoKeyPublicKey> forUserRepoKeyPublicKeys = getForUserRepoKeyPublicKeysForUserIdentityLinkCreation(
+				userRepoKeyPublicKey);
 
 		for (final UserRepoKeyPublicKey forUserRepoKeyPublicKey : forUserRepoKeyPublicKeys)
 			getUserIdentityLinkOrCreate(userRepoKeyPublicKey, forUserRepoKeyPublicKey);
 	}
 
-	private Set<UserRepoKeyPublicKey> getForUserRepoKeyPublicKeysForUserIdentityLinkCreation() {
+	private Set<UserRepoKeyPublicKey> getForUserRepoKeyPublicKeysForUserIdentityLinkCreation(UserRepoKeyPublicKey ofUserRepoKeyPublicKey) {
 		final PermissionDao pDao = context.transaction.getDao(PermissionDao.class);
 
 		final Set<UserRepoKeyPublicKey> forUserRepoKeyPublicKeys = new HashSet<>();
@@ -117,7 +120,20 @@ public class UserRepoKeyPublicKeyHelper {
 		if (repositoryOwner != null)
 			forUserRepoKeyPublicKeys.add(repositoryOwner.getUserRepoKeyPublicKey());
 
-		return forUserRepoKeyPublicKeys;
+		// Every UserRepoKeyPublicKey should be able to read its *own* UserIdentity.
+		forUserRepoKeyPublicKeys.add(ofUserRepoKeyPublicKey);
+
+		// The order is essential! We must start with a for-key that we can read!
+		// Thus transferring things into a LinkedHashSet in the right order!
+		final Set<UserRepoKeyPublicKey> result = new LinkedHashSet<>(forUserRepoKeyPublicKeys.size());
+
+		for (UserRepoKeyPublicKey forUserRepoKeyPublicKey : forUserRepoKeyPublicKeys) {
+			if (context.userRepoKeyRing.getUserRepoKey(forUserRepoKeyPublicKey.getUserRepoKeyId()) != null)
+				result.add(forUserRepoKeyPublicKey);
+		}
+		result.addAll(forUserRepoKeyPublicKeys);
+
+		return result;
 	}
 
 	public UserIdentityLink getUserIdentityLinkOrCreate(final UserRepoKeyPublicKey ofUserRepoKeyPublicKey, final UserRepoKeyPublicKey forUserRepoKeyPublicKey) {
@@ -125,11 +141,18 @@ public class UserRepoKeyPublicKeyHelper {
 		assertNotNull("forUserRepoKeyPublicKey", forUserRepoKeyPublicKey);
 		final UserIdentityLinkDao uilDao = context.transaction.getDao(UserIdentityLinkDao.class);
 
-		final Collection<UserIdentityLink> userIdentityLinks = uilDao.getUserIdentityLinks(ofUserRepoKeyPublicKey, forUserRepoKeyPublicKey);
+		Collection<UserIdentityLink> userIdentityLinks = uilDao.getUserIdentityLinks(ofUserRepoKeyPublicKey, forUserRepoKeyPublicKey);
 		if (!userIdentityLinks.isEmpty())
 			return userIdentityLinks.iterator().next();
 
 		final PlainUserIdentity plainUserIdentity = getPlainUserIdentityOrCreate(ofUserRepoKeyPublicKey);
+
+		if (ofUserRepoKeyPublicKey.equals(forUserRepoKeyPublicKey)) {
+			// We must query again, because it was probably just created, if the for- and the of-key are the same.
+			userIdentityLinks = uilDao.getUserIdentityLinks(ofUserRepoKeyPublicKey, forUserRepoKeyPublicKey);
+			if (!userIdentityLinks.isEmpty())
+				return userIdentityLinks.iterator().next();
+		}
 		return createUserIdentityLink(plainUserIdentity, forUserRepoKeyPublicKey);
 	}
 
@@ -196,7 +219,11 @@ public class UserRepoKeyPublicKeyHelper {
 		final UserRepoKey signingUserRepoKey = userRepoKey != null ? userRepoKey : getUserRepoKeyWithReadUserIdentityPermissionOrFail();
 
 		context.getSignableSigner(signingUserRepoKey).sign(userIdentity);
-		return new PlainUserIdentity(uiDao.makePersistent(userIdentity), sharedSecret);
+
+		// We *must* immediately create a UserIdentityLink for ourselves! Otherwise, we're not able to read it, anymore.
+		PlainUserIdentity plainUserIdentity = new PlainUserIdentity(uiDao.makePersistent(userIdentity), sharedSecret);
+		createUserIdentityLink(plainUserIdentity, ofUserRepoKeyPublicKey);
+		return plainUserIdentity;
 	}
 
 	private UserRepoKey getUserRepoKeyWithReadUserIdentityPermissionOrFail() {
@@ -319,11 +346,12 @@ public class UserRepoKeyPublicKeyHelper {
 		if (uiCount != 0)
 			throw new IllegalStateException(String.format("WTF?! There are still %s UserIdentity instances in the DB!", uiCount));
 
-		final Set<UserRepoKeyPublicKey> forUserRepoKeyPublicKeys = getForUserRepoKeyPublicKeysForUserIdentityLinkCreation();
-
 		for (final Map.Entry<UserRepoKeyPublicKey, byte[]> me : ofUserRepoKeyPublicKey2UserIdentityPayloadDtoData.entrySet()) {
 			final UserRepoKeyPublicKey ofUserRepoKeyPublicKey = me.getKey();
 			final byte[] userIdentityPayloadDtoData = me.getValue();
+
+			final Set<UserRepoKeyPublicKey> forUserRepoKeyPublicKeys = getForUserRepoKeyPublicKeysForUserIdentityLinkCreation(
+					ofUserRepoKeyPublicKey);
 
 			final PlainUserIdentity plainUserIdentity = createPlainUserIdentity(ofUserRepoKeyPublicKey, userIdentityPayloadDtoData);
 

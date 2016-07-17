@@ -33,6 +33,7 @@ import org.subshare.core.user.UserRepoKeyRingLookup;
 import org.subshare.local.persistence.CryptoRepoFile;
 import org.subshare.local.persistence.CryptoRepoFileDao;
 import org.subshare.local.persistence.SsRemoteRepository;
+import org.subshare.local.persistence.UserIdentityDao;
 import org.subshare.local.persistence.UserIdentityLinkDao;
 import org.subshare.local.persistence.UserRepoKeyPublicKey;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyDao;
@@ -47,7 +48,7 @@ import co.codewizards.cloudstore.local.persistence.RemoteRepositoryDao;
 import mockit.Mock;
 import mockit.MockUp;
 
-public class AbstractUserRegistryIT extends AbstractRepoToRepoSyncIT {
+public abstract class AbstractUserRegistryIT extends AbstractRepoToRepoSyncIT {
 
 	private static final Logger logger = LoggerFactory.getLogger(AbstractUserRegistryIT.class);
 
@@ -57,6 +58,20 @@ public class AbstractUserRegistryIT extends AbstractRepoToRepoSyncIT {
 	protected Map<TestUser, UserRegistry> testUser2UserRegistry = new HashMap<>();
 	protected Map<UserRegistry, TestUser> userRegistry2TestUser = new IdentityHashMap<>();
 	protected Map<TestUser, String> testUser2Email = new HashMap<>();
+
+	protected Map<TestUser, TestUserEnv> testUser2TestUserEnv = new HashMap<>();
+
+	protected static class TestUserEnv {
+		public final File localDestRoot;
+		public final LocalRepoManager localDestRepoManagerLocal;
+		public final URL remoteRootURLWithPathPrefixForLocalDest;
+
+		public TestUserEnv(File localDestRoot, LocalRepoManager localDestRepoManagerLocal, URL remoteRootURLWithPathPrefixForLocalDest) {
+			this.localDestRoot = localDestRoot;
+			this.localDestRepoManagerLocal = localDestRepoManagerLocal;
+			this.remoteRootURLWithPathPrefixForLocalDest = remoteRootURLWithPathPrefixForLocalDest;
+		}
+	}
 
 	@Override
 	public void before() throws Exception {
@@ -94,6 +109,13 @@ public class AbstractUserRegistryIT extends AbstractRepoToRepoSyncIT {
 
 	@Override
 	public void after() throws Exception {
+		for (TestUserEnv testUserEnv : testUser2TestUserEnv.values()) {
+			if (testUserEnv.localDestRepoManagerLocal != null)
+				testUserEnv.localDestRepoManagerLocal.close();
+
+			if (this.localDestRepoManagerLocal == testUserEnv.localDestRepoManagerLocal)
+				this.localDestRepoManagerLocal = null;
+		}
 		super.after();
 		final File configDir = ConfigDir.getInstance().getFile();
 		configDir.deleteRecursively();
@@ -101,12 +123,25 @@ public class AbstractUserRegistryIT extends AbstractRepoToRepoSyncIT {
 	}
 
 	protected void switchLocationTo(final TestUser testUser) throws Exception {
+		if (userRegistry != null) {
+			TestUser tu = userRegistry2TestUser.get(userRegistry);
+			if (tu != null)
+				testUser2TestUserEnv.put(tu, new TestUserEnv(localDestRoot, localDestRepoManagerLocal, remoteRootURLWithPathPrefixForLocalDest));
+		}
+
 		userRegistry = testUser2UserRegistry.get(testUser);
 		assertThat(userRegistry).isNotNull();
 		setupPgp(testUser.name(), testUser.getPgpPrivateKeyPassword());
 
 		user = getUser(testUser);
 		UserRepoKeyRingLookup.Helper.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(user.getUserRepoKeyRingOrCreate()));
+
+		if (TestUser.marco != testUser) { // the owner! always!
+			final TestUserEnv testUserEnv = testUser2TestUserEnv.get(testUser);
+			localDestRoot = testUserEnv == null ? null : testUserEnv.localDestRoot;
+			localDestRepoManagerLocal = testUserEnv == null ? null : testUserEnv.localDestRepoManagerLocal;
+			remoteRootURLWithPathPrefixForLocalDest = testUserEnv == null ? null : testUserEnv.remoteRootURLWithPathPrefixForLocalDest;
+		}
 	}
 
 	protected User getUser(final TestUser testUser) {
@@ -149,12 +184,15 @@ public class AbstractUserRegistryIT extends AbstractRepoToRepoSyncIT {
 				Cryptree cryptree = getCryptree(transaction);
 
 				for (UserRepoKeyPublicKey publicKey : urkpkDao.getObjects()) {
-					try {
-						UserIdentityPayloadDto userIdentityPayloadDto = cryptree.getUserIdentityPayloadDtoOrFail(publicKey.getUserRepoKeyId());
-						fail(String.format("Succeeded to decrypt %s for userRepoKeyId=%s! The current user should not be able to do so!", userIdentityPayloadDto, publicKey.getUserRepoKeyId()));
-					} catch (ReadUserIdentityAccessDeniedException x) {
-						doNothing(); // this is exactly, what we expect ;-)
-					}
+					if (user.getUserRepoKeyRing().getUserRepoKey(publicKey.getUserRepoKeyId()) != null)
+						cryptree.getUserIdentityPayloadDtoOrFail(publicKey.getUserRepoKeyId()); // we must be able to decrypt our own identity!
+					else
+						try {
+							UserIdentityPayloadDto userIdentityPayloadDto = cryptree.getUserIdentityPayloadDtoOrFail(publicKey.getUserRepoKeyId());
+							fail(String.format("Succeeded to decrypt %s for userRepoKeyId=%s! The current user should not be able to do so!", userIdentityPayloadDto, publicKey.getUserRepoKeyId()));
+						} catch (ReadUserIdentityAccessDeniedException x) {
+							doNothing(); // this is exactly, what we expect ;-)
+						}
 				}
 
 				transaction.commit();
@@ -301,12 +339,25 @@ public class AbstractUserRegistryIT extends AbstractRepoToRepoSyncIT {
 		return user.getUserRepoKeyRing();
 	}
 
-	protected void assertUserIdentityInRepoIs(File repoRoot, long expectedCount) {
+	protected void assertUserIdentityLinkCountInRepoIs(File repoRoot, long expectedCount) {
 		try (final LocalRepoManager localRepoManager = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(repoRoot);)
 		{
 			try (final LocalRepoTransaction transaction = localRepoManager.beginReadTransaction();)
 			{
 				UserIdentityLinkDao dao = transaction.getDao(UserIdentityLinkDao.class);
+				assertThat(dao.getObjectsCount()).isEqualTo(expectedCount);
+
+				transaction.commit();
+			}
+		}
+	}
+
+	protected void assertUserIdentityCountInRepoIs(File repoRoot, long expectedCount) {
+		try (final LocalRepoManager localRepoManager = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(repoRoot);)
+		{
+			try (final LocalRepoTransaction transaction = localRepoManager.beginReadTransaction();)
+			{
+				UserIdentityDao dao = transaction.getDao(UserIdentityDao.class);
 				assertThat(dao.getObjectsCount()).isEqualTo(expectedCount);
 
 				transaction.commit();

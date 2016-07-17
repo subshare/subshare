@@ -14,13 +14,11 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
 
-import mockit.Mock;
-import mockit.MockUp;
-
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.subshare.core.locker.transport.LockerTransportFactoryRegistry;
@@ -50,7 +48,11 @@ import co.codewizards.cloudstore.local.FilenameFilterSkipMetaDir;
 import co.codewizards.cloudstore.rest.client.ssl.CheckServerTrustedCertificateExceptionContext;
 import co.codewizards.cloudstore.rest.client.ssl.CheckServerTrustedCertificateExceptionResult;
 import co.codewizards.cloudstore.rest.client.ssl.DynamicX509TrustManagerCallback;
+import mockit.Mock;
+import mockit.MockUp;
+import mockit.integration.junit4.JMockit;
 
+@RunWith(JMockit.class)
 public abstract class AbstractIT {
 
 	private static final Logger logger = LoggerFactory.getLogger(AbstractIT.class);

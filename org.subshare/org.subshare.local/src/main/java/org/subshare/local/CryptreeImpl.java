@@ -820,7 +820,7 @@ public class CryptreeImpl extends AbstractCryptree {
 		getCryptreeContext().getSignableSigner(oldKeySigningUserRepoKey).sign(requestDeletion);
 
 		requestDeletion = requestDeletionDao.makePersistent(requestDeletion);
-		deleteUserRepoKeyPublicKeyReplacementRequestWithOldKey(request);
+		deleteUserRepoKeyPublicKeyReplacementRequestWithOldKey(request, null);
 	}
 
 	@Override
@@ -877,17 +877,25 @@ public class CryptreeImpl extends AbstractCryptree {
 		final LocalRepoTransaction transaction = getTransactionOrFail();
 		final UserRepoKeyPublicKeyReplacementRequestDao requestDao = transaction.getDao(UserRepoKeyPublicKeyReplacementRequestDao.class);
 		final UserRepoKeyPublicKeyReplacementRequestDeletionDao requestDeletionDao = transaction.getDao(UserRepoKeyPublicKeyReplacementRequestDeletionDao.class);
+		final UserRepoKeyPublicKeyDao urkpkDao = transaction.getDao(UserRepoKeyPublicKeyDao.class);
 
 		UserRepoKeyPublicKeyReplacementRequestDeletion requestDeletion = requestDeletionDao.getUserRepoKeyPublicKeyReplacementRequestDeletion(requestDeletionDto.getRequestId());
 		if (requestDeletion == null)
-			requestDeletion = new UserRepoKeyPublicKeyReplacementRequestDeletion(requestDeletionDto.getRequestId());
+			requestDeletion = new UserRepoKeyPublicKeyReplacementRequestDeletion(requestDeletionDto.getRequestId(), requestDeletionDto.getOldUserRepoKeyId());
 
 		requestDeletion.setSignature(requestDeletionDto.getSignature());
 		requestDeletion = requestDeletionDao.makePersistent(requestDeletion);
 
 		final UserRepoKeyPublicKeyReplacementRequest request = requestDao.getUserRepoKeyPublicKeyReplacementRequest(requestDeletion.getRequestId());
-		if (request != null)
-			deleteUserRepoKeyPublicKeyReplacementRequestWithOldKey(request);
+		InvitationUserRepoKeyPublicKey oldKey = null;
+		final Uid oldUserRepoKeyId = requestDeletion.getOldUserRepoKeyId();
+		if (oldUserRepoKeyId != null) {
+			final UserRepoKeyPublicKey key = urkpkDao.getUserRepoKeyPublicKey(oldUserRepoKeyId);
+			oldKey = (InvitationUserRepoKeyPublicKey) key;
+		}
+
+		if (request != null || oldKey != null)
+			deleteUserRepoKeyPublicKeyReplacementRequestWithOldKey(request, oldKey);
 	}
 
 	private void putUserIdentityDto(UserIdentityDto userIdentityDto) {
@@ -949,13 +957,21 @@ public class CryptreeImpl extends AbstractCryptree {
 //		}
 	}
 
-	private void deleteUserRepoKeyPublicKeyReplacementRequestWithOldKey(final UserRepoKeyPublicKeyReplacementRequest request) {
+	private void deleteUserRepoKeyPublicKeyReplacementRequestWithOldKey(final UserRepoKeyPublicKeyReplacementRequest request, InvitationUserRepoKeyPublicKey oldKey) {
+		if (request == null && oldKey == null)
+			throw new IllegalArgumentException("Both request and oldKey are null!");
+
 		final LocalRepoTransaction transaction = getTransactionOrFail();
 		transaction.flush();
-		final InvitationUserRepoKeyPublicKey oldKey = request.getOldKey();
+
+		if (oldKey == null)
+			oldKey = request.getOldKey();
 
 		final UserRepoKeyPublicKeyReplacementRequestDao urkpkrrDao = transaction.getDao(UserRepoKeyPublicKeyReplacementRequestDao.class);
-		urkpkrrDao.deletePersistent(request);
+
+		if (request != null)
+			urkpkrrDao.deletePersistent(request);
+
 		transaction.flush();
 
 		final Collection<UserRepoKeyPublicKeyReplacementRequest> otherRequests = urkpkrrDao.getUserRepoKeyPublicKeyReplacementRequestsForOldKey(oldKey);

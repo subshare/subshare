@@ -14,6 +14,8 @@ public class UserRepoKeyPublicKeyReplacementRequestDeletionDto {
 
 	private Uid requestId;
 
+	private Uid oldUserRepoKeyId;
+
 	@XmlElement
 	private SignatureDto signatureDto;
 
@@ -22,6 +24,13 @@ public class UserRepoKeyPublicKeyReplacementRequestDeletionDto {
 	}
 	public void setRequestId(Uid requestId) {
 		this.requestId = requestId;
+	}
+
+	public Uid getOldUserRepoKeyId() {
+		return oldUserRepoKeyId;
+	}
+	public void setOldUserRepoKeyId(Uid oldUserRepoKeyId) {
+		this.oldUserRepoKeyId = oldUserRepoKeyId;
 	}
 
 	@XmlTransient

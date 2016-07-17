@@ -61,8 +61,10 @@ public class InviteUserWithNormalAndMetaOnlyRepoIT extends AbstractUserRegistryI
 		// thus neither in the local destination and thus it cannot be used to decrypt the crypto-links.
 		syncFromLocalSrcToRemote();
 
-		assertUserIdentityInRepoIs(remoteRoot, 2);
-		assertUserIdentityInRepoIs(localSrcRoot, 2);
+		assertUserIdentityCountInRepoIs(remoteRoot, 2);
+		assertUserIdentityLinkCountInRepoIs(remoteRoot, 3);
+		assertUserIdentityCountInRepoIs(localSrcRoot, 2);
+		assertUserIdentityLinkCountInRepoIs(localSrcRoot, 3);
 		assertUserIdentitiesReadable(localSrcRoot);
 
 
@@ -117,8 +119,10 @@ public class InviteUserWithNormalAndMetaOnlyRepoIT extends AbstractUserRegistryI
 //		assertReplacementRequestInRepoIs(remoteRoot, 1);
 //		assertReplacementRequestDeletionInRepoIs(remoteRoot, 0);
 
-		assertUserIdentityInRepoIs(localDestRoot, 3);
-		assertUserIdentityInRepoIs(remoteRoot, 3);
+		assertUserIdentityCountInRepoIs(localDestRoot, 3);
+		assertUserIdentityLinkCountInRepoIs(localDestRoot, 5);
+		assertUserIdentityCountInRepoIs(remoteRoot, 3);
+		assertUserIdentityLinkCountInRepoIs(remoteRoot, 5);
 
 		// Now we sync 'destFile2xxxreverse' up to the server.
 		syncFromRemoteToLocalDest(false);

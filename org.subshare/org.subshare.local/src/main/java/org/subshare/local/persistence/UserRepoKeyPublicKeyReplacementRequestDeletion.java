@@ -20,6 +20,7 @@ import javax.jdo.annotations.Uniques;
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.dto.UserRepoKeyPublicKeyReplacementRequestDeletionDto;
 import org.subshare.core.io.InputStreamSource;
+import org.subshare.core.io.MultiInputStream;
 import org.subshare.core.sign.Signature;
 import org.subshare.core.sign.WriteProtected;
 
@@ -41,6 +42,9 @@ public class UserRepoKeyPublicKeyReplacementRequestDeletion extends Entity imple
 	@Persistent(nullValue=NullValue.EXCEPTION)
 	private String requestId;
 
+//	@Persistent(nullValue=NullValue.EXCEPTION) // we cannot annotate this as mandatory, because it was added, later. Maybe we can fix this in the future.
+	private String oldUserRepoKeyId;
+
 	private long localRevision;
 
 	@Persistent(nullValue=NullValue.EXCEPTION)
@@ -51,15 +55,21 @@ public class UserRepoKeyPublicKeyReplacementRequestDeletion extends Entity imple
 	}
 
 	public UserRepoKeyPublicKeyReplacementRequestDeletion(final UserRepoKeyPublicKeyReplacementRequest request) {
-		this(assertNotNull("request", request).getRequestId());
+		this(assertNotNull("request", request).getRequestId(),
+				assertNotNull("request.oldKey", assertNotNull("request", request).getOldKey()).getUserRepoKeyId());
 	}
 
-	public UserRepoKeyPublicKeyReplacementRequestDeletion(final Uid requestId) {
+	public UserRepoKeyPublicKeyReplacementRequestDeletion(final Uid requestId, final Uid oldUserRepoKeyId) {
 		this.requestId = assertNotNull("requestId", requestId).toString();
+		this.oldUserRepoKeyId = oldUserRepoKeyId == null ? null : oldUserRepoKeyId.toString(); // allow null because of legacy data.
 	}
 
 	public Uid getRequestId() {
 		return new Uid(assertNotNull("requestId", requestId));
+	}
+
+	public Uid getOldUserRepoKeyId() {
+		return oldUserRepoKeyId == null ? null : new Uid(oldUserRepoKeyId); // allow null because of legacy data.
 	}
 
 	@Override
@@ -69,13 +79,28 @@ public class UserRepoKeyPublicKeyReplacementRequestDeletion extends Entity imple
 
 	@Override
 	public int getSignedDataVersion() {
-		return 0;
+		return 1;
 	}
 
 	@Override
 	public InputStream getSignedData(int signedDataVersion) {
 		try {
-			return InputStreamSource.Helper.createInputStreamSource(getRequestId()).createInputStream();
+			byte separatorIndex = 0;
+			switch (signedDataVersion) {
+				case 0:
+					return InputStreamSource.Helper.createInputStreamSource(getRequestId()).createInputStream();
+
+				case 1:
+					return new MultiInputStream(
+							InputStreamSource.Helper.createInputStreamSource(getRequestId()),
+
+							InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
+							InputStreamSource.Helper.createInputStreamSource(getOldUserRepoKeyId())
+							);
+
+				default:
+					throw new IllegalStateException("signedDataVersion=" + signedDataVersion);
+			}
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}

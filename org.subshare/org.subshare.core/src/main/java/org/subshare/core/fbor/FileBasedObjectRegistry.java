@@ -70,6 +70,7 @@ public abstract class FileBasedObjectRegistry {
 	}
 
 	protected synchronized void read() {
+		preRead();
 		enableIgnoreDeferredWrite();
 		try {
 			try (final LockFile lockFile = acquireLockFile();) {
