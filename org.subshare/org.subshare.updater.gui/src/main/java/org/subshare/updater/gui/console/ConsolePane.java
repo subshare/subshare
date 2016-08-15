@@ -1,9 +1,14 @@
 package org.subshare.updater.gui.console;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.nio.charset.StandardCharsets;
+import java.io.StringWriter;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
@@ -19,6 +24,8 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 
 public abstract class ConsolePane extends GridPane {
+	private static final Logger logger = LoggerFactory.getLogger(ConsolePane.class);
+
 	private BooleanProperty done = new SimpleBooleanProperty(this, "done");
 
 	@FXML
@@ -30,9 +37,38 @@ public abstract class ConsolePane extends GridPane {
 	@FXML
 	private Button okButton;
 
+	private static final AtomicInteger nextId = new AtomicInteger();
+	private final int id = nextId.getAndIncrement();
+
+	private final Object instanceMutex = this;
+	private StringBuilder buffer = new StringBuilder();
+
+	private final Timer updateUiTimer = new Timer("ConsolePane[" + id + "].updateTimer", true);
+
+	@SuppressWarnings("unused")
+	private final Object finalizer = new Object() {
+		@Override
+		protected void finalize() throws Throwable {
+			updateUiTimer.cancel();
+		}
+	};
+
 	public ConsolePane() {
 		loadFxml();
 		okButton.disableProperty().bind(done.not());
+
+		final TimerTask updateUiTimerTask = new TimerTask() {
+			@Override
+			public void run() {
+				try {
+					updateUi();
+				} catch (Exception x) {
+					logger.error("updateTimerTask.run: " + x, x);
+				}
+			}
+		};
+
+		updateUiTimer.schedule(updateUiTimerTask, 0, 500);
 	}
 
 	public void setHeaderText(boolean error, String text) {
@@ -75,30 +111,30 @@ public abstract class ConsolePane extends GridPane {
 	protected abstract void okButtonClicked(final ActionEvent event);
 
 	public void appendError(final Throwable error) {
-		if (Platform.isFxApplicationThread())
-			_appendError(error);
-		else
-			Platform.runLater(() -> _appendError(error));
-	}
-
-	private void _appendError(final Throwable error) {
-		final ByteArrayOutputStream out = new ByteArrayOutputStream();
-		final PrintWriter pw = new PrintWriter(out);
+		final StringWriter sw = new StringWriter();
+		final PrintWriter pw = new PrintWriter(sw);
 		error.printStackTrace(pw); pw.flush(); pw.close();
+		final String errorStackTrace = sw.toString();
 
-		String errorStackTrace = new String(out.toByteArray(), StandardCharsets.UTF_8);
-		consoleTextArea.appendText(errorStackTrace);
+		println("\n\n\n*** ERROR ***");
+		println(errorStackTrace);
 	}
 
 	public void print(final String message) {
-		if (Platform.isFxApplicationThread())
-			_print(message);
-		else
-			Platform.runLater(() -> _print(message));
+		synchronized (instanceMutex) {
+			buffer.append(message);
+		}
 	}
 
-	private void _print(final String message) {
-		consoleTextArea.appendText(message);
+	private void updateUi() {
+		final String bufferStr;
+		synchronized (instanceMutex) {
+			bufferStr = buffer.toString();
+			buffer = new StringBuilder();
+		}
+		if (bufferStr.length() > 0) {
+			Platform.runLater(() -> consoleTextArea.appendText(bufferStr));
+		}
 	}
 
 	public void println(final String message) {
