@@ -291,10 +291,10 @@ public abstract class SecurityPane extends GridPane {
 
 		final List<User> users = getSelectedUsers();
 
-		incBackgroundWorkCounter();
 		final Runnable runnable = new Runnable() { // must *not* be converted to lambda! using 'this'!
 			@Override
 			public void run() {
+				incBackgroundWorkCounter();
 				try {
 					if (grantOrRevokeNormalPermissionRunnable != this)
 						return;
@@ -335,10 +335,10 @@ public abstract class SecurityPane extends GridPane {
 
 		final boolean readUserIdentityPermissionIsGranted = readUserIdentityPermissionCheckBox.isSelected();
 
-		incBackgroundWorkCounter();
 		final Runnable runnable = new Runnable() { // must *not* be converted to lambda! using this!
 			@Override
 			public void run() {
+				incBackgroundWorkCounter();
 				try {
 					if (grantOrRevokeReadUserIdentityPermissionRunnable != this)
 						return;
@@ -490,8 +490,8 @@ public abstract class SecurityPane extends GridPane {
 
 	protected void updatePermissionsInheritedCheckBox() {
 		PlatformUtil.assertFxApplicationThread();
-		incBackgroundWorkCounter();
 		executorService.execute(() -> {
+			incBackgroundWorkCounter();
 			try (final LocalRepoManager localRepoManager = createLocalRepoManager(localRepo);) {
 				final SsLocalRepoMetaData localRepoMetaData = (SsLocalRepoMetaData) localRepoManager.getLocalRepoMetaData();
 				final boolean permissionsInherited = localRepoMetaData.isPermissionsInherited(localPath);
@@ -504,8 +504,8 @@ public abstract class SecurityPane extends GridPane {
 
 	protected void loadUserListItems() {
 		PlatformUtil.assertFxApplicationThread();
-		incBackgroundWorkCounter();
 		executorService.execute(() -> {
+			incBackgroundWorkCounter();
 			try (final LocalRepoManager localRepoManager = createLocalRepoManager(localRepo);) {
 				final SsLocalRepoMetaData localRepoMetaData = (SsLocalRepoMetaData) localRepoManager.getLocalRepoMetaData();
 				final Map<User, Set<Uid>> user2UserRepoKeyIds = getUsersHavingUserRepoKey(localRepoManager);
@@ -639,10 +639,10 @@ public abstract class SecurityPane extends GridPane {
 	private void updatePermissionsInheritedDataModel() {
 		PlatformUtil.assertFxApplicationThread();
 		final boolean newInherited = permissionsInheritedCheckBox.isSelected();
-		incBackgroundWorkCounter();
 		final Runnable runnable = new Runnable() { // must *not* be converted to lambda! using this!
 			@Override
 			public void run() {
+				incBackgroundWorkCounter();
 				try {
 					if (updatePermissionsInheritedDataModelRunnable != this)
 						return;
@@ -666,7 +666,7 @@ public abstract class SecurityPane extends GridPane {
 	}
 
 	public synchronized SecureRandom getRandom() {
-		if (random != null)
+		if (random == null)
 			random = new SecureRandom();
 
 		return random;
