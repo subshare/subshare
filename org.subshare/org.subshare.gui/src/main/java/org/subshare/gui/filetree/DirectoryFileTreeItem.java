@@ -9,12 +9,12 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 
-import javafx.beans.InvalidationListener;
-import javafx.beans.value.ChangeListener;
-import javafx.scene.control.TreeItem;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.oio.FileFilter;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
+import javafx.beans.InvalidationListener;
+import javafx.beans.value.ChangeListener;
+import javafx.scene.control.TreeItem;
 
 public class DirectoryFileTreeItem extends FileFileTreeItem {
 
@@ -24,8 +24,6 @@ public class DirectoryFileTreeItem extends FileFileTreeItem {
 
 	public DirectoryFileTreeItem(File file) {
 		super(file);
-		if (! file.isDirectory())
-			throw new IllegalArgumentException("file is not a directory!");
 
 		parentProperty().addListener((ChangeListener<TreeItem<FileTreeItem<?>>>) (observable, oldValue, newValue) -> {
 			final FileTreePane oldFileTreePane = oldValue == null ? null : oldValue.getValue().getFileTreePane();

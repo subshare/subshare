@@ -6,10 +6,13 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import java.util.LinkedList;
 import java.util.List;
 
-import javafx.collections.ObservableList;
-import javafx.scene.control.TreeItem;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.util.IOUtil;
+import javafx.collections.ObservableList;
+import javafx.scene.control.TreeItem;
 
 /**
  * The invisible root-item of the {@link FileTreePane}'s {@link FileTreePane#getTreeTableView() treeTableView}.
@@ -24,6 +27,7 @@ import co.codewizards.cloudstore.core.util.IOUtil;
  * @author Marco หงุ่ยตระกูล-Schulze - marco at codewizards dot co
  */
 public class RootFileTreeItem extends FileTreeItem<String> {
+	private static final Logger logger = LoggerFactory.getLogger(RootFileTreeItem.class);
 
 	private final FileTreePane fileTreePane;
 
@@ -52,6 +56,9 @@ public class RootFileTreeItem extends FileTreeItem<String> {
 
 		final File[] roots = listRootFiles();
 		for (File root : roots) {
+			if (! root.isDirectoryNoFollowSymLinks())
+				logger.warn("loadChildren: root is not a directory: " + root);
+
 			FsRootFileTreeItem treeItem = new FsRootFileTreeItem(root);
 			result.add(treeItem);
 		}
