@@ -7,9 +7,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import mockit.Mock;
-import mockit.MockUp;
-
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -38,6 +35,8 @@ import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
 import co.codewizards.cloudstore.local.persistence.FileChunk;
 import co.codewizards.cloudstore.local.persistence.NormalFile;
 import co.codewizards.cloudstore.local.persistence.RepoFile;
+import mockit.Mock;
+import mockit.MockUp;
 
 public class RepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 
@@ -170,7 +169,7 @@ public class RepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 //		localSrcRepoManagerLocal.close();
 //	}
 
-	@Ignore("Still working on this - collisions are still not supported!")
+	@Ignore("Still working on this - collisions are still not supported!") // TODO they are now! Is this test scenario already covered in a Collision*RepoToRepoSyncIT class?
 	@Test
 	public void syncFromLocalToRemoteToLocalThenCauseDeleteCollisionOnServerDuringUpSync() throws Exception {
 		syncFromLocalToRemoteToLocal();
