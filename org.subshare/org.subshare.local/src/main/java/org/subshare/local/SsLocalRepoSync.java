@@ -29,6 +29,7 @@ import org.subshare.local.persistence.SsNormalFile;
 import org.subshare.local.persistence.SsRemoteRepository;
 
 import co.codewizards.cloudstore.core.dto.FileChunkDto;
+import co.codewizards.cloudstore.core.ignore.IgnoreRuleManagerImpl;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.progress.ProgressMonitor;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
@@ -286,12 +287,31 @@ public class SsLocalRepoSync extends LocalRepoSync {
 //		super.createDeleteModifications(repoFile);
 	}
 
+	private Boolean deletedByIgnoreRule; // *NOT* thread-safe, but LocalRepoSync should never be used on multiple threads, anyway.
+
 	@Override
 	protected void deleteRepoFileWithAllChildrenRecursively(RepoFile repoFile) {
 		final Cryptree cryptree = getCryptree(transaction);
 		final String localPath = repoFile.getPath();
-		cryptree.preDelete(localPath);
-		super.deleteRepoFileWithAllChildrenRecursively(repoFile);
+		final File file = repoFile.getFile(localRoot);
+
+		final boolean deletedByIgnoreRuleControlledHere;
+		if (deletedByIgnoreRule == null) {
+			deletedByIgnoreRuleControlledHere = true;
+
+			deletedByIgnoreRule = IgnoreRuleManagerImpl
+					.getInstanceForDirectory(file.getParentFile()).isIgnored(file);
+		}
+		else
+			deletedByIgnoreRuleControlledHere = false;
+
+		try {
+			cryptree.preDelete(localPath, deletedByIgnoreRule);
+			super.deleteRepoFileWithAllChildrenRecursively(repoFile);
+		} finally {
+			if (deletedByIgnoreRuleControlledHere)
+				deletedByIgnoreRule = null;
+		}
 	}
 
 	protected UserRepoKeyRing getUserRepoKeyRing() {

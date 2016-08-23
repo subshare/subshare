@@ -34,6 +34,7 @@ public class CryptoRepoFileDtoConverter {
 		cryptoRepoFileDto.setRepoFileDtoData(repoFileDtoData);
 
 		cryptoRepoFileDto.setDeleted(cryptoRepoFile.getDeleted());
+		cryptoRepoFileDto.setDeletedByIgnoreRule(cryptoRepoFile.isDeletedByIgnoreRule());
 
 		cryptoRepoFileDto.setSignature(assertNotNull("cryptoRepoFile.signature", cryptoRepoFile.getSignature()));
 

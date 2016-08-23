@@ -5,6 +5,7 @@ import static co.codewizards.cloudstore.core.util.Util.*;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedList;
@@ -107,6 +108,9 @@ public class CryptoRepoFile extends Entity implements WriteProtected, AutoTrackL
 	private boolean directory;
 
 	private Date deleted;
+
+	@Column(defaultValue = "0")
+	private boolean deletedByIgnoreRule;
 
 	@Persistent(nullValue = NullValue.EXCEPTION)
 	@Embedded(nullIndicatorColumn = "signatureCreated")
@@ -331,17 +335,25 @@ public class CryptoRepoFile extends Entity implements WriteProtected, AutoTrackL
 		return CryptoRepoFileDto.SIGNED_DATA_TYPE;
 	}
 
-	@Override
-	public int getSignedDataVersion() {
-		return 0;
-	}
-
 	public Date getDeleted() {
 		return deleted;
 	}
 	public void setDeleted(Date deleted) {
 		if (! equal(this.deleted, deleted))
 			this.deleted = deleted;
+	}
+
+	public boolean isDeletedByIgnoreRule() {
+		return deletedByIgnoreRule;
+	}
+	public void setDeletedByIgnoreRule(boolean deletedByIgnoreRule) {
+		if (! equal(this.deletedByIgnoreRule, deletedByIgnoreRule))
+			this.deletedByIgnoreRule = deletedByIgnoreRule;
+	}
+
+	@Override
+	public int getSignedDataVersion() {
+		return 1;
 	}
 
 	/**
@@ -353,7 +365,8 @@ public class CryptoRepoFile extends Entity implements WriteProtected, AutoTrackL
 	public InputStream getSignedData(final int signedDataVersion) {
 		try {
 			byte separatorIndex = 0;
-			return new MultiInputStream(
+
+			final List<InputStreamSource> inputStreamSources = new LinkedList<InputStreamSource>(Arrays.asList(
 					InputStreamSource.Helper.createInputStreamSource(getCryptoRepoFileId()),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
@@ -372,7 +385,18 @@ public class CryptoRepoFile extends Entity implements WriteProtected, AutoTrackL
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(deleted)
-					);
+					));
+
+			if (signedDataVersion >= 1) {
+				inputStreamSources.add(InputStreamSource.Helper.createInputStreamSource(++separatorIndex));
+				inputStreamSources.add(InputStreamSource.Helper.createInputStreamSource(deletedByIgnoreRule));
+			}
+
+			// Sanity check for supported signedDataVersions.
+			if (signedDataVersion < 0 || signedDataVersion > 1)
+				throw new IllegalStateException("signedDataVersion=" + signedDataVersion);
+
+			return new MultiInputStream(inputStreamSources);
 		} catch (final IOException x) {
 			throw new RuntimeException(x);
 		}

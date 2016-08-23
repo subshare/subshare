@@ -1300,6 +1300,7 @@ public class CryptreeImpl extends AbstractCryptree {
 		cryptoRepoFile.setDirectory(cryptoRepoFileDto.isDirectory());
 		cryptoRepoFile.setLastSyncFromRepositoryId(getRemoteRepositoryIdOrFail());
 		cryptoRepoFile.setDeleted(cryptoRepoFileDto.getDeleted());
+		cryptoRepoFile.setDeletedByIgnoreRule(cryptoRepoFileDto.isDeletedByIgnoreRule());
 
 		cryptoRepoFile.setSignature(cryptoRepoFileDto.getSignature());
 
@@ -2288,7 +2289,7 @@ public class CryptreeImpl extends AbstractCryptree {
 	}
 
 	@Override
-	public void preDelete(final String localPath) {
+	public void preDelete(final String localPath, final boolean deletedByIgnoreRule) {
 		assertNotNull("localPath", localPath);
 		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(localPath);
 		final CryptoRepoFile cryptoRepoFile = cryptreeNode.getCryptoRepoFile();
@@ -2299,6 +2300,7 @@ public class CryptreeImpl extends AbstractCryptree {
 			if (preliminaryDeletion == null) {
 				preliminaryDeletion = new PreliminaryDeletion();
 				preliminaryDeletion.setCryptoRepoFile(cryptoRepoFile);
+				preliminaryDeletion.setDeletedByIgnoreRule(deletedByIgnoreRule);
 				pdDao.makePersistent(preliminaryDeletion);
 			}
 		}
@@ -2313,6 +2315,7 @@ public class CryptreeImpl extends AbstractCryptree {
 			final CryptreeNode cryptreeNode = cryptreeContext.getCryptreeNodeOrCreate(cryptoRepoFile.getCryptoRepoFileId());
 			if (cryptoRepoFile != null && cryptoRepoFile.getDeleted() == null) {
 				cryptoRepoFile.setDeleted(new Date());
+				cryptoRepoFile.setDeletedByIgnoreRule(preliminaryDeletion.isDeletedByIgnoreRule());
 				cryptoRepoFile.setLastSyncFromRepositoryId(null);
 				cryptreeNode.sign(cryptoRepoFile);
 			}
@@ -2328,6 +2331,9 @@ public class CryptreeImpl extends AbstractCryptree {
 		final CryptoRepoFileDao cryptoRepoFileDao = tx.getDao(CryptoRepoFileDao.class);
 		final Collection<CryptoRepoFile> cryptoRepoFiles = cryptoRepoFileDao.getCryptoRepoFilesWithRepoFileAndDeleted();
 		for (final CryptoRepoFile cryptoRepoFile : cryptoRepoFiles) {
+			if (cryptoRepoFile.isDeletedByIgnoreRule())
+				continue; // ignore
+
 			final String path = cryptoRepoFile.getRepoFile().getPath();
 			final DeleteModificationDto deleteModificationDto = new DeleteModificationDto();
 			deleteModificationDto.setPath(path);

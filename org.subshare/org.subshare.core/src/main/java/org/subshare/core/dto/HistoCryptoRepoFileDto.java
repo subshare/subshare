@@ -5,7 +5,10 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -36,6 +39,8 @@ public class HistoCryptoRepoFileDto implements Signable, Serializable {
 	private byte[] repoFileDtoData;
 
 	private Date deleted;
+
+	private boolean deletedByIgnoreRule;
 
 //	private List<CollisionDto> collisionDtos;
 
@@ -91,6 +96,13 @@ public class HistoCryptoRepoFileDto implements Signable, Serializable {
 		this.deleted = deleted;
 	}
 
+	public boolean isDeletedByIgnoreRule() {
+		return deletedByIgnoreRule;
+	}
+	public void setDeletedByIgnoreRule(boolean deletedByIgnoreRule) {
+		this.deletedByIgnoreRule = deletedByIgnoreRule;
+	}
+
 //	public List<CollisionDto> getCollisionDtos() {
 //		if (collisionDtos == null) {
 //			collisionDtos = new ArrayList<>();
@@ -108,7 +120,7 @@ public class HistoCryptoRepoFileDto implements Signable, Serializable {
 
 	@Override
 	public int getSignedDataVersion() {
-		return 0;
+		return 1;
 	}
 
 	/**
@@ -120,7 +132,8 @@ public class HistoCryptoRepoFileDto implements Signable, Serializable {
 	public InputStream getSignedData(final int signedDataVersion) {
 		try {
 			byte separatorIndex = 0;
-			return new MultiInputStream(
+
+			final List<InputStreamSource> inputStreamSources = new LinkedList<InputStreamSource>(Arrays.asList(
 					InputStreamSource.Helper.createInputStreamSource(assertNotNull("histoCryptoRepoFileId", histoCryptoRepoFileId)),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
@@ -140,7 +153,18 @@ public class HistoCryptoRepoFileDto implements Signable, Serializable {
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(deleted)
-					);
+					));
+
+			if (signedDataVersion >= 1) {
+				inputStreamSources.add(InputStreamSource.Helper.createInputStreamSource(++separatorIndex));
+				inputStreamSources.add(InputStreamSource.Helper.createInputStreamSource(deletedByIgnoreRule));
+			}
+
+			// Sanity check for supported signedDataVersions.
+			if (signedDataVersion < 0 || signedDataVersion > 1)
+				throw new IllegalStateException("signedDataVersion=" + signedDataVersion);
+
+			return new MultiInputStream(inputStreamSources);
 		} catch (final IOException x) {
 			throw new RuntimeException(x);
 		}

@@ -200,7 +200,7 @@ public interface Cryptree {
 	void createUnsealedHistoFrameIfNeeded();
 	void sealUnsealedHistoryFrame();
 	void putHistoFrameDto(HistoFrameDto histoFrameDto);
-	void preDelete(String localPath);
+	void preDelete(String localPath, boolean deletedByIgnoreRule);
 	CryptoChangeSetDto createHistoCryptoRepoFilesForDeletedCryptoRepoFiles();
 	void createSyntheticDeleteModifications(ChangeSetDto changeSetDto);
 	Collection<PlainHistoCryptoRepoFileDto> getPlainHistoCryptoRepoFileDtos(PlainHistoCryptoRepoFileFilter filter);

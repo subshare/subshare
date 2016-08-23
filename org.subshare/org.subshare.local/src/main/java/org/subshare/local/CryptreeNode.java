@@ -252,6 +252,7 @@ public class CryptreeNode {
 			}
 			else {
 				cryptoRepoFile.setDeleted(null);
+				cryptoRepoFile.setDeletedByIgnoreRule(false);
 				deletePreliminaryDeletions();
 			}
 
@@ -326,6 +327,7 @@ public class CryptreeNode {
 		histoCryptoRepoFile.setHistoFrame(histoFrame);
 		final Date deleted = cryptoRepoFile.getDeleted();
 		histoCryptoRepoFile.setDeleted(deleted);
+		histoCryptoRepoFile.setDeletedByIgnoreRule(cryptoRepoFile.isDeletedByIgnoreRule());
 
 		final PlainCryptoKey plainCryptoKey = getActivePlainCryptoKeyOrCreate(CryptoKeyRole.dataKey, CipherOperationMode.ENCRYPT);
 		final CryptoKey cryptoKey = assertNotNull("plainCryptoKey", plainCryptoKey).getCryptoKey();
@@ -1706,6 +1708,7 @@ public class CryptreeNode {
 
 		if (cryptoRepoFile.getDeleted() != null) {
 			cryptoRepoFile.setDeleted(null);
+			cryptoRepoFile.setDeletedByIgnoreRule(false);
 			cryptoRepoFile.setLastSyncFromRepositoryId(null);
 			sign(cryptoRepoFile);
 		}

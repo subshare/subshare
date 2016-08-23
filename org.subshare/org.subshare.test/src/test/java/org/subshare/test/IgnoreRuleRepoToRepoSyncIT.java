@@ -45,16 +45,18 @@ public class IgnoreRuleRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 		File src_dir2 = createFile(localSrcRoot, "2");
 		assertThat(src_dir2.getIoFile()).isDirectory();
 
-		File src_file1 = createFileWithRandomContent(src_dir2, "file1");
+		File src_file1 = createFileWithRandomContent(localSrcRoot, "file1");
 		File src_dir1 = createDirectory(localSrcRoot, "dir1");
 		File src_dir1_aa1 = createFileWithRandomContent(src_dir1, "aa1");
 		File src_dir1_bb1 = createFileWithRandomContent(src_dir1, "bb1");
 
+		File src_dir2_file1 = createFileWithRandomContent(src_dir2, "file1");
 		File src_dir2_dir1 = createDirectory(src_dir2, "dir1");
 		File src_dir2_dir1_aa2 = createFileWithRandomContent(src_dir2_dir1, "aa2");
 		File src_dir2_dir1_bb2 = createFileWithRandomContent(src_dir2_dir1, "bb2");
 
 		assertThat(src_file1.getIoFile()).isFile();
+		assertThat(src_dir2_file1.getIoFile()).isFile();
 		assertThat(src_dir1.getIoFile()).isDirectory();
 		assertThat(src_dir1_aa1.getIoFile()).isFile();
 		assertThat(src_dir1_bb1.getIoFile()).isFile();
@@ -70,16 +72,18 @@ public class IgnoreRuleRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 		File dst_dir2 = createFile(localDestRoot, "2");
 		assertThat(dst_dir2.getIoFile()).isDirectory();
 
-		File dst_file1 = createFile(dst_dir2, "file1");
+		File dst_file1 = createFile(localDestRoot, "file1");
 		File dst_dir1 = createFile(localDestRoot, "dir1");
 		File dst_dir1_aa1 = createFile(dst_dir1, "aa1");
 		File dst_dir1_bb1 = createFile(dst_dir1, "bb1");
 
+		File dst_dir2_file1 = createFile(dst_dir2, "file1");
 		File dst_dir2_dir1 = createFile(dst_dir2, "dir1");
 		File dst_dir2_dir1_aa2 = createFile(dst_dir2_dir1, "aa2");
 		File dst_dir2_dir1_bb2 = createFile(dst_dir2_dir1, "bb2");
 
 		assertThat(dst_file1.getIoFile()).doesNotExist();
+		assertThat(dst_dir2_file1.getIoFile()).doesNotExist();
 		assertThat(dst_dir1.getIoFile()).doesNotExist();
 		assertThat(dst_dir1_aa1.getIoFile()).doesNotExist();
 		assertThat(dst_dir1_bb1.getIoFile()).doesNotExist();
@@ -102,11 +106,12 @@ public class IgnoreRuleRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 		File src_dir2 = createFile(localSrcRoot, "2");
 		assertThat(src_dir2.getIoFile()).isDirectory();
 
-		File src_file1 = createFileWithRandomContent(src_dir2, "file1");
+		File src_file1 = createFileWithRandomContent(localSrcRoot, "file1");
 		File src_dir1 = createDirectory(localSrcRoot, "dir1");
 		File src_dir1_aa1 = createFileWithRandomContent(src_dir1, "aa1");
 		File src_dir1_bb1 = createFileWithRandomContent(src_dir1, "bb1");
 
+		File src_dir2_file1 = createFileWithRandomContent(src_dir2, "file1");
 		File src_dir2_dir1 = createDirectory(src_dir2, "dir1");
 		File src_dir2_dir1_aa2 = createFileWithRandomContent(src_dir2_dir1, "aa2");
 		File src_dir2_dir1_bb2 = createFileWithRandomContent(src_dir2_dir1, "bb2");
@@ -115,6 +120,7 @@ public class IgnoreRuleRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 		assertThat(src_dir1.getIoFile()).isDirectory();
 		assertThat(src_dir1_aa1.getIoFile()).isFile();
 		assertThat(src_dir1_bb1.getIoFile()).isFile();
+		assertThat(src_dir2_file1.getIoFile()).isFile();
 		assertThat(src_dir2_dir1.getIoFile()).isDirectory();
 		assertThat(src_dir2_dir1_aa2.getIoFile()).isFile();
 		assertThat(src_dir2_dir1_bb2.getIoFile()).isFile();
@@ -132,6 +138,7 @@ public class IgnoreRuleRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 		File dst_dir1_aa1 = createFile(dst_dir1, "aa1");
 		File dst_dir1_bb1 = createFile(dst_dir1, "bb1");
 
+		File dst_dir2_file1 = createFile(dst_dir2, "file1");
 		File dst_dir2_dir1 = createFile(dst_dir2, "dir1");
 		File dst_dir2_dir1_aa2 = createFile(dst_dir2_dir1, "aa2");
 		File dst_dir2_dir1_bb2 = createFile(dst_dir2_dir1, "bb2");
@@ -140,6 +147,7 @@ public class IgnoreRuleRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 		assertThat(dst_dir1.getIoFile()).doesNotExist();
 		assertThat(dst_dir1_aa1.getIoFile()).doesNotExist();
 		assertThat(dst_dir1_bb1.getIoFile()).doesNotExist();
+		assertThat(dst_dir2_file1.getIoFile()).doesNotExist();
 		assertThat(dst_dir2_dir1.getIoFile()).doesNotExist();
 		assertThat(dst_dir2_dir1_aa2.getIoFile()).doesNotExist();
 		assertThat(dst_dir2_dir1_bb2.getIoFile()).doesNotExist();
@@ -158,6 +166,7 @@ public class IgnoreRuleRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 		assertThat(src_dir1.getIoFile()).isDirectory();
 		assertThat(src_dir1_aa1.getIoFile()).isFile();
 		assertThat(src_dir1_bb1.getIoFile()).isFile();
+		assertThat(src_dir2_file1.getIoFile()).isFile();
 		assertThat(src_dir2_dir1.getIoFile()).isDirectory();
 		assertThat(src_dir2_dir1_aa2.getIoFile()).isFile();
 		assertThat(src_dir2_dir1_bb2.getIoFile()).isFile();
@@ -166,9 +175,126 @@ public class IgnoreRuleRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 		assertThat(dst_dir1.getIoFile()).doesNotExist();
 		assertThat(dst_dir1_aa1.getIoFile()).doesNotExist();
 		assertThat(dst_dir1_bb1.getIoFile()).doesNotExist();
+		assertThat(dst_dir2_file1.getIoFile()).isFile();
 		assertThat(dst_dir2_dir1.getIoFile()).isDirectory();
 		assertThat(dst_dir2_dir1_aa2.getIoFile()).isFile();
 		assertThat(dst_dir2_dir1_bb2.getIoFile()).isFile();
 	}
 
+	@Test
+	public void ignoreRulesAddedAfterFilesSynced() throws Exception {
+		createLocalSourceAndRemoteRepo();
+		populateLocalSourceRepo();
+
+		File src_dir2 = createFile(localSrcRoot, "2");
+		assertThat(src_dir2.getIoFile()).isDirectory();
+
+		File src_file1 = createFileWithRandomContent(localSrcRoot, "file1");
+		File src_dir1 = createDirectory(localSrcRoot, "dir1");
+		File src_dir1_aa1 = createFileWithRandomContent(src_dir1, "aa1");
+		File src_dir1_bb1 = createFileWithRandomContent(src_dir1, "bb1");
+
+		File src_dir2_file1 = createFileWithRandomContent(src_dir2, "file1");
+		File src_dir2_dir1 = createDirectory(src_dir2, "dir1");
+		File src_dir2_dir1_aa2 = createFileWithRandomContent(src_dir2_dir1, "aa2");
+		File src_dir2_dir1_bb2 = createFileWithRandomContent(src_dir2_dir1, "bb2");
+
+		assertThat(src_file1.getIoFile()).isFile();
+		assertThat(src_dir1.getIoFile()).isDirectory();
+		assertThat(src_dir1_aa1.getIoFile()).isFile();
+		assertThat(src_dir1_bb1.getIoFile()).isFile();
+		assertThat(src_dir2_file1.getIoFile()).isFile();
+		assertThat(src_dir2_dir1.getIoFile()).isDirectory();
+		assertThat(src_dir2_dir1_aa2.getIoFile()).isFile();
+		assertThat(src_dir2_dir1_bb2.getIoFile()).isFile();
+
+		syncFromLocalSrcToRemote();
+		determineRemotePathPrefix2Encrypted();
+		createLocalDestinationRepo();
+		syncFromRemoteToLocalDest(false);
+
+		File dst_dir2 = createFile(localDestRoot, "2");
+		assertThat(dst_dir2.getIoFile()).isDirectory();
+
+		File dst_file1 = createFile(localDestRoot, "file1");
+		File dst_dir1 = createFile(localDestRoot, "dir1");
+		File dst_dir1_aa1 = createFile(dst_dir1, "aa1");
+		File dst_dir1_bb1 = createFile(dst_dir1, "bb1");
+
+		File dst_dir2_file1 = createFile(dst_dir2, "file1");
+		File dst_dir2_dir1 = createFile(dst_dir2, "dir1");
+		File dst_dir2_dir1_aa2 = createFile(dst_dir2_dir1, "aa2");
+		File dst_dir2_dir1_bb2 = createFile(dst_dir2_dir1, "bb2");
+
+		assertThat(src_file1.getIoFile()).isFile();
+		assertThat(src_dir1.getIoFile()).isDirectory();
+		assertThat(src_dir1_aa1.getIoFile()).isFile();
+		assertThat(src_dir1_bb1.getIoFile()).isFile();
+		assertThat(src_dir2_file1.getIoFile()).isFile();
+		assertThat(src_dir2_dir1.getIoFile()).isDirectory();
+		assertThat(src_dir2_dir1_aa2.getIoFile()).isFile();
+		assertThat(src_dir2_dir1_bb2.getIoFile()).isFile();
+
+		assertThat(dst_file1.getIoFile()).isFile();
+		assertThat(dst_dir1.getIoFile()).isDirectory();
+		assertThat(dst_dir1_aa1.getIoFile()).isFile();
+		assertThat(dst_dir1_bb1.getIoFile()).isFile();
+		assertThat(dst_dir2_file1.getIoFile()).isFile();
+		assertThat(dst_dir2_dir1.getIoFile()).isDirectory();
+		assertThat(dst_dir2_dir1_aa2.getIoFile()).isFile();
+		assertThat(dst_dir2_dir1_bb2.getIoFile()).isFile();
+
+		// TODO: modify files on both sides and check whether they're synced! They should be neither deleted nor synced!
+
+		// TODO 2: Check HistoCryptoRepoFile.deletedByIgnoreRule - should be true! Maybe add a real deletion as contrast and check whether it is false there.
+
+		// Create ignore rules.
+		Properties properties = new Properties();
+		properties.put("ignore[file1].namePattern", "file1");
+		properties.put("ignore[dir1].namePattern", "dir1");
+		PropertiesUtil.store(createFile(localSrcRoot, ".subshare.properties"), properties, null);
+
+
+		syncFromLocalSrcToRemote();
+		syncFromRemoteToLocalDest(false);
+
+		assertThat(src_file1.getIoFile()).isFile();
+		assertThat(src_dir1.getIoFile()).isDirectory();
+		assertThat(src_dir1_aa1.getIoFile()).isFile();
+		assertThat(src_dir1_bb1.getIoFile()).isFile();
+		assertThat(src_dir2_file1.getIoFile()).isFile();
+		assertThat(src_dir2_dir1.getIoFile()).isDirectory();
+		assertThat(src_dir2_dir1_aa2.getIoFile()).isFile();
+		assertThat(src_dir2_dir1_bb2.getIoFile()).isFile();
+
+		assertThat(dst_file1.getIoFile()).isFile();
+		assertThat(dst_dir1.getIoFile()).isDirectory();
+		assertThat(dst_dir1_aa1.getIoFile()).isFile();
+		assertThat(dst_dir1_bb1.getIoFile()).isFile();
+		assertThat(dst_dir2_file1.getIoFile()).isFile();
+		assertThat(dst_dir2_dir1.getIoFile()).isDirectory();
+		assertThat(dst_dir2_dir1_aa2.getIoFile()).isFile();
+		assertThat(dst_dir2_dir1_bb2.getIoFile()).isFile();
+
+		syncFromLocalSrcToRemote();
+		syncFromRemoteToLocalDest(false);
+
+		assertThat(src_file1.getIoFile()).isFile();
+		assertThat(src_dir1.getIoFile()).isDirectory();
+		assertThat(src_dir1_aa1.getIoFile()).isFile();
+		assertThat(src_dir1_bb1.getIoFile()).isFile();
+		assertThat(src_dir2_file1.getIoFile()).isFile();
+		assertThat(src_dir2_dir1.getIoFile()).isDirectory();
+		assertThat(src_dir2_dir1_aa2.getIoFile()).isFile();
+		assertThat(src_dir2_dir1_bb2.getIoFile()).isFile();
+
+		assertThat(dst_file1.getIoFile()).isFile();
+		assertThat(dst_dir1.getIoFile()).isDirectory();
+		assertThat(dst_dir1_aa1.getIoFile()).isFile();
+		assertThat(dst_dir1_bb1.getIoFile()).isFile();
+		assertThat(dst_dir2_file1.getIoFile()).isFile();
+		assertThat(dst_dir2_dir1.getIoFile()).isDirectory();
+		assertThat(dst_dir2_dir1_aa2.getIoFile()).isFile();
+		assertThat(dst_dir2_dir1_bb2.getIoFile()).isFile();
+	}
 }

@@ -5,7 +5,10 @@ import static co.codewizards.cloudstore.core.util.Util.*;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.UUID;
 import java.util.zip.GZIPOutputStream;
 
@@ -108,6 +111,9 @@ public class HistoCryptoRepoFile extends Entity implements WriteProtected, AutoT
 
 	private Date deleted;
 
+	@Column(defaultValue = "0")
+	private boolean deletedByIgnoreRule;
+
 	@Persistent(nullValue=NullValue.EXCEPTION)
 	@Embedded(nullIndicatorColumn="signatureCreated")
 	private SignatureImpl signature;
@@ -203,6 +209,14 @@ public class HistoCryptoRepoFile extends Entity implements WriteProtected, AutoT
 			this.deleted = deleted;
 	}
 
+	public boolean isDeletedByIgnoreRule() {
+		return deletedByIgnoreRule;
+	}
+	public void setDeletedByIgnoreRule(boolean deletedByIgnoreRule) {
+		if (! equal(this.deletedByIgnoreRule, deletedByIgnoreRule))
+			this.deletedByIgnoreRule = deletedByIgnoreRule;
+	}
+
 	@Override
 	public long getLocalRevision() {
 		return localRevision;
@@ -223,17 +237,17 @@ public class HistoCryptoRepoFile extends Entity implements WriteProtected, AutoT
 		return HistoCryptoRepoFileDto.SIGNED_DATA_TYPE;
 	}
 
-	@Override
-	public int getSignedDataVersion() {
-		return 0;
-	}
-
 	public UUID getLastSyncFromRepositoryId() {
 		return lastSyncFromRepositoryId == null ? null : UUID.fromString(lastSyncFromRepositoryId);
 	}
 	public void setLastSyncFromRepositoryId(final UUID repositoryId) {
 		if (! equal(this.getLastSyncFromRepositoryId(), repositoryId))
 			this.lastSyncFromRepositoryId = repositoryId == null ? null : repositoryId.toString();
+	}
+
+	@Override
+	public int getSignedDataVersion() {
+		return 1;
 	}
 
 	/**
@@ -245,7 +259,8 @@ public class HistoCryptoRepoFile extends Entity implements WriteProtected, AutoT
 	public InputStream getSignedData(final int signedDataVersion) {
 		try {
 			byte separatorIndex = 0;
-			return new MultiInputStream(
+
+			final List<InputStreamSource> inputStreamSources = new LinkedList<InputStreamSource>(Arrays.asList(
 					InputStreamSource.Helper.createInputStreamSource(getHistoCryptoRepoFileId()),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
@@ -266,7 +281,18 @@ public class HistoCryptoRepoFile extends Entity implements WriteProtected, AutoT
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(deleted)
-					);
+					));
+
+			if (signedDataVersion >= 1) {
+				inputStreamSources.add(InputStreamSource.Helper.createInputStreamSource(++separatorIndex));
+				inputStreamSources.add(InputStreamSource.Helper.createInputStreamSource(deletedByIgnoreRule));
+			}
+
+			// Sanity check for supported signedDataVersions.
+			if (signedDataVersion < 0 || signedDataVersion > 1)
+				throw new IllegalStateException("signedDataVersion=" + signedDataVersion);
+
+			return new MultiInputStream(inputStreamSources);
 		} catch (final IOException x) {
 			throw new RuntimeException(x);
 		}

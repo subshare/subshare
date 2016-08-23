@@ -2,6 +2,7 @@ package org.subshare.local.persistence;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
+import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Index;
 import javax.jdo.annotations.Inheritance;
 import javax.jdo.annotations.InheritanceStrategy;
@@ -23,8 +24,11 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 })
 public class PreliminaryDeletion extends Entity {
 
-	@Persistent(nullValue=NullValue.EXCEPTION)
+	@Persistent(nullValue = NullValue.EXCEPTION)
 	private CryptoRepoFile cryptoRepoFile;
+
+	@Column(defaultValue = "0")
+	private boolean deletedByIgnoreRule;
 
 	public CryptoRepoFile getCryptoRepoFile() {
 		return cryptoRepoFile;
@@ -32,5 +36,12 @@ public class PreliminaryDeletion extends Entity {
 
 	public void setCryptoRepoFile(CryptoRepoFile cryptoRepoFile) {
 		this.cryptoRepoFile = assertNotNull("cryptoRepoFile", cryptoRepoFile);
+	}
+
+	public boolean isDeletedByIgnoreRule() {
+		return deletedByIgnoreRule;
+	}
+	public void setDeletedByIgnoreRule(boolean deletedByIgnoreRule) {
+		this.deletedByIgnoreRule = deletedByIgnoreRule;
 	}
 }

@@ -2,7 +2,10 @@ package org.subshare.core.dto;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -30,6 +33,8 @@ public class CryptoRepoFileDto implements Signable {
 	private byte[] repoFileDtoData;
 
 	private Date deleted;
+
+	private boolean deletedByIgnoreRule;
 
 	@XmlElement
 	private SignatureDto signatureDto;
@@ -76,6 +81,13 @@ public class CryptoRepoFileDto implements Signable {
 		this.deleted = deleted;
 	}
 
+	public boolean isDeletedByIgnoreRule() {
+		return deletedByIgnoreRule;
+	}
+	public void setDeletedByIgnoreRule(boolean deletedByIgnoreRule) {
+		this.deletedByIgnoreRule = deletedByIgnoreRule;
+	}
+
 	@Override
 	public String getSignedDataType() {
 		return CryptoRepoFileDto.SIGNED_DATA_TYPE;
@@ -83,7 +95,7 @@ public class CryptoRepoFileDto implements Signable {
 
 	@Override
 	public int getSignedDataVersion() {
-		return 0;
+		return 1;
 	}
 
 	/**
@@ -95,7 +107,8 @@ public class CryptoRepoFileDto implements Signable {
 	public InputStream getSignedData(final int signedDataVersion) {
 		try {
 			byte separatorIndex = 0;
-			return new MultiInputStream(
+
+			final List<InputStreamSource> inputStreamSources = new LinkedList<InputStreamSource>(Arrays.asList(
 					InputStreamSource.Helper.createInputStreamSource(cryptoRepoFileId),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
@@ -114,7 +127,18 @@ public class CryptoRepoFileDto implements Signable {
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(deleted)
-					);
+					));
+
+			if (signedDataVersion >= 1) {
+				inputStreamSources.add(InputStreamSource.Helper.createInputStreamSource(++separatorIndex));
+				inputStreamSources.add(InputStreamSource.Helper.createInputStreamSource(deletedByIgnoreRule));
+			}
+
+			// Sanity check for supported signedDataVersions.
+			if (signedDataVersion < 0 || signedDataVersion > 1)
+				throw new IllegalStateException("signedDataVersion=" + signedDataVersion);
+
+			return new MultiInputStream(inputStreamSources);
 		} catch (final IOException x) {
 			throw new RuntimeException(x);
 		}
