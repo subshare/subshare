@@ -70,6 +70,7 @@ import org.subshare.rest.client.transport.request.SsMakeSymlink;
 
 import co.codewizards.cloudstore.core.auth.SignatureException;
 import co.codewizards.cloudstore.core.dto.ChangeSetDto;
+import co.codewizards.cloudstore.core.dto.ConfigPropSetDto;
 import co.codewizards.cloudstore.core.dto.ModificationDto;
 import co.codewizards.cloudstore.core.dto.NormalFileDto;
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
@@ -1049,4 +1050,9 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 		super.close();
 	}
 
+	@Override
+	public void putParentConfigPropSetDto(ConfigPropSetDto parentConfigPropSetDto) {
+		// TODO implement this!
+		throw new UnsupportedOperationException("NYI");
+	}
 }
