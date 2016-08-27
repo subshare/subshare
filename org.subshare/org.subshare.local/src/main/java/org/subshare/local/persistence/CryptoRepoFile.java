@@ -109,7 +109,7 @@ public class CryptoRepoFile extends Entity implements WriteProtected, AutoTrackL
 
 	private Date deleted;
 
-	@Column(defaultValue = "0")
+	@Column(defaultValue = "N")
 	private boolean deletedByIgnoreRule;
 
 	@Persistent(nullValue = NullValue.EXCEPTION)

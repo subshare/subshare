@@ -111,7 +111,7 @@ public class HistoCryptoRepoFile extends Entity implements WriteProtected, AutoT
 
 	private Date deleted;
 
-	@Column(defaultValue = "0")
+	@Column(defaultValue = "N")
 	private boolean deletedByIgnoreRule;
 
 	@Persistent(nullValue=NullValue.EXCEPTION)
