@@ -3,9 +3,6 @@ package org.subshare.local.persistence;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Index;
 import javax.jdo.annotations.Indices;
@@ -61,16 +58,14 @@ public class PlainHistoCryptoRepoFile extends Entity implements StoreCallback {
 			return null;
 		else {
 			final PlainHistoCryptoRepoFileDtoIo io = new PlainHistoCryptoRepoFileDtoIo();
-			PlainHistoCryptoRepoFileDto dto = io.deserializeWithGz(new ByteArrayInputStream(plainHistoCryptoRepoFileDtoData));
+			PlainHistoCryptoRepoFileDto dto = io.deserializeWithGz(plainHistoCryptoRepoFileDtoData);
 			return dto;
 		}
 	}
 
 	public void setPlainHistoCryptoRepoFileDto(final PlainHistoCryptoRepoFileDto dto) {
 		assertNotNull("dto", dto);
-		final ByteArrayOutputStream out = new ByteArrayOutputStream();
-		new PlainHistoCryptoRepoFileDtoIo().serializeWithGz(dto, out);
-		plainHistoCryptoRepoFileDtoData = out.toByteArray();
+		plainHistoCryptoRepoFileDtoData = new PlainHistoCryptoRepoFileDtoIo().serializeWithGz(dto);
 	}
 
 	@Override

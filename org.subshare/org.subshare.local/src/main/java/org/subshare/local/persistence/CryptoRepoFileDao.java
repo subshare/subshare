@@ -82,7 +82,7 @@ public class CryptoRepoFileDao extends Dao<CryptoRepoFile, CryptoRepoFileDao> {
 			final long localRevision, final UUID exclLastSyncFromRepositoryId) {
 
 		assertNotNull("exclLastSyncFromRepositoryId", exclLastSyncFromRepositoryId);
-		final Query query = pm().newNamedQuery(getEntityClass(), "getCryptoRepoFileChangedAfter_localRevision_exclLastSyncFromRepositoryId");
+		final Query query = pm().newNamedQuery(getEntityClass(), "getCryptoRepoFilesChangedAfter_localRevision_exclLastSyncFromRepositoryId");
 		try {
 			long startTimestamp = System.currentTimeMillis();
 			@SuppressWarnings("unchecked")

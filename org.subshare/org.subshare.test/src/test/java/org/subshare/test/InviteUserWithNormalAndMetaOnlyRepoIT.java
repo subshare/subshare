@@ -178,8 +178,8 @@ public class InviteUserWithNormalAndMetaOnlyRepoIT extends AbstractUserRegistryI
 		// check, whether the stuff is really there in the meta-only-repo
 		try (final LocalRepoManager localDestMetaOnlyRepoManagerLocal = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(localDestMetaOnly);) {
 			SsLocalRepoMetaData localRepoMetaData = (SsLocalRepoMetaData) localDestMetaOnlyRepoManagerLocal.getLocalRepoMetaData();
-			assertThat(localRepoMetaData.getRepoFileDto("/1 {11 11ä11} 1", 0)).isNotNull();
-			assertThat(localRepoMetaData.getRepoFileDto("/1 {11 11ä11} 1/a", 0)).isNotNull();
+			assertThat(localRepoMetaData.getRepoFileDto("/1 {11 11ä11#+} 1", 0)).isNotNull();
+			assertThat(localRepoMetaData.getRepoFileDto("/1 {11 11ä11#+} 1/a", 0)).isNotNull();
 			assertThat(localRepoMetaData.getRepoFileDto("/2/xxxreverse", 0)).isNotNull();
 		}
 

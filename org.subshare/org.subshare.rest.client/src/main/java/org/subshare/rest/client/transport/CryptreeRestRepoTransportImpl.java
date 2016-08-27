@@ -272,6 +272,8 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 				}
 			}
 
+			decryptedChangeSetDto.setParentConfigPropSetDto(cryptree.getParentConfigPropSetDtoIfNeeded());
+
 			cryptree.createSyntheticDeleteModifications(decryptedChangeSetDto);
 
 			transaction.commit();
@@ -1052,7 +1054,8 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 
 	@Override
 	public void putParentConfigPropSetDto(ConfigPropSetDto parentConfigPropSetDto) {
-		// TODO implement this!
-		throw new UnsupportedOperationException("NYI");
+		throw new UnsupportedOperationException(
+				"It is not supported to connect a server-repository to a client-repository's sub-directory! "
+				+ "Only the other way around is supported. This method should thus never be invoked.");
 	}
 }

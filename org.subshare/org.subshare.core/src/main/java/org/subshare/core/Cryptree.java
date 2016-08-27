@@ -23,6 +23,7 @@ import org.subshare.core.user.UserRepoKeyRing;
 
 import co.codewizards.cloudstore.core.auth.SignatureException;
 import co.codewizards.cloudstore.core.dto.ChangeSetDto;
+import co.codewizards.cloudstore.core.dto.ConfigPropSetDto;
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
 import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
@@ -209,6 +210,7 @@ public interface Cryptree {
 	void assertIsNotDeletedDuplicateCryptoRepoFile(Uid cryptoRepoFileId);
 	void putCollisionPrivateDto(CollisionPrivateDto collisionPrivateDto);
 	void removeOrphanedInvitationUserRepoKeyPublicKeys();
+	ConfigPropSetDto getParentConfigPropSetDtoIfNeeded();
 
 //	void createCollisionIfNeeded(String localPath);
 }

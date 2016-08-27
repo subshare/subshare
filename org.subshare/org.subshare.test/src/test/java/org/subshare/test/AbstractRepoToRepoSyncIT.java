@@ -166,7 +166,7 @@ public abstract class AbstractRepoToRepoSyncIT extends AbstractIT {
 	protected void populateLocalSourceRepo() throws Exception {
 		final LocalRepoManager localRepoManagerLocal = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(localSrcRoot);
 
-		final File child_1 = createDirectory(localSrcRoot, "1 {11 11ä11} 1");
+		final File child_1 = createDirectory(localSrcRoot, "1 {11 11ä11#+} 1");
 
 		createFileWithRandomContent(child_1, "a");
 		createFileWithRandomContent(child_1, "b");
@@ -176,7 +176,7 @@ public abstract class AbstractRepoToRepoSyncIT extends AbstractIT {
 
 		createFileWithRandomContent(child_2, "a");
 
-		final File child_2_1 = createDirectory(child_2, "1 {11 11ä11} 1");
+		final File child_2_1 = createDirectory(child_2, "1 {11 11ä11#+} 1");
 		createFileWithRandomContent(child_2_1, "a");
 		createFileWithRandomContent(child_2_1, "b");
 

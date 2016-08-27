@@ -1,0 +1,145 @@
+package org.subshare.test;
+
+import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
+import static org.assertj.core.api.Assertions.*;
+
+import java.util.Properties;
+
+import org.junit.Test;
+import org.subshare.local.UserRepoKeyPublicKeyHelper;
+import org.subshare.local.persistence.UserRepoKeyPublicKey;
+
+import co.codewizards.cloudstore.core.config.Config;
+import co.codewizards.cloudstore.core.config.ConfigImpl;
+import co.codewizards.cloudstore.core.oio.File;
+import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
+import co.codewizards.cloudstore.core.util.PropertiesUtil;
+import mockit.Mock;
+import mockit.MockUp;
+
+public class PathPrefixedConfigInheritanceRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
+
+	@Override
+	public void before() throws Exception {
+		super.before();
+
+		new MockUp<UserRepoKeyPublicKeyHelper>() {
+			@Mock
+			void createUserIdentities(UserRepoKeyPublicKey userRepoKeyPublicKey) {
+				// Our mock should do nothing, because we don't have a real UserRegistry here.
+			}
+		};
+	}
+
+	@Test
+	public void parentConfigWithRemotePathPrefix() throws Exception {
+		remotePathPrefix2Plain = "/2/1 {11 11ä11#+} 1";
+		createLocalSourceAndRemoteRepo();
+		populateLocalSourceRepo();
+		syncFromLocalSrcToRemote();
+		determineRemotePathPrefix2Encrypted();
+		createLocalDestinationRepo();
+		syncFromRemoteToLocalDest();
+
+		File dir2 = createFile(localSrcRoot, "2");
+		File dir2_1 = createFile(dir2, "1 {11 11ä11#+} 1");
+		assertThat(dir2_1.getIoFile()).exists().isDirectory();
+
+		File dir2_1_d1 = createDirectory(dir2_1, "d1");
+		File dir2_1_d2 = createDirectory(dir2_1, "d2");
+		File dir2_1_d3 = createDirectory(dir2_1, "d3");
+
+		File dir2_1_d1_d10 = createDirectory(dir2_1_d1, "d10");
+		File dir2_1_d1_d11 = createDirectory(dir2_1_d1, "d11");
+		File dir2_1_d1_f20 = createFileWithRandomContent(dir2_1_d1, "f20");
+		File dir2_1_d1_f21 = createFileWithRandomContent(dir2_1_d1, "f21");
+
+		File dir2_1_d1_d10_f30 = createFileWithRandomContent(dir2_1_d1_d10, "f30");
+
+		File dir2_1_d2_d20 = createDirectory(dir2_1_d2, "d20");
+		File dir2_1_d2_f40 = createDirectory(dir2_1_d2, "f40");
+
+
+		// Create and sync ignore rules.
+		Properties properties = new Properties();
+		properties.put("ignore[bla].namePattern", "bla");
+		properties.put("ignore[test].namePattern", "test");
+		properties.put("ignore[blubb].namePattern", "blubb");
+		PropertiesUtil.store(createFile(localSrcRoot, ".subshare.properties"), properties, null);
+
+		properties = new Properties();
+		properties.put("ignore[test].namePattern", "overwrittenTest");
+		properties.put("ignore[blubb].namePattern", "overwrittenBlubb");
+		properties.put("ignore[oink].namePattern", "oink!");
+		PropertiesUtil.store(createFile(dir2, ".subshare.properties"), properties, null);
+
+		// The above 2 should be merged into the parent.properties, but the
+		// following should not, because it's synced normally.
+		properties = new Properties();
+		properties.put("ignore[test].namePattern", "overwritten222");
+		properties.put("ignore[bak].namePattern", "*.bak");
+		PropertiesUtil.store(createFile(dir2_1, ".subshare.properties"), properties, null);
+
+		syncFromLocalSrcToRemote();
+		syncFromRemoteToLocalDest();
+
+		File parentPropsFile = createFile(localDestRoot, LocalRepoManager.META_DIR_NAME, "parent.properties");
+		assertThat(parentPropsFile.getIoFile()).exists().isFile();
+
+		long parentPropsFileTimestamp = parentPropsFile.getLastModifiedNoFollow();
+
+		Properties parentProps = PropertiesUtil.load(parentPropsFile);
+		assertThat(parentProps.getProperty("ignore[bla].namePattern", null)).isEqualTo("bla");
+		assertThat(parentProps.getProperty("ignore[blubb].namePattern", null)).isEqualTo("overwrittenBlubb");
+		assertThat(parentProps.getProperty("ignore[test].namePattern", null)).isEqualTo("overwrittenTest");
+		assertThat(parentProps.getProperty("ignore[bak].namePattern", null)).isNull();
+
+		Config configForRoot = ConfigImpl.getInstanceForDirectory(localDestRoot);
+		assertThat(configForRoot.getProperty("ignore[bla].namePattern", null)).isEqualTo("bla");
+		assertThat(configForRoot.getProperty("ignore[blubb].namePattern", null)).isEqualTo("overwrittenBlubb");
+		assertThat(configForRoot.getProperty("ignore[test].namePattern", null)).isEqualTo("overwritten222");
+		assertThat(configForRoot.getProperty("ignore[bak].namePattern", null)).isEqualTo("*.bak");
+
+		syncFromLocalSrcToRemote();
+		syncFromRemoteToLocalDest();
+
+		assertThat(parentPropsFile.getLastModifiedNoFollow()).isEqualTo(parentPropsFileTimestamp);
+
+		properties = new Properties();
+		properties.put("ignore[test].namePattern", "aaaaaaa");
+		properties.put("ignore[blubb].namePattern", "bbbbbbb");
+		properties.put("ignore[xxx].namePattern", "yyy");
+		PropertiesUtil.store(createFile(localSrcRoot, ".subshare.properties"), properties, null);
+
+		syncFromLocalSrcToRemote();
+		syncFromRemoteToLocalDest();
+
+		assertThat(parentPropsFile.getLastModifiedNoFollow()).isNotEqualTo(parentPropsFileTimestamp);
+		parentPropsFileTimestamp = parentPropsFile.getLastModifiedNoFollow();
+
+		parentProps = PropertiesUtil.load(parentPropsFile);
+		assertThat(parentProps.getProperty("ignore[bla].namePattern", null)).isNull();
+		assertThat(parentProps.getProperty("ignore[xxx].namePattern", null)).isEqualTo("yyy");
+		assertThat(parentProps.getProperty("ignore[test].namePattern", null)).isEqualTo("overwrittenTest");
+		assertThat(parentProps.getProperty("ignore[blubb].namePattern", null)).isEqualTo("overwrittenBlubb");
+		assertThat(parentProps.getProperty("ignore[oink].namePattern", null)).isEqualTo("oink!");
+		assertThat(parentProps.getProperty("ignore[bak].namePattern", null)).isNull();
+
+
+		createFile(dir2, ".subshare.properties").delete();
+
+		syncFromLocalSrcToRemote();
+		syncFromRemoteToLocalDest();
+
+		assertThat(parentPropsFile.getLastModifiedNoFollow()).isNotEqualTo(parentPropsFileTimestamp);
+
+		parentProps = PropertiesUtil.load(parentPropsFile);
+		assertThat(parentProps.getProperty("ignore[bla].namePattern", null)).isNull();
+		assertThat(parentProps.getProperty("ignore[xxx].namePattern", null)).isEqualTo("yyy");
+		assertThat(parentProps.getProperty("ignore[test].namePattern", null)).isEqualTo("aaaaaaa");
+		assertThat(parentProps.getProperty("ignore[blubb].namePattern", null)).isEqualTo("bbbbbbb");
+		assertThat(parentProps.getProperty("ignore[oink].namePattern", null)).isNull();
+		assertThat(parentProps.getProperty("ignore[bak].namePattern", null)).isNull();
+	}
+
+}

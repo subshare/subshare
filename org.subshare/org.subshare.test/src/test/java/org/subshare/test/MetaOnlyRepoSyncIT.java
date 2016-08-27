@@ -38,8 +38,8 @@ public class MetaOnlyRepoSyncIT extends AbstractRepoToRepoSyncIT {
 		makeMetaOnly(localDestRoot);
 
 		// check whether there are no RepoFiles in the DB, yet
-		assertThat(getRepoFileDto(localDestRoot, "1 {11 11ä11} 1")).isNull();
-		assertThat(getRepoFileDto(localDestRoot, "1 {11 11ä11} 1/a")).isNull();
+		assertThat(getRepoFileDto(localDestRoot, "1 {11 11ä11#+} 1")).isNull();
+		assertThat(getRepoFileDto(localDestRoot, "1 {11 11ä11#+} 1/a")).isNull();
 		assertThat(getRepoFileDto(localDestRoot, "2")).isNull();
 
 		syncFromRemoteToLocalDest(false);
@@ -51,10 +51,10 @@ public class MetaOnlyRepoSyncIT extends AbstractRepoToRepoSyncIT {
 
 		// check whether the RepoFiles now exist in the DB.
 		assertThat(getRepoFileDto(localDestRoot, "")).isNotNull();
-		assertThat(getRepoFileDto(localDestRoot, "1 {11 11ä11} 1")).isNotNull();
-		assertThat(getRepoFileDto(localDestRoot, "1 {11 11ä11} 1/a")).isNotNull();
-		assertThat(getRepoFileDto(localDestRoot, "1 {11 11ä11} 1/b")).isNotNull();
-		assertThat(getRepoFileDto(localDestRoot, "1 {11 11ä11} 1/c")).isNotNull();
+		assertThat(getRepoFileDto(localDestRoot, "1 {11 11ä11#+} 1")).isNotNull();
+		assertThat(getRepoFileDto(localDestRoot, "1 {11 11ä11#+} 1/a")).isNotNull();
+		assertThat(getRepoFileDto(localDestRoot, "1 {11 11ä11#+} 1/b")).isNotNull();
+		assertThat(getRepoFileDto(localDestRoot, "1 {11 11ä11#+} 1/c")).isNotNull();
 		assertThat(getRepoFileDto(localDestRoot, "2")).isNotNull();
 	}
 
@@ -62,7 +62,7 @@ public class MetaOnlyRepoSyncIT extends AbstractRepoToRepoSyncIT {
 	public void syncFromLocalToRemoteToMetaOnlyAddingFiles() throws Exception {
 		syncFromLocalToRemoteToMetaOnly();
 
-		final File child_1 = createFile(localSrcRoot, "1 {11 11ä11} 1");
+		final File child_1 = createFile(localSrcRoot, "1 {11 11ä11#+} 1");
 		createFileWithRandomContent(child_1, "000");
 
 		File child_xxx = createDirectory(localSrcRoot, "xxx");
@@ -72,14 +72,14 @@ public class MetaOnlyRepoSyncIT extends AbstractRepoToRepoSyncIT {
 		syncFromLocalSrcToRemote();
 
 		// check whether there are no RepoFiles in the DB, yet
-		assertThat(getRepoFileDto(localDestRoot, "1 {11 11ä11} 1/000")).isNull();
+		assertThat(getRepoFileDto(localDestRoot, "1 {11 11ä11#+} 1/000")).isNull();
 		assertThat(getRepoFileDto(localDestRoot, "xxx/001")).isNull();
 		assertThat(getRepoFileDto(localDestRoot, "xxx/002")).isNull();
 
 		syncFromRemoteToLocalDest(false);
 
 		// check whether the RepoFiles now exist in the DB.
-		assertThat(getRepoFileDto(localDestRoot, "1 {11 11ä11} 1/000")).isNotNull();
+		assertThat(getRepoFileDto(localDestRoot, "1 {11 11ä11#+} 1/000")).isNotNull();
 		assertThat(getRepoFileDto(localDestRoot, "xxx/001")).isNotNull();
 		assertThat(getRepoFileDto(localDestRoot, "xxx/002")).isNotNull();
 	}
@@ -89,7 +89,7 @@ public class MetaOnlyRepoSyncIT extends AbstractRepoToRepoSyncIT {
 		syncFromLocalToRemoteToMetaOnly();
 
 		// delete locally
-		createFile(localSrcRoot, "1 {11 11ä11} 1", "a").delete();
+		createFile(localSrcRoot, "1 {11 11ä11#+} 1", "a").delete();
 		createFile(localSrcRoot, "2").deleteRecursively();
 
 		// up-sync + down-sync to meta-only
@@ -97,7 +97,7 @@ public class MetaOnlyRepoSyncIT extends AbstractRepoToRepoSyncIT {
 		syncFromRemoteToLocalDest(false);
 
 		// check whether the RepoFiles are deleted from the DB.
-		assertThat(getRepoFileDto(localDestRoot, "1 {11 11ä11} 1/a")).isNull();
+		assertThat(getRepoFileDto(localDestRoot, "1 {11 11ä11#+} 1/a")).isNull();
 		assertThat(getRepoFileDto(localDestRoot, "2")).isNull();
 	}
 

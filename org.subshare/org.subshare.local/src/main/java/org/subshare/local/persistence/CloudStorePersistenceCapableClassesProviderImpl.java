@@ -11,6 +11,7 @@ public class CloudStorePersistenceCapableClassesProviderImpl extends AbstractClo
 				// resolved using the ClassExtension mechanism. We thus only need classes newly introduced by Subshare here.
 				Collision.class,
 				CollisionPrivate.class,
+				CryptoConfigPropSet.class,
 				CryptoKey.class,
 				CryptoKeyDeactivation.class,
 				CryptoLink.class,

@@ -34,6 +34,7 @@ import org.subshare.core.WriteAccessDeniedException;
 import org.subshare.core.dto.CollisionDto;
 import org.subshare.core.dto.CollisionPrivateDto;
 import org.subshare.core.dto.CryptoChangeSetDto;
+import org.subshare.core.dto.CryptoConfigPropSetDto;
 import org.subshare.core.dto.CryptoKeyDeactivationDto;
 import org.subshare.core.dto.CryptoKeyDto;
 import org.subshare.core.dto.CryptoLinkDto;
@@ -66,6 +67,7 @@ import org.subshare.core.user.UserRepoKeyPublicKeyDtoWithSignatureConverter;
 import org.subshare.core.user.UserRepoKeyPublicKeyLookup;
 import org.subshare.core.user.UserRepoKeyRing;
 import org.subshare.local.dto.CollisionDtoConverter;
+import org.subshare.local.dto.CryptoConfigPropSetDtoConverter;
 import org.subshare.local.dto.CryptoRepoFileDtoConverter;
 import org.subshare.local.dto.CurrentHistoCryptoRepoFileDtoConverter;
 import org.subshare.local.dto.HistoCryptoRepoFileDtoConverter;
@@ -77,6 +79,8 @@ import org.subshare.local.dto.UserRepoKeyPublicKeyReplacementRequestDeletionDtoC
 import org.subshare.local.dto.UserRepoKeyPublicKeyReplacementRequestDtoConverter;
 import org.subshare.local.persistence.Collision;
 import org.subshare.local.persistence.CollisionDao;
+import org.subshare.local.persistence.CryptoConfigPropSet;
+import org.subshare.local.persistence.CryptoConfigPropSetDao;
 import org.subshare.local.persistence.CryptoKey;
 import org.subshare.local.persistence.CryptoKeyDao;
 import org.subshare.local.persistence.CryptoKeyDeactivation;
@@ -129,6 +133,7 @@ import org.subshare.local.persistence.UserRepoKeyPublicKeyReplacementRequestDele
 
 import co.codewizards.cloudstore.core.auth.SignatureException;
 import co.codewizards.cloudstore.core.dto.ChangeSetDto;
+import co.codewizards.cloudstore.core.dto.ConfigPropSetDto;
 import co.codewizards.cloudstore.core.dto.DeleteModificationDto;
 import co.codewizards.cloudstore.core.dto.DirectoryDto;
 import co.codewizards.cloudstore.core.dto.NormalFileDto;
@@ -516,6 +521,10 @@ public class CryptreeImpl extends AbstractCryptree {
 			}
 		}
 
+		putCryptoConfigPropSetDtos(cryptoChangeSetDto.getCryptoConfigPropSetDtos());
+
+		transaction.flush();
+
 		processUserRepoKeyPublicKeyReplacementRequests();
 
 		for (UserRepoKeyPublicKeyReplacementRequestDeletionDto requestDeletionDto : cryptoChangeSetDto.getUserRepoKeyPublicKeyReplacementRequestDeletionDtos())
@@ -527,6 +536,20 @@ public class CryptreeImpl extends AbstractCryptree {
 			new UserRepoKeyPublicKeyHelper(getCryptreeContext()).updateUserRepoKeyRingFromUserIdentities();
 
 		getCryptreeContext().getUserRegistry().writeIfNeeded();
+	}
+
+	@Override
+	public ConfigPropSetDto getParentConfigPropSetDtoIfNeeded() {
+		final String remotePathPrefix = getRemotePathPrefix();
+		if (remotePathPrefix == null) // on server
+			throw new IllegalStateException("This method should not be invoked on the server!");
+
+		if (remotePathPrefix.isEmpty()) // on client and complete repo is checked out
+			return null;
+
+		final Uid id = getCryptreeContext().getCryptoRepoFileIdForRemotePathPrefixOrFail();
+		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(id);
+		return cryptreeNode.getParentConfigPropSetDtoIfNeeded();
 	}
 
 	private void issue_5_cleanUpExpiredInvitationUserRepoKeys() {
@@ -1466,6 +1489,15 @@ public class CryptreeImpl extends AbstractCryptree {
 		return cryptoLinkDao.makePersistent(cryptoLink);
 	}
 
+	private void putCryptoConfigPropSetDtos(final List<CryptoConfigPropSetDto> cryptoConfigPropSetDtos) {
+		assertNotNull("cryptoConfigPropSetDtos", cryptoConfigPropSetDtos);
+		final CryptoConfigPropSetDtoConverter converter = CryptoConfigPropSetDtoConverter.create(getTransactionOrFail());
+		for (CryptoConfigPropSetDto cryptoConfigPropSetDto : cryptoConfigPropSetDtos) {
+			final CryptoConfigPropSet cryptoConfigPropSet = converter.putCryptoConfigPropSetDto(cryptoConfigPropSetDto);
+			cryptoConfigPropSet.setLastSyncFromRepositoryId(getRemoteRepositoryIdOrFail());
+		}
+	}
+
 	private void putPermissionDto(final PermissionDto permissionDto) {
 		assertNotNull("permissionDto", permissionDto);
 		final LocalRepoTransaction transaction = getTransactionOrFail();
@@ -1670,6 +1702,18 @@ public class CryptreeImpl extends AbstractCryptree {
 		populateChangedHistoCryptoRepoFileDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 		populateChangedHistoFrameDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 		populateChangedCollisionDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
+		populateChangedCryptoConfigPropSetDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
+	}
+
+	private void populateChangedCryptoConfigPropSetDtos(CryptoChangeSetDto cryptoChangeSetDto, LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {
+		final CryptoConfigPropSetDtoConverter converter = CryptoConfigPropSetDtoConverter.create(getTransactionOrFail());
+		final CryptoConfigPropSetDao dao = getTransactionOrFail().getDao(CryptoConfigPropSetDao.class);
+
+		final Collection<CryptoConfigPropSet> entities = dao.getCryptoConfigPropSetsChangedAfterExclLastSyncFromRepositoryId(
+				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced(), getRemoteRepositoryIdOrFail());
+
+		for (final CryptoConfigPropSet entity : entities)
+			cryptoChangeSetDto.getCryptoConfigPropSetDtos().add(converter.toCryptoConfigPropSetDto(entity));
 	}
 
 	private void populateChangedCollisionDtos(CryptoChangeSetDto cryptoChangeSetDto, LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {
@@ -2318,6 +2362,7 @@ public class CryptreeImpl extends AbstractCryptree {
 				cryptoRepoFile.setDeletedByIgnoreRule(preliminaryDeletion.isDeletedByIgnoreRule());
 				cryptoRepoFile.setLastSyncFromRepositoryId(null);
 				cryptreeNode.sign(cryptoRepoFile);
+				cryptreeNode.updateCryptoConfigPropSetIfConfigFile();
 			}
 			pdDao.deletePersistent(preliminaryDeletion);
 		}

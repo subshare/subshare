@@ -41,6 +41,8 @@ public class CryptoChangeSetDto {
 
 	private List<CollisionDto> collisionDtos;
 
+	private List<CryptoConfigPropSetDto> cryptoConfigPropSetDtos;
+
 	public List<CryptoRepoFileDto> getCryptoRepoFileDtos() {
 		if (cryptoRepoFileDtos == null)
 			cryptoRepoFileDtos = new ArrayList<>();
@@ -199,6 +201,16 @@ public class CryptoChangeSetDto {
 		this.collisionDtos = collisionDtos;
 	}
 
+	public List<CryptoConfigPropSetDto> getCryptoConfigPropSetDtos() {
+		if (cryptoConfigPropSetDtos == null)
+			cryptoConfigPropSetDtos = new ArrayList<>();
+
+		return cryptoConfigPropSetDtos;
+	}
+	public void setCryptoConfigPropSetDtos(List<CryptoConfigPropSetDto> cryptoConfigPropSetDtos) {
+		this.cryptoConfigPropSetDtos = cryptoConfigPropSetDtos;
+	}
+
 	@Override
 	public String toString() {
 		return "CryptoChangeSetDto[cryptoRepoFileDtos=" + cryptoRepoFileDtos
@@ -212,6 +224,7 @@ public class CryptoChangeSetDto {
 				+ ", histoCryptoRepoFileDtos=" + histoCryptoRepoFileDtos
 				+ ", currentHistoCryptoRepoFileDtos=" + currentHistoCryptoRepoFileDtos
 				+ ", collisionDtos=" + collisionDtos
+				+ ", cryptoConfigPropSetDtos=" + cryptoConfigPropSetDtos
 				+ "]";
 	}
 
@@ -232,7 +245,8 @@ public class CryptoChangeSetDto {
 				&& isEmpty(histoFrameDtos)
 				&& isEmpty(histoCryptoRepoFileDtos)
 				&& isEmpty(currentHistoCryptoRepoFileDtos)
-				&& isEmpty(collisionDtos);
+				&& isEmpty(collisionDtos)
+				&& isEmpty(cryptoConfigPropSetDtos);
 	}
 
 	private static boolean isEmpty(final Collection<?> c) {

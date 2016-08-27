@@ -4,8 +4,6 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
 import static org.subshare.local.CryptreeNodeUtil.*;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -18,9 +16,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
-import java.util.zip.GZIPOutputStream;
 
 import javax.jdo.JDOHelper;
 
@@ -53,6 +51,8 @@ import org.subshare.local.persistence.Collision;
 import org.subshare.local.persistence.CollisionDao;
 import org.subshare.local.persistence.CollisionPrivate;
 import org.subshare.local.persistence.CollisionPrivateDao;
+import org.subshare.local.persistence.CryptoConfigPropSet;
+import org.subshare.local.persistence.CryptoConfigPropSetDao;
 import org.subshare.local.persistence.CryptoKey;
 import org.subshare.local.persistence.CryptoKeyDao;
 import org.subshare.local.persistence.CryptoKeyDeactivation;
@@ -84,13 +84,19 @@ import org.subshare.local.persistence.UserRepoKeyPublicKeyDao;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyReplacementRequestDao;
 
 import co.codewizards.cloudstore.core.auth.SignatureException;
+import co.codewizards.cloudstore.core.config.Config;
+import co.codewizards.cloudstore.core.dto.ConfigPropSetDto;
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
 import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.dto.jaxb.ConfigPropSetDtoIo;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
 import co.codewizards.cloudstore.core.util.ISO8601;
+import co.codewizards.cloudstore.core.util.PropertiesUtil;
 import co.codewizards.cloudstore.local.dto.RepoFileDtoConverter;
 import co.codewizards.cloudstore.local.persistence.Directory;
+import co.codewizards.cloudstore.local.persistence.RemoteRepository;
+import co.codewizards.cloudstore.local.persistence.RemoteRepositoryDao;
 import co.codewizards.cloudstore.local.persistence.RepoFile;
 import co.codewizards.cloudstore.local.persistence.RepoFileDao;
 
@@ -188,7 +194,7 @@ public class CryptreeNode {
 					cryptoRepoFile.getCryptoRepoFileId()));
 
 		final byte[] plainRepoFileDtoData = assertNotNull("decrypt(...)", decrypt(cryptoRepoFile.getRepoFileDtoData(), plainCryptoKey));
-		final RepoFileDto repoFileDto = context.repoFileDtoIo.deserializeWithGz(new ByteArrayInputStream(plainRepoFileDtoData));
+		final RepoFileDto repoFileDto = context.repoFileDtoIo.deserializeWithGz(plainRepoFileDtoData);
 		return repoFileDto;
 	}
 
@@ -201,7 +207,7 @@ public class CryptreeNode {
 					histoCryptoRepoFile.getHistoCryptoRepoFileId()));
 
 		final byte[] plainRepoFileDtoData = assertNotNull("decrypt(...)", decrypt(histoCryptoRepoFile.getRepoFileDtoData(), plainCryptoKey));
-		final RepoFileDto repoFileDto = context.repoFileDtoIo.deserializeWithGz(new ByteArrayInputStream(plainRepoFileDtoData));
+		final RepoFileDto repoFileDto = context.repoFileDtoIo.deserializeWithGz(plainRepoFileDtoData);
 		return repoFileDto;
 	}
 
@@ -219,7 +225,7 @@ public class CryptreeNode {
 					histoCryptoRepoFile.getCryptoRepoFile().getCryptoRepoFileId()));
 
 		final byte[] plainRepoFileDtoData = assertNotNull("decrypt(...)", decrypt(histoCryptoRepoFile.getRepoFileDtoData(), plainCryptoKey));
-		final RepoFileDto repoFileDto = context.repoFileDtoIo.deserializeWithGz(new ByteArrayInputStream(plainRepoFileDtoData));
+		final RepoFileDto repoFileDto = context.repoFileDtoIo.deserializeWithGz(plainRepoFileDtoData);
 		return repoFileDto;
 	}
 
@@ -256,7 +262,7 @@ public class CryptreeNode {
 				deletePreliminaryDeletions();
 			}
 
-			cryptoRepoFile.setRepoFile(repoFile); // repoFile is guaranteed to be *not* null, because of getCryptoRepoFile() above.
+			cryptoRepoFile.setRepoFile(assertNotNull("repoFile", repoFile)); // repoFile is guaranteed to be *not* null, because of getCryptoRepoFile() above.
 			cryptoRepoFile.setDirectory(repoFile instanceof Directory);
 
 			// getPlainCryptoKeyOrCreate(...) causes this method to be called again. We thus must prevent
@@ -278,8 +284,69 @@ public class CryptreeNode {
 
 			sign(cryptoRepoFile);
 			context.transaction.flush(); // we want an early failure - not later during commit.
+
+			updateCryptoConfigPropSetIfConfigFile();
 		}
 		return cryptoRepoFile;
+	}
+
+	public CryptoConfigPropSet updateCryptoConfigPropSetIfConfigFile() {
+		final CryptoRepoFile cryptoRepoFile = assertNotNull("cryptoRepoFile", getCryptoRepoFile());
+		final String localName = cryptoRepoFile.getLocalName();
+		if (! Config.PROPERTIES_FILE_NAME_FOR_DIRECTORY.equals(localName)) {
+			return null;
+		}
+
+		final CryptreeNode parent = assertNotNull("parent", getParent());
+		final CryptoRepoFile parentCrf = parent.getCryptoRepoFileOrCreate(false);
+
+		final CryptoConfigPropSetDao ccpsDao = context.transaction.getDao(CryptoConfigPropSetDao.class);
+		CryptoConfigPropSet cryptoConfigPropSet = ccpsDao.getCryptoConfigPropSet(parentCrf);
+		if (cryptoConfigPropSet == null)
+			cryptoConfigPropSet = new CryptoConfigPropSet(parentCrf);
+
+		final PlainCryptoKey plainCryptoKey = parent.getActivePlainCryptoKeyOrCreate(CryptoKeyRole.dataKey, CipherOperationMode.ENCRYPT);
+		final CryptoKey cryptoKey = assertNotNull("plainCryptoKey", plainCryptoKey).getCryptoKey();
+		cryptoConfigPropSet.setCryptoKey(assertNotNull("plainCryptoKey.cryptoKey", cryptoKey));
+
+		final byte[] plainData = createConfigPropSetDtoDataFromFile();
+		cryptoConfigPropSet.setConfigPropSetDtoData(plainData == null ? null : encrypt(plainData, plainCryptoKey));
+
+		cryptoConfigPropSet.setLastSyncFromRepositoryId(null);
+
+		parent.sign(cryptoConfigPropSet);
+
+		cryptoConfigPropSet = ccpsDao.makePersistent(cryptoConfigPropSet);
+		context.transaction.flush(); // we want an early failure - not later during commit.
+		return cryptoConfigPropSet;
+	}
+
+	private byte[] createConfigPropSetDtoDataFromFile() {
+		final ConfigPropSetDto configPropSetDto = createConfigPropSetDtoFromFile();
+		if (configPropSetDto == null)
+			return null;
+
+		return new ConfigPropSetDtoIo().serializeWithGz(configPropSetDto);
+	}
+
+	private ConfigPropSetDto createConfigPropSetDtoFromFile() {
+		if (getCryptoRepoFile().getDeleted() != null)
+			return null;
+
+		final RepoFile repoFile = assertNotNull("repoFile", getRepoFile());
+		final File configFile = repoFile.getFile(context.transaction.getLocalRepoManager().getLocalRoot());
+		if (! configFile.isFile()) {
+			logger.warn("createConfigPropSetDtoFromFile: configFile not existing (deleted after local-sync?!): {}", configFile);
+			return null;
+		}
+
+		final Properties properties;
+		try {
+			properties = PropertiesUtil.load(configFile);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+		return new ConfigPropSetDto(properties);
 	}
 
 	public CurrentHistoCryptoRepoFile getCurrentHistoCryptoRepoFile() {
@@ -340,7 +407,7 @@ public class CryptreeNode {
 		final byte[] repoFileDtoData;
 		if (deleted != null)
 //			repoFileDtoData = getRepoFileDtoDataForDeletedCryptoRepoFile(previousHistoCryptoRepoFile);
-			repoFileDtoData = serializeRepoFileDto(assertNotNull("getRepoFileDto()", getRepoFileDto()));
+			repoFileDtoData = context.repoFileDtoIo.serializeWithGz(assertNotNull("getRepoFileDto()", getRepoFileDto()));
 		else
 			repoFileDtoData = createRepoFileDtoDataForCryptoRepoFile(true);
 
@@ -447,10 +514,9 @@ public class CryptreeNode {
 		final CryptoKey cryptoKey = assertNotNull("plainCryptoKey", plainCryptoKey).getCryptoKey();
 		collision.setCryptoKey(assertNotNull("plainCryptoKey.cryptoKey", cryptoKey));
 
-		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		context.collisionPrivateDtoIo.serializeWithGz(collisionPrivateDto, out);
+		final byte[] data = context.collisionPrivateDtoIo.serializeWithGz(collisionPrivateDto);
 
-		collision.setCollisionPrivateDtoData(assertNotNull("encrypt(...)", encrypt(out.toByteArray(), plainCryptoKey)));
+		collision.setCollisionPrivateDtoData(assertNotNull("encrypt(...)", encrypt(data, plainCryptoKey)));
 		sign(collision);
 
 		updateCollisionPrivate(collision);
@@ -465,7 +531,7 @@ public class CryptreeNode {
 					collision.getCollisionId()));
 
 		final byte[] plainDtoData = assertNotNull("decrypt(...)", decrypt(collision.getCollisionPrivateDtoData(), plainCryptoKey));
-		CollisionPrivateDto collisionPrivateDto = context.collisionPrivateDtoIo.deserializeWithGz(new ByteArrayInputStream(plainDtoData));
+		CollisionPrivateDto collisionPrivateDto = context.collisionPrivateDtoIo.deserializeWithGz(plainDtoData);
 		return collisionPrivateDto;
 	}
 
@@ -691,23 +757,7 @@ public class CryptreeNode {
 		else
 			repoFileDto.setName(cryptoRepoFile.getLocalName());
 
-		return serializeRepoFileDto(repoFileDto);
-	}
-
-	private byte[] serializeRepoFileDto(final RepoFileDto repoFileDto) {
-		assertNotNull("repoFileDto", repoFileDto);
-
-		// Serialise to XML and compress.
-		final ByteArrayOutputStream out = new ByteArrayOutputStream();
-		try {
-			try (final GZIPOutputStream gzOut = new GZIPOutputStream(out);) {
-				context.repoFileDtoIo.serialize(repoFileDto, gzOut);
-			}
-		} catch (final IOException e) {
-			throw new RuntimeException(e);
-		}
-
-		return out.toByteArray();
+		return context.repoFileDtoIo.serializeWithGz(repoFileDto);
 	}
 
 	private void revokeReadPermission(final Set<Uid> userRepoKeyIds) {
@@ -1711,6 +1761,7 @@ public class CryptreeNode {
 			cryptoRepoFile.setDeletedByIgnoreRule(false);
 			cryptoRepoFile.setLastSyncFromRepositoryId(null);
 			sign(cryptoRepoFile);
+			updateCryptoConfigPropSetIfConfigFile();
 		}
 	}
 
@@ -1722,5 +1773,77 @@ public class CryptreeNode {
 		PreliminaryDeletion preliminaryDeletion = pdDao.getPreliminaryDeletion(cryptoRepoFile);
 		if (preliminaryDeletion != null)
 			pdDao.deletePersistent(preliminaryDeletion);
+	}
+
+	public ConfigPropSetDto getParentConfigPropSetDtoIfNeeded() {
+		final Uid id = context.getCryptoRepoFileIdForRemotePathPrefixOrFail();
+		if (! id.equals(getCryptoRepoFile().getCryptoRepoFileId()))
+			throw new IllegalStateException("cryptoRepoFileIdForRemotePathPrefix != cryptoRepoFile.cryptoRepoFileId :: " + id + " != " + getCryptoRepoFile().getCryptoRepoFileId());
+
+		final List<CryptoConfigPropSet> cryptoConfigPropSets = getCryptoConfigPropSetsAbove();
+		if (! isCryptoConfigPropSetModifiedAfterLastSync(cryptoConfigPropSets))
+			return null;
+
+		Properties mergedProperties = null;
+		for (final CryptoConfigPropSet cryptoConfigPropSet : cryptoConfigPropSets) {
+			final ConfigPropSetDto configPropSetDto = getConfigPropSetDto(cryptoConfigPropSet);
+			if (configPropSetDto == null)
+				continue;
+
+			final Properties properties = configPropSetDto.toProperties();
+			if (mergedProperties == null)
+				mergedProperties = properties;
+			else
+				mergedProperties.putAll(properties);
+		}
+		// We must not return null, if there was a modification. Returning null means to *not*
+		// overwrite the parent.properties. But it must be rewritten.
+		return mergedProperties == null ? new ConfigPropSetDto() : new ConfigPropSetDto(mergedProperties);
+	}
+
+	private ConfigPropSetDto getConfigPropSetDto(CryptoConfigPropSet cryptoConfigPropSet) {
+		assertNotNull("cryptoConfigPropSet", cryptoConfigPropSet);
+
+		final PlainCryptoKey plainCryptoKey = getPlainCryptoKeyForDecrypting(cryptoConfigPropSet.getCryptoKey());
+		if (plainCryptoKey == null)
+			throw new ReadAccessDeniedException(String.format("The CryptoConfigPropSet with cryptoRepoFileId=%s could not be decrypted! Access rights missing?!",
+					cryptoConfigPropSet.getCryptoRepoFileId()));
+
+		final byte[] encryptedData = cryptoConfigPropSet.getConfigPropSetDtoData();
+		if (encryptedData == null || encryptedData.length == 0)
+			return null;
+
+		final byte[] plainData = decrypt(encryptedData, plainCryptoKey);
+		return new ConfigPropSetDtoIo().deserializeWithGz(plainData);
+	}
+
+	private boolean isCryptoConfigPropSetModifiedAfterLastSync(final List<CryptoConfigPropSet> cryptoConfigPropSets) {
+		assertNotNull("cryptoConfigPropSets", cryptoConfigPropSets);
+
+		final RemoteRepository remoteRepository =
+				context.transaction.getDao(RemoteRepositoryDao.class).getRemoteRepositoryOrFail(context.remoteRepositoryId);
+
+		for (final CryptoConfigPropSet cryptoConfigPropSet : cryptoConfigPropSets) {
+			if (cryptoConfigPropSet.getLocalRevision() > remoteRepository.getLocalRevision())
+				return true;
+		}
+		return false;
+	}
+
+	private List<CryptoConfigPropSet> getCryptoConfigPropSetsAbove() {
+		final CryptoConfigPropSetDao ccpsDao = context.transaction.getDao(CryptoConfigPropSetDao.class);
+		final List<CryptoConfigPropSet> result = new ArrayList<>();
+		CryptoRepoFile cryptoRepoFile = assertNotNull("cryptoRepoFile", getCryptoRepoFile());
+		while (true) {
+			cryptoRepoFile = cryptoRepoFile.getParent();
+			if (cryptoRepoFile == null)
+				break;
+
+			final CryptoConfigPropSet cryptoConfigPropSet = ccpsDao.getCryptoConfigPropSet(cryptoRepoFile);
+			if (cryptoConfigPropSet != null)
+				result.add(cryptoConfigPropSet);
+		}
+		Collections.reverse(result);
+		return result;
 	}
 }

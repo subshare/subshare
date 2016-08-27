@@ -71,7 +71,7 @@ import co.codewizards.cloudstore.local.persistence.RepoFile;
 	@Query(name="getCryptoRepoFilesWithoutRepoFileAndNotDeleted", value="SELECT WHERE this.repoFile == null && this.deleted == null"),
 	@Query(name="getCryptoRepoFile_cryptoRepoFileId", value="SELECT UNIQUE WHERE this.cryptoRepoFileId == :cryptoRepoFileId"),
 	@Query(
-			name="getCryptoRepoFileChangedAfter_localRevision_exclLastSyncFromRepositoryId",
+			name="getCryptoRepoFilesChangedAfter_localRevision_exclLastSyncFromRepositoryId",
 			value="SELECT WHERE this.localRevision > :localRevision && (this.lastSyncFromRepositoryId == null || this.lastSyncFromRepositoryId != :lastSyncFromRepositoryId)") // TODO this necessary == null is IMHO a DN bug!
 })
 public class CryptoRepoFile extends Entity implements WriteProtected, AutoTrackLocalRevision, StoreCallback {

@@ -3,8 +3,6 @@ package org.subshare.local;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static org.subshare.local.CryptreeNodeUtil.*;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -252,9 +250,7 @@ public class UserRepoKeyPublicKeyHelper {
 		if (dto == null)
 			dto = createUserIdentityPayloadDto(ofUserRepoKeyPublicKey);
 
-		final ByteArrayOutputStream out = new ByteArrayOutputStream();
-		new UserIdentityPayloadDtoIo().serializeWithGz(dto, out);
-		return out.toByteArray();
+		return new UserIdentityPayloadDtoIo().serializeWithGz(dto);
 	}
 
 	public UserIdentityPayloadDto getUserIdentityPayloadDto(final UserRepoKeyPublicKey ofUserRepoKeyPublicKey) {
@@ -264,7 +260,7 @@ public class UserRepoKeyPublicKeyHelper {
 			return null;
 
 		final UserIdentityPayloadDtoIo userIdentityPayloadDtoIo = new UserIdentityPayloadDtoIo();
-		final UserIdentityPayloadDto userIdentityPayloadDto = userIdentityPayloadDtoIo.deserializeWithGz(new ByteArrayInputStream(userIdentityPayloadDtoData));
+		final UserIdentityPayloadDto userIdentityPayloadDto = userIdentityPayloadDtoIo.deserializeWithGz(userIdentityPayloadDtoData);
 		return userIdentityPayloadDto;
 	}
 

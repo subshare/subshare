@@ -329,7 +329,7 @@ public class InviteUserAndSyncIT extends AbstractUserRegistryIT {
 
 		assertInvitationUserRepoKeyPublicKeyInRepoIs(localSrcRoot, 0);
 
-		UserRepoInvitationToken userRepoInvitationToken = createUserRepoInvitationToken("1 {11 11ä11} 1", PermissionType.read, TestUser.khaled);
+		UserRepoInvitationToken userRepoInvitationToken = createUserRepoInvitationToken("1 {11 11ä11#+} 1", PermissionType.read, TestUser.khaled);
 
 		assertInvitationUserRepoKeyPublicKeyInRepoIs(localSrcRoot, 1);
 
