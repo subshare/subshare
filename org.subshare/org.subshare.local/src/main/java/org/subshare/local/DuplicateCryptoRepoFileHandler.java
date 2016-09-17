@@ -57,14 +57,14 @@ public class DuplicateCryptoRepoFileHandler {
 
 		final CryptoRepoFile cryptoRepoFile2 = transaction.getDao(CryptoRepoFileDao.class).getCryptoRepoFile(repoFile);
 		if (cryptoRepoFile2 != null && ! cryptoRepoFile2.equals(cryptoRepoFile)) {
-			if (cryptoRepoFile2.getDeleted() != null) { // TODO is this really correct?! No collision after deletion? Simply switch to new CryptoRepoFile?
-				logger.warn("associateCryptoRepoFileWithRepoFile: RepoFile is currently associated with another CryptoRepoFile, which is already marked as deleted. Dissociating it without collision. {}, {}, {}",
-						repoFile, cryptoRepoFile, cryptoRepoFile2);
-				cryptoRepoFile2.setRepoFile(null);
-				transaction.flush();
-			}
-			else
-				cryptoRepoFile = deduplicate(cryptoRepoFile, cryptoRepoFile2);
+//			if (cryptoRepoFile2.getDeleted() != null) { // TODO is this really correct?! No collision after deletion? Simply switch to new CryptoRepoFile?
+//				logger.warn("associateCryptoRepoFileWithRepoFile: RepoFile is currently associated with another CryptoRepoFile, which is already marked as deleted. Dissociating it without collision. {}, {}, {}",
+//						repoFile, cryptoRepoFile, cryptoRepoFile2);
+//				cryptoRepoFile2.setRepoFile(null);
+//				transaction.flush();
+//			}
+//			else
+			cryptoRepoFile = deduplicate(cryptoRepoFile, cryptoRepoFile2);
 		}
 
 		if (cryptoRepoFile != null)
@@ -99,12 +99,12 @@ public class DuplicateCryptoRepoFileHandler {
 		else
 			throw new IllegalArgumentException("cryptoRepoFile1 == cryptoRepoFile2");
 
-		// If the older one was already deleted and the newer one was not, then we kill the deleted one.
-		if (cryptoRepoFileActive.getDeleted() != null && cryptoRepoFileDead.getDeleted() == null) {
-			final CryptoRepoFile tmp = cryptoRepoFileActive;
-			cryptoRepoFileActive = cryptoRepoFileDead;
-			cryptoRepoFileDead = tmp;
-		}
+//		// If the older one was already deleted and the newer one was not, then we kill the deleted one.
+//		if (cryptoRepoFileActive.getDeleted() != null && cryptoRepoFileDead.getDeleted() == null) {
+//			final CryptoRepoFile tmp = cryptoRepoFileActive;
+//			cryptoRepoFileActive = cryptoRepoFileDead;
+//			cryptoRepoFileDead = tmp;
+//		}
 	}
 
 	protected CryptoRepoFile deduplicate() {
