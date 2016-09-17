@@ -471,8 +471,16 @@ public class CryptreeNode {
 			}
 			else if (histoCryptoRepoFile2 == null || duplicateCryptoRepoFile.getCryptoRepoFileId().equals(getCryptoRepoFileId(histoCryptoRepoFile2)))
 				histoCryptoRepoFile2 = null;
-			else
-				throw new IllegalStateException("duplicateCryptoRepoFile neither matches histoCryptoRepoFile1 nor histoCryptoRepoFile2!\nduplicateCryptoRepoFile=" + duplicateCryptoRepoFile + "\nhistoCryptoRepoFile1=" + histoCryptoRepoFile1 + "\nhistoCryptoRepoFile2=" + histoCryptoRepoFile2);
+			else {
+//				throw new IllegalStateException("duplicateCryptoRepoFile neither matches histoCryptoRepoFile1 nor histoCryptoRepoFile2!\nduplicateCryptoRepoFile=" + duplicateCryptoRepoFile + "\nhistoCryptoRepoFile1=" + histoCryptoRepoFile1 + "\nhistoCryptoRepoFile2=" + histoCryptoRepoFile2);
+// https://github.com/subshare/subshare/issues/21 :: I think the above exception is nonsense. Instead we should just make sure
+// that histoCryptoRepoFile1 is the newer one, so that we use the newest. This scenario happens, if this sync+deduplication is
+// done on a computer that is *not* involved in any of the changes having caused the collision - which is a perfectly legal situation.
+				if (histoCryptoRepoFile1.getSignature().getSignatureCreated().before(histoCryptoRepoFile2.getSignature().getSignatureCreated()))
+					histoCryptoRepoFile1 = histoCryptoRepoFile2;
+
+				histoCryptoRepoFile2 = null;
+			}
 
 			if (duplicateCryptoRepoFile.getCryptoRepoFileId().equals(getCryptoRepoFileId(histoCryptoRepoFile1)))
 				throw new IllegalStateException("duplicateCryptoRepoFile matches histoCryptoRepoFile1!\nduplicateCryptoRepoFile=" + duplicateCryptoRepoFile + "\nhistoCryptoRepoFile1=" + histoCryptoRepoFile1 + "\nhistoCryptoRepoFile2=" + histoCryptoRepoFile2);

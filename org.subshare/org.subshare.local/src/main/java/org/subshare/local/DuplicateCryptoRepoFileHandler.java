@@ -73,15 +73,18 @@ public class DuplicateCryptoRepoFileHandler {
 		assertNotNull("cryptoRepoFile1", cryptoRepoFile1);
 		assertNotNull("cryptoRepoFile2", cryptoRepoFile2);
 
+		assignCryptoRepoFileCreatedIfNeeded(cryptoRepoFile1);
+		assignCryptoRepoFileCreatedIfNeeded(cryptoRepoFile2);
+
 		// we keep the older one - and delete the newer one (we abort (if currently ongoing) and re-start (always) its upload)
 		final int compared = compare(cryptoRepoFile1, cryptoRepoFile2);
 		if (compared < 0) {
-			// file1 was signed before file2 (i.e. file1 is older than file2)
+			// file1 was created before file2 (i.e. file1 is older than file2)
 			cryptoRepoFileActive = cryptoRepoFile1;
 			cryptoRepoFileDead = cryptoRepoFile2;
 		}
 		else if (compared > 0) {
-			// file1 was signed after file2 (i.e. file1 is newer than file2)
+			// file1 was created after file2 (i.e. file1 is newer than file2)
 			cryptoRepoFileActive = cryptoRepoFile2;
 			cryptoRepoFileDead = cryptoRepoFile1;
 		}
@@ -113,7 +116,7 @@ public class DuplicateCryptoRepoFileHandler {
 
 		cryptoRepoFileDead.setRepoFile(null);
 //		cryptoRepoFileDead.setDeleted(new Date()); // we really delete the instance (controlled by the collision) - no need for a deletion marker.
-		cryptree.sign(cryptoRepoFileDead);
+//		cryptree.sign(cryptoRepoFileDead); // commented out the signing, because this is not needed if we don't modify the 'deleted' property, anymore.
 
 		transaction.flush(); // must flush before creating collision, so that queries return newly associated HistoCryptoRepoFiles!
 
@@ -156,14 +159,37 @@ public class DuplicateCryptoRepoFileHandler {
 		transaction.flush(); // force early failure
 	}
 
+	private void assignCryptoRepoFileCreatedIfNeeded(final CryptoRepoFile cryptoRepoFile) {
+		assertNotNull("cryptoRepoFile", cryptoRepoFile);
+		if (cryptoRepoFile.getCryptoRepoFileCreated() != null)
+			return;
+
+		HistoCryptoRepoFileDao hcrfDao = getTransaction().getDao(HistoCryptoRepoFileDao.class);
+		Collection<HistoCryptoRepoFile> histoCryptoRepoFiles = hcrfDao.getHistoCryptoRepoFiles(cryptoRepoFile);
+		Date cryptoRepoFileCreated = null;
+		for (HistoCryptoRepoFile histoCryptoRepoFile : histoCryptoRepoFiles) {
+			if (cryptoRepoFileCreated == null || cryptoRepoFileCreated.after(histoCryptoRepoFile.getSignature().getSignatureCreated()))
+				cryptoRepoFileCreated = histoCryptoRepoFile.getSignature().getSignatureCreated();
+		}
+
+		assertNotNull("cryptoRepoFileCreated", cryptoRepoFileCreated);
+		cryptoRepoFile.setCryptoRepoFileCreated(cryptoRepoFileCreated);
+		_getCryptree().sign(cryptoRepoFile);
+	}
+
 	private static int compare(final CryptoRepoFile cryptoRepoFile1, final CryptoRepoFile cryptoRepoFile2) {
 		assertNotNull("cryptoRepoFile1", cryptoRepoFile1);
 		assertNotNull("cryptoRepoFile2", cryptoRepoFile2);
 
-		final Date signatureCreated1 = cryptoRepoFile1.getSignature().getSignatureCreated();
-		final Date signatureCreated2 = cryptoRepoFile2.getSignature().getSignatureCreated();
+		final Date cryptoRepoFileCreated1 = assertNotNull(
+				"cryptoRepoFile1.cryptoRepoFileCreated [cryptoRepoFileId=" +cryptoRepoFile1.getCryptoRepoFileId()+ "]",
+				cryptoRepoFile1.getCryptoRepoFileCreated());
 
-		int result = signatureCreated1.compareTo(signatureCreated2);
+		final Date cryptoRepoFileCreated2 = assertNotNull(
+				"cryptoRepoFile2.cryptoRepoFileCreated [cryptoRepoFileId=" +cryptoRepoFile2.getCryptoRepoFileId()+ "]",
+				cryptoRepoFile2.getCryptoRepoFileCreated());
+
+		int result = cryptoRepoFileCreated1.compareTo(cryptoRepoFileCreated2);
 		if (result != 0)
 			return result;
 

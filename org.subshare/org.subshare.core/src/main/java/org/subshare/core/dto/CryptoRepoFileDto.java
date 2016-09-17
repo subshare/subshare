@@ -32,6 +32,8 @@ public class CryptoRepoFileDto implements Signable {
 
 	private byte[] repoFileDtoData;
 
+	private Date cryptoRepoFileCreated;
+
 	private Date deleted;
 
 	private boolean deletedByIgnoreRule;
@@ -74,6 +76,13 @@ public class CryptoRepoFileDto implements Signable {
 		this.repoFileDtoData = repoFileDtoData;
 	}
 
+	public Date getCryptoRepoFileCreated() {
+		return cryptoRepoFileCreated;
+	}
+	public void setCryptoRepoFileCreated(Date cryptoRepoFileCreated) {
+		this.cryptoRepoFileCreated = cryptoRepoFileCreated;
+	}
+
 	public Date getDeleted() {
 		return deleted;
 	}
@@ -95,7 +104,7 @@ public class CryptoRepoFileDto implements Signable {
 
 	@Override
 	public int getSignedDataVersion() {
-		return 1;
+		return 2;
 	}
 
 	/**
@@ -134,8 +143,13 @@ public class CryptoRepoFileDto implements Signable {
 				inputStreamSources.add(InputStreamSource.Helper.createInputStreamSource(deletedByIgnoreRule));
 			}
 
+			if (signedDataVersion >= 2) {
+				inputStreamSources.add(InputStreamSource.Helper.createInputStreamSource(++separatorIndex));
+				inputStreamSources.add(InputStreamSource.Helper.createInputStreamSource(cryptoRepoFileCreated));
+			}
+
 			// Sanity check for supported signedDataVersions.
-			if (signedDataVersion < 0 || signedDataVersion > 1)
+			if (signedDataVersion < 0 || signedDataVersion > 2)
 				throw new IllegalStateException("signedDataVersion=" + signedDataVersion);
 
 			return new MultiInputStream(inputStreamSources);

@@ -107,6 +107,8 @@ public class CryptoRepoFile extends Entity implements WriteProtected, AutoTrackL
 
 	private boolean directory;
 
+	private Date cryptoRepoFileCreated = new Date();
+
 	private Date deleted;
 
 	@Column(defaultValue = "N")
@@ -184,6 +186,23 @@ public class CryptoRepoFile extends Entity implements WriteProtected, AutoTrackL
 	public void setRepoFile(final RepoFile repoFile) {
 		if (! equal(this.repoFile, repoFile))
 			this.repoFile = repoFile;
+	}
+
+	/**
+	 * Gets the timestamp when this {@code CryptoRepoFile} was globally created.
+	 * <p>
+	 * This is different from {@link #getCreated() created} which returns the timestamp of the creation in the local
+	 * database. In contrast to {@code created}, {@code cryptoRepoFileCreated} is synchronized across all repositories
+	 * (i.e. all databases).
+	 * @return the timestamp when this was globally created. Should never be <code>null</code> for new
+	 * entities, but may be <code>null</code> for old entities, because this property was newly introduced.
+	 */
+	public Date getCryptoRepoFileCreated() {
+		return cryptoRepoFileCreated;
+	}
+	public void setCryptoRepoFileCreated(final Date cryptoRepoFileCreated) {
+		if (! equal(this.cryptoRepoFileCreated, cryptoRepoFileCreated))
+			this.cryptoRepoFileCreated = cryptoRepoFileCreated;
 	}
 
 	/**
@@ -353,7 +372,7 @@ public class CryptoRepoFile extends Entity implements WriteProtected, AutoTrackL
 
 	@Override
 	public int getSignedDataVersion() {
-		return 1;
+		return 2;
 	}
 
 	/**
@@ -392,8 +411,13 @@ public class CryptoRepoFile extends Entity implements WriteProtected, AutoTrackL
 				inputStreamSources.add(InputStreamSource.Helper.createInputStreamSource(deletedByIgnoreRule));
 			}
 
+			if (signedDataVersion >= 2) {
+				inputStreamSources.add(InputStreamSource.Helper.createInputStreamSource(++separatorIndex));
+				inputStreamSources.add(InputStreamSource.Helper.createInputStreamSource(cryptoRepoFileCreated));
+			}
+
 			// Sanity check for supported signedDataVersions.
-			if (signedDataVersion < 0 || signedDataVersion > 1)
+			if (signedDataVersion < 0 || signedDataVersion > 2)
 				throw new IllegalStateException("signedDataVersion=" + signedDataVersion);
 
 			return new MultiInputStream(inputStreamSources);
@@ -424,9 +448,10 @@ public class CryptoRepoFile extends Entity implements WriteProtected, AutoTrackL
 
 	@Override
 	public String toString() {
-		return String.format("%s{cryptoRepoFileId=%s, localName=%s}",
+		return String.format("%s{cryptoRepoFileId=%s, localName=%s, deleted=%s}",
 				super.toString(),
 				cryptoRepoFileId,
-				localName);
+				localName,
+				deleted);
 	}
 }

@@ -10,6 +10,8 @@ import javax.jdo.PersistenceManager;
 import javax.jdo.listener.InstanceLifecycleEvent;
 import javax.jdo.listener.StoreLifecycleListener;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.subshare.local.DuplicateCryptoRepoFileHandler;
 
 import co.codewizards.cloudstore.core.repo.local.AbstractLocalRepoTransactionListener;
@@ -19,6 +21,7 @@ import co.codewizards.cloudstore.local.persistence.RepoFile;
 import co.codewizards.cloudstore.local.persistence.RepoFileDao;
 
 public class AssignCryptoRepoFileRepoFileListener extends AbstractLocalRepoTransactionListener implements StoreLifecycleListener {
+	private static final Logger logger = LoggerFactory.getLogger(AssignCryptoRepoFileRepoFileListener.class);
 
 	// Used primarily on server side (where the repoFileName is the unique cryptoRepoFileId)
 	// On the client side, it only matters whether it's empty (nothing to do) or not (sth. to do).
@@ -84,6 +87,11 @@ public class AssignCryptoRepoFileRepoFileListener extends AbstractLocalRepoTrans
 	 */
 	private RepoFile associateRepoFileViaCryptoRepoFileLocalName(final CryptoRepoFile cryptoRepoFile) {
 		assertNotNull("cryptoRepoFile", cryptoRepoFile);
+
+		if (cryptoRepoFile.getDeleted() != null) {
+			logger.info("associateRepoFileViaCryptoRepoFileLocalName: NOT associating deleted cryptoRepoFile! {}", cryptoRepoFile);
+			return null;
+		}
 
 		RepoFile repoFile = cryptoRepoFile.getRepoFile();
 		if (repoFile == null) {

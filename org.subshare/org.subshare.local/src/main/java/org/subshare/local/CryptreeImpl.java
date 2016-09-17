@@ -1322,6 +1322,7 @@ public class CryptreeImpl extends AbstractCryptree {
 
 		cryptoRepoFile.setDirectory(cryptoRepoFileDto.isDirectory());
 		cryptoRepoFile.setLastSyncFromRepositoryId(getRemoteRepositoryIdOrFail());
+		cryptoRepoFile.setCryptoRepoFileCreated(cryptoRepoFileDto.getCryptoRepoFileCreated());
 		cryptoRepoFile.setDeleted(cryptoRepoFileDto.getDeleted());
 		cryptoRepoFile.setDeletedByIgnoreRule(cryptoRepoFileDto.isDeletedByIgnoreRule());
 
