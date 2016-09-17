@@ -88,10 +88,10 @@ public class AssignCryptoRepoFileRepoFileListener extends AbstractLocalRepoTrans
 	private RepoFile associateRepoFileViaCryptoRepoFileLocalName(final CryptoRepoFile cryptoRepoFile) {
 		assertNotNull("cryptoRepoFile", cryptoRepoFile);
 
-		if (cryptoRepoFile.getDeleted() != null) {
-			logger.info("associateRepoFileViaCryptoRepoFileLocalName: NOT associating deleted cryptoRepoFile! {}", cryptoRepoFile);
-			return null;
-		}
+//		if (cryptoRepoFile.getDeleted() != null) {
+//			logger.info("associateRepoFileViaCryptoRepoFileLocalName: NOT associating deleted cryptoRepoFile! {}", cryptoRepoFile);
+//			return null;
+//		}
 
 		RepoFile repoFile = cryptoRepoFile.getRepoFile();
 		if (repoFile == null) {

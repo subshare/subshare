@@ -651,6 +651,11 @@ public class CryptreeImpl extends AbstractCryptree {
 		assertNotNull("cryptoRepoFile", cryptoRepoFile);
 		assertNotNull("decryptedRepoFileDto", decryptedRepoFileDto);
 
+		if (cryptoRepoFile.getDeleted() != null) {
+			logger.info("putDecryptedRepoFile: Skipping deleted {}", cryptoRepoFile);
+			return null;
+		}
+
 		RepoFile decryptedRepoFile = cryptoRepoFile.getRepoFile();
 		if (decryptedRepoFile == null) {
 			final CryptoRepoFile parentCryptoRepoFile = cryptoRepoFile.getParent();
@@ -663,6 +668,10 @@ public class CryptreeImpl extends AbstractCryptree {
 						parentRepoFileDto = getDecryptedRepoFileDtoOrFail(parentCryptoRepoFile.getCryptoRepoFileId());
 
 					parentRepoFile = putDecryptedRepoFile(cryptoRepoFile2DecryptedRepoFileDto, parentCryptoRepoFile, parentRepoFileDto);
+					if (parentRepoFile == null) {
+						logger.warn("putDecryptedRepoFile: Skipping because parentRepoFile == null! {}", cryptoRepoFile);
+						return null;
+					}
 				}
 			}
 
@@ -716,7 +725,21 @@ public class CryptreeImpl extends AbstractCryptree {
 
 			((SsRepoFile) result).setSignature(((SsRepoFileDto) decryptedRepoFileDto).getSignature());
 		}
+		else {
+			CryptoRepoFileDao crfDao = transaction.getDao(CryptoRepoFileDao.class);
+			CryptoRepoFile cryptoRepoFile2 = crfDao.getCryptoRepoFile(result);
+			if (cryptoRepoFile2 != null
+					&& ! cryptoRepoFile.equals(cryptoRepoFile2)
+					&& cryptoRepoFile2.getDeleted() != null) {
+				logger.warn("putDecryptedRepoFile: RepoFile is currently associated with another CryptoRepoFile, which is already marked as deleted. Dissociating it. {}, {}, {}",
+						result, cryptoRepoFile, cryptoRepoFile2);
+
+				cryptoRepoFile2.setRepoFile(null);
+				transaction.flush();
+			}
+		}
 		cryptoRepoFile.setRepoFile(result);
+		transaction.flush();
 		return result;
 	}
 
