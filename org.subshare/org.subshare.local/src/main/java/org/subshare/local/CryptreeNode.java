@@ -237,6 +237,11 @@ public class CryptreeNode {
 			final CryptoRepoFileDao cryptoRepoFileDao = context.transaction.getDao(CryptoRepoFileDao.class);
 			cryptoRepoFile = cryptoRepoFileDao.getCryptoRepoFile(repoFile); // may be null!
 
+			final CryptreeNode parent = getParent();
+			if (parent != null && cryptoRepoFile == null) {
+				cryptoRepoFile = cryptoRepoFileDao.getChildCryptoRepoFile(parent.getCryptoRepoFile(), repoFile.getName());
+			}
+
 			if (cryptoRepoFile != null)
 				context.registerCryptreeNode(cryptoRepoFile, this);
 		}
@@ -640,6 +645,14 @@ public class CryptreeNode {
 //			((SsNormalFileDto) repoFileDto).getFileChunkDtos().clear(); // YES, they ARE NEEDED! for the history export!
 
 		plainHistoCryptoRepoFileDto.setRepoFileDto(repoFileDto);
+
+		if (histoCryptoRepoFile.getDeleted() != null)
+			plainHistoCryptoRepoFileDto.setAction(PlainHistoCryptoRepoFileDto.Action.DELETE);
+		else if (histoCryptoRepoFile.getPreviousHistoCryptoRepoFile() == null
+				|| histoCryptoRepoFile.getPreviousHistoCryptoRepoFile().getDeleted() != null)
+			plainHistoCryptoRepoFileDto.setAction(PlainHistoCryptoRepoFileDto.Action.ADD);
+		else
+			plainHistoCryptoRepoFileDto.setAction(PlainHistoCryptoRepoFileDto.Action.MODIFY);
 
 		populateCollisionDtos(plainHistoCryptoRepoFileDto, histoCryptoRepoFile);
 

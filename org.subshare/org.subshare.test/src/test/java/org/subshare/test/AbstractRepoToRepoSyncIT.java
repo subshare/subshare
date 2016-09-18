@@ -4,9 +4,15 @@ import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static org.assertj.core.api.Assertions.*;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 import javax.jdo.PersistenceManager;
@@ -18,7 +24,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.subshare.core.Cryptree;
 import org.subshare.core.CryptreeFactoryRegistry;
+import org.subshare.core.dto.HistoFrameDto;
 import org.subshare.core.dto.PermissionType;
+import org.subshare.core.dto.PlainHistoCryptoRepoFileDto;
+import org.subshare.core.dto.PlainHistoCryptoRepoFileDtoTreeNode;
+import org.subshare.core.repo.local.HistoFrameFilter;
+import org.subshare.core.repo.local.PlainHistoCryptoRepoFileFilter;
+import org.subshare.core.repo.local.SsLocalRepoMetaData;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKeyRing;
 import org.subshare.core.user.UserRepoKeyRingLookup;
@@ -334,5 +346,37 @@ public abstract class AbstractRepoToRepoSyncIT extends AbstractIT {
 		final PersistenceManager pm = pmf.getPersistenceManager();
 		pm.currentTransaction().begin();
 		return pm;
+	}
+
+	protected List<PlainHistoCryptoRepoFileDto> getPlainHistoCryptoRepoFileDtos(LocalRepoManager localRepoManager, File file) throws IOException {
+		final String path = "/" + localRepoManager.getLocalRoot().relativize(file).replace('\\', '/');
+		SsLocalRepoMetaData localRepoMetaData = (SsLocalRepoMetaData) localSrcRepoManagerLocal.getLocalRepoMetaData();
+		List<PlainHistoCryptoRepoFileDto> result = new ArrayList<>();
+	
+		// TODO need to extend the filter with a path! Do this when extending the UI to show a history in every folder-detail-pane.
+		// The current implementation is very inefficient - but we have only small test data, anyway ;-)
+		Collection<HistoFrameDto> histoFrameDtos = localRepoMetaData.getHistoFrameDtos(new HistoFrameFilter());
+		for (HistoFrameDto histoFrameDto : histoFrameDtos) {
+			PlainHistoCryptoRepoFileFilter filter = new PlainHistoCryptoRepoFileFilter();
+			filter.setHistoFrameId(histoFrameDto.getHistoFrameId());
+			filter.setFillParents(true);
+			Collection<PlainHistoCryptoRepoFileDto> plainHistoCryptoRepoFileDtos = localRepoMetaData.getPlainHistoCryptoRepoFileDtos(filter);
+			PlainHistoCryptoRepoFileDtoTreeNode rootNode = PlainHistoCryptoRepoFileDtoTreeNode.createTree(plainHistoCryptoRepoFileDtos);
+			for (PlainHistoCryptoRepoFileDtoTreeNode node : rootNode) {
+				if (path.equals(node.getPath()))
+					result.add(node.getPlainHistoCryptoRepoFileDto());
+			}
+		}
+	
+		Collections.sort(result, new Comparator<PlainHistoCryptoRepoFileDto>() {
+			@Override
+			public int compare(PlainHistoCryptoRepoFileDto o1, PlainHistoCryptoRepoFileDto o2) {
+				Date signatureCreated1 = o1.getHistoCryptoRepoFileDto().getSignature().getSignatureCreated();
+				Date signatureCreated2 = o2.getHistoCryptoRepoFileDto().getSignature().getSignatureCreated();
+				return signatureCreated1.compareTo(signatureCreated2);
+			}
+		});
+	
+		return result;
 	}
 }

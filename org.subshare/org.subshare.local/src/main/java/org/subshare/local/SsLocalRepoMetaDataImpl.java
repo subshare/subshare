@@ -387,9 +387,25 @@ public class SsLocalRepoMetaDataImpl extends LocalRepoMetaDataImpl implements Ss
 	@Override
 	public Collection<PlainHistoCryptoRepoFileDto> getPlainHistoCryptoRepoFileDtos(PlainHistoCryptoRepoFileFilter filter) {
 		assertNotNull("filter", filter);
+		final Collection<PlainHistoCryptoRepoFileDto> result;
+		final UpdatePlainHistoCryptoRepoFilesMarker updatePlainHistoCryptoRepoFilesMarker;
 		try (final LocalRepoTransaction tx = getLocalRepoManagerOrFail().beginReadTransaction();) {
-			return getCryptree(tx).getPlainHistoCryptoRepoFileDtos(filter);
+			result = getCryptree(tx).getPlainHistoCryptoRepoFileDtos(filter);
+			updatePlainHistoCryptoRepoFilesMarker = tx.getContextObject(UpdatePlainHistoCryptoRepoFilesMarker.class);
 		}
+		if (updatePlainHistoCryptoRepoFilesMarker != null) {
+			new Thread("updatePlainHistoCryptoRepoFilesThread") {
+				@Override
+				public void run() {
+					try (final LocalRepoTransaction tx = getLocalRepoManagerOrFail().beginWriteTransaction();) {
+						getCryptree(tx).updatePlainHistoCryptoRepoFiles(
+								updatePlainHistoCryptoRepoFilesMarker.getHistoCryptoRepoFileIds());
+						tx.commit();
+					}
+				}
+			}.start();
+		}
+		return result;
 	}
 
 	@Override

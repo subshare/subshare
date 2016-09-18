@@ -21,12 +21,6 @@ public class HistoCryptoRepoFileTreeItem extends TreeItem<HistoCryptoRepoFileTre
 	public static class Root extends HistoCryptoRepoFileTreeItem {
 	}
 
-	public static enum Action {
-		ADD,
-		MODIFY,
-		DELETE
-	}
-
 	private final PlainHistoCryptoRepoFileDto plainHistoCryptoRepoFileDto;
 
 	public HistoCryptoRepoFileTreeItem(final PlainHistoCryptoRepoFileDto plainHistoCryptoRepoFileDto) {
@@ -78,21 +72,6 @@ public class HistoCryptoRepoFileTreeItem extends TreeItem<HistoCryptoRepoFileTre
 		return null;
 	}
 
-	public Action getAction() {
-		final HistoCryptoRepoFileDto histoCryptoRepoFileDto = plainHistoCryptoRepoFileDto.getHistoCryptoRepoFileDto();
-
-		if (histoCryptoRepoFileDto == null)
-			return null;
-
-		if (histoCryptoRepoFileDto.getDeleted() != null)
-			return Action.DELETE;
-
-		if (histoCryptoRepoFileDto.getPreviousHistoCryptoRepoFileId() != null)
-			return Action.MODIFY;
-
-		return Action.ADD;
-	}
-
 	public boolean hasCollision() {
 		return ! plainHistoCryptoRepoFileDto.getCollisionDtos().isEmpty();
 	}
@@ -122,7 +101,8 @@ public class HistoCryptoRepoFileTreeItem extends TreeItem<HistoCryptoRepoFileTre
 
 	public Long getLength() {
 		final RepoFileDto repoFileDto = plainHistoCryptoRepoFileDto.getRepoFileDto();
-		if (repoFileDto instanceof NormalFileDto) {
+		if (repoFileDto instanceof NormalFileDto
+				&& ! PlainHistoCryptoRepoFileDto.Action.DELETE.equals(plainHistoCryptoRepoFileDto.getAction())) {
 			final NormalFileDto normalFileDto = (NormalFileDto) repoFileDto;
 			return normalFileDto.getLength();
 		}

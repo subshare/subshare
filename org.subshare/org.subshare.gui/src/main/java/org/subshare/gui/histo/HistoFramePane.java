@@ -105,9 +105,9 @@ public class HistoFramePane extends BorderPane {
 
 	private PlainHistoCryptoRepoFileFilter filter;
 
-	private final Map<HistoCryptoRepoFileTreeItem.Action, Image> action2ActionIcon = new HashMap<>();
+	private final Map<PlainHistoCryptoRepoFileDto.Action, Image> action2ActionIcon = new HashMap<>();
 	{
-		for (final HistoCryptoRepoFileTreeItem.Action action : HistoCryptoRepoFileTreeItem.Action.values()) {
+		for (final PlainHistoCryptoRepoFileDto.Action action : PlainHistoCryptoRepoFileDto.Action.values()) {
 			final String imageName = "Action_" + action.name() + IconSize._16x16.name() + ".png";
 			final URL url = HistoFramePane.class.getResource(imageName);
 			if (url == null)
@@ -136,7 +136,7 @@ public class HistoFramePane extends BorderPane {
 
 						final List<Image> icons = asListWithoutNullElements(
 								getFileIcon(treeItem),
-								action2ActionIcon.get(treeItem.getAction()),
+								action2ActionIcon.get(treeItem.getPlainHistoCryptoRepoFileDto().getAction()),
 								getCollisionIcon(treeItem)
 								);
 

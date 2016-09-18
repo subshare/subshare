@@ -2241,7 +2241,7 @@ public class CryptreeImpl extends AbstractCryptree {
 
 		final LocalRepoTransaction tx = getTransactionOrFail();
 		final CryptoRepoFileDao cryptoRepoFileDao = tx.getDao(CryptoRepoFileDao.class);
-		final Collection<CryptoRepoFile> deletedCryptoRepoFiles = cryptoRepoFileDao.getDeletedCryptoRepoFilesWithoutDeletedHistoCryptoRepoFiles();
+		final Collection<CryptoRepoFile> deletedCryptoRepoFiles = cryptoRepoFileDao.getDeletedCryptoRepoFilesWithoutCurrentHistoCryptoRepoFileAlsoDeleted();
 		final List<HistoCryptoRepoFile> histoCryptoRepoFiles = new ArrayList<>();
 		if (deletedCryptoRepoFiles.isEmpty())
 			return null;
@@ -2479,6 +2479,8 @@ public class CryptreeImpl extends AbstractCryptree {
 
 			final PlainHistoCryptoRepoFile plainHistoCryptoRepoFile = plainHistoCryptoRepoFileDao.getPlainHistoCryptoRepoFileOrFail(histoCryptoRepoFile);
 			final PlainHistoCryptoRepoFileDto plainHistoCryptoRepoFileDto = plainHistoCryptoRepoFile.getPlainHistoCryptoRepoFileDto();
+			if (plainHistoCryptoRepoFileDto.getAction() == null)
+				UpdatePlainHistoCryptoRepoFilesMarker.getInstance(tx).getHistoCryptoRepoFileIds().add(histoCryptoRepoFile.getHistoCryptoRepoFileId());
 
 			if (! filter.isWithFileChunkDtos())
 				removeFileChunkDtos(plainHistoCryptoRepoFileDto);
@@ -2507,6 +2509,7 @@ public class CryptreeImpl extends AbstractCryptree {
 								// parents are directories => no need to invoke removeFileChunkDtos(...)
 								cryptoRepoFileId2PlainHistoCryptoRepoFileDto.put(parentCryptoRepoFileId, parentPlainHistoCryptoRepoFileDto);
 								parentPlainHistoCryptoRepoFileDto.setHistoCryptoRepoFileDto(null); // 1. this is an arbitrary older entry and 2. we need to indicate that it is not a real modification
+								parentPlainHistoCryptoRepoFileDto.setAction(null);
 								parentDtos.add(parentPlainHistoCryptoRepoFileDto);
 								break;
 							}
@@ -2517,6 +2520,18 @@ public class CryptreeImpl extends AbstractCryptree {
 			result.addAll(parentDtos);
 		}
 		return result;
+	}
+
+	@Override
+	public void updatePlainHistoCryptoRepoFiles(final Set<Uid> histoCryptoRepoFileIds) {
+		assertNotNull("histoCryptoRepoFileIds", histoCryptoRepoFileIds);
+		final LocalRepoTransaction tx = getTransactionOrFail();
+		final HistoCryptoRepoFileDao hcrfDao = tx.getDao(HistoCryptoRepoFileDao.class);
+		for (final Uid histoCryptoRepoFileId : histoCryptoRepoFileIds) {
+			final HistoCryptoRepoFile histoCryptoRepoFile = hcrfDao.getHistoCryptoRepoFileOrFail(histoCryptoRepoFileId);
+			getCryptreeContext().getCryptreeNodeOrCreate(histoCryptoRepoFile.getCryptoRepoFile().getCryptoRepoFileId())
+			.updatePlainHistoCryptoRepoFile(histoCryptoRepoFile);
+		}
 	}
 
 	private void removeFileChunkDtos(final PlainHistoCryptoRepoFileDto plainHistoCryptoRepoFileDto) {

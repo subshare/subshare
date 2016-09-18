@@ -13,6 +13,12 @@ import co.codewizards.cloudstore.core.dto.Uid;
 @XmlRootElement
 public class PlainHistoCryptoRepoFileDto implements Serializable {
 
+	public static enum Action {
+		ADD,
+		MODIFY,
+		DELETE
+	}
+
 	private Uid cryptoRepoFileId;
 	private Uid parentCryptoRepoFileId;
 
@@ -23,6 +29,8 @@ public class PlainHistoCryptoRepoFileDto implements Serializable {
 	private List<CollisionDto> collisionDtos;
 
 	private List<CollisionPrivateDto> collisionPrivateDtos;
+
+	private Action action;
 
 	public PlainHistoCryptoRepoFileDto() {
 	}
@@ -73,5 +81,13 @@ public class PlainHistoCryptoRepoFileDto implements Serializable {
 	}
 	public void setCollisionPrivateDtos(List<CollisionPrivateDto> collisionPrivateDtos) {
 		this.collisionPrivateDtos = collisionPrivateDtos;
+	}
+
+	public Action getAction() {
+		return action;
+	}
+
+	public void setAction(Action action) {
+		this.action = action;
 	}
 }

@@ -16,6 +16,7 @@ import org.subshare.core.AccessDeniedException;
 import org.subshare.core.ReadAccessDeniedException;
 import org.subshare.core.WriteAccessDeniedException;
 import org.subshare.core.dto.PermissionType;
+import org.subshare.core.dto.PlainHistoCryptoRepoFileDto;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKey.PublicKey;
 import org.subshare.core.user.UserRepoKeyRing;
@@ -70,17 +71,68 @@ public class RepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 	public void syncFromLocalToRemoteToLocalThenDeleteFileAndSyncAgain() throws Exception {
 		syncFromLocalToRemoteToLocal();
 
+
 		// Delete file /2/a in local source repository and sync this deletion.
-		final File child_2 = createFile(localSrcRoot, "2");
-		final File child_2_a = createFile(child_2, "a");
-		assertThat(child_2_a.exists()).isTrue();
+		final File src_child_2 = createFile(localSrcRoot, "2");
+		final File src_child_2_a = createFile(src_child_2, "a");
+		assertThat(src_child_2_a.getIoFile()).isFile();
 
-		child_2_a.delete();
+		final File dest_child_2 = createFile(localDestRoot, "2");
+		final File dest_child_2_a = createFile(dest_child_2, "a");
+		assertThat(dest_child_2_a.getIoFile()).isFile();
 
-		assertThat(child_2_a.exists()).isFalse();
+		List<PlainHistoCryptoRepoFileDto> plainHistoCryptoRepoFileDtos = getPlainHistoCryptoRepoFileDtos(localSrcRepoManagerLocal, src_child_2_a);
+		assertThat(plainHistoCryptoRepoFileDtos.size()).isEqualTo(1);
+
+		src_child_2_a.delete();
+
+		assertThat(src_child_2_a.getIoFile()).doesNotExist();
 
 		syncFromLocalSrcToRemote();
 		syncFromRemoteToLocalDest();
+
+		assertThat(dest_child_2_a.getIoFile()).doesNotExist();
+
+		plainHistoCryptoRepoFileDtos = getPlainHistoCryptoRepoFileDtos(localSrcRepoManagerLocal, src_child_2_a);
+		assertThat(plainHistoCryptoRepoFileDtos.size()).isEqualTo(2);
+		assertThat(plainHistoCryptoRepoFileDtos.get(0).getHistoCryptoRepoFileDto().getDeleted()).isNull();
+		assertThat(plainHistoCryptoRepoFileDtos.get(1).getHistoCryptoRepoFileDto().getDeleted()).isNotNull();
+
+		plainHistoCryptoRepoFileDtos = getPlainHistoCryptoRepoFileDtos(localDestRepoManagerLocal, dest_child_2_a);
+		assertThat(plainHistoCryptoRepoFileDtos.size()).isEqualTo(2);
+		assertThat(plainHistoCryptoRepoFileDtos.get(0).getHistoCryptoRepoFileDto().getDeleted()).isNull();
+		assertThat(plainHistoCryptoRepoFileDtos.get(1).getHistoCryptoRepoFileDto().getDeleted()).isNotNull();
+
+		// Recreate file
+		createFileWithRandomContent(src_child_2_a);
+
+		syncFromLocalSrcToRemote();
+		syncFromRemoteToLocalDest();
+
+		plainHistoCryptoRepoFileDtos = getPlainHistoCryptoRepoFileDtos(localSrcRepoManagerLocal, src_child_2_a);
+		assertThat(plainHistoCryptoRepoFileDtos.size()).isEqualTo(3);
+		assertThat(plainHistoCryptoRepoFileDtos.get(0).getHistoCryptoRepoFileDto().getDeleted()).isNull();
+		assertThat(plainHistoCryptoRepoFileDtos.get(1).getHistoCryptoRepoFileDto().getDeleted()).isNotNull();
+		assertThat(plainHistoCryptoRepoFileDtos.get(2).getHistoCryptoRepoFileDto().getDeleted()).isNull();
+
+		assertThat(plainHistoCryptoRepoFileDtos.get(0).getHistoCryptoRepoFileDto().getCryptoRepoFileId())
+		.isEqualTo(plainHistoCryptoRepoFileDtos.get(1).getHistoCryptoRepoFileDto().getCryptoRepoFileId());
+
+		assertThat(plainHistoCryptoRepoFileDtos.get(0).getHistoCryptoRepoFileDto().getCryptoRepoFileId())
+		.isEqualTo(plainHistoCryptoRepoFileDtos.get(2).getHistoCryptoRepoFileDto().getCryptoRepoFileId());
+
+
+		plainHistoCryptoRepoFileDtos = getPlainHistoCryptoRepoFileDtos(localDestRepoManagerLocal, dest_child_2_a);
+		assertThat(plainHistoCryptoRepoFileDtos.size()).isEqualTo(3);
+		assertThat(plainHistoCryptoRepoFileDtos.get(0).getHistoCryptoRepoFileDto().getDeleted()).isNull();
+		assertThat(plainHistoCryptoRepoFileDtos.get(1).getHistoCryptoRepoFileDto().getDeleted()).isNotNull();
+		assertThat(plainHistoCryptoRepoFileDtos.get(2).getHistoCryptoRepoFileDto().getDeleted()).isNull();
+
+		assertThat(plainHistoCryptoRepoFileDtos.get(0).getHistoCryptoRepoFileDto().getCryptoRepoFileId())
+		.isEqualTo(plainHistoCryptoRepoFileDtos.get(1).getHistoCryptoRepoFileDto().getCryptoRepoFileId());
+
+		assertThat(plainHistoCryptoRepoFileDtos.get(0).getHistoCryptoRepoFileDto().getCryptoRepoFileId())
+		.isEqualTo(plainHistoCryptoRepoFileDtos.get(2).getHistoCryptoRepoFileDto().getCryptoRepoFileId());
 	}
 
 	protected void assertPaddingsAreEqual(File localSrcRoot, File localDestRoot) {

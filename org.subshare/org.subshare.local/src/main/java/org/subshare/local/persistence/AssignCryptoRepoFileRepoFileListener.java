@@ -88,7 +88,7 @@ public class AssignCryptoRepoFileRepoFileListener extends AbstractLocalRepoTrans
 	private RepoFile associateRepoFileViaCryptoRepoFileLocalName(final CryptoRepoFile cryptoRepoFile) {
 		assertNotNull("cryptoRepoFile", cryptoRepoFile);
 
-//		if (cryptoRepoFile.getDeleted() != null) {
+//		if (cryptoRepoFile.getDeleted() != null) { // Yes we MUST associate, because we otherwise don't have a unique parent-child-localName-relation anymore! See CryptreeNode.getCryptoRepoFile() and CryptoRepoFileDao.getChildCryptoRepoFile(CryptoRepoFile parent, String localName)
 //			logger.info("associateRepoFileViaCryptoRepoFileLocalName: NOT associating deleted cryptoRepoFile! {}", cryptoRepoFile);
 //			return null;
 //		}

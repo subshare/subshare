@@ -211,6 +211,7 @@ public interface Cryptree {
 	void putCollisionPrivateDto(CollisionPrivateDto collisionPrivateDto);
 	void removeOrphanedInvitationUserRepoKeyPublicKeys();
 	ConfigPropSetDto getParentConfigPropSetDtoIfNeeded();
+	void updatePlainHistoCryptoRepoFiles(Set<Uid> histoCryptoRepoFileIds);
 
 //	void createCollisionIfNeeded(String localPath);
 }

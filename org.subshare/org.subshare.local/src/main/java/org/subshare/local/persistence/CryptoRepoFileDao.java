@@ -268,10 +268,11 @@ public class CryptoRepoFileDao extends Dao<CryptoRepoFile, CryptoRepoFileDao> {
 		cryptoKeyDao.deletePersistentAll(cryptoKeyDao.getCryptoKeys(cryptoRepoFile));
 	}
 
-	public Collection<CryptoRepoFile> getDeletedCryptoRepoFilesWithoutDeletedHistoCryptoRepoFiles() {
+	public Collection<CryptoRepoFile> getDeletedCryptoRepoFilesWithoutCurrentHistoCryptoRepoFileAlsoDeleted() {
 		final Query query = pm().newQuery("SELECT FROM " + CryptoRepoFile.class.getName()
 				+ " WHERE this.deleted != null"
-				+ " && (SELECT count(h) FROM " + HistoCryptoRepoFile.class.getName() + " h WHERE h.cryptoRepoFile == this && h.deleted != null) == 0");
+				+ " && (SELECT count(chcrf) FROM " + CurrentHistoCryptoRepoFile.class.getName() + " chcrf WHERE chcrf.cryptoRepoFile == this && chcrf.histoCryptoRepoFile.deleted != null) == 0"
+		);
 		try {
 			long startTimestamp = System.currentTimeMillis();
 
