@@ -106,8 +106,8 @@ public abstract class AbstractIT {
 		}
 
 		if (subShareServerTestSupport.beforeClass()) {
-			// *IMPORTANT* We run *all* tests in parallel in the same JVM. Therefore, we must - in this entire project - *not*
-			// set any other dynamicX509TrustManagerCallbackClass!!! This setting is JVM-wide!
+			// *IMPORTANT* We must *not* set any other dynamicX509TrustManagerCallbackClass!!! This setting is JVM-wide!
+			// We run tests in parallel using multiple JVMs, though.
 			cryptreeRepoTransportFactory = RepoTransportFactoryRegistry.getInstance().getRepoTransportFactoryOrFail(CryptreeRestRepoTransportFactoryImpl.class);
 			cryptreeRepoTransportFactory.setDynamicX509TrustManagerCallbackClass(TestDynamicX509TrustManagerCallback.class);
 
@@ -145,8 +145,20 @@ public abstract class AbstractIT {
 
 	@Before
 	public void before() throws Exception {
-		PgpRegistry.getInstance().clearCache();
+		before_pgpRegistry_clearCache();
+		before_setupUserRegistryImplMockUp();
+		before_deleteUserRegistryFile();
+	}
 
+	protected void before_pgpRegistry_clearCache() {
+		PgpRegistry.getInstance().clearCache();
+	}
+
+	protected void after_pgpRegistry_clearCache() {
+		PgpRegistry.getInstance().clearCache();
+	}
+
+	protected void before_setupUserRegistryImplMockUp() {
 		// Make sure, we get a clean new instance for every test - not one that might already be initialised statically with the wrong directory + data. Skip, if sub-class already initialised!
 		if (userRegistryImplMockUp == null) {
 			final UserRegistry userRegistry = new UserRegistryImpl() {
@@ -162,6 +174,9 @@ public abstract class AbstractIT {
 				}
 			};
 		}
+	}
+
+	protected void before_deleteUserRegistryFile() {
 		createFile(ConfigDir.getInstance().getFile(), UserRegistry.USER_REGISTRY_FILE_NAME).delete();
 	}
 
@@ -171,7 +186,7 @@ public abstract class AbstractIT {
 			userRegistryImplMockUp.tearDown(); // should be done automatically, but since we need to manage the reference, anyway, we do this explicitly here, too.
 			userRegistryImplMockUp = null;
 		}
-		PgpRegistry.getInstance().clearCache();
+		after_pgpRegistry_clearCache();
 	}
 
 	protected UserRepoKeyRing createUserRepoKeyRing(final UUID serverRepositoryId) {
@@ -368,5 +383,14 @@ public abstract class AbstractIT {
 			else if (child1.isDirectory())
 				assertDirectoriesAreEqualRecursively(child1, child2);
 		}
+	}
+
+	protected static boolean isServerThread() {
+		final StackTraceElement[] stackTrace = new Exception().getStackTrace();
+		for (final StackTraceElement stackTraceElement : stackTrace) {
+			if ("org.eclipse.jetty.server.Server".equals(stackTraceElement.getClassName()))
+				return true;
+		}
+		return false;
 	}
 }

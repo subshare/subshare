@@ -2,7 +2,7 @@ package org.subshare.core.pgp.gnupg;
 
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
-import static co.codewizards.cloudstore.core.util.CollectionUtil.*;
+import static co.codewizards.cloudstore.core.util.CollectionUtil.nullToEmpty;
 import static co.codewizards.cloudstore.core.util.HashUtil.*;
 import static co.codewizards.cloudstore.core.util.PropertiesUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
@@ -29,6 +29,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
 
@@ -122,6 +123,14 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 
 	private PgpKeyRegistry pgpKeyRegistry;
 	private TrustDbFactory trustDbFactory;
+
+	/**
+	 * @deprecated Don't manually invoke this constructor! Unfortunately the {@link ServiceLoader}
+	 * requires it to be public.
+	 */
+	@Deprecated
+	public BcWithLocalGnuPgPgp() {
+	}
 
 	@Override
 	public int getPriority() {

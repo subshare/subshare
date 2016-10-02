@@ -1,5 +1,6 @@
 package org.subshare.test;
 
+import static co.codewizards.cloudstore.core.objectfactory.ObjectFactoryUtil.*;
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
 import static org.assertj.core.api.Assertions.*;
@@ -14,11 +15,6 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
-
-import mockit.Invocation;
-import mockit.Mock;
-import mockit.MockUp;
-import mockit.integration.junit4.JMockit;
 
 import org.junit.BeforeClass;
 import org.junit.ComparisonFailure;
@@ -38,6 +34,10 @@ import org.subshare.core.server.ServerImpl;
 import co.codewizards.cloudstore.core.config.ConfigDir;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.util.IOUtil;
+import mockit.Invocation;
+import mockit.Mock;
+import mockit.MockUp;
+import mockit.integration.junit4.JMockit;
 
 @RunWith(JMockit.class)
 public class PgpSyncIT extends AbstractIT {
@@ -109,13 +109,13 @@ public class PgpSyncIT extends AbstractIT {
 
 		gnuPgDirFile = clientGnuPgDirFile;
 		configDir = clientConfigDir;
-		clientPgp = new BcWithLocalGnuPgPgp();
+		clientPgp = createObject(BcWithLocalGnuPgPgp.class);
 		clientPgp.getMasterKeys(); // force initialisation!
 		clientPgp.getLocalRevision(); // force initialisation!
 
 		gnuPgDirFile = serverGnuPgDirFile;
 		configDir = serverConfigDir;
-		serverPgp = new BcWithLocalGnuPgPgp();
+		serverPgp = createObject(BcWithLocalGnuPgPgp.class);
 		serverPgp.getMasterKeys(); // force initialisation!
 		serverPgp.getLocalRevision(); // force initialisation!
 
@@ -149,15 +149,6 @@ public class PgpSyncIT extends AbstractIT {
 
 	private static void copyResource(final String sourceResName, final File destinationFile) throws IOException {
 		IOUtil.copyResource(AbstractIT.class, sourceResName, destinationFile);
-	}
-
-	private static boolean isServerThread() {
-		final StackTraceElement[] stackTrace = new Exception().getStackTrace();
-		for (final StackTraceElement stackTraceElement : stackTrace) {
-			if ("org.eclipse.jetty.server.Server".equals(stackTraceElement.getClassName()))
-				return true;
-		}
-		return false;
 	}
 
 	@Test

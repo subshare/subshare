@@ -10,9 +10,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import mockit.Mock;
-import mockit.MockUp;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -39,6 +36,8 @@ import co.codewizards.cloudstore.core.config.ConfigDir;
 import co.codewizards.cloudstore.core.config.ConfigImpl;
 import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.oio.File;
+import mockit.Mock;
+import mockit.MockUp;
 
 public class LockerSyncIT extends AbstractIT {
 
@@ -122,7 +121,7 @@ public class LockerSyncIT extends AbstractIT {
 			Pgp getPgpOrFail() {
 				Pgp pgp = location2Pgp.get(location);
 				if (pgp == null) {
-					pgp = new BcWithLocalGnuPgPgp();
+					pgp = invokeConstructor(BcWithLocalGnuPgPgp.class);
 					location2Pgp.put(location, pgp);
 				}
 				return pgp;

@@ -4,12 +4,12 @@ import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 
 import java.io.IOException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.subshare.core.pgp.PgpAuthenticationCallback;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpRegistry;
 import org.subshare.core.pgp.gnupg.GnuPgDir;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.util.IOUtil;
@@ -20,6 +20,7 @@ public class PgpTestUtil {
 
 	public static final String PUBRING_FILE_NAME = "pubring.gpg";
 	public static final String SECRING_FILE_NAME = "secring.gpg";
+	public static final String TRUSTDB_FILE_NAME = "trustdb.gpg";
 
 	private PgpTestUtil() {
 	}
@@ -32,6 +33,7 @@ public class PgpTestUtil {
 		gnuPgDir.mkdir();
 		copyResource(gpgDir + '/' + PUBRING_FILE_NAME, createFile(gnuPgDir, PUBRING_FILE_NAME));
 		copyResource(gpgDir + '/' + SECRING_FILE_NAME, createFile(gnuPgDir, SECRING_FILE_NAME));
+		createFile(gnuPgDir, TRUSTDB_FILE_NAME).delete();
 
 		final PgpRegistry pgpRegistry = PgpRegistry.getInstance();
 

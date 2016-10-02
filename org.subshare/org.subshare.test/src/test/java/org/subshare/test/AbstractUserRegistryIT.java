@@ -53,11 +53,12 @@ public abstract class AbstractUserRegistryIT extends AbstractRepoToRepoSyncIT {
 	private static final Logger logger = LoggerFactory.getLogger(AbstractUserRegistryIT.class);
 
 	protected User user;
+	protected TestUser testUser;
 	protected UserRegistry userRegistry;
 
 	protected Map<TestUser, UserRegistry> testUser2UserRegistry = new HashMap<>();
 	protected Map<UserRegistry, TestUser> userRegistry2TestUser = new IdentityHashMap<>();
-	protected Map<TestUser, String> testUser2Email = new HashMap<>();
+//	protected Map<TestUser, String> testUser2Email = new HashMap<>();
 
 	protected Map<TestUser, TestUserEnv> testUser2TestUserEnv = new HashMap<>();
 
@@ -92,15 +93,23 @@ public abstract class AbstractUserRegistryIT extends AbstractRepoToRepoSyncIT {
 		super.before();
 
 		for (final TestUser testUser : TestUser.values()) {
+			if (! testUser.isRealUser())
+				continue;
+
 			final UserRegistry userRegistry = createUserRegistry(testUser);
 			assertThat(userRegistry).isNotNull();
-			final User user = getFirstUserHavingPrivateKey(userRegistry);
+			User user = getFirstUserHavingPrivateKey(userRegistry);
+			if (user == null) {
+				user = userRegistry.createUser();
+				user.setFirstName(testUser.name());
+				user.getEmails().add(testUser.getEmail());
+				userRegistry.addUser(user);
+			}
 			assertThat(user).isNotNull();
 			assertThat(user.getEmails()).isNotEmpty();
-			final String email = user.getEmails().get(0);
+			assertThat(user.getEmails()).contains(testUser.getEmail());
 			testUser2UserRegistry.put(testUser, userRegistry);
 			userRegistry2TestUser.put(userRegistry, testUser);
-			testUser2Email.put(testUser, email);
 		}
 
 		logger.info("*** <<< before <<< ***");
@@ -123,6 +132,7 @@ public abstract class AbstractUserRegistryIT extends AbstractRepoToRepoSyncIT {
 	}
 
 	protected void switchLocationTo(final TestUser testUser) throws Exception {
+		this.testUser = testUser;
 		if (userRegistry != null) {
 			TestUser tu = userRegistry2TestUser.get(userRegistry);
 			if (tu != null)
@@ -147,10 +157,10 @@ public abstract class AbstractUserRegistryIT extends AbstractRepoToRepoSyncIT {
 	protected User getUser(final TestUser testUser) {
 		assertThat(userRegistry).isNotNull();
 
-		final String email = testUser2Email.get(testUser);
-		assertThat(email).isNotNull();
+//		final String email = testUser2Email.get(testUser);
+//		assertThat(email).isNotNull();
 
-		final Collection<User> users = userRegistry.getUsersByEmail(email);
+		final Collection<User> users = userRegistry.getUsersByEmail(testUser.getEmail());
 		assertThat(users).hasSize(1);
 		final User user = users.iterator().next();
 		assertThat(user).isNotNull();
@@ -231,7 +241,8 @@ public abstract class AbstractUserRegistryIT extends AbstractRepoToRepoSyncIT {
 				}
 			}
 		}
-		throw new IllegalStateException("There is no user having a private key!");
+		return null;
+//		throw new IllegalStateException("There is no user having a private key!");
 	}
 
 	protected UserRegistry createUserRegistry(TestUser testUser) throws Exception {
