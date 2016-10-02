@@ -20,10 +20,15 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.subshare.core.dto.PermissionType;
+import org.subshare.core.pgp.CreatePgpKeyParam;
+import org.subshare.core.pgp.CreatePgpKeyParam.Algorithm;
+import org.subshare.core.pgp.ImportKeysResult;
 import org.subshare.core.pgp.Pgp;
 import org.subshare.core.pgp.PgpAuthenticationCallback;
 import org.subshare.core.pgp.PgpKey;
+import org.subshare.core.pgp.PgpKeyId;
 import org.subshare.core.pgp.PgpRegistry;
+import org.subshare.core.pgp.PgpUserId;
 import org.subshare.core.pgp.gnupg.BcWithLocalGnuPgPgp;
 import org.subshare.core.pgp.gnupg.GnuPgDir;
 import org.subshare.core.pgp.sync.PgpSync;
@@ -227,6 +232,10 @@ public abstract class AbstractMultiUserIT extends AbstractIT {
 			if (TestUser.server != testUser) {
 				switchLocationTo(testUser);
 				setupPgp(testUser.name(), testUser.getPgpPrivateKeyPassword());
+				logger.info("setupPgps: testUser={}", testUser);
+				for (PgpKey pgpKey : getPgp().getMasterKeys()) {
+					logger.info("setupPgps: * pgpKey={}", pgpKey);
+				}
 			}
 		}
 	}
@@ -432,7 +441,7 @@ public abstract class AbstractMultiUserIT extends AbstractIT {
 			userRegistry.addUser(user);
 		}
 
-		for (PgpKey pgpKey : PgpRegistry.getInstance().getPgpOrFail().getMasterKeys()) {
+		for (PgpKey pgpKey : getPgp().getMasterKeys()) {
 			if (user.getPgpKeyIds().contains(pgpKey.getPgpKeyId()))
 				continue;
 
@@ -445,6 +454,46 @@ public abstract class AbstractMultiUserIT extends AbstractIT {
 		}
 
 		return user;
+	}
+
+	protected List<PgpKey> importKeys(byte[] pgpKeyData) {
+		final Pgp pgp = getPgp();
+		final ImportKeysResult importKeysResult = pgp.importKeys(pgpKeyData);
+		final List<PgpKey> result = new ArrayList<>(importKeysResult.getPgpKeyId2ImportedMasterKey().size());
+		for (PgpKeyId pgpKeyId : importKeysResult.getPgpKeyId2ImportedMasterKey().keySet()) {
+			PgpKey pgpKey = pgp.getPgpKey(pgpKeyId);
+			result.add(assertNotNull("pgpKey", pgpKey));
+		}
+		return result;
+	}
+
+	protected PgpKey createPgpKey() {
+		final TestUser testUser = getTestUserOrServer();
+		final User user = getUserOrCreate(testUser);
+		final CreatePgpKeyParam createPgpKeyParam = new CreatePgpKeyParam();
+		createPgpKeyParam.setAlgorithm(Algorithm.RSA);
+		createPgpKeyParam.setStrength(min(Algorithm.RSA.getSupportedStrengths())); // shorter key is faster. not used in production, anyway.
+		createPgpKeyParam.setPassphrase(testUser.getPgpPrivateKeyPassword().toCharArray());
+		for (final String email : user.getEmails()) {
+			createPgpKeyParam.getUserIds().add(new PgpUserId(email));
+		}
+		final PgpKey pgpKey = getPgp().createPgpKey(createPgpKeyParam);
+		user.getPgpKeyIds().add(pgpKey.getPgpKeyId());
+		logger.info("createPgpKey: pgpKey={}, user={}", pgpKey, user);
+		return pgpKey;
+	}
+
+	protected Pgp getPgp() {
+		return PgpRegistry.getInstance().getPgpOrFail();
+	}
+
+	private static int min(List<Integer> values) {
+		int result = Integer.MAX_VALUE;
+		for (int v : values) {
+			if (result > v)
+				result = v;
+		}
+		return result;
 	}
 
 	protected void syncPgp() {

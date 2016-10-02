@@ -315,6 +315,6 @@ public class PgpKey implements Serializable {
 
 	@Override
 	public String toString() {
-		return String.format("%s[%s]", getClass().getSimpleName(), pgpKeyId);
+		return String.format("%s[%s, %s]", getClass().getSimpleName(), pgpKeyId, userIds);
 	}
 }
