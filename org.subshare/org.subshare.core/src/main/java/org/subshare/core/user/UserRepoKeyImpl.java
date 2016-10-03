@@ -244,6 +244,26 @@ public class UserRepoKeyImpl implements UserRepoKey {
 		public String toString() {
 			return String.format("%s[userRepoKeyId=%s, invitation=%s, validTo=%s]", this.getClass().getSimpleName(), userRepoKeyId, invitation, validTo);
 		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj == this)
+				return true;
+
+			if (obj == null)
+				return false;
+
+			if (obj.getClass() != this.getClass())
+				return false;
+
+			final PublicKeyImpl other = (PublicKeyImpl) obj;
+			return this.userRepoKeyId.equals(other.getUserRepoKeyId());
+		}
+
+		@Override
+		public int hashCode() {
+			return userRepoKeyId.hashCode();
+		}
 	}
 
 	public static class PublicKeyWithSignatureImpl extends PublicKeyImpl implements UserRepoKey.PublicKeyWithSignature {

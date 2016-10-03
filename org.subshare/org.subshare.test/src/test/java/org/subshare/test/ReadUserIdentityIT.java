@@ -84,7 +84,7 @@ public class ReadUserIdentityIT extends AbstractUserRegistryIT {
 		// grant permission *FIRST*, because this invitation-key is about to be replaced (we want to test this)!
 		User friend = getUser(TestUser.khaled);
 		assertThat(friend.getUserRepoKeyPublicKeys()).hasSize(1);
-		UserRepoKey.PublicKeyWithSignature friendPublicKeyForInvitation = friend.getUserRepoKeyPublicKeys().get(0);
+		UserRepoKey.PublicKeyWithSignature friendPublicKeyForInvitation = friend.getUserRepoKeyPublicKeys().iterator().next();
 		assertThat(friendPublicKeyForInvitation.isInvitation()).isTrue();
 
 		grantPermission("", PermissionType.readUserIdentity, friendPublicKeyForInvitation);
@@ -94,7 +94,7 @@ public class ReadUserIdentityIT extends AbstractUserRegistryIT {
 
 		// We expect the sync to have replaced the key in our user-registry.
 		assertThat(friend.getUserRepoKeyPublicKeys()).hasSize(1);
-		UserRepoKey.PublicKeyWithSignature friendPublicKeyPermanent = friend.getUserRepoKeyPublicKeys().get(0);
+		UserRepoKey.PublicKeyWithSignature friendPublicKeyPermanent = friend.getUserRepoKeyPublicKeys().iterator().next();
 		assertThat(friendPublicKeyPermanent.isInvitation()).isFalse();
 		friend = null; // the user should not linger, because it is bound to a certain UserRegistry - and we're switching it back and forth.
 

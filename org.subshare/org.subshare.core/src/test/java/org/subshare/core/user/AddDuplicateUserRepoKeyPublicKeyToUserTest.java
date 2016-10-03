@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
 
@@ -103,7 +104,7 @@ public class AddDuplicateUserRepoKeyPublicKeyToUserTest {
 		user.getUserRepoKeyPublicKeys().add(pk0);
 		user.getUserRepoKeyPublicKeys().add(pk1);
 		user.getUserRepoKeyPublicKeys().add(pk2);
-		assertThat(user.getUserRepoKeyPublicKeys()).isEqualTo(Arrays.asList(pk0, pk1, pk2));
+		assertThat(user.getUserRepoKeyPublicKeys()).isEqualTo(new HashSet<>(Arrays.asList(pk0, pk1, pk2)));
 	}
 
 	@Test
@@ -119,7 +120,7 @@ public class AddDuplicateUserRepoKeyPublicKeyToUserTest {
 		list.add(pk1);
 		list.add(pk2);
 		user.getUserRepoKeyPublicKeys().addAll(Collections.unmodifiableList(list));
-		assertThat(user.getUserRepoKeyPublicKeys()).isEqualTo(Arrays.asList(pk0, pk1, pk2));
+		assertThat(user.getUserRepoKeyPublicKeys()).isEqualTo(new HashSet<>(Arrays.asList(pk0, pk1, pk2)));
 	}
 
 	@Test
@@ -137,7 +138,7 @@ public class AddDuplicateUserRepoKeyPublicKeyToUserTest {
 		user.getUserRepoKeyPublicKeys().add(pk1);
 		user.getUserRepoKeyPublicKeys().add(pkX);
 		user.getUserRepoKeyPublicKeys().add(pk2);
-		assertThat(user.getUserRepoKeyPublicKeys()).isEqualTo(Arrays.asList(pk0, pk1, pkX, pk2));
+		assertThat(user.getUserRepoKeyPublicKeys()).isEqualTo(new HashSet<>(Arrays.asList(pk0, pk1, pkX, pk2)));
 	}
 
 	@Test
@@ -158,6 +159,6 @@ public class AddDuplicateUserRepoKeyPublicKeyToUserTest {
 		list.add(pk2);
 
 		user.getUserRepoKeyPublicKeys().addAll(Collections.unmodifiableList(list));
-		assertThat(user.getUserRepoKeyPublicKeys()).isEqualTo(Arrays.asList(pk0, pk1, pkX, pk2));
+		assertThat(user.getUserRepoKeyPublicKeys()).isEqualTo(new HashSet<>(Arrays.asList(pk0, pk1, pkX, pk2)));
 	}
 }

@@ -65,7 +65,7 @@ public interface User extends CloneableBean<User.Property> {
 
 	PgpKey getPgpKeyContainingSecretKeyOrFail();
 	PgpKey getPgpKeyContainingSecretKey();
-	List<UserRepoKey.PublicKeyWithSignature> getUserRepoKeyPublicKeys();
+	Set<UserRepoKey.PublicKeyWithSignature> getUserRepoKeyPublicKeys();
 
 	@Override
 	void addPropertyChangeListener(PropertyChangeListener listener);
