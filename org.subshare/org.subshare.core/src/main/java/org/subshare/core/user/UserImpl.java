@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -16,6 +17,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.subshare.core.crypto.KeyFactory;
+import org.subshare.core.observable.ModificationEventType;
 import org.subshare.core.observable.ObservableList;
 import org.subshare.core.observable.standard.StandardPostModificationEvent;
 import org.subshare.core.observable.standard.StandardPostModificationListener;
@@ -24,6 +26,7 @@ import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpKeyId;
 import org.subshare.core.pgp.PgpRegistry;
 import org.subshare.core.sign.SignableSigner;
+import org.subshare.core.user.UserRepoKey.PublicKeyWithSignature;
 
 import co.codewizards.cloudstore.core.bean.AbstractBean;
 import co.codewizards.cloudstore.core.dto.Uid;
@@ -49,6 +52,53 @@ public class UserImpl extends AbstractBean<User.Property> implements User {
 	private final UserRepoKeyRingChangeListener userRepoKeyRingChangeListener = new UserRepoKeyRingChangeListener();
 
 	private Date changed = new Date();
+
+//	private class UserRepoKeyPublicKeysPreModificationListener implements StandardPreModificationListener {
+//		@Override
+//		public void modificationOccurring(StandardPreModificationEvent event) {
+//			if ((ModificationEventType.GROUP_ADD & event.getType()) != 0) {
+//				final Set<Uid> oldUserRepoKeyIds = new HashSet<>(userRepoKeyPublicKeys.size());
+//				for (UserRepoKey.PublicKeyWithSignature pk : userRepoKeyPublicKeys) {
+//					oldUserRepoKeyIds.add(pk.getUserRepoKeyId());
+//				}
+//
+//				@SuppressWarnings("unchecked")
+//				final Collection<UserRepoKey.PublicKeyWithSignature> newPks = event.getChangeCollection();
+//				final Set<Uid> newUserRepoKeyIds = new HashSet<>(newPks.size());
+//				for (UserRepoKey.PublicKeyWithSignature newPk : newPks) {
+//					if (! newUserRepoKeyIds.add(newPk.getUserRepoKeyId()))
+//						throw new ModificationVetoedException(
+//								String.format("Collection about to be added contains this userRepoKeyId more than once: {}", newPk.getUserRepoKeyId()),
+//								event);
+//
+//					if (oldUserRepoKeyIds.contains(newPk.getUserRepoKeyId()))
+//						throw new ModificationVetoedException(
+//								String.format("Cannot add key whose userRepoKeyId is already enlisted: {}", newPk.getUserRepoKeyId()),
+//								event);
+//				}
+//			}
+//		}
+//	};
+
+	private class UserRepoKeyPublicKeysPostModificationListener implements StandardPostModificationListener {
+		@Override
+		public void modificationOccurred(StandardPostModificationEvent event) {
+			if ((ModificationEventType.GROUP_ADD & event.getType()) != 0) {
+				final Set<Uid> userRepoKeyIds = new HashSet<>(userRepoKeyPublicKeys.size());
+				final List<UserRepoKey.PublicKeyWithSignature> elementsToDelete = new LinkedList<>();
+				for (final UserRepoKey.PublicKeyWithSignature pk : userRepoKeyPublicKeys) {
+					if (! userRepoKeyIds.add(pk.getUserRepoKeyId()))
+						elementsToDelete.add(pk);
+				}
+
+				// We *must* use remove(...) instead of removeAll(...) as the latter would remove
+				// really all occurrences of the affected elements - not only the duplicates. But
+				// we must keep a unique one of each duplicate group.
+				for (PublicKeyWithSignature pkToDelete : elementsToDelete)
+					userRepoKeyPublicKeys.remove(pkToDelete);
+			}
+		}
+	};
 
 	private class PostModificationListener implements StandardPostModificationListener {
 		private final Property property;
@@ -270,6 +320,8 @@ public class UserImpl extends AbstractBean<User.Property> implements User {
 	public List<UserRepoKey.PublicKeyWithSignature> getUserRepoKeyPublicKeys() {
 		if (userRepoKeyPublicKeys == null) {
 			userRepoKeyPublicKeys = ObservableList.decorate(new CopyOnWriteArrayList<UserRepoKey.PublicKeyWithSignature>());
+//			userRepoKeyPublicKeys.getHandler().addPreModificationListener(new UserRepoKeyPublicKeysPreModificationListener());
+			userRepoKeyPublicKeys.getHandler().addPostModificationListener(new UserRepoKeyPublicKeysPostModificationListener());
 			userRepoKeyPublicKeys.getHandler().addPostModificationListener(new PostModificationListener(PropertyEnum.userRepoKeyPublicKeys));
 		}
 		return userRepoKeyPublicKeys;

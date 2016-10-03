@@ -16,6 +16,7 @@
 package org.subshare.core.observable.standard;
 
 import org.subshare.core.observable.ModificationListener;
+import org.subshare.core.observable.ModificationVetoedException;
 
 /**
  * A listener for the <code>StandardModificationHandler</code> that is called
@@ -31,13 +32,13 @@ public interface StandardPreModificationListener extends ModificationListener {
     /**
      * A collection modification is occurring.
      * <p>
-     * To veto the change, throw <code>ModicationVetoedException</code>.
+     * To veto the change, throw <code>ModificationVetoedException</code>.
      * <p>
      * This method should be processed quickly, as with all event handling.
      * It should also avoid modifying the event source (the collection).
      *
      * @param event  the event detail
-     * @throws ModicationVetoedException to veto
+     * @throws ModificationVetoedException to veto
      */
     public void modificationOccurring(StandardPreModificationEvent event);
 

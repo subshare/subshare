@@ -62,6 +62,8 @@ public class ThreesomeIT extends AbstractMultiUserIT {
 		// Need to sync the data for the invitation-token! Otherwise the token is useless!
 		syncLocalWithRemoteRepo();
 
+		syncMetaOnlyRepos();
+
 //		assertUserIdentitiesReadable(localSrcRoot);
 //
 //		assertUserIdentityCountInRepoIs(localSrcRoot, 2);
@@ -79,6 +81,9 @@ public class ThreesomeIT extends AbstractMultiUserIT {
 		// and sync.
 		syncLocalWithRemoteRepo();
 
+		syncMetaOnlyRepos();
+
+
 //		assertUserIdentitiesReadable(localDestRoot);
 //
 //		assertUserIdentityCountInRepoIs(localDestRoot, 3); // 3 user-identities for 2 real keys + 1 invitation-key
@@ -95,8 +100,11 @@ public class ThreesomeIT extends AbstractMultiUserIT {
 
 		syncLocalWithRemoteRepo();
 
+		syncMetaOnlyRepos();
+
 		// TODO try to reproduce https://github.com/subshare/subshare/issues/24
 
 		// TODO continue with 3rd party (yasmin) and reproduce https://github.com/subshare/subshare/issues/8
 	}
+
 }

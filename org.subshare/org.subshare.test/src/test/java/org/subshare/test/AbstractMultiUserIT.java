@@ -36,9 +36,12 @@ import org.subshare.core.repo.ServerRepo;
 import org.subshare.core.repo.ServerRepoManagerImpl;
 import org.subshare.core.repo.ServerRepoRegistry;
 import org.subshare.core.repo.ServerRepoRegistryImpl;
+import org.subshare.core.repo.metaonly.MetaOnlyRepoManager;
+import org.subshare.core.repo.metaonly.MetaOnlyRepoManagerImpl;
 import org.subshare.core.server.Server;
 import org.subshare.core.server.ServerRegistry;
 import org.subshare.core.server.ServerRegistryImpl;
+import org.subshare.core.sync.RepoSyncState;
 import org.subshare.core.user.User;
 import org.subshare.core.user.UserRegistry;
 import org.subshare.core.user.UserRegistryImpl;
@@ -49,6 +52,8 @@ import org.subshare.core.user.UserRepoKeyRing;
 import co.codewizards.cloudstore.core.config.Config;
 import co.codewizards.cloudstore.core.config.ConfigDir;
 import co.codewizards.cloudstore.core.config.ConfigImpl;
+import co.codewizards.cloudstore.core.dto.Error;
+import co.codewizards.cloudstore.core.dto.RemoteExceptionUtil;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.progress.LoggerProgressMonitor;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
@@ -75,6 +80,7 @@ public abstract class AbstractMultiUserIT extends AbstractIT {
 	private final Map<TestUser, ServerRepoRegistry> testUser2ServerRepoRegistry = Collections.synchronizedMap(new HashMap<TestUser, ServerRepoRegistry>());
 	private final Map<TestUser, File> testUser2LocalRoot = new HashMap<>();
 	private final Map<TestUser, PgpAuthenticationCallback> testUser2PgpAuthenticationCallback = Collections.synchronizedMap(new HashMap<TestUser, PgpAuthenticationCallback>());
+	private final Map<TestUser, MetaOnlyRepoManager> testUser2MetaOnlyRepoManager = Collections.synchronizedMap(new HashMap<TestUser, MetaOnlyRepoManager>());
 
 	private File remoteRoot;
 	private UUID remoteRepositoryId;
@@ -89,7 +95,21 @@ public abstract class AbstractMultiUserIT extends AbstractIT {
 
 		createConfigDirFiles();
 
-		mockUps.add(new MockUp<ConfigDir>() {
+		mockUps.add(createConfigDirMockUp());
+		mockUps.add(createConfigImplMockUp());
+		mockUps.add(createUserRegistryImplMockUp());
+		mockUps.add(createServerRegistryImplMockUp());
+		mockUps.add(createServerRepoRegistryImplMockUp());
+		mockUps.add(createGnuPgDirMockUp());
+		mockUps.add(createPgpRegistryMockUp());
+		mockUps.add(createMetaOnlyRepoManagerImplMockUp());
+
+		setupPgps();
+		testUser = TestUser.server;
+	}
+
+	private MockUp<ConfigDir> createConfigDirMockUp() {
+		return new MockUp<ConfigDir>() {
 			@Mock
 			String getValue() {
 				final String result = testUser2ConfigDirString.get(getTestUserOrServer());
@@ -104,9 +124,11 @@ public abstract class AbstractMultiUserIT extends AbstractIT {
 				assertThat(result).isNotNull();
 				return result;
 			}
-		});
+		};
+	}
 
-		mockUps.add(new MockUp<ConfigImpl>() {
+	private MockUp<ConfigImpl> createConfigImplMockUp() {
+		return new MockUp<ConfigImpl>() {
 			@Mock
 			Config getInstance() {
 				final TestUser testUser = getTestUserOrServer();
@@ -123,9 +145,11 @@ public abstract class AbstractMultiUserIT extends AbstractIT {
 					return config;
 				}
 			}
-		});
+		};
+	}
 
-		mockUps.add(new MockUp<UserRegistryImpl>() {
+	private MockUp<UserRegistryImpl> createUserRegistryImplMockUp() {
+		return new MockUp<UserRegistryImpl>() {
 			@Mock
 			UserRegistry getInstance() {
 				final TestUser testUser = getTestUserOrServer();
@@ -139,9 +163,11 @@ public abstract class AbstractMultiUserIT extends AbstractIT {
 					return userRegistry;
 				}
 			}
-		});
+		};
+	}
 
-		mockUps.add(new MockUp<ServerRegistryImpl>() {
+	private MockUp<ServerRegistryImpl> createServerRegistryImplMockUp() {
+		return new MockUp<ServerRegistryImpl>() {
 			@Mock
 			ServerRegistry getInstance() {
 				final TestUser testUser = getTestUserOrServer();
@@ -155,9 +181,11 @@ public abstract class AbstractMultiUserIT extends AbstractIT {
 					return registry;
 				}
 			}
-		});
+		};
+	}
 
-		mockUps.add(new MockUp<ServerRepoRegistryImpl>() {
+	private MockUp<ServerRepoRegistryImpl> createServerRepoRegistryImplMockUp() {
+		return new MockUp<ServerRepoRegistryImpl>() {
 			@Mock
 			ServerRepoRegistry getInstance() {
 				final TestUser testUser = getTestUserOrServer();
@@ -171,29 +199,35 @@ public abstract class AbstractMultiUserIT extends AbstractIT {
 					return registry;
 				}
 			}
-		});
+		};
+	}
 
-		mockUps.add(new MockUp<GnuPgDir>() {
+	private MockUp<GnuPgDir> createGnuPgDirMockUp() {
+		return new MockUp<GnuPgDir>() {
 			@Mock
 			GnuPgDir getInstance() {
 				final TestUser testUser = getTestUserOrServer();
 				logger.info("MockUp<GnuPgDir>.getInstance: testUser={}", testUser);
-				GnuPgDir gnuPgDir = testUser2GnuPgDir.get(testUser);
-				if (gnuPgDir == null) {
-					final File gnuPgDirFile = testUser2ConfigDirFile.get(testUser).getParentFile().createFile(".gnupg");
-					gnuPgDir = new GnuPgDir() {
-						@Override
-						public File getFile() {
-							return gnuPgDirFile;
-						}
-					};
-					testUser2GnuPgDir.put(testUser, gnuPgDir);
+				synchronized (testUser2GnuPgDir) {
+					GnuPgDir gnuPgDir = testUser2GnuPgDir.get(testUser);
+					if (gnuPgDir == null) {
+						final File gnuPgDirFile = testUser2ConfigDirFile.get(testUser).getParentFile().createFile(".gnupg");
+						gnuPgDir = new GnuPgDir() {
+							@Override
+							public File getFile() {
+								return gnuPgDirFile;
+							}
+						};
+						testUser2GnuPgDir.put(testUser, gnuPgDir);
+					}
+					return gnuPgDir;
 				}
-				return gnuPgDir;
 			}
-		});
+		};
+	}
 
-		mockUps.add(new MockUp<PgpRegistry>() {
+	private MockUp<PgpRegistry> createPgpRegistryMockUp() {
+		return new MockUp<PgpRegistry>() {
 			@Mock
 			Pgp getPgpOrFail(Invocation invocation) {
 				final TestUser testUser = getTestUserOrServer();
@@ -221,10 +255,25 @@ public abstract class AbstractMultiUserIT extends AbstractIT {
 				logger.info("MockUp<PgpRegistry>.setPgpAuthenticationCallback: testUser={}", testUser);
 				testUser2PgpAuthenticationCallback.put(testUser, pgpAuthenticationCallback);
 			}
-		});
+		};
+	}
 
-		setupPgps();
-		testUser = TestUser.server;
+	private MockUp<MetaOnlyRepoManagerImpl> createMetaOnlyRepoManagerImplMockUp() {
+		return new MockUp<MetaOnlyRepoManagerImpl>() {
+			@Mock
+			MetaOnlyRepoManager getInstance() {
+				final TestUser testUser = getTestUserOrServer();
+				logger.info("MockUp<MetaOnlyRepoManagerImpl>.getInstance: testUser={}", testUser);
+				synchronized (testUser2MetaOnlyRepoManager) {
+					MetaOnlyRepoManager metaOnlyRepoManager = testUser2MetaOnlyRepoManager.get(testUser);
+					if (metaOnlyRepoManager == null) {
+						metaOnlyRepoManager = createObject(MetaOnlyRepoManagerImpl.class);
+						testUser2MetaOnlyRepoManager.put(testUser, metaOnlyRepoManager);
+					}
+					return metaOnlyRepoManager;
+				}
+			}
+		};
 	}
 
 	private void setupPgps() throws Exception {
@@ -246,6 +295,7 @@ public abstract class AbstractMultiUserIT extends AbstractIT {
 			MockUp<?> mockUp = mockUps.remove(mockUps.size() - 1);
 			mockUp.tearDown();
 		}
+		testUser2MetaOnlyRepoManager.clear();
 		testUser2PgpAuthenticationCallback.clear();
 		testUser2Pgp.clear();
 		testUser2GnuPgDir.clear();
@@ -354,6 +404,16 @@ public abstract class AbstractMultiUserIT extends AbstractIT {
 //				new CloudStoreClient("requestRepoConnection", localDestRoot.getPath(), remoteRootURLWithPathPrefix.toExternalForm()).execute();
 //				//	acceptRepoConnection is not needed, because already accepted implicitly by *signed* request
 //			}
+		}
+	}
+
+	protected void syncMetaOnlyRepos() throws Exception {
+		List<RepoSyncState> repoSyncStates = MetaOnlyRepoManagerImpl.getInstance().sync();
+		assertThat(repoSyncStates).isNotEmpty();
+		for (RepoSyncState repoSyncState : repoSyncStates) {
+			Error error = repoSyncState.getError();
+			if (error != null)
+				RemoteExceptionUtil.throwOriginalExceptionIfPossible(error);
 		}
 	}
 
