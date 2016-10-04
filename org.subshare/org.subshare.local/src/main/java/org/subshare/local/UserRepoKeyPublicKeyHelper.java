@@ -12,13 +12,18 @@ import java.util.Map;
 import java.util.Set;
 
 import org.bouncycastle.crypto.params.KeyParameter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.subshare.core.ReadUserIdentityAccessDeniedException;
 import org.subshare.core.crypto.KeyFactory;
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.dto.UserIdentityPayloadDto;
 import org.subshare.core.dto.UserRepoKeyPublicKeyDto;
 import org.subshare.core.dto.jaxb.UserIdentityPayloadDtoIo;
+import org.subshare.core.pgp.MissingSigningPgpKeyException;
+import org.subshare.core.pgp.PgpKeyId;
 import org.subshare.core.user.User;
+import org.subshare.core.user.UserRegistry;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKeyPublicKeyDtoWithSignatureConverter;
 import org.subshare.core.user.UserRepoKeyRing;
@@ -37,6 +42,7 @@ import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
 
 public class UserRepoKeyPublicKeyHelper {
+	private static final Logger logger = LoggerFactory.getLogger(UserRepoKeyPublicKeyHelper.class);
 
 	private final CryptreeContext context;
 
@@ -370,38 +376,59 @@ public class UserRepoKeyPublicKeyHelper {
 	public void updateUserRepoKeyRingFromUserIdentities() {
 		final LocalRepoTransaction transaction = getContext().transaction;
 		final UserRepoKeyPublicKeyDao urkpkDao = transaction.getDao(UserRepoKeyPublicKeyDao.class);
+		final UserRegistry userRegistry = getContext().getUserRegistry();
 		for (final UserRepoKeyPublicKey userRepoKeyPublicKey : urkpkDao.getObjects()) {
 			final Uid userRepoKeyId = userRepoKeyPublicKey.getUserRepoKeyId();
-			User user = getContext().getUserRegistry().getUserByUserRepoKeyId(userRepoKeyId);
-			if (user != null)
+			User user = userRegistry.getUserByUserRepoKeyId(userRepoKeyId);
+			if (user != null) {
+				logger.debug("updateUserRepoKeyRingFromUserIdentities: Skipping {} already associated with {}",
+						userRepoKeyPublicKey, user);
 				continue;
-
-//			UserRepoKey userRepoKey = getContext().userRepoKeyRing.getUserRepoKey(userRepoKeyId);
-//			if (userRepoKey != null)
-//				continue;
+			}
 
 			final UserIdentityPayloadDto userIdentityPayloadDto = getUserIdentityPayloadDto(userRepoKeyPublicKey);
-			if (userIdentityPayloadDto == null)
+			if (userIdentityPayloadDto == null) {
+				logger.debug("updateUserRepoKeyRingFromUserIdentities: Skipping {} because of missing permissions!",
+						userRepoKeyPublicKey);
 				continue; // missing permissions!
+			}
 
-			Collection<User> users = getContext().getUserRegistry().getUsersByPgpKeyIds(new HashSet<>(userIdentityPayloadDto.getPgpKeyIds()));
+			Collection<User> users = userRegistry.getUsersByPgpKeyIds(new HashSet<>(userIdentityPayloadDto.getPgpKeyIds()));
 			if (users.isEmpty()) {
-				user = getContext().getUserRegistry().createUser();
+				user = userRegistry.createUser();
 				user.getPgpKeyIds().addAll(userIdentityPayloadDto.getPgpKeyIds());
 				user.setFirstName(userIdentityPayloadDto.getFirstName());
 				user.setLastName(userIdentityPayloadDto.getLastName());
 				user.getEmails().addAll(userIdentityPayloadDto.getEmails());
+				userRegistry.addUser(user);
+				logger.debug("updateUserRepoKeyRingFromUserIdentities: Created {} for {}",
+						user, userRepoKeyPublicKey);
 			}
-			else
+			else {
 				user = users.iterator().next();
 
-			// TODO we should automatically download these PGP keys (and import the users into the user-registry)!
-			// Maybe we could trigger this automatically, i.e. do it, when sth. is added to user.pgpKeyIds?!
-			// hmmm... maybe this already happens?!
+				for (final PgpKeyId pgpKeyId : userIdentityPayloadDto.getPgpKeyIds()) {
+					if (! user.getPgpKeyIds().contains(pgpKeyId))
+						user.getPgpKeyIds().add(pgpKeyId);
+				}
+
+				logger.debug("updateUserRepoKeyRingFromUserIdentities: Found {} via PGP-key[s] for {}",
+						user, userRepoKeyPublicKey);
+			}
 
 			final UserRepoKeyPublicKeyDtoWithSignatureConverter converter = new UserRepoKeyPublicKeyDtoWithSignatureConverter();
-			final UserRepoKey.PublicKeyWithSignature pk = converter.fromUserRepoKeyPublicKeyDto(userIdentityPayloadDto.getUserRepoKeyPublicKeyDto());
-			user.getUserRepoKeyPublicKeys().add(pk);
+			try {
+				final UserRepoKey.PublicKeyWithSignature pk = converter.fromUserRepoKeyPublicKeyDto(userIdentityPayloadDto.getUserRepoKeyPublicKeyDto());
+				user.getUserRepoKeyPublicKeys().add(pk);
+			} catch (MissingSigningPgpKeyException x) {
+				logger.warn("updateUserRepoKeyRingFromUserIdentities: " + x);
+
+				// The missing keys should already be added above, but we better check again.
+				for (final PgpKeyId pgpKeyId : x.getMissingPgpKeyIds()) {
+					if (! user.getPgpKeyIds().contains(pgpKeyId))
+						user.getPgpKeyIds().add(pgpKeyId);
+				}
+			}
 		}
 	}
 }

@@ -16,6 +16,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.subshare.core.crypto.KeyFactory;
 import org.subshare.core.observable.ObservableList;
 import org.subshare.core.observable.ObservableSet;
@@ -31,6 +33,8 @@ import co.codewizards.cloudstore.core.bean.AbstractBean;
 import co.codewizards.cloudstore.core.dto.Uid;
 
 public class UserImpl extends AbstractBean<User.Property> implements User {
+
+	private static final Logger logger = LoggerFactory.getLogger(UserImpl.class);
 
 	public UserImpl() { }
 
@@ -184,6 +188,7 @@ public class UserImpl extends AbstractBean<User.Property> implements User {
 
 		final AsymmetricCipherKeyPair keyPair = KeyFactory.getInstance().createAsymmetricKeyPair();
 		final UserRepoKey userRepoKey = new UserRepoKeyImpl(serverRepositoryId, keyPair, Collections.singleton(pgpKey), pgpKey, null);
+		logger.debug("createUserRepoKey: pgpKey={}, userRepoKey={}", pgpKey, userRepoKey);
 
 		final UserRepoKeyRing userRepoKeyRing = getUserRepoKeyRingOrCreate();
 		userRepoKeyRing.addUserRepoKey(userRepoKey);
@@ -209,6 +214,7 @@ public class UserImpl extends AbstractBean<User.Property> implements User {
 
 		final AsymmetricCipherKeyPair keyPair = KeyFactory.getInstance().createAsymmetricKeyPair();
 		final UserRepoKey userRepoKey = new UserRepoKeyImpl(serverRepositoryId, keyPair, invitedUserPgpKeys, ownPgpKey, new Date(System.currentTimeMillis() + validityDurationMillis));
+		logger.debug("createInvitationUserRepoKey: ownPgpKey={}, userRepoKey={}", ownPgpKey, userRepoKey);
 		UserRepoKey signingUserRepoKey = getUserRepoKeyRing().getPermanentUserRepoKeys(serverRepositoryId).get(0);
 		new SignableSigner(signingUserRepoKey).sign(userRepoKey.getPublicKey());
 		return userRepoKey;
@@ -304,7 +310,7 @@ public class UserImpl extends AbstractBean<User.Property> implements User {
 
 	@Override
 	public String toString() {
-		return String.format("%s[%s, %s, %s, %s]", getClass().getSimpleName(), userId, firstName, lastName, emails);
+		return String.format("%s[%s, %s, %s, %s, %s]", getClass().getSimpleName(), userId, firstName, lastName, emails, pgpKeyIds);
 	}
 
 	@Override

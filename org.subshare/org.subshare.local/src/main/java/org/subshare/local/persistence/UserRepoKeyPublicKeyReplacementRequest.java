@@ -164,4 +164,13 @@ public class UserRepoKeyPublicKeyReplacementRequest extends Entity implements Si
 	public void jdoPreStore() {
 		getRequestId();
 	}
+
+	@Override
+	public String toString() {
+		return super.toString()
+				+ "{requestId=" + requestId
+				+ ",oldKey=" + oldKey
+				+ ",newKey=" + newKey
+				+ '}';
+	}
 }

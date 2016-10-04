@@ -55,11 +55,11 @@ dynamic component UserRepoKeyListPane resourcefile 'messages.properties' {
 						property : "inDatabase"
 					}
 				},
-				TableColumn<UserRepoKeyListItem, Boolean> id inKeyRingColumn {
-					text : "inKeyRing",
+				TableColumn<UserRepoKeyListItem, String> id keyRingTypeColumn {
+					text : "keyRingType",
 					prefWidth : 50,
-					cellValueFactory : PropertyValueFactory<UserRepoKeyListItem, Boolean> {
-						property : "inKeyRing"
+					cellValueFactory : PropertyValueFactory<UserRepoKeyListItem, String> {
+						property : "keyRingType"
 					}
 				},
 				TableColumn<UserRepoKeyListItem, Boolean> id invitationColumn {

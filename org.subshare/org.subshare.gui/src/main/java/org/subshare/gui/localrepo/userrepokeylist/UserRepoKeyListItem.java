@@ -6,6 +6,7 @@ import static co.codewizards.cloudstore.core.util.StringUtil.*;
 import java.util.UUID;
 
 import org.subshare.core.dto.DebugUserRepoKeyDto;
+import org.subshare.core.dto.DebugUserRepoKeyDto.KeyRingType;
 import org.subshare.core.dto.UserIdentityPayloadDto;
 
 import co.codewizards.cloudstore.core.dto.Uid;
@@ -57,8 +58,9 @@ public class UserRepoKeyListItem {
 		return debugUserRepoKeyDto.isInDatabase();
 	}
 
-	public boolean isInKeyRing() {
-		return debugUserRepoKeyDto.isInKeyRing();
+	public String getKeyRingType() {
+		KeyRingType keyRingType = debugUserRepoKeyDto.getKeyRingType();
+		return keyRingType == null ? null : keyRingType.toString();
 	}
 
 	public int getUserIdentityCount() {

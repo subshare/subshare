@@ -41,7 +41,6 @@ import co.codewizards.cloudstore.core.dto.Uid;
  * @author Marco หงุ่ยตระกูล-Schulze - marco at codewizards dot co
  */
 public class UserRepoKeyImpl implements UserRepoKey {
-
 	private final Uid userRepoKeyId;
 	private final UUID serverRepositoryId;
 	private final AsymmetricCipherKeyPair keyPair;

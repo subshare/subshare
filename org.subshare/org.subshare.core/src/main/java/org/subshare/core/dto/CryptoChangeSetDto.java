@@ -216,6 +216,10 @@ public class CryptoChangeSetDto {
 		return "CryptoChangeSetDto[cryptoRepoFileDtos=" + cryptoRepoFileDtos
 				+ ", histoCryptoRepoFileDtos=" + histoCryptoRepoFileDtos
 				+ ", cryptoKeyDtos=" + cryptoKeyDtos + ", cryptoLinkDtos=" + cryptoLinkDtos
+				+ ", repositoryOwnerDto=" + repositoryOwnerDto
+				+ ", permissionSetDtos=" + permissionSetDtos
+				+ ", permissionDtos=" + permissionDtos
+				+ ", permissionSetInheritanceDtos=" + permissionSetInheritanceDtos
 				+ ", userRepoKeyPublicKeyDtos=" + userRepoKeyPublicKeyDtos
 				+ ", userRepoKeyPublicKeyReplacementRequestDtos=" + userRepoKeyPublicKeyReplacementRequestDtos
 				+ ", userIdentityDtos=" + userIdentityDtos
@@ -225,7 +229,7 @@ public class CryptoChangeSetDto {
 				+ ", currentHistoCryptoRepoFileDtos=" + currentHistoCryptoRepoFileDtos
 				+ ", collisionDtos=" + collisionDtos
 				+ ", cryptoConfigPropSetDtos=" + cryptoConfigPropSetDtos
-				+ "]";
+				+ ", empty=" + isEmpty() + "]";
 	}
 
 	public boolean isEmpty() {

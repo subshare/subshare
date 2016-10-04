@@ -29,6 +29,10 @@
 	<logger name="org.subshare.local.persistence.CurrentHistoCryptoRepoFile" level="DEBUG"/>
 -->
 
+	<logger name="org.subshare.core.pgp.gnupg.BcPgpDecoder" level="DEBUG"/>
+	<logger name="org.subshare.core.user.UserImpl" level="DEBUG"/>
+	<logger name="org.subshare.local.UserRepoKeyPublicKeyHelper" level="DEBUG"/>
+
 	<logger name="co.codewizards.cloudstore.local.LocalRepoManagerImpl" level="WARN"/>
 
 	<root level="INFO">

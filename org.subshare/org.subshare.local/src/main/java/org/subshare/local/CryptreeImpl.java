@@ -775,6 +775,8 @@ public class CryptreeImpl extends AbstractCryptree {
 	}
 
 	private void processUserRepoKeyPublicKeyReplacementRequestAsInvitedUser(final UserRepoKeyPublicKeyReplacementRequest request) {
+		logger.info("processUserRepoKeyPublicKeyReplacementRequestAsInvitedUser: {}", request);
+
 		final LocalRepoTransaction transaction = getTransactionOrFail();
 		final UserRepoKey newUserRepoKey = getCryptreeContext().userRepoKeyRing.getUserRepoKeyOrFail(request.getNewKey().getUserRepoKeyId());
 		final UserRepoKey oldUserRepoKey = getCryptreeContext().userRepoKeyRing.getUserRepoKey(request.getOldKey().getUserRepoKeyId());
@@ -819,6 +821,8 @@ public class CryptreeImpl extends AbstractCryptree {
 	}
 
 	private void processUserRepoKeyPublicKeyReplacementRequestAsInvitingUser(final UserRepoKeyPublicKeyReplacementRequest request) {
+		logger.info("processUserRepoKeyPublicKeyReplacementRequestAsInvitingUser: {}", request);
+
 		final UserRepoKey oldKeySigningUserRepoKey = getCryptreeContext().userRepoKeyRing.getUserRepoKeyOrFail(
 				request.getOldKey().getSignature().getSigningUserRepoKeyId());
 
@@ -1183,6 +1187,8 @@ public class CryptreeImpl extends AbstractCryptree {
 	public void requestReplaceInvitationUserRepoKey(UserRepoKey invitationUserRepoKey, UserRepoKey.PublicKey publicKey) {
 		assertNotNull("invitationUserRepoKey", invitationUserRepoKey);
 		assertNotNull("publicKey", publicKey);
+
+		logger.info("requestReplaceInvitationUserRepoKey: invitationUserRepoKey={}, publicKey={}", invitationUserRepoKey, publicKey);
 
 		if (invitationUserRepoKey.getValidTo() == null)
 			throw new IllegalArgumentException("invitationUserRepoKey is not a temporary UserRepoKey :: invitationUserRepoKey.getValidTo() == null");

@@ -35,9 +35,9 @@
 					<PropertyValueFactory property="inDatabase"/> 
 				</cellValueFactory>
 			</TableColumn>
-			<TableColumn fx:id="inKeyRingColumn" text="inKeyRing" prefWidth="50"> 
+			<TableColumn fx:id="keyRingTypeColumn" text="keyRingType" prefWidth="50"> 
 				<cellValueFactory>
-					<PropertyValueFactory property="inKeyRing"/> 
+					<PropertyValueFactory property="keyRingType"/> 
 				</cellValueFactory>
 			</TableColumn>
 			<TableColumn fx:id="invitationColumn" text="invitation" prefWidth="50"> 

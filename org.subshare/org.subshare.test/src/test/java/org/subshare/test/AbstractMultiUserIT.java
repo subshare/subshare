@@ -19,6 +19,7 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.subshare.core.dto.DebugUserRepoKeyDto;
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.pgp.CreatePgpKeyParam;
 import org.subshare.core.pgp.CreatePgpKeyParam.Algorithm;
@@ -36,6 +37,7 @@ import org.subshare.core.repo.ServerRepo;
 import org.subshare.core.repo.ServerRepoManagerImpl;
 import org.subshare.core.repo.ServerRepoRegistry;
 import org.subshare.core.repo.ServerRepoRegistryImpl;
+import org.subshare.core.repo.local.SsLocalRepoMetaData;
 import org.subshare.core.repo.metaonly.MetaOnlyRepoManager;
 import org.subshare.core.repo.metaonly.MetaOnlyRepoManagerImpl;
 import org.subshare.core.server.Server;
@@ -238,6 +240,10 @@ public abstract class AbstractMultiUserIT extends AbstractIT {
 						pgp = createObject(BcWithLocalGnuPgPgp.class);
 						testUser2Pgp.put(testUser, pgp);
 					}
+					logger.info("MockUp<PgpRegistry>.getPgpOrFail: {}@{}", pgp.getClass().getSimpleName(), Integer.toHexString(System.identityHashCode(pgp)));
+					for (PgpKey pgpKey : pgp.getMasterKeys()) {
+						logger.info("MockUp<PgpRegistry>.getPgpOrFail: * {}", pgpKey);
+					}
 					return pgp;
 				}
 			}
@@ -335,6 +341,10 @@ public abstract class AbstractMultiUserIT extends AbstractIT {
 
 	protected void switchLocationTo(final TestUser testUser) throws Exception {
 		this.testUser = assertNotNull("testUser", testUser);
+		System.out.println();
+		logger.info("");
+		logger.info("********************************************************************");
+		logger.info("*** {} ***", testUser);
 	}
 
 	protected void createLocalSourceAndRemoteRepo() throws Exception {
@@ -394,6 +404,8 @@ public abstract class AbstractMultiUserIT extends AbstractIT {
 		localDestRoot.mkdirs();
 		assertThat(localDestRoot.isDirectory()).isTrue();
 
+		testUser2LocalRoot.put(testUser, localDestRoot);
+
 		final UserRegistry userRegistry = UserRegistryImpl.getInstance();
 //		final URL remoteRootURLWithPathPrefix = getRemoteRootURLWithPathPrefix();
 		try (final LocalRepoManager localRepoManager = localRepoManagerFactory.createLocalRepoManagerForNewRepository(localDestRoot)) {
@@ -433,8 +445,6 @@ public abstract class AbstractMultiUserIT extends AbstractIT {
 		final File localSrcRoot = testUser2LocalRoot.get(assertNotNull("ownerTestUser", ownerTestUser));
 		assertNotNull("localSrcRoot", localSrcRoot);
 
-		final LocalRepoManager localRepoManagerLocal = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(localSrcRoot);
-
 		final File child_1 = createDirectory(localSrcRoot, "1 {11 11ä11#+} 1");
 
 		createFileWithRandomContent(child_1, "a");
@@ -460,13 +470,14 @@ public abstract class AbstractMultiUserIT extends AbstractIT {
 		createFileWithRandomContent(child_3_5, "h");
 		createFileWithRandomContent(child_3_5, "i");
 
-		localRepoManagerLocal.localSync(new LoggerProgressMonitor(logger));
-		localRepoManagerLocal.close();
+		try (final LocalRepoManager localRepoManagerLocal = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(localSrcRoot)) {
+			localRepoManagerLocal.localSync(new LoggerProgressMonitor(logger));
+		}
 	}
 
 	protected void syncLocalWithRemoteRepo() throws Exception {
-		final File localRoot = testUser2LocalRoot.get(assertNotNull("ownerTestUser", ownerTestUser));
-		assertNotNull("localRoot", localRoot);
+		TestUser testUser = getTestUserOrServer();
+		final File localRoot = assertNotNull("testUser2LocalRoot.get(" + testUser + ")", testUser2LocalRoot.get(testUser));
 		try (final RepoToRepoSync repoToRepoSync = RepoToRepoSync.create(localRoot, getRemoteRootURLWithPathPrefix())) {
 			repoToRepoSync.sync(new LoggerProgressMonitor(logger));
 		}
@@ -541,6 +552,16 @@ public abstract class AbstractMultiUserIT extends AbstractIT {
 		user.getPgpKeyIds().add(pgpKey.getPgpKeyId());
 		logger.info("createPgpKey: pgpKey={}, user={}", pgpKey, user);
 		return pgpKey;
+	}
+
+	protected Collection<DebugUserRepoKeyDto> getDebugUserRepoKeyDtos() {
+		final TestUser testUser = getTestUserOrServer();
+		final File localRoot = assertNotNull("testUser2LocalRoot.get(" + testUser + ")", testUser2LocalRoot.get(testUser));
+		try (final LocalRepoManager localRepoManager = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(localRoot)) {
+			SsLocalRepoMetaData localRepoMetaData = (SsLocalRepoMetaData) localRepoManager.getLocalRepoMetaData();
+			Collection<DebugUserRepoKeyDto> debugUserRepoKeyDtos = localRepoMetaData.getDebugUserRepoKeyDtos();
+			return debugUserRepoKeyDtos;
+		}
 	}
 
 	protected Pgp getPgp() {

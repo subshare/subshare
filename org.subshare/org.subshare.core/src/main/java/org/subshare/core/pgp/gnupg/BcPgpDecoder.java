@@ -35,13 +35,17 @@ import org.bouncycastle.openpgp.operator.bc.BcPGPContentVerifierBuilderProvider;
 import org.bouncycastle.openpgp.operator.bc.BcPGPDigestCalculatorProvider;
 import org.bouncycastle.openpgp.operator.bc.BcPublicKeyDataDecryptorFactory;
 import org.bouncycastle.util.io.Streams;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.subshare.core.pgp.AbstractPgpDecoder;
+import org.subshare.core.pgp.MissingSigningPgpKeyException;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpKeyId;
 
 import co.codewizards.cloudstore.core.auth.SignatureException;
 
 public class BcPgpDecoder extends AbstractPgpDecoder {
+	private static final Logger logger = LoggerFactory.getLogger(BcPgpDecoder.class);
 
 	private final BcWithLocalGnuPgPgp pgp;
 
@@ -216,6 +220,8 @@ public class BcPgpDecoder extends AbstractPgpDecoder {
 				}
 			}
 
+			logger.debug("decodeEncrypted: encryptingPgpKeyIds={}", encryptPgpKeyIds);
+
 			if (sKey == null) {
 				if (! encryptPgpKeyIds.isEmpty())
 					throw new IllegalArgumentException(String.format("Data is encrypted for the PGP keys %s, which we do not have a private key for!", encryptPgpKeyIds));
@@ -323,7 +329,10 @@ public class BcPgpDecoder extends AbstractPgpDecoder {
 		}
 		setSignPgpKeyIds(pgpKeyIds);
 
+		logger.debug("verifySignature: signingPgpKeyIds={}", pgpKeyIds);
+
 		if (getPgpSignature() == null && isFailOnMissingSignPgpKey())
-			throw new SignatureException("The data was signed using the following PGP-keys, of which none could be found in the local key-ring: " + pgpKeyIds);
+			throw new MissingSigningPgpKeyException(pgpKeyIds,
+					"The data was signed using the following PGP-keys, of which none could be found in the local key-ring: " + pgpKeyIds);
 	}
 }
