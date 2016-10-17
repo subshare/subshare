@@ -1,13 +1,21 @@
 package org.subshare.gui.splash
 
 import javafx.scene.layout.BorderPane
+import javafx.scene.layout.Background
+import javafx.scene.layout.BackgroundFill
 import javafx.scene.image.ImageView
 import javafx.scene.image.Image
+import javafx.scene.paint.Color
 
 dynamic component SplashPane {
 	BorderPane {
+//		background : Background { 
+//			fills : BackgroundFill {
+//				fill : Color { red : 1, green : 1, blue : 1, opacity : 1 }
+//			}
+//		},
 		center : ImageView id imageView {
-			image : Image id image { url : "@splash.jpg" },
+			image : Image id image { url : "@splash.png" },
 			preserveRatio : true,
 			smooth : true
 		}

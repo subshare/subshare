@@ -13,7 +13,7 @@
 	<center>
 		<ImageView fx:id="imageView" preserveRatio="true" smooth="true"> 
 			<image>
-				<Image fx:id="image" url="@splash.jpg"/> 
+				<Image fx:id="image" url="@splash.png"/> 
 			</image>
 		</ImageView>
 	</center>

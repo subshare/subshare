@@ -71,9 +71,16 @@ def filterTokenMap = [
 			'project.version' : project.version
 		]
 
-task copyFilesFromAssembly(type: Copy) {
+task copyUnfilteredFilesFromAssembly(type: Copy) {
 	into "$buildDir/assembly/subshare"
-	from 'src/assembly/installation.properties'
+	from 'src/assembly'
+	exclude '*.properties'
+}
+
+task copyFilteredFilesFromAssembly(type: Copy, dependsOn: [ copyUnfilteredFilesFromAssembly ] ) {
+	into "$buildDir/assembly/subshare"
+	from 'src/assembly'
+	include '*.properties'
 
 	// Use ANT filter ReplaceTokens.
 	filter(ReplaceTokens, tokens: filterTokenMap)
@@ -87,7 +94,7 @@ task copyFilesFromBin(type: Copy) {
 	filter(ReplaceTokens, tokens: filterTokenMap)
 }
 
-task chmodMainExecutable(type: Exec, dependsOn: [ copyFilesFromBin, copyFilesFromAssembly ]) {
+task chmodMainExecutable(type: Exec, dependsOn: [ copyFilesFromBin, copyFilteredFilesFromAssembly ]) {
 	commandLine = ['chmod', 'a+x', 'subshare']
 	workingDir = file("$buildDir/assembly/subshare/bin")
 }

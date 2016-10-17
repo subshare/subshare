@@ -99,3 +99,15 @@ subprojects {
 		maxParallelForks = Runtime.runtime.availableProcessors();
 	}
 }
+
+task build {
+    dependsOn subprojects.build
+    doLast {
+    	println '*** copyDistributions ***'
+    	copy {
+			into "$buildDir/distributions"
+			from 'org.subshare.gui/build/distributions'
+			from 'org.subshare.server/build/distributions'
+    	}
+    }
+}
