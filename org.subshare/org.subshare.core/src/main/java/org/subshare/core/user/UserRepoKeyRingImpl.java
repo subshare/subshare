@@ -19,12 +19,16 @@ public class UserRepoKeyRingImpl implements UserRepoKeyRing {
 	private /*final*cloned*/ PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
 
 	private /*final*cloned*/ Map<Uid, UserRepoKey> userRepoKeyId2UserRepoKey = new HashMap<>();
+	private Collection<UserRepoKey> userRepoKeysCache;
 	private /*final*cloned*/ Map<UUID, List<UserRepoKey>> repositoryId2InvitationUserRepoKeyList = new HashMap<>();
 	private /*final*cloned*/ Map<UUID, List<UserRepoKey>> repositoryId2PermanentUserRepoKeyList = new HashMap<>();
 
 	@Override
-	public Collection<UserRepoKey> getUserRepoKeys() {
-		return Collections.unmodifiableCollection(userRepoKeyId2UserRepoKey.values());
+	public synchronized Collection<UserRepoKey> getUserRepoKeys() {
+		if (userRepoKeysCache == null)
+			userRepoKeysCache = Collections.unmodifiableCollection(new ArrayList<UserRepoKey>(userRepoKeyId2UserRepoKey.values()));
+
+		return userRepoKeysCache;
 	}
 
 	@Override
@@ -126,6 +130,7 @@ public class UserRepoKeyRingImpl implements UserRepoKeyRing {
 
 	private void clearCache(final UUID serverRepositoryId) {
 		assertNotNull("serverRepositoryId", serverRepositoryId);
+		userRepoKeysCache = null;
 		repositoryId2PermanentUserRepoKeyList.remove(serverRepositoryId);
 		repositoryId2InvitationUserRepoKeyList.remove(serverRepositoryId);
 	}
@@ -187,10 +192,17 @@ public class UserRepoKeyRingImpl implements UserRepoKeyRing {
 		clone.propertyChangeSupport = new PropertyChangeSupport(clone);
 
 		clone.userRepoKeyId2UserRepoKey = new HashMap<>();
-		clone.userRepoKeyId2UserRepoKey.putAll(this.userRepoKeyId2UserRepoKey); // content is immutable => no need to clone even deeper
+		synchronized (this) {
+			clone.userRepoKeyId2UserRepoKey.putAll(this.userRepoKeyId2UserRepoKey); // content is immutable => no need to clone even deeper
+		}
 
 		clone.repositoryId2InvitationUserRepoKeyList = new HashMap<>(); // only a cache
 		clone.repositoryId2PermanentUserRepoKeyList = new HashMap<>(); // only a cache
 		return clone;
+	}
+
+	@Override
+	public String toString() {
+		return getClass().getSimpleName() + '[' + getUserRepoKeys() + ']';
 	}
 }

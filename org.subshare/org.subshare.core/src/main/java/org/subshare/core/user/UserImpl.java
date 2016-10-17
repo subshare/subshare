@@ -19,10 +19,13 @@ import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.subshare.core.crypto.KeyFactory;
+import org.subshare.core.observable.ModificationEventType;
 import org.subshare.core.observable.ObservableList;
 import org.subshare.core.observable.ObservableSet;
 import org.subshare.core.observable.standard.StandardPostModificationEvent;
 import org.subshare.core.observable.standard.StandardPostModificationListener;
+import org.subshare.core.observable.standard.StandardPreModificationEvent;
+import org.subshare.core.observable.standard.StandardPreModificationListener;
 import org.subshare.core.pgp.Pgp;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpKeyId;
@@ -74,6 +77,18 @@ public class UserImpl extends AbstractBean<User.Property> implements User {
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
 			firePropertyChange(PropertyEnum.userRepoKeyRing, null, userRepoKeyRing);
+		}
+	}
+
+	private class PreventUserRepoKeyRingAndPublicKeysCollisionListener implements StandardPreModificationListener {
+		@Override
+		public void modificationOccurring(StandardPreModificationEvent event) {
+			if ((ModificationEventType.GROUP_ADD & event.getType()) != 0) {
+				if (! event.getChangeCollection().isEmpty() && getUserRepoKeyRing() != null)
+					throw new IllegalStateException(String.format(
+							"%s already has a userRepoKeyRing! Cannot add public keys! Either there is a userRepoKeyRing or there are public keys! There cannot be both! userRepoKeyRing=%s, userRepoKeyPublicKeys=%s, event.changeCollection=%s",
+							UserImpl.this, getUserRepoKeyRing(), getUserRepoKeyPublicKeys(), event.getChangeCollection()));
+			}
 		}
 	}
 
@@ -164,7 +179,9 @@ public class UserImpl extends AbstractBean<User.Property> implements User {
 		UserRepoKeyRing userRepoKeyRing;
 		synchronized (this) {
 			if (! getUserRepoKeyPublicKeys().isEmpty())
-				throw new IllegalStateException(String.format("%s has public keys! Either there is a userRepoKeyRing or there are public keys! There cannot be both!", this));
+				throw new IllegalStateException(String.format(
+						"%s already has public keys! Cannot create a userRepoKeyRing! Either there is a userRepoKeyRing or there are public keys! There cannot be both! userRepoKeyPublicKeys=%s, userRepoKeyRing=%s",
+						this, getUserRepoKeyPublicKeys(), getUserRepoKeyRing()));
 
 			userRepoKeyRing = getUserRepoKeyRing();
 			if (userRepoKeyRing == null) {
@@ -278,6 +295,7 @@ public class UserImpl extends AbstractBean<User.Property> implements User {
 	public Set<UserRepoKey.PublicKeyWithSignature> getUserRepoKeyPublicKeys() {
 		if (userRepoKeyPublicKeys == null) {
 			userRepoKeyPublicKeys = ObservableSet.decorate(new CopyOnWriteArraySet<UserRepoKey.PublicKeyWithSignature>());
+			userRepoKeyPublicKeys.getHandler().addPreModificationListener(new PreventUserRepoKeyRingAndPublicKeysCollisionListener());
 			userRepoKeyPublicKeys.getHandler().addPostModificationListener(new PostModificationListener(PropertyEnum.userRepoKeyPublicKeys));
 		}
 		return userRepoKeyPublicKeys;
