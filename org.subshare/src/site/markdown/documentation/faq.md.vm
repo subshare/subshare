@@ -1,10 +1,64 @@
-<head><title>Server installation</title></head>
+<head><title>FAQ</title></head>
 $!{decoration.custom.setAttribute("contentHeaderLogo", "../images/header-notebook.jpg")}
 #set( $H = '#' )
 
-Server installation
+Frequently asked questions (FAQ)
 -------
 
-$H$H$H Download
+$H$H$H What's OpenPGP and why does subshare use it?
 
-Bla bla bla
+The [Security](./security.html) page answers this question.
+
+
+$H$H$H What encryption algorithms are used?
+
+The [Security](./security.html) page answers this question.
+
+
+$H$H$H What happens in case of a collision?
+
+If you modify the same file on two separate computers and then synchronise, there is - obviously - a collision.
+You also run into a collision, if you modify a file on one device and delete it on another (without synchronising
+inbetween). There are more situations leading to collisions, of course, but there\'s no need to list them all here.
+
+All collisions are solved in the same way: Both versions are checked-in so that both
+are available in the history (and can be restored), a collision-marker is created for the affected file/directory
+and shown in the UI (in the directory tree as well as in the history).
+
+
+$H$H$H What's this "local server"?
+
+Subshare's client program consists of two parts: The graphical user interface (GUI) and the actual logic.
+The two parts run in two distinct processes, allowing for the GUI to be closed, while the synchronisation
+continues to run in the background. 
+
+When you start the GUI process, it automatically launches the so-called *cproc* (client process) with the local server
+in the background — if it is not yet running.
+
+The local server opens a randomly chosen TCP port on `localhost` and is thus *not accessible from other computers*.
+To protect it further, i.e. to prevent other users on the *same computer* from accessing it, the local server generates
+a random password on every startup. This password (together with its port) is stored in `~/.subshare/localServer.properties`
+and thus not accessible to other users (if the file system permissions are set correctly).
+
+The user can thus start subshare whenever he logs in into his workstation. After entering his OpenPGP secret key's passphrase,
+he can quit the GUI process — the actual synchronisation logic continues to run and keeps everything in-sync.
+
+
+$H$H$H How can I set log levels?
+
+You can find all logging configuration files in the `~/.subshare` directory.
+
+There are : 
+
+* `logback.client.xml` for the client process
+* `logback.localserver.xml` for the client's separate server process
+* `logback.server.xml` for the server process
+
+
+$H$H$H Another question?
+
+If your question is not answered here, please check both our [wiki](../../wiki) and our [tracker](../../tracker).
+
+If you still don\'t find what you\'re looking for, go ahead and ask your question publicly in the [tracker](../../tracker).
+Please label your question as \"question\" there.
+

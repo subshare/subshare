@@ -11,10 +11,11 @@ Using subshare is easy. You simply have to follow a few steps:
 $H$H$H Install Java
 
 If you didn\'t install Java, yet, you should do this now. Please download and install either
-[Oracle Java](http://java.com/) or the OpenJDK.
+[Oracle Java](http://java.com/) or the OpenJDK. Subshare requires Java 8 and its GUI client needs
+JavaFX (included in Oracle's JRE).
 
-If you use Ubuntu, you could open a shell and enter the following command to install the OpenJDK
-together with OpenJFX (needed by the client only):
+If you use Ubuntu, you could open a shell and enter the following command to install the OpenJDK 8
+together with OpenJFX:
 
 	sudo apt-get install openjdk-8-jre openjfx
 
@@ -30,7 +31,7 @@ In the following description, we're using this server. But for productive use, y
 **Important:** We periodically **delete** all data from our demo-server!
 
 
-$H$H$H Download Client (GUI)
+$H$H$H Download client (GUI)
 
 [Download](../download/index.html) the subshare GUI-client to your local machine. It is recommended that
 you download the PGP signature, too, and verify the authenticity of the binary file.
