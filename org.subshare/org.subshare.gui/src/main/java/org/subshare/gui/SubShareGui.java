@@ -6,24 +6,14 @@ import static co.codewizards.cloudstore.core.util.Util.*;
 import static org.subshare.gui.util.ResourceBundleUtil.*;
 
 import java.io.IOException;
+import java.net.URL;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
-
-import javafx.application.Application;
-import javafx.application.Platform;
-import javafx.fxml.FXMLLoader;
-import javafx.geometry.Insets;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.text.Text;
-import javafx.stage.Stage;
-import javafx.stage.Window;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,6 +50,21 @@ import co.codewizards.cloudstore.core.util.DerbyUtil;
 import co.codewizards.cloudstore.core.util.MainArgsUtil;
 import co.codewizards.cloudstore.ls.client.LocalServerClient;
 import co.codewizards.cloudstore.ls.server.LocalServer;
+import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.image.Image;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.text.Text;
+import javafx.stage.Stage;
+import javafx.stage.StageStyle;
+import javafx.stage.Window;
 
 public class SubShareGui extends Application {
 
@@ -67,12 +72,37 @@ public class SubShareGui extends Application {
 
 	private volatile SsLocalServer localServer;
 	private Stage primaryStage;
+	private Stage splashStage;
 	private SplashPane splashPane;
 	private volatile int exitCode = 0;
+	private static final List<Image> icons;
+	static {
+		icons = Collections.unmodifiableList(Arrays.asList(
+				loadImage("subshare_16x16.png"),
+				loadImage("subshare_32x32.png"),
+				loadImage("subshare_48x48.png"),
+				loadImage("subshare_256x256.png")
+				));
+	}
+
+	private static final Image loadImage(String fileName) {
+		final URL url = SubShareGui.class.getResource(fileName);
+		if (url == null)
+			throw new IllegalArgumentException(String.format("Resource '%s' not found!", fileName));
+
+		return new Image(url.toExternalForm());
+	}
+
+	@Override
+	public void init() throws Exception {
+		super.init();
+	}
 
 	@Override
 	public void start(final Stage primaryStage) throws Exception {
 		this.primaryStage = primaryStage;
+		primaryStage.getIcons().addAll(icons);
+		primaryStage.setTitle("subshare");
 
 		if (isAfterUpdateHook()) {
 			createUpdaterCore().getUpdaterDir().deleteRecursively();
@@ -99,10 +129,13 @@ public class SubShareGui extends Application {
 	private void showSplash() { // TODO we should *additionally* implement a Preloader, later. JavaFX has a special Preloader class.
 		splashPane = new SplashPane();
 		final Scene scene = new Scene(splashPane, 400, 300);
-		scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
-		primaryStage.setScene(scene);
-		primaryStage.setTitle("SubShare");
-		primaryStage.show();
+		scene.setFill(null); // needed to make it transparent ;-)
+//		scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
+		splashStage = new Stage(StageStyle.TRANSPARENT);
+		splashStage.getIcons().addAll(icons);
+		splashStage.setScene(scene);
+		splashStage.setTitle("subshare");
+		splashStage.show();
 	}
 
 	private void startInitThread() {
@@ -130,13 +163,13 @@ public class SubShareGui extends Application {
 
 					final Set<PgpKeyId> pgpKeyIdsHavingPrivateKeyBeforeRestore = getIdsOfMasterKeysWithPrivateKey();
 					tryPgpKeysNoPassphrase();
-					PlatformUtil.runAndWait(() -> promptPgpKeyPassphrases(primaryStage.getScene().getWindow()));
+					PlatformUtil.runAndWait(() -> promptPgpKeyPassphrases(getWindow()));
 					if (exitCode != 0) {
 						stopLater();
 						return;
 					}
 
-					final Welcome welcome = new Welcome(primaryStage.getScene().getWindow());
+					final Welcome welcome = new Welcome(getWindow());
 					if (! welcome.welcome()) {
 						exitCode = 1;
 						stopLater();
@@ -146,7 +179,7 @@ public class SubShareGui extends Application {
 					// If private keys were restored in the Welcome process, we must redo PGP passphrase handling.
 					if (!getIdsOfMasterKeysWithPrivateKey().equals(pgpKeyIdsHavingPrivateKeyBeforeRestore)) {
 						tryPgpKeysNoPassphrase();
-						PlatformUtil.runAndWait(() -> promptPgpKeyPassphrases(primaryStage.getScene().getWindow()));
+						PlatformUtil.runAndWait(() -> promptPgpKeyPassphrases(getWindow()));
 					}
 
 					PlatformUtil.runAndWait(() -> backupIfNeeded());
@@ -161,7 +194,9 @@ public class SubShareGui extends Application {
 
 								final Scene scene = new Scene(root, 800, 600);
 								scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
-								primaryStage.hide();
+								splashStage.hide();
+								splashPane = null;
+
 								primaryStage.setScene(scene);
 								primaryStage.show();
 								splashPane = null;
@@ -181,6 +216,17 @@ public class SubShareGui extends Application {
 				}
 			}
 		}.start();
+	}
+
+	protected Window getWindow() {
+		Stage stage = primaryStage;
+		Scene scene = stage == null ? null : stage.getScene();
+
+		if (scene == null) {
+			stage = splashStage;
+			scene = stage == null ? null : stage.getScene();
+		}
+		return scene == null ? null : scene.getWindow();
 	}
 
 	private Set<PgpKeyId> getIdsOfMasterKeysWithPrivateKey() {
@@ -205,7 +251,7 @@ public class SubShareGui extends Application {
 	protected void backupIfNeeded() {
 		final ExportBackupWizard wizard = new ExportBackupWizard();
 		if (wizard.isNeeded())
-			new WizardDialog(primaryStage.getScene().getWindow(), wizard).showAndWait();
+			new WizardDialog(getWindow(), wizard).showAndWait();
 	}
 
 	@Override

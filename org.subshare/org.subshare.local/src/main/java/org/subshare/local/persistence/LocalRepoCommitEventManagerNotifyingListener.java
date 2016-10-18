@@ -14,12 +14,12 @@ import javax.jdo.listener.DeleteLifecycleListener;
 import javax.jdo.listener.InstanceLifecycleEvent;
 import javax.jdo.listener.StoreLifecycleListener;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.subshare.core.repo.listener.EntityId;
 import org.subshare.core.repo.listener.EntityModification;
 import org.subshare.core.repo.listener.EntityModificationType;
 import org.subshare.core.repo.listener.LocalRepoCommitEventManagerImpl;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import co.codewizards.cloudstore.core.repo.local.AbstractLocalRepoTransactionListener;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
@@ -122,7 +122,9 @@ public class LocalRepoCommitEventManagerNotifyingListener
 				// *not* return, because the deletion must be registered!
 			}
 
-			// Created + deleted means the state *after* the transaction is unchanged.
+			// CREATE + DELETE means the final state *after* the transaction is: *NOT* changed at all!
+			// Note: CREATE + CHANGE + DELETE ends up here, too, because the CHANGE following the CREATE is
+			// ignored above (keeping lastModification = CREATE).
 			if (lastModification.getType() == EntityModificationType.CREATE
 					&& modification.getType() == EntityModificationType.DELETE) {
 				modifications.remove(lastModification);

@@ -6,10 +6,19 @@
 <?import java.lang.*?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.Background?>
+<?import javafx.scene.layout.BackgroundFill?>
 <?import javafx.scene.layout.BorderPane?>
 
 <fx:root xmlns:fx="http://javafx.com/fxml" type="BorderPane">
 
+	<background>
+		<Background> 
+			<fills>
+				<BackgroundFill/> 
+			</fills>
+		</Background>
+	</background>
 	<center>
 		<ImageView fx:id="imageView" preserveRatio="true" smooth="true"> 
 			<image>

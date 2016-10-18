@@ -22,8 +22,15 @@ allprojects {
 	[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
 	repositories {
-		mavenLocal()
 		mavenCentral()
+
+		// This sucks: mavenLocal() must be last according to
+		// http://stackoverflow.com/questions/10156847/how-to-tell-gradle-to-download-all-the-source-jars#10655347
+		// in order to get sources. But it must be first, if we want
+		// to make sure that locally built stuff (=> CloudStore!) is used
+		// instead of an older version built on the Jenkins.
+		mavenLocal()
+
 		maven {
 			url 'http://cloudstore.codewizards.co/maven/snapshot'
 		}
@@ -64,6 +71,12 @@ allprojects {
 			}
 		}
 	}
+
+	eclipse {
+		classpath {
+			downloadSources = true
+		}
+	}
 }
 
 subprojects {
@@ -100,7 +113,6 @@ subprojects {
 	}
 }
 
-// Commented this out, because it fails with older Gradle version on build server. Have to upgrade Gradle on build server first!
 //task build {
 //	dependsOn subprojects.build
 //	doLast {
