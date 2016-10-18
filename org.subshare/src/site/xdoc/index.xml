@@ -102,7 +102,8 @@
 				<h1>Welcome to subshare!</h1>
 			</div>
 			<div class="vestigo-box-content"> 
-				subshare is free software synchronizing your files between multiple devices — encrypting all data on the server.
+				subshare is free software synchronizing your files between multiple devices — encrypting <i>all</i> data before
+				uploading to the server.
 				<p>
 				Its primary focus is on reliability and security. We try our best to make sure you never encounter data
 				loss and nobody but you can access your data.
