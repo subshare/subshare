@@ -7,12 +7,11 @@ import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import javafx.application.Platform;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import co.codewizards.cloudstore.core.concurrent.ExecutionException;
+import javafx.application.Platform;
 
 public final class PlatformUtil {
 
@@ -34,7 +33,7 @@ public final class PlatformUtil {
 					throw new ExecutionException("Not waiting, because 'exiting' flag is already true!");
 
 				try {
-					future.get(15, TimeUnit.SECONDS);
+					future.get(5, TimeUnit.SECONDS);
 					return;
 				} catch (java.util.concurrent.TimeoutException x) {
 					doNothing();
@@ -62,7 +61,7 @@ public final class PlatformUtil {
 					throw new ExecutionException("Not waiting, because 'exiting' flag is already true!");
 
 				try {
-					return future.get(15, TimeUnit.SECONDS);
+					return future.get(5, TimeUnit.SECONDS);
 				} catch (java.util.concurrent.TimeoutException x) {
 					doNothing();
 				}

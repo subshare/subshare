@@ -9,13 +9,18 @@
 <?import javafx.scene.layout.Background?>
 <?import javafx.scene.layout.BackgroundFill?>
 <?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.paint.Color?>
 
 <fx:root xmlns:fx="http://javafx.com/fxml" type="BorderPane">
 
 	<background>
 		<Background> 
 			<fills>
-				<BackgroundFill/> 
+				<BackgroundFill> 
+					<fill>
+						<Color red="1" green="1" blue="1" opacity="0.8"/> 
+					</fill>
+				</BackgroundFill>
 			</fills>
 		</Background>
 	</background>

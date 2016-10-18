@@ -5,7 +5,7 @@ $!{decoration.custom.setAttribute("contentHeaderLogo", "../images/header-jump.jp
 Licence
 -------
 
-$H$H$H GNU Affero General Public License (LGPL)
+$H$H$H GNU Affero General Public License (AGPL)
 
 subshare is [Free Software](http://en.wikipedia.org/wiki/Free_Software) licenced under the conditions of the [AGPL](../license.html).
 

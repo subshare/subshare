@@ -113,14 +113,16 @@ subprojects {
 	}
 }
 
-//task build {
-//	dependsOn subprojects.build
-//	doLast {
-//		println '*** copyDistributions ***'
-//		copy {
-//			into "$buildDir/distributions"
-//			from 'org.subshare.gui/build/distributions'
-//			from 'org.subshare.server/build/distributions'
-//		}
-//	}
-//}
+task copyDistributions(type: Copy) {
+	into "$buildDir/distributions"
+	from 'org.subshare.gui/build/distributions'
+	from 'org.subshare.server/build/distributions'
+
+	// This task depends on 'subprojects.build' in order to run *after* all sub-projects
+	// have been built. Without this, it would run before the sub-projects (when there's
+	// nothing to be copied, yet).
+	dependsOn subprojects.build
+}
+
+// The 'copyDistributions' task should always run when 'build' runs.
+build.finalizedBy copyDistributions

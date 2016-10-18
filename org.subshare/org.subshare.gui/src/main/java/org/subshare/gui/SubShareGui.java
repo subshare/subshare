@@ -74,8 +74,9 @@ public class SubShareGui extends Application {
 	private Stage primaryStage;
 	private Stage splashStage;
 	private SplashPane splashPane;
-	private volatile int exitCode = 0;
+	private volatile ExitCode exitCode = ExitCode.SUCCESS;
 	private static final List<Image> icons;
+	private volatile boolean updaterDirAlreadyCreated;
 	static {
 		icons = Collections.unmodifiableList(Arrays.asList(
 				loadImage("subshare_16x16.png"),
@@ -150,6 +151,14 @@ public class SubShareGui extends Application {
 					Thread.setDefaultUncaughtExceptionHandler(ErrorHandler.getUncaughtExceptionHandler());
 					initLogging();
 
+					final CloudStoreUpdaterCore updaterCore = createUpdaterCore();
+					if (updaterCore.createUpdaterDirIfUpdateNeeded()) {
+						updaterDirAlreadyCreated = true;
+						PlatformUtil.runAndWait(() -> showUpdateStartingDialog(updaterCore));
+						stopLater();
+						return;
+					}
+
 					// We create the LocalServer before constructing the UI to make sure, the UI can access everything.
 					// First we try to launch it in a separate JVM.
 					new SsLocalServerProcessLauncher().start();
@@ -164,14 +173,14 @@ public class SubShareGui extends Application {
 					final Set<PgpKeyId> pgpKeyIdsHavingPrivateKeyBeforeRestore = getIdsOfMasterKeysWithPrivateKey();
 					tryPgpKeysNoPassphrase();
 					PlatformUtil.runAndWait(() -> promptPgpKeyPassphrases(getWindow()));
-					if (exitCode != 0) {
+					if (exitCode != ExitCode.SUCCESS) {
 						stopLater();
 						return;
 					}
 
 					final Welcome welcome = new Welcome(getWindow());
 					if (! welcome.welcome()) {
-						exitCode = 1;
+						exitCode = ExitCode.WELCOME_WIZARD_ABORTED;
 						stopLater();
 						return;
 					}
@@ -204,14 +213,14 @@ public class SubShareGui extends Application {
 								LocalServerInitLs.initFinish();
 							} catch (Exception x) {
 								ErrorHandler.handleError(x);
-								exitCode = 666;
+								exitCode = ExitCode.EXCEPTION_CAUGHT;
 								stopLater();
 							}
 						}
 					});
 				} catch (Exception x) {
 					ErrorHandler.handleError(x);
-					exitCode = 666;
+					exitCode = ExitCode.EXCEPTION_CAUGHT;
 					stopLater();
 				}
 			}
@@ -258,12 +267,14 @@ public class SubShareGui extends Application {
 	public void stop() throws Exception {
 		PlatformUtil.assertFxApplicationThread();
 
-		if (exitCode == 0)
-			backupIfNeeded();
+		if (! updaterDirAlreadyCreated) {
+			if (exitCode == ExitCode.SUCCESS)
+				backupIfNeeded();
 
-		final CloudStoreUpdaterCore updaterCore = createUpdaterCore();
-		if (updaterCore.createUpdaterDirIfUpdateNeeded())
-			showUpdateStartingDialog(updaterCore);
+			final CloudStoreUpdaterCore updaterCore = createUpdaterCore();
+			if (updaterCore.createUpdaterDirIfUpdateNeeded())
+				showUpdateStartingDialog(updaterCore);
+		}
 
 		PlatformUtil.notifyExiting();
 
@@ -275,7 +286,7 @@ public class SubShareGui extends Application {
 		new Thread() {
 			{
 				setName(SubShareGui.class.getSimpleName() + ".StopThread");
-//				setDaemon(true);
+//				setDaemon(true); // commented <= must *not* be a daemon thread!
 			}
 
 			@Override
@@ -288,7 +299,7 @@ public class SubShareGui extends Application {
 					Thread.sleep(1000L);
 				} catch (InterruptedException e) { doNothing(); }
 
-				System.exit(exitCode);
+				System.exit(exitCode.getNumericCode());
 			}
 
 		}.start();
@@ -353,7 +364,7 @@ public class SubShareGui extends Application {
 				final IntroWizard introWizard = new IntroWizard();
 				new WizardDialog(owner, introWizard).showAndWait();
 				if (introWizard.getState() == WizardState.CANCELLED) {
-					exitCode = 2;
+					exitCode = ExitCode.INTRO_WIZARD_ABORTED;
 					return;
 				}
 			}

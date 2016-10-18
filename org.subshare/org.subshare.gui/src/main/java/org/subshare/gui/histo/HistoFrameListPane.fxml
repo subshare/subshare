@@ -12,7 +12,7 @@
 
 <fx:root xmlns:fx="http://javafx.com/fxml" type="VBox" spacing="8">
 
-	<TableView fx:id="tableView"> 
+	<TableView fx:id="tableView" VBox.vgrow="ALWAYS"> 
 		<columns>
 			<TableColumn fx:id="signatureCreatedColumn" text="Date" prefWidth="180"> 
 				<cellValueFactory>

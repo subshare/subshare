@@ -5,188 +5,116 @@ $!{decoration.custom.setAttribute("contentHeaderLogo", "../images/header-noteboo
 Getting started
 -------
 
-Using CloudStore is very easy. You simply have to follow a few steps to get synchronization functional.
+Using subshare is easy. You simply have to follow a few steps:
 
 
-$H$H$H Introduction
-
-Before we start with the actual guide, a few things should be clarified:
-
-
-$H$H$H$H Repositories
-
-A directory which is synchronised by CloudStore is called a *repository*. CloudStore synchronises all files and sub-directories
-of such a repository. This means: If you for example add or modify a file, then this file is automatically copied to the other
-repositories.
-
-Only files and directories within a repository are replicated. Other files/directories on your computer are - of course - ignored.
-
-
-$H$H$H$H Client and server
-
-CloudStore consists of a client and a server component. The client alone can synchronise between local repositories
-(e.g. backup from your hard drive to your USB stick). To synchronise from/to a remote repository requires the CloudStore server
-to be online there.
-
-The client establishes the connection to one or more remote servers as needed.
-
-The most common use-case is you running a server at home (using a dynamic-DNS-provider) and wanting to synchronise your
-files on your workstations, your notebooks etc. Of course, you might run CloudStore on a rented server in a data center
-or within your LAN only, too.
-
-
-$H$H$H Step by step
-
-In the following we set up synchronization between your local workstation and a remote server. We assume that your server
-is accessible via the host-name *myserver.mydomain.tld*. If this is a rented host in a data center or your machine at home
-does not matter.
-
-We assume that you have shell access to the server (using SSH).
-
-
-$H$H$H$H Install Java
+$H$H$H Install Java
 
 If you didn\'t install Java, yet, you should do this now. Please download and install either
 [Oracle Java](http://java.com/) or the OpenJDK.
 
-If you use Ubuntu, you could open a shell and enter the following command to install the OpenJDK:
+If you use Ubuntu, you could open a shell and enter the following command to install the OpenJDK
+together with OpenJFX (needed by the client only):
 
-	sudo apt-get install openjdk-7-jre
-
-
-$H$H$H$H Download
-
-Please [download](../download/index.html) the CloudStore client and server to your local machine. It is recommended that
-you download the PGP signatures, too, and verify the authenticity of the binaries.
-
-If you prefer to build directly from the sources, please consult the [Development](./development.html) page.
-
-In the following, we assume that you downloaded the files into your *~/Downloads/* directory.
+	sudo apt-get install openjdk-8-jre openjfx
 
 
-$H$H$H$H Copy the CloudStore archive to your server machine
+$H$H$H Install server or use demo-server
 
-The CloudStore server needs to be running on your server *myserver.mydomain.tld*. Therefore, you have to copy it to this
-machine. Additionally, you\'ll need the CloudStore client to perform administrative tasks like creating repositories.
-However, the CloudStore client is contained in the server archive, hence you only have to upload one file.
+For your first tests, you can skip the installation of a server. We provide one for demo/test purposes:
+`https://demo.subshare.org:6661`
 
-We recommend using *rsync* or *scp* to copy the file:
+In the following description, we're using this server. But for productive use, you must
+[install your own server](server-installation.html).
 
-<div><pre>rsync -avP ~/Downloads/co.codewizards.subshare.server-${subshare_version}-bin.tar.gz user@myserver.mydomain.tld:/tmp/
-</pre></div>
-
-or
-
-<div><pre>scp -p ~/Downloads/co.codewizards.subshare.server-${subshare_version}-bin.tar.gz user@myserver.mydomain.tld:/tmp/
-</pre></div>
+**Important:** We periodically **delete** all data from our demo-server!
 
 
-$H$H$H$H Extract the CloudStore archive on the server
+$H$H$H Download Client (GUI)
 
-Now, one *tar.gz* file is located in the */tmp/* folder on your server. To continue, you open a shell to the server machine:
+[Download](../download/index.html) the subshare GUI-client to your local machine. It is recommended that
+you download the PGP signature, too, and verify the authenticity of the binary file.
 
-<div><pre>ssh user@myserver.mydomain.tld</pre></div>
-
-We uploaded the file to */tmp/*, hence we go into this directory, extract the tarball there and then move the extracted directory
-into the user\'s home:
-
-<div><pre>cd /tmp
-tar xzf co.codewizards.subshare.server-${subshare_version}-bin.tar.gz
-mv subshare ~/</pre></div>
+In the following, we assume that you downloaded the file `org.subshare.gui-${subshare_version}-bin.tar.gz`
+into your `~/Downloads/` directory.
 
 
-$H$H$H$H Create a repository on the server
-
-There is the directory named *subshare* in your user\'s home containing both server and client with its CLI
-(command line interface).
-We use this CLI to create a new directory and make it a CloudStore repository:
-
-<div><pre>cd ~
-~/subshare/bin/subshare createRepo subshare-repos/myDocuments -createDir</pre></div>
-
-Note, that this creates all parent-directories as needed. Hence the folder *~/subshare-repos*, which likely didn\'t exist yet,
-is created together with the actual repository "myDocuments".
-
-Additionally, this command automatically creates an alias named \"myDocuments\" (case-sensitive!).
-
-
-$H$H$H$H Start the CloudStore server
-
-There is the directory named *subshare* in your user\'s home containing the server. Inside this directory,
-there\'s a shell script which can be used to start the server:
-
-<div><pre>subshare/bin/subshare-server</pre></div>
-
-By default, the server listens on port 8443. Please make sure, this port is accessible. You may need to modify your firewall\'s rules. 
-
-
-$H$H$H$H Extract the CloudStore client archive on the workstation
+$H$H$H Extract GUI client on your workstation
 
 Locally, on your workstation, you have to extract the client and move it to your home directory:
 
+...via shell:
+
 <div><pre>cd ~/Downloads
-tar xzf co.codewizards.subshare.client-${subshare_version}-bin.tar.gz
+tar xzf org.subshare.gui-${subshare_version}-bin.tar.gz
 mv subshare ~/</pre></div>
 
+...via file manager:
 
-$H$H$H$H Create a repository on the client
+![Extract tar.gz archive](../images/getting-started/Dolphin_extract.png)
 
-Let\'s assume you want to synchronise your existing *~/Documents* folder with the repository *myDocuments* you just
-created on the server. You have to convert the existing directory into a CloudStore repository:
-
-<div><pre>cd ~
-~/subshare/bin/subshare createRepo Documents</pre></div>
-
-Since the directory already exists, the *-createDir* option is not needed (it would not do any harm, though).
-
-Note, that the repository-alias \"Documents\" is automatically created, this way. If you do not want this or you want another alias,
-you can add either \"-noAlias\" or \"-alias \<myAlias\>\".
+This "Extract" > "Extract archive here" action creates the new folder `subshare` in the current directory.
+Move it to your home directory (from `~/Downloads/subshare/` to `~/susbshare/`).
 
 
-$H$H$H$H Connect the repositories - step 1 of 2
+$H$H$H Start subshare
 
-The repositories do not know each other, yet. We have to connect them in order to be able to synchronise them. A connection
-is established in two steps: First, the client requests the connection:
+Double-click onto the executable `~/subshare/bin/subshare` (*nix) or
+`~/subshare/bin/subshare.bat` (Windows):
 
-<div><pre>~/subshare/bin/subshare requestRepoConnection Documents https://myserver.mydomain.tld:8443/myDocuments</pre></div>
-
-Instead of the alias \"myDocuments\", you could use the repository\'s unique ID (so-called *repositoryId*), which was shown when
-you created the repository before.
-
-The same applies to the local side: Instead of \"Documents\" you could specify the local repository\'s ID. Or alternatively, you could
-pass the local repository\'s file-system-path as well.
-
-Here an alternative example (assuming that the *repositoryId* on your server is 2cb46e10-c076-466b-a944-2c1914076fe1):
-
-<div><pre>~/subshare/bin/subshare requestRepoConnection /home/user/Documents https://myserver.mydomain.tld:8443/2cb46e10-c076-466b-a944-2c1914076fe1</pre></div>
-
-**Important:** You are asked to verify the server\'s SSL certificate, because this is the first time that your client connects
-to this server. The server\'s certificate is verified by comparing the SHA1 fingerprint which is printed to the console whenever
-the server starts with the fingerprint displayed by the client.
-
-**If the fingerprint shown by the server does not exactly match the fingerprint shown by the client, someone is tampering with your connection and you must not continue!** 
-
-You can read more about this on the [Security](./security.html) page.
+![Start subshare via double-click](../images/getting-started/Dolphin_subshare_bin.png)
 
 
-$H$H$H$H Connect the repositories - step 2 of 2
+$H$H$H Create identity
 
-In the previous step, a connection was requested by the client and the server stored this request. Only after this request is accepted,
-access to the repository is granted.
+In order to share data with others, everyone involved needs an identity. This can be your
+real name & e-mail address or a pseudonym. You can also omit the e-mail address.
 
-You can accept this request via the following command, executed on the server-side (via SSH):
+Technically, your identity is an [OpenPGP](https://en.wikipedia.org/wiki/OpenPGP) key pair.
 
-<div><pre>~/subshare/bin/subshare acceptRepoConnection myDocuments</pre></div>
+Hence, if you already use OpenPGP (e.g. for e-mail encryption) and subshare finds your key pair,
+this step is skipped. Otherwise, a wizard leads you to the process of creating one:
+
+![Create OpenPGP key pair (step 1)](../images/getting-started/subshare_create_pgp_key_pair_1.png)
+
+![Create OpenPGP key pair (step 2)](../images/getting-started/subshare_create_pgp_key_pair_2.png)
+
+![Create OpenPGP key pair (step 3)](../images/getting-started/subshare_create_pgp_key_pair_3.png)
+
+You can click "Finish" here — no need for further details. Nerds might find them interesting, though ;-)
 
 
-$H$H$H$H Synchronise
+$H$H$H Specify server
 
-All is set up. You can synchronise now. Execute the following command on the client-side:
+The client needs to know at least one server. As already stated above, you can use our demo/test server
+with the URL `https://demo.subshare.org:6661` (https://demo.subshare.org:6661) for non-productive uses:
 
-<div><pre>~/subshare/bin/subshare sync Documents</pre></div>
+![Register server](../images/getting-started/subshare_register_server.png)
 
-This synchronises the local repository with the alias \"Documents\".
 
-To synchronise all known local repositories, use \"ALL\" instead:
+$H$H$H Create repository
 
-<div><pre>~/subshare/bin/subshare sync ALL</pre></div>
+In order to upload and synchronize a directory, subshare needs to create a repository on your server.
+Once this is done, the server's repository and the directory on your client computer are permanently
+connected — whenever the data on one side changes, the other side is automatically updated.
+
+The process is started by clicking the upload button:
+
+![Create repository (step 1)](../images/getting-started/subshare_create_repository_1.png)
+
+![Create repository (step 2)](../images/getting-started/subshare_create_repository_2.png)
+
+Click "Finish" and wait — you're done! The new repository is now listed in the table and its contents
+are synchronised between client and server:
+
+![Create repository (step 3)](../images/getting-started/subshare_create_repository_3.png)
+
+Depending on your directory's size as well as your internet connection's speed, the initial upload
+to the server may take hours or even days. Please be patient.
+
+If you cannot wait (or do not want to), you can interrupt this process. The next time you start subshare,
+it's going to continue where it left off.
+
+When the sync is complete, the cloud-icon disappears and a blue info-icon is shown instead:
+
+![Create repository (step 4)](../images/getting-started/subshare_create_repository_4.png)

@@ -50,7 +50,27 @@
 								<h1>In your hands</h1> 
 							</div> 
 							<div class="slider_text">
-								<span class="arrows headerfont">Keep the control over your data in your hands! Do not confide your data to companies spying on you. SubShare is free software. You can verify the source codes yourself to ensure that the software does what it claims to do.</span>
+								<span class="arrows headerfont">Keep the control over your data in your hands! Use the strongest encryption available to make sure, not even the NSA can read your data.</span>
+							</div>
+						</div>					
+					</li>
+
+					<li>
+						<div class="slider">
+							<div style="position: relative; background: url('images/teaser/stock-photo-14186302-hands-in.png'); height:426px; width: 568px;">
+								<div style="position:relative; top:395px; z-index: 50000;">
+									<a href="http://www.freeimages.co.uk" title="Free Stock Photos">
+										<img src="./images/powered-by/fibutton5.gif"
+											alt="More than 13,500 Free hi-res stock photo images for Web, Design and Printed use. Design, Image Editing and Webmaster tips." />
+									</a>
+								</div>
+							</div>
+							<div class="slider_header">
+								<h1>Teamwork</h1> 
+							</div> 
+							<div class="slider_text">
+								<span class="arrows headerfont">Collaborate in your team. Share your data with your friends or family.
+								    And keep everyone out who is not invited — e.g. your competitors or even state actors like the NSA.</span>
 							</div>
 						</div>					
 					</li>
@@ -79,10 +99,10 @@
 		</div>
 		<div class="vestigo-box">
 			<div class="vestigo-box-header">
-				<h1>Welcome to SubShare!</h1>
+				<h1>Welcome to subshare!</h1>
 			</div>
 			<div class="vestigo-box-content"> 
-				SubShare is free software synchronizing your files between multiple devices.
+				subshare is free software synchronizing your files between multiple devices — encrypting all data on the server.
 				<p>
 				Its primary focus is on reliability and security. We try our best to make sure you never encounter data
 				loss and nobody but you can access your data.
@@ -96,60 +116,66 @@
 		<table class="homepagecolumns" border="0"><tbody>
 		<tr class="a">
 				<th align="left" colspan="2">
-					<h1>SubShare synchronizes your data</h1>
+					<h1>subshare synchronizes your data — and it's ...</h1>
 				</th>
 			</tr>
+<!--
 			<tr class="b">
-				<td colspan="2">SubShare follows the Unix principle "Do one thing and do it well." Therefore the feature list
-				is pretty short: Synchronize files and directories between computers.</td>
+				<td colspan="2">... being:</td>
 			</tr>
-			<tr class="b">
-				<td colspan="2">However, even this one single task involves many details: Cloudstore is...</td>
-			</tr>
+-->
 			<tr class="b">
 			
 				<td valign="top" width="50%">
 					<ul>
-						<li>... fast
+						<li><b>... fast</b>
 							<div class="main-bullet-detail">
-							SubShare copies only modified data. If a file is not modified, it is not copied.
+							subshare copies only modified data. If a file is not modified, it is not copied.
 							If a file is large and only a small part of it is modified, only this small part is
-							copied. If a file is moved or renamed, it is not copied over the network - instead,
-							the move operation is imitated on all remote repositories.
+							copied.
 							</div>
 						</li>
-						<li>... secure
+						<li><b>... <i>paranoidly</i> secure</b>
 							<div class="main-bullet-detail">
-							SubShare uses strong encryption and a sophisticated, password-less authentication
-							mechanism. Read more about this on the <a href="./documentation/security.html">Security</a> page.
+							subshare uses strong encryption and bases its identity management on OpenPGP.
+							All data leaving your client device are encrypted.
+							Read more about this on the <a href="./documentation/security.html">Security</a> page.
 							</div>
 						</li>
-						<li>... easy to use
+						<li><b>... easy to use</b>
 							<div class="main-bullet-detail">
-							Due to its unique approach to security, the initial setup is done in a few
-							seconds (no cumbersome password management). And once set up, SubShare
-							synchronises data in the background. You don't need to do anything, anymore.
+							A graphical user interface makes things really easy. See in
+							"<a href="documentation/getting-started.html">Getting started</a>" how easy it is.
+							</div>
+						</li>
+						<li><b>... great for team-work</b>
+							<div class="main-bullet-detail">
+							You can share a repository with co-workers or friends and grant permissions
+							on individual directories (with sub-directories inheriting the permissions by default).
 							</div>
 						</li>
 					</ul>
 				</td>
 				<td valign="top" width="50%">
 					<ul>
-						<li>... robust
+						<li><b>... robust</b>
 							<div class="main-bullet-detail">
-							SubShare does everything possible to prevent data loss:
+							subshare does everything possible to prevent data loss:
 							For example, it detects collisions and resolves them; also if a data transfer
-							is interrupted, SubShare resumes it later.
+							is interrupted, subshare resumes it later.
 							</div>
 						</li>
-						<li>... flexible
+						<li><b>... standards-compliant</b>
 							<div class="main-bullet-detail">
-							Synchronise a repository with as many other repositories as you want. You can
-							synchronise a sub-directory only, too (e.g. sync only a small part of your
-							server's huge repository to your notebook).
+							subshare uses <a href="https://en.wikipedia.org/wiki/OpenPGP">OpenPGP</a> for its identity management
+							and some of its encryption.
+							OpenPGP is a 20 years old standard primarily used for e-mail-encryption and proven
+							to be secure enough to withstand the NSA (by
+							<a href="https://edwardsnowden.com/2015/01/06/intercept-with-pgp-encrypted-message/">Edward Snowden's</a>
+							<a href="http://www.theverge.com/2014/12/28/7458159/encryption-standards-the-nsa-cant-crack-pgp-tor-otr-snowden">revelations</a>).
 							</div>
 						</li>
-						<li>... test-driven and clean code.
+						<li><b>... test-driven and clean code</b>
 							<div class="main-bullet-detail">
 							Fellow developers might appreciate that SubShare is test-driven and - please
 							<a href="./documentation/development.html">see for yourself</a> - clean code.
