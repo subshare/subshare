@@ -5,7 +5,8 @@ $!{decoration.custom.setAttribute("contentHeaderLogo", "../images/header-noteboo
 OpenPGP
 -------
 
-OpenPGP is a very mature standard (more than 20 years old) primarily used for e-mail-encryption and code-signing.
+[OpenPGP](https://en.wikipedia.org/wiki/OpenPGP) is a very mature standard
+(more than 20 years old) primarily used for e-mail-encryption and code-signing.
 For example, most GNU/Linux distributions use it to sign their installation packages.
  
 OpenPGP primarily standardises the usage of public-key-cryptography, which can be used
@@ -18,7 +19,7 @@ to:
 $H$H$H Public/private-key-pair
 
 It is paramount to the understanding of subshare and OpenPGP to understand the
-*basics* of public-key-cryptography (a.k.a. asymmetric cryptography).
+*basics* of [public-key cryptography](https://en.wikipedia.org/wiki/Public-key_cryptography) (a.k.a. asymmetric cryptography).
 
 Don't worry! These basics are easy to understand. It all boils down to so-called key-pairs,
 each containing two keys: A *public key* and *a private key*:
@@ -70,11 +71,4 @@ In order to *sign* data, Alice uses her *private key*. Only she alone has access
 Bob then uses Alice's *public key* to verify the signature. If the data was manipulated
 by an attacker, he'd detect the broken signature.
 
-<img width="400" src="../images/openpgp/sign+verify.svg"/>
-
-
-$H$H$H Wikipedia
-
-More information can be found in the Wikipedia articles [OpenPGP](https://en.wikipedia.org/wiki/OpenPGP)
-and [Public-key cryptography](https://en.wikipedia.org/wiki/Public-key_cryptography).
-
+<img width="455" src="../images/openpgp/sign+verify.svg"/>
