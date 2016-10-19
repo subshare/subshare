@@ -5,15 +5,76 @@ $!{decoration.custom.setAttribute("contentHeaderLogo", "../images/header-noteboo
 OpenPGP
 -------
 
-OpenPGP is a 20 years old standard primarily used for e-mail-encryption.
+OpenPGP is a 20 years old standard primarily used for e-mail-encryption and code-signing.
+For example, most GNU/Linux distributions use it to sign their installation packages.
+ 
+OpenPGP primarily standardises the usage of public-key-cryptography, which can be used
+to:
+
+* Encrypt + decrypt
+* Sign + verify
 
 
 $H$H$H Public/private-key-pair
 
+It is paramount to the understanding of subshare and OpenPGP to understand the
+*basics* of public-key-cryptography.
 
+Don't worry! These basics are easy to understand. It all boils down to so-called key-pairs,
+each containing two keys: A *public key* and *a private key*:
+
+![Key-pair](../images/openpgp/key-pair.svg)
+
+As the name implies, the *public key* is available to everyone. It is usually published
+onto a key-server for the world to see (and use).
+
+The *private key* is kept secret and only available to its owner.
+
+
+$H$H$H Private key vs. secret key
+
+Because of its sensitive nature, a *private key* is usually protected by a passphrase
+(a long password). Protecting it means to encrypt it (using this passphrase).
+The *encrypted private key* is called *secret key*.
+
+Only a person knowing the passphrase is able to decrypt the *secret key* and thus obtain the
+(unprotected and usable) *private key*. The only person being able to do so is the key's owner.
+
+Thus, in practice the public/private-key-pair looks like this:
+
+![Key-pair with secret key](../images/openpgp/key-pair_with_secret_key.svg)
+
+Only the yellow (*secret*) and the green (*public*) keys are stored in a file. The red (*private*)
+key is only kept in memory.
+
+The "Large Random Number" used to generate the keys is never stored. It is forgotten
+immediately after key generation and should not be known by anyone (it's a secret, too).
+
+
+$H$H$H Encrypt + decrypt
+
+In order to *encrypt* a plain text, Bob uses Alice's *public key*.
+
+To *decrypt* the ciphertext, later, Alice needs her corresponding *private key*.
+
+<img width="400" src="../images/openpgp/encrypt+decrypt.svg"/>
+
+Thus, everyone in the world can send an encrypted message to Alice, but only Alice can decrypt
+it — she's the only person having access to her private key.
+
+
+$H$H$H Sign + verify
+
+In order to *sign* data, Alice uses her *private key*. Only she alone has access to it.
+
+Bob then uses Alice's *public key* to verify the signature. If the data was manipulated
+by an attacker, he'd detect the broken signature.
+
+<img width="400" src="../images/openpgp/sign+verify.svg"/>
 
 
 $H$H$H Wikipedia
 
-More information can be found in the Wikipedia article [OpenPGP](https://en.wikipedia.org/wiki/OpenPGP).
+More information can be found in the Wikipedia articles [OpenPGP](https://en.wikipedia.org/wiki/OpenPGP)
+and [Public-key cryptography](https://en.wikipedia.org/wiki/Public-key_cryptography).
 

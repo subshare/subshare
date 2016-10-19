@@ -37,6 +37,7 @@
 			<item name="Server installation" href="./documentation/server-installation.html" />
 			<item name="Wiki" href="../wiki" />
 			<item name="FAQ" href="./documentation/faq.html" />
+			<item name="OpenPGP" href="./documentation/openpgp.html" />
 			<item name="Security" href="./documentation/security.html" />
 			<item name="Development" href="./documentation/development.html" />
 			<item name="Javadoc" href="./apidocs/index.html" />
