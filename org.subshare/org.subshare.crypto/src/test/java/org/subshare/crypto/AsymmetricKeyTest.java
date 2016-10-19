@@ -23,13 +23,18 @@ import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.bouncycastle.crypto.AsymmetricCipherKeyPairGenerator;
 import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Marco หงุ่ยตระกูล-Schulze - marco at nightlabs dot de
  */
 public class AsymmetricKeyTest
 {
+	private static final Logger logger = LoggerFactory.getLogger(AsymmetricKeyTest.class);
+
 	private final SecureRandom secureRandom = new SecureRandom();
 
 	@Test
@@ -40,6 +45,26 @@ public class AsymmetricKeyTest
 	@Test
 	public void encodeDecodeRSAwithOAEPwithSHA1andMGF1Padding() throws Exception {
 		encodeDecode("RSA/ECB/OAEPWITHSHA1ANDMGF1PADDING");
+	}
+
+	@Ignore
+	@Test
+	public void generateManySymmetricKeys() throws Exception {
+		final String transformation = "RSA/ECB/OAEPWITHSHA1ANDMGF1PADDING";
+		final String engine = CryptoRegistry.splitTransformation(transformation)[0];
+		final AsymmetricCipherKeyPairGenerator keyPairGenerator = CryptoRegistry.getInstance().createKeyPairGenerator(engine, true);
+
+		final long startAllKeys = System.currentTimeMillis();
+		final int keyCount = 10;
+		for (int i = 0; i < keyCount; ++i) {
+			final long startThisKey = System.currentTimeMillis();
+			keyPairGenerator.generateKeyPair();
+			logger.info("Generated key #{} in {}ms", i, System.currentTimeMillis() - startThisKey);
+		}
+		final long durationAllKeys = System.currentTimeMillis() - startAllKeys;
+
+		logger.info("Generated {} keys in {}ms, taking in average {}ms per key.",
+				keyCount, durationAllKeys, durationAllKeys / keyCount);
 	}
 
 	private void encodeDecode(final String transformation) throws Exception {

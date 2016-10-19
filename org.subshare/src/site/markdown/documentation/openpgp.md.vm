@@ -5,7 +5,7 @@ $!{decoration.custom.setAttribute("contentHeaderLogo", "../images/header-noteboo
 OpenPGP
 -------
 
-OpenPGP is a 20 years old standard primarily used for e-mail-encryption and code-signing.
+OpenPGP is a very mature standard (more than 20 years old) primarily used for e-mail-encryption and code-signing.
 For example, most GNU/Linux distributions use it to sign their installation packages.
  
 OpenPGP primarily standardises the usage of public-key-cryptography, which can be used
@@ -18,7 +18,7 @@ to:
 $H$H$H Public/private-key-pair
 
 It is paramount to the understanding of subshare and OpenPGP to understand the
-*basics* of public-key-cryptography.
+*basics* of public-key-cryptography (a.k.a. asymmetric cryptography).
 
 Don't worry! These basics are easy to understand. It all boils down to so-called key-pairs,
 each containing two keys: A *public key* and *a private key*:

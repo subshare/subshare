@@ -19,7 +19,7 @@ public abstract class AbstractPgpEncoder implements PgpEncoder {
 	private String fileName = "";
 
 	private boolean withIntegrityCheck;
-	private SymmetricEncryptionAlgorithm symmetricEncryptionAlgorithm = SymmetricEncryptionAlgorithm.AES_256;
+	private SymmetricEncryptionAlgorithm symmetricEncryptionAlgorithm = SymmetricEncryptionAlgorithm.TWOFISH;
 	private CompressionAlgorithm compressionAlgorithm = CompressionAlgorithm.ZIP;
 	private HashAlgorithm hashAlgorithm = HashAlgorithm.SHA256;
 

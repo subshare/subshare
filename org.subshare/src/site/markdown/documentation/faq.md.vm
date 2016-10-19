@@ -7,12 +7,30 @@ Frequently asked questions (FAQ)
 
 $H$H$H What's OpenPGP and why does subshare use it?
 
-The [OpenPGP](./openpgp.html) page answers this question.
+The [OpenPGP](./openpgp.html) and [Security](./security.html) pages answer this question.
 
 
 $H$H$H What encryption algorithms are used?
 
-The [Security](./security.html) page answers this question.
+Whenever OpenPGP is involved, the properties of the OpenPGP keys used dictate the public-key algorithm.
+When subshare creates a new OpenPGP key, it generates an <a href="https://en.wikipedia.org/wiki/RSA_(cryptosystem)">RSA</a>
+key with a size of 4096 bit.
+
+For the OpenPGP-based symmetric encryption, [Twofish](https://en.wikipedia.org/wiki/Twofish) (with 256 bit keys) is used.
+
+Most of the encryption and signing is done without OpenPGP (see [Security](./security.html)), though.
+For these thousands of non-OpenPGP-based keys and cipher-operations, subshare uses:
+
+* Asymmetric (public-key) cryptography:
+	* Algorithm: <a href="https://en.wikipedia.org/wiki/RSA_(cryptosystem)">RSA</a>
+	* Key size: 4096 bit
+	* Padding: [OAEPWITHSHA1ANDMGF1PADDING](https://en.wikipedia.org/wiki/Optimal_asymmetric_encryption_padding)
+
+* Symmetric cryptography:
+	* Algorithm: [Twofish](https://en.wikipedia.org/wiki/Twofish)
+	* Key size: 256 bit
+	* Block cipher mode: [CFB](https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation#Cipher_Feedback_.28CFB.29)
+	* Padding: *none (not needed when using CFB)*
 
 
 $H$H$H What happens in case of a collision?
