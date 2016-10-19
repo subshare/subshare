@@ -29,7 +29,7 @@ and shown in the UI (in the directory tree as well as in the history).
 $H$H$H What's this "local server"?
 
 Subshare's client program consists of two parts: The graphical user interface (GUI) and the actual logic.
-The two parts run in two distinct processes, allowing for the GUI to be closed, while the synchronisation
+The two parts run in two distinct processes (JVMs), allowing for the GUI to be closed, while the synchronisation
 continues to run in the background. 
 
 When you start the GUI process, it automatically launches the so-called *cproc* (client process) with the local server
@@ -42,6 +42,8 @@ and thus not accessible to other users (if the file system permissions are set c
 
 The user can thus start subshare whenever he logs in into his workstation. After entering his OpenPGP secret key's passphrase,
 he can quit the GUI process — the actual synchronisation logic continues to run and keeps everything in-sync.
+
+![3 processes](../images/faq/local-server.png)
 
 
 $H$H$H How can I set log levels?

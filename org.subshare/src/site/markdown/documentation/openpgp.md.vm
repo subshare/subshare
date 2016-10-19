@@ -1,0 +1,19 @@
+<head><title>OpenPGP</title></head>
+$!{decoration.custom.setAttribute("contentHeaderLogo", "../images/header-notebook.jpg")}
+#set( $H = '#' )
+
+OpenPGP
+-------
+
+OpenPGP is a 20 years old standard primarily used for e-mail-encryption.
+
+
+$H$H$H Public/private-key-pair
+
+
+
+
+$H$H$H Wikipedia
+
+More information can be found in the Wikipedia article [OpenPGP](https://en.wikipedia.org/wiki/OpenPGP).
+

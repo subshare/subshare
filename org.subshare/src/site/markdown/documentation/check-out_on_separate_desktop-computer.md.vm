@@ -1,0 +1,23 @@
+<head><title>Check-out or restore</title></head>
+$!{decoration.custom.setAttribute("contentHeaderLogo", "../images/header-notebook.jpg")}
+#set( $H = '#' )
+
+Check-out on a separate desktop computer (or restore after a crash)
+-------
+
+Your computer crashed and you want to restore all your data? Or you want to check-out
+your data in parallel on a separate desktop computer (e.g. home + work computer)?
+
+All you need is installing subshare and having your backup-USB-stick ready. The backup
+contains your OpenPGP key pair and your server's URL. All other data is stored on the server,
+hence you need to create a backup only *once* (when you initially set up things).
+
+
+$H$H$H Install Java & subshare
+
+Install Java and subshare as described in the [Getting started](./getting-started.html) guide.
+
+
+$H$H$H Start subshare
+
+

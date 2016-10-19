@@ -12,7 +12,7 @@ $H$H$H Install Java
 
 If you didn\'t install Java, yet, you should do this now. Please download and install either
 [Oracle Java](http://java.com/) or the OpenJDK. Subshare requires Java 8 and its GUI client needs
-JavaFX (included in Oracle's JRE).
+JavaFX (included in Oracle\'s JRE).
 
 If you use Ubuntu, you could open a shell and enter the following command to install the OpenJDK 8
 together with OpenJFX:
@@ -25,7 +25,7 @@ $H$H$H Install server or use demo-server
 For your first tests, you can skip the installation of a server. We provide one for demo/test purposes:
 `https://demo.subshare.org:6661`
 
-In the following description, we're using this server. But for productive use, you must
+In the following description, we\'re using this server. But for productive use, you must
 [install your own server](server-installation.html).
 
 **Important:** We periodically **delete** all data from our demo-server!
@@ -71,7 +71,7 @@ $H$H$H Create identity
 In order to share data with others, everyone involved needs an identity. This can be your
 real name & e-mail address or a pseudonym. You can also omit the e-mail address.
 
-Technically, your identity is an [OpenPGP](https://en.wikipedia.org/wiki/OpenPGP) key pair.
+Technically, your identity is an [OpenPGP](./openpgp.html) key pair.
 
 Hence, if you already use OpenPGP (e.g. for e-mail encryption) and subshare finds your key pair,
 this step is skipped. Otherwise, a wizard leads you to the process of creating one:
@@ -93,10 +93,19 @@ with the URL `https://demo.subshare.org:6661` (https://demo.subshare.org:6661) f
 ![Register server](../images/getting-started/subshare_register_server.png)
 
 
+$H$H$H Backup
+
+Since your OpenPGP key pair is essential, subshare now suggests to create a backup USB-stick.
+If you skip this, now, subshare is going to ask you again, later.
+
+Please note, that you\'re going to need this backup, too, when you want to [check-out your data on
+another computer](./check-out_on_separate_desktop-computer.html).
+
+
 $H$H$H Create repository
 
 In order to upload and synchronize a directory, subshare needs to create a repository on your server.
-Once this is done, the server's repository and the directory on your client computer are permanently
+Once this is done, the server\'s repository and the directory on your client computer are permanently
 connected — whenever the data on one side changes, the other side is automatically updated.
 
 The process is started by clicking the upload button:
@@ -105,16 +114,16 @@ The process is started by clicking the upload button:
 
 ![Create repository (step 2)](../images/getting-started/subshare_create_repository_2.png)
 
-Click "Finish" and wait — you're done! The new repository is now listed in the table and its contents
+Click "Finish" and wait — you\'re done! The new repository is now listed in the table and its contents
 are synchronised between client and server:
 
 ![Create repository (step 3)](../images/getting-started/subshare_create_repository_3.png)
 
-Depending on your directory's size as well as your internet connection's speed, the initial upload
+Depending on your directory\'s size as well as your internet connection\'s speed, the initial upload
 to the server may take hours or even days. Please be patient.
 
 If you cannot wait (or do not want to), you can interrupt this process. The next time you start subshare,
-it's going to continue where it left off.
+it\'s going to continue where it left off.
 
 When the sync is complete, the cloud-icon disappears and a blue info-icon is shown instead:
 

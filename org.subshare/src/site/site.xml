@@ -34,6 +34,7 @@
 
 		<menu name="Documentation">
 			<item name="Getting started" href="./documentation/getting-started.html" />
+			<item name="Server installation" href="./documentation/server-installation.html" />
 			<item name="Wiki" href="../wiki" />
 			<item name="FAQ" href="./documentation/faq.html" />
 			<item name="Security" href="./documentation/security.html" />

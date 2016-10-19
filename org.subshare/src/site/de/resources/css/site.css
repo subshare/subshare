@@ -85,7 +85,8 @@ table.homepagecolumns li {
 .vestigo-box-content {
 	padding-top: 20px;
     padding-left: 35px;
-    width: 600px;
+    padding-right: 35px;
+/*    width: 800px; */
 	line-height: 18px;    
 }
 

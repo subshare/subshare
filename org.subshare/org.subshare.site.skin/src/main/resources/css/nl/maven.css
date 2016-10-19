@@ -42,6 +42,10 @@ td.nl_maven_left {
 	text-decoration: none;
 }
 
+#nl_container ol {
+	width: 600px;
+}
+
 .nl_maven_right {
 	width: 201px;
 	border-left: 1px solid #9EA5B0;

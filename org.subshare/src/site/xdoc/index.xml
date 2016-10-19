@@ -168,7 +168,7 @@
 						</li>
 						<li><b>... standards-compliant</b>
 							<div class="main-bullet-detail">
-							subshare uses <a href="https://en.wikipedia.org/wiki/OpenPGP">OpenPGP</a> for its identity management
+							subshare uses <a href="./documentation/openpgp.html">OpenPGP</a> for its identity management
 							and some of its encryption.
 							OpenPGP is a 20 years old standard primarily used for e-mail-encryption and proven
 							to be secure enough to withstand the NSA (by

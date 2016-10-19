@@ -7,8 +7,12 @@ Documentation
 
 $H$H$H Getting started
 
-Please read the [Getting started](./getting-started.html) page first. It shows you how easy it is to use subshare
-and gives a basic understanding about how things work.
+Please read the [Getting started](./getting-started.html) page first. It shows you how easy it is to use subshare.
+
+
+$H$H$H Server installation
+
+In order to use Subshare productively, you must [set up your own server](./server-installation.html).
 
 
 $H$H$H Wiki

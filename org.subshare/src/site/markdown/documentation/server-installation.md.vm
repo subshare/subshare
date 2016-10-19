@@ -14,10 +14,145 @@ If you use Ubuntu, you could open a shell and enter the following command to ins
 
 	sudo apt-get install openjdk-8-jre
 
+Note: The server should still work with Java 7 (only the GUI client needs version 8). Hence,
+if you have only Java 7 available on your server and cannot easily upgrade, you should give it a try. 
+
 
 $H$H$H Download server
 
 [Download](../download/index.html) the subshare server to your local machine. It is recommended that
 you download the PGP signature, too, and verify the authenticity of the binary file.
 
-TO BE CONTINUED...
+In the following we assume that you downloaded it to your `~/Downloads/` directory.
+
+
+$H$H$H Ubuntu, Debian and other *nix
+
+In the following, we describe how to install the subshare server on Ubuntu or Debian. The process
+on all other unices should be (nearly) the same.
+
+The subshare server works on Windows, too. If you use Windows,
+we kindly ask you to document the installation in our [wiki](../../wiki) and tell us by opening an issue in our
+[tracker](../../tracker).
+
+
+$H$H$H Create a user on your server
+
+It is recommended that you run the subshare server as a dedicated user. Thus, please open a shell,
+SSH to your server and create the user `subshared` (for subshare-<a href="https://en.wikipedia.org/wiki/Daemon_(computing)">daemon</a>):
+
+<div><pre>ssh root@my.domain.com
+adduser subshared</pre></div>
+
+In this page, we use `my.domain.com`, whenever we mean *your* server. Of course, you
+must replace this by your server\'s *fully qualified* [hostname](https://en.wikipedia.org/wiki/Hostname).
+
+
+$H$H$H Upload the program to your server
+
+Open a shell, go to your `~/Downloads/` directory and copy the program to your server
+
+... via `rsync`:
+
+<div><pre>cd ~/Downloads
+rsync -avP org.subshare.server-${subshare_version}-bin.tar.gz subshared@my.domain.com:</pre></div>
+
+... or via `scp`:
+
+<div><pre>cd ~/Downloads
+scp -p org.subshare.server-${subshare_version}-bin.tar.gz subshared@my.domain.com:</pre></div>
+
+The tar.gz file is now in the home directory of your newly created user on your server: `/home/subshared/`
+
+
+$H$H$H Extract the tar.gz on your server
+
+Open a new shell, SSH as user `subshared` onto your server and then extract the tar.gz file:
+
+<div><pre>ssh subshared@my.domain.com
+tar xzf org.subshare.server-${subshare_version}-bin.tar.gz</pre></div>
+
+Now, there\'s a new directory: `/home/subshared/subshare-server/`
+
+
+$H$H$H Start the server manually
+
+You can start the server manually by invoking the following command (in the shell that you just used to extract):
+
+	~/subshare-server/bin/subshare-server &
+
+The `&` sends this command to the background so that you can continue to use this shell.
+
+Your server is now listening on TCP port 8443. This means, you can specify `https://my.domain.com:8443` as
+server URL (instead of `https://demo.subshare.org:6661`) when configuring your client
+(see [Getting started](./getting-started.html)).
+
+You can take a look into the log file, if you want to:
+
+	tail -f -n 1000 ~/.subshare/log/subshare.server.log
+
+The `-f` option tells `tail` to follow, i.e. to continue running, wait for changes of the file and display
+everything that\'s newly added. You can press `CTRL+C` to end the `tail` command.
+
+
+$H$H$H Stop the server manually
+
+As the user `subshared` on your server, you have 2 possibilities to stop the server:
+
+1. In the same shell in which you started the server before, you can write `fg` to bring the process
+to the foreground and then press `CTRL-C`.
+
+2. Use the command
+
+		killall java
+
+	which ends all `java` processes owned by the current user. Because the subshare server should
+	be the only `java` process running as the user `subshared`, this is the only process
+	to be terminated (which is what you want).
+
+	Note that `killall` without any option sends a `SIGTERM` which causes the server to shut down cleanly.
+	If — for whatever reason — the server does not shut down and you really want to kill it, you must use
+
+		killall -9 java
+	
+	instead. The `-9` option means to send a `SIGKILL` which causes the operating system to forcibly kill
+	the process.
+	
+	Don\'t do this, unless you have a reason! This way, the process does not have any
+	time to properly shut down. It\'s nearly the same as pulling the power plug and might lead to
+	data loss (highly unlikely but possible).
+
+
+$H$H$H Auto-start the server during boot
+
+As the user `subshared` on your server, you enter the following command in your shell:
+
+	crontab -e
+
+This opens an editor with the so-called [Cron](https://en.wikipedia.org/wiki/Cron) jobs.
+Add a new line at the end with the following content:
+
+	@reboot ( $HOME/subshare-server/bin/subshare-server >> /tmp/subshare-server.console.log 2>&1 ) &
+
+Save the file and reboot your server. It should now automatically start the subshare server as the user `subshared`
+and write its output into `/tmp/subshare-server.console.log`.
+
+That\'s it! Have fun!
+
+
+$H$H$H Change the listening port (optional)
+
+By default, your server listens on port 8443. You can change this by editing your main configuration file:
+
+	sensible-editor ~/.subshare/subshare.properties
+
+This should open an editor with the specified file (it was created when the server started the first
+time). Add the following line at its end:
+
+	server.securePort=3939
+
+Save the file and restart the subshare server. It should now listen on port 3939 instead of its default port.
+
+**Important:** Do *not* change the server\'s port after you already created repositories on it!
+**It is not yet supported to move a repository to a different URL!**
+See [issue 31](https://github.com/subshare/subshare/issues/31).
