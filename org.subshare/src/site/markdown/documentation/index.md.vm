@@ -15,6 +15,13 @@ $H$H$H Server installation
 In order to use Subshare productively, you must [set up your own server](./server-installation.html).
 
 
+$H$H$H Check-out on separate desktop computer or restore after crash
+
+The procedure is the same, whether you want to [set up subshare (and check-out repositories) on an additional device](./check-out_on_separate_desktop-computer.html)
+or whether your computer broke (hard disk failures are common) and you want to
+[restore your backup](./check-out_on_separate_desktop-computer.html) afterwards.
+
+
 $H$H$H Wiki
 
 The [wiki](../../wiki) provides additional documentation. Also it is a place where *you* can help us and others by

@@ -71,8 +71,35 @@ You can find all logging configuration files in the `~/.subshare` directory.
 There are : 
 
 * `logback.client.xml` for the client process
-* `logback.localserver.xml` for the client's separate server process
+* `logback.localserver.xml` for the client's separate server process (see "local server" above)
 * `logback.server.xml` for the server process
+
+Please consult [the logback manual](http://logback.qos.ch/manual/) for further information
+about how to configure the logging.
+
+
+$H$H$H Can I use subshare on my Android-based smart phone or tablet?
+
+Currently, this is *not yet* possible. Sorry! But we're working on it — see [issue 32](https://github.com/subshare/subshare/issues/32).
+
+If you want to see this happen faster, you can financially support us ([contact us](../about/contact.html) then)
+or you can [contribute as a developer](./development.html).
+
+
+$H$H$H Can I use subshare on my iOS-based smart phone or tablet?
+
+No.
+
+We do not sacrifice our precious time and money to support a company devoted to enjailing their users and developers!
+There are too many [reasons not to use Apple](https://stallman.org/apple.html) to list them here.
+
+In short: subshare is our contribution to making this world a better place. We certainly won't donate our time to an
+evil company which pursues the opposite goal.
+
+However, if you really want to use subshare on an iThing, you can pay us. If you're serious about and financially capable
+to pay our efforts, please [contact us](../about/contact.html).
+
+Alternatively, you can [develop & contribute it yourself](./development.html).
 
 
 $H$H$H Another question?

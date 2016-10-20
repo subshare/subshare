@@ -1,8 +1,8 @@
-<head><title>Check-out or restore</title></head>
+<head><title>Check-out or restore (desktop computer)</title></head>
 $!{decoration.custom.setAttribute("contentHeaderLogo", "../images/header-notebook.jpg")}
 #set( $H = '#' )
 
-Check-out on a separate desktop computer (or restore after a crash)
+Check-out on separate desktop computer or restore after crash
 -------
 
 Your computer crashed and you want to restore all your data? Or you want to check-out
@@ -12,12 +12,84 @@ All you need is installing subshare and having your backup-USB-stick ready. The 
 contains your OpenPGP key pair and your server's URL. All other data is stored on the server,
 hence you need to create a backup only *once* (when you initially set up things).
 
+Note: If you generate / register additional OpenPGP key pairs / servers, a new backup
+becomes necessary, too — subshare will tell you, then. 
+
 
 $H$H$H Install Java & subshare
 
 Install Java and subshare as described in the [Getting started](./getting-started.html) guide.
 
 
-$H$H$H Start subshare
+$H$H$H Plug-in your backup-USB-stick
 
-TO BE DOCUMENTED...
+During the initial setup, subshare asked you to create a backup file and store it on a
+USB-stick. Plug-in (and mount) this stick, now.
+
+
+$H$H$H Start subshare and choose the restore procedure
+
+When subshare is started the first time (more precisely: when it doesn't find its configuration),
+it starts a "Welcome" wizard:
+
+![Welcome (step 1)](../images/check-out_on_separate_desktop-computer/subshare_restore_1.png)
+
+The 2nd page of this wizard contains a check-box for restoring from a backup:
+
+![Welcome (step 2)](../images/check-out_on_separate_desktop-computer/subshare_restore_2.png)
+
+Tick the check-box labelled "I already used Subshare before and want to import my backup, now.".
+Then click "Next".
+
+
+$H$H$H Select the backup file on your USB stick
+
+Select the backup file, which you stored on your USB-stick and click "Finish":
+
+![Welcome (step 3)](../images/check-out_on_separate_desktop-computer/subshare_restore_3.png)
+
+That's it! The backup is restored and subshare is ready to use. It thus asks you, now, to unlock
+your private OpenPGP key (as usual when starting it):
+
+![Unlock OpenPGP private key](../images/check-out_on_separate_desktop-computer/unlock_pgp-private-key.png)
+
+
+$H$H$H Select a repository for check-out
+
+In the tree, on the left side, you can navigate through all your servers and all repositories hosted on them:
+
+![Check-out repository (step 1)](../images/check-out_on_separate_desktop-computer/check-out_1.png)
+
+If you named your repositories, these (nicer) names are shown instead of the identifier: 
+
+![Check-out repository (step 2)](../images/check-out_on_separate_desktop-computer/check-out_2.png)
+
+In this example, there is only one repository on one server, but you may have multiple servers with each
+hosting multiple repositories.
+
+Of course, you only see those repositories here that you have access to, i.e. all those you created
+yourself (and thus are their owner) as well as those others granted you at least *read* permission for
+(and you accepted their invitation).
+
+You may check-out a sub-directory, only. Perhaps you don't need the entire repository on your small notebook...
+
+Select the repository (or sub-directory) you want to check-out and click the "Check-out" button.
+
+
+$H$H$H Create and select a local directory
+
+A directory-selection-dialog opens and you're asked to select a local directory as check-out target.
+
+Please create a new directory for your repository. The check-out is performed directly into the
+chosen local directory and *not* into a *sub-directory!*
+
+![Check-out repository (step 3)](../images/check-out_on_separate_desktop-computer/check-out_3.png)
+
+The above screenshot demonstrates that I created the new directory `My_Working_Copy` inside
+the directory `~/Desktop/`. Hence, the root of my `family` repository chosen above is checked-out
+into the directory `~/Desktop/My_Working_Copy/`.
+
+That's it! Subshare now downloads the repository and keeps the contents of the local folder
+`~/Desktop/My_Working_Copy/` in-sync with the contents of my server's repository:
+
+![Check-out repository DONE! (step 4)](../images/check-out_on_separate_desktop-computer/check-out_4.png)
