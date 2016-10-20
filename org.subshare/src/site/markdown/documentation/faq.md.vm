@@ -102,10 +102,23 @@ to pay our efforts, please [contact us](../about/contact.html).
 Alternatively, you can [develop & contribute it yourself](./development.html).
 
 
+$H$H$H What's the relation and what are the differences between CloudStore and subshare?
+
+[CloudStore](http://cloudstore.codewizards.co) also synchronizes files between computers. subshare
+actually builds on top of CloudStore.
+
+CloudStore solely protects the communication between client and server via encryption.
+The files are stored in plain-text on both client and server.
+This is great when your server is safe and completely under your control.
+
+subshare, however, does not trust the server. It assumes that the server is NSA-controlled ;-) Therefore,
+all data reaching (and being stored on) the server is encrypted. Only the user owning the data and the users having
+been granted read permissions are able to decrypt the files. 
+
+
 $H$H$H Another question?
 
 If your question is not answered here, please check both our [wiki](../../wiki) and our [tracker](../../tracker).
 
 If you still don\'t find what you\'re looking for, go ahead and ask your question publicly in the [tracker](../../tracker).
 Please label your question as \"question\" there.
-
