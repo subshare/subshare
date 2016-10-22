@@ -58,12 +58,17 @@ public class PgpSync implements Sync {
 	}
 
 	public PgpSync(final Server server) {
-		this.server = assertNotNull("server", server);
-		this.serverId = assertNotNull("server.serverId", this.server.getServerId());
-		this.serverUrl = assertNotNull("server.url", this.server.getUrl());
+		this.server = assertNotNull("server", server); //$NON-NLS-1$
+		this.serverId = assertNotNull("server.serverId", this.server.getServerId()); //$NON-NLS-1$
+		this.serverUrl = assertNotNull("server.url", this.server.getUrl()); //$NON-NLS-1$
 
-		lastSyncLocalLocalRevisionPropertyKey = String.format("lastSync[serverId=%s].local.localRevision", serverId);
-		lastSyncServerLocalRevisionPropertyKey = String.format("lastSync[serverId=%s].server.localRevision", serverId);
+		lastSyncLocalLocalRevisionPropertyKey = String.format("lastSync[serverId=%s].local.localRevision", serverId); //$NON-NLS-1$
+		lastSyncServerLocalRevisionPropertyKey = String.format("lastSync[serverId=%s].server.localRevision", serverId); //$NON-NLS-1$
+	}
+
+	@Override
+	public String getName() {
+		return Messages.getString("PgpSync.name"); //$NON-NLS-1$
 	}
 
 	@Override
@@ -169,7 +174,7 @@ public class PgpSync implements Sync {
 
 	private File getPgpSyncPropertiesFile() {
 		if (pgpSyncPropertiesFile == null)
-			pgpSyncPropertiesFile = createFile(ConfigDir.getInstance().getFile(), "pgpSync.properties");
+			pgpSyncPropertiesFile = createFile(ConfigDir.getInstance().getFile(), "pgpSync.properties"); //$NON-NLS-1$
 
 		return pgpSyncPropertiesFile;
 	}

@@ -6,6 +6,11 @@ import static org.subshare.gui.util.FxmlUtil.*;
 import java.beans.PropertyChangeListener;
 import java.util.function.UnaryOperator;
 
+import org.subshare.core.pgp.CreatePgpKeyParam;
+import org.subshare.gui.pgp.createkey.TimeUnit;
+import org.subshare.gui.util.PlatformUtil;
+import org.subshare.gui.wizard.WizardPageContentGridPane;
+
 import javafx.beans.InvalidationListener;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -14,14 +19,9 @@ import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.control.TextFormatter;
 import javafx.scene.control.TextFormatter.Change;
-import javafx.scene.layout.GridPane;
 import javafx.util.StringConverter;
 
-import org.subshare.core.pgp.CreatePgpKeyParam;
-import org.subshare.gui.pgp.createkey.TimeUnit;
-import org.subshare.gui.util.PlatformUtil;
-
-public abstract class ValidityPane extends GridPane {
+public class ValidityPane extends WizardPageContentGridPane {
 
 	private final CreatePgpKeyParam createPgpKeyParam;
 
@@ -133,12 +133,11 @@ public abstract class ValidityPane extends GridPane {
 		}
 	}
 
+	@Override
 	protected boolean isComplete() {
 		boolean complete = validityNumberSpinner.getValue() != null;
 		return complete;
 	}
-
-	protected abstract void updateComplete();
 
 	@Override
 	public void requestFocus() {

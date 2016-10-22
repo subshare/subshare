@@ -7,9 +7,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-import javafx.scene.Parent;
-import javafx.scene.control.SelectionMode;
-
 import org.subshare.core.pgp.PgpKeyId;
 import org.subshare.core.user.User;
 import org.subshare.core.user.UserRegistry;
@@ -18,6 +15,9 @@ import org.subshare.gui.ls.PgpPrivateKeyPassphraseManagerLs;
 import org.subshare.gui.ls.UserRegistryLs;
 import org.subshare.gui.selectuser.SelectUserPane;
 import org.subshare.gui.wizard.WizardPage;
+
+import javafx.scene.Parent;
+import javafx.scene.control.SelectionMode;
 
 public class SelectOwnerWizardPage extends WizardPage {
 
@@ -75,13 +75,5 @@ public class SelectOwnerWizardPage extends WizardPage {
 			}
 		};
 		return selectUserPane;
-	}
-
-	@Override
-	public void requestFocus() {
-		super.requestFocus();
-
-		if (selectUserPane != null)
-			selectUserPane.requestFocus();
 	}
 }

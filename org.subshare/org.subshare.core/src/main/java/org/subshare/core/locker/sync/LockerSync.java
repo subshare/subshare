@@ -18,6 +18,8 @@ import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.subshare.core.locker.LockerContent;
 import org.subshare.core.locker.LockerEncryptedDataFile;
 import org.subshare.core.locker.transport.LockerTransport;
@@ -31,8 +33,6 @@ import org.subshare.core.pgp.PgpRegistry;
 import org.subshare.core.pgp.man.PgpPrivateKeyPassphraseStoreImpl;
 import org.subshare.core.server.Server;
 import org.subshare.core.sync.Sync;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import co.codewizards.cloudstore.core.config.ConfigDir;
 import co.codewizards.cloudstore.core.dto.Uid;
@@ -58,9 +58,9 @@ public class LockerSync implements Sync {
 	private LockerContent lockerContent;
 
 	public LockerSync(final Server server) {
-		this.server = assertNotNull("server", server);
-		this.serverId = assertNotNull("server.serverId", this.server.getServerId());
-		this.serverUrl = assertNotNull("server.url", this.server.getUrl());
+		this.server = assertNotNull("server", server); //$NON-NLS-1$
+		this.serverId = assertNotNull("server.serverId", this.server.getServerId()); //$NON-NLS-1$
+		this.serverUrl = assertNotNull("server.url", this.server.getUrl()); //$NON-NLS-1$
 	}
 
 	public Server getServer() {
@@ -74,8 +74,13 @@ public class LockerSync implements Sync {
 	}
 
 	@Override
+	public String getName() {
+		return Messages.getString("LockerSync.name"); //$NON-NLS-1$
+	}
+
+	@Override
 	public void sync() {
-		logger.info("sync: serverId='{}' serverName='{}'", server.getServerId(), server.getName());
+		logger.info("sync: serverId='{}' serverName='{}'", server.getServerId(), server.getName()); //$NON-NLS-1$
 
 		lockerContent = null;
 		pgpKey = null;
@@ -89,14 +94,14 @@ public class LockerSync implements Sync {
 			for (final PgpKeyId pgpKeyId : pgpKeyIds) {
 				pgpKey = pgp.getPgpKey(pgpKeyId);
 				if (pgpKey == null)
-					throw new IllegalStateException("PgpKey not found: " + pgpKeyId);
+					throw new IllegalStateException("PgpKey not found: " + pgpKeyId); //$NON-NLS-1$
 
 				getLocalLockerTransport().setPgpKey(pgpKey);
 				getServerLockerTransport().setPgpKey(pgpKey);
 
 				final List<Uid> localVersions = getLocalLockerTransport().getVersions();
 				if (localVersions.size() != 1)
-					throw new IllegalStateException("localVersions.size() != 1");
+					throw new IllegalStateException("localVersions.size() != 1"); //$NON-NLS-1$
 
 				final Uid localVersion = localVersions.get(0);
 				final Uid lastSyncLocalVersion = getLastSyncLocalVersion();
@@ -140,15 +145,15 @@ public class LockerSync implements Sync {
 	}
 
 	public String getLastSyncServerVersionsPropertyKey() {
-		final PgpKeyId pgpKeyId = assertNotNull("pgpKey", pgpKey).getPgpKeyId();
-		final String lockerContentName = assertNotNull("lockerContent", lockerContent).getName();
-		return String.format("server[%s].pgpKey[%s].lockerContent[%s].lastSyncServerVersions", serverId, pgpKeyId, lockerContentName);
+		final PgpKeyId pgpKeyId = assertNotNull("pgpKey", pgpKey).getPgpKeyId(); //$NON-NLS-1$
+		final String lockerContentName = assertNotNull("lockerContent", lockerContent).getName(); //$NON-NLS-1$
+		return String.format("server[%s].pgpKey[%s].lockerContent[%s].lastSyncServerVersions", serverId, pgpKeyId, lockerContentName); //$NON-NLS-1$
 	}
 
 	public String getLastSyncLocalVersionPropertyKey() {
-		final PgpKeyId pgpKeyId = assertNotNull("pgpKey", pgpKey).getPgpKeyId();
-		final String lockerContentName = assertNotNull("lockerContent", lockerContent).getName();
-		return String.format("server[%s].pgpKey[%s].lockerContent[%s].lastSyncLocalVersion", serverId, pgpKeyId, lockerContentName);
+		final PgpKeyId pgpKeyId = assertNotNull("pgpKey", pgpKey).getPgpKeyId(); //$NON-NLS-1$
+		final String lockerContentName = assertNotNull("lockerContent", lockerContent).getName(); //$NON-NLS-1$
+		return String.format("server[%s].pgpKey[%s].lockerContent[%s].lastSyncLocalVersion", serverId, pgpKeyId, lockerContentName); //$NON-NLS-1$
 	}
 
 	/**
@@ -180,7 +185,7 @@ public class LockerSync implements Sync {
 			return Collections.emptyList();
 
 		final List<Uid> result = new ArrayList<Uid>();
-		final String[] strings = value.split(",");
+		final String[] strings = value.split(","); //$NON-NLS-1$
 		for (String string : strings) {
 			if (! isEmpty(string))
 				result.add(new Uid(string));
@@ -189,7 +194,7 @@ public class LockerSync implements Sync {
 	}
 
 	private void setLastSyncServerVersions(final List<Uid> serverVersions) {
-		assertNotNull("serverVersions", serverVersions);
+		assertNotNull("serverVersions", serverVersions); //$NON-NLS-1$
 		StringBuilder sb = new StringBuilder();
 		for (Uid serverVersion : serverVersions) {
 			if (sb.length() > 0)
@@ -202,14 +207,14 @@ public class LockerSync implements Sync {
 	}
 
 	private List<Uid> syncDown() {
-		logger.info("syncDown: serverId='{}' serverName='{}' pgpKeyId={} lockerContentName='{}'",
+		logger.info("syncDown: serverId='{}' serverName='{}' pgpKeyId={} lockerContentName='{}'", //$NON-NLS-1$
 				server.getServerId(), server.getName(), pgpKey.getPgpKeyId(), lockerContent.getName());
 
 		return sync(getServerLockerTransport(), getLocalLockerTransport());
 	}
 
 	private void syncUp() {
-		logger.info("syncUp: serverId='{}' serverName='{}' pgpKeyId={} lockerContentName='{}'",
+		logger.info("syncUp: serverId='{}' serverName='{}' pgpKeyId={} lockerContentName='{}'", //$NON-NLS-1$
 				server.getServerId(), server.getName(), pgpKey.getPgpKeyId(), lockerContent.getName());
 
 		// first obtaining the version, so that if it changes in the mean-time, while we sync up, we'd have to sync up again.
@@ -218,7 +223,7 @@ public class LockerSync implements Sync {
 		sync(getLocalLockerTransport(), getServerLockerTransport());
 
 		if (localVersions.size() != 1)
-			throw new IllegalStateException("localVersions.size() != 1");
+			throw new IllegalStateException("localVersions.size() != 1"); //$NON-NLS-1$
 
 		setLastSyncLocalVersion(localVersions.get(0));
 	}
@@ -228,7 +233,7 @@ public class LockerSync implements Sync {
 		final List<Uid> serverVersions = new ArrayList<Uid>(encryptedDataFiles.size());
 		for (final LockerEncryptedDataFile encryptedDataFile : encryptedDataFiles) {
 			final Uid serverVersion = encryptedDataFile.getContentVersion();
-			assertNotNull("encryptedDataFile.contentVersion", serverVersion);
+			assertNotNull("encryptedDataFile.contentVersion", serverVersion); //$NON-NLS-1$
 			serverVersions.add(serverVersion);
 
 			toLockerTransport.putEncryptedDataFile(encryptedDataFile);
@@ -266,7 +271,7 @@ public class LockerSync implements Sync {
 
 	private File getLockerSyncPropertiesFile() {
 		if (lockerSyncPropertiesFile == null)
-			lockerSyncPropertiesFile = createFile(ConfigDir.getInstance().getFile(), "lockerSync.properties");
+			lockerSyncPropertiesFile = createFile(ConfigDir.getInstance().getFile(), "lockerSync.properties"); //$NON-NLS-1$
 
 		return lockerSyncPropertiesFile;
 	}

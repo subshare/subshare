@@ -22,6 +22,24 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ExecutionException;
 
+import org.subshare.core.pgp.ImportKeysResult;
+import org.subshare.core.pgp.ImportKeysResult.ImportedMasterKey;
+import org.subshare.core.pgp.Pgp;
+import org.subshare.core.pgp.PgpKey;
+import org.subshare.core.pgp.PgpKeyId;
+import org.subshare.core.user.ImportUsersFromPgpKeysResult;
+import org.subshare.core.user.ImportUsersFromPgpKeysResult.ImportedUser;
+import org.subshare.core.user.User;
+import org.subshare.core.user.UserRegistry;
+import org.subshare.gui.concurrent.SsTask;
+import org.subshare.gui.ls.PgpLs;
+import org.subshare.gui.ls.UserRegistryLs;
+import org.subshare.gui.pgp.imp.fromserver.ImportPgpKeyFromServerWizard;
+import org.subshare.gui.user.EditUserManager;
+import org.subshare.gui.wizard.WizardDialog;
+import org.subshare.gui.wizard.WizardState;
+
+import co.codewizards.cloudstore.core.oio.File;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.collections.ListChangeListener;
@@ -38,22 +56,6 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.stage.FileChooser;
-
-import org.subshare.core.pgp.ImportKeysResult;
-import org.subshare.core.pgp.ImportKeysResult.ImportedMasterKey;
-import org.subshare.core.pgp.Pgp;
-import org.subshare.core.pgp.PgpKey;
-import org.subshare.core.pgp.PgpKeyId;
-import org.subshare.core.user.ImportUsersFromPgpKeysResult;
-import org.subshare.core.user.ImportUsersFromPgpKeysResult.ImportedUser;
-import org.subshare.core.user.User;
-import org.subshare.core.user.UserRegistry;
-import org.subshare.gui.concurrent.SsTask;
-import org.subshare.gui.ls.PgpLs;
-import org.subshare.gui.ls.UserRegistryLs;
-import org.subshare.gui.user.EditUserManager;
-
-import co.codewizards.cloudstore.core.oio.File;
 
 public class UserListPane extends GridPane {
 
@@ -288,13 +290,29 @@ public class UserListPane extends GridPane {
 	}
 
 	@FXML
-	private void importPgpKeyButtonClicked(final ActionEvent event) {
+	private void importPgpKeyFromFileButtonClicked(final ActionEvent event) {
 		final File file = showOpenFileDialog("Choose file containing PGP key(s) to import");
 		if (file == null)
 			return;
 
 		final Pgp pgp = getPgp();
 		final ImportKeysResult importKeysResult = pgp.importKeys(file);
+		postImportPgpKey(importKeysResult);
+	}
+
+	@FXML
+	private void importPgpKeyFromServerButtonClicked(final ActionEvent event) {
+		ImportPgpKeyFromServerWizard wizard = new ImportPgpKeyFromServerWizard();
+		WizardDialog dialog = new WizardDialog(getScene().getWindow(), wizard);
+		dialog.showAndWait();
+		if (wizard.getState() == WizardState.FINISHED)
+			postImportPgpKey(wizard.getImportPgpKeyFromServerData().getImportKeysResult());
+	}
+
+	private void postImportPgpKey(final ImportKeysResult importKeysResult) {
+		assertNotNull("importKeysResult", importKeysResult);
+
+		final Pgp pgp = getPgp();
 		final Map<PgpKeyId, PgpKey> pgpKeyId2PgpKey = new HashMap<>();
 
 		for (ImportedMasterKey importedMasterKey : importKeysResult.getPgpKeyId2ImportedMasterKey().values()) {

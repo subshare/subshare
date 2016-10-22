@@ -24,21 +24,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import javafx.application.Platform;
-import javafx.beans.InvalidationListener;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.event.ActionEvent;
-import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.Tooltip;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.RowConstraints;
-
 import org.subshare.core.file.DataFileFilter;
 import org.subshare.core.file.EncryptedDataFile;
 import org.subshare.core.pgp.Pgp;
@@ -52,12 +37,26 @@ import org.subshare.gui.filetree.FileTreePane;
 import org.subshare.gui.invitation.accept.AcceptInvitationData;
 import org.subshare.gui.ls.PgpLs;
 import org.subshare.gui.severity.SeverityImageRegistry;
+import org.subshare.gui.wizard.WizardPageContentGridPane;
 
 import co.codewizards.cloudstore.core.Severity;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.ls.client.LocalServerClient;
+import javafx.application.Platform;
+import javafx.beans.InvalidationListener;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.RowConstraints;
 
-public abstract class AcceptInvitationSourcePane extends GridPane {
+public class AcceptInvitationSourcePane extends WizardPageContentGridPane {
 	private final AcceptInvitationData acceptInvitationData;
 
 	private static final AtomicInteger nextThreadId = new AtomicInteger();
@@ -199,6 +198,7 @@ public abstract class AcceptInvitationSourcePane extends GridPane {
 		return null;
 	}
 
+	@Override
 	protected boolean isComplete() {
 		return acceptInvitationData.getInvitationFile() != null;
 	}
@@ -366,8 +366,6 @@ public abstract class AcceptInvitationSourcePane extends GridPane {
 
 		return properties;
 	}
-
-	protected abstract void updateComplete();
 
 	@Override
 	public void requestFocus() {

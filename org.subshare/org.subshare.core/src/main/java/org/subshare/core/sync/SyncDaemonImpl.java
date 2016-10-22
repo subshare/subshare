@@ -162,8 +162,8 @@ public abstract class SyncDaemonImpl implements SyncDaemon {
 						final long startTimestamp = System.currentTimeMillis();
 						sync.sync();
 
-						final String message = String.format("Synchronizing with server '%s' (%s) took %d ms.",
-								server.getName(), server.getUrl(), System.currentTimeMillis() - startTimestamp);
+						final String message = String.format("%s: Synchronizing with server '%s' (%s) took %d ms.",
+								sync.getName(), server.getName(), server.getUrl(), System.currentTimeMillis() - startTimestamp);
 
 						getStates().add(new SyncState(server, server.getUrl(), Severity.INFO, message, null,
 								syncStarted, new Date()));

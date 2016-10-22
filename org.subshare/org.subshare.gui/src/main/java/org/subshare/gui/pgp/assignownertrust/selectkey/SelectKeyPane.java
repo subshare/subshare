@@ -2,6 +2,15 @@ package org.subshare.gui.pgp.assignownertrust.selectkey;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static org.subshare.gui.util.FxmlUtil.*;
+
+import org.subshare.core.pgp.PgpOwnerTrust;
+import org.subshare.gui.pgp.assignownertrust.AssignOwnerTrustData;
+import org.subshare.gui.pgp.keytree.PgpKeyPgpKeyTreeItem;
+import org.subshare.gui.pgp.keytree.PgpKeyTreeItem;
+import org.subshare.gui.pgp.keytree.PgpKeyTreePane;
+import org.subshare.gui.pgp.keytree.UserRootPgpKeyTreeItem;
+import org.subshare.gui.wizard.WizardPageContentGridPane;
+
 import javafx.beans.InvalidationListener;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.SetChangeListener;
@@ -11,16 +20,8 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.Toggle;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.TreeItem;
-import javafx.scene.layout.GridPane;
 
-import org.subshare.core.pgp.PgpOwnerTrust;
-import org.subshare.gui.pgp.assignownertrust.AssignOwnerTrustData;
-import org.subshare.gui.pgp.keytree.PgpKeyPgpKeyTreeItem;
-import org.subshare.gui.pgp.keytree.PgpKeyTreeItem;
-import org.subshare.gui.pgp.keytree.PgpKeyTreePane;
-import org.subshare.gui.pgp.keytree.UserRootPgpKeyTreeItem;
-
-public abstract class SelectKeyPane extends GridPane {
+public class SelectKeyPane extends WizardPageContentGridPane {
 
 	private /*final*/ AssignOwnerTrustData assignOwnerTrustData;
 
@@ -100,12 +101,11 @@ public abstract class SelectKeyPane extends GridPane {
 		});
 	}
 
+	@Override
 	protected boolean isComplete() {
 		return assignOwnerTrustData.getAssignToAllPgpKeys() == Boolean.TRUE
 				|| ! assignOwnerTrustData.getPgpKeys().isEmpty();
 	}
-
-	protected abstract void updateComplete();
 
 	@Override
 	public void requestFocus() {

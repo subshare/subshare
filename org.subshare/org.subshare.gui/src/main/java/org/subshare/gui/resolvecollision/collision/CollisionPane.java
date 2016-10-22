@@ -7,14 +7,14 @@ import java.util.Date;
 
 import org.subshare.core.dto.CollisionPrivateDto;
 import org.subshare.gui.resolvecollision.CollisionDtoWithPlainHistoCryptoRepoFileDto;
+import org.subshare.gui.wizard.WizardPageContentGridPane;
 
 import javafx.beans.InvalidationListener;
 import javafx.fxml.FXML;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.TextArea;
-import javafx.scene.layout.GridPane;
 
-public class CollisionPane extends GridPane {
+public class CollisionPane extends WizardPageContentGridPane {
 
 	private final CollisionData collisionData;
 
@@ -61,5 +61,10 @@ public class CollisionPane extends GridPane {
 	public void requestFocus() {
 		super.requestFocus();
 		resolvedCheckBox.requestFocus();
+	}
+
+	@Override
+	protected boolean isComplete() {
+		return true;
 	}
 }

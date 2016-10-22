@@ -1,8 +1,13 @@
 package org.subshare.gui.wizard;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.event.EventHandler;
@@ -20,12 +25,19 @@ import javafx.scene.text.Text;
  * basic wizard page class
  */
 public abstract class WizardPage extends VBox {
+
+	private static final Logger logger = LoggerFactory.getLogger(WizardPage.class);
+
 	private String title;
 	private Wizard wizard;
+	protected Parent content;
 	protected final Button previousButton = new Button("P_revious");
 	protected final Button nextButton = new Button("N_ext");
 	protected final Button cancelButton = new Button("Cancel");
 	protected final Button finishButton = new Button("_Finish");
+	protected final BooleanProperty shown = new SimpleBooleanProperty(this, "shown");
+	protected final BooleanProperty shownRequired = new SimpleBooleanProperty(this, "shownRequired");
+	protected final BooleanProperty shownOrNotShownRequired = new SimpleBooleanProperty(this, "shownOrNotShownRequired");
 
 	private final ObjectProperty<WizardPage> nextPage = new SimpleObjectProperty<WizardPage>(this, "nextPage") { //$NON-NLS-1$
 		@Override
@@ -80,6 +92,9 @@ public abstract class WizardPage extends VBox {
 				finishButton.setDefaultButton(true);
 			}
 		});
+
+		shownOrNotShownRequired.bind(shown.or(shownRequired.not()));
+		shown.addListener(observable -> logger.debug("shown={}", shown.get()));
 
 		addEventFilter(KeyEvent.KEY_RELEASED, new EventHandler<KeyEvent>() {
 			@Override
@@ -149,11 +164,17 @@ public abstract class WizardPage extends VBox {
 		Region spring = new Region();
 		VBox.setVgrow(spring, Priority.ALWAYS);
 
-		Parent content = createContent();
+		content = createContent();
 		if (content == null)
 			content = new HBox(new Text(String.format(
 					">>> NO CONTENT <<<\n\nYour implementation of WizardPage.createContent() in class\n%s\nreturned null!", //$NON-NLS-1$
 					this.getClass().getName())));
+
+		if (content instanceof CompletableContent) {
+			final ReadOnlyBooleanProperty contentCompleteProperty = ((CompletableContent) content).completeProperty();
+			assertNotNull("content.completeProperty()", contentCompleteProperty);
+			this.completeProperty().bind(contentCompleteProperty.and(shownOrNotShownRequired));
+		}
 
 		getChildren().add(content);
 
@@ -181,6 +202,7 @@ public abstract class WizardPage extends VBox {
 	 * Callback-method telling this page that it is now shown to the user.
 	 */
 	protected void onShown() {
+		shown.set(true);
 	}
 
 	/**
@@ -189,6 +211,12 @@ public abstract class WizardPage extends VBox {
 	protected void onHidden() {
 	}
 
+	/**
+	 * Creates the content. Though it makes no sense, the result may be <code>null</code>.
+	 * <p>
+	 * The content-object may implement {@link CompletableContent}.
+	 * @return the content. May be <code>null</code>, but should not be.
+	 */
 	protected abstract Parent createContent();
 
 	protected boolean hasNextPage() {
@@ -281,5 +309,13 @@ public abstract class WizardPage extends VBox {
 	public void updateButtonsDisable() {
 		previousButton.setDisable(! hasPreviousPage());
 		nextButton.setDisable(! (hasNextPage() && completeProperty.get()));
+	}
+
+	@Override
+	public void requestFocus() {
+		super.requestFocus();
+
+		if (content != null)
+			content.requestFocus();
 	}
 }

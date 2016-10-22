@@ -6,6 +6,10 @@ import static org.subshare.gui.util.FxmlUtil.*;
 import java.beans.PropertyChangeListener;
 import java.util.List;
 
+import org.subshare.core.pgp.CreatePgpKeyParam;
+import org.subshare.core.pgp.CreatePgpKeyParam.Algorithm;
+import org.subshare.gui.wizard.WizardPageContentGridPane;
+
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.property.adapter.JavaBeanObjectProperty;
@@ -14,13 +18,9 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.ComboBox;
-import javafx.scene.layout.GridPane;
 import javafx.util.StringConverter;
 
-import org.subshare.core.pgp.CreatePgpKeyParam;
-import org.subshare.core.pgp.CreatePgpKeyParam.Algorithm;
-
-public abstract class AdvancedPane extends GridPane {
+public class AdvancedPane extends WizardPageContentGridPane {
 
 	private final CreatePgpKeyParam createPgpKeyParam;
 
@@ -86,12 +86,10 @@ public abstract class AdvancedPane extends GridPane {
 		}
 	}
 
+	@Override
 	protected boolean isComplete() {
 		boolean complete = createPgpKeyParam.getAlgorithm() != null;
 		complete &= createPgpKeyParam.getStrength() > 0;
 		return complete;
 	}
-
-	protected abstract void updateComplete();
-
 }

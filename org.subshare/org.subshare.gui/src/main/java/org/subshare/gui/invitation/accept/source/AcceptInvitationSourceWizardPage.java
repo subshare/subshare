@@ -1,11 +1,12 @@
 package org.subshare.gui.invitation.accept.source;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
-import javafx.scene.Parent;
 
 import org.subshare.gui.invitation.accept.AcceptInvitationData;
 import org.subshare.gui.invitation.accept.checkoutdir.CheckOutDirectoryWizardPage;
 import org.subshare.gui.wizard.WizardPage;
+
+import javafx.scene.Parent;
 
 public class AcceptInvitationSourceWizardPage extends WizardPage {
 
@@ -25,20 +26,7 @@ public class AcceptInvitationSourceWizardPage extends WizardPage {
 
 	@Override
 	protected Parent createContent() {
-		acceptInvitationSourcePane = new AcceptInvitationSourcePane(acceptInvitationData) {
-			@Override
-			protected void updateComplete() {
-				AcceptInvitationSourceWizardPage.this.setComplete(isComplete());
-			}
-		};
+		acceptInvitationSourcePane = new AcceptInvitationSourcePane(acceptInvitationData);
 		return acceptInvitationSourcePane;
-	}
-
-	@Override
-	public void requestFocus() {
-		super.requestFocus();
-
-		if (acceptInvitationSourcePane != null)
-			acceptInvitationSourcePane.requestFocus();
 	}
 }

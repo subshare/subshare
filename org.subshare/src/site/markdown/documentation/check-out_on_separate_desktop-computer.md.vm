@@ -12,9 +12,6 @@ All you need is installing subshare and having your backup-USB-stick ready. The 
 contains your OpenPGP key pair and your server's URL. All other data is stored on the server,
 hence you need to create a backup only *once* (when you initially set up things).
 
-Note: If you generate / register additional OpenPGP key pairs / servers, a new backup
-becomes necessary, too — subshare will tell you, then. 
-
 
 $H$H$H Install Java & subshare
 

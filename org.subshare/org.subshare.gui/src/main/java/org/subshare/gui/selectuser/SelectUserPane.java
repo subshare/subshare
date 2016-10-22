@@ -16,6 +16,9 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import org.subshare.core.user.User;
+import org.subshare.gui.userlist.UserListItem;
+
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.collections.FXCollections;
@@ -27,9 +30,6 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.text.Text;
-
-import org.subshare.core.user.User;
-import org.subshare.gui.userlist.UserListItem;
 
 public class SelectUserPane extends GridPane {
 

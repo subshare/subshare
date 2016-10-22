@@ -1,11 +1,16 @@
 package org.subshare.gui.pgp.assignownertrust.selectownertrust;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.assertNotNull;
-import static co.codewizards.cloudstore.core.util.StringUtil.isEmpty;
-import static org.subshare.gui.util.FxmlUtil.loadDynamicComponentFxml;
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static co.codewizards.cloudstore.core.util.StringUtil.*;
+import static org.subshare.gui.util.FxmlUtil.*;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import org.subshare.core.pgp.PgpOwnerTrust;
+import org.subshare.core.user.User;
+import org.subshare.gui.pgp.assignownertrust.AssignOwnerTrustData;
+import org.subshare.gui.wizard.WizardPageContentGridPane;
 
 import javafx.beans.InvalidationListener;
 import javafx.beans.value.ChangeListener;
@@ -14,15 +19,10 @@ import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Toggle;
 import javafx.scene.control.ToggleGroup;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 
-import org.subshare.core.pgp.PgpOwnerTrust;
-import org.subshare.core.user.User;
-import org.subshare.gui.pgp.assignownertrust.AssignOwnerTrustData;
-
-public abstract class SelectOwnerTrustPane extends GridPane {
+public class SelectOwnerTrustPane extends WizardPageContentGridPane {
 
 	private /*final*/ AssignOwnerTrustData assignOwnerTrustData;
 
@@ -49,12 +49,11 @@ public abstract class SelectOwnerTrustPane extends GridPane {
 		updateToggleGroup();
 	}
 
+	@Override
 	protected boolean isComplete() {
 		return assignOwnerTrustData.getOwnerTrust() != null
 				&& assignOwnerTrustData.getOwnerTrust() != PgpOwnerTrust.UNSPECIFIED;
 	}
-
-	protected abstract void updateComplete();
 
 	private void populateUserTextField() {
 		final User user = assignOwnerTrustData.getUser();

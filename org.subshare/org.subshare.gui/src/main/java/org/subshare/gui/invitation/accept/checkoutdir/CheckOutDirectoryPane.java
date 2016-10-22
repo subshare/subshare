@@ -5,16 +5,15 @@ import static org.subshare.gui.util.FxmlUtil.*;
 
 import java.util.Iterator;
 
-import javafx.beans.InvalidationListener;
-import javafx.fxml.FXML;
-import javafx.scene.layout.GridPane;
-
 import org.subshare.gui.filetree.FileTreePane;
 import org.subshare.gui.invitation.accept.AcceptInvitationData;
+import org.subshare.gui.wizard.WizardPageContentGridPane;
 
 import co.codewizards.cloudstore.core.oio.File;
+import javafx.beans.InvalidationListener;
+import javafx.fxml.FXML;
 
-public abstract class CheckOutDirectoryPane extends GridPane {
+public class CheckOutDirectoryPane extends WizardPageContentGridPane {
 	private final AcceptInvitationData acceptInvitationData;
 
 	@FXML
@@ -28,6 +27,7 @@ public abstract class CheckOutDirectoryPane extends GridPane {
 		onSelectedFilesChanged();
 	}
 
+	@Override
 	protected boolean isComplete() {
 		return acceptInvitationData.getCheckOutDirectory() != null;
 	}
@@ -42,8 +42,6 @@ public abstract class CheckOutDirectoryPane extends GridPane {
 		acceptInvitationData.setCheckOutDirectory(file);
 		updateComplete();
 	}
-
-	protected abstract void updateComplete();
 
 	@Override
 	public void requestFocus() {

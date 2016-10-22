@@ -1,10 +1,11 @@
 package org.subshare.gui.backup.imp.source;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
-import javafx.scene.Parent;
 
 import org.subshare.gui.backup.imp.ImportBackupData;
 import org.subshare.gui.wizard.WizardPage;
+
+import javafx.scene.Parent;
 
 public class ImportBackupSourceWizardPage extends WizardPage {
 
@@ -18,12 +19,7 @@ public class ImportBackupSourceWizardPage extends WizardPage {
 
 	@Override
 	protected Parent createContent() {
-		importBackupSourcePane = new ImportBackupSourcePane(importBackupData) {
-			@Override
-			protected void updateComplete() {
-				ImportBackupSourceWizardPage.this.setComplete(isComplete());
-			}
-		};
+		importBackupSourcePane = new ImportBackupSourcePane(importBackupData);
 		return importBackupSourcePane;
 	}
 }

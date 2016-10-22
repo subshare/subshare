@@ -1,18 +1,18 @@
 package org.subshare.gui.welcome.server;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
-import javafx.beans.InvalidationListener;
-import javafx.beans.WeakInvalidationListener;
-import javafx.scene.Parent;
 
 import org.subshare.gui.invitation.accept.source.AcceptInvitationSourceWizardPage;
 import org.subshare.gui.welcome.ServerData;
 import org.subshare.gui.wizard.WizardPage;
 
+import javafx.beans.InvalidationListener;
+import javafx.beans.WeakInvalidationListener;
+import javafx.scene.Parent;
+
 public class ServerWizardPage extends WizardPage {
 
 	private final ServerData serverData;
-	private ServerPane serverPane;
 	private final AcceptInvitationSourceWizardPage acceptInvitationSourceWizardPage;
 	private final InvalidationListener acceptInvitationInvalidationListener;
 
@@ -28,12 +28,6 @@ public class ServerWizardPage extends WizardPage {
 
 	@Override
 	protected Parent createContent() {
-		serverPane = new ServerPane(serverData) {
-			@Override
-			protected void updateComplete() {
-				ServerWizardPage.this.setComplete(isComplete());
-			}
-		};
-		return serverPane;
+		return new ServerPane(serverData);
 	}
 }

@@ -34,16 +34,28 @@
 				<Tooltip text="Add a new user."/> 
 			</tooltip>
 		</Button>
-		<Button fx:id="importPgpKeyButton" onAction="#importPgpKeyButtonClicked"> 
+		<Button fx:id="importPgpKeyButton" onAction="#importPgpKeyFromFileButtonClicked"> 
 			<graphic>
 				<ImageView> 
 					<image>
-						<Image url="@import-pgp-key_24x24.png"/> 
+						<Image url="@import-pgp-key-from-file_24x24.png"/> 
 					</image>
 				</ImageView>
 			</graphic>
 			<tooltip>
-				<Tooltip text="Import one or more PGP keys from a file."/> 
+				<Tooltip text="Import PGP keys from a file."/> 
+			</tooltip>
+		</Button>
+		<Button fx:id="importPgpKeyButton" onAction="#importPgpKeyFromServerButtonClicked"> 
+			<graphic>
+				<ImageView> 
+					<image>
+						<Image url="@import-pgp-key-from-server_24x24.png"/> 
+					</image>
+				</ImageView>
+			</graphic>
+			<tooltip>
+				<Tooltip text="Import a PGP key from the server."/> 
 			</tooltip>
 		</Button>
 		<Button fx:id="editButton" onAction="#editButtonClicked"> 

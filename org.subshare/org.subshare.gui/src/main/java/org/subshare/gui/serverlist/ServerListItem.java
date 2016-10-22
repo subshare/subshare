@@ -8,16 +8,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.subshare.core.server.Server;
+import org.subshare.core.sync.SyncState;
+
+import co.codewizards.cloudstore.core.Severity;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.property.adapter.JavaBeanObjectPropertyBuilder;
 import javafx.beans.property.adapter.JavaBeanStringPropertyBuilder;
-
-import org.subshare.core.server.Server;
-import org.subshare.core.sync.SyncState;
-
-import co.codewizards.cloudstore.core.Severity;
 
 public class ServerListItem {
 
@@ -29,6 +28,7 @@ public class ServerListItem {
 	private final ObjectProperty<URL> url;
 	private final ObjectProperty<Severity> severity = new SimpleObjectProperty<>(this, "severity");
 
+	@SuppressWarnings("unchecked")
 	public ServerListItem(final Server server) {
 		this.server = assertNotNull("server", server);
 		try {

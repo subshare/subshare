@@ -6,6 +6,11 @@ import java.util.Deque;
 import java.util.IdentityHashMap;
 import java.util.LinkedList;
 
+import org.subshare.gui.error.ErrorHandler;
+import org.subshare.gui.util.PlatformUtil;
+
+import co.codewizards.cloudstore.core.progress.NullProgressMonitor;
+import co.codewizards.cloudstore.core.progress.ProgressMonitor;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.property.BooleanProperty;
@@ -18,12 +23,6 @@ import javafx.beans.value.ChangeListener;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.layout.StackPane;
-
-import org.subshare.gui.error.ErrorHandler;
-import org.subshare.gui.util.PlatformUtil;
-
-import co.codewizards.cloudstore.core.progress.NullProgressMonitor;
-import co.codewizards.cloudstore.core.progress.ProgressMonitor;
 
 /**
  * Abstract wizard base class.
@@ -89,9 +88,9 @@ public abstract class Wizard extends StackPane {
     /**
      * Create an instance of a {@code Wizard} with the specified first page. If {@code firstPage} is
      * <code>null</code>, it must be set later via {@link #setFirstPage(WizardPage)} or the
-     * {@link #firstPageProperty() firstPage} before the wizard can be used.
+     * {@link #firstPageProperty() firstPageProperty} before the wizard can be used.
      * @param firstPage the first page to be shown by this wizard. May be <code>null</code> - in this
-     * case it must be set via the {@code firstPage}, before the wizard is usable.
+     * case it must be set via the {@code firstPageProperty}, before the wizard is usable.
      */
 	protected Wizard(final WizardPage firstPage) {
 		setFirstPage(firstPage);

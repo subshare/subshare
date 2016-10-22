@@ -6,17 +6,17 @@ import static org.subshare.gui.util.FxmlUtil.*;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.subshare.core.server.Server;
+import org.subshare.gui.createrepo.CreateRepoData;
+import org.subshare.gui.ls.ServerRegistryLs;
+import org.subshare.gui.wizard.WizardPageContentGridPane;
+
 import javafx.beans.InvalidationListener;
 import javafx.fxml.FXML;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableView;
-import javafx.scene.layout.GridPane;
 
-import org.subshare.core.server.Server;
-import org.subshare.gui.createrepo.CreateRepoData;
-import org.subshare.gui.ls.ServerRegistryLs;
-
-public abstract class CreateRepoSelectServerPane extends GridPane {
+public class CreateRepoSelectServerPane extends WizardPageContentGridPane {
 
 	private final CreateRepoData createRepoData;
 
@@ -51,11 +51,10 @@ public abstract class CreateRepoSelectServerPane extends GridPane {
 		updateComplete();
 	}
 
+	@Override
 	protected boolean isComplete() {
 		return createRepoData.getServer() != null;
 	}
-
-	protected abstract void updateComplete();
 
 	@Override
 	public void requestFocus() {

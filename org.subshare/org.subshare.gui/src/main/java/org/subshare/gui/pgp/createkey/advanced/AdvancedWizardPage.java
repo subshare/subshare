@@ -1,10 +1,11 @@
 package org.subshare.gui.pgp.createkey.advanced;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
-import javafx.scene.Parent;
 
 import org.subshare.core.pgp.CreatePgpKeyParam;
 import org.subshare.gui.wizard.WizardPage;
+
+import javafx.scene.Parent;
 
 public class AdvancedWizardPage extends WizardPage {
 
@@ -19,20 +20,7 @@ public class AdvancedWizardPage extends WizardPage {
 
 	@Override
 	protected Parent createContent() {
-		advancedPane = new AdvancedPane(createPgpKeyParam) {
-			@Override
-			protected void updateComplete() {
-				AdvancedWizardPage.this.setComplete(isComplete());
-			}
-		};
+		advancedPane = new AdvancedPane(createPgpKeyParam);
 		return advancedPane;
-	}
-
-	@Override
-	public void requestFocus() {
-		super.requestFocus();
-
-		if (advancedPane != null)
-			advancedPane.requestFocus();
 	}
 }

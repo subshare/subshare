@@ -9,6 +9,11 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.subshare.core.pgp.CreatePgpKeyParam;
+import org.subshare.core.pgp.PgpUserId;
+import org.subshare.gui.pgp.createkey.FxPgpUserId;
+import org.subshare.gui.wizard.WizardPageContentGridPane;
+
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.collections.FXCollections;
@@ -17,13 +22,8 @@ import javafx.fxml.FXML;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.TextFieldTableCell;
-import javafx.scene.layout.GridPane;
 
-import org.subshare.core.pgp.CreatePgpKeyParam;
-import org.subshare.core.pgp.PgpUserId;
-import org.subshare.gui.pgp.createkey.FxPgpUserId;
-
-public abstract class UserIdPane extends GridPane {
+public class UserIdPane extends WizardPageContentGridPane {
 
 	private final CreatePgpKeyParam createPgpKeyParam;
 
@@ -72,6 +72,7 @@ public abstract class UserIdPane extends GridPane {
 		}
 	}
 
+	@Override
 	protected boolean isComplete() {
 		int nonEmptyPgpUserIdCount = 0;
 		for (PgpUserId pgpUserId : createPgpKeyParam.getUserIds()) {
@@ -81,8 +82,6 @@ public abstract class UserIdPane extends GridPane {
 		boolean complete = nonEmptyPgpUserIdCount > 0;
 		return complete;
 	}
-
-	protected abstract void updateComplete();
 
 	@Override
 	public void requestFocus() {

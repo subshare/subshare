@@ -6,17 +6,16 @@ import static org.subshare.gui.util.FxmlUtil.*;
 
 import java.util.Iterator;
 
-import javafx.beans.InvalidationListener;
-import javafx.fxml.FXML;
-import javafx.scene.layout.GridPane;
-
 import org.subshare.core.file.DataFileFilter;
 import org.subshare.gui.backup.imp.ImportBackupData;
 import org.subshare.gui.filetree.FileTreePane;
+import org.subshare.gui.wizard.WizardPageContentGridPane;
 
 import co.codewizards.cloudstore.core.oio.File;
+import javafx.beans.InvalidationListener;
+import javafx.fxml.FXML;
 
-public abstract class ImportBackupSourcePane extends GridPane {
+public class ImportBackupSourcePane extends WizardPageContentGridPane {
 
 	private final ImportBackupData importBackupData;
 
@@ -31,6 +30,7 @@ public abstract class ImportBackupSourcePane extends GridPane {
 		onSelectedFilesChanged();
 	}
 
+	@Override
 	protected boolean isComplete() {
 		return importBackupData.getImportBackupFile() != null;
 	}
@@ -45,8 +45,6 @@ public abstract class ImportBackupSourcePane extends GridPane {
 		importBackupData.setImportBackupFile(file);
 		updateComplete();
 	}
-
-	protected abstract void updateComplete();
 
 	@Override
 	public void requestFocus() {

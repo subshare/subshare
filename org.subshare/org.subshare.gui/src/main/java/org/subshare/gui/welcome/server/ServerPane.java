@@ -7,6 +7,11 @@ import static org.subshare.gui.util.FxmlUtil.*;
 import java.beans.PropertyChangeListener;
 import java.net.URL;
 
+import org.subshare.core.server.Server;
+import org.subshare.gui.util.UrlStringConverter;
+import org.subshare.gui.welcome.ServerData;
+import org.subshare.gui.wizard.WizardPageContentGridPane;
+
 import javafx.beans.InvalidationListener;
 import javafx.beans.WeakInvalidationListener;
 import javafx.beans.property.ObjectProperty;
@@ -17,13 +22,8 @@ import javafx.fxml.FXML;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.GridPane;
 
-import org.subshare.core.server.Server;
-import org.subshare.gui.util.UrlStringConverter;
-import org.subshare.gui.welcome.ServerData;
-
-public abstract class ServerPane extends GridPane {
+public class ServerPane extends WizardPageContentGridPane {
 
 	private final PropertyChangeListener updateCompletePropertyChangeListener = event -> updateComplete();
 	private final InvalidationListener updateCompleteInvalidationListener = observable -> updateComplete();
@@ -74,6 +74,7 @@ public abstract class ServerPane extends GridPane {
 		updateComplete();
 	}
 
+	@Override
 	protected boolean isComplete() {
 		if (serverData.acceptInvitationProperty().get())
 			return true;
@@ -81,6 +82,4 @@ public abstract class ServerPane extends GridPane {
 		final URL url = server.getUrl();
 		return url != null;
 	}
-
-	protected abstract void updateComplete();
 }

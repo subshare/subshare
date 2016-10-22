@@ -31,9 +31,14 @@ dynamic component UserListPane resourcefile "messages.properties" {
 				onAction : controllermethod addButtonClicked
 			},
 			Button id importPgpKeyButton {
-				graphic : ImageView { image : Image { url : "@import-pgp-key_24x24.png" } },
-				tooltip : Tooltip { text : "Import one or more PGP keys from a file." },
-				onAction : controllermethod importPgpKeyButtonClicked
+				graphic : ImageView { image : Image { url : "@import-pgp-key-from-file_24x24.png" } },
+				tooltip : Tooltip { text : "Import PGP keys from a file." },
+				onAction : controllermethod importPgpKeyFromFileButtonClicked
+			},
+			Button id importPgpKeyButton {
+				graphic : ImageView { image : Image { url : "@import-pgp-key-from-server_24x24.png" } },
+				tooltip : Tooltip { text : "Import a PGP key from the server." },
+				onAction : controllermethod importPgpKeyFromServerButtonClicked
 			},
 			Button id editButton {
 				graphic : ImageView { image : Image { url : "@edit_24x24.png" } },

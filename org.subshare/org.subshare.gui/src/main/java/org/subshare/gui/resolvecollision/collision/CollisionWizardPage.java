@@ -19,5 +19,4 @@ public class CollisionWizardPage extends WizardPage {
 	protected Parent createContent() {
 		return new CollisionPane(collisionData);
 	}
-
 }

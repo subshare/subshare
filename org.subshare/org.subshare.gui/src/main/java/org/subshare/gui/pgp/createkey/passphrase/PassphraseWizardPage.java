@@ -1,11 +1,12 @@
 package org.subshare.gui.pgp.createkey.passphrase;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
-import javafx.scene.Parent;
 
 import org.subshare.core.pgp.CreatePgpKeyParam;
 import org.subshare.gui.pgp.createkey.validity.ValidityWizardPage;
 import org.subshare.gui.wizard.WizardPage;
+
+import javafx.scene.Parent;
 
 public class PassphraseWizardPage extends WizardPage {
 
@@ -28,13 +29,5 @@ public class PassphraseWizardPage extends WizardPage {
 			}
 		};
 		return passphrasePane;
-	}
-
-	@Override
-	public void requestFocus() {
-		super.requestFocus();
-
-		if (passphrasePane != null)
-			passphrasePane.requestFocus();
 	}
 }

@@ -1,47 +1,28 @@
 package org.subshare.gui.backup.exp.destination;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
-import javafx.scene.Parent;
 
 import org.subshare.gui.backup.exp.ExportBackupData;
 import org.subshare.gui.wizard.WizardPage;
+
+import javafx.scene.Parent;
 
 public class ExportBackupDestinationWizardPage extends WizardPage {
 
 	private final ExportBackupData exportBackupData;
 	private ExportBackupDestinationPane exportBackupDestinationPane;
-	private boolean shownAtLeastOnce;
 
 	public ExportBackupDestinationWizardPage(ExportBackupData exportBackupData) {
 		super("Export backup");
 		this.exportBackupData = assertNotNull("exportBackupData", exportBackupData);
+		shownRequired.set(true);
 		setMinSize(550, 550);
 //		setPrefSize(600, 600);
 	}
 
 	@Override
 	protected Parent createContent() {
-		exportBackupDestinationPane = new ExportBackupDestinationPane(exportBackupData) {
-			@Override
-			protected void updateComplete() {
-				ExportBackupDestinationWizardPage.this.setComplete(shownAtLeastOnce && isComplete());
-			}
-		};
+		exportBackupDestinationPane = new ExportBackupDestinationPane(exportBackupData);
 		return exportBackupDestinationPane;
-	}
-
-	@Override
-	protected void onShown() {
-		super.onShown();
-		shownAtLeastOnce = true;
-		exportBackupDestinationPane.updateComplete();
-	}
-
-	@Override
-	public void requestFocus() {
-		super.requestFocus();
-
-		if (exportBackupDestinationPane != null)
-			exportBackupDestinationPane.requestFocus();
 	}
 }
