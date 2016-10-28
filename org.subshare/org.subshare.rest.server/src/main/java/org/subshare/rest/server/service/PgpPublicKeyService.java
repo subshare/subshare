@@ -25,7 +25,7 @@ import org.subshare.core.pgp.PgpKeyId;
 import org.subshare.core.pgp.PgpKeyIdList;
 import org.subshare.core.pgp.transport.PgpTransport;
 import org.subshare.core.pgp.transport.PgpTransportFactory;
-import org.subshare.core.pgp.transport.PgpTransportFactoryRegistry;
+import org.subshare.core.pgp.transport.PgpTransportFactoryRegistryImpl;
 import org.subshare.core.pgp.transport.local.LocalPgpTransportFactory;
 
 @Path("_PgpPublicKey")
@@ -94,7 +94,7 @@ public class PgpPublicKeyService {
 	}
 
 	private PgpTransport createLocalPgpTransport() {
-		final PgpTransportFactory localPgpTransportFactory = PgpTransportFactoryRegistry.getInstance().getPgpTransportFactoryOrFail(LocalPgpTransportFactory.class);
+		final PgpTransportFactory localPgpTransportFactory = PgpTransportFactoryRegistryImpl.getInstance().getPgpTransportFactoryOrFail(LocalPgpTransportFactory.class);
 		return localPgpTransportFactory.createPgpTransport(LocalPgpTransportFactory.LOCAL_URL);
 	}
 }

@@ -6,17 +6,24 @@ import org.subshare.gui.wizard.WizardPage;
 
 import javafx.scene.Parent;
 
-public class SearchCriteriaWizardPage extends WizardPage {
+public class SearchResultWizardPage extends WizardPage {
 
 	private final ImportPgpKeyFromServerData importPgpKeyFromServerData;
+	private SearchResultPane searchResultPane;
 
-	public SearchCriteriaWizardPage(final ImportPgpKeyFromServerData importPgpKeyFromServerData) {
-		super("Search criteria");
+	public SearchResultWizardPage(final ImportPgpKeyFromServerData importPgpKeyFromServerData) {
+		super("Search result");
 		this.importPgpKeyFromServerData = assertNotNull("importPgpKeyFromServerData", importPgpKeyFromServerData);
 	}
 
 	@Override
+	protected void onShown() {
+		super.onShown();
+		searchResultPane.searchAsync();
+	}
+
+	@Override
 	protected Parent createContent() {
-		return new SearchCriteriaPane(importPgpKeyFromServerData);
+		return searchResultPane = new SearchResultPane(importPgpKeyFromServerData);
 	}
 }

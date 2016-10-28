@@ -8,7 +8,7 @@ import org.subshare.core.pgp.PgpAuthenticationCallback;
 import org.subshare.core.pgp.PgpRegistry;
 import org.subshare.core.pgp.man.PgpPrivateKeyPassphraseStoreImpl;
 import org.subshare.core.pgp.sync.PgpSyncDaemonImpl;
-import org.subshare.core.pgp.transport.PgpTransportFactoryRegistry;
+import org.subshare.core.pgp.transport.PgpTransportFactoryRegistryImpl;
 import org.subshare.core.repo.metaonly.MetaOnlyRepoSyncDaemonImpl;
 import org.subshare.core.repo.sync.RepoSyncTimerImpl;
 import org.subshare.ls.server.cproc.ssl.AcceptAllDynamicX509TrustManagerCallback;
@@ -30,7 +30,7 @@ public class LocalServerInit {
 
 	public static synchronized void initPrepare() {
 		if (! initPrepareDone) {
-			PgpTransportFactoryRegistry.getInstance().getPgpTransportFactoryOrFail(RestPgpTransportFactory.class).setDynamicX509TrustManagerCallbackClass(AcceptAllDynamicX509TrustManagerCallback.class);
+			PgpTransportFactoryRegistryImpl.getInstance().getPgpTransportFactoryOrFail(RestPgpTransportFactory.class).setDynamicX509TrustManagerCallbackClass(AcceptAllDynamicX509TrustManagerCallback.class);
 			LockerTransportFactoryRegistry.getInstance().getLockerTransportFactoryOrFail(RestLockerTransportFactory.class).setDynamicX509TrustManagerCallbackClass(AcceptAllDynamicX509TrustManagerCallback.class);
 
 			final CryptreeRestRepoTransportFactoryImpl cryptreeRestRepoTransportFactoryImpl = RepoTransportFactoryRegistry.getInstance().getRepoTransportFactoryOrFail(CryptreeRestRepoTransportFactoryImpl.class);

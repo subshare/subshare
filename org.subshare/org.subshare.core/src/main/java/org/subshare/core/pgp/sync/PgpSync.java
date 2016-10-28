@@ -21,6 +21,7 @@ import org.subshare.core.pgp.PgpKeyId;
 import org.subshare.core.pgp.transport.PgpTransport;
 import org.subshare.core.pgp.transport.PgpTransportFactory;
 import org.subshare.core.pgp.transport.PgpTransportFactoryRegistry;
+import org.subshare.core.pgp.transport.PgpTransportFactoryRegistryImpl;
 import org.subshare.core.pgp.transport.local.LocalPgpTransportFactory;
 import org.subshare.core.server.Server;
 import org.subshare.core.sync.Sync;
@@ -156,7 +157,7 @@ public class PgpSync implements Sync {
 
 	private PgpTransport getLocalPgpTransport() {
 		if (localPgpTransport == null) {
-			final PgpTransportFactoryRegistry pgpTransportFactoryRegistry = PgpTransportFactoryRegistry.getInstance();
+			final PgpTransportFactoryRegistry pgpTransportFactoryRegistry = PgpTransportFactoryRegistryImpl.getInstance();
 			final PgpTransportFactory pgpTransportFactory = pgpTransportFactoryRegistry.getPgpTransportFactoryOrFail(LocalPgpTransportFactory.LOCAL_URL);
 			localPgpTransport = pgpTransportFactory.createPgpTransport(LocalPgpTransportFactory.LOCAL_URL);
 		}
@@ -165,7 +166,7 @@ public class PgpSync implements Sync {
 
 	public PgpTransport getServerPgpTransport() {
 		if (serverPgpTransport == null) {
-			final PgpTransportFactoryRegistry pgpTransportFactoryRegistry = PgpTransportFactoryRegistry.getInstance();
+			final PgpTransportFactoryRegistry pgpTransportFactoryRegistry = PgpTransportFactoryRegistryImpl.getInstance();
 			final PgpTransportFactory pgpTransportFactory = pgpTransportFactoryRegistry.getPgpTransportFactoryOrFail(serverUrl);
 			serverPgpTransport = pgpTransportFactory.createPgpTransport(serverUrl);
 		}
