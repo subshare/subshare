@@ -2,6 +2,9 @@ package org.subshare.gui.pgp.privatekeypassphrase;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static org.subshare.gui.util.FxmlUtil.*;
+
+import org.subshare.core.pgp.PgpKey;
+
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -12,8 +15,6 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
-
-import org.subshare.core.pgp.PgpKey;
 
 public abstract class PgpPrivateKeyPassphrasePromptPane extends GridPane {
 

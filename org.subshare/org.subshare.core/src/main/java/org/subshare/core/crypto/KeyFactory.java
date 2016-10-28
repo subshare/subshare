@@ -11,10 +11,10 @@ import org.bouncycastle.crypto.AsymmetricCipherKeyPairGenerator;
 import org.bouncycastle.crypto.KeyGenerationParameters;
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.bouncycastle.crypto.params.RSAKeyGenerationParameters;
-import org.subshare.crypto.CryptoRegistry;
-import org.subshare.crypto.SecretKeyGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.subshare.crypto.CryptoRegistry;
+import org.subshare.crypto.SecretKeyGenerator;
 
 /**
  * @deprecated This class sucks - it should be replaced by nicer constructions!

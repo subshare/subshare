@@ -21,7 +21,7 @@ import org.subshare.local.persistence.RepositoryOwner;
 import org.subshare.local.persistence.RepositoryOwnerDao;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyLookupImpl;
 
-import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.core.dto.jaxb.RepoFileDtoIo;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;

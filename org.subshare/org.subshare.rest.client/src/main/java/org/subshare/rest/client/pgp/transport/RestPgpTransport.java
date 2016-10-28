@@ -14,8 +14,10 @@ import org.subshare.core.pgp.PgpKeyId;
 import org.subshare.core.pgp.transport.AbstractPgpTransport;
 import org.subshare.rest.client.pgp.transport.request.GetLocalRevisionRequest;
 import org.subshare.rest.client.pgp.transport.request.GetPgpPublicKeys;
+import org.subshare.rest.client.pgp.transport.request.GetPgpPublicKeysMatchingQuery;
 import org.subshare.rest.client.pgp.transport.request.PutPgpPublicKeys;
 
+import co.codewizards.cloudstore.core.util.IOUtil;
 import co.codewizards.cloudstore.rest.client.ClientBuilderDefaultValuesDecorator;
 import co.codewizards.cloudstore.rest.client.CloudStoreRestClient;
 import co.codewizards.cloudstore.rest.client.CredentialsProvider;
@@ -97,13 +99,29 @@ public class RestPgpTransport extends AbstractPgpTransport {
 			return;
 
 		try {
-			final byte[] buf = new byte[64 * 1024];
-			int bytesRead;
 			try {
+				IOUtil.transferStreamData(in, out);
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		} finally {
+			try {
+				in.close();
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
+	}
 
-				while ((bytesRead = in.read(buf)) >= 0)
-					out.write(buf, 0, bytesRead);
+	@Override
+	public void exportPublicKeysMatchingQuery(final String queryString, final OutputStream out) {
+		final InputStream in = getClient().execute(new GetPgpPublicKeysMatchingQuery(queryString));
+		if (in == null)
+			return;
 
+		try {
+			try {
+				IOUtil.transferStreamData(in, out);
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}

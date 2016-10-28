@@ -3,13 +3,13 @@ package org.subshare.local;
 import static co.codewizards.cloudstore.core.util.Util.*;
 import static org.assertj.core.api.Assertions.*;
 
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.subshare.core.Cryptree;
 import org.subshare.core.GrantAccessDeniedException;
 import org.subshare.core.ReadAccessDeniedException;
 import org.subshare.core.user.UserRepoKeyRing;
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import co.codewizards.cloudstore.core.progress.LoggerProgressMonitor;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;

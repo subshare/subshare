@@ -28,7 +28,7 @@ import org.subshare.gui.resolvecollision.ResolveCollisionData;
 import org.subshare.gui.resolvecollision.ResolveCollisionWizard;
 import org.subshare.gui.wizard.WizardDialog;
 
-import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import co.codewizards.cloudstore.core.repo.sync.RepoSyncDaemon;

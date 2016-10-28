@@ -7,10 +7,10 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.subshare.core.user.User;
+
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableSet;
-
-import org.subshare.core.user.User;
 
 public class EditUserManager {
 

@@ -19,6 +19,16 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
+import org.subshare.core.repo.ServerRepo;
+import org.subshare.core.repo.ServerRepoRegistry;
+import org.subshare.core.server.Server;
+import org.subshare.gui.checkout.CheckOutWizard;
+import org.subshare.gui.concurrent.SsTask;
+import org.subshare.gui.createrepo.CreateRepoData;
+import org.subshare.gui.createrepo.CreateRepoWizard;
+import org.subshare.gui.ls.ServerRepoRegistryLs;
+import org.subshare.gui.wizard.WizardDialog;
+
 import javafx.collections.ListChangeListener;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
@@ -30,16 +40,6 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.GridPane;
-
-import org.subshare.core.repo.ServerRepo;
-import org.subshare.core.repo.ServerRepoRegistry;
-import org.subshare.core.server.Server;
-import org.subshare.gui.checkout.CheckOutWizard;
-import org.subshare.gui.concurrent.SsTask;
-import org.subshare.gui.createrepo.CreateRepoData;
-import org.subshare.gui.createrepo.CreateRepoWizard;
-import org.subshare.gui.ls.ServerRepoRegistryLs;
-import org.subshare.gui.wizard.WizardDialog;
 
 public class ServerPane extends GridPane {
 

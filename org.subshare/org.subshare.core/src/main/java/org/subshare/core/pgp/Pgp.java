@@ -75,11 +75,72 @@ public interface Pgp extends Bean<Pgp.Property> {
 
 	byte[] exportPublicKeysWithSecretKeys(Set<PgpKey> pgpKeys);
 
+	/**
+	 * Import keys from an {@code InputStream} into the key-rings managed by this {@code Pgp} instance.
+	 * <p>
+	 * The data to be imported was previously exported by {@link #exportPublicKeys(Set, OutputStream)}
+	 * or {@link #exportPublicKeysWithSecretKeys(Set, OutputStream)} -- these methods are
+	 * so to say symmetric.
+	 * @param in the {@code InputStream} to read from. Must not be <code>null</code>.
+	 * @return a description of what exactly has been imported. Never <code>null</code>.
+	 * @see #importKeys(byte[])
+	 * @see #importKeys(File)
+	 * @see #importKeysTemporarily(InputStream)
+	 * @see #exportPublicKeys(Set, OutputStream)
+	 * @see #exportPublicKeysWithSecretKeys(Set, OutputStream)
+	 */
 	ImportKeysResult importKeys(InputStream in);
 
+	/**
+	 * Convenience method delegating to {@link #importKeys(InputStream)}.
+	 * @param file the file containing the keys to be imported. Must not be <code>null</code>.
+	 * @return a description of what exactly has been imported. Never <code>null</code>.
+	 * @see #importKeys(InputStream)
+	 * @see #importKeysTemporarily(File)
+	 */
 	ImportKeysResult importKeys(File file);
 
+	/**
+	 * Convenience method delegating to {@link #importKeys(InputStream)}.
+	 * @param data the binary data containing the keys to be imported. Must not be <code>null</code>.
+	 * @return a description of what exactly has been imported. Never <code>null</code>.
+	 * @see #importKeys(InputStream)
+	 * @see #importKeysTemporarily(byte[])
+	 */
 	ImportKeysResult importKeys(byte[] data);
+
+	/**
+	 * Creates a new, separate {@code Pgp} instance and imports the keys serialised in the given {@code InputStream}
+	 * there.
+	 * <p>
+	 * The keys are thus <b>not imported</b>  into the real key-rings managed by {@code this}.
+	 * @param in the input-stream to read from. Must not be <code>null</code>.
+	 * @return a new instance of {@code Pgp} copied from <code>this</code> and additionally holding
+	 * the new keys imported from the given {@code InputStream}; together with an {@code ImportKeysResult}.
+	 * Never <code>null</code>.
+	 * @see #importKeys(InputStream)
+	 */
+	TempImportKeysResult importKeysTemporarily(InputStream in);
+
+	/**
+	 * Convenience method delegating to {@link #importKeysTemporarily(InputStream)}.
+	 * @param file the file containing the keys to be imported into a new, temporary {@code Pgp} instance. Must not be <code>null</code>.
+	 * @return a new instance of {@code Pgp} copied from <code>this</code> and additionally holding
+	 * the new keys imported from the given {@code InputStream}; together with an {@code ImportKeysResult}.
+	 * Never <code>null</code>.
+	 * @see #importKeysTemporarily(InputStream)
+	 */
+	TempImportKeysResult importKeysTemporarily(File file);
+
+	/**
+	 * Convenience method delegating to {@link #importKeysTemporarily(InputStream)}.
+	 * @param data the binary data containing the keys to be imported into a new, temporary {@code Pgp} instance. Must not be <code>null</code>.
+	 * @return a new instance of {@code Pgp} copied from <code>this</code> and additionally holding
+	 * the new keys imported from the given {@code InputStream}; together with an {@code ImportKeysResult}.
+	 * Never <code>null</code>.
+	 * @see #importKeysTemporarily(InputStream)
+	 */
+	TempImportKeysResult importKeysTemporarily(byte[] data);
 
 	/**
 	 * Gets the <i>global</i> local-revision.
@@ -124,4 +185,5 @@ public interface Pgp extends Bean<Pgp.Property> {
 	boolean testPassphrase(PgpKey pgpKey, char[] passphrase) throws IllegalArgumentException;
 
 	void setDisabled(PgpKey pgpKey, boolean disabled);
+
 }

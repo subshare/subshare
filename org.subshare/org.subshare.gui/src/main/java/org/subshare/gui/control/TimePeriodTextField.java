@@ -5,6 +5,10 @@ import static co.codewizards.cloudstore.core.util.Util.*;
 
 import java.text.ParseException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import co.codewizards.cloudstore.core.TimePeriod;
 import javafx.beans.InvalidationListener;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -15,11 +19,6 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.text.Text;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import co.codewizards.cloudstore.core.TimePeriod;
 
 public class TimePeriodTextField extends TextField {
 

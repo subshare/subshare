@@ -6,7 +6,7 @@ import java.util.Set;
 
 import org.subshare.core.dto.PlainHistoCryptoRepoFileDto;
 
-import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.Uid;
 
 @SuppressWarnings("serial")
 public class PlainHistoCryptoRepoFileFilter implements Serializable, Cloneable {

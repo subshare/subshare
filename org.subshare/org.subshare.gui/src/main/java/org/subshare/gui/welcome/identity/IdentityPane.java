@@ -2,14 +2,15 @@ package org.subshare.gui.welcome.identity;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static org.subshare.gui.util.FxmlUtil.*;
+
+import org.subshare.gui.welcome.IdentityData;
+
 import javafx.fxml.FXML;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.text.Text;
-
-import org.subshare.gui.welcome.IdentityData;
 
 public class IdentityPane extends GridPane {
 

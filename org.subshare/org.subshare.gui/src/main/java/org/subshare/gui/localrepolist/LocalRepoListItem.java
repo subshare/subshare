@@ -8,6 +8,12 @@ import java.text.DateFormat;
 import java.util.Date;
 import java.util.Set;
 
+import org.subshare.core.repo.LocalRepo;
+
+import co.codewizards.cloudstore.core.Severity;
+import co.codewizards.cloudstore.core.oio.File;
+import co.codewizards.cloudstore.core.repo.sync.RepoSyncActivity;
+import co.codewizards.cloudstore.core.repo.sync.RepoSyncState;
 import javafx.beans.InvalidationListener;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
@@ -17,13 +23,6 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.property.adapter.JavaBeanObjectPropertyBuilder;
 import javafx.beans.property.adapter.JavaBeanStringPropertyBuilder;
-
-import org.subshare.core.repo.LocalRepo;
-
-import co.codewizards.cloudstore.core.Severity;
-import co.codewizards.cloudstore.core.oio.File;
-import co.codewizards.cloudstore.core.repo.sync.RepoSyncActivity;
-import co.codewizards.cloudstore.core.repo.sync.RepoSyncState;
 
 public class LocalRepoListItem {
 

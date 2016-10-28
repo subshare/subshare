@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.*;
 
 import org.junit.Test;
 
-import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.Uid;
 
 public class CollisionTest {
 

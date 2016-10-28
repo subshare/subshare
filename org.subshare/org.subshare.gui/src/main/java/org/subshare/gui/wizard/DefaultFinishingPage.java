@@ -1,6 +1,7 @@
 package org.subshare.gui.wizard;
 
 import static org.subshare.gui.util.FxmlUtil.*;
+
 import javafx.fxml.FXML;
 import javafx.scene.layout.GridPane;
 import javafx.scene.text.Text;

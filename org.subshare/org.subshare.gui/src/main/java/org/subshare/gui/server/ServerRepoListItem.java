@@ -1,10 +1,11 @@
 package org.subshare.gui.server;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
-import javafx.beans.property.StringProperty;
-import javafx.beans.property.adapter.JavaBeanStringPropertyBuilder;
 
 import org.subshare.core.repo.ServerRepo;
+
+import javafx.beans.property.StringProperty;
+import javafx.beans.property.adapter.JavaBeanStringPropertyBuilder;
 
 public class ServerRepoListItem {
 

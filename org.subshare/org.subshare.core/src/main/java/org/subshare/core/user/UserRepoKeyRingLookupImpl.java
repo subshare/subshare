@@ -8,7 +8,7 @@ import java.util.UUID;
 import org.subshare.core.repo.ServerRepo;
 import org.subshare.core.repo.ServerRepoRegistryImpl;
 
-import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.Uid;
 
 public class UserRepoKeyRingLookupImpl implements UserRepoKeyRingLookup {
 

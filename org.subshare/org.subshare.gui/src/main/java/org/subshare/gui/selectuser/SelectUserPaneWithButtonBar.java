@@ -6,14 +6,14 @@ import static org.subshare.gui.util.FxmlUtil.*;
 import java.util.Collection;
 import java.util.List;
 
+import org.subshare.core.user.User;
+
 import javafx.collections.ObservableSet;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.layout.GridPane;
-
-import org.subshare.core.user.User;
 
 public abstract class SelectUserPaneWithButtonBar extends GridPane {
 

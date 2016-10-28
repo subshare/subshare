@@ -10,11 +10,11 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import javafx.application.Platform;
-
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpKeyId;
 import org.subshare.core.user.User;
+
+import javafx.application.Platform;
 
 public class UserRootPgpKeyTreeItem extends PgpKeyTreeItem<User> {
 

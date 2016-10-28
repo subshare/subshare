@@ -2,13 +2,12 @@ package org.subshare.gui.createrepo;
 
 import java.util.HashSet;
 
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableSet;
-
 import org.subshare.core.server.Server;
 import org.subshare.core.user.User;
 
 import co.codewizards.cloudstore.core.oio.File;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableSet;
 
 public class CreateRepoData {
 

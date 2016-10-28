@@ -295,9 +295,8 @@ public class UserListPane extends GridPane {
 		if (file == null)
 			return;
 
-		final Pgp pgp = getPgp();
-		final ImportKeysResult importKeysResult = pgp.importKeys(file);
-		postImportPgpKey(importKeysResult);
+		final ImportKeysResult importKeysResult = getPgp().importKeys(file);
+		importUsersFromPgpKeys(importKeysResult);
 	}
 
 	@FXML
@@ -306,10 +305,10 @@ public class UserListPane extends GridPane {
 		WizardDialog dialog = new WizardDialog(getScene().getWindow(), wizard);
 		dialog.showAndWait();
 		if (wizard.getState() == WizardState.FINISHED)
-			postImportPgpKey(wizard.getImportPgpKeyFromServerData().getImportKeysResult());
+			editImportedUsers(wizard.getImportPgpKeyFromServerData().getImportUsersResult());
 	}
 
-	private void postImportPgpKey(final ImportKeysResult importKeysResult) {
+	private void importUsersFromPgpKeys(final ImportKeysResult importKeysResult) {
 		assertNotNull("importKeysResult", importKeysResult);
 
 		final Pgp pgp = getPgp();
@@ -323,6 +322,11 @@ public class UserListPane extends GridPane {
 		}
 
 		final ImportUsersFromPgpKeysResult importUsersFromPgpKeysResult = getUserRegistry().importUsersFromPgpKeys(pgpKeyId2PgpKey.values());
+		editImportedUsers(importUsersFromPgpKeysResult);
+	}
+
+	private void editImportedUsers(final ImportUsersFromPgpKeysResult importUsersFromPgpKeysResult) {
+		assertNotNull("importUsersFromPgpKeysResult", importUsersFromPgpKeysResult);
 
 		final List<User> users = new ArrayList<User>();
 		for (List<ImportedUser> importedUsers : importUsersFromPgpKeysResult.getPgpKeyId2ImportedUsers().values()) {

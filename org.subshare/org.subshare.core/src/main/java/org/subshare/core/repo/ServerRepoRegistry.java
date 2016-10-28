@@ -4,9 +4,9 @@ import java.beans.PropertyChangeListener;
 import java.util.List;
 import java.util.UUID;
 
+import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.core.bean.Bean;
 import co.codewizards.cloudstore.core.bean.PropertyBase;
-import co.codewizards.cloudstore.core.dto.Uid;
 
 public interface ServerRepoRegistry extends Bean<ServerRepoRegistry.Property> {
 

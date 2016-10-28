@@ -6,7 +6,7 @@ import java.util.Date;
 
 import org.subshare.core.dto.HistoFrameDto;
 
-import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.Uid;
 
 public class HistoFrameListItem {
 

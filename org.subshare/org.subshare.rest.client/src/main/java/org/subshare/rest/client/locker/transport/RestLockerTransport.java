@@ -14,7 +14,7 @@ import org.subshare.rest.client.locker.transport.request.GetLockerContentVersion
 import org.subshare.rest.client.locker.transport.request.GetLockerEncryptedDataFile;
 import org.subshare.rest.client.locker.transport.request.PutLockerEncryptedDataFile;
 
-import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.rest.client.ClientBuilderDefaultValuesDecorator;
 import co.codewizards.cloudstore.rest.client.CloudStoreRestClient;
 import co.codewizards.cloudstore.rest.client.CredentialsProvider;

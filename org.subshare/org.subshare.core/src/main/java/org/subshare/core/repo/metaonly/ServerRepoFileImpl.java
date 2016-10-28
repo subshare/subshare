@@ -14,12 +14,12 @@ import org.subshare.core.repo.listener.LocalRepoCommitEventManagerImpl;
 import org.subshare.core.repo.listener.WeakLocalRepoCommitEventListener;
 import org.subshare.core.server.Server;
 
+import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.core.collection.ListMerger;
 import co.codewizards.cloudstore.core.dto.DirectoryDto;
 import co.codewizards.cloudstore.core.dto.NormalFileDto;
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
 import co.codewizards.cloudstore.core.dto.SymlinkDto;
-import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.util.UrlUtil;
 
 public class ServerRepoFileImpl implements ServerRepoFile {

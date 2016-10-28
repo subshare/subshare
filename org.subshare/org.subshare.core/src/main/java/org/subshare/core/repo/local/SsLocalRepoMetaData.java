@@ -16,7 +16,7 @@ import org.subshare.core.dto.PermissionType;
 import org.subshare.core.dto.PlainHistoCryptoRepoFileDto;
 import org.subshare.core.user.UserRepoKey;
 
-import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoMetaData;
 
 public interface SsLocalRepoMetaData extends LocalRepoMetaData {

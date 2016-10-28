@@ -32,11 +32,29 @@ import org.subshare.core.pgp.transport.local.LocalPgpTransportFactory;
 public class PgpPublicKeyService {
 
 	@GET
-	@Path("localRevision")
+	@Path("_localRevision")
 	public LongDto getLocalRevision() {
 		try (final PgpTransport localPgpTransport = createLocalPgpTransport();) {
 			return new LongDto(localPgpTransport.getLocalRevision());
 		}
+	}
+
+	@GET
+	@Path("_search/{queryString}")
+	@Produces(MediaType.APPLICATION_OCTET_STREAM)
+	public Response searchPgpPublicKeys(@PathParam("queryString") final String queryString) {
+		assertNotNull("queryString", queryString);
+
+		final StreamingOutput result = new StreamingOutput() {
+			@Override
+			public void write(OutputStream output) throws IOException, WebApplicationException {
+				try (final PgpTransport localPgpTransport = createLocalPgpTransport();) {
+					localPgpTransport.exportPublicKeysMatchingQuery(queryString, output);
+					output.flush();
+				}
+			}
+		};
+		return Response.ok(result).build();
 	}
 
 	// required! without this method an empty pgpKeyIdList causes an exception, because no matching method is found

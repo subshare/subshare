@@ -2,17 +2,17 @@ package org.subshare.test;
 
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static org.assertj.core.api.Assertions.*;
-import mockit.Mock;
-import mockit.MockUp;
 
+import org.junit.Test;
 import org.subshare.core.repo.local.SsLocalRepoMetaData;
 import org.subshare.local.UserRepoKeyPublicKeyHelper;
 import org.subshare.local.persistence.UserRepoKeyPublicKey;
-import org.junit.Test;
 
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
+import mockit.Mock;
+import mockit.MockUp;
 
 public class MetaOnlyRepoSyncIT extends AbstractRepoToRepoSyncIT {
 

@@ -12,8 +12,8 @@ import java.util.Random;
 
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.bouncycastle.crypto.params.KeyParameter;
-import org.subshare.core.dto.CryptoKeyType;
 import org.junit.Test;
+import org.subshare.core.dto.CryptoKeyType;
 
 
 public class EncrypterDecrypterStreamTest {

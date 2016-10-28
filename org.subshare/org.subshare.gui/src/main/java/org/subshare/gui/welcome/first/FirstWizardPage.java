@@ -1,8 +1,8 @@
 package org.subshare.gui.welcome.first;
 
-import javafx.scene.Parent;
-
 import org.subshare.gui.wizard.WizardPage;
+
+import javafx.scene.Parent;
 
 public class FirstWizardPage extends WizardPage {
 

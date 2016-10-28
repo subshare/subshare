@@ -2,14 +2,15 @@ package org.subshare.gui.welcome.identity;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
-import javafx.beans.InvalidationListener;
-import javafx.beans.WeakInvalidationListener;
-import javafx.scene.Parent;
 
 import org.subshare.gui.backup.imp.source.ImportBackupSourceWizardPage;
 import org.subshare.gui.pgp.createkey.passphrase.PassphraseWizardPage;
 import org.subshare.gui.welcome.IdentityData;
 import org.subshare.gui.wizard.WizardPage;
+
+import javafx.beans.InvalidationListener;
+import javafx.beans.WeakInvalidationListener;
+import javafx.scene.Parent;
 
 public class IdentityWizardPage extends WizardPage {
 	private final IdentityData identityData;

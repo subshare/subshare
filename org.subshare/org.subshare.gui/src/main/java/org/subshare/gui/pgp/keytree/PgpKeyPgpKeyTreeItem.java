@@ -8,14 +8,14 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import javafx.collections.ObservableList;
-import javafx.scene.control.TreeItem;
-
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpKeyAlgorithm;
 import org.subshare.core.pgp.PgpKeyFlag;
 import org.subshare.core.pgp.PgpKeyValidity;
 import org.subshare.core.pgp.PgpOwnerTrust;
+
+import javafx.collections.ObservableList;
+import javafx.scene.control.TreeItem;
 
 public class PgpKeyPgpKeyTreeItem extends PgpKeyTreeItem<PgpKey> {
 

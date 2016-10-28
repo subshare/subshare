@@ -7,6 +7,10 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import org.subshare.core.dto.PermissionType;
+import org.subshare.core.user.User;
+
+import co.codewizards.cloudstore.core.Uid;
 import javafx.beans.InvalidationListener;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -14,11 +18,6 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableSet;
-
-import org.subshare.core.dto.PermissionType;
-import org.subshare.core.user.User;
-
-import co.codewizards.cloudstore.core.dto.Uid;
 
 public class UserListItem extends org.subshare.gui.userlist.UserListItem {
 

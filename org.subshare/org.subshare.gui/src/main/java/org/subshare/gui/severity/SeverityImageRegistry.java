@@ -7,11 +7,10 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
-import javafx.scene.image.Image;
-
 import org.subshare.gui.IconSize;
 
 import co.codewizards.cloudstore.core.Severity;
+import javafx.scene.image.Image;
 
 public class SeverityImageRegistry {
 

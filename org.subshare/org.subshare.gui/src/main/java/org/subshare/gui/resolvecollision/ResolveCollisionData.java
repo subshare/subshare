@@ -9,7 +9,7 @@ import java.util.Set;
 import org.subshare.core.repo.LocalRepo;
 import org.subshare.gui.resolvecollision.collision.CollisionData;
 
-import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.Uid;
 
 public class ResolveCollisionData {
 

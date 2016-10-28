@@ -6,8 +6,8 @@ import static co.codewizards.cloudstore.core.util.Util.*;
 import java.util.Date;
 import java.util.UUID;
 
+import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.core.bean.AbstractBean;
-import co.codewizards.cloudstore.core.dto.Uid;
 
 public class ServerRepoImpl extends AbstractBean<ServerRepo.Property> implements ServerRepo {
 

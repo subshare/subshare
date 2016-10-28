@@ -2,12 +2,13 @@ package org.subshare.gui.maintree;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
-import javafx.scene.Parent;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 
 import org.subshare.core.repo.LocalRepo;
 import org.subshare.gui.localrepo.LocalRepoPane;
+
+import javafx.scene.Parent;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 
 public class LocalRepoMainTreeItem extends MainTreeItem<LocalRepo> {
 

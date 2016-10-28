@@ -13,7 +13,7 @@ import org.subshare.local.persistence.CryptoKeyDao;
 import org.subshare.local.persistence.HistoCryptoRepoFile;
 import org.subshare.local.persistence.HistoCryptoRepoFileDao;
 
-import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
 
 public class CollisionDtoConverter {

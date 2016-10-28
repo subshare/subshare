@@ -2,6 +2,7 @@ package org.subshare.gui.wizard;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
+
 import javafx.beans.InvalidationListener;
 import javafx.scene.Scene;
 import javafx.stage.Modality;

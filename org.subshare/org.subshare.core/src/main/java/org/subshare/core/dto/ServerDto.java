@@ -2,7 +2,7 @@ package org.subshare.core.dto;
 
 import java.util.Date;
 
-import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.Uid;
 
 public class ServerDto {
 

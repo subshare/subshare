@@ -7,7 +7,7 @@ import java.util.UUID;
 import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
 import org.subshare.core.sign.Signature;
 
-import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.Uid;
 
 class TestPk implements UserRepoKey.PublicKeyWithSignature {
 	private final Uid userRepoKeyId;

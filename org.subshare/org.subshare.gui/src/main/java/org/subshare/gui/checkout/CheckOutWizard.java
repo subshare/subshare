@@ -2,8 +2,6 @@ package org.subshare.gui.checkout;
 
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
-import javafx.stage.DirectoryChooser;
-import javafx.stage.Window;
 
 import org.subshare.core.repo.ServerRepo;
 import org.subshare.core.repo.metaonly.ServerRepoFile;
@@ -13,6 +11,8 @@ import org.subshare.gui.ls.ServerRepoManagerLs;
 
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.repo.sync.RepoSyncDaemon;
+import javafx.stage.DirectoryChooser;
+import javafx.stage.Window;
 
 public class CheckOutWizard { // TODO sub-class Wizard!!!
 

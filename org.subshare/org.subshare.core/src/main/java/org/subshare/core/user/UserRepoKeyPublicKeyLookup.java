@@ -1,6 +1,6 @@
 package org.subshare.core.user;
 
-import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.Uid;
 
 public interface UserRepoKeyPublicKeyLookup {
 

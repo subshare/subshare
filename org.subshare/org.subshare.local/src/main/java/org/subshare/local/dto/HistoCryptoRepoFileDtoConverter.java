@@ -13,7 +13,7 @@ import org.subshare.local.persistence.HistoCryptoRepoFileDao;
 import org.subshare.local.persistence.HistoFrame;
 import org.subshare.local.persistence.HistoFrameDao;
 
-import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
 
 public class HistoCryptoRepoFileDtoConverter {

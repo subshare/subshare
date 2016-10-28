@@ -32,7 +32,7 @@ import org.subshare.gui.ls.LocalRepoCommitEventManagerLs;
 import org.subshare.gui.ls.LocalRepoManagerFactoryLs;
 import org.subshare.gui.ls.UserRegistryLs;
 
-import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyObjectProperty;

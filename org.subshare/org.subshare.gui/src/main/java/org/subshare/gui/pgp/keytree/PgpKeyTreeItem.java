@@ -6,6 +6,9 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
+import org.subshare.core.pgp.Pgp;
+import org.subshare.gui.ls.PgpLs;
+
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -14,9 +17,6 @@ import javafx.beans.property.StringProperty;
 import javafx.scene.Node;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeTableView;
-
-import org.subshare.core.pgp.Pgp;
-import org.subshare.gui.ls.PgpLs;
 
 public class PgpKeyTreeItem<T> extends TreeItem<PgpKeyTreeItem<?>> {
 

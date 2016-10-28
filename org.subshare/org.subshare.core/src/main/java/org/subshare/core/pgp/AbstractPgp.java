@@ -102,6 +102,24 @@ public abstract class AbstractPgp implements Pgp {
 
 	@Override
 	public ImportKeysResult importKeys(byte[] data) {
+		assertNotNull("data", data);
 		return importKeys(new ByteArrayInputStream(data));
+	}
+
+	@Override
+	public TempImportKeysResult importKeysTemporarily(File file) {
+		try {
+			try (InputStream in = assertNotNull("file", file).createInputStream();) {
+				return importKeysTemporarily(in);
+			}
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@Override
+	public TempImportKeysResult importKeysTemporarily(byte[] data) {
+		assertNotNull("data", data);
+		return importKeysTemporarily(new ByteArrayInputStream(data));
 	}
 }

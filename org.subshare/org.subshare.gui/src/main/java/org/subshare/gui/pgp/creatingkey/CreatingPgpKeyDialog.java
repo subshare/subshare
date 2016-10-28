@@ -1,15 +1,16 @@
 package org.subshare.gui.pgp.creatingkey;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+
+import org.subshare.core.pgp.CreatePgpKeyParam;
+import org.subshare.core.pgp.PgpUserId;
+
 import javafx.event.ActionEvent;
 import javafx.scene.Scene;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
-
-import org.subshare.core.pgp.CreatePgpKeyParam;
-import org.subshare.core.pgp.PgpUserId;
 
 public class CreatingPgpKeyDialog extends Stage {
 

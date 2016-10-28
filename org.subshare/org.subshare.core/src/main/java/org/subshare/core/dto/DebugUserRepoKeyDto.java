@@ -11,7 +11,7 @@ import org.subshare.core.Cryptree;
 import org.subshare.core.user.User;
 import org.subshare.core.user.UserRepoKeyRing;
 
-import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.Uid;
 
 @SuppressWarnings("serial")
 @XmlRootElement

@@ -20,7 +20,7 @@ import org.subshare.core.io.InputStreamSource;
 import org.subshare.core.sign.Signature;
 import org.subshare.core.sign.WriteProtected;
 
-import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.local.persistence.Entity;
 
 @PersistenceCapable

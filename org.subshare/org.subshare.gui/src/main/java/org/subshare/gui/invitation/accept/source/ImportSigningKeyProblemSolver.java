@@ -10,14 +10,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import javafx.geometry.Insets;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.ButtonType;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.text.Text;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.subshare.core.file.EncryptedDataFile;
 import org.subshare.core.pgp.ImportKeysResult;
 import org.subshare.core.pgp.ImportKeysResult.ImportedMasterKey;
@@ -28,10 +22,15 @@ import org.subshare.core.pgp.PgpKeyId;
 import org.subshare.core.user.UserRegistry;
 import org.subshare.gui.ls.PgpLs;
 import org.subshare.gui.ls.UserRegistryLs;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import co.codewizards.cloudstore.ls.client.LocalServerClient;
+import javafx.geometry.Insets;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.ButtonType;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.text.Text;
 
 public class ImportSigningKeyProblemSolver extends AbstractProblemSolver {
 

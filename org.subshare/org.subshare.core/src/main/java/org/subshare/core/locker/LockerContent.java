@@ -2,7 +2,7 @@ package org.subshare.core.locker;
 
 import java.io.IOException;
 
-import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.Uid;
 
 /**
  * A {@code LockerContent} describes a piece of unencrypted, plain data that is to be placed inside the locker (on the server).

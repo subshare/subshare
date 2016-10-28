@@ -4,13 +4,13 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.util.Collection;
 
-import javafx.collections.ObservableList;
-import javafx.scene.control.TreeItem;
-
 import org.subshare.core.pgp.Pgp;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpSignature;
 import org.subshare.gui.ls.PgpLs;
+
+import javafx.collections.ObservableList;
+import javafx.scene.control.TreeItem;
 
 public class CertificationsPgpKeyTreeItem extends PgpKeyTreeItem<PgpKey> {
 

@@ -31,7 +31,7 @@ import org.subshare.core.pgp.PgpRegistry;
 import org.subshare.core.pgp.PgpSignature;
 import org.subshare.rest.server.LockerDir;
 
-import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.core.dto.UidList;
 import co.codewizards.cloudstore.core.io.LockFile;
 import co.codewizards.cloudstore.core.io.LockFileFactory;

@@ -1,5 +1,7 @@
 package org.subshare.core.pgp.transport.local;
 
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Collection;
@@ -37,6 +39,8 @@ public class LocalPgpTransport extends AbstractPgpTransport {
 
 	@Override
 	public void exportPublicKeys(final Set<PgpKeyId> pgpKeyIds, final long changedAfterLocalRevision, final OutputStream out) {
+		assertNotNull("pgpKeyIds", pgpKeyIds);
+		assertNotNull("out", out);
 		final HashSet<PgpKey> masterKeys = new HashSet<PgpKey>(pgpKeyIds.size());
 		for (final PgpKeyId pgpKeyId : pgpKeyIds) {
 			final PgpKey masterKey = pgp.getPgpKey(pgpKeyId);
@@ -48,6 +52,50 @@ public class LocalPgpTransport extends AbstractPgpTransport {
 		}
 
 		pgp.exportPublicKeys(masterKeys, out);
+	}
+
+	@Override
+	public void exportPublicKeysMatchingQuery(final String queryString, final OutputStream out) {
+		assertNotNull("queryString", queryString);
+		assertNotNull("out", out);
+		final HashSet<PgpKey> masterKeys = new HashSet<PgpKey>();
+		final String userId = queryString.trim().toLowerCase();
+		final String emailWithSeparators = appendEmailSeparators(userId.toLowerCase());
+
+		for (PgpKey masterKey : pgp.getMasterKeys()) {
+			if (matches(masterKey, userId, emailWithSeparators))
+				masterKeys.add(masterKey);
+		}
+		pgp.exportPublicKeys(masterKeys, out);
+	}
+
+	private String appendEmailSeparators(String email) {
+		email = assertNotNull("email", email).trim();
+
+		final StringBuilder sb = new StringBuilder(email.length() + 2);
+
+		if (! email.startsWith("<"))
+			sb.append('<');
+
+		sb.append(email);
+
+		if (! email.endsWith(">"))
+			sb.append('>');
+
+		return sb.toString();
+	}
+
+	private boolean matches(final PgpKey pgpKey, final String searchedUserId, String searchedEmailWithSeparators) {
+		assertNotNull("pgpKey", pgpKey);
+		assertNotNull("searchedUserId", searchedUserId);
+		assertNotNull("searchedEmailWithSeparators", searchedEmailWithSeparators);
+		for (final String userId : pgpKey.getUserIds()) {
+			String userIdLowerCase = userId.toLowerCase();
+			if (userIdLowerCase.equals(searchedUserId)
+					|| userIdLowerCase.contains(searchedEmailWithSeparators))
+				return true;
+		}
+		return false;
 	}
 
 	@Override

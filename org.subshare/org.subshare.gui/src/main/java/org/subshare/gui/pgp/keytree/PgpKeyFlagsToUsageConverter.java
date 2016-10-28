@@ -4,9 +4,9 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.util.Set;
 
-import org.subshare.core.pgp.PgpKeyFlag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.subshare.core.pgp.PgpKeyFlag;
 
 public class PgpKeyFlagsToUsageConverter {
 

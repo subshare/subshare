@@ -1,14 +1,15 @@
 package org.subshare.gui.histo;
 
 import static org.subshare.gui.util.FxmlUtil.*;
+
+import org.subshare.core.repo.LocalRepo;
+
 import javafx.beans.InvalidationListener;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TreeItem;
-
-import org.subshare.core.repo.LocalRepo;
 
 public class HistoryPane extends SplitPane {
 

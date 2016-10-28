@@ -37,8 +37,8 @@ import org.subshare.core.observable.standard.StandardPostModificationListener;
 import org.subshare.core.observable.standard.StandardPreModificationEvent;
 import org.subshare.core.observable.standard.StandardPreModificationListener;
 
+import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.core.config.ConfigDir;
-import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.oio.File;
 
 public class ServerRegistryImpl extends FileBasedObjectRegistry implements ServerRegistry {

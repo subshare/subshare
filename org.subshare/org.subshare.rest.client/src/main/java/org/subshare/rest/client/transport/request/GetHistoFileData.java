@@ -5,7 +5,7 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 
-import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.rest.client.request.AbstractRequest;
 
 public class GetHistoFileData extends AbstractRequest<byte[]> {

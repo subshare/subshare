@@ -41,9 +41,9 @@ import org.subshare.local.persistence.UserRepoKeyPublicKey;
 import org.subshare.rest.client.transport.CryptreeRestRepoTransportImpl;
 import org.subshare.rest.server.service.SsWebDavService;
 
+import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.core.auth.SignatureException;
 import co.codewizards.cloudstore.core.dto.RemoteException;
-import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import co.codewizards.cloudstore.core.util.ExceptionUtil;

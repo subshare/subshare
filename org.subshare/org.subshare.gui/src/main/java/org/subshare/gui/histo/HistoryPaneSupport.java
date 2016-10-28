@@ -20,8 +20,8 @@ import org.subshare.gui.resolvecollision.ResolveCollisionData;
 import org.subshare.gui.resolvecollision.ResolveCollisionWizard;
 import org.subshare.gui.wizard.WizardDialog;
 
+import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.core.dto.NormalFileDto;
-import co.codewizards.cloudstore.core.dto.Uid;
 import javafx.beans.InvalidationListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableSet;

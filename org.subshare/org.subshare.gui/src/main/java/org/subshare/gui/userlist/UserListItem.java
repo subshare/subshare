@@ -11,10 +11,6 @@ import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import javafx.application.Platform;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
-
 import org.subshare.core.pgp.Pgp;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpKeyId;
@@ -22,6 +18,10 @@ import org.subshare.core.pgp.PgpKeyValidity;
 import org.subshare.core.pgp.PgpOwnerTrust;
 import org.subshare.core.user.User;
 import org.subshare.gui.ls.PgpLs;
+
+import javafx.application.Platform;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 
 public class UserListItem {
 

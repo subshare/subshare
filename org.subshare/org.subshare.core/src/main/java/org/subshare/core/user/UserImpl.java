@@ -32,8 +32,8 @@ import org.subshare.core.pgp.PgpKeyId;
 import org.subshare.core.pgp.PgpRegistry;
 import org.subshare.core.sign.SignableSigner;
 
+import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.core.bean.AbstractBean;
-import co.codewizards.cloudstore.core.dto.Uid;
 
 public class UserImpl extends AbstractBean<User.Property> implements User {
 

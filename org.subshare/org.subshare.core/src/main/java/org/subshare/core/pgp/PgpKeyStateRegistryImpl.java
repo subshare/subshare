@@ -21,8 +21,8 @@ import org.subshare.core.dto.PgpKeyStateRegistryDto;
 import org.subshare.core.dto.jaxb.PgpKeyStateRegistryDtoIo;
 import org.subshare.core.fbor.FileBasedObjectRegistry;
 
+import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.core.config.ConfigDir;
-import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.oio.File;
 
 public class PgpKeyStateRegistryImpl extends FileBasedObjectRegistry implements PgpKeyStateRegistry {

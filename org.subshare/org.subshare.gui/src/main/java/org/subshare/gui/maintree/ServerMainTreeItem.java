@@ -13,17 +13,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javafx.collections.ObservableList;
-import javafx.scene.Parent;
-import javafx.scene.control.TreeItem;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
-
 import org.subshare.core.repo.ServerRepo;
 import org.subshare.core.repo.ServerRepoRegistry;
 import org.subshare.core.server.Server;
 import org.subshare.gui.ls.ServerRepoRegistryLs;
 import org.subshare.gui.server.ServerPane;
+
+import javafx.collections.ObservableList;
+import javafx.scene.Parent;
+import javafx.scene.control.TreeItem;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 
 public class ServerMainTreeItem extends MainTreeItem<Server> {
 

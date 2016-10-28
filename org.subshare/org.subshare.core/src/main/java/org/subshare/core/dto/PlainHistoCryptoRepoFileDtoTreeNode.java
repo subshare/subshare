@@ -12,8 +12,8 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
-import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.util.AssertUtil;
 
 public class PlainHistoCryptoRepoFileDtoTreeNode implements Iterable<PlainHistoCryptoRepoFileDtoTreeNode> {

@@ -1,10 +1,11 @@
 package org.subshare.gui.pgp.keytree;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
-import javafx.collections.ObservableList;
-import javafx.scene.control.TreeItem;
 
 import org.subshare.core.pgp.PgpKey;
+
+import javafx.collections.ObservableList;
+import javafx.scene.control.TreeItem;
 
 public class SubKeysPgpKeyTreeItem extends PgpKeyTreeItem<PgpKey> {
 

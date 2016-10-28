@@ -18,6 +18,12 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import org.subshare.core.pgp.PgpKey;
+import org.subshare.gui.pgp.keytree.PgpKeyPgpKeyTreeItem;
+import org.subshare.gui.pgp.keytree.PgpKeyTreeItem;
+import org.subshare.gui.pgp.keytree.PgpKeyTreePane;
+import org.subshare.gui.pgp.keytree.SimpleRootPgpKeyTreeItem;
+
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.collections.FXCollections;
@@ -31,12 +37,6 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.TreeItem;
 import javafx.scene.layout.GridPane;
 import javafx.scene.text.Text;
-
-import org.subshare.core.pgp.PgpKey;
-import org.subshare.gui.pgp.keytree.PgpKeyPgpKeyTreeItem;
-import org.subshare.gui.pgp.keytree.PgpKeyTreeItem;
-import org.subshare.gui.pgp.keytree.PgpKeyTreePane;
-import org.subshare.gui.pgp.keytree.SimpleRootPgpKeyTreeItem;
 
 public abstract class SelectPgpKeyPane extends GridPane {
 

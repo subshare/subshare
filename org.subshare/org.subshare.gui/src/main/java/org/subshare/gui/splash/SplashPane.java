@@ -1,6 +1,7 @@
 package org.subshare.gui.splash;
 
 import static org.subshare.gui.util.FxmlUtil.*;
+
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;

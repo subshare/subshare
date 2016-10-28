@@ -5,7 +5,7 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import org.subshare.core.user.UserRepoKey.PublicKey;
 import org.subshare.core.user.UserRepoKeyPublicKeyLookup;
 
-import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
 
 public class UserRepoKeyPublicKeyLookupImpl implements UserRepoKeyPublicKeyLookup {

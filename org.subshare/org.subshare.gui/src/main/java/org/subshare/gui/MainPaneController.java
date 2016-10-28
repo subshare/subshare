@@ -2,6 +2,13 @@ package org.subshare.gui;
 
 import java.util.Arrays;
 
+import org.subshare.gui.maintree.LocalRepoListMainTreeItem;
+import org.subshare.gui.maintree.MainTreeItem;
+import org.subshare.gui.maintree.RootMainTreeItem;
+import org.subshare.gui.maintree.ServerListMainTreeItem;
+import org.subshare.gui.maintree.UserListMainTreeItem;
+import org.subshare.gui.scene.MainDetailContent;
+
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
@@ -11,13 +18,6 @@ import javafx.scene.control.SplitPane;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.layout.BorderPane;
-
-import org.subshare.gui.maintree.LocalRepoListMainTreeItem;
-import org.subshare.gui.maintree.MainTreeItem;
-import org.subshare.gui.maintree.RootMainTreeItem;
-import org.subshare.gui.maintree.ServerListMainTreeItem;
-import org.subshare.gui.maintree.UserListMainTreeItem;
-import org.subshare.gui.scene.MainDetailContent;
 
 public class MainPaneController {
 	@FXML

@@ -1,6 +1,7 @@
 package org.subshare.gui.maintree;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+
 import javafx.scene.control.TreeView;
 
 public class RootMainTreeItem extends MainTreeItem<String> {

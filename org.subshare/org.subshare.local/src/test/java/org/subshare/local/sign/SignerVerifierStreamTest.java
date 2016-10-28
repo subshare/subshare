@@ -11,6 +11,9 @@ import java.util.UUID;
 
 import org.bouncycastle.crypto.Signer;
 import org.bouncycastle.crypto.digests.SHA1Digest;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
 import org.subshare.core.sign.SignerOutputStream;
 import org.subshare.core.sign.SignerTransformation;
 import org.subshare.core.sign.VerifierInputStream;
@@ -20,12 +23,9 @@ import org.subshare.core.user.UserRepoKeyPublicKeyLookup;
 import org.subshare.core.user.UserRepoKeyRing;
 import org.subshare.crypto.CryptoRegistry;
 import org.subshare.local.AbstractTest;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
 
+import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.core.auth.SignatureException;
-import co.codewizards.cloudstore.core.dto.Uid;
 
 public class SignerVerifierStreamTest extends AbstractTest {
 

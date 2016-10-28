@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.subshare.core.dto.CryptoKeyPart;
 import org.subshare.core.dto.CryptoKeyRole;
 
-import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.local.persistence.Dao;
 
 public class CryptoLinkDao extends Dao<CryptoLink, CryptoLinkDao> {

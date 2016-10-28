@@ -1,6 +1,7 @@
 package org.subshare.gui.statusdialog;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+
 import javafx.scene.Scene;
 import javafx.stage.Modality;
 import javafx.stage.Stage;

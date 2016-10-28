@@ -1,13 +1,14 @@
 package org.subshare.gui.welcome;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
-import javafx.application.Platform;
-import javafx.beans.InvalidationListener;
-import javafx.stage.Window;
 
 import org.subshare.gui.util.PlatformUtil;
 import org.subshare.gui.wizard.WizardDialog;
 import org.subshare.gui.wizard.WizardState;
+
+import javafx.application.Platform;
+import javafx.beans.InvalidationListener;
+import javafx.stage.Window;
 
 public class Welcome {
 

@@ -4,12 +4,12 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.net.URL;
 
+import org.subshare.core.server.Server;
+
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.property.adapter.JavaBeanObjectPropertyBuilder;
 import javafx.beans.property.adapter.JavaBeanStringPropertyBuilder;
-
-import org.subshare.core.server.Server;
 
 public class ServerListItem {
 

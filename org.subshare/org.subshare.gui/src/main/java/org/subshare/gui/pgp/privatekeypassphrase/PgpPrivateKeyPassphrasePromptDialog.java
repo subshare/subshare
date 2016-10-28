@@ -1,14 +1,15 @@
 package org.subshare.gui.pgp.privatekeypassphrase;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+
+import org.subshare.core.pgp.PgpKey;
+
 import javafx.event.ActionEvent;
 import javafx.scene.Scene;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
-
-import org.subshare.core.pgp.PgpKey;
 
 public class PgpPrivateKeyPassphrasePromptDialog extends Stage {
 

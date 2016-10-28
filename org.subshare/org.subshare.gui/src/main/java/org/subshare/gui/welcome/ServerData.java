@@ -1,10 +1,10 @@
 package org.subshare.gui.welcome;
 
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-
 import org.subshare.core.server.Server;
 import org.subshare.gui.invitation.accept.AcceptInvitationData;
+
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 
 public class ServerData {
 

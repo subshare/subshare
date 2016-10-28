@@ -6,8 +6,8 @@ import java.util.List;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
+import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
-import co.codewizards.cloudstore.core.dto.Uid;
 
 @SuppressWarnings("serial")
 @XmlRootElement

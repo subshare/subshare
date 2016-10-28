@@ -31,10 +31,10 @@ import org.subshare.core.user.UserRegistry;
 import org.subshare.core.user.UserRegistryImpl;
 import org.subshare.rest.server.LockerDir;
 
+import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.core.config.Config;
 import co.codewizards.cloudstore.core.config.ConfigDir;
 import co.codewizards.cloudstore.core.config.ConfigImpl;
-import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.oio.File;
 import mockit.Mock;
 import mockit.MockUp;

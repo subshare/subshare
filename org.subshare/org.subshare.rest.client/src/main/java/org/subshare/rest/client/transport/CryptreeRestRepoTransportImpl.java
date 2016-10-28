@@ -68,6 +68,7 @@ import org.subshare.rest.client.transport.request.SsEndPutFile;
 import org.subshare.rest.client.transport.request.SsMakeDirectory;
 import org.subshare.rest.client.transport.request.SsMakeSymlink;
 
+import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.core.auth.SignatureException;
 import co.codewizards.cloudstore.core.dto.ChangeSetDto;
 import co.codewizards.cloudstore.core.dto.ConfigPropSetDto;
@@ -76,7 +77,7 @@ import co.codewizards.cloudstore.core.dto.NormalFileDto;
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
 import co.codewizards.cloudstore.core.dto.RepoFileDtoTreeNode;
 import co.codewizards.cloudstore.core.dto.RepositoryDto;
-import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.dto.VersionInfoDto;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.repo.local.ContextWithLocalRepoManager;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
@@ -1050,6 +1051,11 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 			logger.debug("close: There is no restRepoTransport.");
 
 		super.close();
+	}
+
+	@Override
+	public VersionInfoDto getVersionInfoDto() {
+		return getRestRepoTransport().getVersionInfoDto();
 	}
 
 	@Override

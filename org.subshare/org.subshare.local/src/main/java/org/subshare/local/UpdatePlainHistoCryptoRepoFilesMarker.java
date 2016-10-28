@@ -3,7 +3,7 @@ package org.subshare.local;
 import java.util.HashSet;
 import java.util.Set;
 
-import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
 
 public class UpdatePlainHistoCryptoRepoFilesMarker {

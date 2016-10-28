@@ -3,10 +3,10 @@ package org.subshare.local;
 import static co.codewizards.cloudstore.core.util.Util.*;
 import static org.assertj.core.api.Assertions.*;
 
+import org.junit.Test;
 import org.subshare.core.GrantAccessDeniedException;
 import org.subshare.core.WriteAccessDeniedException;
 import org.subshare.core.user.UserRepoKeyRing;
-import org.junit.Test;
 
 public class CryptreeImplGrantRevokeWritePermissionTest extends AbstractPermissionTest {
 

@@ -7,7 +7,7 @@ import org.subshare.core.locker.LockerContent;
 import org.subshare.core.locker.LockerEncryptedDataFile;
 import org.subshare.core.pgp.PgpKey;
 
-import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.Uid;
 
 public interface LockerTransport extends AutoCloseable {
 

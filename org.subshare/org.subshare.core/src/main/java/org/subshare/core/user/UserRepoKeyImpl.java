@@ -25,8 +25,8 @@ import org.subshare.core.pgp.PgpRegistry;
 import org.subshare.core.sign.Signature;
 import org.subshare.crypto.CryptoRegistry;
 
+import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.core.auth.SignatureException;
-import co.codewizards.cloudstore.core.dto.Uid;
 
 /**
  * A user's master-key for one single repository.

@@ -23,10 +23,10 @@ import org.subshare.gui.concurrent.SsTask;
 import org.subshare.gui.filetree.FileIconRegistry;
 import org.subshare.gui.ls.LocalRepoManagerFactoryLs;
 
+import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.core.dto.DirectoryDto;
 import co.codewizards.cloudstore.core.dto.NormalFileDto;
 import co.codewizards.cloudstore.core.dto.SymlinkDto;
-import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;

@@ -13,6 +13,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
+import org.subshare.core.server.Server;
+import org.subshare.core.server.ServerRegistry;
+import org.subshare.gui.concurrent.SsTask;
+import org.subshare.gui.ls.ServerRegistryLs;
+import org.subshare.gui.serverlist.ServerListPane;
+
 import javafx.application.Platform;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
@@ -20,12 +26,6 @@ import javafx.scene.Parent;
 import javafx.scene.control.TreeItem;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-
-import org.subshare.core.server.Server;
-import org.subshare.core.server.ServerRegistry;
-import org.subshare.gui.concurrent.SsTask;
-import org.subshare.gui.ls.ServerRegistryLs;
-import org.subshare.gui.serverlist.ServerListPane;
 
 public class ServerListMainTreeItem extends MainTreeItem<String> {
 

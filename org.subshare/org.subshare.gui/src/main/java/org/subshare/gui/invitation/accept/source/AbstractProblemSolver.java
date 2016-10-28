@@ -1,7 +1,7 @@
 package org.subshare.gui.invitation.accept.source;
 
-import javafx.stage.Window;
 import co.codewizards.cloudstore.core.oio.File;
+import javafx.stage.Window;
 
 public abstract class AbstractProblemSolver implements ProblemSolver {
 

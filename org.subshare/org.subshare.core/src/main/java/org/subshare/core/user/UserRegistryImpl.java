@@ -46,8 +46,8 @@ import org.subshare.core.pgp.sync.PgpSyncDaemonImpl;
 import org.subshare.core.user.ImportUsersFromPgpKeysResult.ImportedUser;
 import org.subshare.core.user.UserRepoKey.PublicKeyWithSignature;
 
+import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.core.config.ConfigDir;
-import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.oio.File;
 
 public class UserRegistryImpl extends FileBasedObjectRegistry implements UserRegistry {

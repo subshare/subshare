@@ -11,7 +11,7 @@ public class GetLocalRevisionRequest extends AbstractRequest<Long> {
 
 	@Override
 	public Long execute() {
-		final WebTarget webTarget = createWebTarget("_PgpPublicKey", "localRevision");
+		final WebTarget webTarget = createWebTarget("_PgpPublicKey", "_localRevision");
 		final LongDto localRevision = assignCredentials(webTarget.request(MediaType.APPLICATION_XML)).get(LongDto.class);
 		return localRevision.getValue();
 	}

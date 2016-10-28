@@ -8,6 +8,9 @@ import java.io.ByteArrayOutputStream;
 import java.util.Date;
 import java.util.UUID;
 
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
 import org.subshare.core.dto.CryptoKeyDto;
 import org.subshare.core.dto.CryptoKeyRole;
 import org.subshare.core.dto.CryptoKeyType;
@@ -20,12 +23,9 @@ import org.subshare.core.user.UserRepoKey.PublicKey;
 import org.subshare.core.user.UserRepoKeyPublicKeyLookup;
 import org.subshare.core.user.UserRepoKeyRing;
 import org.subshare.local.AbstractTest;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
 
+import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.core.auth.SignatureException;
-import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.dto.jaxb.DtoIo;
 
 public class SignableTest extends AbstractTest {

@@ -13,10 +13,6 @@ import java.util.Map;
 import javax.jdo.PersistenceManager;
 import javax.jdo.Query;
 
-import mockit.Invocation;
-import mockit.Mock;
-import mockit.MockUp;
-
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +31,9 @@ import org.subshare.local.persistence.UserRepoKeyPublicKey;
 
 import co.codewizards.cloudstore.core.config.Config;
 import co.codewizards.cloudstore.core.oio.File;
+import mockit.Invocation;
+import mockit.Mock;
+import mockit.MockUp;
 
 public class PermissionIT extends AbstractRepoToRepoSyncIT {
 	private static final Logger logger = LoggerFactory.getLogger(PermissionIT.class);

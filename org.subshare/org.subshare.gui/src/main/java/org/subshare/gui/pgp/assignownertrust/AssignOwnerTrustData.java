@@ -3,12 +3,12 @@ package org.subshare.gui.pgp.assignownertrust;
 import java.util.HashSet;
 import java.util.Set;
 
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
-
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpOwnerTrust;
 import org.subshare.core.user.User;
+
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 
 public class AssignOwnerTrustData {
 

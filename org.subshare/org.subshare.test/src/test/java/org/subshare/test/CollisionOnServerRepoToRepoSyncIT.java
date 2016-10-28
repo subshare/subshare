@@ -7,8 +7,6 @@ import static org.assertj.core.api.Assertions.*;
 import java.util.Collection;
 import java.util.List;
 
-import mockit.integration.junit4.JMockit;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -24,6 +22,7 @@ import org.subshare.core.repo.local.SsLocalRepoMetaData;
 import co.codewizards.cloudstore.core.io.TimeoutException;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.util.IOUtil;
+import mockit.integration.junit4.JMockit;
 
 @RunWith(JMockit.class)
 public class CollisionOnServerRepoToRepoSyncIT extends CollisionRepoToRepoSyncIT {

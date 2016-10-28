@@ -14,7 +14,7 @@ import javax.jdo.annotations.Persistent;
 
 import org.subshare.core.sign.Signature;
 
-import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.Uid;
 
 @PersistenceCapable
 @EmbeddedOnly

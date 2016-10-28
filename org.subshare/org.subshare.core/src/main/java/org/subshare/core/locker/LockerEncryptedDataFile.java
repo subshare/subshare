@@ -11,7 +11,7 @@ import java.util.List;
 
 import org.subshare.core.file.EncryptedDataFile;
 
-import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.Uid;
 
 public class LockerEncryptedDataFile extends EncryptedDataFile {
 

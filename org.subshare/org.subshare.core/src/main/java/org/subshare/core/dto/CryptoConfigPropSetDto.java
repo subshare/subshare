@@ -5,7 +5,7 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import org.subshare.core.sign.Signature;
 
-import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.Uid;
 
 public class CryptoConfigPropSetDto {
 	public static final String SIGNED_DATA_TYPE = "CryptoConfigPropSet";

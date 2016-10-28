@@ -6,10 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import mockit.Invocation;
-import mockit.Mock;
-import mockit.MockUp;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.subshare.core.repo.sync.SsRepoToRepoSync;
@@ -23,6 +19,9 @@ import co.codewizards.cloudstore.core.progress.ProgressMonitor;
 import co.codewizards.cloudstore.core.repo.sync.RepoToRepoSync;
 import co.codewizards.cloudstore.core.repo.transport.CollisionException;
 import co.codewizards.cloudstore.core.repo.transport.RepoTransport;
+import mockit.Invocation;
+import mockit.Mock;
+import mockit.MockUp;
 
 public class RepoToRepoSyncCoordinatorSupport {
 

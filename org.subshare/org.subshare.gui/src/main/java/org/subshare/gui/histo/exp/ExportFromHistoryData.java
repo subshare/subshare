@@ -7,7 +7,7 @@ import java.util.Set;
 
 import org.subshare.core.repo.LocalRepo;
 
-import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.core.oio.File;
 
 public class ExportFromHistoryData {

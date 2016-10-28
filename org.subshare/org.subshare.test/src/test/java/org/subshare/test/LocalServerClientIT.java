@@ -2,21 +2,21 @@ package org.subshare.test;
 
 import static co.codewizards.cloudstore.core.util.Util.*;
 import static org.assertj.core.api.Assertions.*;
-import mockit.Mock;
-import mockit.MockUp;
 
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpKeyId;
 import org.subshare.core.pgp.gnupg.BcWithLocalGnuPgPgp;
 import org.subshare.core.pgp.man.PgpPrivateKeyPassphraseStore;
 import org.subshare.core.pgp.man.PgpPrivateKeyPassphraseStoreImpl;
 import org.subshare.ls.server.SsLocalServer;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
 
 import co.codewizards.cloudstore.ls.client.LocalServerClient;
 import co.codewizards.cloudstore.ls.rest.client.LocalServerRestClient;
+import mockit.Mock;
+import mockit.MockUp;
 
 public class LocalServerClientIT extends AbstractIT {
 

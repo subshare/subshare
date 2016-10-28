@@ -1,10 +1,11 @@
 package org.subshare.gui.invitation.issue.selectkey;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
-import javafx.scene.Parent;
 
 import org.subshare.gui.invitation.issue.IssueInvitationData;
 import org.subshare.gui.wizard.WizardPage;
+
+import javafx.scene.Parent;
 
 public class SelectKeyWizardPage extends WizardPage {
 	private final IssueInvitationData issueInvitationData;

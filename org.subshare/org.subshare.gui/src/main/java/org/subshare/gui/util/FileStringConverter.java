@@ -1,8 +1,9 @@
 package org.subshare.gui.util;
 
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
-import javafx.util.StringConverter;
+
 import co.codewizards.cloudstore.core.oio.File;
+import javafx.util.StringConverter;
 
 public class FileStringConverter extends StringConverter<File> {
 

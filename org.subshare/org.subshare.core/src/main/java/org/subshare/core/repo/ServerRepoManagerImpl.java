@@ -7,8 +7,6 @@ import java.net.URL;
 import java.util.Map;
 import java.util.UUID;
 
-import javafx.util.Pair;
-
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.repo.metaonly.MetaOnlyRepoManagerImpl;
 import org.subshare.core.repo.transport.CryptreeRestRepoTransport;
@@ -27,6 +25,7 @@ import co.codewizards.cloudstore.core.repo.transport.RepoTransport;
 import co.codewizards.cloudstore.core.repo.transport.RepoTransportFactory;
 import co.codewizards.cloudstore.core.repo.transport.RepoTransportFactoryRegistry;
 import co.codewizards.cloudstore.core.util.UrlUtil;
+import javafx.util.Pair;
 
 public class ServerRepoManagerImpl implements ServerRepoManager {
 

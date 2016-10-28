@@ -1,11 +1,6 @@
 package org.subshare.gui.welcome;
 
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
-import javafx.beans.InvalidationListener;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
 
 import org.subshare.core.observable.ObservableList;
 import org.subshare.core.pgp.CreatePgpKeyParam;
@@ -13,6 +8,12 @@ import org.subshare.core.pgp.PgpUserId;
 import org.subshare.gui.backup.imp.ImportBackupData;
 import org.subshare.gui.pgp.createkey.FxPgpUserId;
 import org.subshare.gui.pgp.createkey.TimeUnit;
+
+import javafx.beans.InvalidationListener;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 
 public class IdentityData {
 

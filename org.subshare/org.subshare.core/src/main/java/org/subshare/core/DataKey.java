@@ -4,7 +4,7 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import org.bouncycastle.crypto.params.KeyParameter;
 
-import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.Uid;
 
 public class DataKey {
 

@@ -9,9 +9,9 @@ import org.subshare.core.dto.CollisionPrivateDto;
 import org.subshare.core.dto.HistoCryptoRepoFileDto;
 import org.subshare.core.dto.PlainHistoCryptoRepoFileDto;
 
+import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.core.dto.NormalFileDto;
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
-import co.codewizards.cloudstore.core.dto.Uid;
 import javafx.scene.control.TreeItem;
 
 public class HistoCryptoRepoFileTreeItem extends TreeItem<HistoCryptoRepoFileTreeItem> {

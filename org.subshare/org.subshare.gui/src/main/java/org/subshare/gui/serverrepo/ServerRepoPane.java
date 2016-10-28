@@ -2,16 +2,17 @@ package org.subshare.gui.serverrepo;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static org.subshare.gui.util.FxmlUtil.*;
+
+import org.subshare.core.repo.ServerRepo;
+import org.subshare.core.server.Server;
+import org.subshare.gui.checkout.CheckOutWizard;
+
 import javafx.beans.property.StringProperty;
 import javafx.beans.property.adapter.JavaBeanStringPropertyBuilder;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
-
-import org.subshare.core.repo.ServerRepo;
-import org.subshare.core.server.Server;
-import org.subshare.gui.checkout.CheckOutWizard;
 
 public class ServerRepoPane extends GridPane {
 	private final Server server;

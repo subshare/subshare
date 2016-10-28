@@ -9,7 +9,7 @@ import org.subshare.gui.histo.exp.destination.ExportFromHistoryDestinationWizard
 import org.subshare.gui.ls.HistoExporterLs;
 import org.subshare.gui.wizard.Wizard;
 
-import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.progress.ProgressMonitor;
 

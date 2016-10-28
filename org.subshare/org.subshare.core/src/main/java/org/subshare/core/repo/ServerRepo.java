@@ -6,10 +6,10 @@ import java.util.UUID;
 
 import org.subshare.core.server.Server;
 
+import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.core.bean.CloneableBean;
 import co.codewizards.cloudstore.core.bean.PropertyBase;
 import co.codewizards.cloudstore.core.dto.RepositoryDto;
-import co.codewizards.cloudstore.core.dto.Uid;
 
 /**
  * Repository on a server.

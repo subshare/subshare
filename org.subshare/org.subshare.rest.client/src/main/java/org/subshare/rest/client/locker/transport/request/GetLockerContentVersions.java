@@ -9,7 +9,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.subshare.core.pgp.PgpKeyId;
 
-import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.core.dto.UidList;
 import co.codewizards.cloudstore.rest.client.request.AbstractRequest;
 

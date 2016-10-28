@@ -1,10 +1,10 @@
 package org.subshare.gui.pgp.createkey;
 
+import org.subshare.core.pgp.PgpUserId;
+
 import javafx.beans.property.StringProperty;
 import javafx.beans.property.adapter.JavaBeanStringProperty;
 import javafx.beans.property.adapter.JavaBeanStringPropertyBuilder;
-
-import org.subshare.core.pgp.PgpUserId;
 
 public class FxPgpUserId extends PgpUserId {
 	private static final long serialVersionUID = 1L;

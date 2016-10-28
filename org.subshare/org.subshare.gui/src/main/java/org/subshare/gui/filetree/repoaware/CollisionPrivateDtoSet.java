@@ -10,7 +10,7 @@ import java.util.Map;
 
 import org.subshare.core.dto.CollisionPrivateDto;
 
-import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.Uid;
 
 public class CollisionPrivateDtoSet {
 

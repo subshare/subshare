@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.ServiceLoader;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.locks.Lock;
 
 import org.bouncycastle.bcpg.BCPGOutputStream;
@@ -93,12 +94,14 @@ import org.subshare.core.pgp.PgpSignature;
 import org.subshare.core.pgp.PgpSignatureType;
 import org.subshare.core.pgp.PgpUserId;
 import org.subshare.core.pgp.PgpUserIdNameHash;
+import org.subshare.core.pgp.TempImportKeysResult;
 import org.subshare.crypto.CryptoRegistry;
 
 import co.codewizards.cloudstore.core.config.ConfigDir;
 import co.codewizards.cloudstore.core.io.LockFile;
 import co.codewizards.cloudstore.core.io.LockFileFactory;
 import co.codewizards.cloudstore.core.oio.File;
+import co.codewizards.cloudstore.core.util.IOUtil;
 
 public class BcWithLocalGnuPgPgp extends AbstractPgp {
 	private static final Logger logger = LoggerFactory.getLogger(BcWithLocalGnuPgPgp.class);
@@ -123,6 +126,22 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 
 	private PgpKeyRegistry pgpKeyRegistry;
 	private TrustDbFactory trustDbFactory;
+
+	private final List<Runnable> finalizerRunnables = new CopyOnWriteArrayList<>();
+
+	@SuppressWarnings("unused")
+	private final Object finalizer = new Object() {
+		@Override
+		protected void finalize() throws Throwable {
+			for (Runnable runnable : finalizerRunnables) {
+				try {
+					runnable.run();
+				} catch (Exception x) {
+					logger.error("finalizer.finalize: " + x, x);
+				}
+			}
+		}
+	};
 
 	/**
 	 * @deprecated Don't manually invoke this constructor! Unfortunately the {@link ServiceLoader}
@@ -217,6 +236,49 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 				bcPgpKey.getPublicKeyRing().encode(out);
 			}
 			out.flush();
+		} catch (IOException x) {
+			throw new RuntimeException(x);
+		}
+	}
+
+	@Override
+	public TempImportKeysResult importKeysTemporarily(InputStream in) {
+		assertNotNull("in", in);
+
+		try {
+			final BcWithLocalGnuPgPgp tempPgp = new BcWithLocalGnuPgPgp();
+			final File tempDir = IOUtil.createUniqueRandomFolder(IOUtil.getTempDir(), "tempPgp-");
+			tempPgp.gnuPgDir = tempPgp.configDir = tempDir;
+
+			Runtime.getRuntime().addShutdownHook(new Thread("delete-" + tempDir.getName()) {
+				@Override
+				public void run() {
+					if (! tempDir.exists()) {
+						logger.info("shutdownHook.run: Skipping deletion of non-existent '{}'!", tempDir);
+						return;
+					}
+					logger.info("shutdownHook.run: Deleting '{}'...", tempDir);
+					tempDir.deleteRecursively();
+					logger.info("shutdownHook.run: Deleted '{}'.", tempDir);
+				}
+			});
+			tempPgp.finalizerRunnables.add(new Runnable() {
+				@Override
+				public void run() {
+					if (! tempDir.exists()) {
+						logger.info("finalizerRunnable.run: Skipping deletion of non-existent '{}'!", tempDir);
+						return;
+					}
+					logger.info("finalizerRunnable.run: Deleting '{}'...", tempDir);
+					tempDir.deleteRecursively();
+					logger.info("finalizerRunnable.run: Deleted '{}'.", tempDir);
+				}
+			});
+
+			this.getPubringFile().copyToCopyAttributes(tempPgp.getPubringFile());
+			this.getSecringFile().copyToCopyAttributes(tempPgp.getSecringFile());
+			ImportKeysResult importKeysResult = tempPgp.importKeys(in);
+			return new TempImportKeysResult(tempPgp, importKeysResult);
 		} catch (IOException x) {
 			throw new RuntimeException(x);
 		}

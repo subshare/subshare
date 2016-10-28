@@ -7,15 +7,14 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableSet;
-
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.repo.LocalRepo;
 import org.subshare.core.user.User;
 
 import co.codewizards.cloudstore.core.oio.File;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableSet;
 
 public class IssueInvitationData {
 

@@ -27,7 +27,7 @@ import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKeyImpl;
 import org.subshare.crypto.CryptoRegistry;
 
-import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.local.persistence.AutoTrackLocalRevision;
 import co.codewizards.cloudstore.local.persistence.Entity;
 

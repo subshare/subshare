@@ -25,7 +25,7 @@ import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKeyImpl;
 import org.subshare.crypto.CryptoRegistry;
 
-import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.Uid;
 
 @PersistenceCapable
 @Discriminator(strategy=DiscriminatorStrategy.VALUE_MAP, value="InvitationUserRepoKeyPublicKey")

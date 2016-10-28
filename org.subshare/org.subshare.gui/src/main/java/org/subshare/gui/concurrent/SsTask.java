@@ -1,8 +1,8 @@
 package org.subshare.gui.concurrent;
 
-import javafx.concurrent.Task;
-
 import org.subshare.gui.error.ErrorHandler;
+
+import javafx.concurrent.Task;
 
 public abstract class SsTask<T> extends Task<T> {
 

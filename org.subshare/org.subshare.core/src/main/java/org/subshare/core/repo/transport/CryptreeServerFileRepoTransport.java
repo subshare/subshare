@@ -6,7 +6,7 @@ import org.subshare.core.dto.SsDirectoryDto;
 import org.subshare.core.dto.SsNormalFileDto;
 import org.subshare.core.dto.SsSymlinkDto;
 
-import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.Uid;
 
 public interface CryptreeServerFileRepoTransport extends CryptreeFileRepoTransport {
 	void delete(SsDeleteModificationDto deleteModificationDto);

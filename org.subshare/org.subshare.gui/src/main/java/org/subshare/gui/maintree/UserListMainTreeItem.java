@@ -10,15 +10,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.subshare.core.user.User;
+import org.subshare.gui.user.EditUserManager;
+import org.subshare.gui.userlist.UserListPane;
+
 import javafx.collections.SetChangeListener;
 import javafx.scene.Parent;
 import javafx.scene.control.TreeItem;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-
-import org.subshare.core.user.User;
-import org.subshare.gui.user.EditUserManager;
-import org.subshare.gui.userlist.UserListPane;
 
 public class UserListMainTreeItem extends MainTreeItem<String> {
 

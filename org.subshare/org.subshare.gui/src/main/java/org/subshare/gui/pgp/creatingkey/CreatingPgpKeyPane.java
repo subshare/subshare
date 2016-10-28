@@ -2,13 +2,14 @@ package org.subshare.gui.pgp.creatingkey;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static org.subshare.gui.util.FxmlUtil.*;
+
+import org.subshare.core.pgp.CreatePgpKeyParam;
+import org.subshare.core.pgp.PgpUserId;
+
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.layout.GridPane;
 import javafx.scene.text.Text;
-
-import org.subshare.core.pgp.CreatePgpKeyParam;
-import org.subshare.core.pgp.PgpUserId;
 
 public abstract class CreatingPgpKeyPane extends GridPane {
 

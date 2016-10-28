@@ -16,20 +16,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
-import javafx.beans.InvalidationListener;
-import javafx.concurrent.Service;
-import javafx.concurrent.Task;
-import javafx.event.ActionEvent;
-import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.Tooltip;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
-import javafx.scene.layout.GridPane;
-
 import org.subshare.core.repo.LocalRepo;
 import org.subshare.core.repo.LocalRepoRegistry;
 import org.subshare.gui.IconSize;
@@ -47,6 +33,19 @@ import co.codewizards.cloudstore.core.repo.sync.RepoSyncActivity;
 import co.codewizards.cloudstore.core.repo.sync.RepoSyncDaemon;
 import co.codewizards.cloudstore.core.repo.sync.RepoSyncState;
 import co.codewizards.cloudstore.core.util.StringUtil;
+import javafx.beans.InvalidationListener;
+import javafx.concurrent.Service;
+import javafx.concurrent.Task;
+import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
+import javafx.scene.control.Button;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.Tooltip;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.GridPane;
 
 public class LocalRepoListPane extends GridPane {
 	private static final Image syncIcon = new Image(LocalRepoListPane.class.getResource("sync_16x16.png").toExternalForm());

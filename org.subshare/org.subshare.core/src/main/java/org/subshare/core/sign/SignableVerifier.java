@@ -18,8 +18,8 @@ import org.subshare.core.user.UserRepoKey;
 import org.subshare.core.user.UserRepoKeyPublicKeyLookup;
 import org.subshare.crypto.CryptoRegistry;
 
+import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.core.auth.SignatureException;
-import co.codewizards.cloudstore.core.dto.Uid;
 
 public class SignableVerifier {
 

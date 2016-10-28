@@ -46,6 +46,18 @@
 				<Tooltip text="Import PGP keys from a file."/> 
 			</tooltip>
 		</Button>
+		<Button fx:id="importPgpKeyFromServerButton" onAction="#importPgpKeyFromServerButtonClicked"> 
+			<graphic>
+				<ImageView> 
+					<image>
+						<Image url="@import-pgp-key-from-server_24x24.png"/> 
+					</image>
+				</ImageView>
+			</graphic>
+			<tooltip>
+				<Tooltip text="Import a PGP key from the server."/> 
+			</tooltip>
+		</Button>
 		<Button fx:id="editButton" onAction="#editButtonClicked"> 
 			<graphic>
 				<ImageView> 

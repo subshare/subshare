@@ -14,7 +14,7 @@ import javax.ws.rs.core.Response.Status;
 import org.subshare.core.locker.LockerEncryptedDataFile;
 import org.subshare.core.pgp.PgpKeyId;
 
-import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.rest.client.request.AbstractRequest;
 
 public class GetLockerEncryptedDataFile extends AbstractRequest<LockerEncryptedDataFile> {

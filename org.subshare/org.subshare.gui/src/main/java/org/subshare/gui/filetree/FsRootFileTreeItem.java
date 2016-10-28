@@ -1,8 +1,8 @@
 package org.subshare.gui.filetree;
 
+import co.codewizards.cloudstore.core.oio.File;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import co.codewizards.cloudstore.core.oio.File;
 
 /**
  * Root of the file system.

@@ -9,7 +9,7 @@ import org.subshare.core.dto.DebugUserRepoKeyDto;
 import org.subshare.core.dto.DebugUserRepoKeyDto.KeyRingType;
 import org.subshare.core.dto.UserIdentityPayloadDto;
 
-import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.Uid;
 
 public class UserRepoKeyListItem {
 

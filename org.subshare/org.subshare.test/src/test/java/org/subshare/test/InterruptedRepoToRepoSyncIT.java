@@ -5,15 +5,12 @@ import static org.junit.Assert.*;
 
 import java.net.URL;
 
-import mockit.Mock;
-import mockit.MockUp;
-
-import org.subshare.core.repo.sync.SsRepoToRepoSync;
-import org.subshare.local.UserRepoKeyPublicKeyHelper;
-import org.subshare.local.persistence.UserRepoKeyPublicKey;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.subshare.core.repo.sync.SsRepoToRepoSync;
+import org.subshare.local.UserRepoKeyPublicKeyHelper;
+import org.subshare.local.persistence.UserRepoKeyPublicKey;
 
 import co.codewizards.cloudstore.core.dto.FileChunkDto;
 import co.codewizards.cloudstore.core.dto.RepoFileDtoTreeNode;
@@ -21,6 +18,8 @@ import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.repo.sync.RepoToRepoSync;
 import co.codewizards.cloudstore.core.repo.transport.LocalRepoTransport;
 import co.codewizards.cloudstore.core.repo.transport.RepoTransport;
+import mockit.Mock;
+import mockit.MockUp;
 
 public class InterruptedRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 

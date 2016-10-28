@@ -38,8 +38,8 @@ import org.subshare.core.observable.standard.StandardPreModificationListener;
 import org.subshare.core.server.ServerRegistry;
 import org.subshare.core.server.ServerRegistryImpl;
 
+import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.core.config.ConfigDir;
-import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.oio.File;
 
 public class ServerRepoRegistryImpl extends FileBasedObjectRegistry implements ServerRepoRegistry {

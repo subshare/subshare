@@ -36,9 +36,10 @@ import org.subshare.rest.client.locker.transport.RestLockerTransportFactory;
 import org.subshare.rest.client.pgp.transport.RestPgpTransportFactory;
 import org.subshare.rest.client.transport.CryptreeRestRepoTransportFactoryImpl;
 
+import co.codewizards.cloudstore.core.TestMode;
+import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.core.config.Config;
 import co.codewizards.cloudstore.core.config.ConfigDir;
-import co.codewizards.cloudstore.core.dto.Uid;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManagerFactory;
@@ -60,6 +61,7 @@ public abstract class AbstractIT {
 	protected static String jvmInstanceDir;
 
 	static {
+		TestMode.enableTestMode();
 		final Uid jvmInstanceId = new Uid(); // for parallel test execution ;-)
 		jvmInstanceDir = "build/jvm/" + jvmInstanceId;
 		final String configDirString = jvmInstanceDir + "/.subshare";

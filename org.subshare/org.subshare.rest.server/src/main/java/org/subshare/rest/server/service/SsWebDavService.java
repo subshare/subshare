@@ -20,7 +20,7 @@ import org.subshare.core.dto.PermissionType;
 import org.subshare.core.sign.VerifierInputStream;
 import org.subshare.core.user.UserRepoKey;
 
-import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.core.repo.local.ContextWithLocalRepoManager;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;

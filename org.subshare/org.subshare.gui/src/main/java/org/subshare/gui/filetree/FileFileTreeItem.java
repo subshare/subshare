@@ -6,13 +6,12 @@ import java.text.DateFormat;
 import java.util.Date;
 import java.util.List;
 
-import javafx.scene.control.TreeItem;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
-
 import org.subshare.gui.IconSize;
 
 import co.codewizards.cloudstore.core.oio.File;
+import javafx.scene.control.TreeItem;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 
 public class FileFileTreeItem extends FileTreeItem<File> {
 

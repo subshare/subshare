@@ -5,8 +5,8 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import java.net.URL;
 import java.util.Date;
 
+import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.core.bean.AbstractBean;
-import co.codewizards.cloudstore.core.dto.Uid;
 
 public class ServerImpl extends AbstractBean<Server.Property> implements Cloneable, Server {
 

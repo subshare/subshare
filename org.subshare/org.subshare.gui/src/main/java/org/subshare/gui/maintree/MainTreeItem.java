@@ -8,6 +8,8 @@ import java.beans.PropertyChangeListener;
 import java.lang.reflect.Method;
 import java.util.List;
 
+import co.codewizards.cloudstore.core.bean.WeakPropertyChangeListener;
+import co.codewizards.cloudstore.core.util.ReflectionUtil;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ObjectPropertyBase;
 import javafx.beans.value.ChangeListener;
@@ -18,8 +20,6 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
-import co.codewizards.cloudstore.core.bean.WeakPropertyChangeListener;
-import co.codewizards.cloudstore.core.util.ReflectionUtil;
 
 public class MainTreeItem<T> extends TreeItem<String> {
 

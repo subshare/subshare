@@ -8,14 +8,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import javafx.collections.ObservableSet;
-import javafx.scene.Parent;
-import javafx.scene.control.Label;
-import javafx.scene.control.SelectionMode;
-import javafx.scene.control.Tooltip;
-import javafx.scene.image.ImageView;
-import javafx.scene.layout.VBox;
-
 import org.subshare.core.pgp.Pgp;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpKeyValidity;
@@ -31,6 +23,13 @@ import org.subshare.gui.severity.SeverityImageRegistry;
 import org.subshare.gui.wizard.WizardPage;
 
 import co.codewizards.cloudstore.core.Severity;
+import javafx.collections.ObservableSet;
+import javafx.scene.Parent;
+import javafx.scene.control.Label;
+import javafx.scene.control.SelectionMode;
+import javafx.scene.control.Tooltip;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.VBox;
 
 public class SelectUserWizardPage extends WizardPage {
 

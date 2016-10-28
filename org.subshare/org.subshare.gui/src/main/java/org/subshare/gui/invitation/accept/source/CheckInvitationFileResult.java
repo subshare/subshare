@@ -1,6 +1,7 @@
 package org.subshare.gui.invitation.accept.source;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+
 import co.codewizards.cloudstore.core.Severity;
 
 public class CheckInvitationFileResult {

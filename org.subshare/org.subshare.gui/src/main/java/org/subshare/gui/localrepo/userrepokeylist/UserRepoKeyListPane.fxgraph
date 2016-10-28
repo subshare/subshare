@@ -15,7 +15,7 @@ import javafx.scene.control.Tooltip
 import javafx.scene.layout.GridPane
 import java.util.UUID
 import org.subshare.gui.localrepo.userrepokeylist.UserRepoKeyListItem
-import co.codewizards.cloudstore.core.dto.Uid
+import co.codewizards.cloudstore.core.Uid
 
 dynamic component UserRepoKeyListPane resourcefile 'messages.properties' {
 	GridPane {

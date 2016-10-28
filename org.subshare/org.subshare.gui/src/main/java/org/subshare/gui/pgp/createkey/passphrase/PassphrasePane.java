@@ -8,6 +8,12 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.subshare.core.pgp.CreatePgpKeyParam;
+import org.subshare.gui.IconSize;
+import org.subshare.gui.severity.SeverityImageRegistry;
+import org.subshare.gui.util.CharArrayStringConverter;
+
+import co.codewizards.cloudstore.core.Severity;
 import javafx.beans.InvalidationListener;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
@@ -24,13 +30,6 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
-
-import org.subshare.core.pgp.CreatePgpKeyParam;
-import org.subshare.gui.IconSize;
-import org.subshare.gui.severity.SeverityImageRegistry;
-import org.subshare.gui.util.CharArrayStringConverter;
-
-import co.codewizards.cloudstore.core.Severity;
 
 public abstract class PassphrasePane extends GridPane {
 

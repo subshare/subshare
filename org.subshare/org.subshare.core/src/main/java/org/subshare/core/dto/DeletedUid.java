@@ -4,7 +4,7 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.util.Date;
 
-import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.Uid;
 
 /**
  * Reference to a deleted object, holding its ID and the deletion timestamp.

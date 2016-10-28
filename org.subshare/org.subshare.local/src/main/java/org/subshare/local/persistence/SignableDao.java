@@ -9,7 +9,7 @@ import javax.jdo.Query;
 
 import org.subshare.core.sign.Signable;
 
-import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.local.persistence.Dao;
 import co.codewizards.cloudstore.local.persistence.Entity;
 

@@ -10,7 +10,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.subshare.core.repo.transport.CryptreeServerFileRepoTransport;
 
-import co.codewizards.cloudstore.core.dto.Uid;
+import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.rest.server.service.AbstractServiceWithRepoToRepoAuth;
 
 @Path("_getHistoFileData/{repositoryName}")
