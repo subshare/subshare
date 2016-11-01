@@ -5,8 +5,8 @@ import static co.codewizards.cloudstore.core.util.IOUtil.*;
 import static org.assertj.core.api.Assertions.*;
 
 import java.io.BufferedInputStream;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
+import co.codewizards.cloudstore.core.io.ByteArrayInputStream;
+import co.codewizards.cloudstore.core.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;

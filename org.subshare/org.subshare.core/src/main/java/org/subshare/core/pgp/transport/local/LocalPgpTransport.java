@@ -2,8 +2,6 @@ package org.subshare.core.pgp.transport.local;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -13,6 +11,9 @@ import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpKeyId;
 import org.subshare.core.pgp.PgpRegistry;
 import org.subshare.core.pgp.transport.AbstractPgpTransport;
+
+import co.codewizards.cloudstore.core.io.IInputStream;
+import co.codewizards.cloudstore.core.io.IOutputStream;
 
 public class LocalPgpTransport extends AbstractPgpTransport {
 
@@ -38,7 +39,7 @@ public class LocalPgpTransport extends AbstractPgpTransport {
 	}
 
 	@Override
-	public void exportPublicKeys(final Set<PgpKeyId> pgpKeyIds, final long changedAfterLocalRevision, final OutputStream out) {
+	public void exportPublicKeys(final Set<PgpKeyId> pgpKeyIds, final long changedAfterLocalRevision, final IOutputStream out) {
 		assertNotNull("pgpKeyIds", pgpKeyIds);
 		assertNotNull("out", out);
 		final HashSet<PgpKey> masterKeys = new HashSet<PgpKey>(pgpKeyIds.size());
@@ -55,7 +56,7 @@ public class LocalPgpTransport extends AbstractPgpTransport {
 	}
 
 	@Override
-	public void exportPublicKeysMatchingQuery(final String queryString, final OutputStream out) {
+	public void exportPublicKeysMatchingQuery(final String queryString, final IOutputStream out) {
 		assertNotNull("queryString", queryString);
 		assertNotNull("out", out);
 		final HashSet<PgpKey> masterKeys = new HashSet<PgpKey>();
@@ -99,7 +100,7 @@ public class LocalPgpTransport extends AbstractPgpTransport {
 	}
 
 	@Override
-	public void importKeys(final InputStream in) {
+	public void importKeys(final IInputStream in) {
 		pgp.importKeys(in);
 	}
 }

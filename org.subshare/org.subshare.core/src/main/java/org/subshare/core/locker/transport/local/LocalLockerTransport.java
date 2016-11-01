@@ -1,11 +1,10 @@
 package org.subshare.core.locker.transport.local;
 
+import static co.codewizards.cloudstore.core.io.StreamUtil.*;
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -28,6 +27,8 @@ import org.subshare.core.pgp.PgpSignature;
 import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.core.auth.SignatureException;
 import co.codewizards.cloudstore.core.config.ConfigDir;
+import co.codewizards.cloudstore.core.io.ByteArrayInputStream;
+import co.codewizards.cloudstore.core.io.ByteArrayOutputStream;
 import co.codewizards.cloudstore.core.io.LockFile;
 import co.codewizards.cloudstore.core.io.LockFileFactory;
 import co.codewizards.cloudstore.core.oio.File;
@@ -196,7 +197,7 @@ public class LocalLockerTransport extends AbstractLockerTransport {
 				try {
 					if (localLockerTransportProperties == null) {
 						final Properties p = new Properties();
-						try (final InputStream in = lockFile.createInputStream();) {
+						try (final InputStream in = castStream(lockFile.createInputStream())) {
 							p.load(in);
 						}
 						localLockerTransportProperties = p;
@@ -215,7 +216,7 @@ public class LocalLockerTransport extends AbstractLockerTransport {
 		final Properties localLockerTransportProperties = getLocalLockerTransportProperties();
 		synchronized (localLockerTransportProperties) {
 			try (final LockFile lockFile = LockFileFactory.getInstance().acquire(getLocalLockerTransportPropertiesFile(), 30000);) {
-				try (final OutputStream out = lockFile.createOutputStream();) { // acquires LockFile.lock implicitly
+				try (final OutputStream out = castStream(lockFile.createOutputStream())) { // acquires LockFile.lock implicitly
 					localLockerTransportProperties.store(out, null);
 				}
 			} catch (final IOException x) {

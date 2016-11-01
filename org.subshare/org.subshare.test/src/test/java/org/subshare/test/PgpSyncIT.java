@@ -1,12 +1,12 @@
 package org.subshare.test;
 
+import static co.codewizards.cloudstore.core.io.StreamUtil.*;
 import static co.codewizards.cloudstore.core.objectfactory.ObjectFactoryUtil.*;
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
 import static org.assertj.core.api.Assertions.*;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collection;
@@ -32,6 +32,7 @@ import org.subshare.core.server.Server;
 import org.subshare.core.server.ServerImpl;
 
 import co.codewizards.cloudstore.core.config.ConfigDir;
+import co.codewizards.cloudstore.core.io.IInputStream;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.util.IOUtil;
 import mockit.Invocation;
@@ -179,12 +180,12 @@ public class PgpSyncIT extends AbstractIT {
 
 
 		// *** BEGIN sync 2 - adding one key each on server- and client-side
-		try (InputStream in = PgpSyncIT.class.getResourceAsStream("gpg/aaa_0x710E3371.asc");) {
+		try (IInputStream in = castStream(PgpSyncIT.class.getResourceAsStream("gpg/aaa_0x710E3371.asc"))) {
 			clientPgp.importKeys(in);
 		}
 		Map<PgpKey, Collection<PgpSignature>> clientMasterKeysBeforeSync2 = getSignatures(clientPgp, clientPgp.getMasterKeys());
 
-		try (InputStream in = PgpSyncIT.class.getResourceAsStream("gpg/bbb_0x64C77207.asc");) {
+		try (IInputStream in = castStream(PgpSyncIT.class.getResourceAsStream("gpg/bbb_0x64C77207.asc"))) {
 			serverPgp.importKeys(in);
 		}
 		Map<PgpKey, Collection<PgpSignature>> serverMasterKeysBeforeSync2 = getSignatures(serverPgp, serverPgp.getMasterKeys());
@@ -209,13 +210,13 @@ public class PgpSyncIT extends AbstractIT {
 
 
 		// *** BEGIN sync 3
-		try (InputStream in = PgpSyncIT.class.getResourceAsStream("gpg/0xAA97DDBD_with_aaa_sig.asc");) {
+		try (IInputStream in = castStream(PgpSyncIT.class.getResourceAsStream("gpg/0xAA97DDBD_with_aaa_sig.asc"))) {
 			clientPgp.importKeys(in);
 		}
 		Map<PgpKey, Collection<PgpSignature>> clientMasterKeysBeforeSync3 = getSignatures(clientPgp, clientPgp.getMasterKeys());
 		assertThat(clientMasterKeysBeforeSync3.size()).isEqualTo(clientMasterKeysAfterSync2.size()); // no new key, only new signature!
 
-		try (InputStream in = PgpSyncIT.class.getResourceAsStream("gpg/0xAA97DDBD_with_bbb_sig.asc");) {
+		try (IInputStream in = castStream(PgpSyncIT.class.getResourceAsStream("gpg/0xAA97DDBD_with_bbb_sig.asc"))) {
 			serverPgp.importKeys(in);
 		}
 		Map<PgpKey, Collection<PgpSignature>> serverMasterKeysBeforeSync3 = getSignatures(serverPgp, serverPgp.getMasterKeys());

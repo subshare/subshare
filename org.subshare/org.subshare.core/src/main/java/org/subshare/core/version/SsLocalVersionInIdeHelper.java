@@ -1,5 +1,6 @@
 package org.subshare.core.version;
 
+import static co.codewizards.cloudstore.core.io.StreamUtil.*;
 import static co.codewizards.cloudstore.core.util.UrlUtil.*;
 
 import java.io.BufferedReader;
@@ -37,7 +38,7 @@ public class SsLocalVersionInIdeHelper extends LocalVersionInIdeHelper {
 			};
 
 			for (File buildGradleFile : buildGradleFiles) {
-				try (InputStream buildGradleIn = buildGradleFile.createInputStream()) {
+				try (InputStream buildGradleIn = castStream(buildGradleFile.createInputStream())) {
 					Version version = readVersionFromBuildGradle(buildGradleIn);
 					if (version != null)
 						return version;

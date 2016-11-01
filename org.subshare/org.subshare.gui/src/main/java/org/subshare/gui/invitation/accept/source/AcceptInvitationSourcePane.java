@@ -1,13 +1,12 @@
 package org.subshare.gui.invitation.accept.source;
 
+import static co.codewizards.cloudstore.core.io.StreamUtil.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
 import static org.subshare.core.file.FileConst.*;
 import static org.subshare.gui.util.FxmlUtil.*;
 import static org.subshare.gui.util.PlatformUtil.*;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -40,6 +39,8 @@ import org.subshare.gui.severity.SeverityImageRegistry;
 import org.subshare.gui.wizard.WizardPageContentGridPane;
 
 import co.codewizards.cloudstore.core.Severity;
+import co.codewizards.cloudstore.core.io.ByteArrayInputStream;
+import co.codewizards.cloudstore.core.io.ByteArrayOutputStream;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.ls.client.LocalServerClient;
 import javafx.application.Platform;
@@ -270,7 +271,7 @@ public class AcceptInvitationSourcePane extends WizardPageContentGridPane {
 	private CheckInvitationFileResult checkSelectedFile(File file) throws Exception {
 		final LocalServerClient lsc = LocalServerClient.getInstance();
 		final Pgp pgp = PgpLs.getPgpOrFail();
-		try (InputStream in = file.createInputStream();) {
+		try (InputStream in = castStream(file.createInputStream())) {
 			final EncryptedDataFile encryptedDataFile = new EncryptedDataFile(in);
 			byte[] defaultData = encryptedDataFile.getDefaultData();
 			if (defaultData == null)

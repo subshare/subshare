@@ -4,8 +4,6 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.IOUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -19,6 +17,8 @@ import org.subshare.core.pgp.PgpRegistry;
 import org.subshare.core.pgp.PgpSignature;
 
 import co.codewizards.cloudstore.core.auth.SignatureException;
+import co.codewizards.cloudstore.core.io.ByteArrayInputStream;
+import co.codewizards.cloudstore.core.io.ByteArrayOutputStream;
 
 public class PgpSignableVerifier {
 
@@ -58,7 +58,7 @@ public class PgpSignableVerifier {
 
 			try (InputStream signedDataInputStream = pgpSignable.getSignedData(signedDataVersion);) {
 
-				try (final InputStream in = new MultiInputStream(
+				try (final MultiInputStream in = new MultiInputStream(
 						InputStreamSource.Helper.createInputStreamSource(new ByteArrayInputStream(additionalSignedDataOut.toByteArray())),
 						InputStreamSource.Helper.createInputStreamSource(signedDataInputStream));) {
 

@@ -1,11 +1,12 @@
 package org.subshare.core.pgp.transport;
 
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.URL;
 import java.util.Set;
 
 import org.subshare.core.pgp.PgpKeyId;
+
+import co.codewizards.cloudstore.core.io.IInputStream;
+import co.codewizards.cloudstore.core.io.IOutputStream;
 
 public interface PgpTransport extends AutoCloseable {
 
@@ -33,8 +34,8 @@ public interface PgpTransport extends AutoCloseable {
 
 	Set<PgpKeyId> getMasterKeyIds();
 
-	void exportPublicKeys(Set<PgpKeyId> pgpKeyIds, long changedAfterLocalRevision, OutputStream out);
-	void exportPublicKeysMatchingQuery(String queryString, OutputStream out);
+	void exportPublicKeys(Set<PgpKeyId> pgpKeyIds, long changedAfterLocalRevision, IOutputStream out);
+	void exportPublicKeysMatchingQuery(String queryString, IOutputStream out);
 
-	void importKeys(InputStream in);
+	void importKeys(IInputStream in);
 }

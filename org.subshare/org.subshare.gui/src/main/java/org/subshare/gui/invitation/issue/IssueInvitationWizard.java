@@ -1,5 +1,6 @@
 package org.subshare.gui.invitation.issue;
 
+import static co.codewizards.cloudstore.core.io.StreamUtil.*;
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
@@ -82,7 +83,7 @@ public class IssueInvitationWizard extends Wizard {
 				fileNames.add(fileName);
 				final File file = createFile(invitationTokenDirectory, fileName);
 				try {
-					try (final OutputStream out = file.createOutputStream();) {
+					try (final OutputStream out = castStream(file.createOutputStream())) {
 						out.write(data);
 					}
 				} catch (IOException e) {

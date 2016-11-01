@@ -2,7 +2,7 @@ package org.subshare.rest.server.service;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
-import java.io.ByteArrayInputStream;
+import co.codewizards.cloudstore.core.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Date;
 import java.util.UUID;

@@ -1,26 +1,26 @@
 package org.subshare.core.pgp;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.Set;
 
 import co.codewizards.cloudstore.core.auth.SignatureException;
+import co.codewizards.cloudstore.core.io.IInputStream;
+import co.codewizards.cloudstore.core.io.IOutputStream;
 
 public interface PgpDecoder {
 
-	InputStream getInputStream();
-	void setInputStream(InputStream in);
+	IInputStream getInputStream();
+	void setInputStream(IInputStream in);
 
-	OutputStream getOutputStream();
-	void setOutputStream(OutputStream out);
+	IOutputStream getOutputStream();
+	void setOutputStream(IOutputStream out);
 
 	/**
 	 * Input of a detached signature.
 	 * @return input of a detached signature, or <code>null</code>.
 	 */
-	InputStream getSignInputStream();
-	void setSignInputStream(InputStream in);
+	IInputStream getSignInputStream();
+	void setSignInputStream(IInputStream in);
 
 	void decode() throws SignatureException, IOException;
 

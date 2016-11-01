@@ -13,6 +13,8 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import co.codewizards.cloudstore.core.io.IInputStream;
+
 /**
  * {@link InputStream} implementation combining multiple other {@code InputStream}s.
  * <p>
@@ -21,7 +23,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author Marco หงุ่ยตระกูล-Schulze - marco at codewizards dot co
  */
-public class MultiInputStream extends InputStream {
+public class MultiInputStream extends InputStream implements IInputStream {
 
 	private static final Logger logger = LoggerFactory.getLogger(MultiInputStream.class);
 

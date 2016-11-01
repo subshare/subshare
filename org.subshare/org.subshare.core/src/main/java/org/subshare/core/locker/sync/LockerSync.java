@@ -1,5 +1,6 @@
 package org.subshare.core.locker.sync;
 
+import static co.codewizards.cloudstore.core.io.StreamUtil.*;
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
@@ -284,7 +285,7 @@ public class LockerSync implements Sync {
 				try {
 					if (lockerSyncProperties == null) {
 						final Properties p = new Properties();
-						try (final InputStream in = lockFile.createInputStream();) {
+						try (final InputStream in = castStream(lockFile.createInputStream())) {
 							p.load(in);
 						}
 						lockerSyncProperties = p;
@@ -303,7 +304,7 @@ public class LockerSync implements Sync {
 		final Properties lockerSyncProperties = getLockerSyncProperties();
 		synchronized (lockerSyncProperties) {
 			try (final LockFile lockFile = LockFileFactory.getInstance().acquire(getLockerSyncPropertiesFile(), 30000);) {
-				try (final OutputStream out = lockFile.createOutputStream();) { // acquires LockFile.lock implicitly
+				try (final OutputStream out = castStream(lockFile.createOutputStream())) { // acquires LockFile.lock implicitly
 					lockerSyncProperties.store(out, null);
 				}
 			} catch (final IOException x) {

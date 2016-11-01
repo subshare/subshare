@@ -1,24 +1,17 @@
 package org.subshare.core.pgp;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
-
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Set;
 
-import co.codewizards.cloudstore.core.oio.File;
+import co.codewizards.cloudstore.core.io.IInputStream;
+import co.codewizards.cloudstore.core.io.IOutputStream;
 
 public abstract class AbstractPgp implements Pgp {
 
 	private final PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
 
 	@Override
-	public PgpEncoder createEncoder(final InputStream in, final OutputStream out) {
+	public PgpEncoder createEncoder(final IInputStream in, final IOutputStream out) {
 		final PgpEncoder encoder = _createEncoder();
 		encoder.setInputStream(in);
 		encoder.setOutputStream(out);
@@ -28,7 +21,7 @@ public abstract class AbstractPgp implements Pgp {
 	protected abstract PgpEncoder _createEncoder();
 
 	@Override
-	public PgpDecoder createDecoder(final InputStream in, final OutputStream out) {
+	public PgpDecoder createDecoder(final IInputStream in, final IOutputStream out) {
 		final PgpDecoder decoder = _createDecoder();
 		decoder.setInputStream(in);
 		decoder.setOutputStream(out);
@@ -58,68 +51,68 @@ public abstract class AbstractPgp implements Pgp {
 		propertyChangeSupport.firePropertyChange(property.name(), oldValue, newValue);
 	}
 
-	@Override
-	public void exportPublicKeysWithSecretKeys(final Set<PgpKey> pgpKeys, final File file) {
-		assertNotNull("pgpKeys", pgpKeys);
-		try {
-			try (OutputStream out = assertNotNull("file", file).createOutputStream();) {
-				exportPublicKeysWithSecretKeys(pgpKeys, out);
-			}
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	@Override
-	public void exportPublicKeys(final Set<PgpKey> pgpKeys, final File file) {
-		assertNotNull("pgpKeys", pgpKeys);
-		try {
-			try (OutputStream out = assertNotNull("file", file).createOutputStream();) {
-				exportPublicKeys(pgpKeys, out);
-			}
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	@Override
-	public byte[] exportPublicKeys(Set<PgpKey> pgpKeys) {
-		final ByteArrayOutputStream bout = new ByteArrayOutputStream();
-		exportPublicKeys(pgpKeys, bout);
-		return bout.toByteArray();
-	}
-
-	@Override
-	public ImportKeysResult importKeys(final File file) {
-		try {
-			try (InputStream in = assertNotNull("file", file).createInputStream();) {
-				return importKeys(in);
-			}
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	@Override
-	public ImportKeysResult importKeys(byte[] data) {
-		assertNotNull("data", data);
-		return importKeys(new ByteArrayInputStream(data));
-	}
-
-	@Override
-	public TempImportKeysResult importKeysTemporarily(File file) {
-		try {
-			try (InputStream in = assertNotNull("file", file).createInputStream();) {
-				return importKeysTemporarily(in);
-			}
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	@Override
-	public TempImportKeysResult importKeysTemporarily(byte[] data) {
-		assertNotNull("data", data);
-		return importKeysTemporarily(new ByteArrayInputStream(data));
-	}
+//	@Override
+//	public void exportPublicKeysWithSecretKeys(final Set<PgpKey> pgpKeys, final File file) {
+//		assertNotNull("pgpKeys", pgpKeys);
+//		try {
+//			try (IOutputStream out = assertNotNull("file", file).createOutputStream();) {
+//				exportPublicKeysWithSecretKeys(pgpKeys, out);
+//			}
+//		} catch (IOException e) {
+//			throw new RuntimeException(e);
+//		}
+//	}
+//
+//	@Override
+//	public void exportPublicKeys(final Set<PgpKey> pgpKeys, final File file) {
+//		assertNotNull("pgpKeys", pgpKeys);
+//		try {
+//			try (IOutputStream out = assertNotNull("file", file).createOutputStream();) {
+//				exportPublicKeys(pgpKeys, out);
+//			}
+//		} catch (IOException e) {
+//			throw new RuntimeException(e);
+//		}
+//	}
+//
+//	@Override
+//	public byte[] exportPublicKeys(Set<PgpKey> pgpKeys) {
+//		final ByteArrayOutputStream bout = new ByteArrayOutputStream();
+//		exportPublicKeys(pgpKeys, bout);
+//		return bout.toByteArray();
+//	}
+//
+//	@Override
+//	public ImportKeysResult importKeys(final File file) {
+//		try {
+//			try (IInputStream in = assertNotNull("file", file).createInputStream();) {
+//				return importKeys(in);
+//			}
+//		} catch (IOException e) {
+//			throw new RuntimeException(e);
+//		}
+//	}
+//
+//	@Override
+//	public ImportKeysResult importKeys(byte[] data) {
+//		assertNotNull("data", data);
+//		return importKeys(new ByteArrayInputStream(data));
+//	}
+//
+//	@Override
+//	public TempImportKeysResult importKeysTemporarily(File file) {
+//		try {
+//			try (IInputStream in = assertNotNull("file", file).createInputStream();) {
+//				return importKeysTemporarily(in);
+//			}
+//		} catch (IOException e) {
+//			throw new RuntimeException(e);
+//		}
+//	}
+//
+//	@Override
+//	public TempImportKeysResult importKeysTemporarily(byte[] data) {
+//		assertNotNull("data", data);
+//		return importKeysTemporarily(new ByteArrayInputStream(data));
+//	}
 }

@@ -1,8 +1,8 @@
 package org.subshare.core.io;
 
+import static co.codewizards.cloudstore.core.io.StreamUtil.*;
 import static co.codewizards.cloudstore.core.util.IOUtil.*;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -12,6 +12,8 @@ import java.util.Date;
 import java.util.UUID;
 
 import co.codewizards.cloudstore.core.Uid;
+import co.codewizards.cloudstore.core.io.ByteArrayInputStream;
+import co.codewizards.cloudstore.core.io.IInputStream;
 import co.codewizards.cloudstore.core.util.IOUtil;
 
 /**
@@ -161,6 +163,14 @@ public interface InputStreamSource {
 					in.close();
 				}
 			};
+		}
+
+		public static InputStreamSource createInputStreamSource(final IInputStream in) {
+			return createInputStreamSource(castStream(in));
+		}
+
+		public static InputStreamSource createInputStreamSource(final ByteArrayInputStream in) {
+			return createInputStreamSource((InputStream) in);
 		}
 
 		public static InputStreamSource createInputStreamSource(final File file) {

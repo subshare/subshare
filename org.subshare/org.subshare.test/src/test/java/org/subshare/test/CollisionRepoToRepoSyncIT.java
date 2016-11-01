@@ -1,5 +1,6 @@
 package org.subshare.test;
 
+import static co.codewizards.cloudstore.core.io.StreamUtil.*;
 import static org.assertj.core.api.Assertions.*;
 
 import java.io.BufferedOutputStream;
@@ -15,6 +16,7 @@ import org.subshare.core.dto.CollisionDto;
 import org.subshare.local.UserRepoKeyPublicKeyHelper;
 import org.subshare.local.persistence.UserRepoKeyPublicKey;
 
+import co.codewizards.cloudstore.core.io.IOutputStream;
 import co.codewizards.cloudstore.core.oio.File;
 import mockit.Mock;
 import mockit.MockUp;
@@ -37,13 +39,13 @@ public abstract class CollisionRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT
 	}
 
 	protected static void modifyFile_append(File file, int byteToAppend) throws IOException {
-		try (OutputStream out = file.createOutputStream(true)) { // append
+		try (IOutputStream out = file.createOutputStream(true)) { // append
 			out.write(byteToAppend);
 		}
 	}
 
 	protected static void modifyFile_append(File file, int byteToAppend, int length) throws IOException {
-		try (OutputStream out = new BufferedOutputStream(file.createOutputStream(true))) { // append
+		try (OutputStream out = new BufferedOutputStream(castStream(file.createOutputStream(true)))) { // append
 			for (int i = 0; i < length; ++i)
 				out.write(byteToAppend);
 		}

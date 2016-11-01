@@ -2,10 +2,11 @@ package org.subshare.core.io;
 
 import static org.assertj.core.api.Assertions.*;
 
-import java.io.ByteArrayInputStream;
 import java.util.Random;
 
 import org.junit.Test;
+
+import co.codewizards.cloudstore.core.io.ByteArrayInputStream;
 
 public class LimitedInputStreamTest {
 

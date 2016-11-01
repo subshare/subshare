@@ -1,14 +1,11 @@
 package org.subshare.core.pgp;
 
+import static co.codewizards.cloudstore.core.io.StreamUtil.*;
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
 import static org.assertj.core.api.Assertions.*;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
@@ -28,6 +25,10 @@ import org.subshare.core.sign.PgpSignableVerifier;
 import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.core.auth.SignatureException;
 import co.codewizards.cloudstore.core.config.Config;
+import co.codewizards.cloudstore.core.io.ByteArrayInputStream;
+import co.codewizards.cloudstore.core.io.ByteArrayOutputStream;
+import co.codewizards.cloudstore.core.io.IInputStream;
+import co.codewizards.cloudstore.core.io.IOutputStream;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.util.IOUtil;
 
@@ -259,11 +260,11 @@ public class PgpTest {
 		pgpKeys.add(pgpKey);
 
 		File tempFile = createTempFile("pubkeys-", ".gpg");
-		try (OutputStream out = tempFile.createOutputStream();) {
+		try (IOutputStream out = tempFile.createOutputStream();) {
 			pgp.exportPublicKeys(pgpKeys, out);
 		}
 
-		try (InputStream in = GnuPgTest.class.getResourceAsStream("0xAA97DDBD_with_aaa_sig.asc");) {
+		try (IInputStream in = castStream(GnuPgTest.class.getResourceAsStream("0xAA97DDBD_with_aaa_sig.asc"))) {
 			pgp.importKeys(in);
 		}
 
@@ -273,7 +274,7 @@ public class PgpTest {
 		assertThat(pgp.getCertifications(pgpKey).size()).isEqualTo(3);
 
 
-		try (InputStream in = GnuPgTest.class.getResourceAsStream("0xAA97DDBD_with_bbb_sig.asc");) {
+		try (IInputStream in = castStream(GnuPgTest.class.getResourceAsStream("0xAA97DDBD_with_bbb_sig.asc"))) {
 			pgp.importKeys(in);
 		}
 
@@ -281,7 +282,7 @@ public class PgpTest {
 		assertThat(pgp.getCertifications(pgpKey).size()).isEqualTo(4);
 
 
-		try (InputStream in = GnuPgTest.class.getResourceAsStream("0xAA97DDBD_with_aaa_sig.asc");) {
+		try (IInputStream in = castStream(GnuPgTest.class.getResourceAsStream("0xAA97DDBD_with_aaa_sig.asc"))) {
 			pgp.importKeys(in);
 		}
 
@@ -289,7 +290,7 @@ public class PgpTest {
 		assertThat(pgp.getCertifications(pgpKey).size()).isEqualTo(4);
 
 
-		try (InputStream in = tempFile.createInputStream();) {
+		try (IInputStream in = tempFile.createInputStream();) {
 			pgp.importKeys(in);
 		}
 

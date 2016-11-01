@@ -3,8 +3,8 @@ package org.subshare.local.sign;
 import static co.codewizards.cloudstore.core.util.Util.*;
 import static org.assertj.core.api.Assertions.*;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
+import co.codewizards.cloudstore.core.io.ByteArrayInputStream;
+import co.codewizards.cloudstore.core.io.ByteArrayOutputStream;
 import java.util.Date;
 import java.util.UUID;
 

@@ -18,6 +18,7 @@ import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.user.UserRegistryImpl;
 import org.subshare.core.user.UserRepoInvitationToken;
 
+import co.codewizards.cloudstore.core.io.ByteArrayOutputStream;
 import mockit.integration.junit4.JMockit;
 
 @RunWith(JMockit.class)
@@ -31,7 +32,9 @@ public class Issue8IT extends AbstractMultiUserIT {
 		// Xenia needs to create a new PGP key pair.
 		switchLocationTo(TestUser.xenia);
 		PgpKey pgpKey = createPgpKey();
-		byte[] xeniaPgpKeyPublicData = getPgp().exportPublicKeys(Collections.singleton(pgpKey));
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		getPgp().exportPublicKeys(Collections.singleton(pgpKey), out);
+		byte[] xeniaPgpKeyPublicData = out.toByteArray();
 		pgpKey = null;
 
 
@@ -40,7 +43,9 @@ public class Issue8IT extends AbstractMultiUserIT {
 		// Yasmin, too, needs to create a new PGP key pair.
 		switchLocationTo(TestUser.yasmin);
 		pgpKey = createPgpKey();
-		byte[] yasminPgpKeyPublicData = getPgp().exportPublicKeys(Collections.singleton(pgpKey));
+		out.reset();
+		getPgp().exportPublicKeys(Collections.singleton(pgpKey), out);
+		byte[] yasminPgpKeyPublicData = out.toByteArray();
 		pgpKey = null;
 
 

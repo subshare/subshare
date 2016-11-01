@@ -1,5 +1,6 @@
 package org.subshare.core.file;
 
+import static co.codewizards.cloudstore.core.io.StreamUtil.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
 import static org.subshare.core.file.FileConst.*;
@@ -78,7 +79,7 @@ public class DataFileFilter implements FileFilter {
 		assertNotNull("file", file);
 		try {
 			final DataFile dataFile;
-			try (final InputStream in = file.createInputStream();) {
+			try (final InputStream in = castStream(file.createInputStream())) {
 				dataFile = new DataFile(in) {
 					@Override protected String getContentTypeValue() {
 						// not needed as we neither write nor check the content-type (all are accepted).

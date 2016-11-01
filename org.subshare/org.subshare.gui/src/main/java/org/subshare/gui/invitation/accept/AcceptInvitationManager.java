@@ -1,8 +1,8 @@
 package org.subshare.gui.invitation.accept;
 
+import static co.codewizards.cloudstore.core.io.StreamUtil.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -13,6 +13,7 @@ import org.subshare.gui.ls.PgpSyncDaemonLs;
 import org.subshare.gui.ls.RepoSyncDaemonLs;
 import org.subshare.gui.ls.ServerRepoManagerLs;
 
+import co.codewizards.cloudstore.core.io.ByteArrayOutputStream;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.repo.sync.RepoSyncDaemon;
 
@@ -46,7 +47,7 @@ public class AcceptInvitationManager {
 	private UserRepoInvitationToken readUserRepoInvitationToken(File file) {
 		try {
 			final ByteArrayOutputStream bout = new ByteArrayOutputStream((int) file.length());
-			try (InputStream in = file.createInputStream();) {
+			try (InputStream in = castStream(file.createInputStream())) {
 				Streams.pipeAll(in, bout);
 			}
 			final UserRepoInvitationToken result = new UserRepoInvitationToken(bout.toByteArray());

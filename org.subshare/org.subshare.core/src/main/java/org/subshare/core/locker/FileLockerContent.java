@@ -1,11 +1,13 @@
 package org.subshare.core.locker;
 
-import java.io.ByteArrayOutputStream;
+import static co.codewizards.cloudstore.core.io.StreamUtil.*;
+
 import java.io.IOException;
 import java.io.InputStream;
 
 import org.bouncycastle.util.io.Streams;
 
+import co.codewizards.cloudstore.core.io.ByteArrayOutputStream;
 import co.codewizards.cloudstore.core.io.LockFile;
 import co.codewizards.cloudstore.core.io.LockFileFactory;
 import co.codewizards.cloudstore.core.oio.File;
@@ -42,7 +44,7 @@ public abstract class FileLockerContent implements LockerContent {
 	}
 
 	protected byte[] getData(final File file, final LockFile lockFile) throws IOException {
-		try (final InputStream in = lockFile.createInputStream();) {
+		try (final InputStream in = castStream(lockFile.createInputStream())) {
 			final ByteArrayOutputStream out = new ByteArrayOutputStream();
 			Streams.pipeAll(in, out);
 			return out.toByteArray();

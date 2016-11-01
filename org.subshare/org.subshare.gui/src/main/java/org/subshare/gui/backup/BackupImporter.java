@@ -1,5 +1,6 @@
 package org.subshare.gui.backup;
 
+import static co.codewizards.cloudstore.core.io.StreamUtil.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static org.subshare.gui.backup.BackupDataFile.*;
 
@@ -11,6 +12,7 @@ import org.subshare.core.server.ServerRegistryLockerContent;
 import org.subshare.gui.ls.UserRegistryLs;
 
 import co.codewizards.cloudstore.core.oio.File;
+import co.codewizards.cloudstore.ls.client.util.ByteArrayInputStreamLs;
 
 public class BackupImporter extends AbstractBackupImExporter {
 
@@ -22,7 +24,7 @@ public class BackupImporter extends AbstractBackupImExporter {
 		backupFile.getParentFile().mkdirs();
 
 		final BackupDataFile backupDataFile;
-		try (InputStream in = backupFile.createInputStream();) {
+		try (InputStream in = castStream(backupFile.createInputStream())) {
 			backupDataFile = new BackupDataFile(in);
 		}
 
@@ -30,7 +32,7 @@ public class BackupImporter extends AbstractBackupImExporter {
 
 		final byte[] pgpKeyData = backupDataFile.getData(ENTRY_NAME_PGP_KEYS);
 		assertNotNull("backupDataFile.getData(ENTRY_NAME_PGP_KEYS)", pgpKeyData);
-		pgp.importKeys(pgpKeyData);
+		pgp.importKeys(ByteArrayInputStreamLs.create(pgpKeyData));
 
 		final LockerContent serverRegistryLockerContent = localServerClient.invokeConstructor(ServerRegistryLockerContent.class);
 		final byte[] serverRegistryData = backupDataFile.getData(ENTRY_NAME_SERVER_REGISTRY_FILE);

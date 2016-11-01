@@ -1,5 +1,6 @@
 package org.subshare.core.pgp.gnupg;
 
+import static co.codewizards.cloudstore.core.io.StreamUtil.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.io.IOException;
@@ -41,9 +42,9 @@ public class BcPgpEncoder extends AbstractPgpEncoder {
 	public void encode() throws IOException {
 		final int BUFFER_SIZE = 1024 * 32;
 
-		final InputStream in = getInputStreamOrFail();
-		final OutputStream signOut = getSignOutputStream();
-		OutputStream out = getOutputStreamOrFail();
+		final InputStream in = castStream(getInputStreamOrFail());
+		final OutputStream signOut = castStream(getSignOutputStream());
+		OutputStream out = castStream(getOutputStreamOrFail());
 		try {
 			final PGPEncryptedDataGenerator edGenerator = getEncryptPgpKeys().isEmpty() ? null : createEncryptedDataGenerator();
 			try {

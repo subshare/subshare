@@ -1,10 +1,11 @@
 package org.subshare.core.fbor;
 
+import static co.codewizards.cloudstore.core.io.StreamUtil.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static org.subshare.core.file.FileConst.*;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
+import co.codewizards.cloudstore.core.io.ByteArrayInputStream;
+import co.codewizards.cloudstore.core.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -74,7 +75,7 @@ public abstract class FileBasedObjectRegistry {
 		enableIgnoreDeferredWrite();
 		try {
 			try (final LockFile lockFile = acquireLockFile();) {
-				try (final InputStream in = lockFile.createInputStream();) {
+				try (final InputStream in = castStream(lockFile.createInputStream())) {
 					read(in);
 				}
 			} catch (IOException x) {
@@ -95,7 +96,7 @@ public abstract class FileBasedObjectRegistry {
 
 	protected synchronized void write() {
 		try (LockFile lockFile = acquireLockFile();) {
-			try (final OutputStream out = lockFile.createOutputStream();) {
+			try (final OutputStream out = castStream(lockFile.createOutputStream())) {
 				write(out);
 			}
 		} catch (IOException x) {

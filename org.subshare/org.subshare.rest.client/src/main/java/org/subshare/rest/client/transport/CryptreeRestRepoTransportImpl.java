@@ -6,8 +6,8 @@ import static co.codewizards.cloudstore.core.util.HashUtil.*;
 import static co.codewizards.cloudstore.core.util.IOUtil.*;
 import static org.subshare.core.crypto.CryptoConfigUtil.*;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
+import co.codewizards.cloudstore.core.io.ByteArrayInputStream;
+import co.codewizards.cloudstore.core.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Date;

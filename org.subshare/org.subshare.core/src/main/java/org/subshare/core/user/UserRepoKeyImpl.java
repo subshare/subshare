@@ -3,8 +3,6 @@ package org.subshare.core.user;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
@@ -27,6 +25,8 @@ import org.subshare.crypto.CryptoRegistry;
 
 import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.core.auth.SignatureException;
+import co.codewizards.cloudstore.core.io.ByteArrayInputStream;
+import co.codewizards.cloudstore.core.io.ByteArrayOutputStream;
 
 /**
  * A user's master-key for one single repository.

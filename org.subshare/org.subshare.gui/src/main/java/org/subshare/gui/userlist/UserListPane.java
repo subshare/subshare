@@ -7,6 +7,7 @@ import static org.subshare.gui.util.FxmlUtil.*;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -39,7 +40,9 @@ import org.subshare.gui.user.EditUserManager;
 import org.subshare.gui.wizard.WizardDialog;
 import org.subshare.gui.wizard.WizardState;
 
+import co.codewizards.cloudstore.core.io.IInputStream;
 import co.codewizards.cloudstore.core.oio.File;
+import co.codewizards.cloudstore.ls.client.util.FileLs;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.collections.ListChangeListener;
@@ -295,8 +298,14 @@ public class UserListPane extends GridPane {
 		if (file == null)
 			return;
 
-		final ImportKeysResult importKeysResult = getPgp().importKeys(file);
-		importUsersFromPgpKeys(importKeysResult);
+		try {
+			try (IInputStream in = FileLs.createInputStream(file)) {
+				final ImportKeysResult importKeysResult = getPgp().importKeys(in);
+				importUsersFromPgpKeys(importKeysResult);
+			}
+		} catch (IOException x) {
+			throw new RuntimeException(x);
+		}
 	}
 
 	@FXML

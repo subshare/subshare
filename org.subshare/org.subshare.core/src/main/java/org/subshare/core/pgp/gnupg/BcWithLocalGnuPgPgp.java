@@ -1,5 +1,6 @@
 package org.subshare.core.pgp.gnupg;
 
+import static co.codewizards.cloudstore.core.io.StreamUtil.*;
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.CollectionUtil.nullToEmpty;
@@ -10,8 +11,6 @@ import static co.codewizards.cloudstore.core.util.Util.*;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -98,6 +97,9 @@ import org.subshare.core.pgp.TempImportKeysResult;
 import org.subshare.crypto.CryptoRegistry;
 
 import co.codewizards.cloudstore.core.config.ConfigDir;
+import co.codewizards.cloudstore.core.io.ByteArrayInputStream;
+import co.codewizards.cloudstore.core.io.IInputStream;
+import co.codewizards.cloudstore.core.io.IOutputStream;
 import co.codewizards.cloudstore.core.io.LockFile;
 import co.codewizards.cloudstore.core.io.LockFileFactory;
 import co.codewizards.cloudstore.core.oio.File;
@@ -193,9 +195,11 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 	}
 
 	@Override
-	public synchronized void exportPublicKeysWithSecretKeys(final Set<PgpKey> pgpKeys, OutputStream out) {
+	public synchronized void exportPublicKeysWithSecretKeys(final Set<PgpKey> pgpKeys, IOutputStream _out) {
 		assertNotNull("pgpKeys", pgpKeys);
-		assertNotNull("out", out);
+		assertNotNull("out", _out);
+
+		OutputStream out = castStream(_out);
 
 		if (! (out instanceof BCPGOutputStream))
 			out = new BCPGOutputStream(out); // seems not necessary, but maybe better (faster for sure, since it doesn't need to be created again and again).
@@ -215,17 +219,19 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 		}
 	}
 
-	@Override
-	public byte[] exportPublicKeysWithSecretKeys(Set<PgpKey> pgpKeys) {
-		final ByteArrayOutputStream bout = new ByteArrayOutputStream();
-		exportPublicKeysWithSecretKeys(pgpKeys, bout);
-		return bout.toByteArray();
-	}
+//	@Override
+//	public byte[] exportPublicKeysWithSecretKeys(Set<PgpKey> pgpKeys) {
+//		final ByteArrayOutputStream bout = new ByteArrayOutputStream();
+//		exportPublicKeysWithSecretKeys(pgpKeys, bout);
+//		return bout.toByteArray();
+//	}
 
 	@Override
-	public synchronized void exportPublicKeys(final Set<PgpKey> pgpKeys, OutputStream out) {
+	public synchronized void exportPublicKeys(final Set<PgpKey> pgpKeys, IOutputStream _out) {
 		assertNotNull("pgpKeys", pgpKeys);
-		assertNotNull("out", out);
+		assertNotNull("out", _out);
+
+		OutputStream out = castStream(_out);
 
 		if (! (out instanceof BCPGOutputStream))
 			out = new BCPGOutputStream(out); // seems not necessary, but maybe better (faster for sure, since it doesn't need to be created again and again).
@@ -242,7 +248,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 	}
 
 	@Override
-	public TempImportKeysResult importKeysTemporarily(InputStream in) {
+	public TempImportKeysResult importKeysTemporarily(IInputStream in) {
 		assertNotNull("in", in);
 
 		try {
@@ -285,8 +291,10 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 	}
 
 	@Override
-	public synchronized ImportKeysResult importKeys(InputStream in) {
-		assertNotNull("in", in);
+	public synchronized ImportKeysResult importKeys(IInputStream _in) {
+		assertNotNull("in", _in);
+
+		InputStream in = castStream(_in);
 
 		final ImportKeysResult importKeysResult = new ImportKeysResult();
 		boolean modified = false;
@@ -322,7 +330,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 		if (!pubringFile.isFile())
 			oldPublicKeyRingCollection = new PGPPublicKeyRingCollection(new ByteArrayInputStream(new byte[0]), new BcKeyFingerprintCalculator());
 		else {
-			try (InputStream in = new BufferedInputStream(pubringFile.createInputStream());) {
+			try (InputStream in = new BufferedInputStream(castStream(pubringFile.createInputStream()))) {
 				oldPublicKeyRingCollection = new PGPPublicKeyRingCollection(PGPUtil.getDecoderStream(in), new BcKeyFingerprintCalculator());
 			}
 		}
@@ -332,7 +340,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 
 		if (oldPublicKeyRingCollection != newPublicKeyRingCollection) {
 			final File tmpFile = createFile(pubringFile.getParentFile(), pubringFile.getName() + ".tmp");
-			try (OutputStream out = new BufferedOutputStream(tmpFile.createOutputStream());) {
+			try (OutputStream out = new BufferedOutputStream(castStream(tmpFile.createOutputStream()))) {
 				newPublicKeyRingCollection.encode(out);
 			}
 			pubringFile.delete();
@@ -526,7 +534,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 		if (!secringFile.isFile())
 			oldSecretKeyRingCollection = new PGPSecretKeyRingCollection(new ByteArrayInputStream(new byte[0]), new BcKeyFingerprintCalculator());
 		else {
-			try (InputStream in = new BufferedInputStream(secringFile.createInputStream());) {
+			try (InputStream in = new BufferedInputStream(castStream(secringFile.createInputStream()))) {
 				oldSecretKeyRingCollection = new PGPSecretKeyRingCollection(PGPUtil.getDecoderStream(in), new BcKeyFingerprintCalculator());
 			}
 		}
@@ -536,7 +544,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 
 		if (oldSecretKeyRingCollection != newSecretKeyRingCollection) {
 			final File tmpFile = createFile(secringFile.getParentFile(), secringFile.getName() + ".tmp");
-			try (OutputStream out = new BufferedOutputStream(tmpFile.createOutputStream());) {
+			try (OutputStream out = new BufferedOutputStream(castStream(tmpFile.createOutputStream()))) {
 				newSecretKeyRingCollection.encode(out);
 			}
 			secringFile.delete();
@@ -683,7 +691,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 			secringFileLastModified = secringFile.lastModified();
 			if (secringFile.isFile()) {
 				final PGPSecretKeyRingCollection pgpSecretKeyRingCollection;
-				try (InputStream in = new BufferedInputStream(secringFile.createInputStream());) {
+				try (InputStream in = new BufferedInputStream(castStream(secringFile.createInputStream()))) {
 					pgpSecretKeyRingCollection = new PGPSecretKeyRingCollection(PGPUtil.getDecoderStream(in), new BcKeyFingerprintCalculator());
 				}
 				for (final Iterator<?> it1 = pgpSecretKeyRingCollection.getKeyRings(); it1.hasNext(); ) {
@@ -713,7 +721,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 			pubringFileLastModified = pubringFile.lastModified();
 			if (pubringFile.isFile()) {
 				final PGPPublicKeyRingCollection pgpPublicKeyRingCollection;
-				try (InputStream in = new BufferedInputStream(pubringFile.createInputStream());) {
+				try (InputStream in = new BufferedInputStream(castStream(pubringFile.createInputStream()))) {
 					pgpPublicKeyRingCollection = new PGPPublicKeyRingCollection(PGPUtil.getDecoderStream(in), new BcKeyFingerprintCalculator());
 				}
 
@@ -1169,7 +1177,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 				try {
 					if (gpgProperties == null) {
 						final Properties p = new Properties();
-						try (final InputStream in = lockFile.createInputStream();) {
+						try (final InputStream in = castStream(lockFile.createInputStream())) {
 							p.load(in);
 						}
 						gpgProperties = p;
@@ -1188,7 +1196,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 		final Properties gpgProperties = getGpgProperties();
 		synchronized (gpgProperties) {
 			try (final LockFile lockFile = LockFileFactory.getInstance().acquire(getGpgPropertiesFile(), 30000);) {
-				try (final OutputStream out = lockFile.createOutputStream();) { // acquires LockFile.lock implicitly
+				try (final OutputStream out = castStream(lockFile.createOutputStream())) { // acquires LockFile.lock implicitly
 					gpgProperties.store(out, null);
 				}
 			} catch (final IOException x) {
@@ -1205,7 +1213,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 				properties = new Properties();
 
 				try (final LockFile lockFile = LockFileFactory.getInstance().acquire(getLocalRevisionPropertiesFile(pgpKeyIdRange), 30000);) {
-					try (final InputStream in = lockFile.createInputStream();) {
+					try (final InputStream in = castStream(lockFile.createInputStream())) {
 						properties.load(in);
 					}
 				} catch (final IOException x) {
@@ -1224,7 +1232,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 			Properties properties = pgpKeyIdRange2LocalRevisionProperties.get(pgpKeyIdRange);
 			if (properties != null) {
 				try (final LockFile lockFile = LockFileFactory.getInstance().acquire(getLocalRevisionPropertiesFile(pgpKeyIdRange), 30000);) {
-					try (final OutputStream out = lockFile.createOutputStream();) {
+					try (final OutputStream out = castStream(lockFile.createOutputStream())) {
 						properties.store(out, null);
 					}
 				} catch (final IOException x) {

@@ -2,7 +2,7 @@ package org.subshare.core.file;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
-import java.io.ByteArrayInputStream;
+import co.codewizards.cloudstore.core.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 

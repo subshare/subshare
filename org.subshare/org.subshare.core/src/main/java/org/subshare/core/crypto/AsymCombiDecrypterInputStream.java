@@ -2,7 +2,7 @@ package org.subshare.core.crypto;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
-import java.io.ByteArrayOutputStream;
+import co.codewizards.cloudstore.core.io.ByteArrayOutputStream;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;

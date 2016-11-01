@@ -1,9 +1,8 @@
 package org.subshare.core.pgp.gnupg;
 
+import static co.codewizards.cloudstore.core.io.StreamUtil.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -43,6 +42,8 @@ import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpKeyId;
 
 import co.codewizards.cloudstore.core.auth.SignatureException;
+import co.codewizards.cloudstore.core.io.ByteArrayInputStream;
+import co.codewizards.cloudstore.core.io.ByteArrayOutputStream;
 
 public class BcPgpDecoder extends AbstractPgpDecoder {
 	private static final Logger logger = LoggerFactory.getLogger(BcPgpDecoder.class);
@@ -60,8 +61,8 @@ public class BcPgpDecoder extends AbstractPgpDecoder {
 		setPgpSignature(null);
 		setSignPgpKeyIds(null);
 
-		InputStream in = getInputStreamOrFail();
-		InputStream signIn = getSignInputStream();
+		InputStream in = castStream(getInputStreamOrFail());
+		InputStream signIn = castStream(getSignInputStream());
 
 		if (signIn == null)
 			in = PGPUtil.getDecoderStream(in);
@@ -130,7 +131,7 @@ public class BcPgpDecoder extends AbstractPgpDecoder {
 			if (onePassSignatureList == null || signatureList == null)
 				throw new PGPException("Poor PGP. Signatures not found.");
 
-			verifySignature(onePassSignatureList, signatureList, in, getOutputStreamOrFail());
+			verifySignature(onePassSignatureList, signatureList, in, castStream(getOutputStreamOrFail()));
 		} catch (final PGPException x) {
 			throw new IOException(x);
 		}
@@ -176,7 +177,7 @@ public class BcPgpDecoder extends AbstractPgpDecoder {
 			if (onePassSignatureList == null || signatureList == null) // if it's not encrypted, it really should be signed!
 				throw new PGPException("Poor PGP. Signatures not found.");
 
-			verifySignature(onePassSignatureList, signatureList, new ByteArrayInputStream(output), getOutputStreamOrFail());
+			verifySignature(onePassSignatureList, signatureList, new ByteArrayInputStream(output), castStream(getOutputStreamOrFail()));
 		} catch (final PGPException x) {
 			throw new IOException(x);
 		}
@@ -270,7 +271,7 @@ public class BcPgpDecoder extends AbstractPgpDecoder {
 			final byte[] output = actualOutput.toByteArray();
 
 			if (onePassSignatureList != null && signatureList != null) // It might be encrypted, but not signed!
-				verifySignature(onePassSignatureList, signatureList, new ByteArrayInputStream(output), getOutputStreamOrFail());
+				verifySignature(onePassSignatureList, signatureList, new ByteArrayInputStream(output), castStream(getOutputStreamOrFail()));
 
 			if (getPgpSignature() == null) // either it had no signature, or we don't have the signing key (and failOnMissingSignPgpKey is false).
 				getOutputStreamOrFail().write(output);

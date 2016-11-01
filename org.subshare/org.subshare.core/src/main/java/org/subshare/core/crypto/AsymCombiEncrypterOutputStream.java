@@ -3,7 +3,7 @@ package org.subshare.core.crypto;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static org.subshare.core.crypto.EncrypterDecrypterStreamUtil.*;
 
-import java.io.ByteArrayOutputStream;
+import co.codewizards.cloudstore.core.io.ByteArrayOutputStream;
 import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;

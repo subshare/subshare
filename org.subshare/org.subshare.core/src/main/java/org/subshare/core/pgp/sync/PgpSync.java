@@ -1,12 +1,11 @@
 package org.subshare.core.pgp.sync;
 
+import static co.codewizards.cloudstore.core.io.StreamUtil.*;
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.CollectionUtil.*;
 import static co.codewizards.cloudstore.core.util.PropertiesUtil.*;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -30,6 +29,8 @@ import org.subshare.core.user.UserRegistryImpl;
 
 import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.core.config.ConfigDir;
+import co.codewizards.cloudstore.core.io.ByteArrayInputStream;
+import co.codewizards.cloudstore.core.io.ByteArrayOutputStream;
 import co.codewizards.cloudstore.core.io.LockFile;
 import co.codewizards.cloudstore.core.io.LockFileFactory;
 import co.codewizards.cloudstore.core.oio.File;
@@ -188,7 +189,7 @@ public class PgpSync implements Sync {
 				try {
 					if (pgpSyncProperties == null) {
 						final Properties p = new Properties();
-						try (final InputStream in = lockFile.createInputStream();) {
+						try (final InputStream in = castStream(lockFile.createInputStream())) {
 							p.load(in);
 						}
 						pgpSyncProperties = p;
@@ -207,7 +208,7 @@ public class PgpSync implements Sync {
 		final Properties pgpSyncProperties = getPgpSyncProperties();
 		synchronized (pgpSyncProperties) {
 			try (final LockFile lockFile = LockFileFactory.getInstance().acquire(getPgpSyncPropertiesFile(), 30000);) {
-				try (final OutputStream out = lockFile.createOutputStream();) { // acquires LockFile.lock implicitly
+				try (final OutputStream out = castStream(lockFile.createOutputStream())) { // acquires LockFile.lock implicitly
 					pgpSyncProperties.store(out, null);
 				}
 			} catch (final IOException x) {

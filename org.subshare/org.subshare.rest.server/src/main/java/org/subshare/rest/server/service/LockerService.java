@@ -1,11 +1,10 @@
 package org.subshare.rest.server.service;
 
+import static co.codewizards.cloudstore.core.io.StreamUtil.*;
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.IOUtil.*;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -33,6 +32,9 @@ import org.subshare.rest.server.LockerDir;
 
 import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.core.dto.UidList;
+import co.codewizards.cloudstore.core.io.ByteArrayInputStream;
+import co.codewizards.cloudstore.core.io.ByteArrayOutputStream;
+import co.codewizards.cloudstore.core.io.IOutputStream;
 import co.codewizards.cloudstore.core.io.LockFile;
 import co.codewizards.cloudstore.core.io.LockFileFactory;
 import co.codewizards.cloudstore.core.oio.File;
@@ -123,12 +125,12 @@ public class LockerService {
 		try (final LockFile lockFile = LockFileFactory.getInstance().acquire(file, 30000);) {
 			if (lockFile.getFile().length() == input.length) {
 				final ByteArrayInputStream newIn = new ByteArrayInputStream(input);
-				try (final InputStream oldIn = lockFile.createInputStream();) {
+				try (final InputStream oldIn = castStream(lockFile.createInputStream())) {
 					if (compareInputStreams(newIn, oldIn))
 						return; // no need to write - same data already written before
 				}
 			}
-			try (final OutputStream out = lockFile.createOutputStream();) {
+			try (final IOutputStream out = lockFile.createOutputStream();) {
 				out.write(input);
 			}
 		}
@@ -158,7 +160,7 @@ public class LockerService {
 			public void write(final OutputStream out) throws IOException, WebApplicationException {
 				final File deletedFileToDeleteAgain;
 				try (final LockFile lockFile = LockFileFactory.getInstance().acquire(file, 30000);) {
-					try (final InputStream in = lockFile.createInputStream();) {
+					try (final InputStream in = castStream(lockFile.createInputStream())) {
 						Streams.pipeAll(in, out);
 						out.flush();
 					}

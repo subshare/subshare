@@ -6,9 +6,12 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ImportKeysResult implements Serializable {
-	private static final long serialVersionUID = 1L;
+import co.codewizards.cloudstore.core.ls.NoObjectRef;
 
+@SuppressWarnings("serial")
+public class ImportKeysResult implements Serializable {
+
+	@NoObjectRef
 	private final Map<PgpKeyId, ImportedMasterKey> pgpKeyId2ImportedMasterKey = new HashMap<>();
 
 	public ImportKeysResult() {
@@ -35,6 +38,7 @@ public class ImportKeysResult implements Serializable {
 	public static class ImportedMasterKey extends ImportedKey {
 		private static final long serialVersionUID = 1L;
 
+		@NoObjectRef
 		private final Map<PgpKeyId, ImportedSubKey> pgpKeyId2ImportedSubKey = new HashMap<>();
 
 		public ImportedMasterKey(PgpKeyId pgpKeyId) {

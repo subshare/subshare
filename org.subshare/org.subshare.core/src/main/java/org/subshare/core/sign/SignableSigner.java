@@ -5,7 +5,7 @@ import static co.codewizards.cloudstore.core.util.IOUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
 import static org.subshare.core.crypto.CryptoConfigUtil.*;
 
-import java.io.ByteArrayOutputStream;
+import co.codewizards.cloudstore.core.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;

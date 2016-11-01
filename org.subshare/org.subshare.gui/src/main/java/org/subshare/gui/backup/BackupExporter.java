@@ -1,5 +1,6 @@
 package org.subshare.gui.backup;
 
+import static co.codewizards.cloudstore.core.io.StreamUtil.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.HashUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
@@ -18,8 +19,10 @@ import org.subshare.core.pgp.PgpKeyId;
 import org.subshare.core.server.Server;
 import org.subshare.core.server.ServerRegistryLockerContent;
 
+import co.codewizards.cloudstore.core.io.IByteArrayOutputStream;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.util.ISO8601;
+import co.codewizards.cloudstore.ls.client.util.ByteArrayOutputStreamLs;
 
 public class BackupExporter extends AbstractBackupImExporter {
 
@@ -34,13 +37,15 @@ public class BackupExporter extends AbstractBackupImExporter {
 		backupDataFile.getManifestProperties().put(MANIFEST_PROPERTY_NAME_TIMESTAMP, ISO8601.formatDate(new Date()));
 
 		registerPgpKeyRelatedBackupProperties(now);
-		backupDataFile.putData(ENTRY_NAME_PGP_KEYS, pgp.exportPublicKeysWithSecretKeys(new HashSet<>(pgp.getMasterKeysWithSecretKey())));
+		IByteArrayOutputStream bout = ByteArrayOutputStreamLs.create();
+		pgp.exportPublicKeysWithSecretKeys(new HashSet<>(pgp.getMasterKeysWithSecretKey()), bout);
+		backupDataFile.putData(ENTRY_NAME_PGP_KEYS, bout.toByteArray());
 
 		registerServerRegistryRelatedBackupProperties(now);
 		LockerContent serverRegistryLockerContent = localServerClient.invokeConstructor(ServerRegistryLockerContent.class);
 		backupDataFile.putData(ENTRY_NAME_SERVER_REGISTRY_FILE, serverRegistryLockerContent.getLocalData());
 
-		try (final OutputStream out = backupFile.createOutputStream();) {
+		try (final OutputStream out = castStream(backupFile.createOutputStream())) {
 			backupDataFile.write(out);
 		}
 		writeBackupProperties();

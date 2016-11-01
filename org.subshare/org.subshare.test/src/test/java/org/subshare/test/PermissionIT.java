@@ -5,7 +5,6 @@ import static co.codewizards.cloudstore.core.util.Util.*;
 import static mockit.Deencapsulation.*;
 import static org.assertj.core.api.Assertions.*;
 
-import java.io.OutputStream;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -30,6 +29,7 @@ import org.subshare.local.persistence.CryptoLink;
 import org.subshare.local.persistence.UserRepoKeyPublicKey;
 
 import co.codewizards.cloudstore.core.config.Config;
+import co.codewizards.cloudstore.core.io.IOutputStream;
 import co.codewizards.cloudstore.core.oio.File;
 import mockit.Invocation;
 import mockit.Mock;
@@ -279,7 +279,7 @@ public class PermissionIT extends AbstractRepoToRepoSyncIT {
 
 			Thread.sleep(BACKDATING_MAX_PERMISSION_VALID_TO_AGE);
 
-			final OutputStream out = file.createOutputStream();
+			final IOutputStream out = file.createOutputStream();
 			out.write(123);
 			out.close();
 			file.setLastModified(timestampBeforeRevokingWritePermission.getTime() - 5000); // this could be anything and serves only to re-trigger the local sync.

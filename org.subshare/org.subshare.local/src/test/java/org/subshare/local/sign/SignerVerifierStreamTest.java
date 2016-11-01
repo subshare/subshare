@@ -2,8 +2,8 @@ package org.subshare.local.sign;
 
 import static org.assertj.core.api.Assertions.*;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
+import co.codewizards.cloudstore.core.io.ByteArrayInputStream;
+import co.codewizards.cloudstore.core.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Date;
 import java.util.Random;

@@ -1,10 +1,10 @@
 package org.subshare.rest.client.pgp.transport;
 
+import static co.codewizards.cloudstore.core.io.StreamUtil.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.security.GeneralSecurityException;
 import java.util.Set;
 
@@ -17,6 +17,8 @@ import org.subshare.rest.client.pgp.transport.request.GetPgpPublicKeys;
 import org.subshare.rest.client.pgp.transport.request.GetPgpPublicKeysMatchingQuery;
 import org.subshare.rest.client.pgp.transport.request.PutPgpPublicKeys;
 
+import co.codewizards.cloudstore.core.io.IInputStream;
+import co.codewizards.cloudstore.core.io.IOutputStream;
 import co.codewizards.cloudstore.core.util.IOUtil;
 import co.codewizards.cloudstore.rest.client.ClientBuilderDefaultValuesDecorator;
 import co.codewizards.cloudstore.rest.client.CloudStoreRestClient;
@@ -93,14 +95,14 @@ public class RestPgpTransport extends AbstractPgpTransport {
 	}
 
 	@Override
-	public void exportPublicKeys(final Set<PgpKeyId> pgpKeyIds, final long changedAfterLocalRevision, final OutputStream out) {
+	public void exportPublicKeys(final Set<PgpKeyId> pgpKeyIds, final long changedAfterLocalRevision, final IOutputStream out) {
 		final InputStream in = getClient().execute(new GetPgpPublicKeys(pgpKeyIds, changedAfterLocalRevision));
 		if (in == null)
 			return;
 
 		try {
 			try {
-				IOUtil.transferStreamData(in, out);
+				IOUtil.transferStreamData(in, castStream(out));
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
@@ -114,14 +116,14 @@ public class RestPgpTransport extends AbstractPgpTransport {
 	}
 
 	@Override
-	public void exportPublicKeysMatchingQuery(final String queryString, final OutputStream out) {
+	public void exportPublicKeysMatchingQuery(final String queryString, final IOutputStream out) {
 		final InputStream in = getClient().execute(new GetPgpPublicKeysMatchingQuery(queryString));
 		if (in == null)
 			return;
 
 		try {
 			try {
-				IOUtil.transferStreamData(in, out);
+				IOUtil.transferStreamData(in, castStream(out));
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
@@ -135,7 +137,7 @@ public class RestPgpTransport extends AbstractPgpTransport {
 	}
 
 	@Override
-	public void importKeys(InputStream in) {
-		getClient().execute(new PutPgpPublicKeys(in));
+	public void importKeys(IInputStream in) {
+		getClient().execute(new PutPgpPublicKeys(castStream(in)));
 	}
 }

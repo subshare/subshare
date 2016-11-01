@@ -1,9 +1,10 @@
 package org.subshare.core.pgp;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.Set;
+
+import co.codewizards.cloudstore.core.io.IInputStream;
+import co.codewizards.cloudstore.core.io.IOutputStream;
 
 /**
  * Encoder to encrypt or sign according to the OpenPGP standard.
@@ -11,14 +12,14 @@ import java.util.Set;
  */
 public interface PgpEncoder {
 
-	InputStream getInputStream();
-	void setInputStream(InputStream in);
+	IInputStream getInputStream();
+	void setInputStream(IInputStream in);
 
-	OutputStream getOutputStream();
-	void setOutputStream(OutputStream out);
+	IOutputStream getOutputStream();
+	void setOutputStream(IOutputStream out);
 
-	OutputStream getSignOutputStream();
-	void setSignOutputStream(OutputStream out);
+	IOutputStream getSignOutputStream();
+	void setSignOutputStream(IOutputStream out);
 
 	/**
 	 * Gets the keys of the recipients of the encrypted message.

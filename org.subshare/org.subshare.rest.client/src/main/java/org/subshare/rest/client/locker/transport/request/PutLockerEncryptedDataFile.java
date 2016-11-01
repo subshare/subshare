@@ -2,7 +2,7 @@ package org.subshare.rest.client.locker.transport.request;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
-import java.io.ByteArrayOutputStream;
+import co.codewizards.cloudstore.core.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import javax.ws.rs.client.Entity;

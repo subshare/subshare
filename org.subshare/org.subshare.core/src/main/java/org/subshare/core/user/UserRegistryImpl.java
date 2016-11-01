@@ -7,7 +7,6 @@ import static co.codewizards.cloudstore.core.util.StringUtil.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -48,6 +47,7 @@ import org.subshare.core.user.UserRepoKey.PublicKeyWithSignature;
 
 import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.core.config.ConfigDir;
+import co.codewizards.cloudstore.core.io.ByteArrayInputStream;
 import co.codewizards.cloudstore.core.oio.File;
 
 public class UserRegistryImpl extends FileBasedObjectRegistry implements UserRegistry {

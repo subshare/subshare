@@ -1,15 +1,16 @@
 package org.subshare.core.pgp;
 
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.Collections;
 import java.util.Set;
 
+import co.codewizards.cloudstore.core.io.IInputStream;
+import co.codewizards.cloudstore.core.io.IOutputStream;
+
 public abstract class AbstractPgpDecoder implements PgpDecoder {
 
-	private InputStream inputStream;
-	private OutputStream outputStream;
-	private InputStream signInputStream;
+	private IInputStream inputStream;
+	private IOutputStream outputStream;
+	private IInputStream signInputStream;
 	private PgpKey decryptPgpKey;
 	private PgpKey signPgpKey;
 	private Set<PgpKeyId> signPgpKeyIds = Collections.emptySet();
@@ -17,15 +18,15 @@ public abstract class AbstractPgpDecoder implements PgpDecoder {
 	private boolean failOnMissingSignPgpKey = true;
 
 	@Override
-	public InputStream getInputStream() {
+	public IInputStream getInputStream() {
 		return inputStream;
 	}
 	@Override
-	public void setInputStream(final InputStream inputStream) {
+	public void setInputStream(final IInputStream inputStream) {
 		this.inputStream = inputStream;
 	}
-	protected InputStream getInputStreamOrFail() {
-		final InputStream inputStream = getInputStream();
+	protected IInputStream getInputStreamOrFail() {
+		final IInputStream inputStream = getInputStream();
 		if (inputStream == null)
 			throw new IllegalStateException("inputStream == null");
 
@@ -33,15 +34,15 @@ public abstract class AbstractPgpDecoder implements PgpDecoder {
 	}
 
 	@Override
-	public OutputStream getOutputStream() {
+	public IOutputStream getOutputStream() {
 		return outputStream;
 	}
 	@Override
-	public void setOutputStream(final OutputStream outputStream) {
+	public void setOutputStream(final IOutputStream outputStream) {
 		this.outputStream = outputStream;
 	}
-	protected OutputStream getOutputStreamOrFail() {
-		final OutputStream outputStream = getOutputStream();
+	protected IOutputStream getOutputStreamOrFail() {
+		final IOutputStream outputStream = getOutputStream();
 		if (outputStream == null)
 			throw new IllegalStateException("outputStream == null");
 
@@ -49,11 +50,11 @@ public abstract class AbstractPgpDecoder implements PgpDecoder {
 	}
 
 	@Override
-	public InputStream getSignInputStream() {
+	public IInputStream getSignInputStream() {
 		return signInputStream;
 	}
 	@Override
-	public void setSignInputStream(InputStream signInputStream) {
+	public void setSignInputStream(IInputStream signInputStream) {
 		this.signInputStream = signInputStream;
 	}
 

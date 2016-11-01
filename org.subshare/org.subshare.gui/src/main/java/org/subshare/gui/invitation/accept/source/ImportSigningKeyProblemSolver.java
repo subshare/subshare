@@ -1,9 +1,8 @@
 package org.subshare.gui.invitation.accept.source;
 
+import static co.codewizards.cloudstore.core.io.StreamUtil.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -23,7 +22,10 @@ import org.subshare.core.user.UserRegistry;
 import org.subshare.gui.ls.PgpLs;
 import org.subshare.gui.ls.UserRegistryLs;
 
+import co.codewizards.cloudstore.core.io.ByteArrayInputStream;
+import co.codewizards.cloudstore.core.io.ByteArrayOutputStream;
 import co.codewizards.cloudstore.ls.client.LocalServerClient;
+import co.codewizards.cloudstore.ls.client.util.ByteArrayInputStreamLs;
 import javafx.geometry.Insets;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
@@ -96,7 +98,7 @@ public class ImportSigningKeyProblemSolver extends AbstractProblemSolver {
 		final Pgp pgp = PgpLs.getPgpOrFail();
 		final UserRegistry userRegistry = UserRegistryLs.getUserRegistry();
 
-		final ImportKeysResult importKeysResult = pgp.importKeys(signingKeyData);
+		final ImportKeysResult importKeysResult = pgp.importKeys(ByteArrayInputStreamLs.create(signingKeyData));
 		final Map<PgpKeyId, PgpKey> pgpKeyId2PgpKey = new HashMap<>();
 
 		for (ImportedMasterKey importedMasterKey : importKeysResult.getPgpKeyId2ImportedMasterKey().values()) {
@@ -111,7 +113,7 @@ public class ImportSigningKeyProblemSolver extends AbstractProblemSolver {
 	private byte[] readSigningKeyData() throws IOException {
 		final LocalServerClient lsc = LocalServerClient.getInstance();
 		final Pgp pgp = PgpLs.getPgpOrFail();
-		try (InputStream in = getInvitationFile().createInputStream();) {
+		try (InputStream in = castStream(getInvitationFile().createInputStream())) {
 			final EncryptedDataFile encryptedDataFile = new EncryptedDataFile(in);
 			final Object bout = lsc.invokeConstructor(ByteArrayOutputStream.class);
 			final Object bin = lsc.invokeConstructor(ByteArrayInputStream.class, encryptedDataFile.getSigningKeyData());

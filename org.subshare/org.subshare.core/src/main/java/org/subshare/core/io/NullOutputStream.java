@@ -3,7 +3,9 @@ package org.subshare.core.io;
 import java.io.IOException;
 import java.io.OutputStream;
 
-public class NullOutputStream extends OutputStream {
+import co.codewizards.cloudstore.core.io.IOutputStream;
+
+public class NullOutputStream extends OutputStream implements IOutputStream {
 
 	public NullOutputStream() {
 	}

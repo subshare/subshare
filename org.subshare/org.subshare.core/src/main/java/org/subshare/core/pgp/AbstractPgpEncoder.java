@@ -2,17 +2,18 @@ package org.subshare.core.pgp;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.HashSet;
 import java.util.Set;
+
+import co.codewizards.cloudstore.core.io.IInputStream;
+import co.codewizards.cloudstore.core.io.IOutputStream;
 
 
 public abstract class AbstractPgpEncoder implements PgpEncoder {
 
-	private InputStream inputStream;
-	private OutputStream outputStream;
-	private OutputStream signOutputStream;
+	private IInputStream inputStream;
+	private IOutputStream outputStream;
+	private IOutputStream signOutputStream;
 
 	private final Set<PgpKey> encryptPgpKeys = new HashSet<PgpKey>(0);
 	private PgpKey signPgpKey;
@@ -24,15 +25,15 @@ public abstract class AbstractPgpEncoder implements PgpEncoder {
 	private HashAlgorithm hashAlgorithm = HashAlgorithm.SHA256;
 
 	@Override
-	public InputStream getInputStream() {
+	public IInputStream getInputStream() {
 		return inputStream;
 	}
 	@Override
-	public void setInputStream(final InputStream inputStream) {
+	public void setInputStream(final IInputStream inputStream) {
 		this.inputStream = inputStream;
 	}
-	protected InputStream getInputStreamOrFail() {
-		final InputStream inputStream = getInputStream();
+	protected IInputStream getInputStreamOrFail() {
+		final IInputStream inputStream = getInputStream();
 		if (inputStream == null)
 			throw new IllegalStateException("inputStream == null");
 
@@ -40,15 +41,15 @@ public abstract class AbstractPgpEncoder implements PgpEncoder {
 	}
 
 	@Override
-	public OutputStream getOutputStream() {
+	public IOutputStream getOutputStream() {
 		return outputStream;
 	}
 	@Override
-	public void setOutputStream(final OutputStream outputStream) {
+	public void setOutputStream(final IOutputStream outputStream) {
 		this.outputStream = outputStream;
 	}
-	protected OutputStream getOutputStreamOrFail() {
-		final OutputStream outputStream = getOutputStream();
+	protected IOutputStream getOutputStreamOrFail() {
+		final IOutputStream outputStream = getOutputStream();
 		if (outputStream == null)
 			throw new IllegalStateException("outputStream == null");
 
@@ -56,11 +57,11 @@ public abstract class AbstractPgpEncoder implements PgpEncoder {
 	}
 
 	@Override
-	public OutputStream getSignOutputStream() {
+	public IOutputStream getSignOutputStream() {
 		return signOutputStream;
 	}
 	@Override
-	public void setSignOutputStream(OutputStream signOutputStream) {
+	public void setSignOutputStream(IOutputStream signOutputStream) {
 		this.signOutputStream = signOutputStream;
 	}
 

@@ -1,5 +1,6 @@
 package org.subshare.rest.server.service;
 
+import static co.codewizards.cloudstore.core.io.StreamUtil.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.io.IOException;
@@ -49,7 +50,7 @@ public class PgpPublicKeyService {
 			@Override
 			public void write(OutputStream output) throws IOException, WebApplicationException {
 				try (final PgpTransport localPgpTransport = createLocalPgpTransport();) {
-					localPgpTransport.exportPublicKeysMatchingQuery(queryString, output);
+					localPgpTransport.exportPublicKeysMatchingQuery(queryString, castStream(output));
 					output.flush();
 				}
 			}
@@ -76,7 +77,7 @@ public class PgpPublicKeyService {
 			@Override
 			public void write(OutputStream output) throws IOException, WebApplicationException {
 				try (final PgpTransport localPgpTransport = createLocalPgpTransport();) {
-					localPgpTransport.exportPublicKeys(new HashSet<PgpKeyId>(pgpKeyIdList), changedAfterLocalRevision, output);
+					localPgpTransport.exportPublicKeys(new HashSet<PgpKeyId>(pgpKeyIdList), changedAfterLocalRevision, castStream(output));
 					output.flush();
 				}
 			}
@@ -89,7 +90,7 @@ public class PgpPublicKeyService {
 	public void putPgpPublicKeys(final InputStream in) {
 		assertNotNull("in", in);
 		try (final PgpTransport localPgpTransport = createLocalPgpTransport();) {
-			localPgpTransport.importKeys(in);
+			localPgpTransport.importKeys(castStream(in));
 		}
 	}
 

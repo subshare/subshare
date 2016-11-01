@@ -56,6 +56,7 @@ import co.codewizards.cloudstore.core.config.ConfigDir;
 import co.codewizards.cloudstore.core.config.ConfigImpl;
 import co.codewizards.cloudstore.core.dto.Error;
 import co.codewizards.cloudstore.core.dto.RemoteExceptionUtil;
+import co.codewizards.cloudstore.core.io.ByteArrayInputStream;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.progress.LoggerProgressMonitor;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
@@ -529,7 +530,7 @@ public abstract class AbstractMultiUserIT extends AbstractIT {
 
 	protected List<PgpKey> importKeys(byte[] pgpKeyData) {
 		final Pgp pgp = getPgp();
-		final ImportKeysResult importKeysResult = pgp.importKeys(pgpKeyData);
+		final ImportKeysResult importKeysResult = pgp.importKeys(new ByteArrayInputStream(pgpKeyData));
 		final List<PgpKey> result = new ArrayList<>(importKeysResult.getPgpKeyId2ImportedMasterKey().size());
 		for (PgpKeyId pgpKeyId : importKeysResult.getPgpKeyId2ImportedMasterKey().keySet()) {
 			PgpKey pgpKey = pgp.getPgpKey(pgpKeyId);

@@ -8,6 +8,7 @@ import static co.codewizards.cloudstore.core.util.Util.*;
 import static org.subshare.gui.util.FxmlUtil.*;
 
 import java.beans.PropertyChangeListener;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -43,8 +44,10 @@ import org.subshare.gui.selectuser.SelectUserDialog;
 import org.subshare.gui.wizard.WizardDialog;
 import org.subshare.gui.wizard.WizardState;
 
+import co.codewizards.cloudstore.core.io.IOutputStream;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.progress.ProgressMonitor;
+import co.codewizards.cloudstore.ls.client.util.FileLs;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.property.adapter.JavaBeanStringProperty;
@@ -418,10 +421,16 @@ public class UserPane extends GridPane {
 			// TODO ask whether to include private keys!
 		}
 
-		if (exportPublicKeysWithPrivateKeys)
-			getPgp().exportPublicKeysWithSecretKeys(selectedPgpKeys, file);
-		else
-			getPgp().exportPublicKeys(selectedPgpKeys, file);
+		try {
+			try (IOutputStream out = FileLs.createOutputStream(file)) {
+				if (exportPublicKeysWithPrivateKeys)
+					getPgp().exportPublicKeysWithSecretKeys(selectedPgpKeys, out);
+				else
+					getPgp().exportPublicKeys(selectedPgpKeys, out);
+			}
+		} catch (IOException x) {
+			throw new RuntimeException(x);
+		}
 	}
 
 	private File showSaveFileDialog(final String title, String initialFileName) {

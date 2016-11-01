@@ -2,7 +2,10 @@ package org.subshare.core.pgp;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
-public class TempImportKeysResult {
+import java.io.Serializable;
+
+@SuppressWarnings("serial")
+public class TempImportKeysResult implements Serializable {
 
 	private final Pgp tempPgp;
 	private final ImportKeysResult importKeysResult;

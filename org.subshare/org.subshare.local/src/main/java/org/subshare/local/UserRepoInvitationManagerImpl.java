@@ -4,8 +4,6 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.UrlUtil.*;
 import static org.subshare.core.file.FileConst.*;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
@@ -67,6 +65,8 @@ import org.subshare.local.persistence.VerifySignableAndWriteProtectedEntityListe
 
 import co.codewizards.cloudstore.core.auth.SignatureException;
 import co.codewizards.cloudstore.core.dto.jaxb.CloudStoreJaxbContext;
+import co.codewizards.cloudstore.core.io.ByteArrayInputStream;
+import co.codewizards.cloudstore.core.io.ByteArrayOutputStream;
 import co.codewizards.cloudstore.core.io.NoCloseInputStream;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
@@ -144,7 +144,9 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 		encryptPgpKeys.addAll(userPgpKeys);
 		encryptPgpKeys.add(signPgpKey); // We want to be able to decrypt our own invitations, too ;-)
 
-		final byte[] signPgpKeyData = getPgpOrFail().exportPublicKeys(Collections.singleton(signPgpKey));
+		final ByteArrayOutputStream out = new ByteArrayOutputStream();
+		getPgpOrFail().exportPublicKeys(Collections.singleton(signPgpKey), out);
+		final byte[] signPgpKeyData = out.toByteArray();
 
 		// Even though it is visible for whom a message was encrypted (without decrypting), we still encrypt the
 		// signing key (public), because the it contains signatures and other meta-data, revealing information about
@@ -214,7 +216,7 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 			}
 			signPgpKeyData = out.toByteArray(); // only encrypted - not signed! thus not checking signature!
 
-			final ImportKeysResult importKeysResult = pgp.importKeys(signPgpKeyData);
+			final ImportKeysResult importKeysResult = pgp.importKeys(new ByteArrayInputStream(signPgpKeyData));
 			final Map<PgpKeyId, PgpKey> pgpKeyId2PgpKey = new HashMap<>();
 
 			for (ImportedMasterKey importedMasterKey : importKeysResult.getPgpKeyId2ImportedMasterKey().values()) {

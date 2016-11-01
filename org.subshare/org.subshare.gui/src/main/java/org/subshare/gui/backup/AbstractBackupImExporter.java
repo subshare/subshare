@@ -1,5 +1,6 @@
 package org.subshare.gui.backup;
 
+import static co.codewizards.cloudstore.core.io.StreamUtil.*;
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.HashUtil.*;
@@ -47,7 +48,7 @@ public class AbstractBackupImExporter {
 
 	private void readBackupProperties() {
 		try (LockFile lockFile = LockFileFactory.getInstance().acquire(backupPropertiesFile, 30000);) {
-			try (InputStream in = lockFile.createInputStream();) {
+			try (InputStream in = castStream(lockFile.createInputStream())) {
 				backupProperties.load(in);
 			}
 		} catch (IOException x) {
@@ -57,7 +58,7 @@ public class AbstractBackupImExporter {
 
 	protected void writeBackupProperties() {
 		try (LockFile lockFile = LockFileFactory.getInstance().acquire(backupPropertiesFile, 30000);) {
-			try (OutputStream out = lockFile.createOutputStream();) {
+			try (OutputStream out = castStream(lockFile.createOutputStream())) {
 				backupProperties.store(out, null);
 			}
 		} catch (IOException x) {

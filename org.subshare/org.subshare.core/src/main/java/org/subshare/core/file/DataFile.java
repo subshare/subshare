@@ -3,8 +3,6 @@ package org.subshare.core.file;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static org.subshare.core.file.FileConst.*;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -35,6 +33,8 @@ import org.subshare.core.pgp.PgpRegistry;
 import org.subshare.core.pgp.PgpSignature;
 
 import co.codewizards.cloudstore.core.auth.SignatureException;
+import co.codewizards.cloudstore.core.io.ByteArrayInputStream;
+import co.codewizards.cloudstore.core.io.ByteArrayOutputStream;
 import co.codewizards.cloudstore.core.io.NoCloseInputStream;
 import co.codewizards.cloudstore.core.io.NoCloseOutputStream;
 

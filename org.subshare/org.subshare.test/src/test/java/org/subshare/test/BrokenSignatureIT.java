@@ -5,7 +5,6 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static mockit.Deencapsulation.*;
 import static org.assertj.core.api.Assertions.*;
 
-import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -44,6 +43,7 @@ import org.subshare.rest.server.service.SsWebDavService;
 import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.core.auth.SignatureException;
 import co.codewizards.cloudstore.core.dto.RemoteException;
+import co.codewizards.cloudstore.core.io.IOutputStream;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import co.codewizards.cloudstore.core.util.ExceptionUtil;
@@ -368,7 +368,7 @@ public class BrokenSignatureIT extends AbstractRepoToRepoSyncIT {
 
 		final File file = pickRandomFile(localSrcRoot, false);
 		logger.info("breakRandomFileDataForUpload: file='{}'", file.getAbsolutePath());
-		final OutputStream out = file.createOutputStream(true);
+		final IOutputStream out = file.createOutputStream(true);
 		out.write(200);
 		out.close();
 		file.setLastModified(System.currentTimeMillis() + 1500); // making absolutely sure, the timestamp is different
@@ -430,7 +430,7 @@ public class BrokenSignatureIT extends AbstractRepoToRepoSyncIT {
 
 		final File child_2 = createFile(localSrcRoot, "2");
 		final File child_2_a = createFile(child_2, "a");
-		final OutputStream out = child_2_a.createOutputStream(true);
+		final IOutputStream out = child_2_a.createOutputStream(true);
 		out.write(200);
 		out.close();
 	}

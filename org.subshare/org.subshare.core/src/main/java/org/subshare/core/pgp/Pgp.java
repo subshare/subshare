@@ -1,13 +1,13 @@
 package org.subshare.core.pgp;
 
 import java.beans.PropertyChangeListener;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.Collection;
 import java.util.Set;
 
 import co.codewizards.cloudstore.core.bean.Bean;
 import co.codewizards.cloudstore.core.bean.PropertyBase;
+import co.codewizards.cloudstore.core.io.IInputStream;
+import co.codewizards.cloudstore.core.io.IOutputStream;
 import co.codewizards.cloudstore.core.oio.File;
 
 public interface Pgp extends Bean<Pgp.Property> {
@@ -29,9 +29,9 @@ public interface Pgp extends Bean<Pgp.Property> {
 
 	PgpKey createPgpKey(CreatePgpKeyParam createPgpKeyParam);
 
-	PgpEncoder createEncoder(InputStream in, OutputStream out);
+	PgpEncoder createEncoder(IInputStream in, IOutputStream out);
 
-	PgpDecoder createDecoder(InputStream in, OutputStream out);
+	PgpDecoder createDecoder(IInputStream in, IOutputStream out);
 
 	/**
 	 * Gets the certifications for the authenticity of the given {@code pgpKey}.
@@ -53,61 +53,61 @@ public interface Pgp extends Bean<Pgp.Property> {
 
 	void updateTrustDb();
 
-	void exportPublicKeys(Set<PgpKey> pgpKeys, File file);
+//	void exportPublicKeys(Set<PgpKey> pgpKeys, File file);
+//
+//	void exportPublicKeysWithSecretKeys(Set<PgpKey> pgpKeys, File file);
 
-	void exportPublicKeysWithSecretKeys(Set<PgpKey> pgpKeys, File file);
+	void exportPublicKeys(Set<PgpKey> pgpKeys, IOutputStream out);
 
-	void exportPublicKeys(Set<PgpKey> pgpKeys, OutputStream out);
-
-	byte[] exportPublicKeys(Set<PgpKey> pgpKeys);
+//	byte[] exportPublicKeys(Set<PgpKey> pgpKeys);
 
 	/**
 	 * Export the keys identified by {@code pgpKeys} to the given stream.
 	 * <p>
-	 * In contrast to {@link #exportPublicKeys(Set, OutputStream)}, this method also includes the secret keys.
+	 * In contrast to {@link #exportPublicKeys(Set, IOutputStream)}, this method also includes the secret keys.
 	 * Please note the difference between <i>secret</i> and <i>private</i>: The <i>private</i> key is the unprotected,
 	 * decrypted key itself. The <i>secret</i> key, however, is the passphrase-protected form of the <i>private</i>
 	 * key.
 	 * @param pgpKeys the keys to be exported. Must not be <code>null</code>.
 	 * @param out the stream to write to. Must not be <code>null</code>.
 	 */
-	void exportPublicKeysWithSecretKeys(Set<PgpKey> pgpKeys, OutputStream out);
+	void exportPublicKeysWithSecretKeys(Set<PgpKey> pgpKeys, IOutputStream out);
 
-	byte[] exportPublicKeysWithSecretKeys(Set<PgpKey> pgpKeys);
+//	byte[] exportPublicKeysWithSecretKeys(Set<PgpKey> pgpKeys);
 
 	/**
 	 * Import keys from an {@code InputStream} into the key-rings managed by this {@code Pgp} instance.
 	 * <p>
-	 * The data to be imported was previously exported by {@link #exportPublicKeys(Set, OutputStream)}
-	 * or {@link #exportPublicKeysWithSecretKeys(Set, OutputStream)} -- these methods are
+	 * The data to be imported was previously exported by {@link #exportPublicKeys(Set, IOutputStream)}
+	 * or {@link #exportPublicKeysWithSecretKeys(Set, IOutputStream)} -- these methods are
 	 * so to say symmetric.
 	 * @param in the {@code InputStream} to read from. Must not be <code>null</code>.
 	 * @return a description of what exactly has been imported. Never <code>null</code>.
 	 * @see #importKeys(byte[])
 	 * @see #importKeys(File)
-	 * @see #importKeysTemporarily(InputStream)
-	 * @see #exportPublicKeys(Set, OutputStream)
-	 * @see #exportPublicKeysWithSecretKeys(Set, OutputStream)
+	 * @see #importKeysTemporarily(IInputStream)
+	 * @see #exportPublicKeys(Set, IOutputStream)
+	 * @see #exportPublicKeysWithSecretKeys(Set, IOutputStream)
 	 */
-	ImportKeysResult importKeys(InputStream in);
+	ImportKeysResult importKeys(IInputStream in);
 
-	/**
-	 * Convenience method delegating to {@link #importKeys(InputStream)}.
-	 * @param file the file containing the keys to be imported. Must not be <code>null</code>.
-	 * @return a description of what exactly has been imported. Never <code>null</code>.
-	 * @see #importKeys(InputStream)
-	 * @see #importKeysTemporarily(File)
-	 */
-	ImportKeysResult importKeys(File file);
-
-	/**
-	 * Convenience method delegating to {@link #importKeys(InputStream)}.
-	 * @param data the binary data containing the keys to be imported. Must not be <code>null</code>.
-	 * @return a description of what exactly has been imported. Never <code>null</code>.
-	 * @see #importKeys(InputStream)
-	 * @see #importKeysTemporarily(byte[])
-	 */
-	ImportKeysResult importKeys(byte[] data);
+//	/**
+//	 * Convenience method delegating to {@link #importKeys(IInputStream)}.
+//	 * @param file the file containing the keys to be imported. Must not be <code>null</code>.
+//	 * @return a description of what exactly has been imported. Never <code>null</code>.
+//	 * @see #importKeys(IInputStream)
+//	 * @see #importKeysTemporarily(File)
+//	 */
+//	ImportKeysResult importKeys(File file);
+//
+//	/**
+//	 * Convenience method delegating to {@link #importKeys(IInputStream)}.
+//	 * @param data the binary data containing the keys to be imported. Must not be <code>null</code>.
+//	 * @return a description of what exactly has been imported. Never <code>null</code>.
+//	 * @see #importKeys(IInputStream)
+//	 * @see #importKeysTemporarily(byte[])
+//	 */
+//	ImportKeysResult importKeys(byte[] data);
 
 	/**
 	 * Creates a new, separate {@code Pgp} instance and imports the keys serialised in the given {@code InputStream}
@@ -118,29 +118,29 @@ public interface Pgp extends Bean<Pgp.Property> {
 	 * @return a new instance of {@code Pgp} copied from <code>this</code> and additionally holding
 	 * the new keys imported from the given {@code InputStream}; together with an {@code ImportKeysResult}.
 	 * Never <code>null</code>.
-	 * @see #importKeys(InputStream)
+	 * @see #importKeys(IInputStream)
 	 */
-	TempImportKeysResult importKeysTemporarily(InputStream in);
+	TempImportKeysResult importKeysTemporarily(IInputStream in);
 
-	/**
-	 * Convenience method delegating to {@link #importKeysTemporarily(InputStream)}.
-	 * @param file the file containing the keys to be imported into a new, temporary {@code Pgp} instance. Must not be <code>null</code>.
-	 * @return a new instance of {@code Pgp} copied from <code>this</code> and additionally holding
-	 * the new keys imported from the given {@code InputStream}; together with an {@code ImportKeysResult}.
-	 * Never <code>null</code>.
-	 * @see #importKeysTemporarily(InputStream)
-	 */
-	TempImportKeysResult importKeysTemporarily(File file);
-
-	/**
-	 * Convenience method delegating to {@link #importKeysTemporarily(InputStream)}.
-	 * @param data the binary data containing the keys to be imported into a new, temporary {@code Pgp} instance. Must not be <code>null</code>.
-	 * @return a new instance of {@code Pgp} copied from <code>this</code> and additionally holding
-	 * the new keys imported from the given {@code InputStream}; together with an {@code ImportKeysResult}.
-	 * Never <code>null</code>.
-	 * @see #importKeysTemporarily(InputStream)
-	 */
-	TempImportKeysResult importKeysTemporarily(byte[] data);
+//	/**
+//	 * Convenience method delegating to {@link #importKeysTemporarily(IInputStream)}.
+//	 * @param file the file containing the keys to be imported into a new, temporary {@code Pgp} instance. Must not be <code>null</code>.
+//	 * @return a new instance of {@code Pgp} copied from <code>this</code> and additionally holding
+//	 * the new keys imported from the given {@code InputStream}; together with an {@code ImportKeysResult}.
+//	 * Never <code>null</code>.
+//	 * @see #importKeysTemporarily(IInputStream)
+//	 */
+//	TempImportKeysResult importKeysTemporarily(File file);
+//
+//	/**
+//	 * Convenience method delegating to {@link #importKeysTemporarily(IInputStream)}.
+//	 * @param data the binary data containing the keys to be imported into a new, temporary {@code Pgp} instance. Must not be <code>null</code>.
+//	 * @return a new instance of {@code Pgp} copied from <code>this</code> and additionally holding
+//	 * the new keys imported from the given {@code InputStream}; together with an {@code ImportKeysResult}.
+//	 * Never <code>null</code>.
+//	 * @see #importKeysTemporarily(IInputStream)
+//	 */
+//	TempImportKeysResult importKeysTemporarily(byte[] data);
 
 	/**
 	 * Gets the <i>global</i> local-revision.

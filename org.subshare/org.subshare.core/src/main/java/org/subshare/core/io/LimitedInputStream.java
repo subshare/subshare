@@ -1,11 +1,15 @@
 package org.subshare.core.io;
 
+import static co.codewizards.cloudstore.core.io.StreamUtil.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.zip.GZIPInputStream;
+
+import co.codewizards.cloudstore.core.io.ByteArrayInputStream;
+import co.codewizards.cloudstore.core.io.IInputStream;
 
 /**
  * {@code LimitedInputStream} makes sure, not more data is read from the underlying
@@ -19,11 +23,22 @@ import java.util.zip.GZIPInputStream;
  * @author Marco Schulze
  * @author Marc Klinger - marc at nightlabs dot de (API documentation fixes)
  */
-public class LimitedInputStream extends FilterInputStream
-{
+public class LimitedInputStream extends FilterInputStream implements IInputStream {
 	private final int minLimit;
 	private final int maxLimit;
 	private int readPos = 0;
+
+	/**
+	 * Creates a new {@code LimitedInputStream}.
+	 * @param in the underlying {@code IInputStream}. Must not be <code>null</code>.
+	 * @param minLimit the minimum number of bytes that are expected to be read. If the end of the
+	 * stream is reached before, an {@link IOException} is thrown.
+	 * @param maxLimit the maximum number of bytes to read from {@code in}.
+	 */
+	public LimitedInputStream(final IInputStream in, final int minLimit, final int maxLimit)
+	{
+		this(castStream(in), minLimit, maxLimit);
+	}
 
 	/**
 	 * Creates a new {@code LimitedInputStream}.
@@ -37,6 +52,10 @@ public class LimitedInputStream extends FilterInputStream
 		super(assertNotNull("in", in));
 		this.minLimit = minLimit;
 		this.maxLimit = maxLimit;
+	}
+
+	public LimitedInputStream(final ByteArrayInputStream in, final int minLimit, final int maxLimit) {
+		this((InputStream) in, minLimit, maxLimit);
 	}
 
 	@Override
