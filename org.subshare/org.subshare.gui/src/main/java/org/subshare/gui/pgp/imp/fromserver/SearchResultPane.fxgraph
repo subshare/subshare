@@ -5,6 +5,7 @@ import javafx.scene.text.Text
 import javafx.geometry.Insets
 import javafx.scene.control.Label
 import javafx.scene.control.TextField
+import org.subshare.gui.pgp.keytree.PgpKeyTreePane
 
 dynamic component SearchResultPane resourcefile 'messages.properties' {
 	GridPane {
@@ -13,15 +14,19 @@ dynamic component SearchResultPane resourcefile 'messages.properties' {
 		padding : Insets { left : 8, top : 8, right : 8, bottom : 8 },
 
 		Text id headerText {
-			text : rstring 'SearchResultPane.headerText.text',
+			text : rstring 'SearchResultPane.headerText[searching].text',
 			wrappingWidth : 600,
 			static columnIndex : 0,
 			static rowIndex : 0,
-			static columnSpan : 3,
 			static hgrow : "ALWAYS"
-//				static margin : Insets { bottom : 16 }
+		},
+
+		PgpKeyTreePane id pgpKeyTreePane {
+			static columnIndex : 0,
+			static rowIndex : 1,
+			static hgrow : "ALWAYS",
+			static vgrow : "ALWAYS"
 		}
 
-		
 	}
 }

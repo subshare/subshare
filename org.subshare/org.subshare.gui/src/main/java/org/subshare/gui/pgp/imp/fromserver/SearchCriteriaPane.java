@@ -31,7 +31,11 @@ public class SearchCriteriaPane extends WizardPageContentGridPane {
 	protected boolean isComplete() {
 		final String queryString = importPgpKeyFromServerData.queryStringProperty().get();
 		boolean result = ! isEmpty(trim(queryString));
-		System.out.println("isComplete: " + result);
 		return result;
+	}
+
+	@Override
+	public void requestFocus() {
+		queryStringTextField.requestFocus();
 	}
 }

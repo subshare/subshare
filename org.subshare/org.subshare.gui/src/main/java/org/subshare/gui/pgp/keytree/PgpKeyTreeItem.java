@@ -2,13 +2,16 @@ package org.subshare.gui.pgp.keytree;
 
 import static co.codewizards.cloudstore.core.bean.PropertyChangeListenerUtil.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static org.subshare.gui.util.PlatformUtil.*;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
 import org.subshare.core.pgp.Pgp;
-import org.subshare.gui.ls.PgpLs;
 
+import co.codewizards.cloudstore.core.bean.WeakPropertyChangeListener;
+import javafx.beans.InvalidationListener;
+import javafx.beans.WeakInvalidationListener;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -21,8 +24,6 @@ import javafx.scene.control.TreeTableView;
 public class PgpKeyTreeItem<T> extends TreeItem<PgpKeyTreeItem<?>> {
 
 	private T valueObject;
-
-	private Pgp pgp;
 
 	private final BooleanProperty checked = new SimpleBooleanProperty(this, "checked") {
 		@Override
@@ -43,8 +44,13 @@ public class PgpKeyTreeItem<T> extends TreeItem<PgpKeyTreeItem<?>> {
 		}
 	};
 
-	private boolean trustDbPropertyChangeListenerHooked;
+	private WeakPropertyChangeListener trustDbWeakPropertyChangeListener;
+	private InvalidationListener pgpInvalidationListener = observable -> {
+		if (unhookTrustDbPropertyChangeListener())
+			hookTrustDbPropertyChangeListener();
+	};
 
+	private PgpKeyTreePane pgpKeyTreePane;
 	private final StringProperty keyValidity = new SimpleStringProperty(this, "keyValidity");
 	private final StringProperty ownerTrust = new SimpleStringProperty(this, "ownerTrust");
 
@@ -134,9 +140,13 @@ public class PgpKeyTreeItem<T> extends TreeItem<PgpKeyTreeItem<?>> {
 	}
 
 	protected PgpKeyTreePane getPgpKeyTreePane() {
-		final PgpKeyTreeItem<?> parent = (PgpKeyTreeItem<?>) getParent();
-		assertNotNull("parent", parent);
-		return parent.getPgpKeyTreePane();
+		if (pgpKeyTreePane == null) {
+			final PgpKeyTreeItem<?> parent = (PgpKeyTreeItem<?>) getParent();
+			assertNotNull("parent", parent);
+			pgpKeyTreePane = assertNotNull("parent.pgpKeyTreePane", parent.getPgpKeyTreePane());
+			pgpKeyTreePane.pgpProperty().addListener(new WeakInvalidationListener(pgpInvalidationListener));
+		}
+		return pgpKeyTreePane;
 	}
 
 	public <I extends PgpKeyTreeItem<?>> I getThisOrParentPgpKeyTreeItemOfType(final Class<I> type) {
@@ -158,20 +168,24 @@ public class PgpKeyTreeItem<T> extends TreeItem<PgpKeyTreeItem<?>> {
 	}
 
 	protected Pgp getPgp() {
-		if (pgp == null) {
-			final PgpKeyTreeItem<?> parent = (PgpKeyTreeItem<?>) getParent();
-			if (parent != null)
-				pgp = parent.getPgp();
-			else
-				pgp = PgpLs.getPgpOrFail();
-		}
-		return pgp;
+		return getPgpKeyTreePane().getPgp();
 	}
 
 	protected void hookTrustDbPropertyChangeListener() {
-		if (! trustDbPropertyChangeListenerHooked) {
-			trustDbPropertyChangeListenerHooked = true;
-			addWeakPropertyChangeListener(getPgp(), Pgp.PropertyEnum.trustdb, trustDbPropertyChangeListener);
+		assertFxApplicationThread();
+		if (trustDbWeakPropertyChangeListener == null) {
+			final Pgp pgp = assertNotNull("pgp", getPgp());
+			trustDbWeakPropertyChangeListener = addWeakPropertyChangeListener(pgp, Pgp.PropertyEnum.trustdb, trustDbPropertyChangeListener);
 		}
+	}
+
+	protected boolean unhookTrustDbPropertyChangeListener() {
+		assertFxApplicationThread();
+		if (trustDbWeakPropertyChangeListener != null) {
+			trustDbWeakPropertyChangeListener.removePropertyChangeListener();
+			trustDbWeakPropertyChangeListener = null;
+			return true;
+		}
+		return false;
 	}
 }

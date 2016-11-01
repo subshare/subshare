@@ -4,6 +4,11 @@ import static org.subshare.gui.util.FxmlUtil.*;
 
 import java.util.HashSet;
 
+import org.subshare.core.pgp.Pgp;
+import org.subshare.gui.ls.PgpLs;
+
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableSet;
 import javafx.collections.SetChangeListener;
@@ -17,6 +22,18 @@ import javafx.scene.layout.BorderPane;
 import javafx.util.Callback;
 
 public class PgpKeyTreePane extends BorderPane {
+
+	private final ObjectProperty<Pgp> pgp = new SimpleObjectProperty<Pgp>(this, "pgp") {
+		@Override
+		public Pgp get() {
+			Pgp result = super.get();
+			if (result == null) {
+				result = PgpLs.getPgpOrFail();
+				set(result);
+			}
+			return result;
+		}
+	};
 
 	@FXML
 	private TreeTableView<PgpKeyTreeItem<?>> treeTableView;
@@ -86,5 +103,15 @@ public class PgpKeyTreePane extends BorderPane {
 	public void requestFocus() {
 		super.requestFocus();
 		treeTableView.requestFocus();
+	}
+
+	public Pgp getPgp() {
+		return pgp.get();
+	}
+	public void setPgp(Pgp pgp) {
+		this.pgp.set(pgp);
+	}
+	public ObjectProperty<Pgp> pgpProperty() {
+		return pgp;
 	}
 }

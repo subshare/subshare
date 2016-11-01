@@ -1,16 +1,39 @@
 package org.subshare.gui.pgp.imp.fromserver;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.subshare.core.pgp.ImportKeysResult;
+import org.subshare.core.pgp.PgpKeyId;
+import org.subshare.core.pgp.TempImportKeysResult;
 import org.subshare.core.user.ImportUsersFromPgpKeysResult;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableSet;
 
 public class ImportPgpKeyFromServerData {
 
 	private final StringProperty queryString = new SimpleStringProperty(this, "queryString");
+
+	private ObjectProperty<TempImportKeysResult> tempImportKeysResult = new SimpleObjectProperty<TempImportKeysResult>(this, "tempImportKeysResult") {
+		@Override
+		public void set(TempImportKeysResult newValue) {
+			super.set(newValue);
+			if (newValue != null) {
+				final Set<PgpKeyId> pgpKeyIds = newValue.getImportKeysResult().getPgpKeyId2ImportedMasterKey().keySet();
+				selectedPgpKeyIds.retainAll(pgpKeyIds);
+				selectedPgpKeyIds.addAll(pgpKeyIds);
+			}
+			else
+				selectedPgpKeyIds.clear();
+		}
+	};
+
+	private ObservableSet<PgpKeyId> selectedPgpKeyIds = FXCollections.observableSet(new HashSet<>());
 
 	private ObjectProperty<ImportKeysResult> importKeysResult = new SimpleObjectProperty<>(this, "importKeysResult");
 
@@ -24,6 +47,20 @@ public class ImportPgpKeyFromServerData {
 	}
 	public StringProperty queryStringProperty() {
 		return queryString;
+	}
+
+	public TempImportKeysResult getTempImportKeysResult() {
+		return tempImportKeysResult.get();
+	}
+	public void setTempImportKeysResult(TempImportKeysResult tempImportKeysResult) {
+		this.tempImportKeysResult.set(tempImportKeysResult);
+	}
+	public ObjectProperty<TempImportKeysResult> tempImportKeysResultProperty() {
+		return tempImportKeysResult;
+	}
+
+	public ObservableSet<PgpKeyId> getSelectedPgpKeyIds() {
+		return selectedPgpKeyIds;
 	}
 
 	public ImportKeysResult getImportKeysResult() {
