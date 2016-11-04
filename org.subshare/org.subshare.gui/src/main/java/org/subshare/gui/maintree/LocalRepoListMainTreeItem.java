@@ -2,6 +2,7 @@ package org.subshare.gui.maintree;
 
 import static co.codewizards.cloudstore.core.bean.PropertyChangeListenerUtil.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static javafx.application.Platform.*;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -19,7 +20,6 @@ import org.subshare.gui.concurrent.SsTask;
 import org.subshare.gui.localrepolist.LocalRepoListPane;
 import org.subshare.gui.ls.LocalRepoRegistryLs;
 
-import javafx.application.Platform;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.scene.Parent;
@@ -37,7 +37,7 @@ public class LocalRepoListMainTreeItem extends MainTreeItem<String> {
 		public void propertyChange(PropertyChangeEvent evt) {
 			@SuppressWarnings("unchecked")
 			final Set<LocalRepo> localRepos = new LinkedHashSet<LocalRepo>((List<LocalRepo>) evt.getNewValue());
-			Platform.runLater(new Runnable() {
+			runLater(new Runnable() {
 				@Override
 				public void run() {
 					addOrRemoveTreeItemsViewCallback(localRepos);

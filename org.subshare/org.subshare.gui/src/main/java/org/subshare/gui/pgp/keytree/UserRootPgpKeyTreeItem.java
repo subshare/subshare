@@ -2,6 +2,7 @@ package org.subshare.gui.pgp.keytree;
 
 import static co.codewizards.cloudstore.core.bean.PropertyChangeListenerUtil.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static javafx.application.Platform.*;
 
 import java.beans.PropertyChangeListener;
 import java.util.HashMap;
@@ -14,13 +15,11 @@ import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpKeyId;
 import org.subshare.core.user.User;
 
-import javafx.application.Platform;
-
 public class UserRootPgpKeyTreeItem extends PgpKeyTreeItem<User> {
 
 	private final PgpKeyTreePane pgpKeyTreePane;
 
-	private final PropertyChangeListener userPgpKeyIdsPropertyChangeListener = event -> Platform.runLater(() -> updatePgpKeyChildren());
+	private final PropertyChangeListener userPgpKeyIdsPropertyChangeListener = event -> runLater(() -> updatePgpKeyChildren());
 
 	private final Map<PgpKeyId, PgpKeyPgpKeyTreeItem> pgpKeyId2PgpKeyPgpKeyTreeItem = new HashMap<>();
 

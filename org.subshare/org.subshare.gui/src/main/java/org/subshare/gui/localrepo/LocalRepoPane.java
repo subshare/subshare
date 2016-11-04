@@ -4,6 +4,7 @@ import static co.codewizards.cloudstore.core.bean.PropertyChangeListenerUtil.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
+import static javafx.application.Platform.*;
 import static org.subshare.gui.util.FxmlUtil.*;
 import static org.subshare.gui.util.PlatformUtil.*;
 
@@ -43,7 +44,6 @@ import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.repo.sync.RepoSyncActivity;
 import co.codewizards.cloudstore.core.repo.sync.RepoSyncDaemon;
 import co.codewizards.cloudstore.core.repo.sync.RepoSyncState;
-import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.adapter.JavaBeanObjectProperty;
@@ -236,7 +236,7 @@ public class LocalRepoPane extends VBox implements HistoryPaneContainer {
 
 
 	private void updateNextSync() {
-		Platform.runLater(() -> {
+		runLater(() -> {
 			long nextSyncTimestamp = repoSyncTimer.getNextSyncTimestamp(localRepo.getRepositoryId());
 			final DateFormat dateFormat = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM);
 			nextSyncTextField.setText(dateFormat.format(new Date(nextSyncTimestamp)));
@@ -303,7 +303,7 @@ public class LocalRepoPane extends VBox implements HistoryPaneContainer {
 
 	private void updateActivities() {
 		final Set<RepoSyncActivity> newActivities = repoSyncDaemon.getActivities(localRepo.getRepositoryId());
-		Platform.runLater(() -> {
+		runLater(() -> {
 			if (activities == null || ! activities.equals(newActivities)) {
 				activities = newActivities;
 				activityTextField.setText(getActivityTypesDisplayString(newActivities));
@@ -348,7 +348,7 @@ public class LocalRepoPane extends VBox implements HistoryPaneContainer {
 
 	private void updateState() {
 		final List<RepoSyncState> newStates = repoSyncDaemon.getStates(localRepo.getRepositoryId());
-		Platform.runLater(() -> {
+		runLater(() -> {
 			if (states == null || ! states.equals(newStates)) {
 				states = newStates;
 				final RepoSyncState state = states.isEmpty() ? null : states.get(states.size() - 1); // last one!

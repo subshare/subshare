@@ -2,6 +2,7 @@ package org.subshare.gui.maintree;
 
 import static co.codewizards.cloudstore.core.bean.PropertyChangeListenerUtil.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static javafx.application.Platform.*;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -19,7 +20,6 @@ import org.subshare.gui.concurrent.SsTask;
 import org.subshare.gui.ls.ServerRegistryLs;
 import org.subshare.gui.serverlist.ServerListPane;
 
-import javafx.application.Platform;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.scene.Parent;
@@ -37,7 +37,7 @@ public class ServerListMainTreeItem extends MainTreeItem<String> {
 		public void propertyChange(PropertyChangeEvent evt) {
 			@SuppressWarnings("unchecked")
 			final Set<Server> servers = new LinkedHashSet<Server>((List<Server>) evt.getNewValue());
-			Platform.runLater(new Runnable() {
+			runLater(new Runnable() {
 				@Override
 				public void run() {
 					addOrRemoveTreeItemsViewCallback(servers);

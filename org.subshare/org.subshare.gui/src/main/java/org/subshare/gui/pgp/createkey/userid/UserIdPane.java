@@ -2,6 +2,7 @@ package org.subshare.gui.pgp.createkey.userid;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
+import static javafx.application.Platform.*;
 import static org.subshare.gui.util.FxmlUtil.*;
 
 import java.beans.PropertyChangeListener;
@@ -14,7 +15,6 @@ import org.subshare.core.pgp.PgpUserId;
 import org.subshare.gui.pgp.createkey.FxPgpUserId;
 import org.subshare.gui.wizard.WizardPageContentGridPane;
 
-import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -35,7 +35,7 @@ public class UserIdPane extends WizardPageContentGridPane {
 	private TableColumn<FxPgpUserId, String> emailTableColumn;
 
 	private final PropertyChangeListener pgpUserIdsPropertyChangeListener = event -> {
-		Platform.runLater(() -> updateEmailsTableViewItems() );
+		runLater(() -> updateEmailsTableViewItems() );
 	};
 
 	public UserIdPane(final CreatePgpKeyParam createPgpKeyParam) {

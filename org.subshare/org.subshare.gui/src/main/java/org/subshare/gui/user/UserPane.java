@@ -1,5 +1,6 @@
 package org.subshare.gui.user;
 
+import static javafx.application.Platform.*;
 import static co.codewizards.cloudstore.core.bean.PropertyChangeListenerUtil.*;
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
@@ -115,7 +116,7 @@ public class UserPane extends GridPane {
 
 	private boolean ignoreUpdateEmailsOrWrappers;
 
-	private final PropertyChangeListener userEmailsPropertyChangeListener = event -> Platform.runLater(() -> updateEmailWrappers());
+	private final PropertyChangeListener userEmailsPropertyChangeListener = event -> runLater(() -> updateEmailWrappers());
 
 	private final InvalidationListener emailWrapperInvalidationListener = observable -> updateEmails();
 

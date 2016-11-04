@@ -2,6 +2,7 @@ package org.subshare.gui.userlist;
 
 import static co.codewizards.cloudstore.core.bean.PropertyChangeListenerUtil.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static javafx.application.Platform.*;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -19,7 +20,6 @@ import org.subshare.core.pgp.PgpOwnerTrust;
 import org.subshare.core.user.User;
 import org.subshare.gui.ls.PgpLs;
 
-import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
@@ -65,7 +65,7 @@ public class UserListItem {
 	private final PropertyChangeListener userPropertyChangeListener = new PropertyChangeListener() {
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
-			Platform.runLater(() -> {
+			runLater(() -> {
 				emails = null; // clear cache
 				copyDataFromUser();
 			});
@@ -75,7 +75,7 @@ public class UserListItem {
 	private final PropertyChangeListener pgpPropertyChangeListener = new PropertyChangeListener() {
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
-			Platform.runLater(() -> {
+			runLater(() -> {
 				keyValidity = null; // clear cache
 				ownerTrust = null; // clear cache
 				copyDataFromPgp();

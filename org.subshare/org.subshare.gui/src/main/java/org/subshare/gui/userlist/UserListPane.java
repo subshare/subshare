@@ -3,6 +3,7 @@ package org.subshare.gui.userlist;
 import static co.codewizards.cloudstore.core.bean.PropertyChangeListenerUtil.*;
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static javafx.application.Platform.*;
 import static org.subshare.gui.util.FxmlUtil.*;
 
 import java.beans.PropertyChangeEvent;
@@ -106,7 +107,7 @@ public class UserListPane extends GridPane {
 		public void propertyChange(PropertyChangeEvent evt) {
 			@SuppressWarnings("unchecked")
 			final Set<User> users = new LinkedHashSet<User>((List<User>) evt.getNewValue());
-			Platform.runLater(new Runnable() {
+			runLater(new Runnable() {
 				@Override
 				public void run() {
 					addOrRemoveItemTablesViewCallback(users);

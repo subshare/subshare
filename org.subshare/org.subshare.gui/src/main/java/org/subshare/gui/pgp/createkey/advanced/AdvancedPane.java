@@ -1,5 +1,6 @@
 package org.subshare.gui.pgp.createkey.advanced;
 
+import static javafx.application.Platform.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static org.subshare.gui.util.FxmlUtil.*;
 
@@ -41,7 +42,7 @@ public class AdvancedPane extends WizardPageContentGridPane {
 	};
 
 	private final PropertyChangeListener strengthPropertyChangeListener = event -> {
-		Platform.runLater(() -> updateStrengthComboBoxItems() );
+		runLater(() -> updateStrengthComboBoxItems() );
 	};
 
 	public AdvancedPane(final CreatePgpKeyParam createPgpKeyParam) {

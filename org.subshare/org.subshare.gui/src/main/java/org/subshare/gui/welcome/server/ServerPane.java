@@ -2,6 +2,7 @@ package org.subshare.gui.welcome.server;
 
 import static co.codewizards.cloudstore.core.bean.PropertyChangeListenerUtil.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static javafx.application.Platform.*;
 import static org.subshare.gui.util.FxmlUtil.*;
 
 import java.beans.PropertyChangeListener;
@@ -25,7 +26,7 @@ import javafx.scene.control.TextField;
 
 public class ServerPane extends WizardPageContentGridPane {
 
-	private final PropertyChangeListener updateCompletePropertyChangeListener = event -> updateComplete();
+	private final PropertyChangeListener updateCompletePropertyChangeListener = event -> runLater(() -> updateComplete());
 	private final InvalidationListener updateCompleteInvalidationListener = observable -> updateComplete();
 
 	private final ServerData serverData;

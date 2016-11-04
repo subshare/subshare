@@ -2,6 +2,7 @@ package org.subshare.gui.maintree;
 
 import static co.codewizards.cloudstore.core.bean.PropertyChangeListenerUtil.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static javafx.application.Platform.*;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -40,7 +41,7 @@ public class ServerMainTreeItem extends MainTreeItem<Server> {
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
 			@SuppressWarnings("unchecked")
-			final List<ServerRepo> serverRepos = new ArrayList<ServerRepo>((List<ServerRepo>) evt.getNewValue());
+			final List<ServerRepo> serverRepos = new ArrayList<>((List<ServerRepo>) evt.getNewValue());
 			final Server server = getServer();
 
 			for (Iterator<ServerRepo> it = serverRepos.iterator(); it.hasNext();) {
@@ -48,7 +49,7 @@ public class ServerMainTreeItem extends MainTreeItem<Server> {
 					it.remove();
 			}
 
-			addOrRemoveTreeItems(serverRepos);
+			runLater(() -> addOrRemoveTreeItems(serverRepos));
 		}
 	};
 

@@ -2,13 +2,13 @@ package org.subshare.gui.pgp.createkey.validity;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static org.subshare.gui.util.FxmlUtil.*;
+import static org.subshare.gui.util.PlatformUtil.*;
 
 import java.beans.PropertyChangeListener;
 import java.util.function.UnaryOperator;
 
 import org.subshare.core.pgp.CreatePgpKeyParam;
 import org.subshare.gui.pgp.createkey.TimeUnit;
-import org.subshare.gui.util.PlatformUtil;
 import org.subshare.gui.wizard.WizardPageContentGridPane;
 
 import javafx.beans.InvalidationListener;
@@ -34,7 +34,7 @@ public class ValidityPane extends WizardPageContentGridPane {
 	private boolean ignoreUpdateValidity;
 
 	private final PropertyChangeListener validitySecondsPropertyChangeListener = event -> {
-		PlatformUtil.runAndWait(() -> updateValidityNumberSpinner() );
+		runAndWait(() -> updateValidityNumberSpinner() );
 	};
 
 	private StringConverter<TimeUnit> timeUnitStringConverter = new StringConverter<TimeUnit>() {
