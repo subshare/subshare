@@ -135,6 +135,8 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 
 	private final List<Runnable> finalizerRunnables = new CopyOnWriteArrayList<>();
 
+	private static final List<File> deleteDirsOnExit = new CopyOnWriteArrayList<>();
+
 	@SuppressWarnings("unused")
 	private final Object finalizer = new Object() {
 		@Override
@@ -148,6 +150,41 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 			}
 		}
 	};
+
+	private static void addToDeleteDirsOnExit(final File dir) {
+		deleteDirsOnExit.add(assertNotNull("dir", dir));
+		initShutdownHook();
+	}
+	private static void removeFromDeleteDirsOnExit(final File dir) {
+		deleteDirsOnExit.remove(assertNotNull("dir", dir));
+	}
+
+	private static Thread shutdownHook;
+
+	private static synchronized void initShutdownHook() {
+		if (shutdownHook != null)
+			return;
+
+		shutdownHook = new Thread("BcWithLocalGnuPgPgpShutdownHook") {
+			{
+				setDaemon(false);
+			}
+			@Override
+			public void run() {
+				for (final File dir : deleteDirsOnExit) {
+					if (! dir.exists()) {
+						logger.info("shutdownHook.run: Skipping deletion of non-existent '{}'!", dir);
+						return;
+					}
+					logger.info("shutdownHook.run: Deleting '{}'...", dir);
+					dir.deleteRecursively();
+					logger.info("shutdownHook.run: Deleted '{}'.", dir);
+				}
+			}
+		};
+
+		Runtime.getRuntime().addShutdownHook(shutdownHook);
+	}
 
 	/**
 	 * @deprecated Don't manually invoke this constructor! Unfortunately the {@link ServiceLoader}
@@ -260,18 +297,8 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 			final File tempDir = IOUtil.createUniqueRandomFolder(IOUtil.getTempDir(), "tempPgp-");
 			tempPgp.gnuPgDir = tempPgp.configDir = tempDir;
 
-			Runtime.getRuntime().addShutdownHook(new Thread("delete-" + tempDir.getName()) {
-				@Override
-				public void run() {
-					if (! tempDir.exists()) {
-						logger.info("shutdownHook.run: Skipping deletion of non-existent '{}'!", tempDir);
-						return;
-					}
-					logger.info("shutdownHook.run: Deleting '{}'...", tempDir);
-					tempDir.deleteRecursively();
-					logger.info("shutdownHook.run: Deleted '{}'.", tempDir);
-				}
-			});
+			addToDeleteDirsOnExit(tempDir);
+
 			tempPgp.finalizerRunnables.add(new Runnable() {
 				@Override
 				public void run() {
@@ -282,6 +309,8 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 					logger.info("finalizerRunnable.run: Deleting '{}'...", tempDir);
 					tempDir.deleteRecursively();
 					logger.info("finalizerRunnable.run: Deleted '{}'.", tempDir);
+
+					removeFromDeleteDirsOnExit(tempDir);
 				}
 			});
 
@@ -1756,7 +1785,11 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 			}
 
 			final ImportKeysResult importKeysResult = new ImportKeysResult();
-			importPublicKeyRing(importKeysResult, publicKeyRing);
+			final boolean modified = importPublicKeyRing(importKeysResult, publicKeyRing);
+
+			if (modified) // make sure the localRevision is incremented, even if the timestamp does not change (e.g. because the time resolution of the file system is too low).
+				incLocalRevision();
+
 		} catch (IOException | PGPException e) {
 			throw new RuntimeException(e);
 		}

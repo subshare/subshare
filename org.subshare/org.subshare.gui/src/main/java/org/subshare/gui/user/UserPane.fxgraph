@@ -133,7 +133,8 @@ dynamic component UserPane {
 			static rowIndex : 4,
 			static columnSpan : 2,
 			static fillWidth : true,
-			static hgrow : "ALWAYS"
+			static hgrow : "ALWAYS",
+			static vgrow : "ALWAYS"
 //				static margin : Insets { top : 8 }
 		}
 	}

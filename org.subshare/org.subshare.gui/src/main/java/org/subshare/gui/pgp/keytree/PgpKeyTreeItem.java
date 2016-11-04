@@ -2,6 +2,7 @@ package org.subshare.gui.pgp.keytree;
 
 import static co.codewizards.cloudstore.core.bean.PropertyChangeListenerUtil.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static javafx.application.Platform.*;
 import static org.subshare.gui.util.PlatformUtil.*;
 
 import java.beans.PropertyChangeEvent;
@@ -40,15 +41,12 @@ public class PgpKeyTreeItem<T> extends TreeItem<PgpKeyTreeItem<?>> {
 	private final PropertyChangeListener trustDbPropertyChangeListener = new PropertyChangeListener() {
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
-			updateKeyValidityAndOwnerTrust();
+			runLater(() -> updateKeyValidityAndOwnerTrust());
 		}
 	};
 
 	private WeakPropertyChangeListener trustDbWeakPropertyChangeListener;
-	private InvalidationListener pgpInvalidationListener = observable -> {
-		if (unhookTrustDbPropertyChangeListener())
-			hookTrustDbPropertyChangeListener();
-	};
+	private InvalidationListener pgpInvalidationListener = observable -> onPgpInvalidated();
 
 	private PgpKeyTreePane pgpKeyTreePane;
 	private final StringProperty keyValidity = new SimpleStringProperty(this, "keyValidity");
@@ -169,6 +167,11 @@ public class PgpKeyTreeItem<T> extends TreeItem<PgpKeyTreeItem<?>> {
 
 	protected Pgp getPgp() {
 		return getPgpKeyTreePane().getPgp();
+	}
+
+	protected void onPgpInvalidated() {
+		if (unhookTrustDbPropertyChangeListener())
+			hookTrustDbPropertyChangeListener();
 	}
 
 	protected void hookTrustDbPropertyChangeListener() {

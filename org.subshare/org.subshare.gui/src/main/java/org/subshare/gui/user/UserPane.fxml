@@ -143,7 +143,7 @@
 			</TableColumn>
 		</columns>
 	</TableView>
-	<PgpKeyTreePane fx:id="pgpKeyTreePane" GridPane.columnIndex="0" GridPane.rowIndex="4" GridPane.columnSpan="2" GridPane.fillWidth="true" GridPane.hgrow="ALWAYS"/> 
+	<PgpKeyTreePane fx:id="pgpKeyTreePane" GridPane.columnIndex="0" GridPane.rowIndex="4" GridPane.columnSpan="2" GridPane.fillWidth="true" GridPane.hgrow="ALWAYS" GridPane.vgrow="ALWAYS"/> 
 	<padding>
 		<Insets left="8" top="8" right="8" bottom="8"/> 
 	</padding>
