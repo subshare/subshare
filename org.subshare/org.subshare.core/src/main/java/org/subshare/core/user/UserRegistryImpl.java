@@ -228,7 +228,7 @@ public class UserRegistryImpl extends FileBasedObjectRegistry implements UserReg
 			final PgpKeyId pgpKeyId = new TreeSet<>(user.getPgpKeyIds()).iterator().next();
 			final PgpKey pgpKey = pgpKeyId2PgpKey.get(pgpKeyId);
 			assertNotNull("pgpKey", pgpKey);
-			final Uid userId = new Uid(getLast16(pgpKey.getFingerprint()));
+			final Uid userId = new Uid(getLast16(pgpKey.getFingerprint().getBytes()));
 			user.setUserId(userId);
 			addUser(user);
 			newUserIds.add(user.getUserId());

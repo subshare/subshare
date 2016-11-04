@@ -23,7 +23,7 @@ dynamic component UserIdPane resourcefile 'messages.properties' {
 			static margin : Insets { bottom : 16 }
 		},
 		
-		TableView < FxPgpUserId > id userIdsTableView {
+		TableView<FxPgpUserId> id userIdsTableView {
 			editable : true,
 
 			columns : [

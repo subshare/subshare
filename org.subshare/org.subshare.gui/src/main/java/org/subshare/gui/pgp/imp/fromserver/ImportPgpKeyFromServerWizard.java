@@ -47,7 +47,7 @@ public class ImportPgpKeyFromServerWizard extends Wizard {
 		// In order to work with the keys without actually importing them, a temporary key-ring
 		// was created and and the keys were temporarily imported there.
 		tempImportKeysResult = importPgpKeyFromServerData.getTempImportKeysResult();
-		assertNotNull("tempImportKeysResult", tempImportKeysResult);
+		assertNotNull("tempImportKeysResult", tempImportKeysResult); //$NON-NLS-1$
 
 		// selectedPgpKeyIds references those keys that were checked by the user.
 		selectedPgpKeyIds = new HashSet<>(importPgpKeyFromServerData.getSelectedPgpKeyIds());
@@ -68,21 +68,21 @@ public class ImportPgpKeyFromServerWizard extends Wizard {
 		// tempPgpKeys are the keys from tempPgp referenced by selectedPgpKeyIds.
 		final Set<PgpKey> tempPgpKeys = new HashSet<>(selectedPgpKeyIds.size());
 		for (PgpKeyId pgpKeyId : selectedPgpKeyIds)
-			tempPgpKeys.add(assertNotNull("tempPgp.getPgpKey(" + pgpKeyId + ")", tempPgp.getPgpKey(pgpKeyId)));
+			tempPgpKeys.add(assertNotNull("tempPgp.getPgpKey(" + pgpKeyId + ")", tempPgp.getPgpKey(pgpKeyId))); //$NON-NLS-1$ //$NON-NLS-2$
 
 		// now we export the selected keys into memory and import them into the productive key-ring.
 		IByteArrayOutputStream bout = ByteArrayOutputStreamLs.create();
 		tempPgp.exportPublicKeys(tempPgpKeys, bout);
 
 		importKeysResult = pgp.importKeys(ByteArrayInputStreamLs.create(bout));
-		assertNotNull("importKeysResult", importKeysResult);
+		assertNotNull("importKeysResult", importKeysResult); //$NON-NLS-1$
 
 		// finally import users from the imported PGP keys.
 		final Map<PgpKeyId, PgpKey> pgpKeyId2PgpKey = new HashMap<>();
 		for (ImportedMasterKey importedMasterKey : importKeysResult.getPgpKeyId2ImportedMasterKey().values()) {
 			final PgpKeyId pgpKeyId = importedMasterKey.getPgpKeyId();
 			final PgpKey pgpKey = pgp.getPgpKey(pgpKeyId);
-			assertNotNull("pgp.getPgpKey(" + pgpKeyId + ")", pgpKey);
+			assertNotNull("pgp.getPgpKey(" + pgpKeyId + ")", pgpKey); //$NON-NLS-1$ //$NON-NLS-2$
 			pgpKeyId2PgpKey.put(pgpKeyId, pgpKey);
 		}
 
@@ -92,13 +92,13 @@ public class ImportPgpKeyFromServerWizard extends Wizard {
 	@Override
 	protected void preFinished() {
 		super.preFinished();
-		importPgpKeyFromServerData.setImportKeysResult(assertNotNull("importKeysResult", importKeysResult));
-		importPgpKeyFromServerData.setImportUsersResult(assertNotNull("importUsersFromPgpKeysResult", importUsersFromPgpKeysResult));
+		importPgpKeyFromServerData.setImportKeysResult(assertNotNull("importKeysResult", importKeysResult)); //$NON-NLS-1$
+		importPgpKeyFromServerData.setImportUsersResult(assertNotNull("importUsersFromPgpKeysResult", importUsersFromPgpKeysResult)); //$NON-NLS-1$
 	}
 
 	@Override
 	public String getTitle() {
-		return "Import PGP keys from the server";
+		return Messages.getString("ImportPgpKeyFromServerWizard.title"); //$NON-NLS-1$
 	}
 
 }

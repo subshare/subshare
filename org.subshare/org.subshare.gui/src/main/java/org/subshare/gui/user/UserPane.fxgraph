@@ -46,11 +46,6 @@ dynamic component UserPane {
 				tooltip : Tooltip { text : "Set the owner trust for the selected or all keys of this user." },
 				onAction : controllermethod ownerTrustButtonClicked
 			},
-//				Button id importPgpKeyButton {
-//					graphic : ImageView { image : Image { url : "@import-pgp-key_24x24.png" } },
-//					tooltip : Tooltip { text : "Import one or more PGP keys from a file." },
-//					onAction : controllermethod importPgpKeyButtonClicked
-//				},
 			Button id exportPgpKeyButton {
 				graphic : ImageView { image : Image { url : "@export-pgp-key_24x24.png" } },
 				tooltip : Tooltip { text : "Export the selected PGP keys into a file." },

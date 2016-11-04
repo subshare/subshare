@@ -22,6 +22,7 @@ import org.bouncycastle.openpgp.PGPSignatureSubpacketVector;
 import org.bouncycastle.openpgp.wot.TrustDb;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpKeyAlgorithm;
+import org.subshare.core.pgp.PgpKeyFingerprint;
 import org.subshare.core.pgp.PgpKeyFlag;
 import org.subshare.core.pgp.PgpKeyId;
 
@@ -119,7 +120,7 @@ public class BcPgpKey {
 						masterPgpKey == null ? publicKey : masterKey.getPublicKey());
 			}
 			this.pgpKey = new PgpKey(
-					pgpKeyId, fingerprint, masterPgpKey, created, validTo,
+					pgpKeyId, new PgpKeyFingerprint(fingerprint), masterPgpKey, created, validTo,
 					getPgpKeyAlgorithm(publicKey.getAlgorithm()), publicKey.getBitStrength(),
 					secretKeyAvailable, userIds, getPgpKeyFlags(), publicKey.isRevoked(), disabled);
 

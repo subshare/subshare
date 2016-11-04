@@ -22,23 +22,23 @@ public class AssignOwnerTrustWizard extends Wizard {
 
 	public AssignOwnerTrustWizard(final AssignOwnerTrustData assignOwnerTrustData) {
 		super(new SelectOwnerTrustWizardPage(assignOwnerTrustData));
-		this.assignOwnerTrustData = assertNotNull("assignOwnerTrustData", assignOwnerTrustData);
+		this.assignOwnerTrustData = assertNotNull("assignOwnerTrustData", assignOwnerTrustData); //$NON-NLS-1$
 		final User user = assignOwnerTrustData.getUser();
-		assertNotNull("assignOwnerTrustData.user", user);
+		assertNotNull("assignOwnerTrustData.user", user); //$NON-NLS-1$
 		this.pgp = PgpLs.getPgpOrFail();
 
 		final Set<PgpKey> userPgpKeys = user.getPgpKeys();
 		for (final PgpKey pgpKey : assignOwnerTrustData.getPgpKeys()) {
 			if (! userPgpKeys.contains(pgpKey))
 				throw new IllegalArgumentException(String.format(
-						"pgpKey in assignOwnerTrustData.pgpKeys does not belong to user! pgpKeyId='%s' userId='%s' userFirstName='%s' userLastName='%s'",
+						"pgpKey in assignOwnerTrustData.pgpKeys does not belong to user! pgpKeyId='%s' userId='%s' userFirstName='%s' userLastName='%s'", //$NON-NLS-1$
 						pgpKey.getPgpKeyId(), user.getUserId(), user.getFirstName(), user.getLastName()));
 		}
 	}
 
 	@Override
 	public String getTitle() {
-		return "Assign/modify owner trust";
+		return Messages.getString("AssignOwnerTrustWizard.title"); //$NON-NLS-1$
 	}
 
 	@Override

@@ -3,7 +3,7 @@ package org.subshare.gui.pgp.createkey.passphrase;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import org.subshare.core.pgp.CreatePgpKeyParam;
-import org.subshare.gui.pgp.createkey.validity.ValidityWizardPage;
+import org.subshare.gui.pgp.createkey.userid.UserIdWizardPage;
 import org.subshare.gui.wizard.WizardPage;
 
 import javafx.scene.Parent;
@@ -17,7 +17,8 @@ public class PassphraseWizardPage extends WizardPage {
 	public PassphraseWizardPage(final CreatePgpKeyParam createPgpKeyParam) {
 		super("Passphrase");
 		this.createPgpKeyParam = assertNotNull("createPgpKeyParam", createPgpKeyParam);
-		setNextPage(new ValidityWizardPage(createPgpKeyParam));
+//		setNextPage(new ValidityWizardPage(createPgpKeyParam));
+		setNextPage(new UserIdWizardPage(createPgpKeyParam));
 	}
 
 	@Override

@@ -79,16 +79,20 @@ import org.bouncycastle.openpgp.wot.key.PgpKeyRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.subshare.core.pgp.AbstractPgp;
+import org.subshare.core.pgp.CertifyPgpKeyParam;
 import org.subshare.core.pgp.CreatePgpKeyParam;
+import org.subshare.core.pgp.HashAlgorithm;
 import org.subshare.core.pgp.ImportKeysResult;
 import org.subshare.core.pgp.ImportKeysResult.ImportedMasterKey;
 import org.subshare.core.pgp.ImportKeysResult.ImportedSubKey;
+import org.subshare.core.pgp.PgpAuthenticationCallback;
 import org.subshare.core.pgp.PgpDecoder;
 import org.subshare.core.pgp.PgpEncoder;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpKeyId;
 import org.subshare.core.pgp.PgpKeyValidity;
 import org.subshare.core.pgp.PgpOwnerTrust;
+import org.subshare.core.pgp.PgpRegistry;
 import org.subshare.core.pgp.PgpSignature;
 import org.subshare.core.pgp.PgpSignatureType;
 import org.subshare.core.pgp.PgpUserId;
@@ -321,7 +325,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 		return importKeysResult;
 	}
 
-	private boolean importPublicKeyRing(ImportKeysResult importKeysResult, final PGPPublicKeyRing publicKeyRing) throws IOException, PGPException {
+	private synchronized boolean importPublicKeyRing(ImportKeysResult importKeysResult, final PGPPublicKeyRing publicKeyRing) throws IOException, PGPException {
 		assertNotNull("publicKeyRing", publicKeyRing);
 
 		PGPPublicKeyRingCollection oldPublicKeyRingCollection;
@@ -525,7 +529,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 				&& equal(one.getSignatureType(), two.getSignatureType());
 	}
 
-	private boolean importSecretKeyRing(ImportKeysResult importKeysResult, final PGPSecretKeyRing secretKeyRing) throws IOException, PGPException {
+	private synchronized boolean importSecretKeyRing(ImportKeysResult importKeysResult, final PGPSecretKeyRing secretKeyRing) throws IOException, PGPException {
 		assertNotNull("secretKeyRing", secretKeyRing);
 
 		PGPSecretKeyRingCollection oldSecretKeyRingCollection;
@@ -1359,8 +1363,10 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 			final PGPSecretKeyRing pgpSecretKeyRing = pair.b;
 
 			final ImportKeysResult importKeysResult = new ImportKeysResult();
-			importPublicKeyRing(importKeysResult, pgpPublicKeyRing);
-			importSecretKeyRing(importKeysResult, pgpSecretKeyRing);
+			synchronized (this) {
+				importPublicKeyRing(importKeysResult, pgpPublicKeyRing);
+				importSecretKeyRing(importKeysResult, pgpSecretKeyRing);
+			}
 
 			final PGPSecretKey secretKey = pgpSecretKeyRing.getSecretKey();
 			final PgpKey pgpKey = getPgpKey(new PgpKeyId(secretKey.getKeyID()));
@@ -1677,8 +1683,82 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 		return trustDbFactory;
 	}
 
+	protected PgpRegistry getPgpRegistry() {
+		return PgpRegistry.getInstance();
+	}
+
+	protected PgpAuthenticationCallback getPgpAuthenticationCallback() {
+		final PgpAuthenticationCallback pgpAuthenticationCallback = getPgpRegistry().getPgpAuthenticationCallback();
+		return pgpAuthenticationCallback;
+	}
+
+	protected PgpAuthenticationCallback getPgpAuthenticationCallbackOrFail() {
+		final PgpAuthenticationCallback pgpAuthenticationCallback = getPgpAuthenticationCallback();
+		if (pgpAuthenticationCallback == null)
+			throw new IllegalStateException("There is no PgpAuthenticationCallback assigned!");
+
+		return pgpAuthenticationCallback;
+	}
+
 	protected TrustDb createTrustDb() {
 		final TrustDbFactory trustDbFactory = getTrustDbFactory();
 		return trustDbFactory.createTrustDb();
+	}
+
+	@Override
+	public void certify(final CertifyPgpKeyParam certifyPgpKeyParam) {
+		try {
+			assertNotNull("certifyPgpKeyParam", certifyPgpKeyParam);
+			PgpKey pgpKey = assertNotNull("certifyPgpKeyParam.pgpKey", certifyPgpKeyParam.getPgpKey());
+			PgpKey signPgpKey = assertNotNull("certifyPgpKeyParam.signPgpKey", certifyPgpKeyParam.getSignPgpKey());
+			final PgpSignatureType certificationLevel = assertNotNull("certifyPgpKeyParam.certificationLevel", certifyPgpKeyParam.getCertificationLevel());
+			final HashAlgorithm hashAlgorithm = assertNotNull("certifyPgpKeyParam.hashAlgorithm", certifyPgpKeyParam.getHashAlgorithm());
+
+			if (pgpKey.getMasterKey() != null)
+				pgpKey = pgpKey.getMasterKey();
+
+			if (signPgpKey.getMasterKey() != null)
+				signPgpKey = signPgpKey.getMasterKey();
+
+			final BcPgpKey bcPgpKey = getBcPgpKeyOrFail(pgpKey);
+			final BcPgpKey bcSignPgpKey = getBcPgpKeyOrFail(signPgpKey);
+
+			if (! PgpSignatureType.CERTIFICATIONS.contains(certificationLevel))
+				throw new IllegalArgumentException("certifyPgpKeyParam.certificationLevel is not contained in PgpSignatureType.CERTIFICATIONS.");
+
+			final PgpAuthenticationCallback callback = getPgpAuthenticationCallbackOrFail();
+			final char[] signPassphrase = callback.getPassphrase(signPgpKey);
+
+			PGPPublicKeyRing publicKeyRing = bcPgpKey.getPublicKeyRing();
+
+			final PGPSecretKey signSecretKey = bcSignPgpKey.getSecretKey();
+			if (signSecretKey == null)
+				throw new IllegalArgumentException("signPgpKey does not have a secret key assigned!");
+
+			final PGPPrivateKey signPrivKey = signSecretKey.extractPrivateKey(
+					new BcPBESecretKeyDecryptorBuilder(new BcPGPDigestCalculatorProvider()).build(signPassphrase));
+
+			final PGPSignatureGenerator signatureGenerator = new PGPSignatureGenerator(
+					new BcPGPContentSignerBuilder(signSecretKey.getPublicKey().getAlgorithm(), hashAlgorithm.getHashAlgorithmTag()));
+
+			signatureGenerator.init(signatureTypeFromEnum(certificationLevel), signPrivKey);
+
+			if (pgpKey.getUserIds().isEmpty())
+				throw new IllegalArgumentException("certifyPgpKeyParam.pgpKey.userIds is empty!");
+
+			for (final String userId : pgpKey.getUserIds()) {
+				final PGPPublicKey publicKey = publicKeyRing.getPublicKey();
+				PGPSignature signature = signatureGenerator.generateCertification(userId, publicKey);
+				PGPPublicKey newKey = PGPPublicKey.addCertification(publicKey, userId, signature);
+				PGPPublicKeyRing newPublicKeyRing = PGPPublicKeyRing.removePublicKey(publicKeyRing, publicKey);
+				newPublicKeyRing = PGPPublicKeyRing.insertPublicKey(newPublicKeyRing, newKey);
+				publicKeyRing = newPublicKeyRing;
+			}
+
+			final ImportKeysResult importKeysResult = new ImportKeysResult();
+			importPublicKeyRing(importKeysResult, publicKeyRing);
+		} catch (IOException | PGPException e) {
+			throw new RuntimeException(e);
+		}
 	}
 }

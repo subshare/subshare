@@ -169,7 +169,8 @@ public abstract class SyncDaemonImpl implements SyncDaemon {
 								syncStarted, new Date()));
 					} catch (Exception x) {
 						logger.error("_sync: " + x, x);
-						getStates().add(new SyncState(server, server.getUrl(), Severity.ERROR, x.getLocalizedMessage(), new Error(x),
+						getStates().add(new SyncState(server, server.getUrl(), Severity.ERROR,
+								String.format("%s: %s", sync.getName(), x.getLocalizedMessage()), new Error(x),
 								syncStarted, new Date()));
 					}
 				}

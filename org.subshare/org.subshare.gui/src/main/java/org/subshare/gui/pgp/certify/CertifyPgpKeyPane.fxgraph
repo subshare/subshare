@@ -1,0 +1,159 @@
+package org.subshare.gui.pgp.certify
+
+import javafx.geometry.Insets
+import javafx.scene.control.ComboBox
+import javafx.scene.control.Label
+import javafx.scene.control.TableColumn
+import javafx.scene.control.TableView
+import javafx.scene.control.TextField
+import javafx.scene.control.RadioButton
+import javafx.scene.control.ToggleGroup
+import javafx.scene.control.cell.PropertyValueFactory
+import javafx.scene.layout.GridPane
+import javafx.scene.text.Text
+import javafx.scene.text.Font
+import javafx.scene.layout.VBox
+
+import org.subshare.core.pgp.PgpKey
+import org.subshare.gui.pgp.createkey.FxPgpUserId
+
+dynamic component CertifyPgpKeyPane resourcefile 'messages.properties' {
+	define ToggleGroup id toggleGroup
+	
+	GridPane {
+		hgap : 8,
+		vgap : 8,
+		padding : Insets { left : 8, top : 8, right : 8, bottom : 8 },
+
+		Text id headerText {
+			text : rstring 'CertifyPgpKeyPane.headerText.text',
+			wrappingWidth : 600,
+			static columnIndex : 0,
+			static rowIndex : 0,
+			static columnSpan : 2,
+			static hgrow : "ALWAYS"
+		},
+
+		Label id keyIdLabel {
+			text : rstring 'CertifyPgpKeyPane.keyIdLabel.text',
+			static columnIndex : 0,
+			static rowIndex : 2
+		},
+		TextField id keyIdTextField {
+			text : "82c5:2bc9:4ab0:fbc1",
+			minWidth : 300,
+			editable : false,
+			static columnIndex : 1,
+			static rowIndex : 2,
+			static margin : Insets { left : 8 }
+		},
+
+		Label id userIdsLabel {
+			text : rstring 'CertifyPgpKeyPane.userIdsLabel.text',
+			static columnIndex : 0,
+			static rowIndex : 3,
+			static valignment : "TOP"
+		},
+		TableView<FxPgpUserId> id userIdsTableView {
+			editable : false,
+			minHeight : 80,
+			prefHeight : 120,
+
+			columns : [
+				TableColumn < FxPgpUserId, String > id nameTableColumn {
+					text : "Name",
+					prefWidth : 180,
+					cellValueFactory : PropertyValueFactory < FxPgpUserId, String > {
+						property : "name"
+					}
+				},
+				TableColumn < FxPgpUserId, String > id emailTableColumn {
+					text : "E-mail",
+					prefWidth : 220,
+					cellValueFactory : PropertyValueFactory < FxPgpUserId, String > {
+						property : "email"
+					}
+				}
+			],
+
+			static columnIndex : 1,
+			static rowIndex : 3,
+			static columnSpan : 2,
+			static fillWidth : true,
+			static hgrow : "ALWAYS",
+			static margin : Insets { left : 8 }
+		},
+
+		Label id fingerprintLabel {
+			text : rstring 'CertifyPgpKeyPane.fingerprintLabel.text',
+//			style : "-fx-font-weight: bold",
+			static columnIndex : 0,
+			static rowIndex : 4
+		},
+		TextField id fingerprintTextField {
+			text : "0CA2 AF9A 5632 3324 D8E0 87E9 82C5 2BC9 4AB0 FBC1",
+//			style : "-fx-font-weight: bold",
+			minWidth : 300,
+			editable : false,
+			static columnIndex : 1,
+			static rowIndex : 4,
+			static margin : Insets { left : 8 }
+		},
+
+		Text {
+			text : "How carefully have you verified the key's fingerprint and the user-IDs above?",
+			style : "-fx-font-weight: bold",
+			wrappingWidth : 600,
+			static columnIndex : 0,
+			static rowIndex : 5,
+			static columnSpan : 2,
+			static hgrow : "ALWAYS",
+			static margin : Insets { top : 8 }
+		},
+
+		VBox id radioButtonBox {
+			fillWidth : true,
+			spacing : 8,
+
+			RadioButton id noAnswerRadioButton {
+				text : "I will not answer.",
+				selected : true,
+				toggleGroup : idref toggleGroup
+			},
+
+			RadioButton id noCheckRadioButton {
+				text : "I have not checked at all.",
+				toggleGroup : idref toggleGroup
+			},
+
+			RadioButton id casualCheckRadioButton {
+				text : "I have done casual checking.",
+				toggleGroup : idref toggleGroup
+			},
+
+			RadioButton id carefulCheckRadioButton {
+				text : "I have done very careful checking.",
+				toggleGroup : idref toggleGroup
+			},
+
+			static columnIndex : 0,
+			static rowIndex : 6,
+			static columnSpan : 2,
+			static hgrow : "ALWAYS",
+			static margin : Insets { bottom : 8 }
+		},
+
+		Label id signKeyLabel {
+			text : rstring 'CertifyPgpKeyPane.signKeyLabel.text',
+			static columnIndex : 0,
+			static rowIndex : 7
+		},
+		ComboBox<PgpKey> id signKeyComboBox {
+			static columnIndex : 1,
+			static rowIndex : 7,
+			static columnSpan : 2,
+			static hgrow : "ALWAYS",				
+			static margin : Insets { left : 8 }
+		}
+	}
+}

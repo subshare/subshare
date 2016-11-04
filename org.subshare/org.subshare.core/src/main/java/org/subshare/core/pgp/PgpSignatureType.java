@@ -41,4 +41,21 @@ public enum PgpSignatureType {
 	public boolean isCertification() {
 		return CERTIFICATIONS.contains(this);
 	}
+
+	@Override
+	public String toString() {
+		return Messages.getString(String.format("PgpSignatureType[%s].string", name())); //$NON-NLS-1$
+	}
+
+	public String toShortString() {
+		return Messages.getString(String.format("PgpSignatureType[%s].shortString", name())); //$NON-NLS-1$
+	}
+
+	public String getAnswer() {
+		return Messages.getString(String.format("PgpSignatureType[%s].answer", name())); //$NON-NLS-1$
+	}
+
+	public String getDescription() {
+		return Messages.getString(String.format("PgpSignatureType[%s].description", name())); //$NON-NLS-1$
+	}
 }

@@ -21,7 +21,7 @@ public class PgpKey implements Serializable {
 
 	public static final PgpKey TEST_DUMMY_PGP_KEY = new PgpKey(
 			TEST_DUMMY_PGP_KEY_ID,
-			new byte[0],
+			new PgpKeyFingerprint(new byte[0]),
 			null,
 			new Date(), // created
 			null, // validTo
@@ -39,7 +39,7 @@ public class PgpKey implements Serializable {
 
 	private final PgpKeyId pgpKeyId;
 
-	private final byte[] fingerprint;
+	private final PgpKeyFingerprint fingerprint;
 
 	private final Date created;
 
@@ -67,7 +67,7 @@ public class PgpKey implements Serializable {
 
 	public PgpKey(
 			final PgpKeyId pgpKeyId,
-			final byte[] fingerprint,
+			final PgpKeyFingerprint fingerprint,
 			final PgpKey masterKey,
 			final Date created,
 			final Date validTo,
@@ -100,7 +100,7 @@ public class PgpKey implements Serializable {
 		return pgpKeyId;
 	}
 
-	public byte[] getFingerprint() {
+	public PgpKeyFingerprint getFingerprint() {
 		return fingerprint;
 	}
 

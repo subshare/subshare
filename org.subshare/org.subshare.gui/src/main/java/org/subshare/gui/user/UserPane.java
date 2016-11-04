@@ -31,6 +31,8 @@ import org.subshare.gui.ls.PgpPrivateKeyPassphraseManagerLs;
 import org.subshare.gui.ls.UserRegistryLs;
 import org.subshare.gui.pgp.assignownertrust.AssignOwnerTrustData;
 import org.subshare.gui.pgp.assignownertrust.AssignOwnerTrustWizard;
+import org.subshare.gui.pgp.certify.CertifyPgpKeyData;
+import org.subshare.gui.pgp.certify.CertifyPgpKeyWizard;
 import org.subshare.gui.pgp.createkey.CreatePgpKeyWizard;
 import org.subshare.gui.pgp.createkey.FxPgpUserId;
 import org.subshare.gui.pgp.createkey.TimeUnit;
@@ -365,34 +367,6 @@ public class UserPane extends GridPane {
 		return sb.toString();
 	}
 
-//	@FXML
-//	private void importPgpKeyButtonClicked(final ActionEvent event) {
-//		final File file = showOpenFileDialog("Choose file containing PGP key(s) to import");
-//		if (file == null)
-//			return;
-//
-//		final Pgp pgp = getPgp();
-//		final ImportKeysResult importKeysResult = pgp.importKeys(file);
-//		for (ImportedMasterKey importedMasterKey : importKeysResult.getPgpKeyId2ImportedMasterKey().values()) {
-//			final PgpKeyId pgpKeyId = importedMasterKey.getPgpKeyId();
-//			final PgpKey pgpKey = pgp.getPgpKey(pgpKeyId);
-//			assertNotNull("pgp.getPgpKey(" + pgpKeyId + ")", pgpKey);
-//
-//			for (final String userId : pgpKey.getUserIds()) {
-//				final PgpUserId pgpUserId = new PgpUserId(userId);
-//				final String email = pgpUserId.getEmail();
-//				if (! isEmpty(email) && ! user.getEmails().contains(email))
-//					user.getEmails().add(email);
-//			}
-//
-//			if (! user.getPgpKeyIds().contains(pgpKeyId)) {
-//				user.getPgpKeyIds().add(pgpKeyId);
-//				final PgpKeyPgpKeyTreeItem child = new PgpKeyPgpKeyTreeItem(pgpKey);
-//				pgpKeyTreeTableView.getRoot().getChildren().add(child);
-//			}
-//		}
-//	}
-
 	@FXML
 	private void exportPgpKeyButtonClicked(final ActionEvent event) {
 		Set<PgpKey> selectedPgpKeys = getSelectedPgpKeys();
@@ -454,7 +428,11 @@ public class UserPane extends GridPane {
 
 	@FXML
 	private void signPgpKeyButtonClicked(final ActionEvent event) {
-
+		PgpKey pgpKey = getSelectedPgpKeys().iterator().next();
+		CertifyPgpKeyData certifyPgpKeyData = new CertifyPgpKeyData();
+		certifyPgpKeyData.setPgpKey(pgpKey);
+		CertifyPgpKeyWizard wizard = new CertifyPgpKeyWizard(certifyPgpKeyData);
+		new WizardDialog(getScene().getWindow(), wizard).show();
 	}
 
 	@FXML

@@ -186,4 +186,10 @@ public interface Pgp extends Bean<Pgp.Property> {
 
 	void setDisabled(PgpKey pgpKey, boolean disabled);
 
+	/**
+	 * Certify the authenticity of the given {@code pgpKey}.
+	 * @param certifyPgpKeyParam TODO
+	 */
+	void certify(CertifyPgpKeyParam certifyPgpKeyParam);
+
 }
