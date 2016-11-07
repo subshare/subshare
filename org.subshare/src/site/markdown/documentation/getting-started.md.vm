@@ -88,7 +88,7 @@ You can click "Finish" here — no need for further details. Nerds might find th
 $H$H$H Specify server
 
 The client needs to know at least one server. As already stated above, you can use our demo/test server
-with the URL `https://demo.subshare.org:6661` (https://demo.subshare.org:6661) for non-productive uses:
+with the URL `https://demo.subshare.org:6661` for non-productive uses:
 
 ![Register server](../images/getting-started/subshare_register_server.png)
 
