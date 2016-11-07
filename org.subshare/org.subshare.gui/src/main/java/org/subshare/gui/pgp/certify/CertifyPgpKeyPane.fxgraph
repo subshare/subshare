@@ -25,33 +25,44 @@ dynamic component CertifyPgpKeyPane resourcefile 'messages.properties' {
 		vgap : 8,
 		padding : Insets { left : 8, top : 8, right : 8, bottom : 8 },
 
+//		RadioButton id skipRadioButton {
+//			text : "Do NOT certify this key, now. Skip signing it!",
+//			selected : true,
+//			toggleGroup : idref toggleGroup,
+//			static columnIndex : 0,
+//			static rowIndex : 0,
+//			static columnSpan : 2,
+//			static margin : Insets { bottom : 8 }
+//		},
+
 		Text id headerText {
 			text : rstring 'CertifyPgpKeyPane.headerText.text',
 			wrappingWidth : 600,
 			static columnIndex : 0,
 			static rowIndex : 0,
 			static columnSpan : 2,
-			static hgrow : "ALWAYS"
+			static hgrow : "ALWAYS",
+			static margin : Insets { bottom : 8 }
 		},
 
 		Label id keyIdLabel {
 			text : rstring 'CertifyPgpKeyPane.keyIdLabel.text',
 			static columnIndex : 0,
-			static rowIndex : 2
+			static rowIndex : 1
 		},
 		TextField id keyIdTextField {
 			text : "82c5:2bc9:4ab0:fbc1",
 			minWidth : 300,
 			editable : false,
 			static columnIndex : 1,
-			static rowIndex : 2,
+			static rowIndex : 1,
 			static margin : Insets { left : 8 }
 		},
 
 		Label id userIdsLabel {
 			text : rstring 'CertifyPgpKeyPane.userIdsLabel.text',
 			static columnIndex : 0,
-			static rowIndex : 3,
+			static rowIndex : 2,
 			static valignment : "TOP"
 		},
 		TableView<FxPgpUserId> id userIdsTableView {
@@ -77,7 +88,7 @@ dynamic component CertifyPgpKeyPane resourcefile 'messages.properties' {
 			],
 
 			static columnIndex : 1,
-			static rowIndex : 3,
+			static rowIndex : 2,
 			static columnSpan : 2,
 			static fillWidth : true,
 			static hgrow : "ALWAYS",
@@ -88,7 +99,7 @@ dynamic component CertifyPgpKeyPane resourcefile 'messages.properties' {
 			text : rstring 'CertifyPgpKeyPane.fingerprintLabel.text',
 //			style : "-fx-font-weight: bold",
 			static columnIndex : 0,
-			static rowIndex : 4
+			static rowIndex : 3
 		},
 		TextField id fingerprintTextField {
 			text : "0CA2 AF9A 5632 3324 D8E0 87E9 82C5 2BC9 4AB0 FBC1",
@@ -96,7 +107,7 @@ dynamic component CertifyPgpKeyPane resourcefile 'messages.properties' {
 			minWidth : 300,
 			editable : false,
 			static columnIndex : 1,
-			static rowIndex : 4,
+			static rowIndex : 3,
 			static margin : Insets { left : 8 }
 		},
 
@@ -105,7 +116,7 @@ dynamic component CertifyPgpKeyPane resourcefile 'messages.properties' {
 			style : "-fx-font-weight: bold",
 			wrappingWidth : 600,
 			static columnIndex : 0,
-			static rowIndex : 5,
+			static rowIndex : 4,
 			static columnSpan : 2,
 			static hgrow : "ALWAYS",
 			static margin : Insets { top : 8 }
@@ -137,7 +148,7 @@ dynamic component CertifyPgpKeyPane resourcefile 'messages.properties' {
 			},
 
 			static columnIndex : 0,
-			static rowIndex : 6,
+			static rowIndex : 5,
 			static columnSpan : 2,
 			static hgrow : "ALWAYS",
 			static margin : Insets { bottom : 8 }
@@ -146,11 +157,11 @@ dynamic component CertifyPgpKeyPane resourcefile 'messages.properties' {
 		Label id signKeyLabel {
 			text : rstring 'CertifyPgpKeyPane.signKeyLabel.text',
 			static columnIndex : 0,
-			static rowIndex : 7
+			static rowIndex : 6
 		},
 		ComboBox<PgpKey> id signKeyComboBox {
 			static columnIndex : 1,
-			static rowIndex : 7,
+			static rowIndex : 6,
 			static columnSpan : 2,
 			static hgrow : "ALWAYS",				
 			static margin : Insets { left : 8 }

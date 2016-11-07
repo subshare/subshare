@@ -7,12 +7,14 @@ import org.subshare.core.pgp.ImportKeysResult;
 import org.subshare.core.pgp.PgpKeyId;
 import org.subshare.core.pgp.TempImportKeysResult;
 import org.subshare.core.user.ImportUsersFromPgpKeysResult;
+import org.subshare.gui.pgp.certify.CertifyPgpKeyData;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableMap;
 import javafx.collections.ObservableSet;
 
 public class ImportPgpKeyFromServerData {
@@ -33,11 +35,13 @@ public class ImportPgpKeyFromServerData {
 		}
 	};
 
-	private ObservableSet<PgpKeyId> selectedPgpKeyIds = FXCollections.observableSet(new HashSet<>());
+	private final ObservableSet<PgpKeyId> selectedPgpKeyIds = FXCollections.observableSet(new HashSet<>());
 
-	private ObjectProperty<ImportKeysResult> importKeysResult = new SimpleObjectProperty<>(this, "importKeysResult");
+	private final ObjectProperty<ImportKeysResult> importKeysResult = new SimpleObjectProperty<>(this, "importKeysResult");
 
-	private ObjectProperty<ImportUsersFromPgpKeysResult> importUsersResult = new SimpleObjectProperty<>(this, "importUsersResult");
+	private final ObjectProperty<ImportUsersFromPgpKeysResult> importUsersResult = new SimpleObjectProperty<>(this, "importUsersResult");
+
+	private final ObservableMap<PgpKeyId, CertifyPgpKeyData> pgpKeyId2CertifyPgpKeyData = FXCollections.observableHashMap();
 
 	public String getQueryString() {
 		return queryString.get();
@@ -83,4 +87,7 @@ public class ImportPgpKeyFromServerData {
 		return importUsersResult;
 	}
 
+	public ObservableMap<PgpKeyId, CertifyPgpKeyData> getPgpKeyId2CertifyPgpKeyData() {
+		return pgpKeyId2CertifyPgpKeyData;
+	}
 }

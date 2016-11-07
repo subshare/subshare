@@ -22,7 +22,9 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.Node;
 import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
+import javafx.stage.Window;
 
 /**
  * Abstract wizard base class.
@@ -236,6 +238,11 @@ public abstract class Wizard extends StackPane {
 		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
+				final Scene scene = getScene();
+				final Window window = scene == null ? null : scene.getWindow();
+				if (window != null)
+					window.sizeToScene();
+
 				if (getParent() != null)
 					getParent().requestFocus();
 

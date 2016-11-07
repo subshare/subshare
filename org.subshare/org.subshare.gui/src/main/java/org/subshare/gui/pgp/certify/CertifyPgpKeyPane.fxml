@@ -23,15 +23,19 @@
 		<ToggleGroup fx:id="toggleGroup"/> 
 	</fx:define>
 
-	<Text fx:id="headerText" text="%CertifyPgpKeyPane.headerText.text" wrappingWidth="600" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="2" GridPane.hgrow="ALWAYS"/> 
-	<Label fx:id="keyIdLabel" text="%CertifyPgpKeyPane.keyIdLabel.text" GridPane.columnIndex="0" GridPane.rowIndex="2"/> 
-	<TextField fx:id="keyIdTextField" text="82c5:2bc9:4ab0:fbc1" minWidth="300" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="2"> 
+	<Text fx:id="headerText" text="%CertifyPgpKeyPane.headerText.text" wrappingWidth="600" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.columnSpan="2" GridPane.hgrow="ALWAYS"> 
+		<GridPane.margin>
+			<Insets bottom="8"/> 
+		</GridPane.margin>
+	</Text>
+	<Label fx:id="keyIdLabel" text="%CertifyPgpKeyPane.keyIdLabel.text" GridPane.columnIndex="0" GridPane.rowIndex="1"/> 
+	<TextField fx:id="keyIdTextField" text="82c5:2bc9:4ab0:fbc1" minWidth="300" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="1"> 
 		<GridPane.margin>
 			<Insets left="8"/> 
 		</GridPane.margin>
 	</TextField>
-	<Label fx:id="userIdsLabel" text="%CertifyPgpKeyPane.userIdsLabel.text" GridPane.columnIndex="0" GridPane.rowIndex="3" GridPane.valignment="TOP"/> 
-	<TableView fx:id="userIdsTableView" editable="false" minHeight="80" prefHeight="120" GridPane.columnIndex="1" GridPane.rowIndex="3" GridPane.columnSpan="2" GridPane.fillWidth="true" GridPane.hgrow="ALWAYS"> 
+	<Label fx:id="userIdsLabel" text="%CertifyPgpKeyPane.userIdsLabel.text" GridPane.columnIndex="0" GridPane.rowIndex="2" GridPane.valignment="TOP"/> 
+	<TableView fx:id="userIdsTableView" editable="false" minHeight="80" prefHeight="120" GridPane.columnIndex="1" GridPane.rowIndex="2" GridPane.columnSpan="2" GridPane.fillWidth="true" GridPane.hgrow="ALWAYS"> 
 		<columns>
 			<TableColumn fx:id="nameTableColumn" text="Name" prefWidth="180"> 
 				<cellValueFactory>
@@ -48,18 +52,18 @@
 			<Insets left="8"/> 
 		</GridPane.margin>
 	</TableView>
-	<Label fx:id="fingerprintLabel" text="%CertifyPgpKeyPane.fingerprintLabel.text" GridPane.columnIndex="0" GridPane.rowIndex="4"/> 
-	<TextField fx:id="fingerprintTextField" text="0CA2 AF9A 5632 3324 D8E0 87E9 82C5 2BC9 4AB0 FBC1" minWidth="300" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="4"> 
+	<Label fx:id="fingerprintLabel" text="%CertifyPgpKeyPane.fingerprintLabel.text" GridPane.columnIndex="0" GridPane.rowIndex="3"/> 
+	<TextField fx:id="fingerprintTextField" text="0CA2 AF9A 5632 3324 D8E0 87E9 82C5 2BC9 4AB0 FBC1" minWidth="300" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="3"> 
 		<GridPane.margin>
 			<Insets left="8"/> 
 		</GridPane.margin>
 	</TextField>
-	<Text text="How carefully have you verified the key's fingerprint and the user-IDs above?" style="-fx-font-weight: bold" wrappingWidth="600" GridPane.columnIndex="0" GridPane.rowIndex="5" GridPane.columnSpan="2" GridPane.hgrow="ALWAYS"> 
+	<Text text="How carefully have you verified the key's fingerprint and the user-IDs above?" style="-fx-font-weight: bold" wrappingWidth="600" GridPane.columnIndex="0" GridPane.rowIndex="4" GridPane.columnSpan="2" GridPane.hgrow="ALWAYS"> 
 		<GridPane.margin>
 			<Insets top="8"/> 
 		</GridPane.margin>
 	</Text>
-	<VBox fx:id="radioButtonBox" fillWidth="true" spacing="8" GridPane.columnIndex="0" GridPane.rowIndex="6" GridPane.columnSpan="2" GridPane.hgrow="ALWAYS"> 
+	<VBox fx:id="radioButtonBox" fillWidth="true" spacing="8" GridPane.columnIndex="0" GridPane.rowIndex="5" GridPane.columnSpan="2" GridPane.hgrow="ALWAYS"> 
 		<RadioButton fx:id="noAnswerRadioButton" text="I will not answer." selected="true" toggleGroup="$toggleGroup"/> 
 		<RadioButton fx:id="noCheckRadioButton" text="I have not checked at all." toggleGroup="$toggleGroup"/> 
 		<RadioButton fx:id="casualCheckRadioButton" text="I have done casual checking." toggleGroup="$toggleGroup"/> 
@@ -68,8 +72,8 @@
 			<Insets bottom="8"/> 
 		</GridPane.margin>
 	</VBox>
-	<Label fx:id="signKeyLabel" text="%CertifyPgpKeyPane.signKeyLabel.text" GridPane.columnIndex="0" GridPane.rowIndex="7"/> 
-	<ComboBox fx:id="signKeyComboBox" GridPane.columnIndex="1" GridPane.rowIndex="7" GridPane.columnSpan="2" GridPane.hgrow="ALWAYS"> 
+	<Label fx:id="signKeyLabel" text="%CertifyPgpKeyPane.signKeyLabel.text" GridPane.columnIndex="0" GridPane.rowIndex="6"/> 
+	<ComboBox fx:id="signKeyComboBox" GridPane.columnIndex="1" GridPane.rowIndex="6" GridPane.columnSpan="2" GridPane.hgrow="ALWAYS"> 
 		<GridPane.margin>
 			<Insets left="8"/> 
 		</GridPane.margin>

@@ -23,15 +23,19 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.Toggle;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 import javafx.util.StringConverter;
 
 public class CertifyPgpKeyPane extends WizardPageContentGridPane {
 
-	private final CertifyPgpKeyData certifyPgpKeyData;
-	private final PgpKey pgpKey;
+	protected final CertifyPgpKeyData certifyPgpKeyData;
+	protected final PgpKey pgpKey;
 
 	@FXML
-	private ToggleGroup toggleGroup;
+	private Text headerText;
+
+	@FXML
+	protected ToggleGroup toggleGroup;
 
 	@FXML
 	private TextField keyIdTextField;
@@ -55,6 +59,14 @@ public class CertifyPgpKeyPane extends WizardPageContentGridPane {
 		this.pgpKey = assertNotNull("certifyPgpKeyData.pgpKey", certifyPgpKeyData.getPgpKey());
 		loadDynamicComponentFxml(CertifyPgpKeyPane.class, this);
 
+		if (CertifyPgpKeyPane.class == this.getClass())
+			init();
+	}
+
+	protected void init() {
+		headerText.setText(String.format(Messages.getString("CertifyPgpKeyPane.headerText.text"), //$NON-NLS-1$
+				pgpKey.getPgpKeyId().toHumanString()));
+
 		certifyPgpKeyData.signPgpKeyProperty().bind(signKeyComboBox.getSelectionModel().selectedItemProperty());
 		certifyPgpKeyData.signPgpKeyProperty().addListener((InvalidationListener) observable -> updateComplete());
 
@@ -68,10 +80,19 @@ public class CertifyPgpKeyPane extends WizardPageContentGridPane {
 		updateToggleGroup();
 	}
 
-	private void updateToggleGroup() {
+	protected RadioButton getRadioButtonForCertificationLevel() {
 		final PgpSignatureType certificationLevel = certifyPgpKeyData.certificationLevelProperty().get();
-		RadioButton radioButton = certificationLevel2RadioButton.get(certificationLevel);
-		toggleGroup.selectToggle(radioButton);
+		final RadioButton radioButton = certificationLevel2RadioButton.get(certificationLevel);
+		return radioButton;
+	}
+
+	protected PgpSignatureType getCertificationLevelForRadioButton(final RadioButton radioButton) {
+		assertNotNull("radioButton", radioButton);
+		return (PgpSignatureType) radioButton.getUserData();
+	}
+
+	protected void updateToggleGroup() {
+		toggleGroup.selectToggle(getRadioButtonForCertificationLevel());
 //		selectedCertificationLevelDescriptionText.setText(certificationLevel == null ? null : certificationLevel.getDescription());
 		updateComplete();
 	}
@@ -88,12 +109,13 @@ public class CertifyPgpKeyPane extends WizardPageContentGridPane {
 		}
 
 		toggleGroup.selectedToggleProperty().addListener((ChangeListener<Toggle>) (observable, oldValue, newValue) -> {
-			final PgpSignatureType certificationLevel = newValue == null ? null : getCertificationLevel((RadioButton) newValue);
+			final PgpSignatureType certificationLevel = newValue == null ? null : getCertificationLevelForRadioButton((RadioButton) newValue);
+			assertNotNull("certificationLevel", certificationLevel);
 			certifyPgpKeyData.setCertificationLevel(certificationLevel);
+
 //			selectedCertificationLevelDescriptionText.setText(certificationLevel == null ? null : certificationLevel.getDescription());
 		});
 	}
-
 
 	private void populateUserIdsTableView() {
 		for (final String userIdString : pgpKey.getUserIds()) {
@@ -132,11 +154,10 @@ public class CertifyPgpKeyPane extends WizardPageContentGridPane {
 	}
 
 	protected Pgp getPgp() {
-		return PgpLs.getPgpOrFail();
-	}
-
-	private static PgpSignatureType getCertificationLevel(final RadioButton radioButton) {
-		assertNotNull("radioButton", radioButton);
-		return (PgpSignatureType) assertNotNull("radioButton.userData", radioButton.getUserData());
+		final Pgp pgp = certifyPgpKeyData.getPgp();
+		if (pgp != null)
+			return pgp;
+		else
+			return PgpLs.getPgpOrFail();
 	}
 }

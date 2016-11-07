@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.subshare.core.pgp.CertifyPgpKeyParam;
 import org.subshare.core.pgp.ImportKeysResult;
 import org.subshare.core.pgp.ImportKeysResult.ImportedMasterKey;
 import org.subshare.core.pgp.Pgp;
@@ -17,6 +18,7 @@ import org.subshare.core.user.ImportUsersFromPgpKeysResult;
 import org.subshare.core.user.UserRegistry;
 import org.subshare.gui.ls.PgpLs;
 import org.subshare.gui.ls.UserRegistryLs;
+import org.subshare.gui.pgp.certify.CertifyPgpKeyData;
 import org.subshare.gui.wizard.Wizard;
 
 import co.codewizards.cloudstore.core.io.IByteArrayOutputStream;
@@ -67,8 +69,21 @@ public class ImportPgpKeyFromServerWizard extends Wizard {
 
 		// tempPgpKeys are the keys from tempPgp referenced by selectedPgpKeyIds.
 		final Set<PgpKey> tempPgpKeys = new HashSet<>(selectedPgpKeyIds.size());
-		for (PgpKeyId pgpKeyId : selectedPgpKeyIds)
+		for (PgpKeyId pgpKeyId : selectedPgpKeyIds) {
 			tempPgpKeys.add(assertNotNull("tempPgp.getPgpKey(" + pgpKeyId + ")", tempPgp.getPgpKey(pgpKeyId))); //$NON-NLS-1$ //$NON-NLS-2$
+			CertifyPgpKeyData certifyPgpKeyData = importPgpKeyFromServerData.getPgpKeyId2CertifyPgpKeyData().get(pgpKeyId);
+			if (certifyPgpKeyData.getPgp() != null
+					&& certifyPgpKeyData.getPgpKey() != null
+					&& ! certifyPgpKeyData.isSkip()) {
+
+				CertifyPgpKeyParam certifyPgpKeyParam = new CertifyPgpKeyParam();
+				certifyPgpKeyParam.setPgpKey(certifyPgpKeyData.getPgpKey());
+				certifyPgpKeyParam.setCertificationLevel(certifyPgpKeyData.getCertificationLevel());
+				certifyPgpKeyParam.setSignPgpKey(certifyPgpKeyData.getSignPgpKey());
+
+				tempPgp.certify(certifyPgpKeyParam);
+			}
+		}
 
 		// now we export the selected keys into memory and import them into the productive key-ring.
 		IByteArrayOutputStream bout = ByteArrayOutputStreamLs.create();
@@ -76,6 +91,7 @@ public class ImportPgpKeyFromServerWizard extends Wizard {
 
 		importKeysResult = pgp.importKeys(ByteArrayInputStreamLs.create(bout));
 		assertNotNull("importKeysResult", importKeysResult); //$NON-NLS-1$
+		pgp.updateTrustDb();
 
 		// finally import users from the imported PGP keys.
 		final Map<PgpKeyId, PgpKey> pgpKeyId2PgpKey = new HashMap<>();
