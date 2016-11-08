@@ -27,7 +27,7 @@ public class IssueInvitationData {
 
 	private File invitationTokenDirectory;
 	private PermissionType permissionType = PermissionType.write; // TODO UI!
-	private long validityDurationMillis = 5L * 24L * 3600L * 1000L; // TODO UI!
+	private long validityDurationMillis = 31L * 24L * 3600L * 1000L; // TODO UI!
 
 	public IssueInvitationData() {
 	}

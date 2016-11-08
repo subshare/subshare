@@ -44,10 +44,10 @@ Then clone this Git repository: https://github.com/subshare/subshare.git
 
 $H$H$H$H Step 3: Import projects
 
-Open the \"Java\" perspective and click in the main menu on \"File\" => \"Import...\". Select \"Maven\" / \"Existing Maven Projects\".
-Search for the projects in your Git working copy and import \"org.subshare.*\".
+Open the \"Java\" perspective and click in the main menu on \"File\" => \"Import...\". Select \"Gradle\" / \"Gradle Project\".
+Select the root project in your Git working copy and import all projects (the root project \"org.subshare\" and all its children).
 
-If you do not find \"Maven\" here, you might still need to install [m2e](http://www.eclipse.org/m2e/).
+If you do not find \"Gradle\" in Eclipse' import wizard, you likely still need to install [Buildship](https://projects.eclipse.org/projects/tools.buildship).
 
 
 $H$H$H$H Step 4: DataNucleus Eclipse Plug-in
@@ -57,3 +57,5 @@ Install the [DataNucleus](http://www.datanucleus.org) Eclipse Plug-in, open the 
 
 Then select \"DataNucleus\" => \"Add DataNucleus Support\". Finally, repeat the double-click on the same project and check
 \"DataNucleus\" => \"Enable Auto-Enhancement\".
+
+Repeat this for the project \"org.subshare.local.dbrepo\". Both projects require DataNucleus' enhancement.
