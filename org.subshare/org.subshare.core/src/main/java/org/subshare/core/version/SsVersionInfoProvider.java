@@ -10,6 +10,6 @@ public class SsVersionInfoProvider extends VersionInfoProvider {
 
 	@Override
 	protected Version getMinimumRemoteVersion() {
-		return new Version("0.9.9-SNAPSHOT");
+		return new Version("0.9.9");
 	}
 }
