@@ -55,7 +55,7 @@ mv subshare ~/</pre></div>
 ![Extract tar.gz archive](../images/getting-started/Dolphin_extract.png)
 
 This "Extract" > "Extract archive here" action creates the new folder `subshare` in the current directory.
-Move it to your home directory (from `~/Downloads/subshare/` to `~/susbshare/`).
+Move it to your home directory (from `~/Downloads/subshare/` to `~/subshare/`).
 
 
 $H$H$H Start subshare
