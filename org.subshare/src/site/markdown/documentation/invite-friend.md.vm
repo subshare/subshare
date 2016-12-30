@@ -48,18 +48,48 @@ Amélie's key was found. *Finish* imports it into Adam's key-ring:
 ![Import key (step 3)](../images/invite-friend/import-key_3.png)
 
 
-$H$H$H Adam verifies and signs Amélie's key (step 1)
+$H$H$H Adam certifies Amélie's key (step 1)
 
-It is not required but strongly recommended to verify the downloaded key. Otherwise it's possible
+It is not required but strongly recommended to *verify* and *sign* the downloaded key. Otherwise it's possible
 for an attacker to trick Adam into using a fake key and thus allow the attacker to read/write data.
 
-To verify and sign the key, Adam selects Amélie's key and klicks the *Sign* button:
+To verify and sign the key, Adam selects Amélie's key and klicks the *Certify* button:
 
 ![Sign key (step 1)](../images/invite-friend/sign-key_1.png)
 
 
+$H$H$H Adam certifies Amélie's key (step 2)
 
-$H$H$H Adam invites Amélie
+The following dialog opens:
+
+![Sign key (step 2)](../images/invite-friend/sign-key_2.png)
+
+Adam calls Amélie by phone and asks her to read her key's *fingerprint* to him.
+
+Because Amélie does not know her own key's fingerprint, she looks it up by opening the same
+dialog on her computer (and later cancels it).
+
+She reads "5C4D...4DEB" (yes, all of it!) and Adam knows, everything is fine.
+
+But because a telephone call isn't as reliable and could be faked (though this is really hard, it is
+*not* impossible), Adam ticks *I have done casual checking* (had he met her personally, he could have
+done a *very careful* check).
+
+Finishing this wizard means Adam officially certifies that the key is Amélie's key. This information
+is used by him (his computer from now on trusts Amélie's key) and it may be used by others
+([Web of trust](https://en.wikipedia.org/wiki/Web_of_trust)).
+
+Though it might look a bit inconvenient, this procedure is necessary to ensure that the key
+downloaded by Adam really belongs to Amélie:
+
+If an attacker intercepted the communication between Adam's computer and the server and succeeded to replace
+Amélie's key, Adam would have found out now, because Amélie had read a different fingerprint to him.
+
+If you want to understand this better, please read
+[Public key fingerprint](https://en.wikipedia.org/wiki/Public_key_fingerprint).
+
+
+$H$H$H Adam invites Amélie (step 1)
 
 Adam selects the repository he wishes to share and clicks the *Invite* button:
 
@@ -74,3 +104,71 @@ you wish to share:
 However, in this example, Adam shares his entire repository with Amélie.
 
 
+$H$H$H Adam invites Amélie (step 2)
+
+Adam selects Amélie and clicks *Next*:
+
+![Invite (step 2)](../images/invite-friend/invite-friend_2.png)
+
+
+$H$H$H Adam invites Amélie (step 3)
+
+Adam wants the invitation file to be saved on the Desktop:
+
+![Invite (step 3)](../images/invite-friend/invite-friend_3.png)
+
+
+$H$H$H Adam invites Amélie (step 4)
+
+The invitation file was created:
+
+![Invite (step 4)](../images/invite-friend/invite-friend_4.png)
+
+Adam now sends this file to Amélie by e-mail (or chat or whatever communication channel he prefers).
+
+
+$H$H$H Amélie accepts the invitation (step 1)
+
+Amélie clicks the *Accept invitation* button:
+
+![Accept invitation (step 1)](../images/invite-friend/accept-invitation_1.png)
+
+
+$H$H$H Amélie accepts the invitation (step 2)
+
+Amélie selects the invitation file:
+
+![Accept invitation (step 2)](../images/invite-friend/accept-invitation_2.png)
+
+Because Amélie did not yet import Adam's key, there is a warning. If she clicks the *Solve* button behind it and
+imports the key, an error marker instead tells her that the key is not trusted.
+
+It is not required, but strongly recommended that Amélie also verifies (and certifies) Adam's key. Depending on how
+Amélie received the invitation file, it is possible (though unlikely), that not Adam, but an attacker signed
+the invitation with a fake key.
+
+
+$H$H$H Amélie accepts the invitation (step 3)
+
+Amélie created the folder `~/Desktop/000_subshare/Adams_Pictures/` for Adam's repository and selected it:
+
+![Accept invitation (step 3)](../images/invite-friend/accept-invitation_3.png)
+
+Clicking *Finish* now starts the check-out process.
+
+**Important:** This turns the selected folder directly into the root of the checked-out working copy!
+There won't be any further intermediate folder for the new repository.
+
+That's it!
+
+The new repository is now listed with the status "in progress":
+
+![Accept invitation (step 4)](../images/invite-friend/accept-invitation_4.png)
+
+Depending on the size of the data and the internet connection speed, this can take a while (minutes, hours
+or even days). You don't need to wait. It's safe to interrupt subshare. It resumes where it was interrupted,
+when you start it again.
+
+Once it's done, the cloud-icon disappears and the blue info-icon is shown instead:
+
+![Accept invitation (step 5)](../images/invite-friend/accept-invitation_5.png)
