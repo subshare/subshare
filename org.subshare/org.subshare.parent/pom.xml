@@ -5,10 +5,10 @@
 
 	<groupId>org.subshare</groupId>
 	<artifactId>org.subshare.parent</artifactId>
-	<version>0.9.10-SNAPSHOT</version>
 <!--
-	<version>0.9.10</version>
+	<version>0.9.11-SNAPSHOT</version>
 -->
+	<version>0.9.10</version>
 
 	<packaging>pom</packaging>
 
