@@ -1,0 +1,76 @@
+<head><title>Invite a friend &amp; collaborate</title></head>
+$!{decoration.custom.setAttribute("contentHeaderLogo", "../images/header-notebook.jpg")}
+#set( $H = '#' )
+
+Invite a friend (or colleague) and collaborate
+-------
+
+You can use subshare in a team or with friends/family to share your data.
+
+In order to demonstrate this, the following example shows how Adam sets up a repository
+and invites his girl-friend Amélie.
+
+
+$H$H$H Adam (the repository's owner) gets started
+
+Adam installs subshare and creates a repository, following the
+[Getting started](./getting-started.html) guide.
+
+
+$H$H$H Amélie (the invited friend) needs an OpenPGP key, too
+
+The easiest way for Amélie to create an OpenPGP key is to start subshare and follow the setup wizard
+(see: [Getting started](./getting-started.html)). She also should enter the subshare server's URL,
+because Adam can then download her key easily within subshare.
+
+If Amélie already possesses an OpenPGP key and Adam already has it in his key-ring, this is not necessary. 
+
+
+$H$H$H Adam imports Amélie's OpenPGP key (step 1)
+
+Before Adam can invite Amélie, he needs to retrieve her OpenPGP key. Therefore, he selects *Users* and
+clicks the *Import key from server* button:
+
+![Import key (step 1)](../images/invite-friend/import-key_1.png)
+
+
+$H$H$H Adam imports Amélie's OpenPGP key (step 2)
+
+Adam enters Amélie's e-mail-address and clicks *Next*:
+
+![Import key (step 2)](../images/invite-friend/import-key_2.png)
+
+
+$H$H$H Adam imports Amélie's OpenPGP key (step 3)
+
+Amélie's key was found. *Finish* imports it into Adam's key-ring:
+
+![Import key (step 3)](../images/invite-friend/import-key_3.png)
+
+
+$H$H$H Adam verifies and signs Amélie's key (step 1)
+
+It is not required but strongly recommended to verify the downloaded key. Otherwise it's possible
+for an attacker to trick Adam into using a fake key and thus allow the attacker to read/write data.
+
+To verify and sign the key, Adam selects Amélie's key and klicks the *Sign* button:
+
+![Sign key (step 1)](../images/invite-friend/sign-key_1.png)
+
+
+
+$H$H$H Adam invites Amélie
+
+Adam selects the repository he wishes to share and clicks the *Invite* button:
+
+![Invite (step 1)](../images/invite-friend/invite-friend_1.png)
+
+Please note, that it is also possible to share a sub-folder instead of the entire repository.
+For this purpose, simply navigate through the repository/folder tree and select the directory
+you wish to share:
+
+![Invite (step 1b)](../images/invite-friend/invite-friend_1b.png)
+
+However, in this example, Adam shares his entire repository with Amélie.
+
+
