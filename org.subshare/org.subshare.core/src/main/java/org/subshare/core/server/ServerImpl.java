@@ -57,7 +57,7 @@ public class ServerImpl extends AbstractBean<Server.Property> implements Cloneab
 	}
 	@Override
 	public void setChanged(final Date changed) {
-		assertNotNull("changed", changed);
+		assertNotNull(changed, "changed");
 		setPropertyValue(PropertyEnum.changed, changed);
 	}
 

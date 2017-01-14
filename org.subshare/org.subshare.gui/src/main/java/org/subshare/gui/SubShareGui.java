@@ -421,7 +421,7 @@ public class SubShareGui extends Application {
 	}
 
 	private void showUpdateStartingDialog(final CloudStoreUpdaterCore updaterCore) {
-		assertNotNull("updaterCore", updaterCore);
+		assertNotNull(updaterCore, "updaterCore");
 		Alert alert = new Alert(AlertType.INFORMATION);
 		alert.setHeaderText("Update to a new Subshare version!");
 

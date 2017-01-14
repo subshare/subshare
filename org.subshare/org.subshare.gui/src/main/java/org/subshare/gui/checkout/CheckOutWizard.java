@@ -21,8 +21,8 @@ public class CheckOutWizard { // TODO sub-class Wizard!!!
 	private final ServerRepoFile serverRepoFile;
 
 	public CheckOutWizard(final Server server, final ServerRepo serverRepo) {
-		this.server = assertNotNull("server", server);
-		this.serverRepo = assertNotNull("serverRepo", serverRepo);
+		this.server = assertNotNull(server, "server");
+		this.serverRepo = assertNotNull(serverRepo, "serverRepo");
 		this.serverRepoFile = null;
 	}
 

@@ -19,8 +19,8 @@ public class CollisionPrivateDtoSet {
 	private Collection<CollisionPrivateDto> childCollisionPrivateDtos;
 
 	public CollisionPrivateDtoSet(final Collection<CollisionPrivateDto> allCollisionPrivateDtos, final Collection<CollisionPrivateDto> directCollisionPrivateDtos) {
-		this.allCollisionPrivateDtos = assertNotNull("allCollisionPrivateDtos", allCollisionPrivateDtos);
-		this.directCollisionPrivateDtos = assertNotNull("directCollisionPrivateDtos", directCollisionPrivateDtos);
+		this.allCollisionPrivateDtos = assertNotNull(allCollisionPrivateDtos, "allCollisionPrivateDtos");
+		this.directCollisionPrivateDtos = assertNotNull(directCollisionPrivateDtos, "directCollisionPrivateDtos");
 	}
 
 	public Collection<CollisionPrivateDto> getAllCollisionPrivateDtos() {
@@ -35,10 +35,10 @@ public class CollisionPrivateDtoSet {
 		if (childCollisionPrivateDtos == null) {
 			final Map<Uid, CollisionPrivateDto> collisionId2CollisionPrivateDto = new HashMap<>();
 			for (final CollisionPrivateDto collisionPrivateDto : allCollisionPrivateDtos)
-				collisionId2CollisionPrivateDto.put(assertNotNull("collisionPrivateDto.collisionId", collisionPrivateDto.getCollisionId()), collisionPrivateDto);
+				collisionId2CollisionPrivateDto.put(assertNotNull(collisionPrivateDto.getCollisionId(), "collisionPrivateDto.collisionId"), collisionPrivateDto);
 
 			for (final CollisionPrivateDto collisionPrivateDto : directCollisionPrivateDtos)
-				collisionId2CollisionPrivateDto.remove(assertNotNull("collisionPrivateDto.collisionId", collisionPrivateDto.getCollisionId()));
+				collisionId2CollisionPrivateDto.remove(assertNotNull(collisionPrivateDto.getCollisionId(), "collisionPrivateDto.collisionId"));
 
 			childCollisionPrivateDtos = Collections.unmodifiableList(new ArrayList<>(collisionId2CollisionPrivateDto.values()));
 		}

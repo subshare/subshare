@@ -15,7 +15,7 @@ public class PutPgpPublicKeys extends VoidRequest {
 	private final InputStream inputStream;
 
 	public PutPgpPublicKeys(final InputStream inputStream) {
-		this.inputStream = assertNotNull("inputStream", inputStream);
+		this.inputStream = assertNotNull(inputStream, "inputStream");
 	}
 
 	@Override

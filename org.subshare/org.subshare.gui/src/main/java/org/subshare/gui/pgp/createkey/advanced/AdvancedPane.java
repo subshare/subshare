@@ -46,7 +46,7 @@ public class AdvancedPane extends WizardPageContentGridPane {
 	};
 
 	public AdvancedPane(final CreatePgpKeyParam createPgpKeyParam) {
-		this.createPgpKeyParam = assertNotNull("createPgpKeyParam", createPgpKeyParam);
+		this.createPgpKeyParam = assertNotNull(createPgpKeyParam, "createPgpKeyParam");
 		loadDynamicComponentFxml(AdvancedPane.class, this);
 
 		algorithm = createAlgorithmProperty();

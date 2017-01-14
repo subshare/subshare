@@ -20,7 +20,7 @@ public class UserRepoKeyPublicKeyDtoWithSignatureConverter {
 //	}
 
 	public UserRepoKeyPublicKeyDto toUserRepoKeyPublicKeyDto(final UserRepoKey.PublicKeyWithSignature publicKey) {
-		assertNotNull("publicKey", publicKey);
+		assertNotNull(publicKey, "publicKey");
 
 		final InvitationUserRepoKeyPublicKeyDto invitationUserRepoKeyPublicKeyDto = publicKey.isInvitation() ? new InvitationUserRepoKeyPublicKeyDto() : null;
 
@@ -55,8 +55,8 @@ public class UserRepoKeyPublicKeyDtoWithSignatureConverter {
 //	}
 
 	public UserRepoKey.PublicKeyWithSignature fromUserRepoKeyPublicKeyDto(final UserRepoKeyPublicKeyDto publicKeyDto) {
-		assertNotNull("publicKeyDto", publicKeyDto);
-		assertNotNull("publicKeyDto.signedPublicKeyData", publicKeyDto.getSignedPublicKeyData());
+		assertNotNull(publicKeyDto, "publicKeyDto");
+		assertNotNull(publicKeyDto.getSignedPublicKeyData(), "publicKeyDto.signedPublicKeyData");
 
 		InvitationUserRepoKeyPublicKeyDto invPublicKeyDto = (InvitationUserRepoKeyPublicKeyDto)
 				(publicKeyDto instanceof InvitationUserRepoKeyPublicKeyDto ? publicKeyDto : null);

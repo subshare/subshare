@@ -131,8 +131,8 @@ public class UserRepoKeyPublicKeyReplacementRequest extends Entity implements Si
 	 */
 	@Override
 	public InputStream getSignedData(int signedDataVersion) {
-		assertNotNull("oldKey", oldKey);
-		assertNotNull("newKey", newKey);
+		assertNotNull(oldKey, "oldKey");
+		assertNotNull(newKey, "newKey");
 
 		try {
 			byte separatorIndex = 0;

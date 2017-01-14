@@ -14,7 +14,7 @@ public class GetCryptoChangeSetDto extends AbstractRequest<CryptoChangeSetDto> {
 	private final String repositoryName;
 
 	public GetCryptoChangeSetDto(final String repositoryName) {
-		this.repositoryName = assertNotNull("repositoryName", repositoryName);
+		this.repositoryName = assertNotNull(repositoryName, "repositoryName");
 	}
 
 	@Override

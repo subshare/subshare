@@ -25,7 +25,7 @@ public class UserRepoKeyPublicKeyReplacementRequestDao extends Dao<UserRepoKeyPu
 	}
 
 	public UserRepoKeyPublicKeyReplacementRequest getUserRepoKeyPublicKeyReplacementRequest(final Uid requestId) {
-		assertNotNull("requestId", requestId);
+		assertNotNull(requestId, "requestId");
 		final Query query = pm().newNamedQuery(getEntityClass(), "getUserRepoKeyPublicKeyReplacementRequest_requestId");
 		try {
 			final UserRepoKeyPublicKeyReplacementRequest request = (UserRepoKeyPublicKeyReplacementRequest) query.execute(requestId.toString());
@@ -76,7 +76,7 @@ public class UserRepoKeyPublicKeyReplacementRequestDao extends Dao<UserRepoKeyPu
 	 * @return the replacement-requests found matching the given criteria - never <code>null</code>, but maybe empty.
 	 */
 	public Collection<UserRepoKeyPublicKeyReplacementRequest> getUserRepoKeyPublicKeyReplacementRequestsForOldKey(InvitationUserRepoKeyPublicKey oldKey) {
-		assertNotNull("oldKey", oldKey);
+		assertNotNull(oldKey, "oldKey");
 		final Query query = pm().newNamedQuery(getEntityClass(), "getUserRepoKeyPublicKeyReplacementRequests_oldKey");
 		try {
 			long startTimestamp = System.currentTimeMillis();

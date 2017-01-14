@@ -21,7 +21,7 @@ public class DeleteService extends AbstractServiceWithRepoToRepoAuth {
 
 	@PUT
 	public void delete(final SsDeleteModificationDto deleteModificationDto) {
-		assertNotNull("deleteModificationDto", deleteModificationDto);
+		assertNotNull(deleteModificationDto, "deleteModificationDto");
 
 		try (final RepoTransport repoTransport = authenticateAndCreateLocalRepoTransport();) {
 			CryptreeServerFileRepoTransport csfrt = (CryptreeServerFileRepoTransport) repoTransport;

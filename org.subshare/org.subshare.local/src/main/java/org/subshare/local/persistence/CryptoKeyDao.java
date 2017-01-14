@@ -28,7 +28,7 @@ public class CryptoKeyDao extends Dao<CryptoKey, CryptoKeyDao> {
 	}
 
 	public CryptoKey getCryptoKey(final Uid cryptoKeyId) {
-		assertNotNull("cryptoKeyId", cryptoKeyId);
+		assertNotNull(cryptoKeyId, "cryptoKeyId");
 		final Query query = pm().newNamedQuery(getEntityClass(), "getCryptoKey_cryptoKeyId");
 		try {
 			final CryptoKey cryptoKey = (CryptoKey) query.execute(cryptoKeyId.toString());
@@ -39,8 +39,8 @@ public class CryptoKeyDao extends Dao<CryptoKey, CryptoKeyDao> {
 	}
 
 	public Collection<CryptoKey> getActiveCryptoKeys(final CryptoRepoFile cryptoRepoFile, final CryptoKeyRole cryptoKeyRole) {
-		assertNotNull("cryptoRepoFile", cryptoRepoFile);
-		assertNotNull("cryptoKeyRole", cryptoKeyRole);
+		assertNotNull(cryptoRepoFile, "cryptoRepoFile");
+		assertNotNull(cryptoKeyRole, "cryptoKeyRole");
 		final Query query = pm().newNamedQuery(getEntityClass(), "getActiveCryptoKeys_cryptoRepoFile_cryptoKeyRole");
 		try {
 			long startTimestamp = System.currentTimeMillis();
@@ -73,7 +73,7 @@ public class CryptoKeyDao extends Dao<CryptoKey, CryptoKeyDao> {
 	 */
 	public Collection<CryptoKey> getCryptoKeysChangedAfterExclLastSyncFromRepositoryId(
 			final long localRevision, final UUID exclLastSyncFromRepositoryId) {
-		assertNotNull("exclLastSyncFromRepositoryId", exclLastSyncFromRepositoryId);
+		assertNotNull(exclLastSyncFromRepositoryId, "exclLastSyncFromRepositoryId");
 
 		final Query query = pm().newNamedQuery(getEntityClass(), "getCryptoKeysChangedAfter_localRevision_exclLastSyncFromRepositoryId");
 		try {
@@ -93,7 +93,7 @@ public class CryptoKeyDao extends Dao<CryptoKey, CryptoKeyDao> {
 	}
 
 	public Collection<CryptoKey> getCryptoKeys(final CryptoRepoFile cryptoRepoFile) {
-		assertNotNull("cryptoRepoFile", cryptoRepoFile);
+		assertNotNull(cryptoRepoFile, "cryptoRepoFile");
 		final Query query = pm().newNamedQuery(getEntityClass(), "getCryptoKeys_cryptoRepoFile");
 		try {
 			long startTimestamp = System.currentTimeMillis();
@@ -128,7 +128,7 @@ public class CryptoKeyDao extends Dao<CryptoKey, CryptoKeyDao> {
 	}
 
 	protected void deleteDependentObjects(final CryptoKey cryptoKey) {
-		assertNotNull("cryptoKey", cryptoKey);
+		assertNotNull(cryptoKey, "cryptoKey");
 		final CryptoLinkDao cryptoLinkDao = getDao(CryptoLinkDao.class);
 
 		final Collection<CryptoLink> cryptoLinksFrom = cryptoLinkDao.getCryptoLinksFrom(cryptoKey);

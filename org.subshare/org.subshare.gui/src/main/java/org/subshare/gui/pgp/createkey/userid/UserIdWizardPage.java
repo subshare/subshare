@@ -14,7 +14,7 @@ public class UserIdWizardPage extends WizardPage {
 
 	public UserIdWizardPage(final CreatePgpKeyParam createPgpKeyParam) {
 		super("Identities");
-		this.createPgpKeyParam = assertNotNull("createPgpKeyParam", createPgpKeyParam);
+		this.createPgpKeyParam = assertNotNull(createPgpKeyParam, "createPgpKeyParam");
 		setNextPage(new ValidityWizardPage(createPgpKeyParam));
 	}
 

@@ -20,7 +20,7 @@ public class IssueInvitationDestPane extends WizardPageContentGridPane {
 	private FileTreePane fileTreePane;
 
 	public IssueInvitationDestPane(final IssueInvitationData issueInvitationData) {
-		this.issueInvitationData = assertNotNull("issueInvitationData", issueInvitationData);
+		this.issueInvitationData = assertNotNull(issueInvitationData, "issueInvitationData");
 		loadDynamicComponentFxml(IssueInvitationDestPane.class, this);
 		fileTreePane.fileFilterProperty().set(file -> file.isDirectory());
 		fileTreePane.getSelectedFiles().addListener((InvalidationListener) observable -> onSelectedFilesChanged());

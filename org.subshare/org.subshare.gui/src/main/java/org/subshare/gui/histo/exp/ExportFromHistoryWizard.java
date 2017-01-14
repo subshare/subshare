@@ -18,7 +18,7 @@ public class ExportFromHistoryWizard extends Wizard {
 	private final ExportFromHistoryData exportFromHistoryData;
 
 	public ExportFromHistoryWizard(final ExportFromHistoryData exportFromHistoryData) {
-		this.exportFromHistoryData = assertNotNull("exportFromHistoryData", exportFromHistoryData);
+		this.exportFromHistoryData = assertNotNull(exportFromHistoryData, "exportFromHistoryData");
 		setFirstPage(new ExportFromHistoryDestinationWizardPage(exportFromHistoryData));
 	}
 
@@ -29,7 +29,7 @@ public class ExportFromHistoryWizard extends Wizard {
 
 	@Override
 	protected void finish(final ProgressMonitor monitor) throws Exception {
-		final File exportDirectory = assertNotNull("exportFromHistoryData.exportDirectory", exportFromHistoryData.getExportDirectory());
+		final File exportDirectory = assertNotNull(exportFromHistoryData.getExportDirectory(), "exportFromHistoryData.exportDirectory");
 
 		final LocalRepo localRepo = exportFromHistoryData.getLocalRepo();
 		try (final HistoExporter histoExporter = HistoExporterLs.createHistoExporter(localRepo.getLocalRoot())) {

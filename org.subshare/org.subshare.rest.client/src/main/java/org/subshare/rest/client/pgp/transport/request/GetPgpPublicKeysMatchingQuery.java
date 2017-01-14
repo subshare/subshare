@@ -14,7 +14,7 @@ public class GetPgpPublicKeysMatchingQuery extends AbstractRequest<InputStream> 
 	private final String queryString;
 
 	public GetPgpPublicKeysMatchingQuery(String queryString) {
-		this.queryString = assertNotNull("queryString", queryString);
+		this.queryString = assertNotNull(queryString, "queryString");
 	}
 
 	@Override

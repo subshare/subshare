@@ -18,7 +18,7 @@ public class LocalRepoImpl implements LocalRepo {
 	private File localRoot;
 
 	public LocalRepoImpl(final UUID repositoryId) {
-		this.repositoryId = assertNotNull("repositoryId)", repositoryId);
+		this.repositoryId = assertNotNull(repositoryId, "repositoryId)");
 	}
 
 	@Override
@@ -50,8 +50,8 @@ public class LocalRepoImpl implements LocalRepo {
 
 	@Override
 	public String getLocalPath(final File file) {
-		assertNotNull("file", file);
-		assertNotNull("localRoot", localRoot);
+		assertNotNull(file, "file");
+		assertNotNull(localRoot, "localRoot");
 
 		if (file.equals(localRoot))
 			return "";

@@ -15,7 +15,7 @@ public class ExportFromHistoryDestinationWizardPage extends WizardPage {
 
 	public ExportFromHistoryDestinationWizardPage(ExportFromHistoryData exportFromHistoryData) {
 		super("Export from history");
-		this.exportFromHistoryData = assertNotNull("exportFromHistoryData", exportFromHistoryData);
+		this.exportFromHistoryData = assertNotNull(exportFromHistoryData, "exportFromHistoryData");
 		shownRequired.set(true);
 		setMinSize(550, 550);
 //		setPrefSize(600, 600);

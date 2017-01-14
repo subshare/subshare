@@ -19,8 +19,8 @@ public class GetLockerContentVersions extends AbstractRequest<List<Uid>> {
 	private final String lockerContentName;
 
 	public GetLockerContentVersions(final PgpKeyId pgpKeyId, final String lockerContentName) {
-		this.pgpKeyId = assertNotNull("pgpKeyId", pgpKeyId);
-		this.lockerContentName = assertNotNull("lockerContentName", lockerContentName);
+		this.pgpKeyId = assertNotNull(pgpKeyId, "pgpKeyId");
+		this.lockerContentName = assertNotNull(lockerContentName, "lockerContentName");
 	}
 
 	@Override

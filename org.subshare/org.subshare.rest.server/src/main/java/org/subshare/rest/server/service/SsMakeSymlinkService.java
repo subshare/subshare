@@ -32,18 +32,18 @@ public class SsMakeSymlinkService extends MakeSymlinkService {
 	@Path("{path:.*}")
 	public void makeSymlink(@PathParam("path") String path, final RepoFileDtoWithCurrentHistoCryptoRepoFileDto repoFileDtoWithCurrentHistoCryptoRepoFileDto)
 	{
-		assertNotNull("path", path);
-		assertNotNull("repoFileDtoWithCurrentHistoCryptoRepoFileDto", repoFileDtoWithCurrentHistoCryptoRepoFileDto);
+		assertNotNull(path, "path");
+		assertNotNull(repoFileDtoWithCurrentHistoCryptoRepoFileDto, "repoFileDtoWithCurrentHistoCryptoRepoFileDto");
 
 		final CurrentHistoCryptoRepoFileDto currentHistoCryptoRepoFileDto = assertNotNull(
-				"repoFileDtoWithCurrentHistoCryptoRepoFileDto.currentHistoCryptoRepoFileDto",
-				repoFileDtoWithCurrentHistoCryptoRepoFileDto.getCurrentHistoCryptoRepoFileDto());
+				repoFileDtoWithCurrentHistoCryptoRepoFileDto.getCurrentHistoCryptoRepoFileDto(),
+				"repoFileDtoWithCurrentHistoCryptoRepoFileDto.currentHistoCryptoRepoFileDto");
 
-		assertNotNull("repoFileDtoWithCurrentHistoCryptoRepoFileDto.currentHistoCryptoRepoFileDto.histoCryptoRepoFileDto",
-				currentHistoCryptoRepoFileDto.getHistoCryptoRepoFileDto());
+		assertNotNull(currentHistoCryptoRepoFileDto.getHistoCryptoRepoFileDto(),
+				"repoFileDtoWithCurrentHistoCryptoRepoFileDto.currentHistoCryptoRepoFileDto.histoCryptoRepoFileDto");
 
-		final RepoFileDto rfdto = assertNotNull("repoFileDtoWithCurrentHistoCryptoRepoFileDto.repoFileDto",
-				repoFileDtoWithCurrentHistoCryptoRepoFileDto.getRepoFileDto());
+		final RepoFileDto rfdto = assertNotNull(repoFileDtoWithCurrentHistoCryptoRepoFileDto.getRepoFileDto(),
+				"repoFileDtoWithCurrentHistoCryptoRepoFileDto.repoFileDto");
 
 		if (! (rfdto instanceof SsSymlinkDto))
 			throw new IllegalArgumentException("repoFileDtoWithCurrentHistoCryptoRepoFileDto.repoFileDto is not an instance of SsSymlinkDto, but: " + rfdto.getClass().getName());

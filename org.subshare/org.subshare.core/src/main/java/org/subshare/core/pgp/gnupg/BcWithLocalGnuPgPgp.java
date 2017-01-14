@@ -152,11 +152,11 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 	};
 
 	private static void addToDeleteDirsOnExit(final File dir) {
-		deleteDirsOnExit.add(assertNotNull("dir", dir));
+		deleteDirsOnExit.add(assertNotNull(dir, "dir"));
 		initShutdownHook();
 	}
 	private static void removeFromDeleteDirsOnExit(final File dir) {
-		deleteDirsOnExit.remove(assertNotNull("dir", dir));
+		deleteDirsOnExit.remove(assertNotNull(dir, "dir"));
 	}
 
 	private static Thread shutdownHook;
@@ -224,7 +224,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 
 	@Override
 	public PgpKey getPgpKey(final PgpKeyId pgpKeyId) {
-		assertNotNull("pgpKeyId", pgpKeyId);
+		assertNotNull(pgpKeyId, "pgpKeyId");
 		loadIfNeeded();
 
 		if (PgpKey.TEST_DUMMY_PGP_KEY_ID.equals(pgpKeyId))
@@ -237,8 +237,8 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 
 	@Override
 	public synchronized void exportPublicKeysWithSecretKeys(final Set<PgpKey> pgpKeys, IOutputStream _out) {
-		assertNotNull("pgpKeys", pgpKeys);
-		assertNotNull("out", _out);
+		assertNotNull(pgpKeys, "pgpKeys");
+		assertNotNull(_out, "out");
 
 		OutputStream out = castStream(_out);
 
@@ -269,8 +269,8 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 
 	@Override
 	public synchronized void exportPublicKeys(final Set<PgpKey> pgpKeys, IOutputStream _out) {
-		assertNotNull("pgpKeys", pgpKeys);
-		assertNotNull("out", _out);
+		assertNotNull(pgpKeys, "pgpKeys");
+		assertNotNull(_out, "out");
 
 		OutputStream out = castStream(_out);
 
@@ -290,7 +290,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 
 	@Override
 	public TempImportKeysResult importKeysTemporarily(IInputStream in) {
-		assertNotNull("in", in);
+		assertNotNull(in, "in");
 
 		try {
 			final BcWithLocalGnuPgPgp tempPgp = new BcWithLocalGnuPgPgp();
@@ -325,7 +325,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 
 	@Override
 	public synchronized ImportKeysResult importKeys(IInputStream _in) {
-		assertNotNull("in", _in);
+		assertNotNull(_in, "in");
 
 		InputStream in = castStream(_in);
 
@@ -355,7 +355,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 	}
 
 	private synchronized boolean importPublicKeyRing(ImportKeysResult importKeysResult, final PGPPublicKeyRing publicKeyRing) throws IOException, PGPException {
-		assertNotNull("publicKeyRing", publicKeyRing);
+		assertNotNull(publicKeyRing, "publicKeyRing");
 
 		PGPPublicKeyRingCollection oldPublicKeyRingCollection;
 
@@ -391,8 +391,8 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 	}
 
 	private PGPPublicKeyRingCollection mergePublicKeyRing(ImportKeysResult importKeysResult, PGPPublicKeyRingCollection publicKeyRingCollection, final PGPPublicKeyRing publicKeyRing) throws PGPException {
-		assertNotNull("publicKeyRingCollection", publicKeyRingCollection);
-		assertNotNull("publicKeyRing", publicKeyRing);
+		assertNotNull(publicKeyRingCollection, "publicKeyRingCollection");
+		assertNotNull(publicKeyRing, "publicKeyRing");
 
 		final PgpKeyId masterKeyId = new PgpKeyId(publicKeyRing.getPublicKey().getKeyID());
 		ImportedMasterKey importedMasterKey = importKeysResult.getPgpKeyId2ImportedMasterKey().get(masterKeyId);
@@ -437,8 +437,8 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 	}
 
 	private PGPPublicKeyRing mergePublicKey(PGPPublicKeyRing publicKeyRing, final PGPPublicKey publicKey) {
-		assertNotNull("publicKeyRing", publicKeyRing);
-		assertNotNull("publicKey", publicKey);
+		assertNotNull(publicKeyRing, "publicKeyRing");
+		assertNotNull(publicKey, "publicKey");
 
 		PGPPublicKey oldPublicKey = publicKeyRing.getPublicKey(publicKey.getKeyID());
 		if (oldPublicKey == null)
@@ -478,8 +478,8 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 	}
 
 	private PGPPublicKey mergeKeySignature(PGPPublicKey publicKey, final PGPSignature signature) {
-		assertNotNull("publicKey", publicKey);
-		assertNotNull("signature", signature);
+		assertNotNull(publicKey, "publicKey");
+		assertNotNull(signature, "signature");
 
 		PGPSignature oldSignature = getKeySignature(publicKey, signature);
 		if (oldSignature == null)
@@ -489,9 +489,9 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 	}
 
 	private PGPPublicKey mergeUserIdSignature(PGPPublicKey publicKey, final String userId, final PGPSignature signature) {
-		assertNotNull("publicKey", publicKey);
-		assertNotNull("userId", userId);
-		assertNotNull("signature", signature);
+		assertNotNull(publicKey, "publicKey");
+		assertNotNull(userId, "userId");
+		assertNotNull(signature, "signature");
 
 		PGPSignature oldSignature = getUserIdSignature(publicKey, userId, signature);
 		if (oldSignature == null)
@@ -501,9 +501,9 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 	}
 
 	private PGPPublicKey mergeUserAttributeSignature(PGPPublicKey publicKey, final PGPUserAttributeSubpacketVector userAttribute, final PGPSignature signature) {
-		assertNotNull("publicKey", publicKey);
-		assertNotNull("userAttribute", userAttribute);
-		assertNotNull("signature", signature);
+		assertNotNull(publicKey, "publicKey");
+		assertNotNull(userAttribute, "userAttribute");
+		assertNotNull(signature, "signature");
 
 		PGPSignature oldSignature = getUserAttributeSignature(publicKey, userAttribute, signature);
 		if (oldSignature == null)
@@ -513,8 +513,8 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 	}
 
 	private static PGPSignature getKeySignature(final PGPPublicKey publicKey, final PGPSignature signature) {
-		assertNotNull("publicKey", publicKey);
-		assertNotNull("signature", signature);
+		assertNotNull(publicKey, "publicKey");
+		assertNotNull(signature, "signature");
 
 		for (@SuppressWarnings("unchecked") final Iterator<?> it = nullToEmpty(publicKey.getKeySignatures()); it.hasNext(); ) {
 			final PGPSignature s = (PGPSignature) it.next();
@@ -525,9 +525,9 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 	}
 
 	private static PGPSignature getUserIdSignature(final PGPPublicKey publicKey, final String userId, final PGPSignature signature) {
-		assertNotNull("publicKey", publicKey);
-		assertNotNull("userId", userId);
-		assertNotNull("signature", signature);
+		assertNotNull(publicKey, "publicKey");
+		assertNotNull(userId, "userId");
+		assertNotNull(signature, "signature");
 
 		for (@SuppressWarnings("unchecked") final Iterator<?> it = nullToEmpty(publicKey.getSignaturesForID(userId)); it.hasNext(); ) {
 			final PGPSignature s = (PGPSignature) it.next();
@@ -538,9 +538,9 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 	}
 
 	private static PGPSignature getUserAttributeSignature(final PGPPublicKey publicKey, final PGPUserAttributeSubpacketVector userAttribute, final PGPSignature signature) {
-		assertNotNull("publicKey", publicKey);
-		assertNotNull("userAttribute", userAttribute);
-		assertNotNull("signature", signature);
+		assertNotNull(publicKey, "publicKey");
+		assertNotNull(userAttribute, "userAttribute");
+		assertNotNull(signature, "signature");
 
 		for (@SuppressWarnings("unchecked") final Iterator<?> it = nullToEmpty(publicKey.getSignaturesForUserAttribute(userAttribute)); it.hasNext(); ) {
 			final PGPSignature s = (PGPSignature) it.next();
@@ -559,7 +559,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 	}
 
 	private synchronized boolean importSecretKeyRing(ImportKeysResult importKeysResult, final PGPSecretKeyRing secretKeyRing) throws IOException, PGPException {
-		assertNotNull("secretKeyRing", secretKeyRing);
+		assertNotNull(secretKeyRing, "secretKeyRing");
 
 		PGPSecretKeyRingCollection oldSecretKeyRingCollection;
 
@@ -591,8 +591,8 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 	}
 
 	private PGPSecretKeyRingCollection mergeSecretKeyRing(ImportKeysResult importKeysResult, PGPSecretKeyRingCollection secretKeyRingCollection, final PGPSecretKeyRing secretKeyRing) throws PGPException {
-		assertNotNull("secretKeyRingCollection", secretKeyRingCollection);
-		assertNotNull("secretKeyRing", secretKeyRing);
+		assertNotNull(secretKeyRingCollection, "secretKeyRingCollection");
+		assertNotNull(secretKeyRing, "secretKeyRing");
 
 		final PgpKeyId masterKeyId = new PgpKeyId(secretKeyRing.getSecretKey().getKeyID());
 		ImportedMasterKey importedMasterKey = importKeysResult.getPgpKeyId2ImportedMasterKey().get(masterKeyId);
@@ -632,8 +632,8 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 	}
 
 	private PGPSecretKeyRing mergeSecretKey(PGPSecretKeyRing secretKeyRing, final PGPSecretKey secretKey) {
-		assertNotNull("secretKeyRing", secretKeyRing);
-		assertNotNull("secretKey", secretKey);
+		assertNotNull(secretKeyRing, "secretKeyRing");
+		assertNotNull(secretKey, "secretKey");
 
 		PGPSecretKey oldSecretKey = secretKeyRing.getSecretKey(secretKey.getKeyID());
 		if (oldSecretKey == null)
@@ -652,12 +652,12 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 	}
 
 	public BcPgpKey getBcPgpKey(final PgpKey pgpKey) {
-		final PgpKeyId pgpKeyId = assertNotNull("pgpKey", pgpKey).getPgpKeyId();
+		final PgpKeyId pgpKeyId = assertNotNull(pgpKey, "pgpKey").getPgpKeyId();
 		return getBcPgpKey(pgpKeyId);
 	}
 
 	public BcPgpKey getBcPgpKey(final PgpKeyId pgpKeyId) {
-		assertNotNull("pgpKeyId", pgpKeyId);
+		assertNotNull(pgpKeyId, "pgpKeyId");
 		loadIfNeeded();
 		final BcPgpKey bcPgpKey = pgpKeyId2bcPgpKey.get(pgpKeyId);
 		return bcPgpKey;
@@ -876,7 +876,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 
 	@Override
 	public PgpKeyValidity getKeyValidity(PgpKey pgpKey) {
-		assertNotNull("pgpKey", pgpKey);
+		assertNotNull(pgpKey, "pgpKey");
 		if (pgpKey.getMasterKey() != null)
 			pgpKey = pgpKey.getMasterKey();
 
@@ -900,8 +900,8 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 
 	@Override
 	public PgpKeyValidity getKeyValidity(PgpKey pgpKey, final String userId) {
-		assertNotNull("pgpKey", pgpKey);
-		assertNotNull("userId", userId);
+		assertNotNull(pgpKey, "pgpKey");
+		assertNotNull(userId, "userId");
 		if (pgpKey.getMasterKey() != null)
 			pgpKey = pgpKey.getMasterKey();
 
@@ -924,7 +924,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 	}
 
 	private static PgpKeyValidity toPgpKeyValidity(final Validity validity) {
-		switch (assertNotNull("validity", validity)) {
+		switch (assertNotNull(validity, "validity")) {
 			case NONE:
 			case UNDEFINED:
 				return PgpKeyValidity.NOT_TRUSTED;
@@ -941,7 +941,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 
 	@Override
 	public void setDisabled(PgpKey pgpKey, boolean disabled) {
-		assertNotNull("pgpKey", pgpKey);
+		assertNotNull(pgpKey, "pgpKey");
 		if (pgpKey.getMasterKey() != null)
 			pgpKey = pgpKey.getMasterKey();
 
@@ -956,7 +956,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 
 	@Override
 	public PgpOwnerTrust getOwnerTrust(PgpKey pgpKey) {
-		assertNotNull("pgpKey", pgpKey);
+		assertNotNull(pgpKey, "pgpKey");
 		if (pgpKey.getMasterKey() != null)
 			pgpKey = pgpKey.getMasterKey();
 
@@ -987,8 +987,8 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 
 	@Override
 	public void setOwnerTrust(PgpKey pgpKey, final PgpOwnerTrust ownerTrust) {
-		assertNotNull("pgpKey", pgpKey);
-		assertNotNull("ownerTrust", ownerTrust);
+		assertNotNull(pgpKey, "pgpKey");
+		assertNotNull(ownerTrust, "ownerTrust");
 
 		if (ownerTrust == PgpOwnerTrust.UNSPECIFIED)
 			throw new IllegalArgumentException("ownerTrust cannot be set to UNSPECIFIED!");
@@ -1103,7 +1103,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 	}
 
 	private int signatureTypeFromEnum(final PgpSignatureType signatureType) {
-		switch (assertNotNull("signatureType", signatureType)) {
+		switch (assertNotNull(signatureType, "signatureType")) {
 			case BINARY_DOCUMENT:
 				return PGPSignature.BINARY_DOCUMENT;
 			case CANONICAL_TEXT_DOCUMENT:
@@ -1276,7 +1276,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 	}
 
 	private File getLocalRevisionPropertiesFile(final String pgpKeyIdRange) {
-		assertNotNull("pgpKeyIdRange", pgpKeyIdRange);
+		assertNotNull(pgpKeyIdRange, "pgpKeyIdRange");
 		final File dir = createFile(getConfigDir(), "gpgLocalRevision");
 		final File file = createFile(dir, pgpKeyIdRange + ".properties");
 		file.getParentFile().mkdirs();
@@ -1284,7 +1284,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 	}
 
 	private Object getPgpKeyIdRangeMutex(final String pgpKeyIdRange) {
-		assertNotNull("pgpKeyIdRange", pgpKeyIdRange);
+		assertNotNull(pgpKeyIdRange, "pgpKeyIdRange");
 		synchronized (pgpKeyIdRange2Mutex) {
 			Object mutex = pgpKeyIdRange2Mutex.get(pgpKeyIdRange);
 			if (mutex == null) {
@@ -1296,7 +1296,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 	}
 
 	private String getPgpKeyIdRange(final PgpKeyId pgpKeyId) {
-		assertNotNull("pgpKeyId", pgpKeyId);
+		assertNotNull(pgpKeyId, "pgpKeyId");
 		final int range1 = ((int) pgpKeyId.longValue()) & 0xff;
 //		final int range2 = ((int) (pgpKeyId.longValue() >>> 8)) & 0xff;
 //		return encodeHexStr(new byte[] { (byte)range2 }) + '/' + encodeHexStr(new byte[] { (byte)range1 });
@@ -1359,8 +1359,8 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 
 	@Override
 	public boolean testPassphrase(final PgpKey pgpKey, final char[] passphrase) throws IllegalArgumentException {
-		assertNotNull("pgpKey", pgpKey);
-		assertNotNull("passphrase", passphrase); // empty for no passphrase! never null!
+		assertNotNull(pgpKey, "pgpKey");
+		assertNotNull(passphrase, "passphrase"); // empty for no passphrase! never null!
 		final BcPgpKey bcPgpKey = getBcPgpKeyOrFail(pgpKey);
 		final PGPSecretKey secretKey = bcPgpKey.getSecretKey();
 		if (secretKey == null)
@@ -1385,7 +1385,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 
 	@Override
 	public PgpKey createPgpKey(final CreatePgpKeyParam createPgpKeyParam) {
-		assertNotNull("createPgpKeyParam", createPgpKeyParam);
+		assertNotNull(createPgpKeyParam, "createPgpKeyParam");
 		try {
 			final Pair<PGPPublicKeyRing, PGPSecretKeyRing> pair = createPGPSecretKeyRing(createPgpKeyParam);
 			final PGPPublicKeyRing pgpPublicKeyRing = pair.a;
@@ -1399,7 +1399,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 
 			final PGPSecretKey secretKey = pgpSecretKeyRing.getSecretKey();
 			final PgpKey pgpKey = getPgpKey(new PgpKeyId(secretKey.getKeyID()));
-			assertNotNull("pgpKey", pgpKey);
+			assertNotNull(pgpKey, "pgpKey");
 			return pgpKey;
 		} catch (IOException | NoSuchAlgorithmException | PGPException e) {
 			throw new RuntimeException(e);
@@ -1417,7 +1417,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 	}
 
 	private Pair<PGPPublicKeyRing, PGPSecretKeyRing> createPGPSecretKeyRing(final CreatePgpKeyParam createPgpKeyParam) throws PGPException, NoSuchAlgorithmException {
-		assertNotNull("createPgpKeyParam", createPgpKeyParam);
+		assertNotNull(createPgpKeyParam, "createPgpKeyParam");
 
 		final List<PgpUserId> secondaryUserIds = new ArrayList<>(createPgpKeyParam.getUserIds());
 		if (secondaryUserIds.isEmpty())
@@ -1538,12 +1538,12 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 			PGPContentSignerBuilder signerBuilder,
 			final PGPSignatureSubpacketVector hashedSubpackets,
 			final PGPSignatureSubpacketVector unhashedSubpackets) throws PGPException {
-		assertNotNull("publicKeyRing", publicKeyRing);
-		assertNotNull("userId", userId);
+		assertNotNull(publicKeyRing, "publicKeyRing");
+		assertNotNull(userId, "userId");
 
 		final PGPPublicKey masterPublicKey = getMasterKeyOrFail(publicKeyRing);
 		final PGPSecretKey masterSecretKey = secretKeyRing.getSecretKey(masterPublicKey.getKeyID());
-		assertNotNull("masterSecretKey", masterSecretKey);
+		assertNotNull(masterSecretKey, "masterSecretKey");
 		final PGPPrivateKey privateKey = extractPrivateKey(masterSecretKey, passphrase);
 
 		final PGPSignatureGenerator sGen = new PGPSignatureGenerator(signerBuilder);
@@ -1737,11 +1737,11 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 	@Override
 	public void certify(final CertifyPgpKeyParam certifyPgpKeyParam) {
 		try {
-			assertNotNull("certifyPgpKeyParam", certifyPgpKeyParam);
-			PgpKey pgpKey = assertNotNull("certifyPgpKeyParam.pgpKey", certifyPgpKeyParam.getPgpKey());
-			PgpKey signPgpKey = assertNotNull("certifyPgpKeyParam.signPgpKey", certifyPgpKeyParam.getSignPgpKey());
-			final PgpSignatureType certificationLevel = assertNotNull("certifyPgpKeyParam.certificationLevel", certifyPgpKeyParam.getCertificationLevel());
-			final HashAlgorithm hashAlgorithm = assertNotNull("certifyPgpKeyParam.hashAlgorithm", certifyPgpKeyParam.getHashAlgorithm());
+			assertNotNull(certifyPgpKeyParam, "certifyPgpKeyParam");
+			PgpKey pgpKey = assertNotNull(certifyPgpKeyParam.getPgpKey(), "certifyPgpKeyParam.pgpKey");
+			PgpKey signPgpKey = assertNotNull(certifyPgpKeyParam.getSignPgpKey(), "certifyPgpKeyParam.signPgpKey");
+			final PgpSignatureType certificationLevel = assertNotNull(certifyPgpKeyParam.getCertificationLevel(), "certifyPgpKeyParam.certificationLevel");
+			final HashAlgorithm hashAlgorithm = assertNotNull(certifyPgpKeyParam.getHashAlgorithm(), "certifyPgpKeyParam.hashAlgorithm");
 
 			if (pgpKey.getMasterKey() != null)
 				pgpKey = pgpKey.getMasterKey();

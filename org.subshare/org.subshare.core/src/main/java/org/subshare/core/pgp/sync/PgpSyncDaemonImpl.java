@@ -23,7 +23,7 @@ public class PgpSyncDaemonImpl extends SyncDaemonImpl implements PgpSyncDaemon {
 
 	@Override
 	protected Sync createSync(final Server server) {
-		assertNotNull("server", server);
+		assertNotNull(server, "server");
 		return new PgpSync(server);
 	}
 

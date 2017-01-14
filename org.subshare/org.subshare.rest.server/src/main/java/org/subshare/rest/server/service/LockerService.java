@@ -62,8 +62,8 @@ public class LockerService {
 	@Path("{pgpKeyId}/{lockerContentName}")
 	@Produces(MediaType.APPLICATION_XML)
 	public UidList getLockerContentVersions() {
-		assertNotNull("pgpKeyId", pgpKeyId);
-		assertNotNull("lockerContentName", lockerContentName);
+		assertNotNull(pgpKeyId, "pgpKeyId");
+		assertNotNull(lockerContentName, "lockerContentName");
 
 		final UidList result = new UidList();
 		final File dir = createFile(lockerDir, pgpKeyId.toString(), lockerContentName);
@@ -90,17 +90,17 @@ public class LockerService {
 		PgpSignature pgpSignature = encryptedDataFile.assertManifestSignatureValid();
 
 		final PgpKeyId signaturePgpKeyId = pgpSignature.getPgpKeyId(); // likely a sub-key
-		assertNotNull("pgpSignature.pgpKeyId", signaturePgpKeyId);
+		assertNotNull(signaturePgpKeyId, "pgpSignature.pgpKeyId");
 		final PgpKey signaturePgpKey = pgp.getPgpKey(signaturePgpKeyId);
-		assertNotNull("pgp.getPgpKey(signaturePgpKeyId=" + signaturePgpKeyId + ")", signaturePgpKey);
+		assertNotNull(signaturePgpKey, "pgp.getPgpKey(signaturePgpKeyId=" + signaturePgpKeyId + ")");
 
 		pgpKeyId = signaturePgpKey.getMasterKey().getPgpKeyId();
 
 		lockerContentName = encryptedDataFile.getContentName();
-		assertNotNull("encryptedDataFile.contentName", lockerContentName);
+		assertNotNull(lockerContentName, "encryptedDataFile.contentName");
 
 		final Uid lockerContentVersion = encryptedDataFile.getContentVersion();
-		assertNotNull("encryptedDataFile.contentVersion", lockerContentVersion);
+		assertNotNull(lockerContentVersion, "encryptedDataFile.contentVersion");
 
 // We cannot verify the signatures of the signed+encrypted data, because OpenPGP first signs and then encrypts.
 // This verification is thus only possible on the client-side (it's done in
@@ -147,9 +147,9 @@ public class LockerService {
 	@Path("{pgpKeyId}/{lockerContentName}/{version}")
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
 	public Response getLockerEncryptedDataFile(@PathParam("version") final String version) {
-		assertNotNull("version", version);
-		assertNotNull("pgpKeyId", pgpKeyId);
-		assertNotNull("lockerContentName", lockerContentName);
+		assertNotNull(version, "version");
+		assertNotNull(pgpKeyId, "pgpKeyId");
+		assertNotNull(lockerContentName, "lockerContentName");
 
 		final File file = createFile(lockerDir, pgpKeyId.toString(), lockerContentName, version.toString() + DATA_FILE_SUFFIX);
 		if (! file.exists())
@@ -179,7 +179,7 @@ public class LockerService {
 	}
 
 	private static byte[] safeRead(final InputStream inputStream) throws IOException {
-		assertNotNull("inputStream", inputStream);
+		assertNotNull(inputStream, "inputStream");
 
 		// To protect this server, we throw an exception, if the client tries to upload more than this:
 		final int maxBytesLimit = 5 /* MiB */ * 1024 /* KiB */ * 1024 /* B */;

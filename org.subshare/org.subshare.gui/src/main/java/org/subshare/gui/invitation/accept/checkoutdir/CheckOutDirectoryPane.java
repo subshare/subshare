@@ -20,7 +20,7 @@ public class CheckOutDirectoryPane extends WizardPageContentGridPane {
 	private FileTreePane fileTreePane;
 
 	public CheckOutDirectoryPane(final AcceptInvitationData acceptInvitationData) {
-		this.acceptInvitationData = assertNotNull("acceptInvitationData", acceptInvitationData);
+		this.acceptInvitationData = assertNotNull(acceptInvitationData, "acceptInvitationData");
 		loadDynamicComponentFxml(CheckOutDirectoryPane.class, this);
 		fileTreePane.fileFilterProperty().set(file -> file.isDirectory());
 		fileTreePane.getSelectedFiles().addListener((InvalidationListener) observable -> onSelectedFilesChanged());

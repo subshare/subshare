@@ -11,7 +11,7 @@ public class PaddingUtil {
 	private static final int chunkPayloadLengthBytesLength = 4;
 
 	public static byte[] addPadding(final byte[] fileData, final int paddingLength) {
-		assertNotNull("fileData", fileData);
+		assertNotNull(fileData, "fileData");
 
 		if (paddingLength < 0)
 			throw new IllegalArgumentException("paddingLength < 0");
@@ -32,7 +32,7 @@ public class PaddingUtil {
 	}
 
 	public static byte[] removePadding(final byte[] fileData) {
-		assertNotNull("fileData", fileData);
+		assertNotNull(fileData, "fileData");
 		// We do *not* pass the paddingLength as parameter but instead encode it (or more precisely the payload-length)
 		// into the fileData to ensure we *never* encounter an inconsistency between data and meta-data. Such
 		// inconsistencies may happen, if a file is modified during transport and in our current solution, this

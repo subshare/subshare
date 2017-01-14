@@ -14,7 +14,7 @@ public class IssueInvitationDestWizardPage extends WizardPage {
 
 	public IssueInvitationDestWizardPage(final IssueInvitationData issueInvitationData) {
 		super("Destination directory");
-		this.issueInvitationData = assertNotNull("issueInvitationData", issueInvitationData);
+		this.issueInvitationData = assertNotNull(issueInvitationData, "issueInvitationData");
 		shownRequired.set(true);
 	}
 

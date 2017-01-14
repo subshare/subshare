@@ -284,9 +284,9 @@ public class Permission extends Entity implements WriteProtected, AutoTrackLocal
 
 	@Override
 	public Uid getCryptoRepoFileIdControllingPermissions() {
-		assertNotNull("permissionSet", permissionSet);
-		return assertNotNull("permissionSet.cryptoRepoFile.cryptoRepoFileId",
-				assertNotNull("permissionSet.cryptoRepoFile", permissionSet.getCryptoRepoFile()).getCryptoRepoFileId());
+		assertNotNull(permissionSet, "permissionSet");
+		return assertNotNull(assertNotNull(permissionSet.getCryptoRepoFile(), "permissionSet.cryptoRepoFile").getCryptoRepoFileId(),
+				"permissionSet.cryptoRepoFile.cryptoRepoFileId");
 	}
 
 	@Override

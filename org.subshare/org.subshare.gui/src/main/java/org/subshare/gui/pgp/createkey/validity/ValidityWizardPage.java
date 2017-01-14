@@ -14,7 +14,7 @@ public class ValidityWizardPage extends WizardPage {
 
 	public ValidityWizardPage(CreatePgpKeyParam createPgpKeyParam) {
 		super("OpenPGP key validity");
-		this.createPgpKeyParam = assertNotNull("createPgpKeyParam", createPgpKeyParam);
+		this.createPgpKeyParam = assertNotNull(createPgpKeyParam, "createPgpKeyParam");
 		setNextPage(new AdvancedWizardPage(createPgpKeyParam));
 	}
 

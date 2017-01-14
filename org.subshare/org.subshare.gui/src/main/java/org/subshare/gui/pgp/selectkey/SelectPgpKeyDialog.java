@@ -24,8 +24,8 @@ public class SelectPgpKeyDialog extends Stage {
 	private List<PgpKey> selectedPgpKeys;
 
 	public SelectPgpKeyDialog(final Window owner, final List<PgpKey> pgpKeys, final Collection<PgpKey> selectedPgpKeys, final SelectionMode selectionMode, final String headerText) {
-		assertNotNull("owner", owner);
-		assertNotNull("pgpKeys", pgpKeys);
+		assertNotNull(owner, "owner");
+		assertNotNull(pgpKeys, "pgpKeys");
 		// selectedPgpKeys may be null
 
 		setResizable(false);

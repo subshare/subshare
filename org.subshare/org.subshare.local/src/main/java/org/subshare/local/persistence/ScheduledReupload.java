@@ -31,6 +31,6 @@ public class ScheduledReupload extends Entity {
 		return repoFile;
 	}
 	public void setRepoFile(RepoFile repoFile) {
-		this.repoFile = assertNotNull("repoFile", repoFile);
+		this.repoFile = assertNotNull(repoFile, "repoFile");
 	}
 }

@@ -121,8 +121,8 @@ public class UserPane extends GridPane {
 	private final InvalidationListener emailWrapperInvalidationListener = observable -> updateEmails();
 
 	public UserPane(final EditUserManager editUserManager, final User user) {
-		this.editUserManager = assertNotNull("editUserManager", editUserManager);
-		this.user = assertNotNull("user", user);
+		this.editUserManager = assertNotNull(editUserManager, "editUserManager");
+		this.user = assertNotNull(user, "user");
 		loadDynamicComponentFxml(UserPane.class, this);
 
 		try {
@@ -174,7 +174,7 @@ public class UserPane extends GridPane {
 
 			final PgpKeyTreeItem<?> pgpKeyTreeItem = treeItem.getValue();
 			final PgpKeyPgpKeyTreeItem pgpKeyPgpKeyTreeItem = pgpKeyTreeItem.getThisOrParentPgpKeyTreeItemOfType(PgpKeyPgpKeyTreeItem.class);
-			assertNotNull("pgpKeyPgpKeyTreeItem", pgpKeyPgpKeyTreeItem);
+			assertNotNull(pgpKeyPgpKeyTreeItem, "pgpKeyPgpKeyTreeItem");
 			final PgpKey pgpKey = pgpKeyPgpKeyTreeItem.getPgpKey();
 			result.add(pgpKey);
 		}

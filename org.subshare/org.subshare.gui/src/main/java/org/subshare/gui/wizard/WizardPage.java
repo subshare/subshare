@@ -152,7 +152,7 @@ public abstract class WizardPage extends VBox {
 	 * @param wizard the {@link Wizard} this {@code WizardPage} is used in. Must not be <code>null</code>.
 	 */
 	public void setWizard(final Wizard wizard) {
-		assertNotNull("wizard", wizard); //$NON-NLS-1$
+		assertNotNull(wizard, "wizard"); //$NON-NLS-1$
 		if (this.wizard == wizard)
 			return;
 
@@ -172,7 +172,7 @@ public abstract class WizardPage extends VBox {
 
 		if (content instanceof CompletableContent) {
 			final ReadOnlyBooleanProperty contentCompleteProperty = ((CompletableContent) content).completeProperty();
-			assertNotNull("content.completeProperty()", contentCompleteProperty);
+			assertNotNull(contentCompleteProperty, "content.completeProperty()");
 			this.completeProperty().bind(contentCompleteProperty.and(shownOrNotShownRequired));
 		}
 

@@ -32,11 +32,11 @@ public class SsWebDavService extends WebDavService {
 
 	@Override
 	public void putFileData(final String path, final long offset, final byte[] fileData) {
-		assertNotNull("path", path);
-		assertNotNull("fileData", fileData);
+		assertNotNull(path, "path");
+		assertNotNull(fileData, "fileData");
 
 		try (final RepoTransport repoTransport = authenticateAndCreateLocalRepoTransport();) {
-			final UUID clientRepositoryId = assertNotNull("clientRepositoryId", repoTransport.getClientRepositoryId());
+			final UUID clientRepositoryId = assertNotNull(repoTransport.getClientRepositoryId(), "clientRepositoryId");
 			final LocalRepoManager localRepoManager = ((ContextWithLocalRepoManager) repoTransport).getLocalRepoManager();
 			final LocalRepoTransaction transaction = localRepoManager.beginReadTransaction();
 			try {

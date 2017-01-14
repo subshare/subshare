@@ -55,17 +55,17 @@ public class UserRepoKeyPublicKeyReplacementRequestDeletion extends Entity imple
 	}
 
 	public UserRepoKeyPublicKeyReplacementRequestDeletion(final UserRepoKeyPublicKeyReplacementRequest request) {
-		this(assertNotNull("request", request).getRequestId(),
-				assertNotNull("request.oldKey", assertNotNull("request", request).getOldKey()).getUserRepoKeyId());
+		this(assertNotNull(request, "request").getRequestId(),
+				assertNotNull(assertNotNull(request, "request").getOldKey(), "request.oldKey").getUserRepoKeyId());
 	}
 
 	public UserRepoKeyPublicKeyReplacementRequestDeletion(final Uid requestId, final Uid oldUserRepoKeyId) {
-		this.requestId = assertNotNull("requestId", requestId).toString();
+		this.requestId = assertNotNull(requestId, "requestId").toString();
 		this.oldUserRepoKeyId = oldUserRepoKeyId == null ? null : oldUserRepoKeyId.toString(); // allow null because of legacy data.
 	}
 
 	public Uid getRequestId() {
-		return new Uid(assertNotNull("requestId", requestId));
+		return new Uid(assertNotNull(requestId, "requestId"));
 	}
 
 	public Uid getOldUserRepoKeyId() {

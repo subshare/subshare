@@ -47,7 +47,7 @@ public class IssueInvitationWizard extends Wizard {
 	private final List<String> fileNames = new ArrayList<String>();
 
 	public IssueInvitationWizard(final IssueInvitationData issueInvitationData) {
-		this.issueInvitationData = assertNotNull("issueInvitationData", issueInvitationData);
+		this.issueInvitationData = assertNotNull(issueInvitationData, "issueInvitationData");
 		setFirstPage(new SelectUserWizardPage(issueInvitationData));
 	}
 
@@ -62,7 +62,7 @@ public class IssueInvitationWizard extends Wizard {
 	protected void finish(ProgressMonitor monitor) throws Exception {
 		final Set<User> invitees = issueInvitationData.getInvitees();
 		final File invitationTokenDirectory = issueInvitationData.getInvitationTokenDirectory();
-		assertNotNull("issueInvitationData.invitationTokenDirectory", invitationTokenDirectory);
+		assertNotNull(invitationTokenDirectory, "issueInvitationData.invitationTokenDirectory");
 
 		final UserRegistry userRegistry = UserRegistryLs.getUserRegistry();
 		final File localRoot = issueInvitationData.getLocalRepo().getLocalRoot();
@@ -135,12 +135,12 @@ public class IssueInvitationWizard extends Wizard {
 	}
 
 	private String getLocalPath() {
-		final LocalRepo localRepo = assertNotNull("issueInvitationData.localRepo", issueInvitationData.getLocalRepo());
-		return localRepo.getLocalPath(assertNotNull("issueInvitationData.invitationTargetFile", issueInvitationData.getInvitationTargetFile()));
+		final LocalRepo localRepo = assertNotNull(issueInvitationData.getLocalRepo(), "issueInvitationData.localRepo");
+		return localRepo.getLocalPath(assertNotNull(issueInvitationData.getInvitationTargetFile(), "issueInvitationData.invitationTargetFile"));
 	}
 
 	private String getFileName(final User invitee) {
-		assertNotNull("invitee", invitee);
+		assertNotNull(invitee, "invitee");
 		final StringBuilder sb = new StringBuilder();
 
 		final String firstName = invitee.getFirstName();

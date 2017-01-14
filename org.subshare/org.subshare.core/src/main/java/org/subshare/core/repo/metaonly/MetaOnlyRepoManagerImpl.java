@@ -90,7 +90,7 @@ public class MetaOnlyRepoManagerImpl implements MetaOnlyRepoManager {
 	}
 
 	private UUID getLocalRepositoryId(final File localRoot, final UUID fallbackRepositoryId) {
-		assertNotNull("localRoot", localRoot);
+		assertNotNull(localRoot, "localRoot");
 		final UUID result = localRoot2LocalRepositoryId.get(localRoot);
 		if (result == null)
 			return fallbackRepositoryId;
@@ -99,8 +99,8 @@ public class MetaOnlyRepoManagerImpl implements MetaOnlyRepoManager {
 	}
 
 	private void sync(final Server server, final ServerRepo serverRepo) {
-		assertNotNull("server", server);
-		assertNotNull("serverRepo", serverRepo);
+		assertNotNull(server, "server");
+		assertNotNull(serverRepo, "serverRepo");
 
 		final List<URL> remoteRoots = new ArrayList<URL>();
 		try (final LocalRepoManager localRepoManager = createLocalRepoManager(serverRepo);) {
@@ -177,9 +177,9 @@ public class MetaOnlyRepoManagerImpl implements MetaOnlyRepoManager {
 //	}
 
 	public ServerRepoFile getServerRepoFile(final ServerRepo serverRepo, long repoFileId) {
-		assertNotNull("serverRepo", serverRepo);
+		assertNotNull(serverRepo, "serverRepo");
 		final Server server = ServerRegistryImpl.getInstance().getServer(serverRepo.getServerId());
-		assertNotNull("serverRegistry.getServer(" + serverRepo.getServerId() + ")", server); // or should we better return null?!
+		assertNotNull(server, "serverRegistry.getServer(" + serverRepo.getServerId() + ")"); // or should we better return null?!
 
 		try (final LocalRepoManager localRepoManager = createLocalRepoManager(serverRepo);) {
 			SsLocalRepoMetaData localRepoMetaData = (SsLocalRepoMetaData) localRepoManager.getLocalRepoMetaData();
@@ -199,9 +199,9 @@ public class MetaOnlyRepoManagerImpl implements MetaOnlyRepoManager {
 
 	@Override
 	public ServerRepoFile getRootServerRepoFile(final ServerRepo serverRepo) {
-		assertNotNull("serverRepo", serverRepo);
+		assertNotNull(serverRepo, "serverRepo");
 		final Server server = ServerRegistryImpl.getInstance().getServer(serverRepo.getServerId());
-		assertNotNull("serverRegistry.getServer(" + serverRepo.getServerId() + ")", server); // or should we better return null?!
+		assertNotNull(server, "serverRegistry.getServer(" + serverRepo.getServerId() + ")"); // or should we better return null?!
 
 		try (final LocalRepoManager localRepoManager = createLocalRepoManager(serverRepo);) {
 			SsLocalRepoMetaData localRepoMetaData = (SsLocalRepoMetaData) localRepoManager.getLocalRepoMetaData();
@@ -220,7 +220,7 @@ public class MetaOnlyRepoManagerImpl implements MetaOnlyRepoManager {
 	}
 
 	protected List<ServerRepoFile> getChildServerRepoFiles(final ServerRepoFileImpl serverRepoFile) {
-		assertNotNull("serverRepoFile", serverRepoFile);
+		assertNotNull(serverRepoFile, "serverRepoFile");
 
 		final ServerRepo serverRepo = serverRepoFile.getServerRepo();
 		final long repoFileId = serverRepoFile.getRepoFileId();

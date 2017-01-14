@@ -29,7 +29,7 @@ public class RootMainTreeItem extends MainTreeItem<String> {
 //	};
 
 	public RootMainTreeItem(final TreeView<String> mainTree) {
-		this.mainTree = assertNotNull("mainTree", mainTree);
+		this.mainTree = assertNotNull(mainTree, "mainTree");
 //		this.mainTree.getSelectionModel().getSelectedItems().addListener(mainTreeSelectionListener);
 	}
 

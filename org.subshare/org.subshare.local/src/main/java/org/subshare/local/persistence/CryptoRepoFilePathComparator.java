@@ -21,8 +21,8 @@ public class CryptoRepoFilePathComparator implements Comparator<CryptoRepoFile> 
 	}
 
 	private boolean isParentOrEqual(final CryptoRepoFile parentCandidate, final CryptoRepoFile childCandidate) {
-		assertNotNull("parentCandidate", parentCandidate);
-		assertNotNull("childCandidate", childCandidate);
+		assertNotNull(parentCandidate, "parentCandidate");
+		assertNotNull(childCandidate, "childCandidate");
 
 		CryptoRepoFile crf = childCandidate;
 		while (crf != null) {

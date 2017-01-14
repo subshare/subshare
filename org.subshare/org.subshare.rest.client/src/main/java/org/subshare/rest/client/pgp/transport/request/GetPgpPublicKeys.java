@@ -19,7 +19,7 @@ public class GetPgpPublicKeys extends AbstractRequest<InputStream> {
 	private final long changedAfterLocalRevision;
 
 	public GetPgpPublicKeys(final Collection<PgpKeyId> pgpKeyIds, final long changedAfterLocalRevision) {
-		assertNotNull("pgpKeyIds", pgpKeyIds);
+		assertNotNull(pgpKeyIds, "pgpKeyIds");
 		if (pgpKeyIds instanceof PgpKeyIdList)
 			this.pgpKeyIdList = (PgpKeyIdList) pgpKeyIds;
 		else

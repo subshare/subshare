@@ -283,8 +283,8 @@ public class CryptoLink extends Entity implements WriteProtected, AutoTrackLocal
 
 	@Override
 	public Uid getCryptoRepoFileIdControllingPermissions() {
-		final CryptoRepoFile cryptoRepoFile = assertNotNull("toCryptoKey", toCryptoKey).getCryptoRepoFile();
-		return assertNotNull("cryptoRepoFile", cryptoRepoFile).getCryptoRepoFileId();
+		final CryptoRepoFile cryptoRepoFile = assertNotNull(toCryptoKey, "toCryptoKey").getCryptoRepoFile();
+		return assertNotNull(cryptoRepoFile, "cryptoRepoFile").getCryptoRepoFileId();
 	}
 
 	@Override

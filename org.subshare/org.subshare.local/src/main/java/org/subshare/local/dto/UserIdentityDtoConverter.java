@@ -8,7 +8,7 @@ import org.subshare.local.persistence.UserIdentity;
 public class UserIdentityDtoConverter {
 
 	public UserIdentityDto toUserIdentityDto(final UserIdentity userIdentity) {
-		assertNotNull("userIdentity", userIdentity);
+		assertNotNull(userIdentity, "userIdentity");
 		final UserIdentityDto userIdentityDto = new UserIdentityDto();
 		userIdentityDto.setUserIdentityId(userIdentity.getUserIdentityId());
 		userIdentityDto.setOfUserRepoKeyId(userIdentity.getOfUserRepoKeyPublicKey().getUserRepoKeyId());

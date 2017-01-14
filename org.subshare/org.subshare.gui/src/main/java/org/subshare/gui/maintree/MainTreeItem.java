@@ -151,7 +151,7 @@ public class MainTreeItem<T> extends TreeItem<String> {
 
 	protected TreeView<String> getTreeView() {
 		final MainTreeItem<?> parent = (MainTreeItem<?>) getParent();
-		assertNotNull("parent", parent);
+		assertNotNull(parent, "parent");
 		return parent.getTreeView();
 	}
 

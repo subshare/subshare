@@ -12,7 +12,7 @@ public class SearchCriteriaWizardPage extends WizardPage {
 
 	public SearchCriteriaWizardPage(final ImportPgpKeyFromServerData importPgpKeyFromServerData) {
 		super("Search criteria");
-		this.importPgpKeyFromServerData = assertNotNull("importPgpKeyFromServerData", importPgpKeyFromServerData);
+		this.importPgpKeyFromServerData = assertNotNull(importPgpKeyFromServerData, "importPgpKeyFromServerData");
 		setNextPage(new SearchResultWizardPage(importPgpKeyFromServerData));
 	}
 

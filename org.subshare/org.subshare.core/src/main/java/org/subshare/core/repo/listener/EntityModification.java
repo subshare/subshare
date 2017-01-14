@@ -12,8 +12,8 @@ public class EntityModification implements Serializable {
 	private final EntityModificationType type;
 
 	public EntityModification(final EntityId entityId, final EntityModificationType type) {
-		this.entityId = assertNotNull("entityId", entityId);
-		this.type = assertNotNull("type", type);
+		this.entityId = assertNotNull(entityId, "entityId");
+		this.type = assertNotNull(type, "type");
 	}
 
 	public EntityId getEntityId() {

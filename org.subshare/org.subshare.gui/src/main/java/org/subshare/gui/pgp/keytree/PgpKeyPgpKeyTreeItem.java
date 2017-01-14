@@ -20,7 +20,7 @@ import javafx.scene.control.TreeItem;
 public class PgpKeyPgpKeyTreeItem extends PgpKeyTreeItem<PgpKey> {
 
 	public PgpKeyPgpKeyTreeItem(final PgpKey pgpKey) {
-		super(assertNotNull("pgpKey", pgpKey));
+		super(assertNotNull(pgpKey, "pgpKey"));
 	}
 
 	public PgpKey getPgpKey() {

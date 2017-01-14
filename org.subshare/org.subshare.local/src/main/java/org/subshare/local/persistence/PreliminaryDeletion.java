@@ -35,7 +35,7 @@ public class PreliminaryDeletion extends Entity {
 	}
 
 	public void setCryptoRepoFile(CryptoRepoFile cryptoRepoFile) {
-		this.cryptoRepoFile = assertNotNull("cryptoRepoFile", cryptoRepoFile);
+		this.cryptoRepoFile = assertNotNull(cryptoRepoFile, "cryptoRepoFile");
 	}
 
 	public boolean isDeletedByIgnoreRule() {

@@ -24,8 +24,8 @@ public class PermissionDao extends Dao<Permission, PermissionDao> {
 	private static final Logger logger = LoggerFactory.getLogger(PermissionDao.class);
 
 	public Collection<Permission> getNonRevokedPermissions(final PermissionType permissionType, final Set<Uid> userRepoKeyIds) {
-		assertNotNull("permissionType", permissionType);
-		assertNotNull("userRepoKeyIds", userRepoKeyIds);
+		assertNotNull(permissionType, "permissionType");
+		assertNotNull(userRepoKeyIds, "userRepoKeyIds");
 		final List<Permission> permissions = new ArrayList<Permission>();
 		for (final Uid userRepoKeyId : userRepoKeyIds) {
 			final Collection<Permission> c = getNonRevokedPermissions( permissionType, userRepoKeyId);
@@ -35,8 +35,8 @@ public class PermissionDao extends Dao<Permission, PermissionDao> {
 	}
 
 	public Collection<Permission> getNonRevokedPermissions(final PermissionType permissionType, final Uid userRepoKeyId) {
-		assertNotNull("permissionType", permissionType);
-		assertNotNull("userRepoKeyId", userRepoKeyId);
+		assertNotNull(permissionType, "permissionType");
+		assertNotNull(userRepoKeyId, "userRepoKeyId");
 
 		final Query query = pm().newNamedQuery(getEntityClass(), "getNonRevokedPermissions_permissionType_userRepoKeyId");
 		try {
@@ -60,7 +60,7 @@ public class PermissionDao extends Dao<Permission, PermissionDao> {
 	}
 
 	public Collection<Permission> getNonRevokedPermissions(PermissionType permissionType) {
-		assertNotNull("permissionType", permissionType);
+		assertNotNull(permissionType, "permissionType");
 
 		final Query query = pm().newNamedQuery(getEntityClass(), "getNonRevokedPermissions_permissionType");
 		try {
@@ -83,16 +83,16 @@ public class PermissionDao extends Dao<Permission, PermissionDao> {
 	}
 
 	public Collection<Permission> getNonRevokedPermissions(final PermissionSet permissionSet, final PermissionType permissionType, final UserRepoKeyPublicKey userRepoKeyPublicKey) {
-		assertNotNull("permissionSet", permissionSet);
-		assertNotNull("permissionType", permissionType);
-		assertNotNull("userRepoKeyPublicKey", userRepoKeyPublicKey);
+		assertNotNull(permissionSet, "permissionSet");
+		assertNotNull(permissionType, "permissionType");
+		assertNotNull(userRepoKeyPublicKey, "userRepoKeyPublicKey");
 		return getNonRevokedPermissions(permissionSet, permissionType, userRepoKeyPublicKey.getUserRepoKeyId());
 	}
 
 	public Collection<Permission> getNonRevokedPermissions(final PermissionSet permissionSet, final PermissionType permissionType, final Set<Uid> userRepoKeyIds) {
-		assertNotNull("permissionSet", permissionSet);
-		assertNotNull("permissionType", permissionType);
-		assertNotNull("userRepoKeyIds", userRepoKeyIds);
+		assertNotNull(permissionSet, "permissionSet");
+		assertNotNull(permissionType, "permissionType");
+		assertNotNull(userRepoKeyIds, "userRepoKeyIds");
 
 		final List<Permission> permissions = new ArrayList<Permission>();
 		for (final Uid userRepoKeyId : userRepoKeyIds) {
@@ -103,9 +103,9 @@ public class PermissionDao extends Dao<Permission, PermissionDao> {
 	}
 
 	public Collection<Permission> getNonRevokedPermissions(final PermissionSet permissionSet, final PermissionType permissionType, final Uid userRepoKeyId) {
-		assertNotNull("permissionSet", permissionSet);
-		assertNotNull("permissionType", permissionType);
-		assertNotNull("userRepoKeyId", userRepoKeyId);
+		assertNotNull(permissionSet, "permissionSet");
+		assertNotNull(permissionType, "permissionType");
+		assertNotNull(userRepoKeyId, "userRepoKeyId");
 
 		final Query query = pm().newNamedQuery(getEntityClass(), "getNonRevokedPermissions_permissionSet_permissionType_userRepoKeyId");
 		try {
@@ -131,9 +131,9 @@ public class PermissionDao extends Dao<Permission, PermissionDao> {
 
 	public Collection<Permission> getValidPermissions(
 			final PermissionType permissionType, final Uid userRepoKeyId, final Date timestamp) {
-		assertNotNull("permissionType", permissionType);
-		assertNotNull("userRepoKeyId", userRepoKeyId);
-		assertNotNull("timestamp", timestamp);
+		assertNotNull(permissionType, "permissionType");
+		assertNotNull(userRepoKeyId, "userRepoKeyId");
+		assertNotNull(timestamp, "timestamp");
 
 		final Query query = pm().newNamedQuery(getEntityClass(), "getValidPermissions_permissionType_userRepoKeyId_timestamp");
 		try {
@@ -159,10 +159,10 @@ public class PermissionDao extends Dao<Permission, PermissionDao> {
 
 	public Collection<Permission> getValidPermissions(
 			final PermissionSet permissionSet, final PermissionType permissionType, final Uid userRepoKeyId, final Date timestamp) {
-		assertNotNull("permissionSet", permissionSet);
-		assertNotNull("permissionType", permissionType);
-		assertNotNull("userRepoKeyId", userRepoKeyId);
-		assertNotNull("timestamp", timestamp);
+		assertNotNull(permissionSet, "permissionSet");
+		assertNotNull(permissionType, "permissionType");
+		assertNotNull(userRepoKeyId, "userRepoKeyId");
+		assertNotNull(timestamp, "timestamp");
 
 		final Query query = pm().newNamedQuery(getEntityClass(), "getValidPermissions_permissionSet_permissionType_userRepoKeyId_timestamp");
 		try {
@@ -188,7 +188,7 @@ public class PermissionDao extends Dao<Permission, PermissionDao> {
 	}
 
 	public Collection<Permission> getPermissions(final UserRepoKeyPublicKey userRepoKeyPublicKey) {
-		assertNotNull("userRepoKeyPublicKey", userRepoKeyPublicKey);
+		assertNotNull(userRepoKeyPublicKey, "userRepoKeyPublicKey");
 
 		final Query query = pm().newNamedQuery(getEntityClass(), "getPermissions_userRepoKeyPublicKey");
 		try {
@@ -211,8 +211,8 @@ public class PermissionDao extends Dao<Permission, PermissionDao> {
 	}
 
 	public long getPermissionCountOfDirectChildCryptoRepoFiles(final CryptoRepoFile parentCryptoRepoFile, final PermissionType permissionType) {
-		assertNotNull("parentCryptoRepoFile", parentCryptoRepoFile);
-		assertNotNull("permissionType", permissionType);
+		assertNotNull(parentCryptoRepoFile, "parentCryptoRepoFile");
+		assertNotNull(permissionType, "permissionType");
 
 		final Query query = pm().newNamedQuery(getEntityClass(), "PermissionCountOfDirectChildCryptoRepoFiles_parentCryptoRepoFile_permissionType");
 		try {
@@ -253,7 +253,7 @@ public class PermissionDao extends Dao<Permission, PermissionDao> {
 	}
 
 	public Permission getPermission(final Uid permissionId) {
-		assertNotNull("permissionId", permissionId);
+		assertNotNull(permissionId, "permissionId");
 		final Query query = pm().newNamedQuery(getEntityClass(), "getPermission_permissionId");
 		try {
 			final Permission permission = (Permission) query.execute(permissionId.toString());
@@ -264,7 +264,7 @@ public class PermissionDao extends Dao<Permission, PermissionDao> {
 	}
 
 	public Collection<Permission> getPermissionsSignedBy(final Uid signingUserRepoKeyId) {
-		assertNotNull("signingUserRepoKeyId", signingUserRepoKeyId);
+		assertNotNull(signingUserRepoKeyId, "signingUserRepoKeyId");
 		final Query query = pm().newNamedQuery(getEntityClass(), "getPermissions_signingUserRepoKeyId");
 		try {
 			long startTimestamp = System.currentTimeMillis();

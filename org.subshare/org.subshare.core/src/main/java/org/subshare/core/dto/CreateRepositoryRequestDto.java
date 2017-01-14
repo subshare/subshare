@@ -39,7 +39,7 @@ public class CreateRepositoryRequestDto implements PgpSignable {
 
 	@Override
 	public InputStream getSignedData(int signedDataVersion) {
-		assertNotNull("serverRepositoryId", serverRepositoryId);
+		assertNotNull(serverRepositoryId, "serverRepositoryId");
 		try {
 			return new MultiInputStream(
 					InputStreamSource.Helper.createInputStreamSource(serverRepositoryId)

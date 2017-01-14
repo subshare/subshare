@@ -55,8 +55,8 @@ public class CertifyPgpKeyPane extends WizardPageContentGridPane {
 	private Map<PgpSignatureType, RadioButton> certificationLevel2RadioButton = new HashMap<>();
 
 	public CertifyPgpKeyPane(final CertifyPgpKeyData certifyPgpKeyData) {
-		this.certifyPgpKeyData = assertNotNull("certifyPgpKeyData", certifyPgpKeyData);
-		this.pgpKey = assertNotNull("certifyPgpKeyData.pgpKey", certifyPgpKeyData.getPgpKey());
+		this.certifyPgpKeyData = assertNotNull(certifyPgpKeyData, "certifyPgpKeyData");
+		this.pgpKey = assertNotNull(certifyPgpKeyData.getPgpKey(), "certifyPgpKeyData.pgpKey");
 		loadDynamicComponentFxml(CertifyPgpKeyPane.class, this);
 
 		if (CertifyPgpKeyPane.class == this.getClass())
@@ -87,7 +87,7 @@ public class CertifyPgpKeyPane extends WizardPageContentGridPane {
 	}
 
 	protected PgpSignatureType getCertificationLevelForRadioButton(final RadioButton radioButton) {
-		assertNotNull("radioButton", radioButton);
+		assertNotNull(radioButton, "radioButton");
 		return (PgpSignatureType) radioButton.getUserData();
 	}
 
@@ -110,7 +110,7 @@ public class CertifyPgpKeyPane extends WizardPageContentGridPane {
 
 		toggleGroup.selectedToggleProperty().addListener((ChangeListener<Toggle>) (observable, oldValue, newValue) -> {
 			final PgpSignatureType certificationLevel = newValue == null ? null : getCertificationLevelForRadioButton((RadioButton) newValue);
-			assertNotNull("certificationLevel", certificationLevel);
+			assertNotNull(certificationLevel, "certificationLevel");
 			certifyPgpKeyData.setCertificationLevel(certificationLevel);
 
 //			selectedCertificationLevelDescriptionText.setText(certificationLevel == null ? null : certificationLevel.getDescription());

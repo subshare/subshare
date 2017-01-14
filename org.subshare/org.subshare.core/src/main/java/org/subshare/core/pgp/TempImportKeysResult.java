@@ -11,8 +11,8 @@ public class TempImportKeysResult implements Serializable {
 	private final ImportKeysResult importKeysResult;
 
 	public TempImportKeysResult(Pgp tempPgp, ImportKeysResult importKeysResult) {
-		this.tempPgp = assertNotNull("tempPgp", tempPgp);
-		this.importKeysResult = assertNotNull("importKeysResult", importKeysResult);
+		this.tempPgp = assertNotNull(tempPgp, "tempPgp");
+		this.importKeysResult = assertNotNull(importKeysResult, "importKeysResult");
 	}
 
 	public Pgp getTempPgp() {

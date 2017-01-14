@@ -80,7 +80,7 @@ public abstract class AbstractPgpEncoder implements PgpEncoder {
 	}
 	@Override
 	public void setSymmetricEncryptionAlgorithm(final SymmetricEncryptionAlgorithm symmetricEncryptionAlgorithm) {
-		this.symmetricEncryptionAlgorithm = assertNotNull("symmetricEncryptionAlgorithm", symmetricEncryptionAlgorithm);
+		this.symmetricEncryptionAlgorithm = assertNotNull(symmetricEncryptionAlgorithm, "symmetricEncryptionAlgorithm");
 	}
 
 	@Override
@@ -89,7 +89,7 @@ public abstract class AbstractPgpEncoder implements PgpEncoder {
 	}
 	@Override
 	public void setCompressionAlgorithm(final CompressionAlgorithm compressionAlgorithm) {
-		this.compressionAlgorithm = assertNotNull("compressionAlgorithm", compressionAlgorithm);
+		this.compressionAlgorithm = assertNotNull(compressionAlgorithm, "compressionAlgorithm");
 	}
 
 	@Override
@@ -98,7 +98,7 @@ public abstract class AbstractPgpEncoder implements PgpEncoder {
 	}
 	@Override
 	public void setHashAlgorithm(final HashAlgorithm hashAlgorithm) {
-		this.hashAlgorithm = assertNotNull("hashAlgorithm", hashAlgorithm);
+		this.hashAlgorithm = assertNotNull(hashAlgorithm, "hashAlgorithm");
 	}
 
 	@Override
@@ -122,7 +122,7 @@ public abstract class AbstractPgpEncoder implements PgpEncoder {
 		return fileName;
 	}
 	public void setFileName(final String fileName) {
-		this.fileName = assertNotNull("fileName", fileName);
+		this.fileName = assertNotNull(fileName, "fileName");
 	}
 
 	protected PgpAuthenticationCallback getPgpAuthenticationCallback() {

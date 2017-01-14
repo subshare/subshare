@@ -48,7 +48,7 @@ public class LocalRepoDirectoryMainTreeItem extends MainTreeItem<File> {
 	private static final Comparator<File> fileComparator = (o1, o2) -> o1.getName().compareTo(o2.getName());
 
 	public LocalRepoDirectoryMainTreeItem(final File file) {
-		super(assertNotNull("file", file),
+		super(assertNotNull(file, "file"),
 				new ImageView(FileIconRegistry.getInstance().getIcon(file, IconSize._16x16)));
 
 		collisionIcon.addListener((InvalidationListener) observable -> updateGraphic());
@@ -142,8 +142,8 @@ public class LocalRepoDirectoryMainTreeItem extends MainTreeItem<File> {
 
 	private Image _getCollisionIcon() {
 		synchronized (LocalRepoDirectoryMainTreeItem.class) {
-			final LocalRepo localRepo = assertNotNull("localRepo", getLocalRepo());
-			final File file = assertNotNull("file", getFile());
+			final LocalRepo localRepo = assertNotNull(getLocalRepo(), "localRepo");
+			final File file = assertNotNull(getFile(), "file");
 			final String localPath = localRepo.getLocalPath(file);
 
 			try (final LocalRepoManager localRepoManager = createLocalRepoManager()) {
@@ -184,7 +184,7 @@ public class LocalRepoDirectoryMainTreeItem extends MainTreeItem<File> {
 	}
 
 	private LocalRepoManager createLocalRepoManager() {
-		final LocalRepo localRepo = assertNotNull("localRepo", getLocalRepo());
+		final LocalRepo localRepo = assertNotNull(getLocalRepo(), "localRepo");
 		return LocalRepoManagerFactoryLs.getLocalRepoManagerFactory().createLocalRepoManagerForExistingRepository(localRepo.getLocalRoot());
 	}
 

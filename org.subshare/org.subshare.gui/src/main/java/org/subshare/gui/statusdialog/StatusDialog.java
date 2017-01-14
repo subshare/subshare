@@ -13,8 +13,8 @@ public class StatusDialog extends Stage {
 	private final StatusPane statusPane;
 
 	public StatusDialog(final Window owner, final Modality modality, final String title, final String message) {
-		assertNotNull("owner", owner);
-		assertNotNull("modality", modality);
+		assertNotNull(owner, "owner");
+		assertNotNull(modality, "modality");
 
 		setTitle(title == null ? Messages.getString("StatusDialog.title") : title);
 		setResizable(false);

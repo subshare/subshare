@@ -12,7 +12,7 @@ public class CertifyPgpKeyWizardPage extends WizardPage {
 
 	public CertifyPgpKeyWizardPage(final CertifyPgpKeyData certifyPgpKeyData) {
 		super(Messages.getString("CertifyPgpKeyWizardPage.title")); //$NON-NLS-1$
-		this.certifyPgpKeyData = assertNotNull("certifyPgpKeyData", certifyPgpKeyData); //$NON-NLS-1$
+		this.certifyPgpKeyData = assertNotNull(certifyPgpKeyData, "certifyPgpKeyData"); //$NON-NLS-1$
 	}
 
 //	@Override

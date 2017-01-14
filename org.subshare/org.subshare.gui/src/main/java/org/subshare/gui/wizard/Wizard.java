@@ -115,7 +115,7 @@ public abstract class Wizard extends StackPane {
 	}
 
 	public void registerWizardPage(final WizardPage wizardPage) {
-		assertNotNull("wizardPage", wizardPage);
+		assertNotNull(wizardPage, "wizardPage");
 
 		if (wizardPage.getWizard() != null)
 			wizardPage.setWizard(this);
@@ -206,7 +206,7 @@ public abstract class Wizard extends StackPane {
 	}
 
 	protected void navTo(final WizardPage wizardPage, boolean addToHistory) {
-		assertNotNull("wizardPage", wizardPage);
+		assertNotNull(wizardPage, "wizardPage");
 		PlatformUtil.assertFxApplicationThread();
 
 		{
@@ -502,7 +502,7 @@ public abstract class Wizard extends StackPane {
 		return finishingPage;
 	}
 	public void setFinishingPage(final Parent finishingPage) {
-		assertNotNull("finishingPage", finishingPage);
+		assertNotNull(finishingPage, "finishingPage");
 		PlatformUtil.assertFxApplicationThread();
 
 		if (! (finishingPage instanceof FinishingPage))

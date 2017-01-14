@@ -24,7 +24,7 @@ public class DeletedUid {
 	public DeletedUid() { }
 
 	public DeletedUid(Uid uid) {
-		this.uid = assertNotNull("uid", uid);
+		this.uid = assertNotNull(uid, "uid");
 		this.deleted = new Date();
 	}
 

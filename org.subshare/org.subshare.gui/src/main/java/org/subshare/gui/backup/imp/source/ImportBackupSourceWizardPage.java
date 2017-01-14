@@ -14,7 +14,7 @@ public class ImportBackupSourceWizardPage extends WizardPage {
 
 	public ImportBackupSourceWizardPage(final ImportBackupData importBackupData) {
 		super("Import data from backup");
-		this.importBackupData = assertNotNull("importBackupData", importBackupData);
+		this.importBackupData = assertNotNull(importBackupData, "importBackupData");
 	}
 
 	@Override

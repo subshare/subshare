@@ -16,7 +16,7 @@ import javafx.scene.image.ImageView;
 public class FileFileTreeItem extends FileTreeItem<File> {
 
 	public FileFileTreeItem(final File file) {
-		super(assertNotNull("file", file));
+		super(assertNotNull(file, "file"));
 
 		if (! file.isAbsolute())
 			throw new IllegalArgumentException("file not absolute!");
@@ -54,7 +54,7 @@ public class FileFileTreeItem extends FileTreeItem<File> {
 
 	@Override
 	public FileTreeItem<?> findFirst(final File file) {
-		assertNotNull("file", file);
+		assertNotNull(file, "file");
 
 		if (! file.isAbsolute())
 			throw new IllegalArgumentException("file not absolute!");
@@ -95,7 +95,7 @@ public class FileFileTreeItem extends FileTreeItem<File> {
 
 	@Override
 	public List<FileTreeItem<?>> findAll(final File file) {
-		assertNotNull("file", file);
+		assertNotNull(file, "file");
 
 		if (! file.isAbsolute())
 			throw new IllegalArgumentException("file not absolute!");

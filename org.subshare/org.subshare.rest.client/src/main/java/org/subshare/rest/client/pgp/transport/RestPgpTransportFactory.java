@@ -33,7 +33,7 @@ public class RestPgpTransportFactory extends AbstractPgpTransportFactory {
 
 	@Override
 	public boolean isSupported(final URL url) {
-		return PROTOCOL_HTTP.equals(AssertUtil.assertNotNull("url", url).getProtocol())
+		return PROTOCOL_HTTP.equals(AssertUtil.assertNotNull(url, "url").getProtocol())
 				|| PROTOCOL_HTTPS.equals(url.getProtocol());
 	}
 

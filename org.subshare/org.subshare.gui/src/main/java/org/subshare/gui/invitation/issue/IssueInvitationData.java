@@ -75,7 +75,7 @@ public class IssueInvitationData {
 		return permissionType;
 	}
 	public void setPermissionType(final PermissionType permissionType) {
-		this.permissionType = assertNotNull("permissionType", permissionType);
+		this.permissionType = assertNotNull(permissionType, "permissionType");
 	}
 	public long getValidityDurationMillis() {
 		return validityDurationMillis;

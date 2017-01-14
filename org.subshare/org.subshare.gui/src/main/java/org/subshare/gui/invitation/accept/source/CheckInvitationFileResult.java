@@ -31,8 +31,8 @@ public class CheckInvitationFileResult {
 	}
 
 	public CheckInvitationFileResult(final Type type, final Severity severity, final String message, final String longText) {
-		this.type = assertNotNull("type", type);
-		this.severity = assertNotNull("severity", severity);
+		this.type = assertNotNull(type, "type");
+		this.severity = assertNotNull(severity, "severity");
 		this.message = message; // may be null!
 		this.longText = longText; // may be null!
 	}

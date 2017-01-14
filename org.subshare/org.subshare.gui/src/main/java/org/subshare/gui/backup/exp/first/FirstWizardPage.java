@@ -12,7 +12,7 @@ public class FirstWizardPage extends WizardPage {
 
 	public FirstWizardPage(final ExportBackupData exportBackupData) {
 		super("Backup needed!");
-		assertNotNull("exportBackupData", exportBackupData);
+		assertNotNull(exportBackupData, "exportBackupData");
 		setNextPage(new ExportBackupDestinationWizardPage(exportBackupData));
 	}
 

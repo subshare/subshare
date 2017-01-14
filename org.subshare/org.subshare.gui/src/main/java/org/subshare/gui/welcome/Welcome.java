@@ -22,7 +22,7 @@ public class Welcome {
 	private volatile boolean serverWizardCompleted;
 
 	public Welcome(Window owner) {
-		this.owner = assertNotNull("owner", owner);
+		this.owner = assertNotNull(owner, "owner");
 	}
 
 	private void init() {

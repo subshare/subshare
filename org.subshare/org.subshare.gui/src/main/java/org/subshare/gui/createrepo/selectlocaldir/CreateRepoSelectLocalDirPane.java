@@ -21,7 +21,7 @@ public class CreateRepoSelectLocalDirPane extends WizardPageContentGridPane {
 	private FileTreePane fileTreePane;
 
 	public CreateRepoSelectLocalDirPane(final CreateRepoData createRepoData) {
-		this.createRepoData = assertNotNull("createRepoData", createRepoData);
+		this.createRepoData = assertNotNull(createRepoData, "createRepoData");
 		loadDynamicComponentFxml(CreateRepoSelectLocalDirPane.class, this);
 		fileTreePane.fileFilterProperty().set(file -> file.isDirectory());
 		fileTreePane.getSelectedFiles().addListener((InvalidationListener) observable -> onSelectedFilesChanged());

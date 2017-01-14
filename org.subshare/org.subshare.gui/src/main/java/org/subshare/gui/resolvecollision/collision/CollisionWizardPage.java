@@ -12,7 +12,7 @@ public class CollisionWizardPage extends WizardPage {
 
 	public CollisionWizardPage(final CollisionData collisionData) {
 		super("Collision");
-		this.collisionData = assertNotNull("collisionData", collisionData);
+		this.collisionData = assertNotNull(collisionData, "collisionData");
 	}
 
 	@Override

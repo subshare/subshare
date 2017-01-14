@@ -17,8 +17,8 @@ public class PutHistoFrameDto extends VoidRequest {
 	private final HistoFrameDto histoFrameDto;
 
 	public PutHistoFrameDto(final String repositoryName, final HistoFrameDto histoFrameDto) {
-		this.repositoryName = assertNotNull("repositoryName", repositoryName);
-		this.histoFrameDto = assertNotNull("histoFrameDto", histoFrameDto);
+		this.repositoryName = assertNotNull(repositoryName, "repositoryName");
+		this.histoFrameDto = assertNotNull(histoFrameDto, "histoFrameDto");
 	}
 
 	@Override

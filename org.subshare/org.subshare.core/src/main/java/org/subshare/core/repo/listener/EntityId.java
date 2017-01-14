@@ -13,11 +13,11 @@ public class EntityId implements Serializable {
 	private final long id;
 
 	public EntityId(final Class<?> clazz, final long id) {
-		this(assertNotNull("clazz", clazz).getName(), id);
+		this(assertNotNull(clazz, "clazz").getName(), id);
 	}
 
 	public EntityId(final String className, final long id) {
-		this.className = assertNotNull("className", className);
+		this.className = assertNotNull(className, "className");
 		this.id = id;
 	}
 

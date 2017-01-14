@@ -67,7 +67,7 @@ public class SelectKeyPane extends WizardPageContentGridPane {
 	};
 
 	public SelectKeyPane(final AssignOwnerTrustData assignOwnerTrustData) {
-		this.assignOwnerTrustData = assertNotNull("assignOwnerTrustData", assignOwnerTrustData);
+		this.assignOwnerTrustData = assertNotNull(assignOwnerTrustData, "assignOwnerTrustData");
 		loadDynamicComponentFxml(SelectKeyPane.class, this);
 		assignOwnerTrustData.assignToAllPgpKeysProperty().addListener(assignToAllPgpKeysChangeListener);
 		toggleGroup.selectedToggleProperty().addListener(toggleGroupSelectedToggleListener);

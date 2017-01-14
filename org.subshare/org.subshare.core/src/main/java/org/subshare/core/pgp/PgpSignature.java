@@ -18,7 +18,7 @@ public class PgpSignature implements Serializable {
 		return pgpKeyId;
 	}
 	public void setPgpKeyId(final PgpKeyId pgpKeyId) {
-		this.pgpKeyId = assertNotNull("pgpKeyId", pgpKeyId);
+		this.pgpKeyId = assertNotNull(pgpKeyId, "pgpKeyId");
 	}
 
 	public Date getCreated() {

@@ -397,7 +397,7 @@ public class CollisionOnServerRepoToRepoSyncIT extends CollisionRepoToRepoSyncIT
 		private final RepoToRepoSyncCoordinator coordinator;
 
 		public SyncFromLocalSrcToRemoteThread(RepoToRepoSyncCoordinator coordinator) {
-			this.coordinator = assertNotNull("coordinator", coordinator);
+			this.coordinator = assertNotNull(coordinator, "coordinator");
 		}
 
 		@Override
@@ -418,7 +418,7 @@ public class CollisionOnServerRepoToRepoSyncIT extends CollisionRepoToRepoSyncIT
 		private final RepoToRepoSyncCoordinator coordinator;
 
 		public SyncFromRemoteToLocalDestThread(RepoToRepoSyncCoordinator coordinator) {
-			this.coordinator = assertNotNull("coordinator", coordinator);
+			this.coordinator = assertNotNull(coordinator, "coordinator");
 		}
 
 		@Override

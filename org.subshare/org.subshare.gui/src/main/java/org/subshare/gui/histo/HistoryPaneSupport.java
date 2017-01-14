@@ -51,12 +51,12 @@ public class HistoryPaneSupport {
 
 	public HistoryPaneSupport(final HistoryPaneContainer container) {
 		assertFxApplicationThread();
-		this.container = assertNotNull("container", container);
-		this.localRepo = assertNotNull("container.localRepo", this.container.getLocalRepo());
-		this.tabPane = assertNotNull("container.tabPane", this.container.getTabPane());
-		this.historyTab = assertNotNull("container.historyTab", this.container.getHistoryTab());
-		this.resolveCollisionInHistoryButton = assertNotNull("container.resolveCollisionInHistoryButton", this.container.getResolveCollisionInHistoryButton());
-		this.exportFromHistoryButton = assertNotNull("container.exportFromHistoryButton", this.container.getExportFromHistoryButton());
+		this.container = assertNotNull(container, "container");
+		this.localRepo = assertNotNull(this.container.getLocalRepo(), "container.localRepo");
+		this.tabPane = assertNotNull(this.container.getTabPane(), "container.tabPane");
+		this.historyTab = assertNotNull(this.container.getHistoryTab(), "container.historyTab");
+		this.resolveCollisionInHistoryButton = assertNotNull(this.container.getResolveCollisionInHistoryButton(), "container.resolveCollisionInHistoryButton");
+		this.exportFromHistoryButton = assertNotNull(this.container.getExportFromHistoryButton(), "container.exportFromHistoryButton");
 
 		tabPane.getSelectionModel().selectedItemProperty().addListener((InvalidationListener) observable -> createOrForgetHistoryPane());
 		selectedHistoCryptoRepoFileIds.addListener((InvalidationListener) observable -> selectedHistoCryptoRepoFileIdsChanged());
@@ -69,7 +69,7 @@ public class HistoryPaneSupport {
 	private void configureResolveCollisionInHistoryButton() {
 		final String imageName = "collision-resolved_24x24.png";
 		final URL imageUrl = HistoryPaneSupport.class.getResource(imageName); //$NON-NLS-1$
-		assertNotNull("imageUrl", imageUrl, "imageName = %s", imageName);
+		assertNotNull(imageUrl, "imageUrl", "imageName = %s", imageName);
 		resolveCollisionInHistoryButton.setGraphic(new ImageView(imageUrl.toString()));
 		resolveCollisionInHistoryButton.setTooltip(new Tooltip("Resolve the selected collision(s). You may also undo resolutions."));
 		resolveCollisionInHistoryButton.setOnAction(event -> resolveCollisionInHistoryButtonClicked(event));
@@ -78,7 +78,7 @@ public class HistoryPaneSupport {
 	private void configureExportFromHistoryButton() {
 		final String imageName = "export-from-history_24x24.png";
 		final URL imageUrl = HistoryPaneSupport.class.getResource(imageName); //$NON-NLS-1$
-		assertNotNull("imageUrl", imageUrl, "imageName = %s", imageName);
+		assertNotNull(imageUrl, "imageUrl", "imageName = %s", imageName);
 		exportFromHistoryButton.setGraphic(new ImageView(imageUrl.toString()));
 		exportFromHistoryButton.setTooltip(new Tooltip("Export the selected file(s) from the history."));
 		exportFromHistoryButton.setOnAction(event -> exportFromHistoryButtonClicked(event));

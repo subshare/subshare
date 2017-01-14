@@ -28,11 +28,11 @@ public class SignableVerifier {
 	private final Map<SignerTransformation, Signer> signerTransformation2Signer = new HashMap<SignerTransformation, Signer>(2);
 
 	public SignableVerifier(final UserRepoKeyPublicKeyLookup lookup) {
-		this.lookup = assertNotNull("lookup", lookup);
+		this.lookup = assertNotNull(lookup, "lookup");
 	}
 
 	public void verify(final Signable signable) throws SignatureException {
-		final Signature signature = assertNotNull("signable", signable).getSignature();
+		final Signature signature = assertNotNull(signable, "signable").getSignature();
 		if (signature == null)
 			throw new SignatureException("There is no signature! signable.signature == null");
 
@@ -106,7 +106,7 @@ public class SignableVerifier {
 	}
 
 	private Signer getSigner(final SignerTransformation signerTransformation) {
-		assertNotNull("signerTransformation", signerTransformation);
+		assertNotNull(signerTransformation, "signerTransformation");
 		Signer signer = signerTransformation2Signer.get(signerTransformation);
 		if (signer == null) {
 			try {

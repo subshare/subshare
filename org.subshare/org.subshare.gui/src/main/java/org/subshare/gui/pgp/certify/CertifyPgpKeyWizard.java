@@ -15,8 +15,8 @@ public class CertifyPgpKeyWizard extends Wizard {
 	private CertifyPgpKeyParam certifyPgpKeyParam;
 
 	public CertifyPgpKeyWizard(final CertifyPgpKeyData certifyPgpKeyData) {
-		this.certifyPgpKeyData = assertNotNull("certifyPgpKeyData", certifyPgpKeyData); //$NON-NLS-1$
-		assertNotNull("certifyPgpKeyData.pgpKey", certifyPgpKeyData.getPgpKey()); //$NON-NLS-1$
+		this.certifyPgpKeyData = assertNotNull(certifyPgpKeyData, "certifyPgpKeyData"); //$NON-NLS-1$
+		assertNotNull(certifyPgpKeyData.getPgpKey(), "certifyPgpKeyData.pgpKey"); //$NON-NLS-1$
 		setFirstPage(new CertifyPgpKeyWizardPage(certifyPgpKeyData));
 	}
 

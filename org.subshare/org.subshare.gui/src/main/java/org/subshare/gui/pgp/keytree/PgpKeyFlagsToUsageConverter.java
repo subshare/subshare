@@ -16,7 +16,7 @@ public class PgpKeyFlagsToUsageConverter {
 	}
 
 	public String toUsage(final Set<PgpKeyFlag> pgpKeyFlags) {
-		assertNotNull("pgpKeyFlags", pgpKeyFlags);
+		assertNotNull(pgpKeyFlags, "pgpKeyFlags");
 
 		final StringBuilder sb = new StringBuilder();
 		for (final PgpKeyFlag pgpKeyFlag : pgpKeyFlags) {

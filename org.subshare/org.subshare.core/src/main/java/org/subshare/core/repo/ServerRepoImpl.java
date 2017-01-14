@@ -18,7 +18,7 @@ public class ServerRepoImpl extends AbstractBean<ServerRepo.Property> implements
 	private Date changed = new Date();
 
 	public ServerRepoImpl(final UUID repositoryId) {
-		this.repositoryId = assertNotNull("repositoryId)", repositoryId);
+		this.repositoryId = assertNotNull(repositoryId, "repositoryId)");
 	}
 
 	@Override
@@ -72,7 +72,7 @@ public class ServerRepoImpl extends AbstractBean<ServerRepo.Property> implements
 	}
 	@Override
 	public void setChanged(final Date changed) {
-		assertNotNull("changed", changed);
+		assertNotNull(changed, "changed");
 		setPropertyValue(PropertyEnum.changed, changed);
 	}
 

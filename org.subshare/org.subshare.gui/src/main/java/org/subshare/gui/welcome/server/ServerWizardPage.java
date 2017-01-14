@@ -18,7 +18,7 @@ public class ServerWizardPage extends WizardPage {
 
 	public ServerWizardPage(final ServerData serverData) {
 		super("Server");
-		this.serverData = assertNotNull("serverData", serverData);
+		this.serverData = assertNotNull(serverData, "serverData");
 		acceptInvitationSourceWizardPage = new AcceptInvitationSourceWizardPage(serverData.getAcceptInvitationData());
 		acceptInvitationInvalidationListener = observable -> {
 			nextPageProperty().set(serverData.acceptInvitationProperty().get() ? acceptInvitationSourceWizardPage : null);

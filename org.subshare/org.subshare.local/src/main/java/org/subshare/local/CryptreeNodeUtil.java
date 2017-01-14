@@ -52,8 +52,8 @@ public class CryptreeNodeUtil {
 //	}
 
 	public static byte[] encryptLarge(final byte[] plain, final UserRepoKeyPublicKey userRepoKeyPublicKey) {
-		assertNotNull("plain", plain);
-		assertNotNull("userRepoKeyPublicKey", userRepoKeyPublicKey);
+		assertNotNull(plain, "plain");
+		assertNotNull(userRepoKeyPublicKey, "userRepoKeyPublicKey");
 
 		if (logger.isTraceEnabled())
 			logger.trace("encryptLarge: userRepoKeyId={} plain={}", userRepoKeyPublicKey.getUserRepoKeyId(), Arrays.toString(plain));
@@ -63,8 +63,8 @@ public class CryptreeNodeUtil {
 	}
 
 	public static byte[] encryptLarge(final byte[] plain, final AsymmetricKeyParameter publicKey) {
-		assertNotNull("plain", plain);
-		assertNotNull("publicKey", publicKey);
+		assertNotNull(plain, "plain");
+		assertNotNull(publicKey, "publicKey");
 		try {
 			final ByteArrayOutputStream bout = new ByteArrayOutputStream(plain.length + 10240); // don't know exactly, but I guess 10 KiB should be sufficient
 			final AsymCombiEncrypterOutputStream out = new AsymCombiEncrypterOutputStream(bout,
@@ -84,8 +84,8 @@ public class CryptreeNodeUtil {
 	}
 
 	public static byte[] decryptLarge(final byte[] encrypted, final UserRepoKey userRepoKey) {
-		assertNotNull("encrypted", encrypted);
-		assertNotNull("userRepoKey", userRepoKey);
+		assertNotNull(encrypted, "encrypted");
+		assertNotNull(userRepoKey, "userRepoKey");
 
 		if (logger.isTraceEnabled())
 			logger.trace("decryptLarge: userRepoKeyId={} encrypted={}", userRepoKey.getUserRepoKeyId(), Arrays.toString(encrypted));
@@ -95,8 +95,8 @@ public class CryptreeNodeUtil {
 	}
 
 	public static byte[] decryptLarge(final byte[] encrypted, final AsymmetricKeyParameter privateKey) {
-		assertNotNull("encrypted", encrypted);
-		assertNotNull("privateKey", privateKey);
+		assertNotNull(encrypted, "encrypted");
+		assertNotNull(privateKey, "privateKey");
 		try {
 			final AsymCombiDecrypterInputStream in = new AsymCombiDecrypterInputStream(
 					new ByteArrayInputStream(encrypted), privateKey);
@@ -141,8 +141,8 @@ public class CryptreeNodeUtil {
 	}
 
 	public static byte[] encrypt(final byte[] plain, final CipherParameters key) {
-		assertNotNull("plain", plain);
-		assertNotNull("key", key);
+		assertNotNull(plain, "plain");
+		assertNotNull(key, "key");
 
 		if (key instanceof AsymmetricKeyParameter) {
 			final boolean large = plain.length > MAX_ASYMMETRIC_PLAIN_SIZE;
@@ -166,8 +166,8 @@ public class CryptreeNodeUtil {
 	}
 
 	public static byte[] decrypt(final byte[] encrypted, final CipherParameters key) {
-		assertNotNull("encrypted", encrypted);
-		assertNotNull("key", key);
+		assertNotNull(encrypted, "encrypted");
+		assertNotNull(key, "key");
 
 		if (key instanceof AsymmetricKeyParameter) {
 			final int magicByte = encrypted[0] & 0xff;
@@ -191,9 +191,9 @@ public class CryptreeNodeUtil {
 	}
 
 	public static CryptoLink createCryptoLink(final CryptreeNode cryptreeNode, final PlainCryptoKey fromPlainCryptoKey, final PlainCryptoKey toPlainCryptoKey) {
-		assertNotNull("cryptreeNode", cryptreeNode);
-		assertNotNull("fromPlainCryptoKey", fromPlainCryptoKey);
-		assertNotNull("toPlainCryptoKey", toPlainCryptoKey);
+		assertNotNull(cryptreeNode, "cryptreeNode");
+		assertNotNull(fromPlainCryptoKey, "fromPlainCryptoKey");
+		assertNotNull(toPlainCryptoKey, "toPlainCryptoKey");
 		final CryptoLink cryptoLink = new CryptoLink();
 		cryptoLink.setFromCryptoKey(fromPlainCryptoKey.getCryptoKey());
 		cryptoLink.setToCryptoKey(toPlainCryptoKey.getCryptoKey());
@@ -207,11 +207,11 @@ public class CryptreeNodeUtil {
 	}
 
 	private static void assertToCryptoKeyBelongsToThisCryptreeNode(final CryptreeNode cryptreeNode, final CryptoLink cryptoLink) {
-		assertNotNull("cryptreeNode", cryptreeNode);
-		assertNotNull("cryptoLink", cryptoLink);
-		final CryptoKey toCryptoKey = assertNotNull("cryptoLink.toCryptoKey", cryptoLink.getToCryptoKey());
-		assertNotNull("cryptreeNode.cryptoRepoFile", cryptreeNode.getCryptoRepoFile());
-		assertNotNull("toCryptoKey.cryptoRepoFile", toCryptoKey.getCryptoRepoFile());
+		assertNotNull(cryptreeNode, "cryptreeNode");
+		assertNotNull(cryptoLink, "cryptoLink");
+		final CryptoKey toCryptoKey = assertNotNull(cryptoLink.getToCryptoKey(), "cryptoLink.toCryptoKey");
+		assertNotNull(cryptreeNode.getCryptoRepoFile(), "cryptreeNode.cryptoRepoFile");
+		assertNotNull(toCryptoKey.getCryptoRepoFile(), "toCryptoKey.cryptoRepoFile");
 		if (! toCryptoKey.getCryptoRepoFile().equals(cryptreeNode.getCryptoRepoFile()))
 			throw new IllegalStateException(String.format("cryptoLink.toCryptoKey.cryptoRepoFile != cryptreeNode.cryptoRepoFile :: cryptoLink=%s cryptoLink.toCryptoKey.cryptoRepoFile=%s cryptreeNode.cryptoRepoFile=%s",
 					cryptoLink,
@@ -220,9 +220,9 @@ public class CryptreeNodeUtil {
 	}
 
 	public static CryptoLink createCryptoLink(final CryptreeNode cryptreeNode, final UserRepoKeyPublicKey fromUserRepoKeyPublicKey, final PlainCryptoKey toPlainCryptoKey) {
-		assertNotNull("cryptreeNode", cryptreeNode);
-		assertNotNull("fromUserRepoKeyPublicKey", fromUserRepoKeyPublicKey);
-		assertNotNull("toPlainCryptoKey", toPlainCryptoKey);
+		assertNotNull(cryptreeNode, "cryptreeNode");
+		assertNotNull(fromUserRepoKeyPublicKey, "fromUserRepoKeyPublicKey");
+		assertNotNull(toPlainCryptoKey, "toPlainCryptoKey");
 		final CryptoLink cryptoLink = new CryptoLink();
 		cryptoLink.setFromUserRepoKeyPublicKey(fromUserRepoKeyPublicKey);
 		cryptoLink.setToCryptoKey(toPlainCryptoKey.getCryptoKey());
@@ -236,8 +236,8 @@ public class CryptreeNodeUtil {
 	}
 
 	public static CryptoLink createCryptoLink(final CryptreeNode cryptreeNode, final PlainCryptoKey toPlainCryptoKey) { // plain-text = UNENCRYPTED!!!
-		assertNotNull("cryptreeNode", cryptreeNode);
-		assertNotNull("toPlainCryptoKey", toPlainCryptoKey);
+		assertNotNull(cryptreeNode, "cryptreeNode");
+		assertNotNull(toPlainCryptoKey, "toPlainCryptoKey");
 
 		if (CryptoKeyPart.publicKey != toPlainCryptoKey.getCryptoKeyPart())
 			throw new IllegalArgumentException("You probably do not want to create a plain-text - i.e. *not* encrypted - CryptoLink to a key[part] of type: " + toPlainCryptoKey.getCryptoKeyPart());
@@ -260,7 +260,7 @@ public class CryptreeNodeUtil {
 	 * @return the configured/preferred transformation. Never <code>null</code>.
 	 */
 	private static CipherTransformation getCipherTransformation(final CipherParameters key) {
-		assertNotNull("key", key);
+		assertNotNull(key, "key");
 		// TODO we need a better way to look up a compatible preferred algorithm fitting the given key. => move this (in a much better way) into the CryptoRegistry!
 		if (key instanceof KeyParameter)
 			return getSymmetricCipherTransformation();

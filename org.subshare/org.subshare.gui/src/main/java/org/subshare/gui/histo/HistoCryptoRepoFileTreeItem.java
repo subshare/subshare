@@ -24,8 +24,8 @@ public class HistoCryptoRepoFileTreeItem extends TreeItem<HistoCryptoRepoFileTre
 	private final PlainHistoCryptoRepoFileDto plainHistoCryptoRepoFileDto;
 
 	public HistoCryptoRepoFileTreeItem(final PlainHistoCryptoRepoFileDto plainHistoCryptoRepoFileDto) {
-		this.plainHistoCryptoRepoFileDto = assertNotNull("plainHistoCryptoRepoFileDto", plainHistoCryptoRepoFileDto);
-		assertNotNull("plainHistoCryptoRepoFileDto.cryptoRepoFileId", plainHistoCryptoRepoFileDto.getCryptoRepoFileId());
+		this.plainHistoCryptoRepoFileDto = assertNotNull(plainHistoCryptoRepoFileDto, "plainHistoCryptoRepoFileDto");
+		assertNotNull(plainHistoCryptoRepoFileDto.getCryptoRepoFileId(), "plainHistoCryptoRepoFileDto.cryptoRepoFileId");
 		setValue(this);
 	}
 
@@ -59,7 +59,7 @@ public class HistoCryptoRepoFileTreeItem extends TreeItem<HistoCryptoRepoFileTre
 	}
 
 	public HistoCryptoRepoFileTreeItem getChild(final String name) {
-		assertNotNull("name", name);
+		assertNotNull(name, "name");
 		for (final TreeItem<HistoCryptoRepoFileTreeItem> c : getChildren()) {
 			final HistoCryptoRepoFileTreeItem child = (HistoCryptoRepoFileTreeItem) c;
 			final RepoFileDto repoFileDto = child.getPlainHistoCryptoRepoFileDto().getRepoFileDto();

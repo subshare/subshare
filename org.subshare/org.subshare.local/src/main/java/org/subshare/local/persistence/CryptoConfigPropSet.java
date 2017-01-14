@@ -65,7 +65,7 @@ public class CryptoConfigPropSet extends Entity implements WriteProtected, AutoT
 	}
 
 	public CryptoConfigPropSet(CryptoRepoFile cryptoRepoFile) {
-		this.cryptoRepoFile = assertNotNull("cryptoRepoFile", cryptoRepoFile);
+		this.cryptoRepoFile = assertNotNull(cryptoRepoFile, "cryptoRepoFile");
 	}
 
 	public Uid getCryptoRepoFileId() {
@@ -112,7 +112,7 @@ public class CryptoConfigPropSet extends Entity implements WriteProtected, AutoT
 	public void setCryptoKey(final CryptoKey cryptoKey) {
 		if (! equal(this.cryptoKey, cryptoKey)) {
 			if (cryptoKey != null) {
-				final CryptoKeyRole cryptoKeyRole = assertNotNull("cryptoKey.cryptoKeyRole", cryptoKey.getCryptoKeyRole());
+				final CryptoKeyRole cryptoKeyRole = assertNotNull(cryptoKey.getCryptoKeyRole(), "cryptoKey.cryptoKeyRole");
 				if (CryptoKeyRole.dataKey != cryptoKeyRole)
 					throw new IllegalArgumentException("cryptoKey.cryptoKeyRole != dataKey");
 			}
@@ -153,7 +153,7 @@ public class CryptoConfigPropSet extends Entity implements WriteProtected, AutoT
 					InputStreamSource.Helper.createInputStreamSource(getCryptoRepoFileId()),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
-					InputStreamSource.Helper.createInputStreamSource(assertNotNull("cryptoKey", cryptoKey).getCryptoKeyId()),
+					InputStreamSource.Helper.createInputStreamSource(assertNotNull(cryptoKey, "cryptoKey").getCryptoKeyId()),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(configPropSetDtoData)
@@ -165,7 +165,7 @@ public class CryptoConfigPropSet extends Entity implements WriteProtected, AutoT
 
 	@Override
 	public Uid getCryptoRepoFileIdControllingPermissions() {
-		return assertNotNull("cryptoRepoFileId", this.getCryptoRepoFileId());
+		return assertNotNull(this.getCryptoRepoFileId(), "cryptoRepoFileId");
 	}
 
 	@Override

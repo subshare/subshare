@@ -133,12 +133,12 @@ public class UserRepoKeyListPane extends GridPane {
 	}
 
 	private LocalRepoManager createLocalRepoManager() {
-		final LocalRepo localRepo = assertNotNull("localRepo", getLocalRepo());
+		final LocalRepo localRepo = assertNotNull(getLocalRepo(), "localRepo");
 		return LocalRepoManagerFactoryLs.getLocalRepoManagerFactory().createLocalRepoManagerForExistingRepository(localRepo.getLocalRoot());
 	}
 
 	private void addOrRemoveTableItemsViewCallback(final Collection<DebugUserRepoKeyDto> dtos) {
-		assertNotNull("dtos", dtos);
+		assertNotNull(dtos, "dtos");
 		final Map<DebugUserRepoKeyDto, UserRepoKeyListItem> viewDto2ListItem = new HashMap<>();
 		for (final UserRepoKeyListItem li : tableView.getItems())
 			viewDto2ListItem.put(li.getDebugUserRepoKeyDto(), li);

@@ -39,7 +39,7 @@ public class CertifyPgpKeyPane extends org.subshare.gui.pgp.certify.CertifyPgpKe
 		// Move all children down, first.
 		for (Node child : getChildren()) {
 			final Integer rowIndex = getRowIndex(child);
-			assertNotNull("rowIndex[" + child + "]", rowIndex);
+			assertNotNull(rowIndex, "rowIndex[" + child + "]");
 			setRowIndex(child, rowIndex + 1);
 		}
 

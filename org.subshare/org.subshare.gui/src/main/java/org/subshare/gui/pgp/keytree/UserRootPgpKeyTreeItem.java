@@ -24,8 +24,8 @@ public class UserRootPgpKeyTreeItem extends PgpKeyTreeItem<User> {
 	private final Map<PgpKeyId, PgpKeyPgpKeyTreeItem> pgpKeyId2PgpKeyPgpKeyTreeItem = new HashMap<>();
 
 	public UserRootPgpKeyTreeItem(final PgpKeyTreePane pgpKeyTreePane, final User user) {
-		super(assertNotNull("user", user));
-		this.pgpKeyTreePane = assertNotNull("pgpKeyTreePane", pgpKeyTreePane);
+		super(assertNotNull(user, "user"));
+		this.pgpKeyTreePane = assertNotNull(pgpKeyTreePane, "pgpKeyTreePane");
 
 		addWeakPropertyChangeListener(user, User.PropertyEnum.pgpKeyIds, userPgpKeyIdsPropertyChangeListener);
 		updatePgpKeyChildren();

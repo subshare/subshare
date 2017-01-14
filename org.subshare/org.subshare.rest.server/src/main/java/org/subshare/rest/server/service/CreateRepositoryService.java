@@ -33,8 +33,8 @@ public class CreateRepositoryService {
 
 	@PUT
 	public void createRepository(final CreateRepositoryRequestDto createRepositoryRequestDto) {
-		assertNotNull("createRepositoryRequestDto", createRepositoryRequestDto);
-		final UUID serverRepositoryId = assertNotNull("createRepositoryRequestDto.serverRepositoryId", createRepositoryRequestDto.getServerRepositoryId());
+		assertNotNull(createRepositoryRequestDto, "createRepositoryRequestDto");
+		final UUID serverRepositoryId = assertNotNull(createRepositoryRequestDto.getServerRepositoryId(), "createRepositoryRequestDto.serverRepositoryId");
 
 		final PgpSignature pgpSignature = new PgpSignableVerifier().verify(createRepositoryRequestDto);
 		// TODO introduce sth. like a server-owner or a list of server-admins who are allowed to do this.

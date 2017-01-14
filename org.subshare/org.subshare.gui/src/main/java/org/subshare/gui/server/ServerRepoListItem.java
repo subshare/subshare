@@ -13,7 +13,7 @@ public class ServerRepoListItem {
 	private final StringProperty nameProperty;
 
 	public ServerRepoListItem(final ServerRepo serverRepo) {
-		this.serverRepo = assertNotNull("serverRepo", serverRepo);
+		this.serverRepo = assertNotNull(serverRepo, "serverRepo");
 		try {
 			nameProperty = JavaBeanStringPropertyBuilder.create()
 					.bean(serverRepo)

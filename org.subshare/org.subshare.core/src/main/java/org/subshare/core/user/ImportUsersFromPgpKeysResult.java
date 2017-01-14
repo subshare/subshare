@@ -30,7 +30,7 @@ public class ImportUsersFromPgpKeysResult implements Serializable {
 		private final boolean modified;
 
 		public ImportedUser(final User user, boolean _new, final boolean modified) {
-			this.user = assertNotNull("user", user);
+			this.user = assertNotNull(user, "user");
 			this._new = _new;
 			this.modified = modified;
 		}

@@ -341,7 +341,7 @@ public class BrokenSignatureIT extends AbstractRepoToRepoSyncIT {
 		try {
 			final CryptoRepoFileDao cryptoRepoFileDao = new CryptoRepoFileDao().persistenceManager(pm);
 			final CryptoRepoFile cryptoRepoFile = cryptoRepoFileDao.getCryptoRepoFileOrFail(cryptoRepoFileId);
-			final RepoFile repoFile = assertNotNull("cryptoRepoFile.repoFile", cryptoRepoFile.getRepoFile());
+			final RepoFile repoFile = assertNotNull(cryptoRepoFile.getRepoFile(), "cryptoRepoFile.repoFile");
 
 			repoFile.setLocalRevision(Long.MAX_VALUE);
 			repoFile.setLastSyncFromRepositoryId(null);

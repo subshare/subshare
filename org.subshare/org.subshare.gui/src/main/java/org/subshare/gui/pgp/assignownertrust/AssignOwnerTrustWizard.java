@@ -22,9 +22,9 @@ public class AssignOwnerTrustWizard extends Wizard {
 
 	public AssignOwnerTrustWizard(final AssignOwnerTrustData assignOwnerTrustData) {
 		super(new SelectOwnerTrustWizardPage(assignOwnerTrustData));
-		this.assignOwnerTrustData = assertNotNull("assignOwnerTrustData", assignOwnerTrustData); //$NON-NLS-1$
+		this.assignOwnerTrustData = assertNotNull(assignOwnerTrustData, "assignOwnerTrustData"); //$NON-NLS-1$
 		final User user = assignOwnerTrustData.getUser();
-		assertNotNull("assignOwnerTrustData.user", user); //$NON-NLS-1$
+		assertNotNull(user, "assignOwnerTrustData.user"); //$NON-NLS-1$
 		this.pgp = PgpLs.getPgpOrFail();
 
 		final Set<PgpKey> userPgpKeys = user.getPgpKeys();

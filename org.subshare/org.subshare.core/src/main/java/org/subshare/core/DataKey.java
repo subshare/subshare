@@ -12,7 +12,7 @@ public class DataKey {
 	public final KeyParameter keyParameter;
 
 	public DataKey(final Uid cryptoKeyId, final KeyParameter keyParameter) {
-		this.cryptoKeyId = assertNotNull("cryptoKeyId", cryptoKeyId);
-		this.keyParameter = assertNotNull("keyParameter", keyParameter);
+		this.cryptoKeyId = assertNotNull(cryptoKeyId, "cryptoKeyId");
+		this.keyParameter = assertNotNull(keyParameter, "keyParameter");
 	}
 }

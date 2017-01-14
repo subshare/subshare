@@ -10,7 +10,7 @@ import co.codewizards.cloudstore.local.persistence.RepoFile;
 public class ScheduledReuploadDao extends Dao<ScheduledReupload, ScheduledReuploadDao> {
 
 	public ScheduledReupload getScheduledReupload(final RepoFile repoFile) {
-		assertNotNull("repoFile", repoFile);
+		assertNotNull(repoFile, "repoFile");
 		final Query query = pm().newNamedQuery(getEntityClass(), "getScheduledReupload_repoFile");
 		try {
 			final ScheduledReupload result = (ScheduledReupload) query.execute(repoFile);
@@ -21,7 +21,7 @@ public class ScheduledReuploadDao extends Dao<ScheduledReupload, ScheduledReuplo
 	}
 
 	public ScheduledReupload scheduleReupload(final RepoFile repoFile) {
-		assertNotNull("repoFile", repoFile);
+		assertNotNull(repoFile, "repoFile");
 		ScheduledReupload scheduledReupload = getScheduledReupload(repoFile);
 		if (scheduledReupload == null) {
 			scheduledReupload = new ScheduledReupload();

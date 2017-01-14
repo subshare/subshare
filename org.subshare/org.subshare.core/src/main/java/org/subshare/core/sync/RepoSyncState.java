@@ -21,9 +21,9 @@ public class RepoSyncState extends co.codewizards.cloudstore.core.repo.sync.Repo
 //	private final File localRoot;
 
 	public RepoSyncState(UUID localRepositoryId, ServerRepo serverRepo, Server server, File localRoot, URL url, Severity severity, String message, Error error, Date syncStarted, Date syncFinished) {
-		super(localRepositoryId, assertNotNull("serverRepo", serverRepo).getRepositoryId(), localRoot, url, severity, message, error, syncStarted, syncFinished);
+		super(localRepositoryId, assertNotNull(serverRepo, "serverRepo").getRepositoryId(), localRoot, url, severity, message, error, syncStarted, syncFinished);
 		this.serverRepo = serverRepo;
-		this.server = assertNotNull("server", server);
+		this.server = assertNotNull(server, "server");
 //		this.localRoot = assertNotNull("localRoot", localRoot);
 	}
 

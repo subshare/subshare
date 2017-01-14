@@ -26,9 +26,9 @@ public abstract class SelectUserPaneWithButtonBar extends GridPane {
 	private Button cancelButton;
 
 	public SelectUserPaneWithButtonBar(final List<User> users, final Collection<User> selectedUsers, final SelectionMode selectionMode, final String headerText) {
-		assertNotNull("users", users);
+		assertNotNull(users, "users");
 		// selectedUsers may be null
-		assertNotNull("selectionMode", selectionMode);
+		assertNotNull(selectionMode, "selectionMode");
 		loadDynamicComponentFxml(SelectUserPaneWithButtonBar.class, this);
 		selectUserPane = new SelectUserPane(users, selectedUsers, selectionMode, headerText) {
 			@Override

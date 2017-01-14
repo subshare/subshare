@@ -15,7 +15,7 @@ public class AcceptInvitationSourceWizardPage extends WizardPage {
 
 	public AcceptInvitationSourceWizardPage(final AcceptInvitationData acceptInvitationData) {
 		super("Which invitation?");
-		this.acceptInvitationData = assertNotNull("acceptInvitationData", acceptInvitationData);
+		this.acceptInvitationData = assertNotNull(acceptInvitationData, "acceptInvitationData");
 	}
 
 	@Override

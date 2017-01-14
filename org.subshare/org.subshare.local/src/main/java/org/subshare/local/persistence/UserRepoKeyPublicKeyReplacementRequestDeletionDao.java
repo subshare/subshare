@@ -25,7 +25,7 @@ public class UserRepoKeyPublicKeyReplacementRequestDeletionDao extends Dao<UserR
 	}
 
 	public UserRepoKeyPublicKeyReplacementRequestDeletion getUserRepoKeyPublicKeyReplacementRequestDeletion(final Uid requestId) {
-		assertNotNull("requestId", requestId);
+		assertNotNull(requestId, "requestId");
 		final Query query = pm().newNamedQuery(getEntityClass(), "getUserRepoKeyPublicKeyReplacementRequestDeletion_requestId");
 		try {
 			final UserRepoKeyPublicKeyReplacementRequestDeletion requestDeletion = (UserRepoKeyPublicKeyReplacementRequestDeletion) query.execute(requestId.toString());

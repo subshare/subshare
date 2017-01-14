@@ -13,7 +13,7 @@ public class UserRepoKeyPublicKeyLookupImpl implements UserRepoKeyPublicKeyLooku
 	private final LocalRepoTransaction transaction;
 
 	public UserRepoKeyPublicKeyLookupImpl(final LocalRepoTransaction transaction) {
-		this.transaction = assertNotNull("", transaction);
+		this.transaction = assertNotNull(transaction, "");
 	}
 
 	@Override

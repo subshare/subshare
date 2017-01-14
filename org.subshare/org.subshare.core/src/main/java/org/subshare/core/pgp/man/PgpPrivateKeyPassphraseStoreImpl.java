@@ -29,9 +29,9 @@ public class PgpPrivateKeyPassphraseStoreImpl implements PgpPrivateKeyPassphrase
 	private final PgpAuthenticationCallback pgpAuthenticationCallback = new PgpAuthenticationCallback() {
 		@Override
 		public char[] getPassphrase(final PgpKey pgpKey) {
-			final PgpKey masterKey = assertNotNull("pgpKey", pgpKey).getMasterKey();
+			final PgpKey masterKey = assertNotNull(pgpKey, "pgpKey").getMasterKey();
 			final PgpKeyId pgpKeyId = masterKey.getPgpKeyId();
-			assertNotNull("pgpKey.pgpKeyId", pgpKeyId);
+			assertNotNull(pgpKeyId, "pgpKey.pgpKeyId");
 			return PgpPrivateKeyPassphraseStoreImpl.this.getPassphrase(pgpKeyId);
 		}
 	};
@@ -53,7 +53,7 @@ public class PgpPrivateKeyPassphraseStoreImpl implements PgpPrivateKeyPassphrase
 	}
 
 	protected synchronized char[] getPassphrase(final PgpKeyId pgpKeyId) {
-		assertNotNull("pgpKeyId", pgpKeyId);
+		assertNotNull(pgpKeyId, "pgpKeyId");
 		final char[] passphrase = pgpKeyId2Passphrase.get(pgpKeyId);
 		return passphrase;
 	}
@@ -65,8 +65,8 @@ public class PgpPrivateKeyPassphraseStoreImpl implements PgpPrivateKeyPassphrase
 
 	@Override
 	public void putPassphrase(final PgpKeyId pgpKeyId, final char[] passphrase) throws SecurityException {
-		assertNotNull("pgpKeyId", pgpKeyId);
-		assertNotNull("passphrase", passphrase);
+		assertNotNull(pgpKeyId, "pgpKeyId");
+		assertNotNull(passphrase, "passphrase");
 
 		assertPassphraseValid(pgpKeyId, passphrase);
 
@@ -76,11 +76,11 @@ public class PgpPrivateKeyPassphraseStoreImpl implements PgpPrivateKeyPassphrase
 	}
 
 	private void assertPassphraseValid(final PgpKeyId pgpKeyId, final char[] passphrase) throws SecurityException {
-		assertNotNull("pgpKeyId", pgpKeyId);
-		assertNotNull("passphrase", passphrase); // empty for no passphrase! never null!
+		assertNotNull(pgpKeyId, "pgpKeyId");
+		assertNotNull(passphrase, "passphrase"); // empty for no passphrase! never null!
 		final Pgp pgp = PgpRegistry.getInstance().getPgpOrFail();
 		final PgpKey pgpKey = pgp.getPgpKey(pgpKeyId);
-		assertNotNull("pgp.getPgpKey(" + pgpKeyId + ")", pgpKey);
+		assertNotNull(pgpKey, "pgp.getPgpKey(" + pgpKeyId + ")");
 		if (! pgp.testPassphrase(pgpKey, passphrase))
 			throw new SecurityException("Wrong passphrase!");
 	}

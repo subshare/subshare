@@ -25,7 +25,7 @@ public class CryptoConfigPropSetDao extends Dao<CryptoConfigPropSet, CryptoConfi
 	}
 
 	public CryptoConfigPropSet getCryptoConfigPropSet(final CryptoRepoFile cryptoRepoFile) {
-		assertNotNull("cryptoRepoFile", cryptoRepoFile);
+		assertNotNull(cryptoRepoFile, "cryptoRepoFile");
 		final Query query = pm().newNamedQuery(getEntityClass(), "getCryptoConfigPropSet_cryptoRepoFile");
 		try {
 			final CryptoConfigPropSet result = (CryptoConfigPropSet) query.execute(cryptoRepoFile);
@@ -38,7 +38,7 @@ public class CryptoConfigPropSetDao extends Dao<CryptoConfigPropSet, CryptoConfi
 	public Collection<CryptoConfigPropSet> getCryptoConfigPropSetsChangedAfterExclLastSyncFromRepositoryId(
 			final long localRevision, final UUID exclLastSyncFromRepositoryId) {
 
-		assertNotNull("exclLastSyncFromRepositoryId", exclLastSyncFromRepositoryId);
+		assertNotNull(exclLastSyncFromRepositoryId, "exclLastSyncFromRepositoryId");
 		final Query query = pm().newNamedQuery(getEntityClass(), "getCryptoConfigPropSetsChangedAfter_localRevision_exclLastSyncFromRepositoryId");
 		try {
 			long startTimestamp = System.currentTimeMillis();

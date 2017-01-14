@@ -279,8 +279,8 @@ public class CryptoKey extends Entity implements WriteProtected, AutoTrackLocalR
 
 	@Override
 	public Uid getCryptoRepoFileIdControllingPermissions() {
-		return assertNotNull("cryptoRepoFile.cryptoRepoFileId",
-				assertNotNull("cryptoRepoFile", cryptoRepoFile).getCryptoRepoFileId());
+		return assertNotNull(assertNotNull(cryptoRepoFile, "cryptoRepoFile").getCryptoRepoFileId(),
+				"cryptoRepoFile.cryptoRepoFileId");
 
 //		switch (cryptoKeyRole) {
 //			case backlinkKey:

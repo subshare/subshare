@@ -41,7 +41,7 @@ public class IdentityPane extends GridPane {
 	protected CheckBox importBackupCheckBox;
 
 	public IdentityPane(final IdentityData identityData) {
-		this.identityData = assertNotNull("identityData", identityData);
+		this.identityData = assertNotNull(identityData, "identityData");
 		loadDynamicComponentFxml(IdentityPane.class, this);
 
 		firstNameTextField.textProperty().bindBidirectional(identityData.firstNameProperty());

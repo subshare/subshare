@@ -15,9 +15,9 @@ public class HistoFrameListItem {
 
 	public HistoFrameListItem(final HistoFrameDto histoFrameDto, final String signingUserName) {
 		// TODO pass resolved user for signingUserRepoKeyId! Or resolve+assign it afterwards!
-		this.histoFrameDto = assertNotNull("histoFrameDto", histoFrameDto);
-		assertNotNull("histoFrameDto.signature", histoFrameDto.getSignature());
-		this.signingUserName = assertNotNull("signingUserName", signingUserName);
+		this.histoFrameDto = assertNotNull(histoFrameDto, "histoFrameDto");
+		assertNotNull(histoFrameDto.getSignature(), "histoFrameDto.signature");
+		this.signingUserName = assertNotNull(signingUserName, "signingUserName");
 	}
 
 	public HistoFrameDto getHistoFrameDto() {

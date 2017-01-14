@@ -126,7 +126,7 @@ public class AcceptInvitationSourcePane extends WizardPageContentGridPane {
 //	};
 
 	public AcceptInvitationSourcePane(final AcceptInvitationData acceptInvitationData) {
-		this.acceptInvitationData = assertNotNull("acceptInvitationData", acceptInvitationData);
+		this.acceptInvitationData = assertNotNull(acceptInvitationData, "acceptInvitationData");
 		loadDynamicComponentFxml(AcceptInvitationSourcePane.class, this);
 		fileTreePane.fileFilterProperty().set(new DataFileFilter().setAcceptContentType(EncryptedDataFile.CONTENT_TYPE_VALUE));
 		fileTreePane.getSelectedFiles().addListener((InvalidationListener) observable -> onSelectedFilesChanged());
@@ -289,8 +289,8 @@ public class AcceptInvitationSourcePane extends WizardPageContentGridPane {
 			readManifest(zin);
 
 			if (decoder.getPgpSignature() != null) {
-				final PgpKeyId pgpKeyId = assertNotNull("pgpSignature.pgpKeyId", decoder.getPgpSignature().getPgpKeyId());
-				final PgpKey pgpKey = assertNotNull("pgp.getPgpKey(" + pgpKeyId + ")", pgp.getPgpKey(pgpKeyId));
+				final PgpKeyId pgpKeyId = assertNotNull(decoder.getPgpSignature().getPgpKeyId(), "pgpSignature.pgpKeyId");
+				final PgpKey pgpKey = assertNotNull(pgp.getPgpKey(pgpKeyId), "pgp.getPgpKey(" + pgpKeyId + ")");
 				final String primaryUserId = pgpKey.getUserIds().isEmpty() ? "<<unknown>>" : pgpKey.getUserIds().get(0);
 
 				final PgpKeyValidity keyValidity = pgp.getKeyValidity(pgpKey);
@@ -349,7 +349,7 @@ public class AcceptInvitationSourcePane extends WizardPageContentGridPane {
 	}
 
 	private Properties readManifest(final ZipInputStream zin) throws IOException {
-		assertNotNull("zin", zin);
+		assertNotNull(zin, "zin");
 
 		final ZipEntry ze = zin.getNextEntry();
 		if (ze == null)
@@ -376,8 +376,8 @@ public class AcceptInvitationSourcePane extends WizardPageContentGridPane {
 
 	@FXML
 	private void solveProblemButtonClicked(final ActionEvent event) {
-		assertNotNull("problemSolver", problemSolver);
-		problemSolver.setWindow(assertNotNull("scene.window", getScene().getWindow()));
+		assertNotNull(problemSolver, "problemSolver");
+		problemSolver.setWindow(assertNotNull(getScene().getWindow(), "scene.window"));
 		problemSolver.solveProblem();
 		onSelectedFilesChanged();
 	}

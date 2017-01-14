@@ -82,7 +82,7 @@ public class LocalRepoListMainTreeItem extends MainTreeItem<String> {
 	}
 
 	protected void addOrRemoveTreeItemsViewCallback(final Set<LocalRepo> localRepos) {
-		assertNotNull("localRepos", localRepos);
+		assertNotNull(localRepos, "localRepos");
 		final Map<LocalRepo, LocalRepoMainTreeItem> viewRepositoryId2LocalRepoMainTreeItem = new HashMap<>();
 		for (final TreeItem<?> ti : getChildren()) {
 			final LocalRepoMainTreeItem lrmti = (LocalRepoMainTreeItem) ti;
@@ -107,7 +107,7 @@ public class LocalRepoListMainTreeItem extends MainTreeItem<String> {
 	}
 
 	private void addTableItemsViewCallback(final Collection<LocalRepo> localRepos) {
-		assertNotNull("localRepos", localRepos);
+		assertNotNull(localRepos, "localRepos");
 		for (final LocalRepo localRepo : localRepos)
 			getChildren().add(new LocalRepoMainTreeItem(localRepo));
 	}

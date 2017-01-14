@@ -46,7 +46,7 @@ public abstract class PgpPrivateKeyPassphrasePromptPane extends GridPane {
 
 	public PgpPrivateKeyPassphrasePromptPane(final PgpKey pgpKey, final String errorMessage) {
 		loadDynamicComponentFxml(PgpPrivateKeyPassphrasePromptPane.class, this);
-		this.pgpKey = assertNotNull("pgpKey", pgpKey);
+		this.pgpKey = assertNotNull(pgpKey, "pgpKey");
 		userIdsComboBox.setItems(FXCollections.observableArrayList(this.pgpKey.getUserIds()));
 		userIdsComboBox.getSelectionModel().select(0);
 		keyIdTextField.setText(this.pgpKey.getPgpKeyId().toHumanString());

@@ -17,7 +17,7 @@ public class UserRepoKeyListItem {
 	private final String name;
 
 	public UserRepoKeyListItem(final DebugUserRepoKeyDto debugUserRepoKeyDto) {
-		this.debugUserRepoKeyDto = assertNotNull("debugUserRepoKeyDto", debugUserRepoKeyDto);
+		this.debugUserRepoKeyDto = assertNotNull(debugUserRepoKeyDto, "debugUserRepoKeyDto");
 		this.name = _getName(debugUserRepoKeyDto.getUserIdentityPayloadDto());
 	}
 

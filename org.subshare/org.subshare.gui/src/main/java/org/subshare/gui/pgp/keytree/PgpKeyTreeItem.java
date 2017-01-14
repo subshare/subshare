@@ -140,15 +140,15 @@ public class PgpKeyTreeItem<T> extends TreeItem<PgpKeyTreeItem<?>> {
 	protected PgpKeyTreePane getPgpKeyTreePane() {
 		if (pgpKeyTreePane == null) {
 			final PgpKeyTreeItem<?> parent = (PgpKeyTreeItem<?>) getParent();
-			assertNotNull("parent", parent);
-			pgpKeyTreePane = assertNotNull("parent.pgpKeyTreePane", parent.getPgpKeyTreePane());
+			assertNotNull(parent, "parent");
+			pgpKeyTreePane = assertNotNull(parent.getPgpKeyTreePane(), "parent.pgpKeyTreePane");
 			pgpKeyTreePane.pgpProperty().addListener(new WeakInvalidationListener(pgpInvalidationListener));
 		}
 		return pgpKeyTreePane;
 	}
 
 	public <I extends PgpKeyTreeItem<?>> I getThisOrParentPgpKeyTreeItemOfType(final Class<I> type) {
-		assertNotNull("type", type);
+		assertNotNull(type, "type");
 
 		if (type.isInstance(this))
 			return type.cast(this);
@@ -177,7 +177,7 @@ public class PgpKeyTreeItem<T> extends TreeItem<PgpKeyTreeItem<?>> {
 	protected void hookTrustDbPropertyChangeListener() {
 		assertFxApplicationThread();
 		if (trustDbWeakPropertyChangeListener == null) {
-			final Pgp pgp = assertNotNull("pgp", getPgp());
+			final Pgp pgp = assertNotNull(getPgp(), "pgp");
 			trustDbWeakPropertyChangeListener = addWeakPropertyChangeListener(pgp, Pgp.PropertyEnum.trustdb, trustDbPropertyChangeListener);
 		}
 	}

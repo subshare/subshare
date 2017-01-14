@@ -41,10 +41,10 @@ public class AssignCryptoRepoFileRepoFileListener extends AbstractLocalRepoTrans
 
 	@Override
 	public void postStore(final InstanceLifecycleEvent event) {
-		final Object persistable = assertNotNull("event.persistentInstance", event.getPersistentInstance());
+		final Object persistable = assertNotNull(event.getPersistentInstance(), "event.persistentInstance");
 		if (persistable instanceof RepoFile) {
 			final RepoFile repoFile = (RepoFile) persistable;
-			repoFileName2RepoFile.put(assertNotNull("repoFile.name", repoFile.getName()), repoFile);
+			repoFileName2RepoFile.put(assertNotNull(repoFile.getName(), "repoFile.name"), repoFile);
 		}
 		else if (persistable instanceof CryptoRepoFile)
 			cryptoRepoFilePersisted = true;
@@ -86,7 +86,7 @@ public class AssignCryptoRepoFileRepoFileListener extends AbstractLocalRepoTrans
 	 * @return the {@link RepoFile} associated with the given {@code cryptoRepoFile}. May be <code>null</code>.
 	 */
 	private RepoFile associateRepoFileViaCryptoRepoFileLocalName(final CryptoRepoFile cryptoRepoFile) {
-		assertNotNull("cryptoRepoFile", cryptoRepoFile);
+		assertNotNull(cryptoRepoFile, "cryptoRepoFile");
 
 //		if (cryptoRepoFile.getDeleted() != null) { // Yes we MUST associate, because we otherwise don't have a unique parent-child-localName-relation anymore! See CryptreeNode.getCryptoRepoFile() and CryptoRepoFileDao.getChildCryptoRepoFile(CryptoRepoFile parent, String localName)
 //			logger.info("associateRepoFileViaCryptoRepoFileLocalName: NOT associating deleted cryptoRepoFile! {}", cryptoRepoFile);

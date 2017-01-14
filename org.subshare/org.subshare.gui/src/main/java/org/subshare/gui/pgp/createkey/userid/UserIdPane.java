@@ -39,7 +39,7 @@ public class UserIdPane extends WizardPageContentGridPane {
 	};
 
 	public UserIdPane(final CreatePgpKeyParam createPgpKeyParam) {
-		this.createPgpKeyParam = assertNotNull("createPgpKeyParam", createPgpKeyParam);
+		this.createPgpKeyParam = assertNotNull(createPgpKeyParam, "createPgpKeyParam");
 		loadDynamicComponentFxml(UserIdPane.class, this);
 
 		for (PgpUserId pgpUserId : createPgpKeyParam.getUserIds())

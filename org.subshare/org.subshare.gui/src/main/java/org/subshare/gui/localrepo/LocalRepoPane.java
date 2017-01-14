@@ -153,7 +153,7 @@ public class LocalRepoPane extends VBox implements HistoryPaneContainer {
 	private WeakReference<UserRepoKeyListPane> userRepoKeyListPaneRef;
 
 	public LocalRepoPane(final LocalRepo localRepo) {
-		this.localRepo = assertNotNull("localRepo", localRepo);
+		this.localRepo = assertNotNull(localRepo, "localRepo");
 		this.repoSyncDaemon = RepoSyncDaemonLs.getRepoSyncDaemon();
 		this.repoSyncTimer = RepoSyncTimerLs.getRepoSyncTimer();
 		loadDynamicComponentFxml(LocalRepoPane.class, this);
@@ -342,7 +342,7 @@ public class LocalRepoPane extends VBox implements HistoryPaneContainer {
 	}
 
 	private void showSyncStateErrorDialog(final Error error) {
-		assertNotNull("error", error);
+		assertNotNull(error, "error");
 		ErrorHandler.handleError("Last synchronisation failed!", null, error); // take 'contentText' from throwable
 	}
 

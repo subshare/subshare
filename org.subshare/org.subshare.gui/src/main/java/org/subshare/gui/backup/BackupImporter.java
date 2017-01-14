@@ -20,7 +20,7 @@ public class BackupImporter extends AbstractBackupImExporter {
 	}
 
 	public void importBackup(final File backupFile) throws IOException {
-		assertNotNull("backupFile", backupFile);
+		assertNotNull(backupFile, "backupFile");
 		backupFile.getParentFile().mkdirs();
 
 		final BackupDataFile backupDataFile;
@@ -31,12 +31,12 @@ public class BackupImporter extends AbstractBackupImExporter {
 		UserRegistryLs.getUserRegistry(); // instantiating it before loading the PGP-keys to prevent it from populating itself from PGP keys (during init).
 
 		final byte[] pgpKeyData = backupDataFile.getData(ENTRY_NAME_PGP_KEYS);
-		assertNotNull("backupDataFile.getData(ENTRY_NAME_PGP_KEYS)", pgpKeyData);
+		assertNotNull(pgpKeyData, "backupDataFile.getData(ENTRY_NAME_PGP_KEYS)");
 		pgp.importKeys(ByteArrayInputStreamLs.create(pgpKeyData));
 
 		final LockerContent serverRegistryLockerContent = localServerClient.invokeConstructor(ServerRegistryLockerContent.class);
 		final byte[] serverRegistryData = backupDataFile.getData(ENTRY_NAME_SERVER_REGISTRY_FILE);
-		assertNotNull("backupDataFile.getData(ENTRY_NAME_SERVER_REGISTRY_FILE)", serverRegistryData);
+		assertNotNull(serverRegistryData, "backupDataFile.getData(ENTRY_NAME_SERVER_REGISTRY_FILE)");
 		serverRegistryLockerContent.mergeFrom(serverRegistryData);
 
 		registerPgpKeyRelatedBackupProperties(backupDataFile.getManifestTimestamp());

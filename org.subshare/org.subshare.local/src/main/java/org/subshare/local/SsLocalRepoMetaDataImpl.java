@@ -116,14 +116,14 @@ public class SsLocalRepoMetaDataImpl extends LocalRepoMetaDataImpl implements Ss
 
 	@Override
 	public Map<Long, CryptoRepoFileDto> getCryptoRepoFileDtos(final Collection<Long> repoFileIds) {
-		assertNotNull("repoFileIds", repoFileIds);
+		assertNotNull(repoFileIds, "repoFileIds");
 		final Map<Long, CryptoRepoFileDto> result = new LinkedHashMap<>();
 		try (final LocalRepoTransaction tx = beginReadTransaction();) {
 			final RepoFileDao repoFileDao = tx.getDao(RepoFileDao.class);
 			final CryptoRepoFileDao cryptoRepoFileDao = tx.getDao(CryptoRepoFileDao.class);
 			final CryptoRepoFileDtoConverter converter = CryptoRepoFileDtoConverter.create();
 			for (final Long repoFileId : repoFileIds) {
-				assertNotNull("repoFileId", repoFileId);
+				assertNotNull(repoFileId, "repoFileId");
 				final RepoFile repoFile = repoFileDao.getObjectByIdOrNull(repoFileId);
 				if (repoFile == null)
 					continue;
@@ -287,7 +287,7 @@ public class SsLocalRepoMetaDataImpl extends LocalRepoMetaDataImpl implements Ss
 	}
 
 	protected UUID getRemoteRepositoryId(final LocalRepoTransaction tx) {
-		assertNotNull("tx", tx);
+		assertNotNull(tx, "tx");
 		UUID result = remoteRepositoryId;
 		if (result == null) {
 			final RemoteRepositoryDao remoteRepositoryDao = tx.getDao(RemoteRepositoryDao.class);
@@ -309,7 +309,7 @@ public class SsLocalRepoMetaDataImpl extends LocalRepoMetaDataImpl implements Ss
 	}
 
 	protected URL getRemoteRoot(final LocalRepoTransaction tx) {
-		assertNotNull("tx", tx);
+		assertNotNull(tx, "tx");
 		URL result = remoteRoot;
 		if (result == null) {
 			getRemoteRepositoryId(tx);
@@ -372,7 +372,7 @@ public class SsLocalRepoMetaDataImpl extends LocalRepoMetaDataImpl implements Ss
 
 	@Override
 	public Collection<HistoFrameDto> getHistoFrameDtos(final HistoFrameFilter filter) {
-		assertNotNull("filter", filter);
+		assertNotNull(filter, "filter");
 		final LocalRepoManager localRepoManager = getLocalRepoManagerOrFail();
 		try (final LocalRepoTransaction tx = localRepoManager.beginReadTransaction();) {
 			final HistoFrameDao hfDao = tx.getDao(HistoFrameDao.class);
@@ -389,7 +389,7 @@ public class SsLocalRepoMetaDataImpl extends LocalRepoMetaDataImpl implements Ss
 
 	@Override
 	public Collection<PlainHistoCryptoRepoFileDto> getPlainHistoCryptoRepoFileDtos(PlainHistoCryptoRepoFileFilter filter) {
-		assertNotNull("filter", filter);
+		assertNotNull(filter, "filter");
 		final Collection<PlainHistoCryptoRepoFileDto> result;
 		final UpdatePlainHistoCryptoRepoFilesMarker updatePlainHistoCryptoRepoFilesMarker;
 		try (final LocalRepoTransaction tx = getLocalRepoManagerOrFail().beginReadTransaction();) {
@@ -413,7 +413,7 @@ public class SsLocalRepoMetaDataImpl extends LocalRepoMetaDataImpl implements Ss
 
 	@Override
 	public Collection<CollisionPrivateDto> getCollisionPrivateDtos(CollisionPrivateFilter filter) {
-		assertNotNull("filter", filter);
+		assertNotNull(filter, "filter");
 		try (final LocalRepoTransaction tx = getLocalRepoManagerOrFail().beginReadTransaction();) {
 			final CollisionPrivateDao cDao = tx.getDao(CollisionPrivateDao.class);
 			final Collection<CollisionPrivate> pcps = cDao.getCollisionPrivates(filter);
@@ -428,7 +428,7 @@ public class SsLocalRepoMetaDataImpl extends LocalRepoMetaDataImpl implements Ss
 
 	@Override
 	public Collection<CollisionDto> getCollisionDtos(CollisionFilter filter) {
-		assertNotNull("filter", filter);
+		assertNotNull(filter, "filter");
 		try (final LocalRepoTransaction tx = getLocalRepoManagerOrFail().beginReadTransaction();) {
 			final CollisionDao cDao = tx.getDao(CollisionDao.class);
 			final Collection<Collision> collisions = cDao.getCollisions(filter);
@@ -444,7 +444,7 @@ public class SsLocalRepoMetaDataImpl extends LocalRepoMetaDataImpl implements Ss
 
 	@Override
 	public void putCollisionPrivateDto(final CollisionPrivateDto collisionPrivateDto) {
-		assertNotNull("collisionPrivateDto", collisionPrivateDto);
+		assertNotNull(collisionPrivateDto, "collisionPrivateDto");
 		try (final LocalRepoTransaction tx = getLocalRepoManagerOrFail().beginWriteTransaction();) {
 			final Cryptree cryptree = getCryptree(tx);
 			cryptree.putCollisionPrivateDto(collisionPrivateDto);

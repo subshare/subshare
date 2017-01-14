@@ -110,7 +110,7 @@ public class RepoAwareFileTreePane extends FileTreePane {
 	}
 
 	public CollisionPrivateDtoSet getCollisionDtoSet(final FileTreeItem<?> treeItem) {
-		assertNotNull("treeItem", treeItem);
+		assertNotNull(treeItem, "treeItem");
 		assertFxApplicationThread();
 		return treeItem2CollisionDtoSet.get(treeItem);
 	}
@@ -140,7 +140,7 @@ public class RepoAwareFileTreePane extends FileTreePane {
 	}
 
 	private CollisionPrivateDtoSet _getCollisionDtoSet(final FileTreeItem<?> treeItem) {
-		assertNotNull("treeItem", treeItem);
+		assertNotNull(treeItem, "treeItem");
 
 		if (! (treeItem instanceof FileFileTreeItem))
 			return null;
@@ -194,7 +194,7 @@ public class RepoAwareFileTreePane extends FileTreePane {
 	}
 
 	private LocalRepoManager createLocalRepoManager() {
-		final LocalRepo localRepo = assertNotNull("localRepo", getLocalRepo());
+		final LocalRepo localRepo = assertNotNull(getLocalRepo(), "localRepo");
 		return LocalRepoManagerFactoryLs.getLocalRepoManagerFactory().createLocalRepoManagerForExistingRepository(localRepo.getLocalRoot());
 	}
 

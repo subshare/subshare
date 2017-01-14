@@ -27,7 +27,7 @@ public class ImportKeysResult implements Serializable {
 		private final PgpKeyId pgpKeyId;
 
 		public ImportedKey(final PgpKeyId pgpKeyId) {
-			this.pgpKeyId = assertNotNull("pgpKeyId", pgpKeyId);
+			this.pgpKeyId = assertNotNull(pgpKeyId, "pgpKeyId");
 		}
 
 		public PgpKeyId getPgpKeyId() {
@@ -57,7 +57,7 @@ public class ImportKeysResult implements Serializable {
 
 		public ImportedSubKey(PgpKeyId pgpKeyId, ImportedMasterKey importedMasterKey) {
 			super(pgpKeyId);
-			this.importedMasterKey = assertNotNull("importedMasterKey", importedMasterKey);
+			this.importedMasterKey = assertNotNull(importedMasterKey, "importedMasterKey");
 		}
 
 		public ImportedMasterKey getImportedMasterKey() {

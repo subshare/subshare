@@ -12,7 +12,7 @@ public class UserRepoInvitationToken implements Serializable {
 	private final byte[] signedEncryptedUserRepoInvitationData;
 
 	public UserRepoInvitationToken(byte[] signedEncryptedUserRepoInvitationData) {
-		this.signedEncryptedUserRepoInvitationData = assertNotNull("signedEncryptedUserRepoInvitationData", signedEncryptedUserRepoInvitationData);
+		this.signedEncryptedUserRepoInvitationData = assertNotNull(signedEncryptedUserRepoInvitationData, "signedEncryptedUserRepoInvitationData");
 	}
 
 	public byte[] getSignedEncryptedUserRepoInvitationData() {

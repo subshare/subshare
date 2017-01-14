@@ -44,7 +44,7 @@ public class PgpPublicKeyService {
 	@Path("_search/{queryString}")
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
 	public Response searchPgpPublicKeys(@PathParam("queryString") final String queryString) {
-		assertNotNull("queryString", queryString);
+		assertNotNull(queryString, "queryString");
 
 		final StreamingOutput result = new StreamingOutput() {
 			@Override
@@ -71,7 +71,7 @@ public class PgpPublicKeyService {
 	public Response getPgpPublicKeys(
 			@PathParam("pgpKeyIdList") final PgpKeyIdList pgpKeyIdList,
 			@QueryParam("changedAfterLocalRevision") @DefaultValue("-1") final long changedAfterLocalRevision) {
-		assertNotNull("pgpKeyIdList", pgpKeyIdList);
+		assertNotNull(pgpKeyIdList, "pgpKeyIdList");
 
 		final StreamingOutput result = new StreamingOutput() {
 			@Override
@@ -88,7 +88,7 @@ public class PgpPublicKeyService {
 	@PUT
 	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
 	public void putPgpPublicKeys(final InputStream in) {
-		assertNotNull("in", in);
+		assertNotNull(in, "in");
 		try (final PgpTransport localPgpTransport = createLocalPgpTransport();) {
 			localPgpTransport.importKeys(castStream(in));
 		}

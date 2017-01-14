@@ -14,14 +14,14 @@ public class PermissionTypeItem {
 	private final String text;
 
 	public PermissionTypeItem(final PermissionType permissionType) {
-		this.permissionType = assertNotNull("permissionType", permissionType);
+		this.permissionType = assertNotNull(permissionType, "permissionType");
 		this.id = permissionType.name();
 		this.text = getText();
 	}
 
 	public PermissionTypeItem(final String id) {
 		this.permissionType = null;
-		this.id = assertNotNull("id", id);
+		this.id = assertNotNull(id, "id");
 		this.text = getText();
 	}
 

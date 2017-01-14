@@ -8,7 +8,7 @@ public class SimpleRootPgpKeyTreeItem extends PgpKeyTreeItem<String> {
 
 	public SimpleRootPgpKeyTreeItem(final PgpKeyTreePane pgpKeyTreePane) {
 		super("");
-		this.pgpKeyTreePane = assertNotNull("pgpKeyTreePane", pgpKeyTreePane);
+		this.pgpKeyTreePane = assertNotNull(pgpKeyTreePane, "pgpKeyTreePane");
 	}
 
 	@Override

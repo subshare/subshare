@@ -14,7 +14,7 @@ public class SsDelete extends co.codewizards.cloudstore.rest.client.request.Dele
 
 	public SsDelete(final String repositoryName, final SsDeleteModificationDto deleteModificationDto) {
 		super(repositoryName, null);
-		this.deleteModificationDto = assertNotNull("deleteModificationDto", deleteModificationDto);
+		this.deleteModificationDto = assertNotNull(deleteModificationDto, "deleteModificationDto");
 	}
 
 	@Override

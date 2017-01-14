@@ -27,7 +27,7 @@ public class SearchResultWizardPage extends WizardPage {
 
 	public SearchResultWizardPage(final ImportPgpKeyFromServerData importPgpKeyFromServerData) {
 		super("Search result");
-		this.importPgpKeyFromServerData = assertNotNull("importPgpKeyFromServerData", importPgpKeyFromServerData);
+		this.importPgpKeyFromServerData = assertNotNull(importPgpKeyFromServerData, "importPgpKeyFromServerData");
 		this.pgpKeyId2CertifyPgpKeyData = importPgpKeyFromServerData.getPgpKeyId2CertifyPgpKeyData();
 
 		// This wizard-page must be shown - even though the selection is done automatically!
@@ -66,7 +66,7 @@ public class SearchResultWizardPage extends WizardPage {
 		final List<CertifyPgpKeyWizardPage> certifyPgpKeyWizardPages = new ArrayList<>();
 		for (final PgpKeyId pgpKeyId : importPgpKeyFromServerData.getSelectedPgpKeyIds()) {
 			final PgpKey pgpKey = tempPgp.getPgpKey(pgpKeyId);
-			assertNotNull("tempPgp.getPgpKey(" + pgpKeyId + ")", pgpKey);
+			assertNotNull(pgpKey, "tempPgp.getPgpKey(" + pgpKeyId + ")");
 
 			CertifyPgpKeyData certifyPgpKeyData = pgpKeyId2CertifyPgpKeyData.get(pgpKeyId);
 			if (certifyPgpKeyData == null) {

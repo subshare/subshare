@@ -47,7 +47,7 @@ public class ServerRepoDirectoryMainTreeItem extends MainTreeItem<ServerRepoFile
 	private TimerTask deferredGetChildrenTimerTask;
 
 	public ServerRepoDirectoryMainTreeItem(final ServerRepoFile serverRepoFile) {
-		super(assertNotNull("serverRepoFile", serverRepoFile));
+		super(assertNotNull(serverRepoFile, "serverRepoFile"));
 		setGraphic(new ImageView(icon));
 		final UUID localRepositoryId = serverRepoFile.getLocalRepositoryId();
 

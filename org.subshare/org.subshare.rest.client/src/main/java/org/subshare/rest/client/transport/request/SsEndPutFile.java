@@ -24,17 +24,17 @@ public class SsEndPutFile extends EndPutFile {
 		super(repositoryName, path, new DateTime(new Date(0)), 0, null);
 //		this.normalFileDto = assertNotNull("normalFileDto", normalFileDto);
 
-		this.repoFileDtoWithCurrentHistoCryptoRepoFileDto = assertNotNull("repoFileDtoWithCurrentHistoCryptoRepoFileDto", repoFileDtoWithCurrentHistoCryptoRepoFileDto);
+		this.repoFileDtoWithCurrentHistoCryptoRepoFileDto = assertNotNull(repoFileDtoWithCurrentHistoCryptoRepoFileDto, "repoFileDtoWithCurrentHistoCryptoRepoFileDto");
 
 		final CurrentHistoCryptoRepoFileDto currentHistoCryptoRepoFileDto = assertNotNull(
-				"repoFileDtoWithCurrentHistoCryptoRepoFileDto.currentHistoCryptoRepoFileDto",
-				repoFileDtoWithCurrentHistoCryptoRepoFileDto.getCurrentHistoCryptoRepoFileDto());
+				repoFileDtoWithCurrentHistoCryptoRepoFileDto.getCurrentHistoCryptoRepoFileDto(),
+				"repoFileDtoWithCurrentHistoCryptoRepoFileDto.currentHistoCryptoRepoFileDto");
 
-		assertNotNull("repoFileDtoWithCurrentHistoCryptoRepoFileDto.currentHistoCryptoRepoFileDto.histoCryptoRepoFileDto",
-				currentHistoCryptoRepoFileDto.getHistoCryptoRepoFileDto());
+		assertNotNull(currentHistoCryptoRepoFileDto.getHistoCryptoRepoFileDto(),
+				"repoFileDtoWithCurrentHistoCryptoRepoFileDto.currentHistoCryptoRepoFileDto.histoCryptoRepoFileDto");
 
-		final RepoFileDto rfdto = assertNotNull("repoFileDtoWithCurrentHistoCryptoRepoFileDto.repoFileDto",
-				repoFileDtoWithCurrentHistoCryptoRepoFileDto.getRepoFileDto());
+		final RepoFileDto rfdto = assertNotNull(repoFileDtoWithCurrentHistoCryptoRepoFileDto.getRepoFileDto(),
+				"repoFileDtoWithCurrentHistoCryptoRepoFileDto.repoFileDto");
 
 		if (! (rfdto instanceof SsNormalFileDto))
 			throw new IllegalArgumentException("repoFileDtoWithCryptoRepoFileOnServerDto.repoFileDto is not an instance of SsNormalFileDto, but: " + rfdto.getClass().getName());

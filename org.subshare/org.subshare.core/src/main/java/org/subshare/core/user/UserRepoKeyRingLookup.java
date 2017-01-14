@@ -12,7 +12,7 @@ public interface UserRepoKeyRingLookup {
 		}
 
 		public static void setUserRepoKeyRingLookup(final UserRepoKeyRingLookup lookup) {
-			instance = assertNotNull("lookup", lookup);
+			instance = assertNotNull(lookup, "lookup");
 		}
 	}
 

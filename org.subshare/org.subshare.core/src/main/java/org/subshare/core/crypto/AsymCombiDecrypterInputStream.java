@@ -39,8 +39,8 @@ public class AsymCombiDecrypterInputStream extends FilterInputStream {
 	 * @throws IOException if reading the header from the underlying {@code InputStream} fails.
 	 */
 	public AsymCombiDecrypterInputStream(final InputStream in, final AsymmetricKeyParameter privateKey) throws IOException {
-		super(assertNotNull("in", in));
-		this.privateKey = assertNotNull("privateKey", privateKey);
+		super(assertNotNull(in, "in"));
+		this.privateKey = assertNotNull(privateKey, "privateKey");
 		this.header = readHeader();
 		symIn = new DecrypterInputStream(in, header.symmetricKey);
 	}
@@ -74,7 +74,7 @@ public class AsymCombiDecrypterInputStream extends FilterInputStream {
 		public final KeyParameter symmetricKey;
 		public Header(final int version, final KeyParameter symmetricKey) {
 			this.version = version;
-			this.symmetricKey = assertNotNull("symmetricKey", symmetricKey);
+			this.symmetricKey = assertNotNull(symmetricKey, "symmetricKey");
 		}
 	}
 

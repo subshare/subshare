@@ -37,7 +37,7 @@ public class PreliminaryCollision extends Entity {
 	}
 
 	public void setPath(final String path) {
-		this.path = assertNotNull("path", path);
+		this.path = assertNotNull(path, "path");
 		this.pathSha1 = sha1(path);
 	}
 

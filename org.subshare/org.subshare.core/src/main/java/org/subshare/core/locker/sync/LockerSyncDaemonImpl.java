@@ -23,7 +23,7 @@ public class LockerSyncDaemonImpl extends SyncDaemonImpl implements LockerSyncDa
 
 	@Override
 	protected Sync createSync(final Server server) {
-		assertNotNull("server", server);
+		assertNotNull(server, "server");
 		return new LockerSync(server);
 	}
 

@@ -64,7 +64,7 @@ public class PlainHistoCryptoRepoFile extends Entity implements StoreCallback {
 	}
 
 	public void setPlainHistoCryptoRepoFileDto(final PlainHistoCryptoRepoFileDto dto) {
-		assertNotNull("dto", dto);
+		assertNotNull(dto, "dto");
 		plainHistoCryptoRepoFileDtoData = new PlainHistoCryptoRepoFileDtoIo().serializeWithGz(dto);
 	}
 

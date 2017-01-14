@@ -22,7 +22,7 @@ public class CreateRepoWizard extends Wizard {
 	private final CreateRepoData createRepoData;
 
 	public CreateRepoWizard(final CreateRepoData createRepoData) {
-		this.createRepoData = assertNotNull("createRepoData", createRepoData);
+		this.createRepoData = assertNotNull(createRepoData, "createRepoData");
 
 		if (createRepoData.getServer() == null) {
 			List<Server> servers = ServerRegistryLs.getServerRegistry().getServers();

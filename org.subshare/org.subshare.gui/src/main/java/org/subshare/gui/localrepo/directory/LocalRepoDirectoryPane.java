@@ -83,8 +83,8 @@ public class LocalRepoDirectoryPane extends VBox implements HistoryPaneContainer
 	private final HistoryPaneSupport historyPaneSupport;
 
 	public LocalRepoDirectoryPane(final LocalRepo localRepo, final File file) {
-		this.localRepo = assertNotNull("localRepo", localRepo);
-		this.file = assertNotNull("file", file);
+		this.localRepo = assertNotNull(localRepo, "localRepo");
+		this.file = assertNotNull(file, "file");
 		loadDynamicComponentFxml(LocalRepoDirectoryPane.class, this);
 
 		final String path = file.getAbsolutePath();
@@ -200,7 +200,7 @@ public class LocalRepoDirectoryPane extends VBox implements HistoryPaneContainer
 
 		public RootDirectoryFileTreeItem(FileTreePane fileTreePane, File file) {
 			super(file); // file is null-checked by super-constructor.
-			this.fileTreePane = assertNotNull("fileTreePane", fileTreePane);
+			this.fileTreePane = assertNotNull(fileTreePane, "fileTreePane");
 			hookUpdateInvalidationListener(fileTreePane);
 		}
 

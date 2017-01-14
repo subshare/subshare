@@ -72,11 +72,11 @@ public class FilePaddingLengthRandom {
 	}
 
 	public FilePaddingLengthRandom(final File file) {
-		this(ConfigImpl.getInstanceForFile(assertNotNull("file", file)));
+		this(ConfigImpl.getInstanceForFile(assertNotNull(file, "file")));
 	}
 
 	public FilePaddingLengthRandom(final Config config) {
-		this.config = assertNotNull("config", config);
+		this.config = assertNotNull(config, "config");
 		populateLengthProbability();
 	}
 

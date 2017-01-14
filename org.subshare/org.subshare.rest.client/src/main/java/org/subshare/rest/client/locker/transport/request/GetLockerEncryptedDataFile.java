@@ -24,9 +24,9 @@ public class GetLockerEncryptedDataFile extends AbstractRequest<LockerEncryptedD
 	private final Uid lockerContentVersion;
 
 	public GetLockerEncryptedDataFile(final PgpKeyId pgpKeyId, final String lockerContentName, final Uid lockerContentVersion) {
-		this.pgpKeyId = assertNotNull("pgpKeyId", pgpKeyId);
-		this.lockerContentName = assertNotNull("lockerContentName", lockerContentName);
-		this.lockerContentVersion = assertNotNull("lockerContentVersion", lockerContentVersion);
+		this.pgpKeyId = assertNotNull(pgpKeyId, "pgpKeyId");
+		this.lockerContentName = assertNotNull(lockerContentName, "lockerContentName");
+		this.lockerContentVersion = assertNotNull(lockerContentVersion, "lockerContentVersion");
 	}
 
 	@Override

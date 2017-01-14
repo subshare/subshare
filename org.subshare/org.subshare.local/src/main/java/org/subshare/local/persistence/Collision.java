@@ -222,7 +222,7 @@ public class Collision extends Entity implements WriteProtected, AutoTrackLocalR
 					InputStreamSource.Helper.createInputStreamSource(getDuplicateCryptoRepoFileId()),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
-					InputStreamSource.Helper.createInputStreamSource(assertNotNull("cryptoKey", cryptoKey).getCryptoKeyId()),
+					InputStreamSource.Helper.createInputStreamSource(assertNotNull(cryptoKey, "cryptoKey").getCryptoKeyId()),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(collisionPrivateDtoData)
@@ -245,9 +245,9 @@ public class Collision extends Entity implements WriteProtected, AutoTrackLocalR
 	@Override
 	public void jdoPreStore() {
 		final Uid collisionId = getCollisionId();
-		final CryptoRepoFile cryptoRepoFile1 = assertNotNull("histoCryptoRepoFile1", histoCryptoRepoFile1).getCryptoRepoFile();
+		final CryptoRepoFile cryptoRepoFile1 = assertNotNull(histoCryptoRepoFile1, "histoCryptoRepoFile1").getCryptoRepoFile();
 		final CryptoRepoFile cryptoRepoFile2 = histoCryptoRepoFile2 == null ? null : histoCryptoRepoFile2.getCryptoRepoFile();
-		final CryptoRepoFile parent1 = assertNotNull("cryptoRepoFile1", cryptoRepoFile1).getParent();
+		final CryptoRepoFile parent1 = assertNotNull(cryptoRepoFile1, "cryptoRepoFile1").getParent();
 		final CryptoRepoFile parent2 = cryptoRepoFile2 == null ? null : cryptoRepoFile2.getParent();
 
 		if (histoCryptoRepoFile2 == null && duplicateCryptoRepoFileId == null)
@@ -276,7 +276,7 @@ public class Collision extends Entity implements WriteProtected, AutoTrackLocalR
 	}
 
 	private Uid calculateCollisionId() {
-		byte[] bytes = assertNotNull("histoCryptoRepoFile1", histoCryptoRepoFile1).getHistoCryptoRepoFileId().toBytes();
+		byte[] bytes = assertNotNull(histoCryptoRepoFile1, "histoCryptoRepoFile1").getHistoCryptoRepoFileId().toBytes();
 		xorIntoBytes(bytes, histoCryptoRepoFile2 == null ? null : histoCryptoRepoFile2.getHistoCryptoRepoFileId());
 		xorIntoBytes(bytes, getDuplicateCryptoRepoFileId());
 		return new Uid(bytes);
@@ -306,10 +306,10 @@ public class Collision extends Entity implements WriteProtected, AutoTrackLocalR
 
 	@Override
 	public Uid getCryptoRepoFileIdControllingPermissions() {
-		final CryptoRepoFile cryptoRepoFile1 = assertNotNull("histoCryptoRepoFile1", histoCryptoRepoFile1).getCryptoRepoFile();
+		final CryptoRepoFile cryptoRepoFile1 = assertNotNull(histoCryptoRepoFile1, "histoCryptoRepoFile1").getCryptoRepoFile();
 		final CryptoRepoFile cryptoRepoFile2 = histoCryptoRepoFile2 == null ? cryptoRepoFile1 : histoCryptoRepoFile2.getCryptoRepoFile();
-		assertNotNull("cryptoRepoFile1", cryptoRepoFile1);
-		assertNotNull("cryptoRepoFile2", cryptoRepoFile2);
+		assertNotNull(cryptoRepoFile1, "cryptoRepoFile1");
+		assertNotNull(cryptoRepoFile2, "cryptoRepoFile2");
 
 		// In most (nearly all) cases, the cryptoRepoFile1 and cryptoRepoFile2 are equal, because
 		// collisions happen with the very same file/dir/symlink. There is, however, a very rare

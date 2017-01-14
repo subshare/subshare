@@ -50,7 +50,7 @@ public class SearchResultPane extends WizardPageContentGridPane {
 	private PgpKeyTreePane pgpKeyTreePane;
 
 	public SearchResultPane(final ImportPgpKeyFromServerData importPgpKeyFromServerData) {
-		this.importPgpKeyFromServerData = assertNotNull("importPgpKeyFromServerData", importPgpKeyFromServerData); //$NON-NLS-1$
+		this.importPgpKeyFromServerData = assertNotNull(importPgpKeyFromServerData, "importPgpKeyFromServerData"); //$NON-NLS-1$
 		loadDynamicComponentFxml(SearchResultPane.class, this);
 		pgpKeyTreePane.getCheckBoxVisibleForPgpKeyTreeItemClasses().add(PgpKeyPgpKeyTreeItem.class);
 
@@ -153,7 +153,7 @@ public class SearchResultPane extends WizardPageContentGridPane {
 			for (final ImportedMasterKey importedMasterKey : tempImportKeysResult.getImportKeysResult().getPgpKeyId2ImportedMasterKey().values()) {
 				final PgpKeyId pgpKeyId = importedMasterKey.getPgpKeyId();
 				final PgpKey pgpKey = tempPgp.getPgpKey(pgpKeyId);
-				assertNotNull(String.format("tempPgp.getPgpKey(%s)", pgpKeyId), pgpKey);
+				assertNotNull(pgpKey, String.format("tempPgp.getPgpKey(%s)", pgpKeyId));
 
 				PgpKeyPgpKeyTreeItem ti = new PgpKeyPgpKeyTreeItem(pgpKey);
 				root.getChildren().add(ti);

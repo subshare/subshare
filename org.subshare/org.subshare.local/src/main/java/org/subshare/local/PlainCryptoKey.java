@@ -18,9 +18,9 @@ public class PlainCryptoKey {
 	private final CipherParameters cipherParameters;
 
 	public PlainCryptoKey(final CryptoKey cryptoKey, final CryptoKeyPart cryptoKeyPart, final CipherParameters cipherParameters) {
-		this.cryptoKey = assertNotNull("cryptoKey", cryptoKey);
-		this.cryptoKeyPart = assertNotNull("cryptoKeyPart", cryptoKeyPart);
-		this.cipherParameters = assertNotNull("cipherParameters", cipherParameters);
+		this.cryptoKey = assertNotNull(cryptoKey, "cryptoKey");
+		this.cryptoKeyPart = assertNotNull(cryptoKeyPart, "cryptoKeyPart");
+		this.cipherParameters = assertNotNull(cipherParameters, "cipherParameters");
 
 		switch (cryptoKeyPart) {
 			case privateKey:

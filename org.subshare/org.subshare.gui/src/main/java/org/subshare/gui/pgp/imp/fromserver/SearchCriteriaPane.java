@@ -20,7 +20,7 @@ public class SearchCriteriaPane extends WizardPageContentGridPane {
 	private TextField queryStringTextField;
 
 	public SearchCriteriaPane(final ImportPgpKeyFromServerData importPgpKeyFromServerData) {
-		this.importPgpKeyFromServerData = assertNotNull("importPgpKeyFromServerData", importPgpKeyFromServerData);
+		this.importPgpKeyFromServerData = assertNotNull(importPgpKeyFromServerData, "importPgpKeyFromServerData");
 		loadDynamicComponentFxml(SearchCriteriaPane.class, this);
 		queryStringTextField.textProperty().bindBidirectional(importPgpKeyFromServerData.queryStringProperty());
 		importPgpKeyFromServerData.queryStringProperty().addListener(new WeakInvalidationListener(updateCompleteInvalidationListener));

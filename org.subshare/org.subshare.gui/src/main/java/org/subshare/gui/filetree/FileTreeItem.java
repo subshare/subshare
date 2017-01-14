@@ -77,7 +77,7 @@ public class FileTreeItem<T> extends TreeItem<FileTreeItem<?>> {
 			return fileTreePane;
 
 		final FileTreeItem<?> parent = (FileTreeItem<?>) getParent();
-		assertNotNull("parent", parent);
+		assertNotNull(parent, "parent");
 		return parent.getFileTreePane();
 	}
 
@@ -123,7 +123,7 @@ public class FileTreeItem<T> extends TreeItem<FileTreeItem<?>> {
 	}
 
 	public FileTreeItem<?> findFirst(final File file) {
-		assertNotNull("file", file);
+		assertNotNull(file, "file");
 
 		if (! file.isAbsolute())
 			throw new IllegalArgumentException("file not absolute!");
@@ -140,7 +140,7 @@ public class FileTreeItem<T> extends TreeItem<FileTreeItem<?>> {
 	}
 
 	public List<FileTreeItem<?>> findAll(final File file) {
-		assertNotNull("file", file);
+		assertNotNull(file, "file");
 
 		if (! file.isAbsolute())
 			throw new IllegalArgumentException("file not absolute!");
@@ -148,7 +148,7 @@ public class FileTreeItem<T> extends TreeItem<FileTreeItem<?>> {
 		final List<FileTreeItem<?>> result = new ArrayList<FileTreeItem<?>>();
 		for (final TreeItem<FileTreeItem<?>> child : getChildren()) {
 			final List<FileTreeItem<?>> childFound = child.getValue().findAll(file);
-			result.addAll(assertNotNull("FileTreeItem.findAll(...)", childFound));
+			result.addAll(assertNotNull(childFound, "FileTreeItem.findAll(...)"));
 		}
 		return result;
 	}

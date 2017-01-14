@@ -117,7 +117,7 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 
 	@Override
 	public void createRepository(final UUID serverRepositoryId, PgpKey pgpKey) {
-		assertNotNull("pgpKey", pgpKey);
+		assertNotNull(pgpKey, "pgpKey");
 		CreateRepositoryRequestDto createRepositoryRequestDto = new CreateRepositoryRequestDto();
 		createRepositoryRequestDto.setServerRepositoryId(serverRepositoryId);
 		new PgpSignableSigner(pgpKey).sign(createRepositoryRequestDto);
@@ -215,7 +215,7 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 	}
 
 	private ChangeSetDto decryptChangeSetDto(final ChangeSetDto changeSetDto) {
-		assertNotNull("changeSetDto", changeSetDto);
+		assertNotNull(changeSetDto, "changeSetDto");
 		final ChangeSetDto decryptedChangeSetDto = new ChangeSetDto();
 
 		final LocalRepoManager localRepoManager = getLocalRepoManager();
@@ -368,8 +368,8 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 	}
 
 	private void assertRepoFileDtoIsCorrectRoot(final Cryptree cryptree, final RepoFileDto repoFileDto) {
-		assertNotNull("cryptree", cryptree);
-		assertNotNull("repoFileDto", repoFileDto);
+		assertNotNull(cryptree, "cryptree");
+		assertNotNull(repoFileDto, "repoFileDto");
 		final SsDirectoryDto ssDirectoryDto = (SsDirectoryDto) repoFileDto;
 
 		if (! repoFileDto.getName().isEmpty())
@@ -380,7 +380,7 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 				throw new IllegalStateException(String.format("ssDirectoryDto.realName is not null, but: '%s'", ssDirectoryDto.getRealName()));
 		}
 		else {
-			final Uid virtualRootCryptoRepoFileId = assertNotNull("cryptree.getCryptoRepoFileIdForRemotePathPrefixOrFail()", cryptree.getCryptoRepoFileIdForRemotePathPrefixOrFail());
+			final Uid virtualRootCryptoRepoFileId = assertNotNull(cryptree.getCryptoRepoFileIdForRemotePathPrefixOrFail(), "cryptree.getCryptoRepoFileIdForRemotePathPrefixOrFail()");
 			if (! virtualRootCryptoRepoFileId.toString().equals(ssDirectoryDto.getRealName()))
 				throw new IllegalStateException(String.format("virtualRootCryptoRepoFileId != ssDirectoryDto.realName :: '%s' != '%s'",
 						virtualRootCryptoRepoFileId, ssDirectoryDto.getRealName()));
@@ -388,11 +388,11 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 	}
 
 	private void assertRepoFileParentNameMatchesParentRepoFileName(final RepoFileDtoTreeNode node) throws IllegalStateException {
-		assertNotNull("node", node);
+		assertNotNull(node, "node");
 		final SsRepoFileDto ssRepoFileDto = (SsRepoFileDto) node.getRepoFileDto();
-		final String childParentName = assertNotNull("ssRepoFileDto.parentName", ssRepoFileDto.getParentName());
-		final RepoFileDtoTreeNode parent = assertNotNull("node.parent", node.getParent());
-		final RepoFileDto parentRepoFileDto = assertNotNull("node.parent.repoFileDto", parent.getRepoFileDto());
+		final String childParentName = assertNotNull(ssRepoFileDto.getParentName(), "ssRepoFileDto.parentName");
+		final RepoFileDtoTreeNode parent = assertNotNull(node.getParent(), "node.parent");
+		final RepoFileDto parentRepoFileDto = assertNotNull(parent.getRepoFileDto(), "node.parent.repoFileDto");
 		final SsDirectoryDto parentDirectoryDto = (SsDirectoryDto) parentRepoFileDto;
 		final String parentRealName = (isVirtualRootWithDifferentRealName(parentDirectoryDto)
 				? parentDirectoryDto.getRealName() : parentDirectoryDto.getName());
@@ -403,14 +403,14 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 	}
 
 	private boolean isVirtualRootWithDifferentRealName(final SsDirectoryDto ssDirectoryDto) {
-		assertNotNull("ssDirectoryDto", ssDirectoryDto);
+		assertNotNull(ssDirectoryDto, "ssDirectoryDto");
 		return ssDirectoryDto.getRealName() != null
 				&& ssDirectoryDto.getName().isEmpty()
 				&& ssDirectoryDto.getParentId() == null;
 	}
 
 	private ModificationDto decryptModificationDto(final Cryptree cryptree, final ModificationDto modificationDto) {
-		assertNotNull("modificationDto", modificationDto);
+		assertNotNull(modificationDto, "modificationDto");
 
 		if (modificationDto instanceof SsDeleteModificationDto)
 			return decryptDeleteModificationDto(cryptree, (SsDeleteModificationDto) modificationDto);
@@ -420,7 +420,7 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 	}
 
 	private ModificationDto decryptDeleteModificationDto(final Cryptree cryptree, final SsDeleteModificationDto modificationDto) {
-		assertNotNull("modificationDto", modificationDto);
+		assertNotNull(modificationDto, "modificationDto");
 
 		final String localPath = cryptree.getLocalPath(modificationDto.getServerPath());
 		modificationDto.setPath(localPath);
@@ -428,12 +428,12 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 	}
 
 	private RepoFileDto decryptRepoFileDtoOnServer(final Cryptree cryptree, final RepoFileDto repoFileDto) {
-		assertNotNull("cryptree", cryptree);
-		final String name = assertNotNull("repoFileDto", repoFileDto).getName();
+		assertNotNull(cryptree, "cryptree");
+		final String name = assertNotNull(repoFileDto, "repoFileDto").getName();
 
 		final Uid cryptoRepoFileId = (repoFileDto.getParentId() == null && name.isEmpty())
 				? cryptree.getRootCryptoRepoFileId()
-						: new Uid(assertNotNull("repoFileDto.name", name));
+						: new Uid(assertNotNull(name, "repoFileDto.name"));
 
 		if (cryptoRepoFileId == null) // there is no root before the very first up-sync!
 			return null;
@@ -949,7 +949,7 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 	}
 
 	private void putCryptoChangeSetDto(final CryptoChangeSetDto cryptoChangeSetDto) {
-		assertNotNull("cryptoChangeSetDto", cryptoChangeSetDto);
+		assertNotNull(cryptoChangeSetDto, "cryptoChangeSetDto");
 		if (! cryptoChangeSetDto.isEmpty())
 			getClient().execute(new PutCryptoChangeSetDto(getRepositoryId().toString(), cryptoChangeSetDto));
 	}
@@ -1023,8 +1023,8 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 		if (restRepoTransport == null) {
 			final RestRepoTransportFactory restRepoTransportFactory = getRepoTransportFactory().restRepoTransportFactory;
 			restRepoTransport = (RestRepoTransport) restRepoTransportFactory.createRepoTransport(
-					assertNotNull("getRemoteRoot()", getRemoteRoot()),
-					assertNotNull("getClientRepositoryId()", getClientRepositoryId()));
+					assertNotNull(getRemoteRoot(), "getRemoteRoot()"),
+					assertNotNull(getClientRepositoryId(), "getClientRepositoryId()"));
 		}
 		return restRepoTransport;
 	}

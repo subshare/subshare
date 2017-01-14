@@ -35,7 +35,7 @@ public class BcPgpEncoder extends AbstractPgpEncoder {
 	private final BcWithLocalGnuPgPgp pgp;
 
 	public BcPgpEncoder(final BcWithLocalGnuPgPgp pgp) {
-		this.pgp = assertNotNull("pgp", pgp);
+		this.pgp = assertNotNull(pgp, "pgp");
 	}
 
 	@Override
@@ -124,7 +124,7 @@ public class BcPgpEncoder extends AbstractPgpEncoder {
 	}
 
 	private PGPSignatureGenerator createSignatureGenerator() throws PGPException {
-		final PgpKey signPgpKey = assertNotNull("signPgpKey", getSignPgpKey());
+		final PgpKey signPgpKey = assertNotNull(getSignPgpKey(), "signPgpKey");
 		final PgpKey actualSignPgpKey = signPgpKey.getPgpKeyForSignatureOrFail();
 
 		final PGPSecretKey signSecretKey = getPgpSecretKeyOrFail(actualSignPgpKey);
@@ -168,7 +168,7 @@ public class BcPgpEncoder extends AbstractPgpEncoder {
 	}
 
 	private PGPSecretKey getPgpSecretKeyOrFail(final PgpKey pgpKey) {
-		assertNotNull("pgpKey", pgpKey);
+		assertNotNull(pgpKey, "pgpKey");
 		final PGPSecretKey secretKey = pgp.getBcPgpKeyOrFail(pgpKey).getSecretKey();
 		if (secretKey == null)
 			throw new IllegalStateException(String.format(

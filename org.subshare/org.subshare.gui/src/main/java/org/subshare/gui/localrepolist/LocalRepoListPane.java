@@ -220,7 +220,7 @@ public class LocalRepoListPane extends GridPane {
 	}
 
 	private void addOrRemoveTableItemsViewCallback(final Collection<LocalRepo> localRepos) {
-		assertNotNull("localRepos", localRepos);
+		assertNotNull(localRepos, "localRepos");
 		final Map<LocalRepo, LocalRepoListItem> viewLocalRepo2LocalRepoListItem = new HashMap<>();
 		for (final LocalRepoListItem li : tableView.getItems())
 			viewLocalRepo2LocalRepoListItem.put(li.getLocalRepo(), li);

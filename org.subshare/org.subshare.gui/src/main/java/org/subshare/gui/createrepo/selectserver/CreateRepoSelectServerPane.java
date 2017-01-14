@@ -24,7 +24,7 @@ public class CreateRepoSelectServerPane extends WizardPageContentGridPane {
 	private TableView<ServerListItem> tableView;
 
 	public CreateRepoSelectServerPane(final CreateRepoData createRepoData) {
-		this.createRepoData = assertNotNull("createRepoData", createRepoData);
+		this.createRepoData = assertNotNull(createRepoData, "createRepoData");
 		loadDynamicComponentFxml(CreateRepoSelectServerPane.class, this);
 		tableView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
 		tableView.getSelectionModel().selectedItemProperty().addListener((InvalidationListener) observable -> onSelectionChanged());

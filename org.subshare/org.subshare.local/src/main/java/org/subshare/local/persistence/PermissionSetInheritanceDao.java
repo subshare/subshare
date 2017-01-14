@@ -46,7 +46,7 @@ public class PermissionSetInheritanceDao extends Dao<PermissionSetInheritance, P
 	}
 
 	public PermissionSetInheritance getPermissionSetInheritance(final Uid permissionSetInheritanceId) {
-		assertNotNull("permissionSetInheritanceId", permissionSetInheritanceId);
+		assertNotNull(permissionSetInheritanceId, "permissionSetInheritanceId");
 		final Query query = pm().newNamedQuery(getEntityClass(), "getPermissionSetInheritance_permissionSetInheritanceId");
 		try {
 			final PermissionSetInheritance result = (PermissionSetInheritance) query.execute(permissionSetInheritanceId.toString());

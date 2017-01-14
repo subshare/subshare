@@ -43,7 +43,7 @@ public class SelectUserWizardPage extends WizardPage {
 
 	public SelectUserWizardPage(final IssueInvitationData issueInvitationData) {
 		super(Messages.getString("SelectUserWizardPage.title")); //$NON-NLS-1$
-		this.issueInvitationData = assertNotNull("issueInvitationData", issueInvitationData); //$NON-NLS-1$
+		this.issueInvitationData = assertNotNull(issueInvitationData, "issueInvitationData"); //$NON-NLS-1$
 	}
 
 	@Override

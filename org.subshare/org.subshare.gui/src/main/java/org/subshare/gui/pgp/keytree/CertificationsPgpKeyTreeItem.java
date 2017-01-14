@@ -44,8 +44,8 @@ public class CertificationsPgpKeyTreeItem extends PgpKeyTreeItem<PgpKey> {
 	}
 
 	public CertificationsPgpKeyTreeItem(final PgpKey pgpKey, final String userId) {
-		super(assertNotNull("pgpKey", pgpKey));
-		this.userId = assertNotNull("userId", userId);
+		super(assertNotNull(pgpKey, "pgpKey"));
+		this.userId = assertNotNull(userId, "userId");
 	}
 
 	@Override
@@ -87,7 +87,7 @@ public class CertificationsPgpKeyTreeItem extends PgpKeyTreeItem<PgpKey> {
 	protected void hookPgpPropertyChangeListener() {
 		assertFxApplicationThread();
 		if (pgpWeakPropertyChangeListener == null) {
-			final Pgp pgp = assertNotNull("pgp", getPgp());
+			final Pgp pgp = assertNotNull(getPgp(), "pgp");
 			pgpWeakPropertyChangeListener = addWeakPropertyChangeListener(pgp, Pgp.PropertyEnum.localRevision, pgpPropertyChangeListener);
 		}
 	}

@@ -35,7 +35,7 @@ public class ServerRepoMainTreeItem extends MainTreeItem<ServerRepo> {
 	private WeakLocalRepoCommitEventListener weakLocalRepoCommitEventListener;
 
 	public ServerRepoMainTreeItem(final ServerRepo serverRepo) {
-		super(assertNotNull("serverRepo", serverRepo));
+		super(assertNotNull(serverRepo, "serverRepo"));
 		setGraphic(new ImageView(icon));
 	}
 

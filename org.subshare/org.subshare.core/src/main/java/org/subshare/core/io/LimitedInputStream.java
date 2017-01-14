@@ -49,7 +49,7 @@ public class LimitedInputStream extends FilterInputStream implements IInputStrea
 	 */
 	public LimitedInputStream(final InputStream in, final int minLimit, final int maxLimit)
 	{
-		super(assertNotNull("in", in));
+		super(assertNotNull(in, "in"));
 		this.minLimit = minLimit;
 		this.maxLimit = maxLimit;
 	}

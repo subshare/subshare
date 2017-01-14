@@ -18,7 +18,7 @@ public class ExportFromHistoryData {
 	private final Set<Uid> histoCryptoRepoFileIds = new HashSet<>();
 
 	public ExportFromHistoryData(final LocalRepo localRepo) {
-		this.localRepo = assertNotNull("localRepo", localRepo);
+		this.localRepo = assertNotNull(localRepo, "localRepo");
 	}
 
 	public LocalRepo getLocalRepo() {

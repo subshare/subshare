@@ -107,7 +107,7 @@ public class PgpTransportFactoryRegistryImpl implements PgpTransportFactoryRegis
 
 	@Override
 	public <F extends PgpTransportFactory> F getPgpTransportFactory(Class<F> factoryClass) {
-		AssertUtil.assertNotNull("factoryClass", factoryClass);
+		AssertUtil.assertNotNull(factoryClass, "factoryClass");
 		List<PgpTransportFactory> pgpTransportFactories = getPgpTransportFactories();
 		for (PgpTransportFactory pgpTransportFactory : pgpTransportFactories) {
 			if (factoryClass.isInstance(pgpTransportFactory)) {

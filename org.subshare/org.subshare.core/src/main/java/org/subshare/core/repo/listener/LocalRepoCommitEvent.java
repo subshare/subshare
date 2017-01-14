@@ -19,9 +19,9 @@ public class LocalRepoCommitEvent extends EventObject {
 	private final List<EntityModification> modifications;
 
 	protected LocalRepoCommitEvent(final LocalRepoCommitEventManagerImpl source, final LocalRepoManager localRepoManager, final List<EntityModification> modifications) {
-		super(assertNotNull("source", source));
-		assertNotNull("modifications", modifications);
-		this.localRepoManager = assertNotNull("localRepoManager", localRepoManager);
+		super(assertNotNull(source, "source"));
+		assertNotNull(modifications, "modifications");
+		this.localRepoManager = assertNotNull(localRepoManager, "localRepoManager");
 		this.localRepositoryId = localRepoManager.getRepositoryId();
 		this.modifications = Collections.unmodifiableList(new ArrayList<EntityModification>(modifications));
 	}

@@ -27,7 +27,7 @@ public abstract class AbstractPgpTransport implements PgpTransport {
 
 	@Override
 	public void setPgpTransportFactory(final PgpTransportFactory pgpTransportFactory) {
-		this.pgpTransportFactory = AssertUtil.assertNotNull("pgpTransportFactory", pgpTransportFactory);
+		this.pgpTransportFactory = AssertUtil.assertNotNull(pgpTransportFactory, "pgpTransportFactory");
 	}
 
 	@Override

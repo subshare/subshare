@@ -37,7 +37,7 @@ public enum SignerTransformation {
 	private final String transformation;
 
 	private SignerTransformation(final String transformation) {
-		this.transformation = assertNotNull("transformation", transformation);
+		this.transformation = assertNotNull(transformation, "transformation");
 	}
 
 	public String getTransformation() {
@@ -45,7 +45,7 @@ public enum SignerTransformation {
 	}
 
 	public static SignerTransformation fromTransformation(final String transformation) {
-		assertNotNull("transformation", transformation);
+		assertNotNull(transformation, "transformation");
 		final SignerTransformation st = transformation2SignerTransformation.get(transformation);
 		if (st == null)
 			throw new IllegalArgumentException("There is no SignerTransformation for this transformation: " + transformation);

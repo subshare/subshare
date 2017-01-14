@@ -44,12 +44,12 @@ public class HistoExporterImpl implements HistoExporter {
 	protected final UUID remoteRepositoryId;
 
 	public static HistoExporter createHistoExporter(final File localRoot) {
-		assertNotNull("localRoot", localRoot);
+		assertNotNull(localRoot, "localRoot");
 		return new HistoExporterImpl(localRoot);
 	}
 
 	protected HistoExporterImpl(final File localRoot) {
-		this.localRoot = assertNotNull("localRoot", localRoot);
+		this.localRoot = assertNotNull(localRoot, "localRoot");
 		this.localRepoManager = LocalRepoManagerFactory.Helper.getInstance().createLocalRepoManagerForExistingRepository(localRoot);
 		this.localRepositoryId = localRepoManager.getRepositoryId();
 		if (localRepositoryId == null)
@@ -100,14 +100,14 @@ public class HistoExporterImpl implements HistoExporter {
 	@Override
 	public void exportFile(final ExportFileParam exportFileParam) throws IOException {
 		// TODO support directories and take options into account (e.g. entire dirs [complete snapshots])
-		assertNotNull("exportFileParam", exportFileParam);
-		assertNotNull("exportFileParam.histoCryptoRepoFileId", exportFileParam.getHistoCryptoRepoFileId());
-		assertNotNull("exportFileParam.exportDirectory", exportFileParam.getExportDirectory());
+		assertNotNull(exportFileParam, "exportFileParam");
+		assertNotNull(exportFileParam.getHistoCryptoRepoFileId(), "exportFileParam.histoCryptoRepoFileId");
+		assertNotNull(exportFileParam.getExportDirectory(), "exportFileParam.exportDirectory");
 
 		try (final LocalRepoTransaction tx = localRepoManager.beginReadTransaction();) {
 			final PlainHistoCryptoRepoFileDto plainHistoCryptoRepoFileDto = getCryptree(tx).getPlainHistoCryptoRepoFileDto(exportFileParam.getHistoCryptoRepoFileId());
 			final RepoFileDto repoFileDto = plainHistoCryptoRepoFileDto.getRepoFileDto();
-			assertNotNull("plainHistoCryptoRepoFileDto.repoFileDto", repoFileDto);
+			assertNotNull(repoFileDto, "plainHistoCryptoRepoFileDto.repoFileDto");
 
 			final File exportFile = createFile(exportFileParam.getExportDirectory(), repoFileDto.getName());
 

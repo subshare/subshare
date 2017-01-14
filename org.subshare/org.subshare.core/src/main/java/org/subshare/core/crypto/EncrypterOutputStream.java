@@ -104,8 +104,8 @@ public class EncrypterOutputStream extends FilterOutputStream {
 			final CipherTransformation cipherTransformation,
 			final CipherParameters key,
 			final IvFactory ivFactory) throws IOException {
-		super(assertNotNull("out", out));
-		this.cipherTransformation = assertNotNull("cipherTransformation", cipherTransformation);
+		super(assertNotNull(out, "out"));
+		this.cipherTransformation = assertNotNull(cipherTransformation, "cipherTransformation");
 		assertValidKey(cipherTransformation, key);
 		this.cipher = createCipher();
 

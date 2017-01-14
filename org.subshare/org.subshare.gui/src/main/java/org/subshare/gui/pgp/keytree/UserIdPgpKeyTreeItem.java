@@ -13,8 +13,8 @@ public class UserIdPgpKeyTreeItem extends PgpKeyTreeItem<String> {
 	private final PgpKey pgpKey;
 
 	public UserIdPgpKeyTreeItem(final PgpKey pgpKey, final String userId) {
-		super(assertNotNull("userId", userId));
-		this.pgpKey = assertNotNull("pgpKey", pgpKey);
+		super(assertNotNull(userId, "userId"));
+		this.pgpKey = assertNotNull(pgpKey, "pgpKey");
 	}
 
 	@Override

@@ -16,7 +16,7 @@ public class SsBeginPutFile extends BeginPutFile {
 
 	public SsBeginPutFile(final String repositoryName, final String path, final SsNormalFileDto normalFileDto) {
 		super(repositoryName, path);
-		this.normalFileDto = assertNotNull("normalFileDto", normalFileDto);
+		this.normalFileDto = assertNotNull(normalFileDto, "normalFileDto");
 	}
 
 	@Override

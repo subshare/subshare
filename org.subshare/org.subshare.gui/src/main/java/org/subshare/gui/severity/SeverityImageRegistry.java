@@ -28,8 +28,8 @@ public class SeverityImageRegistry {
 	}
 
 	public synchronized Image getImage(final Severity severity, final IconSize iconSize) {
-		assertNotNull("severity", severity);
-		assertNotNull("iconSize", iconSize);
+		assertNotNull(severity, "severity");
+		assertNotNull(iconSize, "iconSize");
 
 		Map<IconSize, Image> iconSize2Image = severity2IconSize2Image.get(severity);
 		if (iconSize2Image == null) {

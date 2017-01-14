@@ -61,7 +61,7 @@ public class UserListItem extends org.subshare.gui.userlist.UserListItem {
 	}
 
 	private static String getPermissionString(final Set<PermissionType> permissionTypes) {
-		assertNotNull("permissionTypes", permissionTypes); //$NON-NLS-1$
+		assertNotNull(permissionTypes, "permissionTypes"); //$NON-NLS-1$
 		final StringBuilder sb = new StringBuilder();
 
 		final LinkedHashSet<PermissionType> allPermissionTypes = new LinkedHashSet<PermissionType>(

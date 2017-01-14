@@ -56,16 +56,16 @@ public class CryptreeContext {
 			final UUID localRepositoryId, final UUID remoteRepositoryId, final UUID serverRepositoryId,
 			final String remotePathPrefix, final boolean isOnServer) {
 		if (!isOnServer) {
-			assertNotNull("userRepoKeyRing", userRepoKeyRing);
-			assertNotNull("remotePathPrefix", remotePathPrefix);
+			assertNotNull(userRepoKeyRing, "userRepoKeyRing");
+			assertNotNull(remotePathPrefix, "remotePathPrefix");
 		}
 
 		this.userRepoKeyRing = userRepoKeyRing;
 
-		this.transaction = assertNotNull("transaction", transaction);
-		this.localRepositoryId = assertNotNull("localRepositoryId", localRepositoryId);
-		this.remoteRepositoryId = assertNotNull("remoteRepositoryId", remoteRepositoryId);
-		this.serverRepositoryId = assertNotNull("serverRepositoryId", serverRepositoryId);
+		this.transaction = assertNotNull(transaction, "transaction");
+		this.localRepositoryId = assertNotNull(localRepositoryId, "localRepositoryId");
+		this.remoteRepositoryId = assertNotNull(remoteRepositoryId, "remoteRepositoryId");
+		this.serverRepositoryId = assertNotNull(serverRepositoryId, "serverRepositoryId");
 		this.remotePathPrefix = remotePathPrefix;
 		this.isOnServer = isOnServer;
 		this.repoFileDtoIo = new RepoFileDtoIo();
@@ -83,7 +83,7 @@ public class CryptreeContext {
 	}
 
 	public CryptreeNode getCryptreeNodeOrCreate(String localPath) {
-		assertNotNull("localPath", localPath);
+		assertNotNull(localPath, "localPath");
 		if ("/".equals(localPath))
 			localPath = "";
 
@@ -96,7 +96,7 @@ public class CryptreeContext {
 	}
 
 	public CryptreeNode getCryptreeNodeOrCreate(final Uid cryptoRepoFileId) {
-		assertNotNull("cryptoRepoFileId", cryptoRepoFileId);
+		assertNotNull(cryptoRepoFileId, "cryptoRepoFileId");
 		CryptreeNode cryptreeNode = cryptoRepoFileId2CryptreeNode.get(cryptoRepoFileId);
 		if (cryptreeNode == null) {
 			cryptreeNode = createCryptreeNodeOrFail(cryptoRepoFileId);
@@ -106,14 +106,14 @@ public class CryptreeContext {
 	}
 
 	public void registerCryptreeNode(final RepoFile repoFile, final CryptreeNode cryptreeNode) {
-		assertNotNull("repoFile", repoFile);
-		assertNotNull("cryptreeNode", cryptreeNode);
+		assertNotNull(repoFile, "repoFile");
+		assertNotNull(cryptreeNode, "cryptreeNode");
 		localPath2CryptreeNode.put(repoFile.getPath(), cryptreeNode);
 	}
 
 	public void registerCryptreeNode(final CryptoRepoFile cryptoRepoFile, final CryptreeNode cryptreeNode) {
-		assertNotNull("cryptoRepoFile", cryptoRepoFile);
-		assertNotNull("cryptreeNode", cryptreeNode);
+		assertNotNull(cryptoRepoFile, "cryptoRepoFile");
+		assertNotNull(cryptreeNode, "cryptreeNode");
 		cryptoRepoFileId2CryptreeNode.put(cryptoRepoFile.getCryptoRepoFileId(), cryptreeNode);
 	}
 
@@ -166,7 +166,7 @@ public class CryptreeContext {
 	}
 
 	public SignableSigner getSignableSigner(final UserRepoKey userRepoKey) {
-		assertNotNull("userRepoKey", userRepoKey);
+		assertNotNull(userRepoKey, "userRepoKey");
 		SignableSigner signableSigner = userRepoKey2SignableSigner.get(userRepoKey);
 		if (signableSigner == null) {
 			signableSigner = new SignableSigner(userRepoKey);
@@ -200,7 +200,7 @@ public class CryptreeContext {
 
 	public CryptoRepoFile getCryptoRepoFileOrFail(final String localPath) {
 		final CryptoRepoFile cryptoRepoFile = getCryptoRepoFile(localPath);
-		assertNotNull("cryptoRepoFile", cryptoRepoFile);
+		assertNotNull(cryptoRepoFile, "cryptoRepoFile");
 		return cryptoRepoFile;
 	}
 
@@ -211,7 +211,7 @@ public class CryptreeContext {
 	}
 
 	private String prefixLocalPath(final String localPath) {
-		assertNotNull("localPath", localPath);
+		assertNotNull(localPath, "localPath");
 
 		if (remotePathPrefix.isEmpty())
 			return localPath;

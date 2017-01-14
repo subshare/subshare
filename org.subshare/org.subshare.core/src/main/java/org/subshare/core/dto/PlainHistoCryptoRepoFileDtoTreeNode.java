@@ -40,7 +40,7 @@ public class PlainHistoCryptoRepoFileDtoTreeNode implements Iterable<PlainHistoC
 	 * @throws IllegalArgumentException if the given {@code plainHistoCryptoRepoFileDtos} does not meet the criteria stated above.
 	 */
 	public static PlainHistoCryptoRepoFileDtoTreeNode createTree(final Collection<PlainHistoCryptoRepoFileDto> plainHistoCryptoRepoFileDtos) throws IllegalArgumentException {
-		AssertUtil.assertNotNull("plainHistoCryptoRepoFileDtos", plainHistoCryptoRepoFileDtos);
+		AssertUtil.assertNotNull(plainHistoCryptoRepoFileDtos, "plainHistoCryptoRepoFileDtos");
 		if (plainHistoCryptoRepoFileDtos.isEmpty())
 			return null;
 
@@ -88,7 +88,7 @@ public class PlainHistoCryptoRepoFileDtoTreeNode implements Iterable<PlainHistoC
 	private List<PlainHistoCryptoRepoFileDtoTreeNode> flattenedTreeList;
 
 	protected PlainHistoCryptoRepoFileDtoTreeNode(final PlainHistoCryptoRepoFileDto plainHistoCryptoRepoFileDto) {
-		this.plainHistoCryptoRepoFileDto = AssertUtil.assertNotNull("plainHistoCryptoRepoFileDto", plainHistoCryptoRepoFileDto);
+		this.plainHistoCryptoRepoFileDto = AssertUtil.assertNotNull(plainHistoCryptoRepoFileDto, "plainHistoCryptoRepoFileDto");
 	}
 
 	public PlainHistoCryptoRepoFileDto getPlainHistoCryptoRepoFileDto() {

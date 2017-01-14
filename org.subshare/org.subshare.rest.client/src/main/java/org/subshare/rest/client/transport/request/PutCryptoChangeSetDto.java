@@ -17,8 +17,8 @@ public class PutCryptoChangeSetDto extends VoidRequest {
 	private final CryptoChangeSetDto cryptoChangeSetDto;
 
 	public PutCryptoChangeSetDto(final String repositoryName, final CryptoChangeSetDto cryptoChangeSetDto) {
-		this.repositoryName = assertNotNull("repositoryName", repositoryName);
-		this.cryptoChangeSetDto = assertNotNull("cryptoChangeSetDto", cryptoChangeSetDto);
+		this.repositoryName = assertNotNull(repositoryName, "repositoryName");
+		this.cryptoChangeSetDto = assertNotNull(cryptoChangeSetDto, "cryptoChangeSetDto");
 	}
 
 	@Override

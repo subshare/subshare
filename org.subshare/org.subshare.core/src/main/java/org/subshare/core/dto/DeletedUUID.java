@@ -23,7 +23,7 @@ public class DeletedUUID {
 	public DeletedUUID() { }
 
 	public DeletedUUID(UUID uuid) {
-		this.uuid = assertNotNull("uuid", uuid);
+		this.uuid = assertNotNull(uuid, "uuid");
 		this.deleted = new Date();
 	}
 

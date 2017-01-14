@@ -54,9 +54,9 @@ public class SelectUserPane extends GridPane {
 	}
 
 	public SelectUserPane(final List<User> users, final Collection<User> selectedUsers, final SelectionMode selectionMode, final String headerText) {
-		assertNotNull("users", users);
+		assertNotNull(users, "users");
 		// selectedUsers may be null
-		assertNotNull("selectionMode", selectionMode);
+		assertNotNull(selectionMode, "selectionMode");
 		loadDynamicComponentFxml(SelectUserPane.class, this);
 
 		this.headerText.setText(headerText);

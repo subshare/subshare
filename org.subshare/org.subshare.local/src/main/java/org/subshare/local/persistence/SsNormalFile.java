@@ -105,7 +105,7 @@ public class SsNormalFile extends NormalFile implements SsRepoFile {
 
 	@Override
 	public Uid getCryptoRepoFileIdControllingPermissions() {
-		final PersistenceManager pm = assertNotNull("JDOHelper.getPersistenceManager(this)", JDOHelper.getPersistenceManager(this));
+		final PersistenceManager pm = assertNotNull(JDOHelper.getPersistenceManager(this), "JDOHelper.getPersistenceManager(this)");
 		return new CryptoRepoFileDao().persistenceManager(pm).getCryptoRepoFileOrFail(this).getCryptoRepoFileId();
 	}
 

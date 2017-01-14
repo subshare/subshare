@@ -30,7 +30,7 @@ public class CryptoLinkDao extends Dao<CryptoLink, CryptoLinkDao> {
 	}
 
 	public CryptoLink getCryptoLink(final Uid cryptoLinkId) {
-		assertNotNull("cryptoLinkId", cryptoLinkId);
+		assertNotNull(cryptoLinkId, "cryptoLinkId");
 		final Query query = pm().newNamedQuery(getEntityClass(), "getCryptoLink_cryptoLinkId");
 		try {
 			final CryptoLink cryptoLink = (CryptoLink) query.execute(cryptoLinkId.toString());
@@ -55,7 +55,7 @@ public class CryptoLinkDao extends Dao<CryptoLink, CryptoLinkDao> {
 	 */
 	public Collection<CryptoLink> getCryptoLinksChangedAfterExclLastSyncFromRepositoryId(
 			final long localRevision, final UUID exclLastSyncFromRepositoryId) {
-		assertNotNull("exclLastSyncFromRepositoryId", exclLastSyncFromRepositoryId);
+		assertNotNull(exclLastSyncFromRepositoryId, "exclLastSyncFromRepositoryId");
 
 		final Query query = pm().newNamedQuery(getEntityClass(), "getCryptoLinksChangedAfter_localRevision_exclLastSyncFromRepositoryId");
 		try {
@@ -103,7 +103,7 @@ public class CryptoLinkDao extends Dao<CryptoLink, CryptoLinkDao> {
 	}
 
 	public Collection<CryptoLink> getCryptoLinks(final UserRepoKeyPublicKey fromUserRepoKeyPublicKey) {
-		assertNotNull("fromUserRepoKeyPublicKey", fromUserRepoKeyPublicKey);
+		assertNotNull(fromUserRepoKeyPublicKey, "fromUserRepoKeyPublicKey");
 		final Query query = pm().newNamedQuery(getEntityClass(), "getCryptoLinks_fromUserRepoKeyPublicKey");
 		try {
 			long startTimestamp = System.currentTimeMillis();
@@ -122,7 +122,7 @@ public class CryptoLinkDao extends Dao<CryptoLink, CryptoLinkDao> {
 	}
 
 	public Collection<CryptoLink> getCryptoLinksFrom(final CryptoKey fromCryptoKey) {
-		assertNotNull("fromCryptoKey", fromCryptoKey);
+		assertNotNull(fromCryptoKey, "fromCryptoKey");
 		final Query query = pm().newNamedQuery(getEntityClass(), "getCryptoLinksFrom_fromCryptoKey");
 		try {
 			long startTimestamp = System.currentTimeMillis();
@@ -141,7 +141,7 @@ public class CryptoLinkDao extends Dao<CryptoLink, CryptoLinkDao> {
 	}
 
 	public Collection<CryptoLink> getCryptoLinksTo(final CryptoKey toCryptoKey) {
-		assertNotNull("toCryptoKey", toCryptoKey);
+		assertNotNull(toCryptoKey, "toCryptoKey");
 		final Query query = pm().newNamedQuery(getEntityClass(), "getCryptoLinksTo_toCryptoKey");
 		try {
 			long startTimestamp = System.currentTimeMillis();
@@ -160,7 +160,7 @@ public class CryptoLinkDao extends Dao<CryptoLink, CryptoLinkDao> {
 	}
 
 	public Collection<CryptoLink> getCryptoLinksSignedBy(final Uid signingUserRepoKeyId) {
-		assertNotNull("signingUserRepoKeyId", signingUserRepoKeyId);
+		assertNotNull(signingUserRepoKeyId, "signingUserRepoKeyId");
 		final Query query = pm().newNamedQuery(getEntityClass(), "getCryptoLinks_signingUserRepoKeyId");
 		try {
 			long startTimestamp = System.currentTimeMillis();

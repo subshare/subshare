@@ -46,7 +46,7 @@ public class DecrypterInputStream extends FilterInputStream {
 	private boolean closeUnderlyingStream = true;
 
 	public DecrypterInputStream(final InputStream in, final CipherParameters key) throws IOException {
-		super(assertNotNull("in", in));
+		super(assertNotNull(in, "in"));
 		this.header = readHeader();
 		assertValidKey(header.cipherTransformation, key);
 		this.cipher = createCipher();
@@ -74,7 +74,7 @@ public class DecrypterInputStream extends FilterInputStream {
 		public final byte[] iv;
 		public Header(final int version, final CipherTransformation cipherTransformation, final byte[] iv) {
 			this.version = version;
-			this.cipherTransformation = assertNotNull("cipherTransformation", cipherTransformation);
+			this.cipherTransformation = assertNotNull(cipherTransformation, "cipherTransformation");
 			this.iv = iv;
 		}
 	}

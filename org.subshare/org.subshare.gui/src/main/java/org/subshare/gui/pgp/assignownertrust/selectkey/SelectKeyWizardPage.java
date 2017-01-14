@@ -13,7 +13,7 @@ public class SelectKeyWizardPage extends WizardPage {
 
 	public SelectKeyWizardPage(final AssignOwnerTrustData assignOwnerTrustData) {
 		super("Assign owner-trust to which keys?");
-		this.assignOwnerTrustData = assertNotNull("assignOwnerTrustData", assignOwnerTrustData);
+		this.assignOwnerTrustData = assertNotNull(assignOwnerTrustData, "assignOwnerTrustData");
 	}
 
 	@Override

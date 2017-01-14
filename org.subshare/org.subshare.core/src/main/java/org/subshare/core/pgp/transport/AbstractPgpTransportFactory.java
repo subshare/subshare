@@ -13,7 +13,7 @@ public abstract class AbstractPgpTransportFactory implements PgpTransportFactory
 
 	@Override
 	public PgpTransport createPgpTransport(URL remoteRoot) {
-		AssertUtil.assertNotNull("remoteRoot", remoteRoot);
+		AssertUtil.assertNotNull(remoteRoot, "remoteRoot");
 		final PgpTransport pgpTransport = _createPgpTransport();
 		if (pgpTransport == null)
 			throw new IllegalStateException(String.format("Implementation error in class %s: _createPgpTransport(...) returned null!", this.getClass().getName()));

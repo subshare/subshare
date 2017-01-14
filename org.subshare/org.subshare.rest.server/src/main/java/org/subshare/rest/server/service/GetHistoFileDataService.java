@@ -23,7 +23,7 @@ public class GetHistoFileDataService extends AbstractServiceWithRepoToRepoAuth {
 			@PathParam("histoCryptoRepoFileId") Uid histoCryptoRepoFileId,
 			@PathParam("offset") final long offset)
 	{
-		assertNotNull("histoCryptoRepoFileId", histoCryptoRepoFileId);
+		assertNotNull(histoCryptoRepoFileId, "histoCryptoRepoFileId");
 
 		try (final CryptreeServerFileRepoTransport repoTransport = (CryptreeServerFileRepoTransport) authenticateAndCreateLocalRepoTransport()) {
 			return repoTransport.getHistoFileData(histoCryptoRepoFileId, offset);

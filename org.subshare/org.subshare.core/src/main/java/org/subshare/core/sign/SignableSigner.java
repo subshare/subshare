@@ -28,7 +28,7 @@ public class SignableSigner {
 	private final Signer signer;
 
 	public SignableSigner(final UserRepoKey userRepoKey) {
-		this.userRepoKey = assertNotNull("userRepoKey", userRepoKey);
+		this.userRepoKey = assertNotNull(userRepoKey, "userRepoKey");
 		this.signerTransformation = getSignerTransformation();
 
 		try {
@@ -40,7 +40,7 @@ public class SignableSigner {
 	}
 
 	public void sign(final Signable signable) {
-		assertNotNull("signable", signable);
+		assertNotNull(signable, "signable");
 
 		final Date signatureCreated = new Date();
 		final SignatureDto signatureDto = new SignatureDto();

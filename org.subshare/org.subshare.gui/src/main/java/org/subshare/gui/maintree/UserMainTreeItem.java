@@ -19,8 +19,8 @@ public class UserMainTreeItem extends MainTreeItem<User> {
 	public UserMainTreeItem(final EditUserManager editUserManager, final User user) {
 		super(user);
 		setGraphic(new ImageView(icon));
-		this.editUserManager = assertNotNull("editUserManager", editUserManager);
-		assertNotNull("user", user);
+		this.editUserManager = assertNotNull(editUserManager, "editUserManager");
+		assertNotNull(user, "user");
 	}
 
 	@Override

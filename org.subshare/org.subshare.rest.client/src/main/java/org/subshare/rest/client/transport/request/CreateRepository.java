@@ -15,7 +15,7 @@ public class CreateRepository extends VoidRequest {
 	private final CreateRepositoryRequestDto createRepositoryRequestDto;
 
 	public CreateRepository(final CreateRepositoryRequestDto createRepositoryRequestDto) {
-		this.createRepositoryRequestDto = assertNotNull("createRepositoryRequestDto", createRepositoryRequestDto);
+		this.createRepositoryRequestDto = assertNotNull(createRepositoryRequestDto, "createRepositoryRequestDto");
 	}
 
 	@Override

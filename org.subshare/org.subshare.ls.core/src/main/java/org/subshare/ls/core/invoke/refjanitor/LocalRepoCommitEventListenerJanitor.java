@@ -58,7 +58,7 @@ public class LocalRepoCommitEventListenerJanitor extends AbstractReferenceJanito
 		else
 			return;
 
-		assertNotNull("listener", listener);
+		assertNotNull(listener, "listener");
 
 		if ("addLocalRepoCommitEventListener".equals(methodName))
 			trackAddLocalRepoCommitEventListener(manager, localRepositoryId, listener);
@@ -67,7 +67,7 @@ public class LocalRepoCommitEventListenerJanitor extends AbstractReferenceJanito
 	}
 
 	private synchronized FaultTolerantLocalRepoCommitEventListener getFaultTolerantLocalRepoCommitEventListenerOrCreate(final LocalRepoCommitEventListener listener) {
-		assertNotNull("listener", listener);
+		assertNotNull(listener, "listener");
 
 		FaultTolerantLocalRepoCommitEventListener faultTolerantListener = originalListener2FaultTolerantLocalRepoCommitEventListener.get(listener);
 		if (faultTolerantListener == null) {
@@ -78,7 +78,7 @@ public class LocalRepoCommitEventListenerJanitor extends AbstractReferenceJanito
 	}
 
 	private synchronized FaultTolerantLocalRepoCommitEventListener getFaultTolerantLocalRepoCommitEventListener(final LocalRepoCommitEventListener listener) {
-		assertNotNull("listener", listener);
+		assertNotNull(listener, "listener");
 
 		final FaultTolerantLocalRepoCommitEventListener faultTolerantListener = originalListener2FaultTolerantLocalRepoCommitEventListener.get(listener);
 		return faultTolerantListener;
@@ -110,8 +110,8 @@ public class LocalRepoCommitEventListenerJanitor extends AbstractReferenceJanito
 	}
 
 	private void _removeLocalRepoCommitEventListener(final LocalRepoCommitEventManager manager, final UUID localRepositoryId, final LocalRepoCommitEventListener listener) {
-		assertNotNull("manager", manager);
-		assertNotNull("listener", listener);
+		assertNotNull(manager, "manager");
+		assertNotNull(listener, "listener");
 
 		final FaultTolerantLocalRepoCommitEventListener faultTolerantLocalRepoCommitEventListener = getFaultTolerantLocalRepoCommitEventListener(listener);
 		if (faultTolerantLocalRepoCommitEventListener == null)
@@ -121,8 +121,8 @@ public class LocalRepoCommitEventListenerJanitor extends AbstractReferenceJanito
 	}
 
 	private synchronized void trackAddLocalRepoCommitEventListener(final LocalRepoCommitEventManager manager, final UUID localRepositoryId, final LocalRepoCommitEventListener listener) {
-		assertNotNull("manager", manager);
-		assertNotNull("listener", listener);
+		assertNotNull(manager, "manager");
+		assertNotNull(listener, "listener");
 
 		Map<UUID, List<IdentityWeakReference<LocalRepoCommitEventListener>>> localRepositoryId2ListenerRefs = manager2LocalRepositoryId2ListenerRefs.get(manager);
 		if (localRepositoryId2ListenerRefs == null) {
@@ -145,8 +145,8 @@ public class LocalRepoCommitEventListenerJanitor extends AbstractReferenceJanito
 	}
 
 	private synchronized void trackRemoveLocalRepoCommitEventListener(final LocalRepoCommitEventManager manager, final UUID localRepositoryId, final LocalRepoCommitEventListener listener) {
-		assertNotNull("manager", manager);
-		assertNotNull("listener", listener);
+		assertNotNull(manager, "manager");
+		assertNotNull(listener, "listener");
 
 		final Map<UUID, List<IdentityWeakReference<LocalRepoCommitEventListener>>> localRepositoryId2ListenerRefs = manager2LocalRepositoryId2ListenerRefs.get(manager);
 		if (localRepositoryId2ListenerRefs == null)
@@ -169,7 +169,7 @@ public class LocalRepoCommitEventListenerJanitor extends AbstractReferenceJanito
 	}
 
 	private void expunge(final List<IdentityWeakReference<LocalRepoCommitEventListener>> listenerRefs) {
-		assertNotNull("listenerRefs", listenerRefs);
+		assertNotNull(listenerRefs, "listenerRefs");
 		for (final Iterator<IdentityWeakReference<LocalRepoCommitEventListener>> it = listenerRefs.iterator(); it.hasNext();) {
 			final IdentityWeakReference<LocalRepoCommitEventListener> ref = it.next();
 			if (ref.get() == null)
@@ -183,7 +183,7 @@ public class LocalRepoCommitEventListenerJanitor extends AbstractReferenceJanito
 		private final LocalRepoCommitEventListener delegate;
 
 		public FaultTolerantLocalRepoCommitEventListener(final LocalRepoCommitEventListener delegate) {
-			this.delegate = assertNotNull("delegate", delegate);
+			this.delegate = assertNotNull(delegate, "delegate");
 		}
 
 		@Override

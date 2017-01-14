@@ -95,18 +95,18 @@ public class AsymCombiEncrypterOutputStream extends FilterOutputStream {
 			final KeyParameterFactory keyParameterFactory,
 			final IvFactory ivFactory) throws IOException
 	{
-		super(assertNotNull("out", out));
-		this.asymmetricCipherTransformation = assertNotNull("asymmetricCipherTransformation", asymmetricCipherTransformation);
+		super(assertNotNull(out, "out"));
+		this.asymmetricCipherTransformation = assertNotNull(asymmetricCipherTransformation, "asymmetricCipherTransformation");
 		if (CryptoKeyType.asymmetric != asymmetricCipherTransformation.getType())
 			throw new IllegalArgumentException("asymmetric != asymmetricCipherTransformation.type");
 
-		this.publicKey = assertNotNull("publicKey", publicKey);
+		this.publicKey = assertNotNull(publicKey, "publicKey");
 
-		assertNotNull("symmetricCipherTransformation", symmetricCipherTransformation);
+		assertNotNull(symmetricCipherTransformation, "symmetricCipherTransformation");
 		if (CryptoKeyType.symmetric != symmetricCipherTransformation.getType())
 			throw new IllegalArgumentException("symmetric != symmetricCipherTransformation.type");
 
-		assertNotNull("keyParameterFactory", keyParameterFactory).setCipherTransformation(symmetricCipherTransformation);
+		assertNotNull(keyParameterFactory, "keyParameterFactory").setCipherTransformation(symmetricCipherTransformation);
 		this.symmetricKey = keyParameterFactory.createKeyParameter();
 		keyParameterFactory.setCipherTransformation(null);
 

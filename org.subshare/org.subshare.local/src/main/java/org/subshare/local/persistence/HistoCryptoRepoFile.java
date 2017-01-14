@@ -177,7 +177,7 @@ public class HistoCryptoRepoFile extends Entity implements WriteProtected, AutoT
 	public void setCryptoKey(final CryptoKey cryptoKey) {
 		if (! equal(this.cryptoKey, cryptoKey)) {
 			if (cryptoKey != null) {
-				final CryptoKeyRole cryptoKeyRole = assertNotNull("cryptoKey.cryptoKeyRole", cryptoKey.getCryptoKeyRole());
+				final CryptoKeyRole cryptoKeyRole = assertNotNull(cryptoKey.getCryptoKeyRole(), "cryptoKey.cryptoKeyRole");
 				if (CryptoKeyRole.dataKey != cryptoKeyRole)
 					throw new IllegalArgumentException("cryptoKey.cryptoKeyRole != dataKey");
 			}
@@ -268,13 +268,13 @@ public class HistoCryptoRepoFile extends Entity implements WriteProtected, AutoT
 							previousHistoCryptoRepoFile == null ? null : previousHistoCryptoRepoFile.getHistoCryptoRepoFileId()),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
-					InputStreamSource.Helper.createInputStreamSource(assertNotNull("cryptoRepoFile", cryptoRepoFile).getCryptoRepoFileId()),
+					InputStreamSource.Helper.createInputStreamSource(assertNotNull(cryptoRepoFile, "cryptoRepoFile").getCryptoRepoFileId()),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
-					InputStreamSource.Helper.createInputStreamSource(assertNotNull("histoFrame", histoFrame).getHistoFrameId()),
+					InputStreamSource.Helper.createInputStreamSource(assertNotNull(histoFrame, "histoFrame").getHistoFrameId()),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
-					InputStreamSource.Helper.createInputStreamSource(assertNotNull("cryptoKey", cryptoKey).getCryptoKeyId()),
+					InputStreamSource.Helper.createInputStreamSource(assertNotNull(cryptoKey, "cryptoKey").getCryptoKeyId()),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(getRepoFileDtoData()),
@@ -310,7 +310,7 @@ public class HistoCryptoRepoFile extends Entity implements WriteProtected, AutoT
 
 	@Override
 	public Uid getCryptoRepoFileIdControllingPermissions() {
-		return assertNotNull("cryptoRepoFileId", assertNotNull("cryptoRepoFile", cryptoRepoFile).getCryptoRepoFileId());
+		return assertNotNull(assertNotNull(cryptoRepoFile, "cryptoRepoFile").getCryptoRepoFileId(), "cryptoRepoFileId");
 	}
 
 	@Override

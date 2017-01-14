@@ -222,7 +222,7 @@ public class HistoFramePane extends BorderPane {
 	}
 
 	private HistoCryptoRepoFileTreeItem.Root buildTree(final Collection<PlainHistoCryptoRepoFileDto> plainHistoCryptoRepoFileDtos) {
-		assertNotNull("plainHistoCryptoRepoFileDtos", plainHistoCryptoRepoFileDtos);
+		assertNotNull(plainHistoCryptoRepoFileDtos, "plainHistoCryptoRepoFileDtos");
 
 		final HistoCryptoRepoFileTreeItem.Root root = new HistoCryptoRepoFileTreeItem.Root();
 
@@ -260,12 +260,12 @@ public class HistoFramePane extends BorderPane {
 	}
 
 	private LocalRepoManager createLocalRepoManager() {
-		final LocalRepo localRepo = assertNotNull("localRepo", getLocalRepo());
+		final LocalRepo localRepo = assertNotNull(getLocalRepo(), "localRepo");
 		return LocalRepoManagerFactoryLs.getLocalRepoManagerFactory().createLocalRepoManagerForExistingRepository(localRepo.getLocalRoot());
 	}
 
 	private Image getCollisionIcon(final HistoCryptoRepoFileTreeItem treeItem) {
-		assertNotNull("treeItem", treeItem);
+		assertNotNull(treeItem, "treeItem");
 		if (! treeItem.hasCollision())
 			return null;
 
@@ -276,7 +276,7 @@ public class HistoFramePane extends BorderPane {
 	}
 
 	private Image getFileIcon(final HistoCryptoRepoFileTreeItem treeItem) {
-		assertNotNull("treeItem", treeItem);
+		assertNotNull(treeItem, "treeItem");
 		final String iconId;
 		if (treeItem.getRepoFileDto() instanceof DirectoryDto)
 			iconId = FileIconRegistry.ICON_ID_DIRECTORY;

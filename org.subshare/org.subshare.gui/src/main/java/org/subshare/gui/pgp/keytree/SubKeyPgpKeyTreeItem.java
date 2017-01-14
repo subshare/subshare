@@ -10,7 +10,7 @@ import org.subshare.core.pgp.PgpKey;
 public class SubKeyPgpKeyTreeItem extends PgpKeyTreeItem<PgpKey> {
 
 	public SubKeyPgpKeyTreeItem(final PgpKey subKey) {
-		super(assertNotNull("subKey", subKey)); //$NON-NLS-1$
+		super(assertNotNull(subKey, "subKey")); //$NON-NLS-1$
 	}
 
 	@Override

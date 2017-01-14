@@ -20,9 +20,9 @@ import co.codewizards.cloudstore.core.repo.sync.RepoSyncDaemon;
 public class AcceptInvitationManager {
 
 	public void acceptInvitation(final AcceptInvitationData acceptInvitationData) {
-		assertNotNull("acceptInvitationData", acceptInvitationData);
+		assertNotNull(acceptInvitationData, "acceptInvitationData");
 
-		final File invitationFile = assertNotNull("acceptInvitationData.invitationFile", acceptInvitationData.getInvitationFile());
+		final File invitationFile = assertNotNull(acceptInvitationData.getInvitationFile(), "acceptInvitationData.invitationFile");
 		final UserRepoInvitationToken userRepoInvitationToken = readUserRepoInvitationToken(invitationFile);
 
 		// TODO we need to verify the userRepoInvitationToken, before we continue!
@@ -31,7 +31,7 @@ public class AcceptInvitationManager {
 		//    Maybe automatically download it? Or maybe include it in the token? Hmmm... not sure yet.
 		// 3) Do we trust the signing PGP key? What, if not? Shall we show a warning?
 
-		final File directory = assertNotNull("acceptInvitationData.checkOutDirectory", acceptInvitationData.getCheckOutDirectory());
+		final File directory = assertNotNull(acceptInvitationData.getCheckOutDirectory(), "acceptInvitationData.checkOutDirectory");
 
 		ServerRepoManagerLs.getServerRepoManager().checkOutRepository(directory, userRepoInvitationToken);
 

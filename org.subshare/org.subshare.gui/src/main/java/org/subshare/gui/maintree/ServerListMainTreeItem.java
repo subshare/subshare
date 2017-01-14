@@ -81,7 +81,7 @@ public class ServerListMainTreeItem extends MainTreeItem<String> {
 	}
 
 	protected void addOrRemoveTreeItemsViewCallback(final Set<Server> servers) {
-		assertNotNull("servers", servers);
+		assertNotNull(servers, "servers");
 		final Map<Server, ServerMainTreeItem> viewServer2ServerMainTreeItem = new HashMap<>();
 		for (final TreeItem<?> ti : getChildren()) {
 			final ServerMainTreeItem smti = (ServerMainTreeItem) ti;
@@ -106,7 +106,7 @@ public class ServerListMainTreeItem extends MainTreeItem<String> {
 	}
 
 	private void addTreeItemsViewCallback(final Collection<Server> servers) {
-		assertNotNull("servers", servers);
+		assertNotNull(servers, "servers");
 		for (final Server server : servers)
 			getChildren().add(new ServerMainTreeItem(server));
 	}

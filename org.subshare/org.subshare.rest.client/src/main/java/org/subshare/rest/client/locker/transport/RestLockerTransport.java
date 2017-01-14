@@ -35,7 +35,7 @@ public class RestLockerTransport extends AbstractLockerTransport {
 
 	@Override
 	public void addMergedVersions(List<Uid> serverVersions) {
-		assertNotNull("serverVersions", serverVersions);
+		assertNotNull(serverVersions, "serverVersions");
 		throw new UnsupportedOperationException("Merging is only supported on the client side.");
 	}
 

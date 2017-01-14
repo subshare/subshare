@@ -18,8 +18,8 @@ public class PgpPrivateKeyPassphrasePromptDialog extends Stage {
 	private char[] passphrase;
 
 	public PgpPrivateKeyPassphrasePromptDialog(final Window owner, final PgpKey pgpKey, final String errorMessage) {
-		assertNotNull("owner", owner);
-		assertNotNull("pgpKey", pgpKey);
+		assertNotNull(owner, "owner");
+		assertNotNull(pgpKey, "pgpKey");
 
 		setTitle("Unlock PGP private key");
 		setResizable(false);

@@ -29,7 +29,7 @@ public abstract class AbstractCryptree implements Cryptree {
 		this.cryptreeFactory = cryptreeFactory;
 	}
 	protected CryptreeFactory getCryptreeFactoryOrFail() {
-		return assertNotNull("getCryptreeFactory()", getCryptreeFactory());
+		return assertNotNull(getCryptreeFactory(), "getCryptreeFactory()");
 	}
 
 	@Override
@@ -44,7 +44,7 @@ public abstract class AbstractCryptree implements Cryptree {
 		this.transaction = transaction;
 	}
 	protected LocalRepoTransaction getTransactionOrFail() {
-		return assertNotNull("getTransaction()", getTransaction());
+		return assertNotNull(getTransaction(), "getTransaction()");
 	}
 
 	@Override
@@ -60,7 +60,7 @@ public abstract class AbstractCryptree implements Cryptree {
 //	}
 
 	protected UserRepoKeyRing getUserRepoKeyRingOrFail() {
-		return assertNotNull("getUserRepoKeyRing()", getUserRepoKeyRing());
+		return assertNotNull(getUserRepoKeyRing(), "getUserRepoKeyRing()");
 	}
 
 	@Override
@@ -75,7 +75,7 @@ public abstract class AbstractCryptree implements Cryptree {
 		this.remoteRepositoryId = serverRepositoryId;
 	}
 	protected UUID getRemoteRepositoryIdOrFail() {
-		return assertNotNull("getRemoteRepositoryId()", getRemoteRepositoryId());
+		return assertNotNull(getRemoteRepositoryId(), "getRemoteRepositoryId()");
 	}
 
 	@Override
@@ -90,6 +90,6 @@ public abstract class AbstractCryptree implements Cryptree {
 		this.remotePathPrefix = remotePathPrefix;
 	}
 	protected String getRemotePathPrefixOrFail() {
-		return assertNotNull("getRemotePathPrefix()", getRemotePathPrefix());
+		return assertNotNull(getRemotePathPrefix(), "getRemotePathPrefix()");
 	}
 }

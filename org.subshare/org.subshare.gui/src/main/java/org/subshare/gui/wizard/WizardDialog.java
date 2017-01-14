@@ -14,8 +14,8 @@ public class WizardDialog extends Stage {
 	private final Wizard wizard;
 
 	public WizardDialog(final Window owner, final Wizard wizard) {
-		assertNotNull("owner", owner);
-		this.wizard = assertNotNull("wizard", wizard);
+		assertNotNull(owner, "owner");
+		this.wizard = assertNotNull(wizard, "wizard");
 
 		setResizable(true);
 		initStyle(StageStyle.UTILITY);

@@ -33,7 +33,7 @@ public class RootFileTreeItem extends FileTreeItem<String> {
 
 	public RootFileTreeItem(final FileTreePane fileTreePane) {
 		super(""); // invisible ;-)
-		this.fileTreePane = assertNotNull("fileTreePane", fileTreePane);
+		this.fileTreePane = assertNotNull(fileTreePane, "fileTreePane");
 		getChildren(); // force loading of children NOW!
 	}
 

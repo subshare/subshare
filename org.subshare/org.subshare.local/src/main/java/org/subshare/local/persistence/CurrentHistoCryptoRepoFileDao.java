@@ -18,7 +18,7 @@ public class CurrentHistoCryptoRepoFileDao extends Dao<CurrentHistoCryptoRepoFil
 
 	public Collection<CurrentHistoCryptoRepoFile> getCurrentHistoCryptoRepoFilesChangedAfterExclLastSyncFromRepositoryId(
 			final long localRevision, final UUID exclLastSyncFromRepositoryId) {
-		assertNotNull("exclLastSyncFromRepositoryId", exclLastSyncFromRepositoryId);
+		assertNotNull(exclLastSyncFromRepositoryId, "exclLastSyncFromRepositoryId");
 
 		final Query query = pm().newNamedQuery(getEntityClass(), "getCurrentHistoCryptoRepoFilesChangedAfter_localRevision_exclLastSyncFromRepositoryId");
 		try {
@@ -38,7 +38,7 @@ public class CurrentHistoCryptoRepoFileDao extends Dao<CurrentHistoCryptoRepoFil
 	}
 
 	public CurrentHistoCryptoRepoFile getCurrentHistoCryptoRepoFile(final CryptoRepoFile cryptoRepoFile) {
-		assertNotNull("cryptoRepoFile", cryptoRepoFile);
+		assertNotNull(cryptoRepoFile, "cryptoRepoFile");
 		final Query query = pm().newNamedQuery(getEntityClass(), "getCurrentHistoCryptoRepoFile_cryptoRepoFile");
 		try {
 			final CurrentHistoCryptoRepoFile result = (CurrentHistoCryptoRepoFile) query.execute(cryptoRepoFile);

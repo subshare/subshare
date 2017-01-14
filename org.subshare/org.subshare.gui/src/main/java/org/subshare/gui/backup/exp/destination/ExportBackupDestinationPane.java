@@ -22,7 +22,7 @@ public class ExportBackupDestinationPane extends WizardPageContentGridPane {
 
 	public ExportBackupDestinationPane(final ExportBackupData exportBackupData) {
 		loadDynamicComponentFxml(ExportBackupDestinationPane.class, this);
-		this.exportBackupData = assertNotNull("exportBackupData", exportBackupData);
+		this.exportBackupData = assertNotNull(exportBackupData, "exportBackupData");
 		fileTreePane.fileFilterProperty().set(file -> file.isDirectory());
 		fileTreePane.getSelectedFiles().addListener((InvalidationListener) observable -> onSelectedFilesChanged());
 		onSelectedFilesChanged();

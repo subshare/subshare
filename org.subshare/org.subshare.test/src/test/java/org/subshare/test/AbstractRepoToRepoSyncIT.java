@@ -146,7 +146,7 @@ public abstract class AbstractRepoToRepoSyncIT extends AbstractIT {
 			}
 
 	protected UserRepoKeyRing createUserRepoKeyRing() {
-		assertNotNull("remoteRepositoryId", remoteRepositoryId);
+		assertNotNull(remoteRepositoryId, "remoteRepositoryId");
 		return createUserRepoKeyRing(remoteRepositoryId);
 	}
 

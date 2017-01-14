@@ -19,7 +19,7 @@ public class RepositoryOwnerDao extends Dao<RepositoryOwner, RepositoryOwnerDao>
 	}
 
 	public RepositoryOwner getRepositoryOwner(final UUID serverRepositoryId) {
-		assertNotNull("serverRepositoryId", serverRepositoryId);
+		assertNotNull(serverRepositoryId, "serverRepositoryId");
 		final Query q = pm().newNamedQuery(getEntityClass(), "getRepositoryOwner_serverRepositoryId");
 		final RepositoryOwner repositoryOwner = (RepositoryOwner) q.execute(serverRepositoryId.toString());
 		return repositoryOwner;

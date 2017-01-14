@@ -42,7 +42,7 @@ public class LocalRepoListItem {
 	private ObjectProperty<Set<RepoSyncActivity>> repoSyncActivities = new SimpleObjectProperty<>(this, "repoSyncActivities");
 
 	public LocalRepoListItem(final LocalRepo localRepo) {
-		this.localRepo = assertNotNull("localRepo", localRepo);
+		this.localRepo = assertNotNull(localRepo, "localRepo");
 		bind();
 		updateNameShown();
 	}

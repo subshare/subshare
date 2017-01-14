@@ -79,7 +79,7 @@ public class ServerPane extends GridPane {
 	};
 
 	public ServerPane(final Server server) {
-		this.server = assertNotNull("server", server);
+		this.server = assertNotNull(server, "server");
 		loadDynamicComponentFxml(ServerPane.class, this);
 		tableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 		tableView.getSelectionModel().getSelectedItems().addListener(selectionListener);

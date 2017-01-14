@@ -96,9 +96,9 @@ public class SignatureImpl implements Signature {
 		if (signature == null)
 			return null;
 
-		assertNotNull("signature.signatureCreated", signature.getSignatureCreated());
-		assertNotNull("signature.signingUserRepoKeyId", signature.getSigningUserRepoKeyId());
-		assertNotNull("signature.signatureData", signature.getSignatureData());
+		assertNotNull(signature.getSignatureCreated(), "signature.signatureCreated");
+		assertNotNull(signature.getSigningUserRepoKeyId(), "signature.signingUserRepoKeyId");
+		assertNotNull(signature.getSignatureData(), "signature.signatureData");
 
 		final SignatureImpl copy = new SignatureImpl();
 		copy.setSignatureCreated(signature.getSignatureCreated());

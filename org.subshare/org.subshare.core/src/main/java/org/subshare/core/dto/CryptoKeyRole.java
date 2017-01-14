@@ -25,7 +25,7 @@ public enum CryptoKeyRole {
 	private final CryptoKeyPart[][] cipherOperationModeOrdinal2CryptoKeyParts;
 
 	private CryptoKeyRole(final CryptoKeyPart ... cryptoKeyParts) {
-		assertNotNullAndNoNullElement("cryptoKeyParts", cryptoKeyParts);
+		assertNotNullAndNoNullElement(cryptoKeyParts, "cryptoKeyParts");
 		if (cryptoKeyParts.length < 1)
 			throw new IllegalArgumentException("cryptoKeyParts.length < 1");
 
@@ -77,7 +77,7 @@ public enum CryptoKeyRole {
 	}
 
 	public CryptoKeyPart[] getCryptoKeyParts(final CipherOperationMode cipherOperationMode) {
-		assertNotNull("cipherOperationMode", cipherOperationMode);
+		assertNotNull(cipherOperationMode, "cipherOperationMode");
 		return cipherOperationModeOrdinal2CryptoKeyParts[cipherOperationMode.ordinal()];
 	}
 }

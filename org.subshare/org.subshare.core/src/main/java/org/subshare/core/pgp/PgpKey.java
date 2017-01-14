@@ -78,18 +78,18 @@ public class PgpKey implements Serializable {
 			final Set<PgpKeyFlag> pgpKeyFlags,
 			final boolean revoked,
 			final boolean disabled) {
-		this.pgpKeyId = assertNotNull("pgpKeyId", pgpKeyId);
-		this.fingerprint = assertNotNull("fingerprint", fingerprint);
+		this.pgpKeyId = assertNotNull(pgpKeyId, "pgpKeyId");
+		this.fingerprint = assertNotNull(fingerprint, "fingerprint");
 		this.masterKey = masterKey == null ? this : masterKey;
-		this.created = assertNotNull("created", created);
+		this.created = assertNotNull(created, "created");
 		this.validTo = validTo; // may be null - null means, it does *not* expire.
-		this.algorithm = assertNotNull("algorithm", algorithm);
+		this.algorithm = assertNotNull(algorithm, "algorithm");
 		this.strength = strength;
 		this.secretKeyAvailable = secretKeyAvailable;
-		this.userIds = Collections.unmodifiableList(new ArrayList<String>(assertNotNull("userIds", userIds)));
+		this.userIds = Collections.unmodifiableList(new ArrayList<String>(assertNotNull(userIds, "userIds")));
 
 		final Set<PgpKeyFlag> tmpPgpKeyFlags = EnumSet.noneOf(PgpKeyFlag.class);
-		tmpPgpKeyFlags.addAll(assertNotNull("pgpKeyFlags", pgpKeyFlags));
+		tmpPgpKeyFlags.addAll(assertNotNull(pgpKeyFlags, "pgpKeyFlags"));
 		this.pgpKeyFlags = Collections.unmodifiableSet(tmpPgpKeyFlags);
 
 		this.revoked = revoked;
@@ -189,7 +189,7 @@ public class PgpKey implements Serializable {
 	 * @return the master-key of this key or <code>this</code>, if this is already the master-key.
 	 */
 	public PgpKey getMasterKey() {
-		return assertNotNull("masterKey", masterKey);
+		return assertNotNull(masterKey, "masterKey");
 	}
 
 	public void setSubKeys(List<PgpKey> subKeys) {
@@ -199,7 +199,7 @@ public class PgpKey implements Serializable {
 		if (subKeys == null)
 		    this.subKeys = NULL_SUB_KEYS;
 		else
-		    this.subKeys = Collections.unmodifiableList(new ArrayList<PgpKey>(assertNotNull("subKeys", subKeys)));
+		    this.subKeys = Collections.unmodifiableList(new ArrayList<PgpKey>(assertNotNull(subKeys, "subKeys")));
 	}
 
 	/**

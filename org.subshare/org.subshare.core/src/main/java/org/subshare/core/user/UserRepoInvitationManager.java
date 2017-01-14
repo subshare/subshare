@@ -16,8 +16,8 @@ public interface UserRepoInvitationManager {
 
 	static class Helper {
 		public static UserRepoInvitationManager getInstance(final UserRegistry userRegistry, final LocalRepoManager localRepoManager) {
-			assertNotNull("userRegistry", userRegistry);
-			assertNotNull("localRepoManager", localRepoManager);
+			assertNotNull(userRegistry, "userRegistry");
+			assertNotNull(localRepoManager, "localRepoManager");
 
 			final ServiceLoader<UserRepoInvitationManager> serviceLoader = ServiceLoader.load(UserRepoInvitationManager.class);
 			final Iterator<UserRepoInvitationManager> iterator = serviceLoader.iterator();

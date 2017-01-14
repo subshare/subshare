@@ -38,7 +38,7 @@ public class CryptoChangeSetDtoService extends AbstractServiceWithRepoToRepoAuth
 	public CryptoChangeSetDto getCryptoChangeSetDto() {
 		CryptoChangeSetDto cryptoChangeSetDto;
 		try (final RepoTransport repoTransport = authenticateAndCreateLocalRepoTransport();) {
-			final UUID clientRepositoryId = assertNotNull("clientRepositoryId", repoTransport.getClientRepositoryId());
+			final UUID clientRepositoryId = assertNotNull(repoTransport.getClientRepositoryId(), "clientRepositoryId");
 			final LocalRepoManager localRepoManager = ((ContextWithLocalRepoManager) repoTransport).getLocalRepoManager();
 			transaction = localRepoManager.beginWriteTransaction(); // We write LastCryptoKeySyncToRemoteRepo.
 			try {
@@ -59,7 +59,7 @@ public class CryptoChangeSetDtoService extends AbstractServiceWithRepoToRepoAuth
 	@Path("endGet")
 	public void endGetCryptoChangeSetDto() {
 		try (final RepoTransport repoTransport = authenticateAndCreateLocalRepoTransport();) {
-			final UUID clientRepositoryId = assertNotNull("clientRepositoryId", repoTransport.getClientRepositoryId());
+			final UUID clientRepositoryId = assertNotNull(repoTransport.getClientRepositoryId(), "clientRepositoryId");
 			final LocalRepoManager localRepoManager = ((ContextWithLocalRepoManager) repoTransport).getLocalRepoManager();
 			transaction = localRepoManager.beginWriteTransaction();
 			try {
@@ -76,9 +76,9 @@ public class CryptoChangeSetDtoService extends AbstractServiceWithRepoToRepoAuth
 
 	@PUT
 	public void putCryptoChangeSetDto(final CryptoChangeSetDto cryptoChangeSetDto) {
-		assertNotNull("cryptoChangeSetDto", cryptoChangeSetDto);
+		assertNotNull(cryptoChangeSetDto, "cryptoChangeSetDto");
 		try (final RepoTransport repoTransport = authenticateAndCreateLocalRepoTransport();) {
-			final UUID clientRepositoryId = assertNotNull("clientRepositoryId", repoTransport.getClientRepositoryId());
+			final UUID clientRepositoryId = assertNotNull(repoTransport.getClientRepositoryId(), "clientRepositoryId");
 			final LocalRepoManager localRepoManager = ((ContextWithLocalRepoManager) repoTransport).getLocalRepoManager();
 			transaction = localRepoManager.beginWriteTransaction();
 			try {

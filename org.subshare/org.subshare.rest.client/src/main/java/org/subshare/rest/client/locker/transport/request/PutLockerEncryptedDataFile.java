@@ -18,7 +18,7 @@ public class PutLockerEncryptedDataFile extends VoidRequest {
 	private final LockerEncryptedDataFile lockerEncryptedDataFile;
 
 	public PutLockerEncryptedDataFile(final LockerEncryptedDataFile lockerEncryptedDataFile) {
-		this.lockerEncryptedDataFile = assertNotNull("lockerEncryptedDataFile", lockerEncryptedDataFile);
+		this.lockerEncryptedDataFile = assertNotNull(lockerEncryptedDataFile, "lockerEncryptedDataFile");
 	}
 
 	@Override

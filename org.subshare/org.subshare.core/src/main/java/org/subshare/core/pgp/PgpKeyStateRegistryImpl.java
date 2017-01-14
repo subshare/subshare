@@ -101,7 +101,7 @@ public class PgpKeyStateRegistryImpl extends FileBasedObjectRegistry implements 
 		final PgpKeyStateRegistryDto pgpKeyStateRegistryDto = pgpKeyStateRegistryDtoIo.deserialize(zin);
 
 		for (PgpKeyStateDto pgpKeyStateDto : pgpKeyStateRegistryDto.getPgpKeyStateDtos()) {
-			final PgpKeyId pgpKeyId = assertNotNull("pgpKeyStateDto.pgpKeyId", pgpKeyStateDto.getPgpKeyId());
+			final PgpKeyId pgpKeyId = assertNotNull(pgpKeyStateDto.getPgpKeyId(), "pgpKeyStateDto.pgpKeyId");
 			pgpKeyId2PgpKeyStateDto.put(pgpKeyId, pgpKeyStateDto);
 		}
 
@@ -145,7 +145,7 @@ public class PgpKeyStateRegistryImpl extends FileBasedObjectRegistry implements 
 		// All keys that are unmodified in PGP's trust-database, but have meaningful data in the
 		// PgpKeyStateRegistry should first be updated in the PGP-trust-database!
 		for (final PgpKeyStateDto pgpKeyStateDto : pgpKeyId2PgpKeyStateDto.values()) {
-			final PgpKeyId pgpKeyId = assertNotNull("pgpKeyStateDto.pgpKeyId", pgpKeyStateDto.getPgpKeyId());
+			final PgpKeyId pgpKeyId = assertNotNull(pgpKeyStateDto.getPgpKeyId(), "pgpKeyStateDto.pgpKeyId");
 			final PgpKey pgpKey = pgp.getPgpKey(pgpKeyId);
 			if (pgpKey != null && isDefaults(pgpKey)) {
 				if (pgpKeyStateDto.isDisabled()) {
@@ -185,7 +185,7 @@ public class PgpKeyStateRegistryImpl extends FileBasedObjectRegistry implements 
 	}
 
 	private PgpKeyStateDto createPgpKeyStateDto(final PgpKey pgpKey) {
-		assertNotNull("pgpKey", pgpKey);
+		assertNotNull(pgpKey, "pgpKey");
 		final PgpKeyStateDto pgpKeyStateDto = new PgpKeyStateDto();
 		pgpKeyStateDto.setPgpKeyId(pgpKey.getPgpKeyId());
 		pgpKeyStateDto.setCreated(new Date());
@@ -194,8 +194,8 @@ public class PgpKeyStateRegistryImpl extends FileBasedObjectRegistry implements 
 	}
 
 	private void updatePgpKeyStateDto(final PgpKey pgpKey, final PgpKeyStateDto pgpKeyStateDto) {
-		assertNotNull("pgpKey", pgpKey);
-		assertNotNull("pgpKeyStateDto", pgpKeyStateDto);
+		assertNotNull(pgpKey, "pgpKey");
+		assertNotNull(pgpKeyStateDto, "pgpKeyStateDto");
 		pgpKeyStateDto.setChanged(new Date());
 		pgpKeyStateDto.setDisabled(pgpKey.isDisabled());
 		pgpKeyStateDto.setOwnerTrust(pgp.getOwnerTrust(pgpKey));
@@ -208,18 +208,18 @@ public class PgpKeyStateRegistryImpl extends FileBasedObjectRegistry implements 
 	}
 
 	private boolean isModified(final PgpKey pgpKey, final PgpKeyStateDto pgpKeyStateDto) {
-		assertNotNull("pgpKey", pgpKey);
-		assertNotNull("pgpKeyStateDto", pgpKeyStateDto);
+		assertNotNull(pgpKey, "pgpKey");
+		assertNotNull(pgpKeyStateDto, "pgpKeyStateDto");
 		return pgpKeyStateDto.isDisabled() != pgpKey.isDisabled()
 			|| pgpKeyStateDto.getOwnerTrust() != pgp.getOwnerTrust(pgpKey);
 	}
 
 	protected synchronized void mergeFrom(final PgpKeyStateRegistryDto pgpKeyStateRegistryDto) {
-		assertNotNull("pgpKeyStateRegistryDto", pgpKeyStateRegistryDto);
+		assertNotNull(pgpKeyStateRegistryDto, "pgpKeyStateRegistryDto");
 		needUpdateTrustDb = false;
 
 		for (final PgpKeyStateDto inPgpKeyStateDto : pgpKeyStateRegistryDto.getPgpKeyStateDtos()) {
-			final PgpKeyId pgpKeyId = assertNotNull("inPgpKeyStateDto.pgpKeyId", inPgpKeyStateDto.getPgpKeyId());
+			final PgpKeyId pgpKeyId = assertNotNull(inPgpKeyStateDto.getPgpKeyId(), "inPgpKeyStateDto.pgpKeyId");
 			final PgpKey pgpKey = pgp.getPgpKey(pgpKeyId);
 
 			PgpKeyStateDto myPgpKeyStateDto = pgpKeyId2PgpKeyStateDto.get(pgpKeyId);
@@ -243,8 +243,8 @@ public class PgpKeyStateRegistryImpl extends FileBasedObjectRegistry implements 
 	}
 
 	private void updatePgp(PgpKey pgpKey, PgpKeyStateDto pgpKeyStateDto) {
-		assertNotNull("pgpKey", pgpKey);
-		assertNotNull("pgpKeyStateDto", pgpKeyStateDto);
+		assertNotNull(pgpKey, "pgpKey");
+		assertNotNull(pgpKeyStateDto, "pgpKeyStateDto");
 
 		if (pgpKey.isDisabled() != pgpKeyStateDto.isDisabled()) {
 			needUpdateTrustDb = true;

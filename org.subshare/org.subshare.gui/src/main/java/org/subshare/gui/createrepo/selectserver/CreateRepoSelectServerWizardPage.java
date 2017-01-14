@@ -14,7 +14,7 @@ public class CreateRepoSelectServerWizardPage extends WizardPage {
 
 	public CreateRepoSelectServerWizardPage(final CreateRepoData createRepoData) {
 		super("Server for new repository");
-		this.createRepoData = assertNotNull("createRepoData", createRepoData);
+		this.createRepoData = assertNotNull(createRepoData, "createRepoData");
 	}
 
 	@Override

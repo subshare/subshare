@@ -14,7 +14,7 @@ public class SelectOwnerTrustWizardPage extends WizardPage {
 
 	public SelectOwnerTrustWizardPage(final AssignOwnerTrustData assignOwnerTrustData) {
 		super("How much is the owner trusted?");
-		this.assignOwnerTrustData = assertNotNull("assignOwnerTrustData", assignOwnerTrustData);
+		this.assignOwnerTrustData = assertNotNull(assignOwnerTrustData, "assignOwnerTrustData");
 	}
 
 	@Override

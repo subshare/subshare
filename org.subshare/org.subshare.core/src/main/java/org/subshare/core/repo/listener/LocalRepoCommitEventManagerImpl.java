@@ -44,8 +44,8 @@ public class LocalRepoCommitEventManagerImpl implements LocalRepoCommitEventMana
 	 * Must not be <code>null</code>.
 	 */
 	public void fireLater(final LocalRepoManager localRepoManager, final List<EntityModification> modifications) {
-		assertNotNull("localRepoManager", localRepoManager);
-		assertNotNull("modifications", modifications);
+		assertNotNull(localRepoManager, "localRepoManager");
+		assertNotNull(modifications, "modifications");
 		final UUID localRepositoryId = localRepoManager.getRepositoryId();
 
 		final Iterator<LocalRepoCommitEventListener> globalListenerIterator = getListeners(null).iterator();
@@ -80,7 +80,7 @@ public class LocalRepoCommitEventManagerImpl implements LocalRepoCommitEventMana
 
 	@Override
 	public void addLocalRepoCommitEventListener(final UUID localRepositoryId, final LocalRepoCommitEventListener listener) {
-		assertNotNull("listener", listener);
+		assertNotNull(listener, "listener");
 		getListeners(localRepositoryId).add(listener);
 	}
 
@@ -91,7 +91,7 @@ public class LocalRepoCommitEventManagerImpl implements LocalRepoCommitEventMana
 
 	@Override
 	public void removeLocalRepoCommitEventListener(final UUID localRepositoryId, LocalRepoCommitEventListener listener) {
-		assertNotNull("listener", listener);
+		assertNotNull(listener, "listener");
 		getListeners(localRepositoryId).remove(listener);
 	}
 
@@ -114,7 +114,7 @@ public class LocalRepoCommitEventManagerImpl implements LocalRepoCommitEventMana
 	 * @return the single-thread-executor for the given {@code localRepositoryId}. Never <code>null</code>.
 	 */
 	private ExecutorService getExecutorService(final UUID localRepositoryId) {
-		assertNotNull("localRepositoryId", localRepositoryId);
+		assertNotNull(localRepositoryId, "localRepositoryId");
 		synchronized (localRepositoryId2ExecutorService) {
 			ExecutorService executorService = localRepositoryId2ExecutorService.get(localRepositoryId);
 			if (executorService == null) {

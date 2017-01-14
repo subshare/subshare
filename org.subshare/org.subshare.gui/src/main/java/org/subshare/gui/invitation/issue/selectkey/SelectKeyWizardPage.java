@@ -12,7 +12,7 @@ public class SelectKeyWizardPage extends WizardPage {
 
 	public SelectKeyWizardPage(final IssueInvitationData issueInvitationData) {
 		super("Select PGP keys");
-		this.issueInvitationData = assertNotNull("issueInvitationData", issueInvitationData);
+		this.issueInvitationData = assertNotNull(issueInvitationData, "issueInvitationData");
 	}
 
 	@Override

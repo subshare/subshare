@@ -61,7 +61,7 @@ public class LocalRepoCommitEventManagerNotifyingListener
 
 	@Override
 	public void postDelete(InstanceLifecycleEvent event) {
-		final Object entity = assertNotNull("event.persistentInstance", event.getPersistentInstance());
+		final Object entity = assertNotNull(event.getPersistentInstance(), "event.persistentInstance");
 		final EntityId entityId = getEntityId(entity);
 		if (entityId != null)
 			enlist(new EntityModification(entityId, EntityModificationType.DELETE));
@@ -72,7 +72,7 @@ public class LocalRepoCommitEventManagerNotifyingListener
 
 	@Override
 	public void postStore(InstanceLifecycleEvent event) {
-		final Object entity = assertNotNull("event.persistentInstance", event.getPersistentInstance());
+		final Object entity = assertNotNull(event.getPersistentInstance(), "event.persistentInstance");
 		final EntityId entityId = getEntityId(entity);
 		if (entityId != null)
 			enlist(new EntityModification(entityId, EntityModificationType.CHANGE));
@@ -80,14 +80,14 @@ public class LocalRepoCommitEventManagerNotifyingListener
 
 	@Override
 	public void postCreate(InstanceLifecycleEvent event) {
-		final Object entity = assertNotNull("event.persistentInstance", event.getPersistentInstance());
+		final Object entity = assertNotNull(event.getPersistentInstance(), "event.persistentInstance");
 		final EntityId entityId = getEntityId(entity);
 		if (entityId != null)
 			enlist(new EntityModification(entityId, EntityModificationType.CREATE));
 	}
 
 	private void enlist(final EntityModification modification) {
-		assertNotNull("modification", modification);
+		assertNotNull(modification, "modification");
 		final EntityId entityId = modification.getEntityId();
 		final EntityModification lastModification = entityId2LastModification.get(entityId);
 
@@ -138,7 +138,7 @@ public class LocalRepoCommitEventManagerNotifyingListener
 	}
 
 	private EntityId getEntityId(final Object entity) {
-		assertNotNull("entity", entity);
+		assertNotNull(entity, "entity");
 
 		if (entity instanceof Entity) {
 			final long id = ((Entity) entity).getId();

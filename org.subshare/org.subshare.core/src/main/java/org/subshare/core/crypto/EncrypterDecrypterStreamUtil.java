@@ -12,8 +12,8 @@ class EncrypterDecrypterStreamUtil {
 	static final int MAX_UNSIGNED_2_BYTE_VALUE = 0xffff;
 
 	static CipherParameters assertValidKey(final CipherTransformation cipherTransformation, final CipherParameters key) {
-		assertNotNull("cipherTransformation", cipherTransformation);
-		assertNotNull("key", key);
+		assertNotNull(cipherTransformation, "cipherTransformation");
+		assertNotNull(key, "key");
 		if (key instanceof KeyParameter)
 			// symmetric encryption
 			if (CryptoKeyType.symmetric != cipherTransformation.getType())

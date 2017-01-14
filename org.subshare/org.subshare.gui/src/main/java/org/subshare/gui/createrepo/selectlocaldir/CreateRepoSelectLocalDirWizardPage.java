@@ -15,7 +15,7 @@ public class CreateRepoSelectLocalDirWizardPage extends WizardPage {
 
 	public CreateRepoSelectLocalDirWizardPage(final CreateRepoData createRepoData) {
 		super("Local directory to be uploaded and shared");
-		this.createRepoData = assertNotNull("createRepoData", createRepoData);
+		this.createRepoData = assertNotNull(createRepoData, "createRepoData");
 		shownRequired.set(true);
 	}
 

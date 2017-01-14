@@ -89,7 +89,7 @@ public class DebugUserRepoKeyDto implements Serializable {
 		return keyRingType;
 	}
 	public void setKeyRingType(KeyRingType keyRingType) {
-		this.keyRingType = assertNotNull("keyRingType", keyRingType);
+		this.keyRingType = assertNotNull(keyRingType, "keyRingType");
 	}
 
 	public int getUserIdentityCount() {

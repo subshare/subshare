@@ -21,7 +21,7 @@ public class CertifyPgpKeyData {
 	private ObjectProperty<PgpSignatureType> certificationLevel = new SimpleObjectProperty<PgpSignatureType>(this, "certificationLevel") {
 		@Override
 		public void set(PgpSignatureType newValue) {
-			super.set(assertNotNull("newValue", newValue));
+			super.set(assertNotNull(newValue, "newValue"));
 		}
 	};
 	{
@@ -54,7 +54,7 @@ public class CertifyPgpKeyData {
 	}
 	public void setPgpKey(final PgpKey pgpKey) {
 		if (pgpKey != null)
-			setPgpKeyId(assertNotNull("pgpKey.pgpKeyId", pgpKey.getPgpKeyId()));
+			setPgpKeyId(assertNotNull(pgpKey.getPgpKeyId(), "pgpKey.pgpKeyId"));
 
 		this.pgpKey = pgpKey;
 	}

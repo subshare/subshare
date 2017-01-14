@@ -15,7 +15,7 @@ public class LocalRepoMainTreeItem extends MainTreeItem<LocalRepo> {
 	private static final Image icon = new Image(ServerListMainTreeItem.class.getResource("local-repo_16x16.png").toExternalForm());
 
 	public LocalRepoMainTreeItem(final LocalRepo localRepo) {
-		super(assertNotNull("localRepo", localRepo));
+		super(assertNotNull(localRepo, "localRepo"));
 		setGraphic(new ImageView(icon));
 
 		getChildren().add(new LocalRepoDirectoryMainTreeItem(localRepo.getLocalRoot()));

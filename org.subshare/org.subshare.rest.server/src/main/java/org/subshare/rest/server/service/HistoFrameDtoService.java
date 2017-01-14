@@ -34,9 +34,9 @@ public class HistoFrameDtoService extends AbstractServiceWithRepoToRepoAuth {
 
 	@PUT
 	public void putHistoFrameDto(final HistoFrameDto histoFrameDto) {
-		assertNotNull("histoFrameDto", histoFrameDto);
+		assertNotNull(histoFrameDto, "histoFrameDto");
 		try (final RepoTransport repoTransport = authenticateAndCreateLocalRepoTransport();) {
-			final UUID clientRepositoryId = assertNotNull("clientRepositoryId", repoTransport.getClientRepositoryId());
+			final UUID clientRepositoryId = assertNotNull(repoTransport.getClientRepositoryId(), "clientRepositoryId");
 			final LocalRepoManager localRepoManager = ((ContextWithLocalRepoManager) repoTransport).getLocalRepoManager();
 			transaction = localRepoManager.beginWriteTransaction();
 			try {

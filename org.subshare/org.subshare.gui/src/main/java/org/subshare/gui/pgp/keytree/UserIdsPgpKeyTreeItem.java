@@ -12,7 +12,7 @@ public class UserIdsPgpKeyTreeItem extends PgpKeyTreeItem<PgpKey> {
 	private boolean childrenInitialised;
 
 	public UserIdsPgpKeyTreeItem(final PgpKey pgpKey) {
-		super(assertNotNull("pgpKey", pgpKey));
+		super(assertNotNull(pgpKey, "pgpKey"));
 	}
 
 	@Override

@@ -14,7 +14,7 @@ public class EndGetCryptoChangeSetDto extends VoidRequest {
 	private final String repositoryName;
 
 	public EndGetCryptoChangeSetDto(final String repositoryName) {
-		this.repositoryName = assertNotNull("repositoryName", repositoryName);
+		this.repositoryName = assertNotNull(repositoryName, "repositoryName");
 	}
 
 	@Override

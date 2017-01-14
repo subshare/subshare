@@ -29,7 +29,7 @@ public class UserIdentityLinkDao extends Dao<UserIdentityLink, UserIdentityLinkD
 	}
 
 	public UserIdentityLink getUserIdentityLink(final Uid userIdentityLinkId) {
-		assertNotNull("userIdentityLinkId", userIdentityLinkId);
+		assertNotNull(userIdentityLinkId, "userIdentityLinkId");
 		final Query query = pm().newNamedQuery(getEntityClass(), "getUserIdentityLink_userIdentityLinkId");
 		try {
 			final UserIdentityLink userIdentityLink = (UserIdentityLink) query.execute(userIdentityLinkId.toString());
@@ -40,7 +40,7 @@ public class UserIdentityLinkDao extends Dao<UserIdentityLink, UserIdentityLinkD
 	}
 
 	public Collection<UserIdentityLink> getUserIdentityLinksOf(final UserRepoKeyPublicKey ofUserRepoKeyPublicKey) {
-		assertNotNull("ofUserRepoKeyPublicKey", ofUserRepoKeyPublicKey);
+		assertNotNull(ofUserRepoKeyPublicKey, "ofUserRepoKeyPublicKey");
 
 		final Query query = pm().newNamedQuery(getEntityClass(), "getUserIdentityLinks_ofUserRepoKeyPublicKey");
 		try {
@@ -63,7 +63,7 @@ public class UserIdentityLinkDao extends Dao<UserIdentityLink, UserIdentityLinkD
 	}
 
 	public Collection<UserIdentityLink> getUserIdentityLinksOf(final UserIdentity userIdentity) {
-		assertNotNull("userIdentity", userIdentity);
+		assertNotNull(userIdentity, "userIdentity");
 
 		final Query query = pm().newNamedQuery(getEntityClass(), "getUserIdentityLinks_userIdentity");
 		try {
@@ -86,7 +86,7 @@ public class UserIdentityLinkDao extends Dao<UserIdentityLink, UserIdentityLinkD
 	}
 
 	public Collection<UserIdentityLink> getUserIdentityLinksFor(final UserRepoKeyPublicKey forUserRepoKeyPublicKey) {
-		assertNotNull("forUserRepoKeyPublicKey", forUserRepoKeyPublicKey);
+		assertNotNull(forUserRepoKeyPublicKey, "forUserRepoKeyPublicKey");
 
 		final Query query = pm().newNamedQuery(getEntityClass(), "getUserIdentityLinks_forUserRepoKeyPublicKey");
 		try {
@@ -109,8 +109,8 @@ public class UserIdentityLinkDao extends Dao<UserIdentityLink, UserIdentityLinkD
 	}
 
 	public Collection<UserIdentityLink> getUserIdentityLinks(final UserRepoKeyPublicKey ofUserRepoKeyPublicKey, final UserRepoKeyPublicKey forUserRepoKeyPublicKey) {
-		assertNotNull("ofUserRepoKeyPublicKey", ofUserRepoKeyPublicKey);
-		assertNotNull("forUserRepoKeyPublicKey", forUserRepoKeyPublicKey);
+		assertNotNull(ofUserRepoKeyPublicKey, "ofUserRepoKeyPublicKey");
+		assertNotNull(forUserRepoKeyPublicKey, "forUserRepoKeyPublicKey");
 
 		final Query query = pm().newNamedQuery(getEntityClass(), "getUserIdentityLinks_ofUserRepoKeyPublicKey_forUserRepoKeyPublicKey");
 		try {

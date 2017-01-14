@@ -28,7 +28,7 @@ public class HistoFrameDao extends Dao<HistoFrame, HistoFrameDao> {
 
 	public Collection<HistoFrame> getHistoFramesChangedAfterExclLastSyncFromRepositoryId(
 			final long localRevision, final UUID exclLastSyncFromRepositoryId) {
-		assertNotNull("exclLastSyncFromRepositoryId", exclLastSyncFromRepositoryId);
+		assertNotNull(exclLastSyncFromRepositoryId, "exclLastSyncFromRepositoryId");
 
 		final Query query = pm().newNamedQuery(getEntityClass(), "getHistoFramesChangedAfter_localRevision_exclLastSyncFromRepositoryId");
 		try {
@@ -56,7 +56,7 @@ public class HistoFrameDao extends Dao<HistoFrame, HistoFrameDao> {
 	}
 
 	public HistoFrame getHistoFrame(final Uid histoFrameId) {
-		assertNotNull("histoFrameId", histoFrameId);
+		assertNotNull(histoFrameId, "histoFrameId");
 		final Query query = pm().newNamedQuery(getEntityClass(), "getHistoFrame_histoFrameId");
 		try {
 			final HistoFrame result = (HistoFrame) query.execute(histoFrameId.toString());
@@ -85,7 +85,7 @@ public class HistoFrameDao extends Dao<HistoFrame, HistoFrameDao> {
 	}
 
 	public HistoFrame getUnsealedHistoFrame(final UUID fromRepositoryId) {
-		assertNotNull("fromRepositoryId", fromRepositoryId);
+		assertNotNull(fromRepositoryId, "fromRepositoryId");
 		final Query query = pm().newNamedQuery(getEntityClass(), "getHistoFrame_fromRepositoryId_sealed");
 		try {
 			final HistoFrame result = (HistoFrame) query.execute(fromRepositoryId.toString(), null);
@@ -96,7 +96,7 @@ public class HistoFrameDao extends Dao<HistoFrame, HistoFrameDao> {
 	}
 
 	public Collection<HistoFrame> getHistoFrames(final HistoFrameFilter filter) {
-		assertNotNull("filter", filter);
+		assertNotNull(filter, "filter");
 
 		if ("/".equals(filter.getLocalPath())) // the root is normally simply "", but we are tolerant to "/".
 			filter.setLocalPath("");
@@ -110,7 +110,7 @@ public class HistoFrameDao extends Dao<HistoFrame, HistoFrameDao> {
 
 			final CryptoRepoFileDao crfDao = getDao(CryptoRepoFileDao.class);
 			final CryptoRepoFile crf1 = crfDao.getCryptoRepoFile(remoteRepository, filter.getLocalPath());
-			assertNotNull("cryptoRepoFile", crf1, "remoteRepository=%s filter.localPath='%s'", remoteRepository, filter.getLocalPath());
+			assertNotNull(crf1, "cryptoRepoFile", "remoteRepository=%s filter.localPath='%s'", remoteRepository, filter.getLocalPath());
 
 			final Set<Long> childCryptoRepoFileOids = crfDao.getChildCryptoRepoFileOidsRecursively(crf1);
 			for (final Set<Long> partialChildCryptoRepoFileOids : CollectionUtil.splitSet(childCryptoRepoFileOids, 1000))
@@ -124,8 +124,8 @@ public class HistoFrameDao extends Dao<HistoFrame, HistoFrameDao> {
 
 
 	private void populateHistoFrames(final Set<HistoFrame> result, final HistoFrameFilter filter, final Set<Long> childCryptoRepoFileOids) {
-		assertNotNull("result", result);
-		assertNotNull("filter", filter);
+		assertNotNull(result, "result");
+		assertNotNull(filter, "filter");
 //		childCryptoRepoFileOids may be null!
 
 		final Query query = pm().newQuery(getEntityClass());

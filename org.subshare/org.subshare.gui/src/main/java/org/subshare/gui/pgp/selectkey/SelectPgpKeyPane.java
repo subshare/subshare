@@ -67,9 +67,9 @@ public abstract class SelectPgpKeyPane extends GridPane {
 	private Button cancelButton;
 
 	public SelectPgpKeyPane(final List<PgpKey> pgpKeys, final Collection<PgpKey> selectedPgpKeys, final SelectionMode selectionMode, final String headerText) {
-		assertNotNull("pgpKeys", pgpKeys);
+		assertNotNull(pgpKeys, "pgpKeys");
 		// selectedPgpKeys may be null
-		assertNotNull("selectionMode", selectionMode);
+		assertNotNull(selectionMode, "selectionMode");
 		loadDynamicComponentFxml(SelectPgpKeyPane.class, this);
 
 		this.headerText.setText(headerText);

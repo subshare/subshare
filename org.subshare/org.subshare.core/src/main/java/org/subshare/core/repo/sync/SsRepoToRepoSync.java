@@ -59,7 +59,7 @@ public class SsRepoToRepoSync extends RepoToRepoSync {
 
 	@Override
 	public void sync(final ProgressMonitor monitor) {
-		assertNotNull("monitor", monitor);
+		assertNotNull(monitor, "monitor");
 		monitor.beginTask("Synchronising...", 251);
 		try {
 			super.sync(new SubProgressMonitor(monitor, 201));

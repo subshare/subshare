@@ -95,7 +95,7 @@ public class ServerWizard extends Wizard {
 	}
 
 	protected void finish_registerServer(ProgressMonitor monitor) throws Exception {
-		final Server server = assertNotNull("serverData.server", serverData.getServer());
+		final Server server = assertNotNull(serverData.getServer(), "serverData.server");
 		if (syncLocker) {
 			// We must first sync the PGP keys, because the server doesn't accept a locker that's signed
 			// by an unknown key.

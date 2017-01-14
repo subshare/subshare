@@ -10,7 +10,7 @@ import co.codewizards.cloudstore.local.persistence.RemoteRepository;
 public class LastCryptoKeySyncToRemoteRepoDao extends Dao<LastCryptoKeySyncToRemoteRepo, LastCryptoKeySyncToRemoteRepoDao> {
 
 	public LastCryptoKeySyncToRemoteRepo getLastCryptoKeySyncToRemoteRepo(final RemoteRepository remoteRepository) {
-		assertNotNull("remoteRepository", remoteRepository);
+		assertNotNull(remoteRepository, "remoteRepository");
 		final Query query = pm().newNamedQuery(getEntityClass(), "getLastCryptoKeySyncToRemoteRepo_remoteRepository");
 		try {
 			final LastCryptoKeySyncToRemoteRepo lastSyncToRemoteRepo = (LastCryptoKeySyncToRemoteRepo) query.execute(remoteRepository);

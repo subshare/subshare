@@ -16,7 +16,7 @@ public class EditUserEvent extends EventObject {
 
 	public EditUserEvent(final EditUserManager source, final Collection<? extends User> users) {
 		super(source);
-		this.users = new LinkedHashSet<>(assertNotNull("users", users));
+		this.users = new LinkedHashSet<>(assertNotNull(users, "users"));
 	}
 
 	public Set<? extends User> getUsers() {

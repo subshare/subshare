@@ -27,7 +27,7 @@ public class UserRepoKeyPublicKeyDao extends Dao<UserRepoKeyPublicKey, UserRepoK
 	}
 
 	public UserRepoKeyPublicKey getUserRepoKeyPublicKey(final Uid userRepoKeyId) {
-		assertNotNull("userRepoKeyId", userRepoKeyId);
+		assertNotNull(userRepoKeyId, "userRepoKeyId");
 		final Query query = pm().newNamedQuery(getEntityClass(), "getUserRepoKeyPublicKey_userRepoKeyId");
 		try {
 			final UserRepoKeyPublicKey key = (UserRepoKeyPublicKey) query.execute(userRepoKeyId.toString());
@@ -89,7 +89,7 @@ public class UserRepoKeyPublicKeyDao extends Dao<UserRepoKeyPublicKey, UserRepoK
 	}
 
 	protected void deleteDependentObjects(final UserRepoKeyPublicKey userRepoKeyPublicKey) {
-		assertNotNull("userRepoKeyPublicKey", userRepoKeyPublicKey);
+		assertNotNull(userRepoKeyPublicKey, "userRepoKeyPublicKey");
 
 		final UserIdentityLinkDao userIdentityLinkDao = getDao(UserIdentityLinkDao.class);
 

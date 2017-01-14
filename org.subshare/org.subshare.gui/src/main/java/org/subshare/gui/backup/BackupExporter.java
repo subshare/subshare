@@ -30,7 +30,7 @@ public class BackupExporter extends AbstractBackupImExporter {
 	}
 
 	public void exportBackup(final File backupFile) throws IOException {
-		assertNotNull("backupFile", backupFile);
+		assertNotNull(backupFile, "backupFile");
 		final Date now = new Date(); // we want the same timestamp everywhere in the export => freeze it now.
 		backupFile.getParentFile().mkdirs();
 		final BackupDataFile backupDataFile = new BackupDataFile();

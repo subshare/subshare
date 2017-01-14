@@ -22,7 +22,7 @@ public class ExportFromHistoryDestinationPane extends WizardPageContentGridPane 
 
 	public ExportFromHistoryDestinationPane(final ExportFromHistoryData exportFromHistoryData) {
 		loadDynamicComponentFxml(ExportFromHistoryDestinationPane.class, this);
-		this.exportFromHistoryData = assertNotNull("exportFromHistoryData", exportFromHistoryData);
+		this.exportFromHistoryData = assertNotNull(exportFromHistoryData, "exportFromHistoryData");
 		fileTreePane.fileFilterProperty().set(file -> file.isDirectory());
 		fileTreePane.getSelectedFiles().addListener((InvalidationListener) observable -> onSelectedFilesChanged());
 		onSelectedFilesChanged();

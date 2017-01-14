@@ -18,11 +18,11 @@ public class HistoFrameDtoConverter {
 	}
 
 	protected HistoFrameDtoConverter(final LocalRepoTransaction transaction) {
-		this.transaction = assertNotNull("transaction", transaction);
+		this.transaction = assertNotNull(transaction, "transaction");
 	}
 
 	public HistoFrameDto toHistoFrameDto(final HistoFrame histoFrame) {
-		assertNotNull("histoFrame", histoFrame);
+		assertNotNull(histoFrame, "histoFrame");
 		HistoFrameDto result = new HistoFrameDto();
 		result.setHistoFrameId(histoFrame.getHistoFrameId());
 		result.setFromRepositoryId(histoFrame.getFromRepositoryId());
@@ -34,7 +34,7 @@ public class HistoFrameDtoConverter {
 	}
 
 	public HistoFrame putHistoFrameDto(final HistoFrameDto histoFrameDto) {
-		assertNotNull("histoFrameDto", histoFrameDto);
+		assertNotNull(histoFrameDto, "histoFrameDto");
 
 		final HistoFrameDao dao = transaction.getDao(HistoFrameDao.class);
 		HistoFrame result = dao.getHistoFrame(histoFrameDto.getHistoFrameId());

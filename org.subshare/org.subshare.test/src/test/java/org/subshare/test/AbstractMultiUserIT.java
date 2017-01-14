@@ -320,7 +320,7 @@ public abstract class AbstractMultiUserIT extends AbstractIT {
 	}
 
 	protected TestUser getTestUserOrServer() {
-		TestUser tu = assertNotNull("testUser", testUser);
+		TestUser tu = assertNotNull(testUser, "testUser");
 		if (isServerThread())
 			tu = TestUser.server;
 		return tu;
@@ -341,7 +341,7 @@ public abstract class AbstractMultiUserIT extends AbstractIT {
 	}
 
 	protected void switchLocationTo(final TestUser testUser) throws Exception {
-		this.testUser = assertNotNull("testUser", testUser);
+		this.testUser = assertNotNull(testUser, "testUser");
 		System.out.println();
 		logger.info("");
 		logger.info("********************************************************************");
@@ -431,20 +431,20 @@ public abstract class AbstractMultiUserIT extends AbstractIT {
 	}
 
 	protected URL getRemoteRootURLBase() throws MalformedURLException {
-		assertNotNull("remoteRepositoryId", remoteRepositoryId);
+		assertNotNull(remoteRepositoryId, "remoteRepositoryId");
 		return new URL(getSecureUrl() + "/" + remoteRepositoryId);
 	}
 
 	protected URL getRemoteRootURLWithPathPrefix() throws MalformedURLException {
 //		final TestUser testUser = getTestUserOrServer(); // maybe needed later to determine path-prefix on partial check-out.
 		String remotePathPrefix1Encrypted = ""; // TODO maybe add this later?!
-		assertNotNull("remoteRepositoryId", remoteRepositoryId);
+		assertNotNull(remoteRepositoryId, "remoteRepositoryId");
 		return UrlUtil.appendNonEncodedPath(getRemoteRootURLBase(),  remotePathPrefix1Encrypted);
 	}
 
 	protected void populateLocalSourceRepo() throws Exception {
-		final File localSrcRoot = testUser2LocalRoot.get(assertNotNull("ownerTestUser", ownerTestUser));
-		assertNotNull("localSrcRoot", localSrcRoot);
+		final File localSrcRoot = testUser2LocalRoot.get(assertNotNull(ownerTestUser, "ownerTestUser"));
+		assertNotNull(localSrcRoot, "localSrcRoot");
 
 		final File child_1 = createDirectory(localSrcRoot, "1 {11 11ä11#+} 1");
 
@@ -478,7 +478,7 @@ public abstract class AbstractMultiUserIT extends AbstractIT {
 
 	protected void syncLocalWithRemoteRepo() throws Exception {
 		TestUser testUser = getTestUserOrServer();
-		final File localRoot = assertNotNull("testUser2LocalRoot.get(" + testUser + ")", testUser2LocalRoot.get(testUser));
+		final File localRoot = assertNotNull(testUser2LocalRoot.get(testUser), "testUser2LocalRoot.get(" + testUser + ")");
 		try (final RepoToRepoSync repoToRepoSync = RepoToRepoSync.create(localRoot, getRemoteRootURLWithPathPrefix())) {
 			repoToRepoSync.sync(new LoggerProgressMonitor(logger));
 		}
@@ -488,7 +488,7 @@ public abstract class AbstractMultiUserIT extends AbstractIT {
 		final TestUser testUser = getTestUserOrServer();
 		final User invitedUser = getUserOrCreate(invitedTestUser);
 		final UserRepoInvitationToken userRepoInvitationToken;
-		final File localRoot = assertNotNull("testUser2LocalRoot.get(" + testUser + ")", testUser2LocalRoot.get(testUser));
+		final File localRoot = assertNotNull(testUser2LocalRoot.get(testUser), "testUser2LocalRoot.get(" + testUser + ")");
 		final UserRegistry userRegistry = UserRegistryImpl.getInstance();
 		try (final LocalRepoManager localRepoManager = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(localRoot);) {
 			final UserRepoInvitationManager userRepoInvitationManager = UserRepoInvitationManager.Helper.getInstance(userRegistry, localRepoManager);
@@ -499,7 +499,7 @@ public abstract class AbstractMultiUserIT extends AbstractIT {
 	}
 
 	protected User getUserOrCreate(final TestUser testUser) {
-		assertNotNull("testUser", testUser);
+		assertNotNull(testUser, "testUser");
 		UserRegistry userRegistry = UserRegistryImpl.getInstance();
 		Collection<User> users = userRegistry.getUsersByEmail(testUser.getEmail());
 		User user = null;
@@ -534,7 +534,7 @@ public abstract class AbstractMultiUserIT extends AbstractIT {
 		final List<PgpKey> result = new ArrayList<>(importKeysResult.getPgpKeyId2ImportedMasterKey().size());
 		for (PgpKeyId pgpKeyId : importKeysResult.getPgpKeyId2ImportedMasterKey().keySet()) {
 			PgpKey pgpKey = pgp.getPgpKey(pgpKeyId);
-			result.add(assertNotNull("pgpKey", pgpKey));
+			result.add(assertNotNull(pgpKey, "pgpKey"));
 		}
 		return result;
 	}
@@ -557,7 +557,7 @@ public abstract class AbstractMultiUserIT extends AbstractIT {
 
 	protected Collection<DebugUserRepoKeyDto> getDebugUserRepoKeyDtos() {
 		final TestUser testUser = getTestUserOrServer();
-		final File localRoot = assertNotNull("testUser2LocalRoot.get(" + testUser + ")", testUser2LocalRoot.get(testUser));
+		final File localRoot = assertNotNull(testUser2LocalRoot.get(testUser), "testUser2LocalRoot.get(" + testUser + ")");
 		try (final LocalRepoManager localRepoManager = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(localRoot)) {
 			SsLocalRepoMetaData localRepoMetaData = (SsLocalRepoMetaData) localRepoManager.getLocalRepoMetaData();
 			Collection<DebugUserRepoKeyDto> debugUserRepoKeyDtos = localRepoMetaData.getDebugUserRepoKeyDtos();

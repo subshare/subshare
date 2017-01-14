@@ -245,7 +245,7 @@ public class HistoFrameListPane extends VBox {
 	}
 
 	private String getUserNameByUserRepoKeyId(final Uid userRepoKeyId) {
-		assertNotNull("userRepoKeyId", userRepoKeyId);
+		assertNotNull(userRepoKeyId, "userRepoKeyId");
 
 		String userName = userRepoKey2UserName.get(userRepoKeyId);
 		if (userName == null) {
@@ -262,7 +262,7 @@ public class HistoFrameListPane extends VBox {
 	}
 
 	private String getUserName(final User user) { // TODO should I move this into User? Or instead replace it by 3 separate columns?!
-		assertNotNull("user", user);
+		assertNotNull(user, "user");
 		StringBuilder sb = new StringBuilder();
 
 		final String firstName = trim(user.getFirstName());
@@ -329,11 +329,11 @@ public class HistoFrameListPane extends VBox {
 
 	private void sortHistoFrameDtosBySignatureCreatedNewestFirst(final List<HistoFrameDto> histoFrameDtos) {
 		Collections.sort(histoFrameDtos, (o1, o2) -> {
-			final Date signatureCreated1 = assertNotNull("o1.signature", o1.getSignature()).getSignatureCreated();
-			assertNotNull("o1.signature.signatureCreated", signatureCreated1);
+			final Date signatureCreated1 = assertNotNull(o1.getSignature(), "o1.signature").getSignatureCreated();
+			assertNotNull(signatureCreated1, "o1.signature.signatureCreated");
 
-			final Date signatureCreated2 = assertNotNull("o2.signature", o2.getSignature()).getSignatureCreated();
-			assertNotNull("o2.signature.signatureCreated", signatureCreated2);
+			final Date signatureCreated2 = assertNotNull(o2.getSignature(), "o2.signature").getSignatureCreated();
+			assertNotNull(signatureCreated2, "o2.signature.signatureCreated");
 
 			return -1 * signatureCreated1.compareTo(signatureCreated2);
 		});
@@ -352,7 +352,7 @@ public class HistoFrameListPane extends VBox {
 	}
 
 	private LocalRepoManager createLocalRepoManager() {
-		final LocalRepo localRepo = assertNotNull("localRepo", getLocalRepo());
+		final LocalRepo localRepo = assertNotNull(getLocalRepo(), "localRepo");
 		return LocalRepoManagerFactoryLs.getLocalRepoManagerFactory().createLocalRepoManagerForExistingRepository(localRepo.getLocalRoot());
 	}
 }

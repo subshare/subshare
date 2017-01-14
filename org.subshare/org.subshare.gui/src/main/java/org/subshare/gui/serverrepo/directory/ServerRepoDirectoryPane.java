@@ -21,7 +21,7 @@ public class ServerRepoDirectoryPane extends GridPane {
 	private TextField serverUrlTextField;
 
 	public ServerRepoDirectoryPane(final ServerRepoFile serverRepoFile) {
-		this.serverRepoFile = assertNotNull("serverRepoFile", serverRepoFile);
+		this.serverRepoFile = assertNotNull(serverRepoFile, "serverRepoFile");
 		loadDynamicComponentFxml(ServerRepoDirectoryPane.class, this);
 		localPathTextField.setText(serverRepoFile.getLocalPath());
 		serverUrlTextField.setText(serverRepoFile.getServerUrl().toExternalForm());

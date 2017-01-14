@@ -220,7 +220,7 @@ public class ServerListPane extends GridPane {
 	}
 
 	private void addOrRemoveTableItemsViewCallback(final Collection<Server> servers) {
-		assertNotNull("servers", servers);
+		assertNotNull(servers, "servers");
 		final Map<Server, ServerListItem> viewServer2ServerListItem = new HashMap<>();
 		for (final ServerListItem sli : tableView.getItems())
 			viewServer2ServerListItem.put(sli.getServer(), sli);
@@ -246,8 +246,8 @@ public class ServerListPane extends GridPane {
 	}
 
 	protected void updateSyncStates(final ServerListItem serverListItem) {
-		final Server server = assertNotNull("serverListItem", serverListItem).getServer();
-		assertNotNull("serverListItem.server", server);
+		final Server server = assertNotNull(serverListItem, "serverListItem").getServer();
+		assertNotNull(server, "serverListItem.server");
 
 		SyncState state = getPgpSyncDaemon().getState(serverListItem.getServer());
 		serverListItem.setPgpSyncState(state);

@@ -23,8 +23,8 @@ public class SsBeginPutFileService extends BeginPutFileService {
 	@PUT
 	@Path("{path:.*}")
 	public void beginPutFile(@PathParam("path") String path, final SsNormalFileDto normalFileDto) {
-		assertNotNull("path", path);
-		assertNotNull("normalFileDto", normalFileDto);
+		assertNotNull(path, "path");
+		assertNotNull(normalFileDto, "normalFileDto");
 
 //		RepoFileContext.setContext(new RepoFileContext(path, normalFileDto, null));
 //		try {

@@ -14,7 +14,7 @@ public class MissingSigningPgpKeyException extends SignatureException {
 
 	public MissingSigningPgpKeyException(Set<PgpKeyId> missingPgpKeyIds, String message) {
 		super(message);
-		this.missingPgpKeyIds = assertNotNull("missingPgpKeyIds", missingPgpKeyIds);
+		this.missingPgpKeyIds = assertNotNull(missingPgpKeyIds, "missingPgpKeyIds");
 	}
 
 	public Set<PgpKeyId> getMissingPgpKeyIds() {

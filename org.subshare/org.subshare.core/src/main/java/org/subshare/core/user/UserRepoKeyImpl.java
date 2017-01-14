@@ -53,11 +53,11 @@ public class UserRepoKeyImpl implements UserRepoKey {
 
 	public UserRepoKeyImpl(final UUID serverRepositoryId, final AsymmetricCipherKeyPair keyPair, final Set<PgpKey> pgpKeysForEncryption, final PgpKey pgpKeyForSignature, final Date validTo) {
 		this.userRepoKeyId = new Uid();
-		this.serverRepositoryId = assertNotNull("serverRepositoryId", serverRepositoryId);
-		this.keyPair = assertNotNull("keyPair", keyPair);
+		this.serverRepositoryId = assertNotNull(serverRepositoryId, "serverRepositoryId");
+		this.keyPair = assertNotNull(keyPair, "keyPair");
 		this.validTo = validTo;
-		assertNotNull("pgpKeysForEncryption", pgpKeysForEncryption);
-		assertNotNull("pgpKeyForSignature", pgpKeyForSignature);
+		assertNotNull(pgpKeysForEncryption, "pgpKeysForEncryption");
+		assertNotNull(pgpKeyForSignature, "pgpKeyForSignature");
 		this.encryptedSignedPrivateKeyData = encryptSignPrivateKeyData(pgpKeysForEncryption, pgpKeyForSignature);
 		this.signedPublicKeyData = signPublicKeyData(pgpKeyForSignature);
 
@@ -66,10 +66,10 @@ public class UserRepoKeyImpl implements UserRepoKey {
 	}
 
 	public UserRepoKeyImpl(final Uid userRepoKeyId, final UUID serverRepositoryId, final byte[] encryptedSignedPrivateKeyData, final byte[] signedPublicKeyData, final Date validTo, final boolean invitation) {
-		this.userRepoKeyId = assertNotNull("userRepoKeyId", userRepoKeyId);
-		this.serverRepositoryId = assertNotNull("serverRepositoryId", serverRepositoryId);
-		this.encryptedSignedPrivateKeyData = assertNotNull("encryptedSignedPrivateKeyData", encryptedSignedPrivateKeyData);
-		this.signedPublicKeyData = assertNotNull("signedPublicKeyData", signedPublicKeyData);
+		this.userRepoKeyId = assertNotNull(userRepoKeyId, "userRepoKeyId");
+		this.serverRepositoryId = assertNotNull(serverRepositoryId, "serverRepositoryId");
+		this.encryptedSignedPrivateKeyData = assertNotNull(encryptedSignedPrivateKeyData, "encryptedSignedPrivateKeyData");
+		this.signedPublicKeyData = assertNotNull(signedPublicKeyData, "signedPublicKeyData");
 		this.validTo = validTo;
 		this.invitation = invitation;
 
@@ -121,8 +121,8 @@ public class UserRepoKeyImpl implements UserRepoKey {
 		if (pgpKeysForEncryption.size() == 1 && PgpKey.TEST_DUMMY_PGP_KEY == pgpKeysForEncryption.iterator().next())
 			return new byte[0]; // for consistency with signPublicKeyData(...) we return an empty array here, too.
 
-		assertNotNull("pgpKeysForEncryption", pgpKeysForEncryption);
-		assertNotNull("pgpKeyForSignature", pgpKeyForSignature);
+		assertNotNull(pgpKeysForEncryption, "pgpKeysForEncryption");
+		assertNotNull(pgpKeyForSignature, "pgpKeyForSignature");
 		final byte[] encodedPrivateKey = CryptoRegistry.getInstance().encodePrivateKey(keyPair.getPrivate());
 		final ByteArrayOutputStream out = new ByteArrayOutputStream();
 		final PgpEncoder encoder = PgpRegistry.getInstance().getPgpOrFail().createEncoder(new ByteArrayInputStream(encodedPrivateKey), out);
@@ -156,7 +156,7 @@ public class UserRepoKeyImpl implements UserRepoKey {
 		if (PgpKey.TEST_DUMMY_PGP_KEY == pgpKey)
 			return new byte[0]; // null causes an IllegalArgumentException => empty array.
 
-		assertNotNull("pgpKey", pgpKey);
+		assertNotNull(pgpKey, "pgpKey");
 		final byte[] encodedPublicKey = CryptoRegistry.getInstance().encodePublicKey(keyPair.getPublic());
 		final ByteArrayOutputStream out = new ByteArrayOutputStream();
 		final PgpEncoder encoder = PgpRegistry.getInstance().getPgpOrFail().createEncoder(new ByteArrayInputStream(encodedPublicKey), out);
@@ -174,7 +174,7 @@ public class UserRepoKeyImpl implements UserRepoKey {
 	}
 
 	private static AsymmetricKeyParameter verifyPublicKeyData(final byte[] signedPublicKeyData) throws SignatureException {
-		assertNotNull("signedPublicKeyData", signedPublicKeyData);
+		assertNotNull(signedPublicKeyData, "signedPublicKeyData");
 		final ByteArrayOutputStream out = new ByteArrayOutputStream();
 		final PgpDecoder decoder = PgpRegistry.getInstance().getPgpOrFail().createDecoder(new ByteArrayInputStream(signedPublicKeyData), out);
 		try {
@@ -207,9 +207,9 @@ public class UserRepoKeyImpl implements UserRepoKey {
 		private final boolean invitation;
 
 		public PublicKeyImpl(final Uid userRepoKeyId, final UUID serverRepositoryId, final AsymmetricKeyParameter publicKey, final Date validTo, final boolean invitation) {
-			this.userRepoKeyId = assertNotNull("userRepoKeyId", userRepoKeyId);
-			this.serverRepositoryId = assertNotNull("serverRepositoryId", serverRepositoryId);
-			this.publicKey = assertNotNull("publicKey", publicKey);
+			this.userRepoKeyId = assertNotNull(userRepoKeyId, "userRepoKeyId");
+			this.serverRepositoryId = assertNotNull(serverRepositoryId, "serverRepositoryId");
+			this.publicKey = assertNotNull(publicKey, "publicKey");
 			this.validTo = validTo;
 			this.invitation = invitation;
 		}
@@ -275,12 +275,12 @@ public class UserRepoKeyImpl implements UserRepoKey {
 
 		protected PublicKeyWithSignatureImpl(Uid userRepoKeyId, UUID serverRepositoryId, AsymmetricKeyParameter publicKey, final byte[] signedPublicKeyData, final Date validTo, final boolean invitation) {
 			super(userRepoKeyId, serverRepositoryId, publicKey, validTo, invitation);
-			this.signedPublicKeyData = assertNotNull("signedPublicKeyData", signedPublicKeyData);
+			this.signedPublicKeyData = assertNotNull(signedPublicKeyData, "signedPublicKeyData");
 		}
 
 		public PublicKeyWithSignatureImpl(Uid userRepoKeyId, UUID repositoryId, final byte[] signedPublicKeyData, final Date validTo, final boolean invitation) {
 			super(userRepoKeyId, repositoryId, verifyPublicKeyData(signedPublicKeyData), validTo, invitation);
-			this.signedPublicKeyData = assertNotNull("signedPublicKeyData", signedPublicKeyData);
+			this.signedPublicKeyData = assertNotNull(signedPublicKeyData, "signedPublicKeyData");
 		}
 
 		@Override

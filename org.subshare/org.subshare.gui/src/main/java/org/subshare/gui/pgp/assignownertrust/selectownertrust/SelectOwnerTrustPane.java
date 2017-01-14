@@ -41,7 +41,7 @@ public class SelectOwnerTrustPane extends WizardPageContentGridPane {
 	private Text selectedOwnerTrustDescriptionText;
 
 	public SelectOwnerTrustPane(final AssignOwnerTrustData assignOwnerTrustData) {
-		this.assignOwnerTrustData = assertNotNull("assignOwnerTrustData", assignOwnerTrustData);
+		this.assignOwnerTrustData = assertNotNull(assignOwnerTrustData, "assignOwnerTrustData");
 		loadDynamicComponentFxml(SelectOwnerTrustPane.class, this);
 		populateUserTextField();
 		populateRadioButtonBox();
@@ -116,7 +116,7 @@ public class SelectOwnerTrustPane extends WizardPageContentGridPane {
 	}
 
 	private static PgpOwnerTrust getOwnerTrust(final RadioButton radioButton) {
-		assertNotNull("radioButton", radioButton);
-		return (PgpOwnerTrust) assertNotNull("radioButton.userData", radioButton.getUserData());
+		assertNotNull(radioButton, "radioButton");
+		return (PgpOwnerTrust) assertNotNull(radioButton.getUserData(), "radioButton.userData");
 	}
 }

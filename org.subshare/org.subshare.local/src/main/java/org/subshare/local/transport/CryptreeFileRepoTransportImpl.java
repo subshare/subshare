@@ -127,8 +127,8 @@ public class CryptreeFileRepoTransportImpl extends FileRepoTransport implements 
 
 	@Override
 	protected RepoFile syncRepoFile(final LocalRepoTransaction transaction, final File file) {
-		assertNotNull("transaction", transaction);
-		assertNotNull("file", file);
+		assertNotNull(transaction, "transaction");
+		assertNotNull(file, "file");
 
 		final File localRoot = getLocalRepoManager().getLocalRoot();
 		final RepoFileDao rfDao = transaction.getDao(RepoFileDao.class);
@@ -261,9 +261,9 @@ public class CryptreeFileRepoTransportImpl extends FileRepoTransport implements 
 //	}
 
 	protected void createAndPersistPreliminaryCollision(final LocalRepoManager localRepoManager, final File file, String localPath, Uid cryptoRepoFileId) {
-		assertNotNull("localRepoManager", localRepoManager);
+		assertNotNull(localRepoManager, "localRepoManager");
 		if (localPath == null)
-			assertNotNull("localPath/file", file);
+			assertNotNull(file, "localPath/file");
 
 		logger.debug("createAndPersistPreliminaryCollision: localRoot='{}' localRepositoryId={} file='{}' localPath='{}' cryptoRepoFileId={}",
 				localRepoManager.getLocalRoot(), getRepositoryId(), (file == null ? "" : file.getAbsolutePath()),
@@ -325,7 +325,7 @@ public class CryptreeFileRepoTransportImpl extends FileRepoTransport implements 
 
 	private void putPaddingMetaData(String path, SsNormalFileDto fromNormalFileDto) {
 		path = prefixPath(path); // does a null-check
-		assertNotNull("fromNormalFileDto", fromNormalFileDto);
+		assertNotNull(fromNormalFileDto, "fromNormalFileDto");
 
 		final File file = getFile(path);
 		try ( final LocalRepoTransaction transaction = getLocalRepoManager().beginWriteTransaction(); ) {

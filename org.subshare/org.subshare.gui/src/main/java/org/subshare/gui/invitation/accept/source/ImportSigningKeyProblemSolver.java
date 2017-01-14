@@ -104,7 +104,7 @@ public class ImportSigningKeyProblemSolver extends AbstractProblemSolver {
 		for (ImportedMasterKey importedMasterKey : importKeysResult.getPgpKeyId2ImportedMasterKey().values()) {
 			final PgpKeyId pgpKeyId = importedMasterKey.getPgpKeyId();
 			final PgpKey pgpKey = pgp.getPgpKey(pgpKeyId);
-			assertNotNull("pgp.getPgpKey(" + pgpKeyId + ")", pgpKey);
+			assertNotNull(pgpKey, "pgp.getPgpKey(" + pgpKeyId + ")");
 			pgpKeyId2PgpKey.put(pgpKeyId, pgpKey);
 		}
 		userRegistry.importUsersFromPgpKeys(pgpKeyId2PgpKey.values());
@@ -124,7 +124,7 @@ public class ImportSigningKeyProblemSolver extends AbstractProblemSolver {
 				throw new RuntimeException(e);
 			}
 			final byte[] signingKeyData = lsc.invoke(bout,"toByteArray"); // only encrypted - not signed! thus not checking signature!
-			assertNotNull("signingKeyData", signingKeyData);
+			assertNotNull(signingKeyData, "signingKeyData");
 			return signingKeyData;
 		}
 	}

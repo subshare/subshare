@@ -18,8 +18,8 @@ public class ResolveCollisionData {
 	private List<CollisionData> collisionDatas;
 
 	public ResolveCollisionData(LocalRepo localRepo, Set<Uid> collisionIds) {
-		this.localRepo = assertNotNull("localRepo", localRepo);
-		this.collisionIds = assertNotNull("collisionIds", collisionIds);
+		this.localRepo = assertNotNull(localRepo, "localRepo");
+		this.collisionIds = assertNotNull(collisionIds, "collisionIds");
 	}
 
 	public LocalRepo getLocalRepo() {

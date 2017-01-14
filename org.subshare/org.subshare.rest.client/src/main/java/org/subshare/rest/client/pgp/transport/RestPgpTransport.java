@@ -86,7 +86,7 @@ public class RestPgpTransport extends AbstractPgpTransport {
 	@Override
 	public long getLocalRevision() {
 		final Long localRevision = getClient().execute(new GetLocalRevisionRequest());
-		return assertNotNull("localRevision", localRevision);
+		return assertNotNull(localRevision, "localRevision");
 	}
 
 	@Override

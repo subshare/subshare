@@ -19,7 +19,7 @@ public class ServerListItem {
 	private final ObjectProperty<URL> url;
 
 	public ServerListItem(final Server server) {
-		this.server = assertNotNull("server", server);
+		this.server = assertNotNull(server, "server");
 		try {
 			name = JavaBeanStringPropertyBuilder.create()
 					.bean(server)

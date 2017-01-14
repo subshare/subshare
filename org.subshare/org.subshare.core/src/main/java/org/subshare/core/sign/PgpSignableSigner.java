@@ -29,12 +29,12 @@ public class PgpSignableSigner {
 	}
 
 	public PgpSignableSigner(final Pgp pgp, final PgpKey pgpKey) {
-		this.pgp = assertNotNull("pgp", pgp);
-		this.pgpKey = assertNotNull("pgpKey", pgpKey);
+		this.pgp = assertNotNull(pgp, "pgp");
+		this.pgpKey = assertNotNull(pgpKey, "pgpKey");
 	}
 
 	public void sign(final PgpSignable pgpSignable) {
-		assertNotNull("pgpSignable", pgpSignable);
+		assertNotNull(pgpSignable, "pgpSignable");
 
 		final String signedDataType = pgpSignable.getSignedDataType();
 		if (isEmpty(signedDataType))

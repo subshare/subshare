@@ -28,7 +28,7 @@ public class WeakLocalRepoCommitEventListener implements LocalRepoCommitEventLis
 	public WeakLocalRepoCommitEventListener(final LocalRepoCommitEventManager manager, final UUID localRepositoryId, final LocalRepoCommitEventListener listener) {
 		expunge();
 
-		this.manager = assertNotNull("manager", manager);
+		this.manager = assertNotNull(manager, "manager");
 		this.localRepositoryId = localRepositoryId;
 
 		listenerRef = new WeakReference<LocalRepoCommitEventListener>(listener, listenerRefQueue);

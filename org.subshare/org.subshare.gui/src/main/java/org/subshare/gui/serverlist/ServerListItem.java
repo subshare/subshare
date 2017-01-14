@@ -30,7 +30,7 @@ public class ServerListItem {
 
 	@SuppressWarnings("unchecked")
 	public ServerListItem(final Server server) {
-		this.server = assertNotNull("server", server);
+		this.server = assertNotNull(server, "server");
 		try {
 			name = JavaBeanStringPropertyBuilder.create()
 					.bean(server)
@@ -107,7 +107,7 @@ public class ServerListItem {
 	}
 
 	private String assembleTooltipText(final String ... tooltipTexts) {
-		assertNotNull("tooltipTexts", tooltipTexts);
+		assertNotNull(tooltipTexts, "tooltipTexts");
 
 		final List<String> tooltipTextList = Arrays.asList(tooltipTexts);
 		return assembleTooltipText(tooltipTextList);
@@ -133,7 +133,7 @@ public class ServerListItem {
 	}
 
 	private List<String> filterEmpty(final List<String> strings) {
-		assertNotNull("strings", strings);
+		assertNotNull(strings, "strings");
 		final List<String> result = new ArrayList<String>(strings.size());
 		for (final String string : strings) {
 			if (! isEmpty(string))

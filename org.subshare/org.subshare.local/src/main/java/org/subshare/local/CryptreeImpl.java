@@ -230,7 +230,7 @@ public class CryptreeImpl extends AbstractCryptree {
 //		cryptreeNode.createHistoCryptoRepoFileIfNeeded();
 
 		final CryptoRepoFile cryptoRepoFile = cryptreeNode.getCryptoRepoFile();
-		assertNotNull("cryptoRepoFile", cryptoRepoFile);
+		assertNotNull(cryptoRepoFile, "cryptoRepoFile");
 
 		final CryptoChangeSetDto cryptoChangeSetDto = getCryptoChangeSetDto(cryptoRepoFile);
 		return cryptoChangeSetDto;
@@ -240,13 +240,13 @@ public class CryptreeImpl extends AbstractCryptree {
 	public String getServerPath(final String localPath) {
 		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(localPath);
 		final CryptoRepoFile cryptoRepoFile = cryptreeNode.getCryptoRepoFile();
-		assertNotNull("cryptoRepoFile", cryptoRepoFile);
+		assertNotNull(cryptoRepoFile, "cryptoRepoFile");
 		return cryptoRepoFile.getServerPath();
 	}
 
 	@Override
 	public String getLocalPath(final String serverPath) {
-		assertNotNull("serverPath", serverPath);
+		assertNotNull(serverPath, "serverPath");
 		if (StringUtil.isEmpty(serverPath))
 			throw new IllegalArgumentException("serverPath is empty"); // TODO do we need to support this? Is this the root? Shouldn't this be mapped to the local root [or more precisely the local connection-point]?!
 
@@ -269,7 +269,7 @@ public class CryptreeImpl extends AbstractCryptree {
 
 	@Override
 	public DataKey getDataKeyOrFail(final String localPath) {
-		assertNotNull("localPath", localPath);
+		assertNotNull(localPath, "localPath");
 		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(localPath);
 		return cryptreeNode.getDataKeyOrFail();
 	}
@@ -361,7 +361,7 @@ public class CryptreeImpl extends AbstractCryptree {
 
 	@Override
 	public void putCryptoChangeSetDto(final CryptoChangeSetDto cryptoChangeSetDto) {
-		assertNotNull("cryptoChangeSetDto", cryptoChangeSetDto);
+		assertNotNull(cryptoChangeSetDto, "cryptoChangeSetDto");
 		final LocalRepoTransaction transaction = getTransactionOrFail();
 
 		final Map<CryptoRepoFileDto, CryptoRepoFile> cryptoRepoFileDto2CryptoRepoFile = new HashMap<>();
@@ -640,16 +640,16 @@ public class CryptreeImpl extends AbstractCryptree {
 	}
 
 	private void putDecryptedRepoFiles(final Map<CryptoRepoFile, RepoFileDto> cryptoRepoFile2DecryptedRepoFileDto) {
-		assertNotNull("cryptoRepoFile2DecryptedRepoFileDto", cryptoRepoFile2DecryptedRepoFileDto);
+		assertNotNull(cryptoRepoFile2DecryptedRepoFileDto, "cryptoRepoFile2DecryptedRepoFileDto");
 		final Map<CryptoRepoFile, RepoFileDto> cache = new HashMap<>(cryptoRepoFile2DecryptedRepoFileDto);
 		for (final Map.Entry<CryptoRepoFile, RepoFileDto> me : cryptoRepoFile2DecryptedRepoFileDto.entrySet())
 			putDecryptedRepoFile(cache, me.getKey(), me.getValue());
 	}
 
 	private RepoFile putDecryptedRepoFile(final Map<CryptoRepoFile, RepoFileDto> cryptoRepoFile2DecryptedRepoFileDto, final CryptoRepoFile cryptoRepoFile, final RepoFileDto decryptedRepoFileDto) {
-		assertNotNull("cryptoRepoFile2DecryptedRepoFileDto", cryptoRepoFile2DecryptedRepoFileDto);
-		assertNotNull("cryptoRepoFile", cryptoRepoFile);
-		assertNotNull("decryptedRepoFileDto", decryptedRepoFileDto);
+		assertNotNull(cryptoRepoFile2DecryptedRepoFileDto, "cryptoRepoFile2DecryptedRepoFileDto");
+		assertNotNull(cryptoRepoFile, "cryptoRepoFile");
+		assertNotNull(decryptedRepoFileDto, "decryptedRepoFileDto");
 
 		if (cryptoRepoFile.getDeleted() != null) {
 			logger.info("putDecryptedRepoFile: Skipping deleted {}", cryptoRepoFile);
@@ -681,8 +681,8 @@ public class CryptreeImpl extends AbstractCryptree {
 	}
 
 	private RepoFile putDecryptedRepoFile(final CryptoRepoFile cryptoRepoFile, final RepoFileDto decryptedRepoFileDto, final RepoFile parentRepoFile) {
-		assertNotNull("cryptoRepoFile", cryptoRepoFile);
-		assertNotNull("decryptedRepoFileDto", decryptedRepoFileDto);
+		assertNotNull(cryptoRepoFile, "cryptoRepoFile");
+		assertNotNull(decryptedRepoFileDto, "decryptedRepoFileDto");
 		// parentRepoFile might be null!
 
 		final LocalRepoTransaction transaction = getTransactionOrFail();
@@ -848,7 +848,7 @@ public class CryptreeImpl extends AbstractCryptree {
 					cryptoLink.getToCryptoKey().getCryptoRepoFile().getCryptoRepoFileId());
 
 			final PlainCryptoKey plainCryptoKey = cryptreeNode.getPlainCryptoKeyForDecrypting(cryptoLink.getToCryptoKey());
-			assertNotNull("plainCryptoKey[cryptoKeyId=" + cryptoLink.getToCryptoKey().getCryptoKeyId() + "]", plainCryptoKey);
+			assertNotNull(plainCryptoKey, "plainCryptoKey[cryptoKeyId=" + cryptoLink.getToCryptoKey().getCryptoKeyId() + "]");
 
 			final byte[] newToCryptoKeyData = encrypt(plainCryptoKey.getEncodedKey(), request.getNewKey().getPublicKey().getPublicKey());
 
@@ -891,7 +891,7 @@ public class CryptreeImpl extends AbstractCryptree {
 			final UserIdentityPayloadDto userIdentityPayloadDto = getUserIdentityPayloadDtoOrFail(request.getNewKey().getUserRepoKeyId());
 			UserRepoKeyPublicKeyDtoWithSignatureConverter urkpkConverter = new UserRepoKeyPublicKeyDtoWithSignatureConverter();
 			UserRepoKey.PublicKeyWithSignature newPublicKey = urkpkConverter.fromUserRepoKeyPublicKeyDto(userIdentityPayloadDto.getUserRepoKeyPublicKeyDto());
-			assertNotNull("newPublicKey", newPublicKey);
+			assertNotNull(newPublicKey, "newPublicKey");
 			final List<UserRepoKey.PublicKeyWithSignature> oldPublicKeys = new ArrayList<>();
 			for (final UserRepoKey.PublicKeyWithSignature pk : user.getUserRepoKeyPublicKeys()) {
 				if (pk.getUserRepoKeyId().equals(request.getOldKey().getUserRepoKeyId()))
@@ -964,7 +964,7 @@ public class CryptreeImpl extends AbstractCryptree {
 //	}
 
 	private void putUserRepoKeyPublicKeyReplacementRequestDeletionDto(final UserRepoKeyPublicKeyReplacementRequestDeletionDto requestDeletionDto) {
-		assertNotNull("requestDeletionDto", requestDeletionDto);
+		assertNotNull(requestDeletionDto, "requestDeletionDto");
 		final LocalRepoTransaction transaction = getTransactionOrFail();
 		final UserRepoKeyPublicKeyReplacementRequestDao requestDao = transaction.getDao(UserRepoKeyPublicKeyReplacementRequestDao.class);
 		final UserRepoKeyPublicKeyReplacementRequestDeletionDao requestDeletionDao = transaction.getDao(UserRepoKeyPublicKeyReplacementRequestDeletionDao.class);
@@ -990,7 +990,7 @@ public class CryptreeImpl extends AbstractCryptree {
 	}
 
 	private void putUserIdentityDto(UserIdentityDto userIdentityDto) {
-		assertNotNull("userIdentityDto", userIdentityDto);
+		assertNotNull(userIdentityDto, "userIdentityDto");
 		final LocalRepoTransaction transaction = getTransactionOrFail();
 		final UserIdentityDao uiDao = transaction.getDao(UserIdentityDao.class);
 		final UserRepoKeyPublicKeyDao urkpkDao = transaction.getDao(UserRepoKeyPublicKeyDao.class);
@@ -1009,7 +1009,7 @@ public class CryptreeImpl extends AbstractCryptree {
 	}
 
 	private void deleteOtherUserIdentitiesOfSameUserRepoKeyPublicKey(final UserIdentity userIdentity) {
-		assertNotNull("userIdentity", userIdentity);
+		assertNotNull(userIdentity, "userIdentity");
 		final LocalRepoTransaction transaction = getTransactionOrFail();
 		final UserIdentityDao uiDao = transaction.getDao(UserIdentityDao.class);
 //		final UserIdentityLinkDao uilDao = transaction.getDao(UserIdentityLinkDao.class);
@@ -1023,7 +1023,7 @@ public class CryptreeImpl extends AbstractCryptree {
 	}
 
 	private void putUserIdentityLinkDto(UserIdentityLinkDto userIdentityLinkDto) {
-		assertNotNull("userIdentityLinkDto", userIdentityLinkDto);
+		assertNotNull(userIdentityLinkDto, "userIdentityLinkDto");
 		final LocalRepoTransaction transaction = getTransactionOrFail();
 		final UserIdentityDao uiDao = transaction.getDao(UserIdentityDao.class);
 		final UserIdentityLinkDao uilDao = transaction.getDao(UserIdentityLinkDao.class);
@@ -1083,7 +1083,7 @@ public class CryptreeImpl extends AbstractCryptree {
 
 	@Override
 	public UserIdentityPayloadDto getUserIdentityPayloadDtoOrFail(final Uid userRepoKeyId) throws ReadUserIdentityAccessDeniedException {
-		assertNotNull("userRepoKeyId", userRepoKeyId);
+		assertNotNull(userRepoKeyId, "userRepoKeyId");
 		final UserRepoKeyPublicKeyDao userRepoKeyPublicKeyDao = getCryptreeContext().transaction.getDao(UserRepoKeyPublicKeyDao.class);
 		final UserRepoKeyPublicKey ofUserRepoKeyPublicKey = userRepoKeyPublicKeyDao.getUserRepoKeyPublicKey(userRepoKeyId);
 		if (ofUserRepoKeyPublicKey == null)
@@ -1099,7 +1099,7 @@ public class CryptreeImpl extends AbstractCryptree {
 
 	@Override
 	public UserRepoKey getUserRepoKey(final String localPath, final PermissionType permissionType) {
-		assertNotNull("permissionType", permissionType);
+		assertNotNull(permissionType, "permissionType");
 		final CryptreeNode cryptreeNode =
 				localPath == null
 				? getCryptreeContext().getCryptreeNodeOrCreate(getRootCryptoRepoFileIdOrFail())
@@ -1129,7 +1129,7 @@ public class CryptreeImpl extends AbstractCryptree {
 
 	public Uid getRootCryptoRepoFileIdOrFail() {
 		final Uid rootCryptoRepoFileId = getRootCryptoRepoFileId();
-		return assertNotNull("rootCryptoRepoFileId", rootCryptoRepoFileId);
+		return assertNotNull(rootCryptoRepoFileId, "rootCryptoRepoFileId");
 	}
 
 	@Override
@@ -1144,49 +1144,49 @@ public class CryptreeImpl extends AbstractCryptree {
 
 	@Override
 	public RepoFileDto getDecryptedRepoFileDtoOrFail(final Uid cryptoRepoFileId) throws AccessDeniedException {
-		assertNotNull("cryptoRepoFileId", cryptoRepoFileId);
+		assertNotNull(cryptoRepoFileId, "cryptoRepoFileId");
 		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(cryptoRepoFileId);
 		final RepoFileDto repoFileDto = cryptreeNode.getRepoFileDto();
-		assertNotNull("cryptreeNode.getRepoFileDto()", repoFileDto); // The cryptoRepoFile is present, thus this should never be null!
+		assertNotNull(repoFileDto, "cryptreeNode.getRepoFileDto()"); // The cryptoRepoFile is present, thus this should never be null!
 		return repoFileDto;
 	}
 
 	@Override
 	public RepoFileDto getDecryptedRepoFileDto(final String localPath) throws AccessDeniedException {
-		assertNotNull("localPath", localPath);
+		assertNotNull(localPath, "localPath");
 		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(localPath);
 		return cryptreeNode.getRepoFileDto();
 	}
 
 	@Override
 	public RepoFileDto getDecryptedRepoFileOnServerDtoOrFail(Uid cryptoRepoFileId) throws AccessDeniedException {
-		assertNotNull("cryptoRepoFileId", cryptoRepoFileId);
+		assertNotNull(cryptoRepoFileId, "cryptoRepoFileId");
 		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(cryptoRepoFileId);
 		final RepoFileDto repoFileDto = cryptreeNode.getRepoFileDtoOnServer();
-		assertNotNull("cryptreeNode.getRepoFileDtoOnServer()", repoFileDto); // The cryptoRepoFile is present, thus this should never be null!
+		assertNotNull(repoFileDto, "cryptreeNode.getRepoFileDtoOnServer()"); // The cryptoRepoFile is present, thus this should never be null!
 		return repoFileDto;
 	}
 
 	@Override
 	public RepoFileDto getDecryptedRepoFileOnServerDto(final String localPath) {
-		assertNotNull("localPath", localPath);
+		assertNotNull(localPath, "localPath");
 		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(localPath);
 		return cryptreeNode.getRepoFileDtoOnServer();
 	}
 
 	@Override
 	public void grantPermission(final String localPath, final PermissionType permissionType, final UserRepoKey.PublicKey userRepoKeyPublicKey) {
-		assertNotNull("localPath", localPath);
-		assertNotNull("permissionType", permissionType);
-		assertNotNull("userRepoKeyPublicKey", userRepoKeyPublicKey);
+		assertNotNull(localPath, "localPath");
+		assertNotNull(permissionType, "permissionType");
+		assertNotNull(userRepoKeyPublicKey, "userRepoKeyPublicKey");
 		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(localPath);
 		cryptreeNode.grantPermission(permissionType, userRepoKeyPublicKey);
 	}
 
 	@Override
 	public void requestReplaceInvitationUserRepoKey(UserRepoKey invitationUserRepoKey, UserRepoKey.PublicKey publicKey) {
-		assertNotNull("invitationUserRepoKey", invitationUserRepoKey);
-		assertNotNull("publicKey", publicKey);
+		assertNotNull(invitationUserRepoKey, "invitationUserRepoKey");
+		assertNotNull(publicKey, "publicKey");
 
 		logger.info("requestReplaceInvitationUserRepoKey: invitationUserRepoKey={}, publicKey={}", invitationUserRepoKey, publicKey);
 
@@ -1228,7 +1228,7 @@ public class CryptreeImpl extends AbstractCryptree {
 
 	@Override
 	public void registerRemotePathPrefix(final String pathPrefix) { // TODO this is bad, because whenever the remote-path-prefix changes, the localRevision is updated and then the collision detection fails. Maybe move this somewhere else?
-		assertNotNull("pathPrefix", pathPrefix);
+		assertNotNull(pathPrefix, "pathPrefix");
 		final RemoteRepositoryDao remoteRepositoryDao = getTransactionOrFail().getDao(RemoteRepositoryDao.class);
 		final RemoteRepository remoteRepository = remoteRepositoryDao.getRemoteRepositoryOrFail(getServerRepositoryIdOrFail());
 		final SsRemoteRepository rr = (SsRemoteRepository)remoteRepository;
@@ -1237,55 +1237,55 @@ public class CryptreeImpl extends AbstractCryptree {
 
 	@Override
 	public void revokePermission(final String localPath, final PermissionType permissionType, final Set<Uid> userRepoKeyIds) {
-		assertNotNull("localPath", localPath);
-		assertNotNull("permissionType", permissionType);
-		assertNotNull("userRepoKeyIds", userRepoKeyIds);
+		assertNotNull(localPath, "localPath");
+		assertNotNull(permissionType, "permissionType");
+		assertNotNull(userRepoKeyIds, "userRepoKeyIds");
 		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(localPath);
 		cryptreeNode.revokePermission(permissionType, userRepoKeyIds);
 	}
 
 	@Override
 	public void grantPermission(final Uid cryptoRepoFileId, final PermissionType permissionType, final UserRepoKey.PublicKey userRepoKeyPublicKey) {
-		assertNotNull("cryptoRepoFileId", cryptoRepoFileId);
-		assertNotNull("permissionType", permissionType);
-		assertNotNull("userRepoKeyPublicKey", userRepoKeyPublicKey);
+		assertNotNull(cryptoRepoFileId, "cryptoRepoFileId");
+		assertNotNull(permissionType, "permissionType");
+		assertNotNull(userRepoKeyPublicKey, "userRepoKeyPublicKey");
 		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(cryptoRepoFileId);
 		cryptreeNode.grantPermission(permissionType, userRepoKeyPublicKey);
 	}
 
 	@Override
 	public void revokePermission(final Uid cryptoRepoFileId, final PermissionType permissionType, final Set<Uid> userRepoKeyIds) {
-		assertNotNull("cryptoRepoFileId", cryptoRepoFileId);
-		assertNotNull("permissionType", permissionType);
-		assertNotNull("userRepoKeyIds", userRepoKeyIds);
+		assertNotNull(cryptoRepoFileId, "cryptoRepoFileId");
+		assertNotNull(permissionType, "permissionType");
+		assertNotNull(userRepoKeyIds, "userRepoKeyIds");
 		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(cryptoRepoFileId);
 		cryptreeNode.revokePermission(permissionType, userRepoKeyIds);
 	}
 
 	@Override
 	public void setPermissionsInherited(final String localPath, final boolean inherited) {
-		assertNotNull("localPath", localPath);
+		assertNotNull(localPath, "localPath");
 		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(localPath);
 		cryptreeNode.setPermissionsInherited(inherited);
 	}
 
 	@Override
 	public boolean isPermissionsInherited(final String localPath) {
-		assertNotNull("localPath", localPath);
+		assertNotNull(localPath, "localPath");
 		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(localPath);
 		return cryptreeNode.isPermissionsInherited();
 	}
 
 	@Override
 	public void setPermissionsInherited(final Uid cryptoRepoFileId, final boolean inherited) {
-		assertNotNull("cryptoRepoFileId", cryptoRepoFileId);
+		assertNotNull(cryptoRepoFileId, "cryptoRepoFileId");
 		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(cryptoRepoFileId);
 		cryptreeNode.setPermissionsInherited(inherited);
 	}
 
 	@Override
 	public boolean isPermissionsInherited(final Uid cryptoRepoFileId) {
-		assertNotNull("cryptoRepoFileId", cryptoRepoFileId);
+		assertNotNull(cryptoRepoFileId, "cryptoRepoFileId");
 		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(cryptoRepoFileId);
 		return cryptreeNode.isPermissionsInherited();
 	}
@@ -1300,12 +1300,12 @@ public class CryptreeImpl extends AbstractCryptree {
 	}
 
 	private CryptoRepoFile putCryptoRepoFileDto(final CryptoRepoFileDto cryptoRepoFileDto) {
-		assertNotNull("cryptoRepoFileDto", cryptoRepoFileDto);
+		assertNotNull(cryptoRepoFileDto, "cryptoRepoFileDto");
 		final LocalRepoTransaction transaction = getTransactionOrFail();
 		final CryptoKeyDao cryptoKeyDao = transaction.getDao(CryptoKeyDao.class);
 		final CryptoRepoFileDao cryptoRepoFileDao = transaction.getDao(CryptoRepoFileDao.class);
 
-		final Uid cryptoRepoFileId = assertNotNull("cryptoRepoFileDto.cryptoRepoFileId", cryptoRepoFileDto.getCryptoRepoFileId());
+		final Uid cryptoRepoFileId = assertNotNull(cryptoRepoFileDto.getCryptoRepoFileId(), "cryptoRepoFileDto.cryptoRepoFileId");
 		CryptoRepoFile cryptoRepoFile = cryptoRepoFileDao.getCryptoRepoFile(cryptoRepoFileId);
 		if (cryptoRepoFile == null)
 			cryptoRepoFile = new CryptoRepoFile(cryptoRepoFileId);
@@ -1320,7 +1320,7 @@ public class CryptreeImpl extends AbstractCryptree {
 //			}
 //		}
 
-		final Uid cryptoKeyId = assertNotNull("cryptoRepoFileDto.cryptoKeyId", cryptoRepoFileDto.getCryptoKeyId());
+		final Uid cryptoKeyId = assertNotNull(cryptoRepoFileDto.getCryptoKeyId(), "cryptoRepoFileDto.cryptoKeyId");
 		cryptoRepoFile.setCryptoKey(cryptoKeyDao.getCryptoKey(cryptoKeyId)); // may be null, now, if it is persisted later!
 
 		final Uid parentCryptoRepoFileId = cryptoRepoFileDto.getParentCryptoRepoFileId();
@@ -1346,7 +1346,7 @@ public class CryptreeImpl extends AbstractCryptree {
 			}
 		}
 
-		final byte[] repoFileDtoData = assertNotNull("cryptoRepoFileDto.repoFileDtoData", cryptoRepoFileDto.getRepoFileDtoData());
+		final byte[] repoFileDtoData = assertNotNull(cryptoRepoFileDto.getRepoFileDtoData(), "cryptoRepoFileDto.repoFileDtoData");
 		cryptoRepoFile.setRepoFileDtoData(repoFileDtoData);
 
 		cryptoRepoFile.setDirectory(cryptoRepoFileDto.isDirectory());
@@ -1361,7 +1361,7 @@ public class CryptreeImpl extends AbstractCryptree {
 	}
 
 	protected void deleteRepoFileWithAllChildrenRecursively(final RepoFile repoFile) {
-		assertNotNull("repoFile", repoFile);
+		assertNotNull(repoFile, "repoFile");
 		final LocalRepoTransaction transaction = getTransactionOrFail();
 		final RepoFileDao repoFileDao = transaction.getDao(RepoFileDao.class);
 		for (final RepoFile childRepoFile : repoFileDao.getChildRepoFiles(repoFile)) {
@@ -1371,14 +1371,14 @@ public class CryptreeImpl extends AbstractCryptree {
 	}
 
 	private UserRepoKeyPublicKey putUserRepoKeyPublicKeyDto(final UserRepoKeyPublicKeyDto userRepoKeyPublicKeyDto) {
-		assertNotNull("userRepoKeyPublicKeyDto", userRepoKeyPublicKeyDto);
+		assertNotNull(userRepoKeyPublicKeyDto, "userRepoKeyPublicKeyDto");
 		final LocalRepoTransaction transaction = getTransactionOrFail();
 		final UserRepoKeyPublicKeyDao userRepoKeyPublicKeyDao = transaction.getDao(UserRepoKeyPublicKeyDao.class);
 
 		final InvitationUserRepoKeyPublicKeyDto invUserRepoKeyPublicKeyDto = (InvitationUserRepoKeyPublicKeyDto)
 				(userRepoKeyPublicKeyDto instanceof InvitationUserRepoKeyPublicKeyDto ? userRepoKeyPublicKeyDto : null);
 
-		final Uid userRepoKeyId = assertNotNull("userRepoKeyPublicKeyDto.userRepoKeyId", userRepoKeyPublicKeyDto.getUserRepoKeyId());
+		final Uid userRepoKeyId = assertNotNull(userRepoKeyPublicKeyDto.getUserRepoKeyId(), "userRepoKeyPublicKeyDto.userRepoKeyId");
 		UserRepoKeyPublicKey userRepoKeyPublicKey = userRepoKeyPublicKeyDao.getUserRepoKeyPublicKey(userRepoKeyId);
 		if (userRepoKeyPublicKey == null)
 			userRepoKeyPublicKey = invUserRepoKeyPublicKeyDto != null ? new InvitationUserRepoKeyPublicKey(userRepoKeyId) : new UserRepoKeyPublicKey(userRepoKeyId);
@@ -1401,7 +1401,7 @@ public class CryptreeImpl extends AbstractCryptree {
 	}
 
 	private UserRepoKeyPublicKeyReplacementRequest putUserRepoKeyPublicKeyReplacementRequestDto(final UserRepoKeyPublicKeyReplacementRequestDto requestDto) {
-		assertNotNull("requestDto", requestDto);
+		assertNotNull(requestDto, "requestDto");
 		final LocalRepoTransaction transaction = getTransactionOrFail();
 		final UserRepoKeyPublicKeyDao keyDao = transaction.getDao(UserRepoKeyPublicKeyDao.class);
 		final UserRepoKeyPublicKeyReplacementRequestDao requestDao = transaction.getDao(UserRepoKeyPublicKeyReplacementRequestDao.class);
@@ -1427,12 +1427,12 @@ public class CryptreeImpl extends AbstractCryptree {
 	}
 
 	private CryptoKey putCryptoKeyDto(final CryptoKeyDto cryptoKeyDto) {
-		assertNotNull("cryptoKeyDto", cryptoKeyDto);
+		assertNotNull(cryptoKeyDto, "cryptoKeyDto");
 		final LocalRepoTransaction transaction = getTransactionOrFail();
 		final CryptoKeyDao cryptoKeyDao = transaction.getDao(CryptoKeyDao.class);
 		final CryptoRepoFileDao cryptoRepoFileDao = transaction.getDao(CryptoRepoFileDao.class);
 
-		final Uid cryptoKeyId = assertNotNull("cryptoKeyDto.cryptoKeyId", cryptoKeyDto.getCryptoKeyId());
+		final Uid cryptoKeyId = assertNotNull(cryptoKeyDto.getCryptoKeyId(), "cryptoKeyDto.cryptoKeyId");
 		CryptoKey cryptoKey = cryptoKeyDao.getCryptoKey(cryptoKeyId);
 //		final boolean cryptoKeyIsNew;
 		if (cryptoKey == null) {
@@ -1460,7 +1460,7 @@ public class CryptreeImpl extends AbstractCryptree {
 			if (cryptoKeyDeactivation == null)
 				cryptoKeyDeactivation = new CryptoKeyDeactivation();
 
-			assertNotNull("cryptoKeyDeactivationDto.cryptoKeyId", cryptoKeyDeactivationDto.getCryptoKeyId());
+			assertNotNull(cryptoKeyDeactivationDto.getCryptoKeyId(), "cryptoKeyDeactivationDto.cryptoKeyId");
 			if (! cryptoKeyDeactivationDto.getCryptoKeyId().equals(cryptoKeyId))
 				throw new IllegalStateException(String.format("cryptoKeyDeactivationDto.cryptoKeyId != cryptoKeyDto.cryptoKeyId :: %s != %s",
 						cryptoKeyDeactivationDto.getCryptoKeyId(), cryptoKeyId));
@@ -1473,15 +1473,15 @@ public class CryptreeImpl extends AbstractCryptree {
 		cryptoKey.setCryptoKeyRole(cryptoKeyDto.getCryptoKeyRole());
 		cryptoKey.setCryptoKeyType(cryptoKeyDto.getCryptoKeyType());
 
-		final Uid cryptoRepoFileId = assertNotNull("cryptoKeyDto.cryptoRepoFileId", cryptoKeyDto.getCryptoRepoFileId());
+		final Uid cryptoRepoFileId = assertNotNull(cryptoKeyDto.getCryptoRepoFileId(), "cryptoKeyDto.cryptoRepoFileId");
 		final CryptoRepoFile cryptoRepoFile = cryptoRepoFileDao.getCryptoRepoFileOrFail(cryptoRepoFileId);
 		cryptoKey.setCryptoRepoFile(cryptoRepoFile);
 		cryptoKey.setLastSyncFromRepositoryId(getRemoteRepositoryIdOrFail());
 
-		assertNotNull("cryptoKeyDto.signature", cryptoKeyDto.getSignature());
-		assertNotNull("cryptoKeyDto.signature.signatureCreated", cryptoKeyDto.getSignature().getSignatureCreated());
-		assertNotNull("cryptoKeyDto.signature.signingUserRepoKeyId", cryptoKeyDto.getSignature().getSigningUserRepoKeyId());
-		assertNotNull("cryptoKeyDto.signature.signatureData", cryptoKeyDto.getSignature().getSignatureData());
+		assertNotNull(cryptoKeyDto.getSignature(), "cryptoKeyDto.signature");
+		assertNotNull(cryptoKeyDto.getSignature().getSignatureCreated(), "cryptoKeyDto.signature.signatureCreated");
+		assertNotNull(cryptoKeyDto.getSignature().getSigningUserRepoKeyId(), "cryptoKeyDto.signature.signingUserRepoKeyId");
+		assertNotNull(cryptoKeyDto.getSignature().getSignatureData(), "cryptoKeyDto.signature.signatureData");
 
 		cryptoKey.setSignature(cryptoKeyDto.getSignature());
 
@@ -1489,13 +1489,13 @@ public class CryptreeImpl extends AbstractCryptree {
 	}
 
 	private CryptoLink putCryptoLinkDto(final CryptoLinkDto cryptoLinkDto) {
-		assertNotNull("cryptoLinkDto", cryptoLinkDto);
+		assertNotNull(cryptoLinkDto, "cryptoLinkDto");
 		final LocalRepoTransaction transaction = getTransactionOrFail();
 		final CryptoLinkDao cryptoLinkDao = transaction.getDao(CryptoLinkDao.class);
 		final CryptoKeyDao cryptoKeyDao = transaction.getDao(CryptoKeyDao.class);
 		final UserRepoKeyPublicKeyDao userRepoKeyPublicKeyDao = transaction.getDao(UserRepoKeyPublicKeyDao.class);
 
-		final Uid cryptoLinkId = assertNotNull("cryptoLinkDto.cryptoLinkId", cryptoLinkDto.getCryptoLinkId());
+		final Uid cryptoLinkId = assertNotNull(cryptoLinkDto.getCryptoLinkId(), "cryptoLinkDto.cryptoLinkId");
 		CryptoLink cryptoLink = cryptoLinkDao.getCryptoLink(cryptoLinkId);
 		if (cryptoLink == null)
 			cryptoLink = new CryptoLink(cryptoLinkId);
@@ -1506,7 +1506,7 @@ public class CryptreeImpl extends AbstractCryptree {
 		final Uid fromUserRepoKeyId = cryptoLinkDto.getFromUserRepoKeyId();
 		cryptoLink.setFromUserRepoKeyPublicKey(fromUserRepoKeyId == null ? null : userRepoKeyPublicKeyDao.getUserRepoKeyPublicKeyOrFail(fromUserRepoKeyId));
 
-		final Uid toCryptoKeyId = assertNotNull("cryptoLinkDto.toCryptoKeyId", cryptoLinkDto.getToCryptoKeyId());
+		final Uid toCryptoKeyId = assertNotNull(cryptoLinkDto.getToCryptoKeyId(), "cryptoLinkDto.toCryptoKeyId");
 		final CryptoKey toCryptoKey = cryptoKeyDao.getCryptoKeyOrFail(toCryptoKeyId);
 		cryptoLink.setToCryptoKey(toCryptoKey);
 
@@ -1520,7 +1520,7 @@ public class CryptreeImpl extends AbstractCryptree {
 	}
 
 	private void putCryptoConfigPropSetDtos(final List<CryptoConfigPropSetDto> cryptoConfigPropSetDtos) {
-		assertNotNull("cryptoConfigPropSetDtos", cryptoConfigPropSetDtos);
+		assertNotNull(cryptoConfigPropSetDtos, "cryptoConfigPropSetDtos");
 		final CryptoConfigPropSetDtoConverter converter = CryptoConfigPropSetDtoConverter.create(getTransactionOrFail());
 		for (CryptoConfigPropSetDto cryptoConfigPropSetDto : cryptoConfigPropSetDtos) {
 			final CryptoConfigPropSet cryptoConfigPropSet = converter.putCryptoConfigPropSetDto(cryptoConfigPropSetDto);
@@ -1529,7 +1529,7 @@ public class CryptreeImpl extends AbstractCryptree {
 	}
 
 	private void putPermissionDto(final PermissionDto permissionDto) {
-		assertNotNull("permissionDto", permissionDto);
+		assertNotNull(permissionDto, "permissionDto");
 		final LocalRepoTransaction transaction = getTransactionOrFail();
 		final PermissionDao permissionDao = transaction.getDao(PermissionDao.class);
 		final PermissionSetDao permissionSetDao = transaction.getDao(PermissionSetDao.class);
@@ -1573,7 +1573,7 @@ public class CryptreeImpl extends AbstractCryptree {
 	}
 
 	private void putPermissionSetDto(final PermissionSetDto permissionSetDto) {
-		assertNotNull("permissionSetDto", permissionSetDto);
+		assertNotNull(permissionSetDto, "permissionSetDto");
 		final LocalRepoTransaction transaction = getTransactionOrFail();
 		final PermissionSetDao permissionSetDao = transaction.getDao(PermissionSetDao.class);
 		final CryptoRepoFileDao cryptoRepoFileDao = transaction.getDao(CryptoRepoFileDao.class);
@@ -1589,7 +1589,7 @@ public class CryptreeImpl extends AbstractCryptree {
 	}
 
 	private void putPermissionSetInheritanceDto(final PermissionSetInheritanceDto psInheritanceDto) {
-		assertNotNull("psInheritanceDto", psInheritanceDto);
+		assertNotNull(psInheritanceDto, "psInheritanceDto");
 		final LocalRepoTransaction transaction = getTransactionOrFail();
 		final PermissionSetInheritanceDao psInheritanceDao = transaction.getDao(PermissionSetInheritanceDao.class);
 		final PermissionSetDao permissionSetDao = transaction.getDao(PermissionSetDao.class);
@@ -1637,8 +1637,8 @@ public class CryptreeImpl extends AbstractCryptree {
 	}
 
 	private void collectUserRepoKeyPublicKeysOfThisAndParentPermissionSets(final Set<UserRepoKeyPublicKey> userRepoKeyPublicKeys, final PermissionSet permissionSet) {
-		assertNotNull("userRepoKeyPublicKeys", userRepoKeyPublicKeys);
-		assertNotNull("permissionSet", permissionSet);
+		assertNotNull(userRepoKeyPublicKeys, "userRepoKeyPublicKeys");
+		assertNotNull(permissionSet, "permissionSet");
 
 		for (final Permission permission : permissionSet.getPermissions())
 			userRepoKeyPublicKeys.add(permission.getUserRepoKeyPublicKey());
@@ -1660,7 +1660,7 @@ public class CryptreeImpl extends AbstractCryptree {
 	}
 
 	private void putRepositoryOwnerDto(final RepositoryOwnerDto repositoryOwnerDto) {
-		assertNotNull("repositoryOwnerDto", repositoryOwnerDto);
+		assertNotNull(repositoryOwnerDto, "repositoryOwnerDto");
 		final LocalRepoTransaction transaction = getTransactionOrFail();
 		final RepositoryOwnerDao repositoryOwnerDao = transaction.getDao(RepositoryOwnerDao.class);
 		final UserRepoKeyPublicKeyDao userRepoKeyPublicKeyDao = transaction.getDao(UserRepoKeyPublicKeyDao.class);
@@ -1702,7 +1702,7 @@ public class CryptreeImpl extends AbstractCryptree {
 	}
 
 	protected CryptoChangeSetDto getCryptoChangeSetDto(final CryptoRepoFile cryptoRepoFile) {
-		assertNotNull("cryptoRepoFile", cryptoRepoFile);
+		assertNotNull(cryptoRepoFile, "cryptoRepoFile");
 
 		final LocalRepository localRepository = getTransactionOrFail().getDao(LocalRepositoryDao.class).getLocalRepositoryOrFail();
 		final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo = getLastCryptoKeySyncToRemoteRepo();
@@ -1987,7 +1987,7 @@ public class CryptreeImpl extends AbstractCryptree {
 	}
 
 	private CryptoLinkDto toCryptoLinkDto(final CryptoLink cryptoLink) {
-		assertNotNull("cryptoLink", cryptoLink);
+		assertNotNull(cryptoLink, "cryptoLink");
 		final CryptoLinkDto cryptoLinkDto = new CryptoLinkDto();
 		cryptoLinkDto.setCryptoLinkId(cryptoLink.getCryptoLinkId());
 
@@ -2000,12 +2000,12 @@ public class CryptreeImpl extends AbstractCryptree {
 		cryptoLinkDto.setToCryptoKeyData(cryptoLink.getToCryptoKeyData());
 		cryptoLinkDto.setToCryptoKeyId(cryptoLink.getToCryptoKey().getCryptoKeyId());
 		cryptoLinkDto.setToCryptoKeyPart(cryptoLink.getToCryptoKeyPart());
-		cryptoLinkDto.setSignature(assertNotNull("cryptoLink.signature", cryptoLink.getSignature()));
+		cryptoLinkDto.setSignature(assertNotNull(cryptoLink.getSignature(), "cryptoLink.signature"));
 		return cryptoLinkDto;
 	}
 
 	private CryptoKeyDto toCryptoKeyDto(final CryptoKey cryptoKey) {
-		assertNotNull("cryptoKey", cryptoKey);
+		assertNotNull(cryptoKey, "cryptoKey");
 		final CryptoKeyDto cryptoKeyDto = new CryptoKeyDto();
 		cryptoKeyDto.setCryptoKeyId(cryptoKey.getCryptoKeyId());
 		cryptoKeyDto.setCryptoRepoFileId(cryptoKey.getCryptoRepoFile().getCryptoRepoFileId());
@@ -2015,29 +2015,29 @@ public class CryptreeImpl extends AbstractCryptree {
 		if (cryptoKeyDeactivation != null)
 			cryptoKeyDto.setCryptoKeyDeactivationDto(toCryptoKeyDeactivationDto(cryptoKeyDeactivation));
 
-		cryptoKeyDto.setCryptoKeyRole(assertNotNull("cryptoKey.cryptoKeyRole", cryptoKey.getCryptoKeyRole()));
-		cryptoKeyDto.setCryptoKeyType(assertNotNull("cryptoKey.cryptoKeyType", cryptoKey.getCryptoKeyType()));
+		cryptoKeyDto.setCryptoKeyRole(assertNotNull(cryptoKey.getCryptoKeyRole(), "cryptoKey.cryptoKeyRole"));
+		cryptoKeyDto.setCryptoKeyType(assertNotNull(cryptoKey.getCryptoKeyType(), "cryptoKey.cryptoKeyType"));
 
 		final Signature signature = cryptoKey.getSignature();
-		cryptoKeyDto.setSignature(assertNotNull("cryptoKey.signature", signature));
-		assertNotNull("cryptoKey.signature.signatureCreated", signature.getSignatureCreated());
-		assertNotNull("cryptoKey.signature.signingUserRepoKeyId", signature.getSigningUserRepoKeyId());
-		assertNotNull("cryptoKey.signature.signatureData", signature.getSignatureData());
+		cryptoKeyDto.setSignature(assertNotNull(signature, "cryptoKey.signature"));
+		assertNotNull(signature.getSignatureCreated(), "cryptoKey.signature.signatureCreated");
+		assertNotNull(signature.getSigningUserRepoKeyId(), "cryptoKey.signature.signingUserRepoKeyId");
+		assertNotNull(signature.getSignatureData(), "cryptoKey.signature.signatureData");
 
 		return cryptoKeyDto;
 	}
 
 	private CryptoKeyDeactivationDto toCryptoKeyDeactivationDto(final CryptoKeyDeactivation cryptoKeyDeactivation) {
-		assertNotNull("cryptoKeyDeactivation", cryptoKeyDeactivation);
+		assertNotNull(cryptoKeyDeactivation, "cryptoKeyDeactivation");
 		final CryptoKeyDeactivationDto cryptoKeyDeactivationDto = new CryptoKeyDeactivationDto();
-		final CryptoKey cryptoKey = assertNotNull("cryptoKeyDeactivation.cryptoKey", cryptoKeyDeactivation.getCryptoKey());
-		cryptoKeyDeactivationDto.setCryptoKeyId(assertNotNull("cryptoKeyDeactivation.cryptoKey.cryptoKeyId", cryptoKey.getCryptoKeyId()));
+		final CryptoKey cryptoKey = assertNotNull(cryptoKeyDeactivation.getCryptoKey(), "cryptoKeyDeactivation.cryptoKey");
+		cryptoKeyDeactivationDto.setCryptoKeyId(assertNotNull(cryptoKey.getCryptoKeyId(), "cryptoKeyDeactivation.cryptoKey.cryptoKeyId"));
 		cryptoKeyDeactivationDto.setSignature(cryptoKeyDeactivation.getSignature());
 		return cryptoKeyDeactivationDto;
 	}
 
 	private RepositoryOwnerDto toRepositoryOwnerDto(final RepositoryOwner repositoryOwner) {
-		assertNotNull("repositoryOwner", repositoryOwner);
+		assertNotNull(repositoryOwner, "repositoryOwner");
 		final RepositoryOwnerDto repositoryOwnerDto = new RepositoryOwnerDto();
 		repositoryOwnerDto.setServerRepositoryId(repositoryOwner.getServerRepositoryId());
 		repositoryOwnerDto.setSignature(repositoryOwner.getSignature());
@@ -2046,7 +2046,7 @@ public class CryptreeImpl extends AbstractCryptree {
 	}
 
 	private PermissionSetDto toPermissionSetDto(final PermissionSet permissionSet) {
-		assertNotNull("permissionSet", permissionSet);
+		assertNotNull(permissionSet, "permissionSet");
 		final PermissionSetDto permissionSetDto = new PermissionSetDto();
 		permissionSetDto.setCryptoRepoFileId(permissionSet.getCryptoRepoFile().getCryptoRepoFileId());
 		permissionSetDto.setSignature(permissionSet.getSignature());
@@ -2054,7 +2054,7 @@ public class CryptreeImpl extends AbstractCryptree {
 	}
 
 	private PermissionDto toPermissionDto(final Permission permission) {
-		assertNotNull("permission", permission);
+		assertNotNull(permission, "permission");
 		final PermissionDto permissionDto = new PermissionDto();
 		permissionDto.setCryptoRepoFileId(permission.getPermissionSet().getCryptoRepoFile().getCryptoRepoFileId());
 		permissionDto.setPermissionId(permission.getPermissionId());
@@ -2068,7 +2068,7 @@ public class CryptreeImpl extends AbstractCryptree {
 	}
 
 	private PermissionSetInheritanceDto toPermissionSetInheritanceDto(final PermissionSetInheritance psInheritance) {
-		assertNotNull("psInheritance", psInheritance);
+		assertNotNull(psInheritance, "psInheritance");
 		final PermissionSetInheritanceDto psInheritanceDto = new PermissionSetInheritanceDto();
 		psInheritanceDto.setPermissionSetInheritanceId(psInheritance.getPermissionSetInheritanceId());
 		psInheritanceDto.setCryptoRepoFileId(psInheritance.getPermissionSet().getCryptoRepoFile().getCryptoRepoFileId());
@@ -2154,7 +2154,7 @@ public class CryptreeImpl extends AbstractCryptree {
 
 	@Override
 	public void assertIsNotDeletedDuplicateCryptoRepoFile(Uid cryptoRepoFileId) {
-		assertNotNull("cryptoRepoFileId", cryptoRepoFileId);
+		assertNotNull(cryptoRepoFileId, "cryptoRepoFileId");
 		Collection<Collision> collisions = getCryptreeContext().transaction.getDao(CollisionDao.class).getCollisionsWithDuplicateCryptoRepoFileId(cryptoRepoFileId);
 		if (! collisions.isEmpty())
 			throw new CollisionException("CryptoRepoFile was deleted due to being a duplicate! cryptoRepoFileId = " + cryptoRepoFileId);
@@ -2167,10 +2167,10 @@ public class CryptreeImpl extends AbstractCryptree {
 			final PermissionType permissionType, final Date timestamp
 			) throws AccessDeniedException
 	{
-		assertNotNull("cryptoRepoFileId", cryptoRepoFileId);
-		assertNotNull("userRepoKeyId", userRepoKeyId);
-		assertNotNull("permissionType", permissionType);
-		assertNotNull("timestamp", timestamp);
+		assertNotNull(cryptoRepoFileId, "cryptoRepoFileId");
+		assertNotNull(userRepoKeyId, "userRepoKeyId");
+		assertNotNull(permissionType, "permissionType");
+		assertNotNull(timestamp, "timestamp");
 
 		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(cryptoRepoFileId);
 		cryptreeNode.assertHasPermission(false, userRepoKeyId, permissionType, timestamp);
@@ -2194,7 +2194,7 @@ public class CryptreeImpl extends AbstractCryptree {
 
 	@Override
 	public Uid getCryptoRepoFileIdOrFail(final String localPath) {
-		assertNotNull("localPath", localPath);
+		assertNotNull(localPath, "localPath");
 		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(localPath);
 		final CryptoRepoFile cryptoRepoFile = cryptreeNode.getCryptoRepoFile();
 		return cryptoRepoFile == null ? null : cryptoRepoFile.getCryptoRepoFileId();
@@ -2202,20 +2202,20 @@ public class CryptreeImpl extends AbstractCryptree {
 
 	@Override
 	public Uid getCryptoRepoFileId(final String localPath) {
-		assertNotNull("localPath", localPath);
+		assertNotNull(localPath, "localPath");
 		final CryptoRepoFile cryptoRepoFile = getCryptreeContext().getCryptoRepoFile(localPath);
 		return cryptoRepoFile == null ? null : cryptoRepoFile.getCryptoRepoFileId();
 	}
 
 	@Override
 	public Uid getParentCryptoRepoFileId(final Uid cryptoRepoFileId) {
-		assertNotNull("cryptoRepoFileId", cryptoRepoFileId);
+		assertNotNull(cryptoRepoFileId, "cryptoRepoFileId");
 		if (getRootCryptoRepoFileId().equals(cryptoRepoFileId))
 			return null;
 
 		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(cryptoRepoFileId);
-		final CryptoRepoFile parent = assertNotNull("cryptreeNode.cryptoRepoFile", cryptreeNode.getCryptoRepoFile()).getParent();
-		assertNotNull("cryptreeNode.cryptoRepoFile.parent", parent);
+		final CryptoRepoFile parent = assertNotNull(cryptreeNode.getCryptoRepoFile(), "cryptreeNode.cryptoRepoFile").getParent();
+		assertNotNull(parent, "cryptreeNode.cryptoRepoFile.parent");
 		return parent.getCryptoRepoFileId();
 	}
 
@@ -2324,7 +2324,7 @@ public class CryptreeImpl extends AbstractCryptree {
 	}
 
 	public Collision createCollisionIfNeeded(final CryptoRepoFile cryptoRepoFile, final CryptoRepoFile duplicateCryptoRepoFile, final String localPath, boolean expectedSealedStatus) {
-		assertNotNull("cryptoRepoFile", cryptoRepoFile);
+		assertNotNull(cryptoRepoFile, "cryptoRepoFile");
 
 		return getCryptreeContext().getCryptreeNodeOrCreate(cryptoRepoFile.getCryptoRepoFileId())
 				.createCollisionIfNeeded(duplicateCryptoRepoFile, localPath, expectedSealedStatus);
@@ -2348,14 +2348,14 @@ public class CryptreeImpl extends AbstractCryptree {
 
 	@Override
 	public void putHistoFrameDto(final HistoFrameDto histoFrameDto) {
-		assertNotNull("histoFrameDto", histoFrameDto);
+		assertNotNull(histoFrameDto, "histoFrameDto");
 		final LocalRepoTransaction tx = getTransactionOrFail();
 		final HistoFrame histoFrame = HistoFrameDtoConverter.create(tx).putHistoFrameDto(histoFrameDto);
 		histoFrame.setLastSyncFromRepositoryId(getRemoteRepositoryIdOrFail());
 	}
 
 	private Collision putCollisionDto(final CollisionDto collisionDto) {
-		assertNotNull("collisionDto", collisionDto);
+		assertNotNull(collisionDto, "collisionDto");
 		final LocalRepoTransaction tx = getTransactionOrFail();
 		final Collision collision = CollisionDtoConverter.create(tx).putCollisionDto(collisionDto);
 		DuplicateCryptoRepoFileHandler.createInstance(tx).deduplicateFromCollisionIfNeeded(collision);
@@ -2364,7 +2364,7 @@ public class CryptreeImpl extends AbstractCryptree {
 
 	@Override
 	public void preDelete(final String localPath, final boolean deletedByIgnoreRule) {
-		assertNotNull("localPath", localPath);
+		assertNotNull(localPath, "localPath");
 		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(localPath);
 		final CryptoRepoFile cryptoRepoFile = cryptreeNode.getCryptoRepoFile();
 
@@ -2401,7 +2401,7 @@ public class CryptreeImpl extends AbstractCryptree {
 
 	@Override
 	public void createSyntheticDeleteModifications(final ChangeSetDto changeSetDto) {
-		assertNotNull("changeSetDto", changeSetDto);
+		assertNotNull(changeSetDto, "changeSetDto");
 		final LocalRepoTransaction tx = getTransactionOrFail();
 		final CryptoRepoFileDao cryptoRepoFileDao = tx.getDao(CryptoRepoFileDao.class);
 		final Collection<CryptoRepoFile> cryptoRepoFiles = cryptoRepoFileDao.getCryptoRepoFilesWithRepoFileAndDeleted();
@@ -2418,7 +2418,7 @@ public class CryptreeImpl extends AbstractCryptree {
 
 	@Override
 	public Collection<PlainHistoCryptoRepoFileDto> getPlainHistoCryptoRepoFileDtos(PlainHistoCryptoRepoFileFilter filter) {
-		assertNotNull("filter", filter);
+		assertNotNull(filter, "filter");
 
 		if ("/".equals(filter.getLocalPath())) { // the root is normally simply "", but we are tolerant to "/".
 			filter = filter.clone();
@@ -2474,7 +2474,7 @@ public class CryptreeImpl extends AbstractCryptree {
 
 		final CryptoRepoFile filterLocalPathCryptoRepoFile = (filterLocalPathCryptreeNode == null
 				? null
-				: assertNotNull("filterLocalPathCryptreeNode.cryptoRepoFile", filterLocalPathCryptreeNode.getCryptoRepoFile()));
+				: assertNotNull(filterLocalPathCryptreeNode.getCryptoRepoFile(), "filterLocalPathCryptreeNode.cryptoRepoFile"));
 
 		final List<PlainHistoCryptoRepoFileDto> result = new ArrayList<>(histoCryptoRepoFiles.size());
 		final PlainHistoCryptoRepoFileDao plainHistoCryptoRepoFileDao = tx.getDao(PlainHistoCryptoRepoFileDao.class);
@@ -2530,7 +2530,7 @@ public class CryptreeImpl extends AbstractCryptree {
 
 	@Override
 	public void updatePlainHistoCryptoRepoFiles(final Set<Uid> histoCryptoRepoFileIds) {
-		assertNotNull("histoCryptoRepoFileIds", histoCryptoRepoFileIds);
+		assertNotNull(histoCryptoRepoFileIds, "histoCryptoRepoFileIds");
 		final LocalRepoTransaction tx = getTransactionOrFail();
 		final HistoCryptoRepoFileDao hcrfDao = tx.getDao(HistoCryptoRepoFileDao.class);
 		for (final Uid histoCryptoRepoFileId : histoCryptoRepoFileIds) {
@@ -2549,8 +2549,8 @@ public class CryptreeImpl extends AbstractCryptree {
 	}
 
 	private boolean isParentOrEqual(final CryptoRepoFile parentCandidate, final CryptoRepoFile childCandidate) {
-		assertNotNull("parentCandidate", parentCandidate);
-		assertNotNull("childCandidate", childCandidate);
+		assertNotNull(parentCandidate, "parentCandidate");
+		assertNotNull(childCandidate, "childCandidate");
 
 		CryptoRepoFile crf = childCandidate;
 		while (crf != null) {
@@ -2564,7 +2564,7 @@ public class CryptreeImpl extends AbstractCryptree {
 
 	@Override
 	public PlainHistoCryptoRepoFileDto getPlainHistoCryptoRepoFileDto(final Uid histoCryptoRepoFileId) {
-		assertNotNull("histoCryptoRepoFileId", histoCryptoRepoFileId);
+		assertNotNull(histoCryptoRepoFileId, "histoCryptoRepoFileId");
 		final LocalRepoTransaction tx = getTransactionOrFail();
 		final HistoCryptoRepoFileDao hcrfDao = tx.getDao(HistoCryptoRepoFileDao.class);
 		final HistoCryptoRepoFile histoCryptoRepoFile = hcrfDao.getHistoCryptoRepoFileOrFail(histoCryptoRepoFileId);
@@ -2575,15 +2575,15 @@ public class CryptreeImpl extends AbstractCryptree {
 
 	@Override
 	public void clearCryptoRepoFileDeleted(String localPath) {
-		assertNotNull("localPath", localPath);
+		assertNotNull(localPath, "localPath");
 		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(localPath);
 		cryptreeNode.clearCryptoRepoFileDeleted();
 	}
 
 	@Override
 	public void putCollisionPrivateDto(final CollisionPrivateDto collisionPrivateDto) {
-		assertNotNull("collisionPrivateDto", collisionPrivateDto);
-		final Uid collisionId = assertNotNull("collisionPrivateDto.collisionId", collisionPrivateDto.getCollisionId());
+		assertNotNull(collisionPrivateDto, "collisionPrivateDto");
+		final Uid collisionId = assertNotNull(collisionPrivateDto.getCollisionId(), "collisionPrivateDto.collisionId");
 
 		final CollisionDao cDao = getTransactionOrFail().getDao(CollisionDao.class);
 		final Collision collision = cDao.getCollisionOrFail(collisionId);

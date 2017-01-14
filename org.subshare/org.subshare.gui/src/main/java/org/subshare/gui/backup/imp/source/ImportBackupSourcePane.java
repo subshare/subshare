@@ -24,7 +24,7 @@ public class ImportBackupSourcePane extends WizardPageContentGridPane {
 
 	public ImportBackupSourcePane(final ImportBackupData importBackupData) {
 		loadDynamicComponentFxml(ImportBackupSourcePane.class, this);
-		this.importBackupData = assertNotNull("importBackupData", importBackupData);
+		this.importBackupData = assertNotNull(importBackupData, "importBackupData");
 		fileTreePane.fileFilterProperty().set(new DataFileFilter().setAcceptContentType(BACKUP_FILE_CONTENT_TYPE_VALUE));
 		fileTreePane.getSelectedFiles().addListener((InvalidationListener) observable -> onSelectedFilesChanged());
 		onSelectedFilesChanged();

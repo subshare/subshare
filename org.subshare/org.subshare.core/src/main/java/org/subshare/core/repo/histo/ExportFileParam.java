@@ -18,8 +18,8 @@ public class ExportFileParam implements Serializable {
 	}
 
 	public ExportFileParam(Uid histoCryptoRepoFileId, File exportDirectory) {
-		this.histoCryptoRepoFileId = assertNotNull("histoCryptoRepoFileId", histoCryptoRepoFileId);
-		this.exportDirectory = assertNotNull("exportDirectory", exportDirectory);
+		this.histoCryptoRepoFileId = assertNotNull(histoCryptoRepoFileId, "histoCryptoRepoFileId");
+		this.exportDirectory = assertNotNull(exportDirectory, "exportDirectory");
 	}
 
 	/**

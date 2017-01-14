@@ -57,7 +57,7 @@ public abstract class FileBasedObjectRegistry {
 	}
 
 	protected void read(final InputStream in) throws IOException {
-		final ZipInputStream zin = new ZipInputStream(new NoCloseInputStream(assertNotNull("in", in)));
+		final ZipInputStream zin = new ZipInputStream(new NoCloseInputStream(assertNotNull(in, "in")));
 
 		manifestProperties = readManifest(zin);
 		if (manifestProperties == null) { // be fault-tolerant on *empty* input.
@@ -145,7 +145,7 @@ public abstract class FileBasedObjectRegistry {
 	}
 
 	protected Properties readManifest(final ZipInputStream zin) throws IOException {
-		assertNotNull("zin", zin);
+		assertNotNull(zin, "zin");
 
 		final ZipEntry ze = zin.getNextEntry();
 		if (ze == null)
@@ -174,7 +174,7 @@ public abstract class FileBasedObjectRegistry {
 	}
 
 	protected void readPayload(final ZipInputStream zin) throws IOException {
-		assertNotNull("zin", zin);
+		assertNotNull(zin, "zin");
 
 		ZipEntry zipEntry;
 		while (null != (zipEntry = zin.getNextEntry()))
@@ -202,7 +202,7 @@ public abstract class FileBasedObjectRegistry {
 
 
 	protected void write(final OutputStream out) throws IOException {
-		assertNotNull("out", out);
+		assertNotNull(out, "out");
 
 		final byte[] manifestData = createManifestData();
 
@@ -252,11 +252,11 @@ public abstract class FileBasedObjectRegistry {
 		final SortedMap<String,String> sortedManifestProperties = createSortedManifestProperties();
 
 		final String contentType = sortedManifestProperties.remove(MANIFEST_PROPERTY_CONTENT_TYPE);
-		assertNotNull(MANIFEST_PROPERTY_CONTENT_TYPE, contentType);
+		assertNotNull(contentType, MANIFEST_PROPERTY_CONTENT_TYPE);
 		writeManifestEntry(w, MANIFEST_PROPERTY_CONTENT_TYPE, contentType);
 
 		final String version = sortedManifestProperties.remove(MANIFEST_PROPERTY_CONTENT_TYPE_VERSION);
-		assertNotNull(MANIFEST_PROPERTY_CONTENT_TYPE_VERSION, version);
+		assertNotNull(version, MANIFEST_PROPERTY_CONTENT_TYPE_VERSION);
 		try {
 			Integer.parseInt(version);
 		} catch (NumberFormatException x) {
@@ -272,7 +272,7 @@ public abstract class FileBasedObjectRegistry {
 	}
 
 	public void mergeFrom(final byte[] data) {
-		assertNotNull("data", data);
+		assertNotNull(data, "data");
 		if (data.length == 0)
 			return;
 
@@ -303,9 +303,9 @@ public abstract class FileBasedObjectRegistry {
 	}
 
 	private void writeManifestEntry(final Writer w, final String key, final String value) throws IOException {
-		assertNotNull("w", w);
-		assertNotNull("key", key);
-		assertNotNull("value", value);
+		assertNotNull(w, "w");
+		assertNotNull(key, "key");
+		assertNotNull(value, "value");
 
 		w.write(key);
 		w.write('=');

@@ -15,7 +15,7 @@ public abstract class AbstractLocalRepoStorageFactory implements LocalRepoStorag
 
 	@Override
 	public LocalRepoStorage getLocalRepoStorageOrCreate(final LocalRepoTransaction transaction) {
-		assertNotNull("transaction", transaction);
+		assertNotNull(transaction, "transaction");
 		LocalRepoStorage lrs = transaction.getContextObject(LocalRepoStorage.class);
 		if (lrs == null) {
 			lrs = _createLocalRepoStorage();
@@ -35,9 +35,9 @@ public abstract class AbstractLocalRepoStorageFactory implements LocalRepoStorag
 
 	@Override
 	public LocalRepoStorage getLocalRepoStorageOrCreate(final LocalRepoTransaction transaction, final UUID remoteRepositoryId, final String remotePathPrefix) {
-		assertNotNull("transaction", transaction);
-		assertNotNull("remoteRepositoryId", remoteRepositoryId);
-		assertNotNull("remotePathPrefix", remotePathPrefix);
+		assertNotNull(transaction, "transaction");
+		assertNotNull(remoteRepositoryId, "remoteRepositoryId");
+		assertNotNull(remotePathPrefix, "remotePathPrefix");
 		LocalRepoStorage cryptree = transaction.getContextObject(LocalRepoStorage.class);
 		if (cryptree == null) {
 			cryptree = _createLocalRepoStorage();

@@ -14,7 +14,7 @@ public class UserRepoKeyRingLookupImpl implements UserRepoKeyRingLookup {
 
 	@Override
 	public UserRepoKeyRing getUserRepoKeyRing(final UserRepoKeyRingLookupContext context) {
-		assertNotNull("context", context);
+		assertNotNull(context, "context");
 
 		final UUID serverRepositoryId = context.getServerRepositoryId();
 
@@ -27,9 +27,9 @@ public class UserRepoKeyRingLookupImpl implements UserRepoKeyRingLookup {
 	}
 
 	private UserRepoKeyRing getUserRepoKeyRing(final ServerRepo serverRepo) {
-		assertNotNull("serverRepo", serverRepo);
+		assertNotNull(serverRepo, "serverRepo");
 		final Uid userId = serverRepo.getUserId();
-		assertNotNull("serverRepo.userId", userId);
+		assertNotNull(userId, "serverRepo.userId");
 
 		final User user = UserRegistryImpl.getInstance().getUserByUserIdOrFail(userId);
 		return user.getUserRepoKeyRingOrCreate();

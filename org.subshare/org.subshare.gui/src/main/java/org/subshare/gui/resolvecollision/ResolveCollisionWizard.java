@@ -34,7 +34,7 @@ public class ResolveCollisionWizard extends Wizard {
 
 	public ResolveCollisionWizard(final ResolveCollisionData resolveCollisionData) {
 		super(new LoadingWizardPage());
-		this.resolveCollisionData = assertNotNull("resolveCollisionData", resolveCollisionData);
+		this.resolveCollisionData = assertNotNull(resolveCollisionData, "resolveCollisionData");
 	}
 
 	@Override
@@ -80,7 +80,7 @@ public class ResolveCollisionWizard extends Wizard {
 								for (CollisionPrivateDto cpDto : plainHistoCryptoRepoFileDto.getCollisionPrivateDtos()) {
 									final Uid collisionId = cpDto.getCollisionId();
 									final CollisionDtoWithPlainHistoCryptoRepoFileDto dto = collisionId2Dto.get(collisionId);
-									assertNotNull("collisionId2Dto[" + collisionId + "]", dto);
+									assertNotNull(dto, "collisionId2Dto[" + collisionId + "]");
 									dto.setCollisionPrivateDto(cpDto);
 								}
 							}
@@ -89,9 +89,9 @@ public class ResolveCollisionWizard extends Wizard {
 									collisionId2Dto.values());
 
 							for (final CollisionDtoWithPlainHistoCryptoRepoFileDto dto : collisionDtoWithPlainHistoCryptoRepoFileDtos) {
-								assertNotNull("dto.collisionDto", dto.getCollisionDto());
-								assertNotNull("dto.collisionPrivateDto", dto.getCollisionPrivateDto());
-								assertNotNull("dto.plainHistoCryptoRepoFileDto1", dto.getPlainHistoCryptoRepoFileDto1());
+								assertNotNull(dto.getCollisionDto(), "dto.collisionDto");
+								assertNotNull(dto.getCollisionPrivateDto(), "dto.collisionPrivateDto");
+								assertNotNull(dto.getPlainHistoCryptoRepoFileDto1(), "dto.plainHistoCryptoRepoFileDto1");
 							}
 							return collisionDtoWithPlainHistoCryptoRepoFileDtos;
 						}
@@ -147,7 +147,7 @@ public class ResolveCollisionWizard extends Wizard {
 	}
 
 	private LocalRepoManager createLocalRepoManager() {
-		final LocalRepo localRepo = assertNotNull("resolveCollisionData.localRepo", resolveCollisionData.getLocalRepo());
+		final LocalRepo localRepo = assertNotNull(resolveCollisionData.getLocalRepo(), "resolveCollisionData.localRepo");
 		return LocalRepoManagerFactoryLs.getLocalRepoManagerFactory().createLocalRepoManagerForExistingRepository(localRepo.getLocalRoot());
 	}
 }

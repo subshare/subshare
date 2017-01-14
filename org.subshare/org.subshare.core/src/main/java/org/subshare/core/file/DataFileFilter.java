@@ -61,7 +61,7 @@ public class DataFileFilter implements FileFilter {
 
 	@Override
 	public boolean accept(final File file) {
-		assertNotNull("file", file);
+		assertNotNull(file, "file");
 		if (isAcceptDirectories() && file.isDirectory())
 			return true;
 
@@ -76,7 +76,7 @@ public class DataFileFilter implements FileFilter {
 	}
 
 	protected boolean acceptContentType(File file) {
-		assertNotNull("file", file);
+		assertNotNull(file, "file");
 		try {
 			final DataFile dataFile;
 			try (final InputStream in = castStream(file.createInputStream())) {
@@ -104,7 +104,7 @@ public class DataFileFilter implements FileFilter {
 	}
 
 	protected boolean acceptContentType(final Properties manifestProperties) {
-		assertNotNull("manifestProperties", manifestProperties);
+		assertNotNull(manifestProperties, "manifestProperties");
 		final String contentTypeValue = manifestProperties.getProperty(MANIFEST_PROPERTY_CONTENT_TYPE);
 		if (getAcceptContentType() == null)
 			return true;

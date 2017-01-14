@@ -49,7 +49,7 @@ public class VerifierInputStream extends FilterInputStream {
 
 	public VerifierInputStream(final InputStream in, final UserRepoKeyPublicKeyLookup lookup) throws IOException {
 		super(new BufferedInputStream(in));
-		assertNotNull("lookup", lookup);
+		assertNotNull(lookup, "lookup");
 		header = readHeader();
 
 		try {
@@ -75,9 +75,9 @@ public class VerifierInputStream extends FilterInputStream {
 		public final Date signatureCreated;
 		public Header(final int version, final SignerTransformation signerTransformation, final Uid signingUserRepoKeyId, final Date signatureCreated) {
 			this.version = version;
-			this.signerTransformation = assertNotNull("signerTransformation", signerTransformation);
-			this.signingUserRepoKeyId = assertNotNull("signingUserRepoKeyId", signingUserRepoKeyId);
-			this.signatureCreated = assertNotNull("signatureCreated", signatureCreated);
+			this.signerTransformation = assertNotNull(signerTransformation, "signerTransformation");
+			this.signingUserRepoKeyId = assertNotNull(signingUserRepoKeyId, "signingUserRepoKeyId");
+			this.signatureCreated = assertNotNull(signatureCreated, "signatureCreated");
 		}
 	}
 
@@ -87,7 +87,7 @@ public class VerifierInputStream extends FilterInputStream {
 
 		public Footer(final long signatureBytesOffset, final byte[] signatureBytes) {
 			this.signatureBytesOffset = signatureBytesOffset;
-			this.signatureBytes = assertNotNull("signatureBytes", signatureBytes);
+			this.signatureBytes = assertNotNull(signatureBytes, "signatureBytes");
 		}
 	}
 

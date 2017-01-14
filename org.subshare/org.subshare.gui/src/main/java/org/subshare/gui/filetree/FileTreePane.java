@@ -67,7 +67,7 @@ public class FileTreePane extends BorderPane {
 	private final StringProperty useCaseProperty = new SimpleStringProperty(this, "useCase", "default") {
 		@Override
 		public void set(final String useCase) {
-			assertNotNull("useCase", useCase);
+			assertNotNull(useCase, "useCase");
 		}
 	};
 
@@ -275,12 +275,12 @@ public class FileTreePane extends BorderPane {
 
 	protected void addRefreshListener(RefreshListener listener) {
 		expungeRefreshListeners();
-		refreshListeners.add(new IdentityWeakReference<RefreshListener>(assertNotNull("listener", listener), refreshListenersReferenceQueue));
+		refreshListeners.add(new IdentityWeakReference<RefreshListener>(assertNotNull(listener, "listener"), refreshListenersReferenceQueue));
 	}
 
 	protected void removeRefreshListener(RefreshListener listener) {
 		expungeRefreshListeners();
-		refreshListeners.remove(new IdentityWeakReference<RefreshListener>(assertNotNull("listener", listener)));
+		refreshListeners.remove(new IdentityWeakReference<RefreshListener>(assertNotNull(listener, "listener")));
 	}
 
 	private void expungeRefreshListeners() {
@@ -294,7 +294,7 @@ public class FileTreePane extends BorderPane {
 	}
 
 	public void setSelectionMode(SelectionMode selectionMode) {
-		assertNotNull("selectionMode", selectionMode);
+		assertNotNull(selectionMode, "selectionMode");
 		treeTableView.getSelectionModel().setSelectionMode(selectionMode);
 	}
 
@@ -357,7 +357,7 @@ public class FileTreePane extends BorderPane {
 
 	@FXML
 	private void createDirButtonClicked(final ActionEvent event) {
-		final File parent = assertNotNull("getSelectedDirectory()", getSelectedDirectory());
+		final File parent = assertNotNull(getSelectedDirectory(), "getSelectedDirectory()");
 
 		final String dirName = showCreateOrRenameDialog(
 				"Create folder",

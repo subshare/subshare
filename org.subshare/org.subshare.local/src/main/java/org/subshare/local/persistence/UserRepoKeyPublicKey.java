@@ -69,7 +69,7 @@ public class UserRepoKeyPublicKey extends Entity implements AutoTrackLocalRevisi
 	}
 
 	public UserRepoKeyPublicKey(final UserRepoKey.PublicKey publicKey) {
-		assertNotNull("publicKey", publicKey);
+		assertNotNull(publicKey, "publicKey");
 		this.publicKey = publicKey;
 		setUserRepoKeyId(publicKey.getUserRepoKeyId());
 		setServerRepositoryId(publicKey.getServerRepositoryId());

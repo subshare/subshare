@@ -13,7 +13,7 @@ public abstract class AbstractLockerTransportFactory implements LockerTransportF
 
 	@Override
 	public LockerTransport createLockerTransport(URL remoteRoot) {
-		AssertUtil.assertNotNull("remoteRoot", remoteRoot);
+		AssertUtil.assertNotNull(remoteRoot, "remoteRoot");
 		final LockerTransport transport = _createLockerTransport();
 		if (transport == null)
 			throw new IllegalStateException(String.format("Implementation error in class %s: _createLockerTransport(...) returned null!", this.getClass().getName()));

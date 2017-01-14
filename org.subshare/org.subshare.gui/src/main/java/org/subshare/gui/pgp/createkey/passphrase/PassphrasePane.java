@@ -73,7 +73,7 @@ public abstract class PassphrasePane extends GridPane {
 	private char[] backupPassphrase;
 
 	public PassphrasePane(final CreatePgpKeyParam createPgpKeyParam) {
-		this.createPgpKeyParam = assertNotNull("createPgpKeyParam", createPgpKeyParam); //$NON-NLS-1$
+		this.createPgpKeyParam = assertNotNull(createPgpKeyParam, "createPgpKeyParam"); //$NON-NLS-1$
 		loadDynamicComponentFxml(PassphrasePane.class, this);
 
 		passphrase1 = createPassphraseProperty();

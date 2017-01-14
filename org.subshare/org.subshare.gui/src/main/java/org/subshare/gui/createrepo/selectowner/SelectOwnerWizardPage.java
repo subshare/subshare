@@ -27,7 +27,7 @@ public class SelectOwnerWizardPage extends WizardPage {
 
 	public SelectOwnerWizardPage(final CreateRepoData createRepoData) {
 		super(Messages.getString("SelectOwnerWizardPage.title")); //$NON-NLS-1$
-		this.createRepoData = assertNotNull("createRepoData", createRepoData); //$NON-NLS-1$
+		this.createRepoData = assertNotNull(createRepoData, "createRepoData"); //$NON-NLS-1$
 	}
 
 	@Override

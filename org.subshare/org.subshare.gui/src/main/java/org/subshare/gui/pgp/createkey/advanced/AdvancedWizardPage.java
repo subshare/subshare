@@ -15,7 +15,7 @@ public class AdvancedWizardPage extends WizardPage {
 
 	public AdvancedWizardPage(final CreatePgpKeyParam createPgpKeyParam) {
 		super("Advanced");
-		this.createPgpKeyParam = assertNotNull("createPgpKeyParam", createPgpKeyParam);
+		this.createPgpKeyParam = assertNotNull(createPgpKeyParam, "createPgpKeyParam");
 	}
 
 	@Override

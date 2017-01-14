@@ -26,7 +26,7 @@ public class CollisionPane extends WizardPageContentGridPane {
 
 	public CollisionPane(final CollisionData collisionData) {
 		loadDynamicComponentFxml(CollisionPane.class, this);
-		this.collisionData = assertNotNull("collisionData", collisionData);
+		this.collisionData = assertNotNull(collisionData, "collisionData");
 
 		final CollisionDtoWithPlainHistoCryptoRepoFileDto collisionDtoWithPlainHistoCryptoRepoFileDto = collisionData.getCollisionDtoWithPlainHistoCryptoRepoFileDto();
 		final CollisionPrivateDto collisionPrivateDto = collisionDtoWithPlainHistoCryptoRepoFileDto.getCollisionPrivateDto();

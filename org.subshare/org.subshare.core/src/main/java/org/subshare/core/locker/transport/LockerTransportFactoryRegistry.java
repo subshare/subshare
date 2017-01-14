@@ -101,7 +101,7 @@ public class LockerTransportFactoryRegistry {
 	}
 
 	public <F extends LockerTransportFactory> F getLockerTransportFactory(Class<F> factoryClass) {
-		AssertUtil.assertNotNull("factoryClass", factoryClass);
+		AssertUtil.assertNotNull(factoryClass, "factoryClass");
 		List<LockerTransportFactory> lockerTransportFactories = getLockerTransportFactories();
 		for (LockerTransportFactory lockerTransportFactory : lockerTransportFactories) {
 			if (factoryClass.isInstance(lockerTransportFactory)) {

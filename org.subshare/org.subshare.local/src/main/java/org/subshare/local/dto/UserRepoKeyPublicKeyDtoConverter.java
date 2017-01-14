@@ -10,7 +10,7 @@ import org.subshare.local.persistence.UserRepoKeyPublicKey;
 public class UserRepoKeyPublicKeyDtoConverter {
 
 	public UserRepoKeyPublicKeyDto toUserRepoKeyPublicKeyDto(final UserRepoKeyPublicKey userRepoKeyPublicKey) {
-		assertNotNull("userRepoKeyPublicKey", userRepoKeyPublicKey);
+		assertNotNull(userRepoKeyPublicKey, "userRepoKeyPublicKey");
 
 		final InvitationUserRepoKeyPublicKey invUserRepoKeyPublicKey = (InvitationUserRepoKeyPublicKey)
 				(userRepoKeyPublicKey instanceof InvitationUserRepoKeyPublicKey ? userRepoKeyPublicKey : null);

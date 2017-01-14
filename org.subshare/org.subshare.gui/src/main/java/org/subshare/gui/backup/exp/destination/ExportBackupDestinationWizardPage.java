@@ -14,7 +14,7 @@ public class ExportBackupDestinationWizardPage extends WizardPage {
 
 	public ExportBackupDestinationWizardPage(ExportBackupData exportBackupData) {
 		super("Export backup");
-		this.exportBackupData = assertNotNull("exportBackupData", exportBackupData);
+		this.exportBackupData = assertNotNull(exportBackupData, "exportBackupData");
 		shownRequired.set(true);
 		setMinSize(550, 550);
 //		setPrefSize(600, 600);

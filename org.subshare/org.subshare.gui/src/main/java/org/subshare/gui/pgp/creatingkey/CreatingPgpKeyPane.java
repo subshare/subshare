@@ -17,7 +17,7 @@ public abstract class CreatingPgpKeyPane extends GridPane {
 	private Text messageText;
 
 	public CreatingPgpKeyPane(CreatePgpKeyParam createPgpKeyParam) {
-		assertNotNull("createPgpKeyParam", createPgpKeyParam); //$NON-NLS-1$
+		assertNotNull(createPgpKeyParam, "createPgpKeyParam"); //$NON-NLS-1$
 		loadDynamicComponentFxml(CreatingPgpKeyPane.class, this);
 
 		final PgpUserId pgpUserId = createPgpKeyParam.getUserIds().get(0);

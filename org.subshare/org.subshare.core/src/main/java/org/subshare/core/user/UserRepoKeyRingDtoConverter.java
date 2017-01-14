@@ -9,7 +9,7 @@ public class UserRepoKeyRingDtoConverter {
 	private final UserRepoKeyDtoConverter userRepoKeyDtoConverter = new UserRepoKeyDtoConverter();
 
 	public UserRepoKeyRingDto toUserRepoKeyRingDto(final UserRepoKeyRing userRepoKeyRing) {
-		assertNotNull("userRepoKeyRing", userRepoKeyRing);
+		assertNotNull(userRepoKeyRing, "userRepoKeyRing");
 
 		final UserRepoKeyRingDto userRepoKeyRingDto = new UserRepoKeyRingDto();
 		for (final UserRepoKey userRepoKey : userRepoKeyRing.getUserRepoKeys()) {
@@ -20,7 +20,7 @@ public class UserRepoKeyRingDtoConverter {
 	}
 
 	public UserRepoKeyRing fromUserRepoKeyRingDto(final UserRepoKeyRingDto userRepoKeyRingDto) {
-		assertNotNull("userRepoKeyRingDto", userRepoKeyRingDto);
+		assertNotNull(userRepoKeyRingDto, "userRepoKeyRingDto");
 
 		final UserRepoKeyRing userRepoKeyRing = new UserRepoKeyRingImpl();
 		for (final UserRepoKeyDto userRepoKeyDto : userRepoKeyRingDto.getUserRepoKeyDtos()) {

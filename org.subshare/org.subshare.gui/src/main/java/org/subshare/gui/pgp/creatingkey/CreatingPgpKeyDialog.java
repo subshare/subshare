@@ -17,8 +17,8 @@ public class CreatingPgpKeyDialog extends Stage {
 	private final CreatingPgpKeyPane creatingPgpKeyPane;
 
 	public CreatingPgpKeyDialog(final Window owner, final CreatePgpKeyParam createPgpKeyParam) {
-		assertNotNull("owner", owner);
-		assertNotNull("createPgpKeyParam", createPgpKeyParam);
+		assertNotNull(owner, "owner");
+		assertNotNull(createPgpKeyParam, "createPgpKeyParam");
 
 		PgpUserId pgpUserId = createPgpKeyParam.getUserIds().get(0);
 

@@ -20,8 +20,8 @@ public class TempFileChunkDao extends Dao<TempFileChunk, TempFileChunkDao> {
 	private static final Logger logger = LoggerFactory.getLogger(TempFileChunkDao.class);
 
 	public TempFileChunk getTempFileChunk(NormalFile normalFile, UUID remoteRepositoryId, long offset) {
-		assertNotNull("repoFile", normalFile);
-		assertNotNull("remoteRepositoryId", remoteRepositoryId);
+		assertNotNull(normalFile, "repoFile");
+		assertNotNull(remoteRepositoryId, "remoteRepositoryId");
 
 		final Query query = pm().newNamedQuery(getEntityClass(), "getTempFileChunk_normalFile_remoteRepositoryId_offset");
 		try {
@@ -40,7 +40,7 @@ public class TempFileChunkDao extends Dao<TempFileChunk, TempFileChunkDao> {
 	}
 
 	public Collection<TempFileChunk> getTempFileChunks(NormalFile normalFile) {
-		assertNotNull("repoFile", normalFile);
+		assertNotNull(normalFile, "repoFile");
 
 		final Query query = pm().newNamedQuery(getEntityClass(), "getTempFileChunks_normalFile");
 		try {
@@ -63,8 +63,8 @@ public class TempFileChunkDao extends Dao<TempFileChunk, TempFileChunkDao> {
 	}
 
 	public Collection<TempFileChunk> getTempFileChunks(NormalFile normalFile, UUID remoteRepositoryId) {
-		assertNotNull("repoFile", normalFile);
-		assertNotNull("remoteRepositoryId", remoteRepositoryId);
+		assertNotNull(normalFile, "repoFile");
+		assertNotNull(remoteRepositoryId, "remoteRepositoryId");
 
 		final Query query = pm().newNamedQuery(getEntityClass(), "getTempFileChunks_normalFile_remoteRepositoryId");
 		try {

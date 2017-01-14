@@ -13,9 +13,9 @@ public class UserRepoInvitation {
 	private final UserRepoKey invitationUserRepoKey;
 
 	public UserRepoInvitation(final URL serverUrl, final String serverPath, final UserRepoKey invitationUserRepoKey) {
-		this.serverUrl = assertNotNull("serverUrl", serverUrl);
-		this.serverPath = assertNotNull("serverPath", serverPath);
-		this.invitationUserRepoKey = assertNotNull("invitationUserRepoKey", invitationUserRepoKey);
+		this.serverUrl = assertNotNull(serverUrl, "serverUrl");
+		this.serverPath = assertNotNull(serverPath, "serverPath");
+		this.invitationUserRepoKey = assertNotNull(invitationUserRepoKey, "invitationUserRepoKey");
 	}
 
 	public URL getServerUrl() {

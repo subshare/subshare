@@ -14,7 +14,7 @@ public class CheckOutDirectoryWizardPage extends WizardPage {
 
 	public CheckOutDirectoryWizardPage(final AcceptInvitationData acceptInvitationData) {
 		super("Check-out directory");
-		this.acceptInvitationData = assertNotNull("acceptInvitationData", acceptInvitationData);
+		this.acceptInvitationData = assertNotNull(acceptInvitationData, "acceptInvitationData");
 		shownRequired.set(true);
 	}
 

@@ -48,7 +48,7 @@ public class CopyOfLocalRepoCommitListenerJanitor extends AbstractReferenceJanit
 		else
 			return;
 
-		assertNotNull("listener", listener);
+		assertNotNull(listener, "listener");
 
 		if ("addLocalRepoCommitListener".equals(methodName))
 			trackAddLocalRepoCommitListener(manager, listener);
@@ -57,7 +57,7 @@ public class CopyOfLocalRepoCommitListenerJanitor extends AbstractReferenceJanit
 	}
 
 	private synchronized FaultTolerantLocalRepoCommitListener getFaultTolerantLocalRepoCommitListenerOrCreate(final LocalRepoCommitEventListener listener) {
-		assertNotNull("listener", listener);
+		assertNotNull(listener, "listener");
 
 		final WeakReference<FaultTolerantLocalRepoCommitListener> ref = originalListener2FaultTolerantLocalRepoCommitListenerRef.get(listener);
 		FaultTolerantLocalRepoCommitListener faultTolerantListener = ref == null ? null : ref.get();
@@ -69,7 +69,7 @@ public class CopyOfLocalRepoCommitListenerJanitor extends AbstractReferenceJanit
 	}
 
 	private synchronized FaultTolerantLocalRepoCommitListener getFaultTolerantLocalRepoCommitListener(final LocalRepoCommitEventListener listener) {
-		assertNotNull("listener", listener);
+		assertNotNull(listener, "listener");
 
 		final WeakReference<FaultTolerantLocalRepoCommitListener> ref = originalListener2FaultTolerantLocalRepoCommitListenerRef.get(listener);
 		final FaultTolerantLocalRepoCommitListener faultTolerantListener = ref == null ? null : ref.get();
@@ -99,8 +99,8 @@ public class CopyOfLocalRepoCommitListenerJanitor extends AbstractReferenceJanit
 	}
 
 	private void _removeLocalRepoCommitListener(final LocalRepoCommitEventManager manager, final LocalRepoCommitEventListener listener) {
-		assertNotNull("manager", manager);
-		assertNotNull("listener", listener);
+		assertNotNull(manager, "manager");
+		assertNotNull(listener, "listener");
 
 		final FaultTolerantLocalRepoCommitListener faultTolerantLocalRepoCommitListener = getFaultTolerantLocalRepoCommitListener(listener);
 		if (faultTolerantLocalRepoCommitListener == null)
@@ -110,8 +110,8 @@ public class CopyOfLocalRepoCommitListenerJanitor extends AbstractReferenceJanit
 	}
 
 	private synchronized void trackAddLocalRepoCommitListener(final LocalRepoCommitEventManager manager, final LocalRepoCommitEventListener listener) {
-		assertNotNull("manager", manager);
-		assertNotNull("listener", listener);
+		assertNotNull(manager, "manager");
+		assertNotNull(listener, "listener");
 
 		List<IdentityWeakReference<LocalRepoCommitEventListener>> listenerRefs = manager2ListenerRefs.get(manager);
 		if (listenerRefs == null) {
@@ -128,8 +128,8 @@ public class CopyOfLocalRepoCommitListenerJanitor extends AbstractReferenceJanit
 	}
 
 	private synchronized void trackRemoveLocalRepoCommitListener(final LocalRepoCommitEventManager manager, final LocalRepoCommitEventListener listener) {
-		assertNotNull("manager", manager);
-		assertNotNull("listener", listener);
+		assertNotNull(manager, "manager");
+		assertNotNull(listener, "listener");
 
 		final List<IdentityWeakReference<LocalRepoCommitEventListener>> listenerRefs = manager2ListenerRefs.get(manager);
 		if (listenerRefs == null)
@@ -145,7 +145,7 @@ public class CopyOfLocalRepoCommitListenerJanitor extends AbstractReferenceJanit
 	}
 
 	private void expunge(final List<IdentityWeakReference<LocalRepoCommitEventListener>> listenerRefs) {
-		assertNotNull("listenerRefs", listenerRefs);
+		assertNotNull(listenerRefs, "listenerRefs");
 		for (final Iterator<IdentityWeakReference<LocalRepoCommitEventListener>> it = listenerRefs.iterator(); it.hasNext();) {
 			final IdentityWeakReference<LocalRepoCommitEventListener> ref = it.next();
 			if (ref.get() == null)
@@ -159,7 +159,7 @@ public class CopyOfLocalRepoCommitListenerJanitor extends AbstractReferenceJanit
 		private final LocalRepoCommitEventListener delegate;
 
 		public FaultTolerantLocalRepoCommitListener(final LocalRepoCommitEventListener delegate) {
-			this.delegate = assertNotNull("delegate", delegate);
+			this.delegate = assertNotNull(delegate, "delegate");
 		}
 
 		@Override

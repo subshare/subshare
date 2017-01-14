@@ -17,7 +17,7 @@ public class SyncState extends co.codewizards.cloudstore.core.sync.SyncState {
 
 	public SyncState(final Server server, final URL url, final Severity severity, final String message, final Error error, Date syncStarted, Date syncFinished) {
 		super(url, severity, message, error, syncStarted, syncFinished);
-		this.server = assertNotNull("server", server);
+		this.server = assertNotNull(server, "server");
 	}
 
 	public Server getServer() {

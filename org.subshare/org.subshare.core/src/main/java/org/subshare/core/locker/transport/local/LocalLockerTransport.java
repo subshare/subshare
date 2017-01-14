@@ -62,7 +62,7 @@ public class LocalLockerTransport extends AbstractLockerTransport {
 
 	@Override
 	public void addMergedVersions(final List<Uid> serverVersions) {
-		assertNotNull("serverVersions", serverVersions);
+		assertNotNull(serverVersions, "serverVersions");
 		mergedVersions.addAll(serverVersions);
 	}
 
@@ -133,9 +133,9 @@ public class LocalLockerTransport extends AbstractLockerTransport {
 
 	@Override
 	public void putEncryptedDataFile(final LockerEncryptedDataFile encryptedDataFile) {
-		assertNotNull("encryptedDataFile", encryptedDataFile);
+		assertNotNull(encryptedDataFile, "encryptedDataFile");
 		final Uid contentVersion = encryptedDataFile.getContentVersion();
-		assertNotNull("encryptedDataFile.contentVersion", contentVersion);
+		assertNotNull(contentVersion, "encryptedDataFile.contentVersion");
 
 		final PgpSignature manifestSignature = encryptedDataFile.assertManifestSignatureValid();
 		final PgpKeyId pgpKeyId = getPgpKeyOrFail().getPgpKeyId();
@@ -154,7 +154,7 @@ public class LocalLockerTransport extends AbstractLockerTransport {
 
 		try {
 			final byte[] defaultData = encryptedDataFile.getDefaultData();
-			assertNotNull("encryptedDataFile.defaultData", defaultData);
+			assertNotNull(defaultData, "encryptedDataFile.defaultData");
 
 			final ByteArrayOutputStream out = new ByteArrayOutputStream();
 			final PgpDecoder decoder = getPgp().createDecoder(new ByteArrayInputStream(defaultData), out);

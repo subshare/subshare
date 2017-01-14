@@ -164,9 +164,9 @@ public class PermissionSetInheritance extends Entity implements WriteProtected, 
 
 	@Override
 	public Uid getCryptoRepoFileIdControllingPermissions() {
-		assertNotNull("permissionSet", permissionSet);
-		return assertNotNull("permissionSet.cryptoRepoFileIdControllingPermissions",
-				permissionSet.getCryptoRepoFileIdControllingPermissions());
+		assertNotNull(permissionSet, "permissionSet");
+		return assertNotNull(permissionSet.getCryptoRepoFileIdControllingPermissions(),
+				"permissionSet.cryptoRepoFileIdControllingPermissions");
 	}
 
 	@Override

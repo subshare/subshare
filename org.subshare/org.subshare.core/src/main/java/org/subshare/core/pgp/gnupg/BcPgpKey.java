@@ -50,7 +50,7 @@ public class BcPgpKey {
 
 	public BcPgpKey(final BcWithLocalGnuPgPgp pgp, final PgpKeyId pgpKeyId) {
 		this.pgp = pgp;
-		this.pgpKeyId = assertNotNull("pgpKeyId", pgpKeyId);
+		this.pgpKeyId = assertNotNull(pgpKeyId, "pgpKeyId");
 	}
 
 	public PgpKeyId getPgpKeyId() {
@@ -104,7 +104,7 @@ public class BcPgpKey {
 		final PgpKey masterPgpKey = masterKey == null ? null : masterKey.getPgpKey();
 
 		if (pgpKey == null) {
-			final byte[] fingerprint = assertNotNull("publicKey", publicKey).getFingerprint();
+			final byte[] fingerprint = assertNotNull(publicKey, "publicKey").getFingerprint();
 			final boolean secretKeyAvailable = secretKey != null && ! secretKey.isPrivateKeyEmpty();
 
 			final List<String> userIds = new ArrayList<String>();

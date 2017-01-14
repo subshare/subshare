@@ -29,11 +29,11 @@ public class PgpSignableVerifier {
 	}
 
 	public PgpSignableVerifier(final Pgp pgp) {
-		this.pgp = assertNotNull("pgp", pgp);
+		this.pgp = assertNotNull(pgp, "pgp");
 	}
 
 	public PgpSignature verify(final PgpSignable pgpSignable) throws SignatureException {
-		final byte[] pgpSignatureData = assertNotNull("pgpSignable", pgpSignable).getPgpSignatureData();
+		final byte[] pgpSignatureData = assertNotNull(pgpSignable, "pgpSignable").getPgpSignatureData();
 		if (pgpSignatureData == null)
 			throw new SignatureException("There is no signature! pgpSignable.pgpSignatureData == null");
 

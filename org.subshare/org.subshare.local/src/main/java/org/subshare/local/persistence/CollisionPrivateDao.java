@@ -23,7 +23,7 @@ public class CollisionPrivateDao extends Dao<CollisionPrivate, CollisionPrivateD
 	private static final Logger logger = LoggerFactory.getLogger(CollisionPrivateDao.class);
 
 	public CollisionPrivate getCollisionPrivate(final Collision collision) {
-		assertNotNull("collision", collision);
+		assertNotNull(collision, "collision");
 		final Query query = pm().newNamedQuery(getEntityClass(), "getCollisionPrivate_collision");
 		try {
 			final CollisionPrivate result = (CollisionPrivate) query.execute(collision);
@@ -34,7 +34,7 @@ public class CollisionPrivateDao extends Dao<CollisionPrivate, CollisionPrivateD
 	}
 
 	public CollisionPrivate getCollisionPrivateOrFail(final Collision collision) {
-		assertNotNull("collision", collision);
+		assertNotNull(collision, "collision");
 		final CollisionPrivate collisionPrivate = getCollisionPrivate(collision);
 		if (collisionPrivate == null)
 			throw new IllegalArgumentException("There is no CollisionPrivate for " + collision);
@@ -43,7 +43,7 @@ public class CollisionPrivateDao extends Dao<CollisionPrivate, CollisionPrivateD
 	}
 
 	public Collection<CollisionPrivate> getCollisionPrivates(CollisionPrivateFilter filter) {
-		assertNotNull("filter", filter);
+		assertNotNull(filter, "filter");
 
 		filter = prepareFilter(filter);
 		if (filter == null)
@@ -93,7 +93,7 @@ public class CollisionPrivateDao extends Dao<CollisionPrivate, CollisionPrivateD
 	}
 
 	private CollisionPrivateFilter prepareFilter(CollisionPrivateFilter filter) {
-		assertNotNull("filter", filter);
+		assertNotNull(filter, "filter");
 
 		if (filter.getLocalPath() != null && filter.getCryptoRepoFileId() != null)
 			throw new IllegalArgumentException("filter.localPath and filter.cryptoRepoFileId must not both be set! Exactly one of them!");
@@ -114,8 +114,8 @@ public class CollisionPrivateDao extends Dao<CollisionPrivate, CollisionPrivateD
 	}
 
 	private static void appendToQueryFilter_collisionIds(final StringBuilder qf, final Map<String, Object> qp, final Map<String, Class<?>> qv, final Set<Uid> collisionIds) {
-		assertNotNull("qf", qf);
-		assertNotNull("qp", qp);
+		assertNotNull(qf, "qf");
+		assertNotNull(qp, "qp");
 		if (collisionIds == null)
 			return;
 
@@ -129,8 +129,8 @@ public class CollisionPrivateDao extends Dao<CollisionPrivate, CollisionPrivateD
 	}
 
 	private static void appendToQueryFilter_histoCryptoRepoFileId(final StringBuilder qf, final Map<String, Object> qp, final Map<String, Class<?>> qv, final Uid histoCryptoRepoFileId) {
-		assertNotNull("qf", qf);
-		assertNotNull("qp", qp);
+		assertNotNull(qf, "qf");
+		assertNotNull(qp, "qp");
 		if (histoCryptoRepoFileId == null)
 			return;
 
@@ -145,9 +145,9 @@ public class CollisionPrivateDao extends Dao<CollisionPrivate, CollisionPrivateD
 	}
 
 	private static void appendToQueryFilter_cryptoRepoFileId_nonRecursive(final StringBuilder qf, final Map<String, Object> qp, final Map<String, Class<?>> qv, final Uid cryptoRepoFileId) {
-		assertNotNull("qf", qf);
-		assertNotNull("qp", qp);
-		assertNotNull("qv", qv);
+		assertNotNull(qf, "qf");
+		assertNotNull(qp, "qp");
+		assertNotNull(qv, "qv");
 		if (cryptoRepoFileId == null)
 			return;
 
@@ -162,9 +162,9 @@ public class CollisionPrivateDao extends Dao<CollisionPrivate, CollisionPrivateD
 	}
 
 	private static void appendToQueryFilter_cryptoRepoFileId_recursive(final StringBuilder qf, final Map<String, Object> qp, final Map<String, Class<?>> qv, final Uid cryptoRepoFileId) {
-		assertNotNull("qf", qf);
-		assertNotNull("qp", qp);
-		assertNotNull("qv", qv);
+		assertNotNull(qf, "qf");
+		assertNotNull(qp, "qp");
+		assertNotNull(qv, "qv");
 		if (cryptoRepoFileId == null)
 			return;
 
@@ -193,9 +193,9 @@ public class CollisionPrivateDao extends Dao<CollisionPrivate, CollisionPrivateD
 	}
 
 	private void appendToQueryFilter_resolved(StringBuilder qf, Map<String, Object> qp, final Map<String, Class<?>> qv, Boolean resolved) {
-		assertNotNull("qf", qf);
-		assertNotNull("qp", qp);
-		assertNotNull("qv", qv);
+		assertNotNull(qf, "qf");
+		assertNotNull(qp, "qp");
+		assertNotNull(qv, "qv");
 		if (resolved == null)
 			return;
 
@@ -212,7 +212,7 @@ public class CollisionPrivateDao extends Dao<CollisionPrivate, CollisionPrivateD
 	}
 
 	private static void appendAndIfNeeded(final StringBuilder qf) {
-		assertNotNull("qf", qf);
+		assertNotNull(qf, "qf");
 		if (qf.length() > 0)
 			qf.append(" && ");
 	}

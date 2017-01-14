@@ -51,8 +51,8 @@ public class ServerPane extends WizardPageContentGridPane {
 
 	@SuppressWarnings("unchecked")
 	public ServerPane(final ServerData serverData) {
-		this.serverData = assertNotNull("serverData", serverData);
-		this.server = assertNotNull("serverData.server", serverData.getServer());
+		this.serverData = assertNotNull(serverData, "serverData");
+		this.server = assertNotNull(serverData.getServer(), "serverData.server");
 		loadDynamicComponentFxml(ServerPane.class, this);
 
 		try {

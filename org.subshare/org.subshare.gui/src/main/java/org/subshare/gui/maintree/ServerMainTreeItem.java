@@ -33,7 +33,7 @@ public class ServerMainTreeItem extends MainTreeItem<Server> {
 	private boolean childrenLoaded;
 
 	public ServerMainTreeItem(final Server server) {
-		super(assertNotNull("server", server));
+		super(assertNotNull(server, "server"));
 		setGraphic(new ImageView(icon));
 	}
 

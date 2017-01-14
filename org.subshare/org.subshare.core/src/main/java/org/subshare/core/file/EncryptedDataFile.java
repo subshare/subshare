@@ -12,7 +12,7 @@ public class EncryptedDataFile extends DataFile {
 	public static final String ENTRY_NAME_SIGNING_KEY_DATA = "signingKey.gpg";
 
 	public EncryptedDataFile(final byte[] in) throws IOException {
-		this(new ByteArrayInputStream(assertNotNull("in", in)));
+		this(new ByteArrayInputStream(assertNotNull(in, "in")));
 	}
 
 	public EncryptedDataFile(final InputStream in) throws IOException {

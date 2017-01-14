@@ -35,7 +35,7 @@ public abstract class AbstractLockerTransport implements LockerTransport {
 
 	@Override
 	public void setLockerTransportFactory(final LockerTransportFactory lockerTransportFactory) {
-		this.lockerTransportFactory = AssertUtil.assertNotNull("lockerTransportFactory", lockerTransportFactory);
+		this.lockerTransportFactory = AssertUtil.assertNotNull(lockerTransportFactory, "lockerTransportFactory");
 	}
 
 	@Override
@@ -58,7 +58,7 @@ public abstract class AbstractLockerTransport implements LockerTransport {
 	}
 	protected LockerContent getLockerContentOrFail() {
 		final LockerContent lockerContent = getLockerContent();
-		assertNotNull("lockerContent", lockerContent);
+		assertNotNull(lockerContent, "lockerContent");
 		return lockerContent;
 	}
 	@Override
@@ -77,7 +77,7 @@ public abstract class AbstractLockerTransport implements LockerTransport {
 	}
 	protected PgpKey getPgpKeyOrFail() {
 		final PgpKey pgpKey = getPgpKey();
-		assertNotNull("pgpKey", pgpKey);
+		assertNotNull(pgpKey, "pgpKey");
 		return pgpKey;
 	}
 	@Override

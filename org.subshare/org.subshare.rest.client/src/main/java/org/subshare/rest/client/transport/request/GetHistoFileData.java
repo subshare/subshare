@@ -14,8 +14,8 @@ public class GetHistoFileData extends AbstractRequest<byte[]> {
 	private final long offset;
 
 	public GetHistoFileData(final String repositoryName, Uid histoCryptoRepoFileId, final long offset) {
-		this.repositoryName = assertNotNull("repositoryName", repositoryName);
-		this.histoCryptoRepoFileId = assertNotNull("histoCryptoRepoFileId", histoCryptoRepoFileId);
+		this.repositoryName = assertNotNull(repositoryName, "repositoryName");
+		this.histoCryptoRepoFileId = assertNotNull(histoCryptoRepoFileId, "histoCryptoRepoFileId");
 		this.offset = offset;
 	}
 

@@ -69,7 +69,7 @@ public class VerifySignableAndWriteProtectedEntityListener extends AbstractLocal
 	 * @param signable the entity that was written in the current transaction, but should <b>not</b> be verified.
 	 */
 	public void removeSignable(Signable signable) {
-		assertNotNull("signable", signable);
+		assertNotNull(signable, "signable");
 		signables.remove(signable);
 	}
 

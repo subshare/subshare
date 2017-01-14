@@ -80,16 +80,16 @@ public class CryptoKeyDeactivation extends Entity implements WriteProtected {
 
 	@Override
 	public Uid getCryptoRepoFileIdControllingPermissions() {
-		final CryptoKey ck = assertNotNull("cryptoKey", cryptoKey);
-		final CryptoKeyRole cryptoKeyRole = assertNotNull("cryptoKey.cryptoKeyRole", ck.getCryptoKeyRole());
-		final CryptoRepoFile cryptoRepoFile = assertNotNull("cryptoKey.cryptoRepoFile", ck.getCryptoRepoFile());
+		final CryptoKey ck = assertNotNull(cryptoKey, "cryptoKey");
+		final CryptoKeyRole cryptoKeyRole = assertNotNull(ck.getCryptoKeyRole(), "cryptoKey.cryptoKeyRole");
+		final CryptoRepoFile cryptoRepoFile = assertNotNull(ck.getCryptoRepoFile(), "cryptoKey.cryptoRepoFile");
 
 		switch (cryptoKeyRole) {
 			case backlinkKey:
 			case dataKey:
 				return null;
 			default:
-				return assertNotNull("cryptoRepoFile.cryptoRepoFileId", cryptoRepoFile.getCryptoRepoFileId());
+				return assertNotNull(cryptoRepoFile.getCryptoRepoFileId(), "cryptoRepoFile.cryptoRepoFileId");
 		}
 	}
 

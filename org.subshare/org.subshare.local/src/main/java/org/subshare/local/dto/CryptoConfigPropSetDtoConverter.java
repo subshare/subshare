@@ -22,21 +22,21 @@ public class CryptoConfigPropSetDtoConverter {
 	}
 
 	protected CryptoConfigPropSetDtoConverter(LocalRepoTransaction transaction) {
-		this.transaction = assertNotNull("transaction", transaction);
+		this.transaction = assertNotNull(transaction, "transaction");
 	}
 
 	public CryptoConfigPropSetDto toCryptoConfigPropSetDto(final CryptoConfigPropSet cryptoConfigPropSet) {
-		assertNotNull("cryptoConfigPropSet", cryptoConfigPropSet);
+		assertNotNull(cryptoConfigPropSet, "cryptoConfigPropSet");
 		CryptoConfigPropSetDto result = new CryptoConfigPropSetDto();
 		result.setCryptoRepoFileId(cryptoConfigPropSet.getCryptoRepoFileId());
-		result.setCryptoKeyId(assertNotNull("cryptoConfigPropSet.cryptoKey", cryptoConfigPropSet.getCryptoKey()).getCryptoKeyId());
+		result.setCryptoKeyId(assertNotNull(cryptoConfigPropSet.getCryptoKey(), "cryptoConfigPropSet.cryptoKey").getCryptoKeyId());
 		result.setConfigPropSetDtoData(cryptoConfigPropSet.getConfigPropSetDtoData());
 		result.setSignature(cryptoConfigPropSet.getSignature());
 		return result;
 	}
 
 	public CryptoConfigPropSet putCryptoConfigPropSetDto(final CryptoConfigPropSetDto cryptoConfigPropSetDto) {
-		assertNotNull("cryptoConfigPropSetDto", cryptoConfigPropSetDto);
+		assertNotNull(cryptoConfigPropSetDto, "cryptoConfigPropSetDto");
 
 		final CryptoRepoFileDao crfDao = transaction.getDao(CryptoRepoFileDao.class);
 		final CryptoKeyDao ckDao = transaction.getDao(CryptoKeyDao.class);

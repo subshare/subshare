@@ -260,7 +260,7 @@ public abstract class SyncDaemonImpl implements SyncDaemon {
 
 	@Override
 	public SyncState getState(final Server server) {
-		assertNotNull("server", server);
+		assertNotNull(server, "server");
 		return server2State.get(server);
 	}
 

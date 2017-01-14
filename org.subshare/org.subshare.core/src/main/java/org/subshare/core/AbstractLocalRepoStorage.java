@@ -26,7 +26,7 @@ public abstract class AbstractLocalRepoStorage implements LocalRepoStorage {
 	}
 
 	protected LocalRepoStorageFactory getLocalRepoStorageFactoryOrFail() {
-		return assertNotNull("getLocalRepoStorageFactoryOrFail()", getLocalRepoStorageFactoryOrFail());
+		return assertNotNull(getLocalRepoStorageFactoryOrFail(), "getLocalRepoStorageFactoryOrFail()");
 	}
 
 	@Override
@@ -41,7 +41,7 @@ public abstract class AbstractLocalRepoStorage implements LocalRepoStorage {
 		this.transaction = transaction;
 	}
 	protected LocalRepoTransaction getTransactionOrFail() {
-		return assertNotNull("getTransaction()", getTransaction());
+		return assertNotNull(getTransaction(), "getTransaction()");
 	}
 
 	@Override
@@ -56,7 +56,7 @@ public abstract class AbstractLocalRepoStorage implements LocalRepoStorage {
 		this.remoteRepositoryId = serverRepositoryId;
 	}
 	protected UUID getRemoteRepositoryIdOrFail() {
-		return assertNotNull("getRemoteRepositoryId()", getRemoteRepositoryId());
+		return assertNotNull(getRemoteRepositoryId(), "getRemoteRepositoryId()");
 	}
 
 	@Override
@@ -71,6 +71,6 @@ public abstract class AbstractLocalRepoStorage implements LocalRepoStorage {
 		this.remotePathPrefix = remotePathPrefix;
 	}
 	protected String getRemotePathPrefixOrFail() {
-		return assertNotNull("getRemotePathPrefix()", getRemotePathPrefix());
+		return assertNotNull(getRemotePathPrefix(), "getRemotePathPrefix()");
 	}
 }

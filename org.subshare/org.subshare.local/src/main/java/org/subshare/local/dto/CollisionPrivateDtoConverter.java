@@ -20,11 +20,11 @@ public class CollisionPrivateDtoConverter {
 	}
 
 	protected CollisionPrivateDtoConverter(final LocalRepoTransaction transaction) {
-		this.transaction = assertNotNull("transaction", transaction);
+		this.transaction = assertNotNull(transaction, "transaction");
 	}
 
 	public CollisionPrivateDto toCollisionPrivateDto(final CollisionPrivate collisionPrivate) {
-		assertNotNull("collisionPrivate", collisionPrivate);
+		assertNotNull(collisionPrivate, "collisionPrivate");
 		CollisionPrivateDto result = new CollisionPrivateDto();
 		result.setCollisionId(collisionPrivate.getCollision().getCollisionId());
 		result.setComment(collisionPrivate.getComment());
@@ -33,15 +33,15 @@ public class CollisionPrivateDtoConverter {
 	}
 
 	public CollisionPrivate putCollisionPrivateDto(final CollisionPrivateDto collisionPrivateDto) {
-		assertNotNull("collisionPrivateDto", collisionPrivateDto);
+		assertNotNull(collisionPrivateDto, "collisionPrivateDto");
 		final CollisionDao cDao = transaction.getDao(CollisionDao.class);
 		final Collision collision = cDao.getCollisionOrFail(collisionPrivateDto.getCollisionId());
 		return putCollisionPrivateDto(collision, collisionPrivateDto);
 	}
 
 	public CollisionPrivate putCollisionPrivateDto(final Collision collision, final CollisionPrivateDto collisionPrivateDto) {
-		assertNotNull("collision", collision);
-		assertNotNull("collisionPrivateDto", collisionPrivateDto);
+		assertNotNull(collision, "collision");
+		assertNotNull(collisionPrivateDto, "collisionPrivateDto");
 
 		final CollisionPrivateDao cpDao = transaction.getDao(CollisionPrivateDao.class);
 

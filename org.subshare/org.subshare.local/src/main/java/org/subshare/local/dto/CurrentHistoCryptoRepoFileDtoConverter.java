@@ -23,15 +23,15 @@ public class CurrentHistoCryptoRepoFileDtoConverter {
 	}
 
 	protected CurrentHistoCryptoRepoFileDtoConverter(final LocalRepoTransaction transaction) {
-		this.transaction = assertNotNull("transaction", transaction);
+		this.transaction = assertNotNull(transaction, "transaction");
 	}
 
 	public CurrentHistoCryptoRepoFileDto toCurrentHistoCryptoRepoFileDto(final CurrentHistoCryptoRepoFile currentHistoCryptoRepoFile, boolean withHistoCryptoRepoFileDto) {
-		assertNotNull("currentHistoCryptoRepoFile", currentHistoCryptoRepoFile);
+		assertNotNull(currentHistoCryptoRepoFile, "currentHistoCryptoRepoFile");
 		final CurrentHistoCryptoRepoFileDto result = new CurrentHistoCryptoRepoFileDto();
 
-		final HistoCryptoRepoFile histoCryptoRepoFile = assertNotNull("currentHistoCryptoRepoFile.histoCryptoRepoFile", currentHistoCryptoRepoFile.getHistoCryptoRepoFile());
-		final CryptoRepoFile cryptoRepoFile = assertNotNull("currentHistoCryptoRepoFile.cryptoRepoFile", currentHistoCryptoRepoFile.getCryptoRepoFile());
+		final HistoCryptoRepoFile histoCryptoRepoFile = assertNotNull(currentHistoCryptoRepoFile.getHistoCryptoRepoFile(), "currentHistoCryptoRepoFile.histoCryptoRepoFile");
+		final CryptoRepoFile cryptoRepoFile = assertNotNull(currentHistoCryptoRepoFile.getCryptoRepoFile(), "currentHistoCryptoRepoFile.cryptoRepoFile");
 
 		if (withHistoCryptoRepoFileDto) {
 			final HistoCryptoRepoFileDto histoCryptoRepoFileDto = HistoCryptoRepoFileDtoConverter.create(transaction).toHistoCryptoRepoFileDto(histoCryptoRepoFile);
@@ -48,7 +48,7 @@ public class CurrentHistoCryptoRepoFileDtoConverter {
 	}
 
 	public CurrentHistoCryptoRepoFile putCurrentHistoCryptoRepoFile(final CurrentHistoCryptoRepoFileDto currentHistoCryptoRepoFileDto) {
-		assertNotNull("cryptoRepoFileOnServerDto", currentHistoCryptoRepoFileDto);
+		assertNotNull(currentHistoCryptoRepoFileDto, "cryptoRepoFileOnServerDto");
 		final CurrentHistoCryptoRepoFileDao currentHistoCryptoRepoFileDao = transaction.getDao(CurrentHistoCryptoRepoFileDao.class);
 		final HistoCryptoRepoFileDao histoCryptoRepoFileDao = transaction.getDao(HistoCryptoRepoFileDao.class);
 		final CryptoRepoFileDao cryptoRepoFileDao = transaction.getDao(CryptoRepoFileDao.class);

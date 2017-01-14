@@ -30,7 +30,7 @@ public class EditUserManager {
 	}
 
 	public void edit(final Collection<? extends User> users) {
-		assertNotNull("users", users);
+		assertNotNull(users, "users");
 		editedUsers.addAll(users);
 		final EditUserEvent event = new EditUserEvent(this, users);
 		for (final EditUserListener listener : editUserListeners)
@@ -38,12 +38,12 @@ public class EditUserManager {
 	}
 
 	public void endEditing(final Collection<? extends User> users) {
-		assertNotNull("users", users);
+		assertNotNull(users, "users");
 		editedUsers.removeAll(users);
 	}
 
 	public void addEditUserListener(final EditUserListener listener) {
-		assertNotNull("listener", listener);
+		assertNotNull(listener, "listener");
 		editUserListeners.add(listener);
 	}
 	public void removeEditUserListener(final EditUserListener listener) {

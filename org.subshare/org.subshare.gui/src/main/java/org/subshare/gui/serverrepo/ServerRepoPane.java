@@ -24,8 +24,8 @@ public class ServerRepoPane extends GridPane {
 	private final StringProperty nameProperty;
 
 	public ServerRepoPane(final Server server, final ServerRepo serverRepo) {
-		this.server = assertNotNull("server", server);
-		this.serverRepo = assertNotNull("serverRepo", serverRepo);
+		this.server = assertNotNull(server, "server");
+		this.serverRepo = assertNotNull(serverRepo, "serverRepo");
 		loadDynamicComponentFxml(ServerRepoPane.class, this);
 
 		try {

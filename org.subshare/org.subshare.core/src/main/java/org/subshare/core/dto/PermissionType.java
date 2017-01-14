@@ -67,13 +67,13 @@ public enum PermissionType {
 	private Set<PermissionType> includedPermissionTypes;
 
 	private PermissionType(final String... includedPermissionTypeNames) {
-		this.includedPermissionTypeNames = assertNotNull("includedPermissionTypeNames", includedPermissionTypeNames);
+		this.includedPermissionTypeNames = assertNotNull(includedPermissionTypeNames, "includedPermissionTypeNames");
 	}
 
 	public synchronized Set<PermissionType> getIncludedPermissionTypes() {
 		if (includedPermissionTypes == null) {
 			EnumSet<PermissionType> pts = EnumSet.of(this);
-			for (String n : assertNotNull("includedPermissionTypeNames", includedPermissionTypeNames))
+			for (String n : assertNotNull(includedPermissionTypeNames, "includedPermissionTypeNames"))
 				pts.add(PermissionType.valueOf(n));
 
 			includedPermissionTypes = pts;

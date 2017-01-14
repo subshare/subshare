@@ -25,7 +25,7 @@ public class IdentityWizardPage extends WizardPage {
 
 	public IdentityWizardPage(final IdentityData identityData) {
 		super("Identity");
-		this.identityData = assertNotNull("identityData", identityData);
+		this.identityData = assertNotNull(identityData, "identityData");
 
 		importBackupSourceWizardPage = new ImportBackupSourceWizardPage(identityData.getImportBackupData());
 		passphraseWizardPage = new PassphraseWizardPage(identityData.getCreatePgpKeyParam());

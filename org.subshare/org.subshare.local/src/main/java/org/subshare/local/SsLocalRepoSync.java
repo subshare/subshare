@@ -134,9 +134,9 @@ public class SsLocalRepoSync extends LocalRepoSync {
 
 	@Override
 	protected void sha(final NormalFile normalFile, final File file, final ProgressMonitor monitor) {
-		assertNotNull("normalFile", normalFile);
-		assertNotNull("file", file);
-		assertNotNull("monitor", monitor);
+		assertNotNull(normalFile, "normalFile");
+		assertNotNull(file, "file");
+		assertNotNull(monitor, "monitor");
 
 		SsNormalFile nf = (SsNormalFile) normalFile;
 
@@ -167,7 +167,7 @@ public class SsLocalRepoSync extends LocalRepoSync {
 					lastNewFileChunk = (SsFileChunk) fileChunk;
 			}
 
-			assertNotNull("lastNewFileChunk", lastNewFileChunk); // every file has at least one chunk! even if it is empty!
+			assertNotNull(lastNewFileChunk, "lastNewFileChunk"); // every file has at least one chunk! even if it is empty!
 
 			long offset = lastNewFileChunk.getOffset();
 
@@ -209,7 +209,7 @@ public class SsLocalRepoSync extends LocalRepoSync {
 	}
 
 	private SsFileChunk createPaddingFileChunk(final SsNormalFile normalFile, final long offset, final int paddingLength) {
-		assertNotNull("normalFile", normalFile);
+		assertNotNull(normalFile, "normalFile");
 		SsFileChunk fileChunk = (SsFileChunk) createObject(FileChunk.class);
 		fileChunk.setNormalFile(normalFile);
 		fileChunk.setOffset(offset);

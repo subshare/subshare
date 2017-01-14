@@ -51,7 +51,7 @@ public class LocalRepoStorageImpl extends AbstractLocalRepoStorage {
 
 	@Override
 	public Collection<? extends FileChunkDto> getTempFileChunkDtos(String localPath) {
-		assertNotNull("localPath", localPath);
+		assertNotNull(localPath, "localPath");
 
 		final UUID remoteRepositoryId = getRemoteRepositoryIdOrFail();
 		final TempFileChunkDao tfcDao = getTransactionOrFail().getDao(TempFileChunkDao.class);
@@ -80,7 +80,7 @@ public class LocalRepoStorageImpl extends AbstractLocalRepoStorage {
 
 	@Override
 	public RepoFileDto getRepoFileDto(String localPath) {
-		assertNotNull("localPath", localPath);
+		assertNotNull(localPath, "localPath");
 
 		final RepoFile repoFile = getRepoFile(localPath);
 		if (repoFile == null)
@@ -94,7 +94,7 @@ public class LocalRepoStorageImpl extends AbstractLocalRepoStorage {
 
 	@Override
 	public void putTempFileChunkDto(String localPath, long offset) {
-		assertNotNull("localPath", localPath);
+		assertNotNull(localPath, "localPath");
 
 		final UUID remoteRepositoryId = getRemoteRepositoryIdOrFail();
 		final TempFileChunkDao tfcDao = getTransactionOrFail().getDao(TempFileChunkDao.class);
@@ -136,7 +136,7 @@ public class LocalRepoStorageImpl extends AbstractLocalRepoStorage {
 
 	@Override
 	public void clearTempFileChunkDtos(String localPath) {
-		assertNotNull("localPath", localPath);
+		assertNotNull(localPath, "localPath");
 		final UUID remoteRepositoryId = getRemoteRepositoryIdOrFail();
 		final LocalRepoTransaction transaction = getTransactionOrFail();
 		final TempFileChunkDao tfcDao = transaction.getDao(TempFileChunkDao.class);
@@ -154,7 +154,7 @@ public class LocalRepoStorageImpl extends AbstractLocalRepoStorage {
 	}
 
 	protected RepoFile getRepoFile(final String localPath) {
-		assertNotNull("localPath", localPath);
+		assertNotNull(localPath, "localPath");
 		final LocalRepoTransaction transaction = getTransactionOrFail();
 		final LocalRepoManager localRepoManager = transaction.getLocalRepoManager();
 		final RepoFileDao repoFileDao = transaction.getDao(RepoFileDao.class);

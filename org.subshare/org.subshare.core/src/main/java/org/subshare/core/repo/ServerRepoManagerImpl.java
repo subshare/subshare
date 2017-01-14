@@ -42,9 +42,9 @@ public class ServerRepoManagerImpl implements ServerRepoManager {
 
 	@Override
 	public ServerRepo createRepository(final File localDirectory, final Server server, final User owner) {
-		assertNotNull("localDirectory", localDirectory);
-		assertNotNull("server", server);
-		assertNotNull("owner", owner);
+		assertNotNull(localDirectory, "localDirectory");
+		assertNotNull(server, "server");
+		assertNotNull(owner, "owner");
 
 		// We first make a check locally, before talking to the server. This does not guarantee that we can finalize the process,
 		// but our risk of creating orphaned garbage on the server should be reduced to nearly 0%.
@@ -67,9 +67,9 @@ public class ServerRepoManagerImpl implements ServerRepoManager {
 
 	@Override
 	public void checkOutRepository(final Server server, final ServerRepo serverRepo, String serverPath, final File localDirectory) {
-		assertNotNull("server", server);
-		assertNotNull("serverRepo", serverRepo);
-		assertNotNull("localDirectory", localDirectory);
+		assertNotNull(server, "server");
+		assertNotNull(serverRepo, "serverRepo");
+		assertNotNull(localDirectory, "localDirectory");
 
 		if (! server.getServerId().equals(serverRepo.getServerId()))
 			throw new IllegalArgumentException(String.format(
@@ -98,7 +98,7 @@ public class ServerRepoManagerImpl implements ServerRepoManager {
 
 	@Override
 	public boolean canUseLocalDirectory(final File localDirectory) {
-		assertNotNull("localDirectory", localDirectory);
+		assertNotNull(localDirectory, "localDirectory");
 		final File localRoot = LocalRepoHelper.getLocalRootContainingFile(localDirectory);
 		if (localRoot == null) {
 			final boolean containsOtherRepo = ! LocalRepoHelper.getLocalRootsContainedInDirectory(localDirectory).isEmpty();
@@ -130,7 +130,7 @@ public class ServerRepoManagerImpl implements ServerRepoManager {
 	}
 
 	private Pair<File, UUID> createLocalRepository(final File localDirectory) {
-		assertNotNull("localDirectory", localDirectory);
+		assertNotNull(localDirectory, "localDirectory");
 
 		final File localRoot = LocalRepoHelper.getLocalRootContainingFile(localDirectory);
 		if (localRoot == null) {
@@ -151,9 +151,9 @@ public class ServerRepoManagerImpl implements ServerRepoManager {
 	}
 
 	private UUID createServerRepository(final UUID clientRepositoryId, final Server server, final User owner) {
-		assertNotNull("clientRepositoryId", clientRepositoryId);
-		assertNotNull("server", server);
-		assertNotNull("owner", owner);
+		assertNotNull(clientRepositoryId, "clientRepositoryId");
+		assertNotNull(server, "server");
+		assertNotNull(owner, "owner");
 
 		final UUID serverRepositoryId = UUID.randomUUID(); // or should we better have the server create it? does it matter?
 		final URL remoteRoot = UrlUtil.appendNonEncodedPath(server.getUrl(), serverRepositoryId.toString());
@@ -194,9 +194,9 @@ public class ServerRepoManagerImpl implements ServerRepoManager {
 	}
 
 	private ServerRepo registerInServerRepoRegistry(final Server server, final UUID serverRepositoryId, final User owner) {
-		assertNotNull("server", server);
-		assertNotNull("serverRepositoryId", serverRepositoryId);
-		assertNotNull("owner", owner);
+		assertNotNull(server, "server");
+		assertNotNull(serverRepositoryId, "serverRepositoryId");
+		assertNotNull(owner, "owner");
 
 		final ServerRepoRegistry serverRepoRegistry = getServerRepoRegistry();
 		final ServerRepo serverRepo = serverRepoRegistry.createServerRepo(serverRepositoryId);
@@ -213,9 +213,9 @@ public class ServerRepoManagerImpl implements ServerRepoManager {
 	}
 
 	public static void connectLocalRepositoryWithServerRepository(final File localRoot, final Server server, final UUID serverRepositoryId, final String serverPath) {
-		assertNotNull("localRoot", localRoot);
-		assertNotNull("server", server);
-		assertNotNull("serverRepositoryId", serverRepositoryId);
+		assertNotNull(localRoot, "localRoot");
+		assertNotNull(server, "server");
+		assertNotNull(serverRepositoryId, "serverRepositoryId");
 
 		URL remoteRoot = UrlUtil.appendNonEncodedPath(server.getUrl(), serverRepositoryId.toString());
 
@@ -228,9 +228,9 @@ public class ServerRepoManagerImpl implements ServerRepoManager {
 	}
 
 	public static void connectLocalRepositoryWithServerRepository(final LocalRepoManager localRepoManager, final UUID serverRepositoryId, final URL remoteRoot) {
-		assertNotNull("localRepoManager", localRepoManager);
-		assertNotNull("serverRepositoryId", serverRepositoryId);
-		assertNotNull("remoteRoot", remoteRoot);
+		assertNotNull(localRepoManager, "localRepoManager");
+		assertNotNull(serverRepositoryId, "serverRepositoryId");
+		assertNotNull(remoteRoot, "remoteRoot");
 
 		final UUID clientRepositoryId = localRepoManager.getRepositoryId();
 		final byte[] clientRepositoryPublicKey = localRepoManager.getPublicKey();

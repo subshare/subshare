@@ -16,7 +16,7 @@ public class PermissionSetDao extends Dao<PermissionSet, PermissionSetDao> {
 	private static final Logger logger = LoggerFactory.getLogger(PermissionSetDao.class);
 
 	public PermissionSet getPermissionSet(final CryptoRepoFile cryptoRepoFile) {
-		assertNotNull("cryptoRepoFile", cryptoRepoFile);
+		assertNotNull(cryptoRepoFile, "cryptoRepoFile");
 		final Query query = pm().newNamedQuery(getEntityClass(), "getPermissionSet_cryptoRepoFile");
 		try {
 			final PermissionSet permissionSet = (PermissionSet) query.execute(cryptoRepoFile);

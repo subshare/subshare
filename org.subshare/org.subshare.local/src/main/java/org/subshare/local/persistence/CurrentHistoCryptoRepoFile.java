@@ -112,9 +112,9 @@ public class CurrentHistoCryptoRepoFile extends Entity implements WriteProtected
 		logger.debug("jdoPreStore: {} {}",
 				cryptoRepoFile, histoCryptoRepoFile);
 
-		final Uid cryptoRepoFileId = assertNotNull("cryptoRepoFile", cryptoRepoFile).getCryptoRepoFileId();
-		final CryptoRepoFile crf = assertNotNull("histoCryptoRepoFile", histoCryptoRepoFile).getCryptoRepoFile();
-		assertNotNull("histoCryptoRepoFile.cryptoRepoFile", crf);
+		final Uid cryptoRepoFileId = assertNotNull(cryptoRepoFile, "cryptoRepoFile").getCryptoRepoFileId();
+		final CryptoRepoFile crf = assertNotNull(histoCryptoRepoFile, "histoCryptoRepoFile").getCryptoRepoFile();
+		assertNotNull(crf, "histoCryptoRepoFile.cryptoRepoFile");
 
 		if (! cryptoRepoFileId.equals(crf.getCryptoRepoFileId()))
 			throw new IllegalStateException(String.format("cryptoRepoFile.cryptoRepoFileId != histoCryptoRepoFile.cryptoRepoFile.cryptoRepoFileId :: %s != %s",
@@ -139,11 +139,11 @@ public class CurrentHistoCryptoRepoFile extends Entity implements WriteProtected
 	@Override
 	public InputStream getSignedData(final int signedDataVersion) {
 		try {
-			final Uid cryptoRepoFileId = assertNotNull("cryptoRepoFile", cryptoRepoFile).getCryptoRepoFileId();
-			final Uid histoCryptoRepoFileId = assertNotNull("histoCryptoRepoFile", histoCryptoRepoFile).getHistoCryptoRepoFileId();
+			final Uid cryptoRepoFileId = assertNotNull(cryptoRepoFile, "cryptoRepoFile").getCryptoRepoFileId();
+			final Uid histoCryptoRepoFileId = assertNotNull(histoCryptoRepoFile, "histoCryptoRepoFile").getHistoCryptoRepoFileId();
 
-			assertNotNull("cryptoRepoFileId", cryptoRepoFileId);
-			assertNotNull("histoCryptoRepoFileId", histoCryptoRepoFileId);
+			assertNotNull(cryptoRepoFileId, "cryptoRepoFileId");
+			assertNotNull(histoCryptoRepoFileId, "histoCryptoRepoFileId");
 
 			byte separatorIndex = 0;
 			return new MultiInputStream(
@@ -177,7 +177,7 @@ public class CurrentHistoCryptoRepoFile extends Entity implements WriteProtected
 
 	@Override
 	public Uid getCryptoRepoFileIdControllingPermissions() {
-		return assertNotNull("cryptoRepoFileId", assertNotNull("cryptoRepoFile", cryptoRepoFile).getCryptoRepoFileId());
+		return assertNotNull(assertNotNull(cryptoRepoFile, "cryptoRepoFile").getCryptoRepoFileId(), "cryptoRepoFileId");
 	}
 
 	@Override

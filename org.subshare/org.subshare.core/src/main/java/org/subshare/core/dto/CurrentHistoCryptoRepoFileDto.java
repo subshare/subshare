@@ -88,8 +88,8 @@ public class CurrentHistoCryptoRepoFileDto implements Signable {
 			final Uid histoCryptoRepoFileId = (histoCryptoRepoFileDto != null
 					? histoCryptoRepoFileDto.getHistoCryptoRepoFileId() : this.histoCryptoRepoFileId);
 
-			assertNotNull("cryptoRepoFileId", cryptoRepoFileId);
-			assertNotNull("histoCryptoRepoFileId", histoCryptoRepoFileId);
+			assertNotNull(cryptoRepoFileId, "cryptoRepoFileId");
+			assertNotNull(histoCryptoRepoFileId, "histoCryptoRepoFileId");
 
 			byte separatorIndex = 0;
 			return new MultiInputStream(

@@ -17,9 +17,9 @@ public class CertificationPgpKeyTreeItem extends PgpKeyTreeItem<PgpSignature> {
 	private final PgpKey signaturePgpKey; // may be null!
 
 	public CertificationPgpKeyTreeItem(final Pgp pgp, final PgpSignature signature) {
-		super(assertNotNull("signature", signature));
-		signaturePgpKeyId = assertNotNull("signature.pgpKeyId", signature.getPgpKeyId());
-		assertNotNull("pgp", pgp);
+		super(assertNotNull(signature, "signature"));
+		signaturePgpKeyId = assertNotNull(signature.getPgpKeyId(), "signature.pgpKeyId");
+		assertNotNull(pgp, "pgp");
 		signaturePgpKey = pgp.getPgpKey(signaturePgpKeyId);
 	}
 

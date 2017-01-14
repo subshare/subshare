@@ -8,7 +8,7 @@ import org.subshare.core.sign.Signature;
 public class UserRepoKeyDtoConverter {
 
 	public UserRepoKeyDto toUserRepoKeyDto(final UserRepoKey userRepoKey) {
-		assertNotNull("userRepoKey", userRepoKey);
+		assertNotNull(userRepoKey, "userRepoKey");
 
 		final UserRepoKeyDto userRepoKeyDto = new UserRepoKeyDto();
 		userRepoKeyDto.setUserRepoKeyId(userRepoKey.getUserRepoKeyId());
@@ -22,7 +22,7 @@ public class UserRepoKeyDtoConverter {
 	}
 
 	public UserRepoKey fromUserRepoKeyDto(final UserRepoKeyDto userRepoKeyDto) {
-		assertNotNull("userRepoKeyDto", userRepoKeyDto);
+		assertNotNull(userRepoKeyDto, "userRepoKeyDto");
 
 		final UserRepoKey userRepoKey = new UserRepoKeyImpl(
 				userRepoKeyDto.getUserRepoKeyId(),
