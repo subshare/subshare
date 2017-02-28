@@ -2,12 +2,11 @@ package org.subshare.rest.client.transport;
 
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static co.codewizards.cloudstore.core.util.DebugUtil.*;
 import static co.codewizards.cloudstore.core.util.HashUtil.*;
 import static co.codewizards.cloudstore.core.util.IOUtil.*;
 import static org.subshare.core.crypto.CryptoConfigUtil.*;
 
-import co.codewizards.cloudstore.core.io.ByteArrayInputStream;
-import co.codewizards.cloudstore.core.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Date;
@@ -78,6 +77,8 @@ import co.codewizards.cloudstore.core.dto.RepoFileDto;
 import co.codewizards.cloudstore.core.dto.RepoFileDtoTreeNode;
 import co.codewizards.cloudstore.core.dto.RepositoryDto;
 import co.codewizards.cloudstore.core.dto.VersionInfoDto;
+import co.codewizards.cloudstore.core.io.ByteArrayInputStream;
+import co.codewizards.cloudstore.core.io.ByteArrayOutputStream;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.repo.local.ContextWithLocalRepoManager;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
@@ -155,8 +156,14 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 	public ChangeSetDto getChangeSetDto(final boolean localSync) {
 		final ChangeSetDto changeSetDto = getRestRepoTransport().getChangeSetDto(localSync);
 
-		logger.debug("getChangeSetDto: clientRepositoryId={} serverRepositoryId={}: {}",
-				getClientRepositoryId(), getRepositoryId(), changeSetDto);
+		if (logger.isInfoEnabled()) {
+			logger.info("getChangeSetDto: clientRepositoryId={} serverRepositoryId={}: repoFileDtos.size={}",
+					getClientRepositoryId(), getRepositoryId(), changeSetDto.getRepoFileDtos().size());
+
+			logMemoryStats(logger);
+
+			logger.trace("getChangeSetDto: {}", changeSetDto);
+		}
 
 		syncCryptoKeysFromRemoteRepo();
 		return decryptChangeSetDto(changeSetDto);
@@ -201,13 +208,46 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 		final CryptoChangeSetDto cryptoChangeSetDto = getClient().execute(new GetCryptoChangeSetDto(getRepositoryId().toString()));
 		final LocalRepoManager localRepoManager = getLocalRepoManager();
 
-		logger.debug("syncCryptoKeysFromRemoteRepo: clientRepositoryId={} serverRepositoryId={}: {}",
-				getClientRepositoryId(), getRepositoryId(), cryptoChangeSetDto);
+		if (logger.isInfoEnabled()) {
+			logger.info("syncCryptoKeysFromRemoteRepo: clientRepositoryId={} serverRepositoryId={}: "
+					+ "cryptoRepoFileDtos.size={}, cryptoKeyDtos.size={}, cryptoLinkDtos.size={}, "
+					+ "currentHistoCryptoRepoFileDtos.size={}, histoCryptoRepoFileDtos.size={}, "
+					+ "histoFrameDtos.size={}, permissionDtos.size={}, permissionSetDtos.size={}, "
+					+ "permissionSetInheritanceDtos.size={}, userIdentityDtos.size={}, userIdentityLinkDtos.size={}, "
+					+ "userRepoKeyPublicKeyDtos.size={}, userRepoKeyPublicKeyReplacementRequestDtos.size={}, "
+					+ "userRepoKeyPublicKeyReplacementRequestDeletionDtos.size={}, collisionDtos.size={}, "
+					+ "cryptoConfigPropSetDtos.size={}",
+					getClientRepositoryId(), getRepositoryId(),
+					cryptoChangeSetDto.getCryptoRepoFileDtos().size(),
+					cryptoChangeSetDto.getCryptoKeyDtos().size(),
+					cryptoChangeSetDto.getCryptoLinkDtos().size(),
+					cryptoChangeSetDto.getCurrentHistoCryptoRepoFileDtos().size(),
+					cryptoChangeSetDto.getHistoCryptoRepoFileDtos().size(),
+					cryptoChangeSetDto.getHistoFrameDtos().size(),
+					cryptoChangeSetDto.getPermissionDtos().size(),
+					cryptoChangeSetDto.getPermissionSetDtos().size(),
+					cryptoChangeSetDto.getPermissionSetInheritanceDtos().size(),
+					cryptoChangeSetDto.getUserIdentityDtos().size(),
+					cryptoChangeSetDto.getUserIdentityLinkDtos().size(),
+					cryptoChangeSetDto.getUserRepoKeyPublicKeyDtos().size(),
+					cryptoChangeSetDto.getUserRepoKeyPublicKeyReplacementRequestDtos().size(),
+					cryptoChangeSetDto.getUserRepoKeyPublicKeyReplacementRequestDeletionDtos().size(),
+					cryptoChangeSetDto.getCollisionDtos().size(),
+					cryptoChangeSetDto.getCryptoConfigPropSetDtos().size());
+
+			logMemoryStats(logger);
+
+			logger.trace("syncCryptoKeysFromRemoteRepo: {}", cryptoChangeSetDto);
+		}
 
 		try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
 			final Cryptree cryptree = getCryptree(transaction);
 			cryptree.initLocalRepositoryType();
 			cryptree.putCryptoChangeSetDto(cryptoChangeSetDto);
+
+			logger.info("syncCryptoKeysFromRemoteRepo: after putCryptoChangeSetDto(...)");
+			logMemoryStats(logger);
+
 			transaction.commit();
 		}
 		// In case of successful commit, we notify the server in order to not receive the same changes again.
@@ -217,6 +257,12 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 	private ChangeSetDto decryptChangeSetDto(final ChangeSetDto changeSetDto) {
 		assertNotNull(changeSetDto, "changeSetDto");
 		final ChangeSetDto decryptedChangeSetDto = new ChangeSetDto();
+
+		final boolean debug = true;// logger.isDebugEnabled(); // TODO not always enabled!
+		if (logger.isInfoEnabled()) {
+			logger.info("decryptChangeSetDto: entered.");
+			logMemoryStats(logger);
+		}
 
 		final LocalRepoManager localRepoManager = getLocalRepoManager();
 		try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) { // TODO read-transaction?!
@@ -233,6 +279,9 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 				if (decryptedModificationDto != null) // if it's null, it could not be decrypted (missing access rights?!) and should be ignored.
 					decryptedChangeSetDto.getModificationDtos().add(decryptedModificationDto);
 			}
+
+			int processedTreeNodeCount = 0;
+			long lastLogTimestamp = System.currentTimeMillis();
 
 			final Set<Long> nonDecryptableRepoFileIds = new HashSet<Long>();
 
@@ -270,6 +319,15 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 						nonDecryptableRepoFileIds.add(repoFileDto.getId());
 					else
 						decryptedChangeSetDto.getRepoFileDtos().add(decryptedRepoFileDto);
+
+					if (debug) {
+						++processedTreeNodeCount;
+						if (System.currentTimeMillis() - lastLogTimestamp > 10000L) {
+							logger.info("decryptChangeSetDto: processedTreeNodeCount={}", processedTreeNodeCount); // TODO debug(..)! not info(...)!
+							logMemoryStats(logger);
+							lastLogTimestamp = System.currentTimeMillis();
+						}
+					}
 				}
 			}
 
@@ -277,10 +335,19 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 
 			cryptree.createSyntheticDeleteModifications(decryptedChangeSetDto);
 
+			if (logger.isInfoEnabled()) {
+				logger.info("decryptChangeSetDto: before commit.");
+				logMemoryStats(logger);
+			}
 			transaction.commit();
 		}
 
-		logger.debug("decryptChangeSetDto: clientRepositoryId={} serverRepositoryId={}: {}",
+		if (logger.isInfoEnabled()) {
+			logger.info("decryptChangeSetDto: after commit.");
+			logMemoryStats(logger);
+		}
+
+		logger.trace("decryptChangeSetDto: clientRepositoryId={} serverRepositoryId={}: {}",
 				getClientRepositoryId(), getRepositoryId(), decryptedChangeSetDto);
 
 		return decryptedChangeSetDto;
