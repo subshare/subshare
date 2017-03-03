@@ -389,8 +389,9 @@ public class CryptreeNode {
 		for (HistoCryptoRepoFile hcrf : histoCryptoRepoFiles) {
 			if (histoFrame.equals(hcrf.getHistoFrame())) {
 //				createCollisionIfNeeded(histoCryptoRepoFile);
-				histoCryptoRepoFile = hcrf; // TODO is this the right strategy? Or should we better delete and recreate? I encountered this situation when aborting an up-sync and resuming later.
 //				throw new IllegalStateException("xxx");
+				histoCryptoRepoFile = hcrf; // TODO is this the right strategy? Or should we better delete and recreate? I encountered this situation when aborting an up-sync and resuming later.
+				// ... if this fixes https://github.com/subshare/subshare/issues/45, then it definitely is the right strategy ;-)
 			}
 		}
 		
