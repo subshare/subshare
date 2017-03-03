@@ -391,7 +391,7 @@ public class CryptreeNode {
 //				createCollisionIfNeeded(histoCryptoRepoFile);
 //				throw new IllegalStateException("xxx");
 				histoCryptoRepoFile = hcrf; // TODO is this the right strategy? Or should we better delete and recreate? I encountered this situation when aborting an up-sync and resuming later.
-				// ... if this fixes https://github.com/subshare/subshare/issues/45, then it definitely is the right strategy ;-)
+				// ... if https://github.com/subshare/subshare/issues/45 is fixed, now, then it can't be so wrong ;-)
 			}
 		}
 		
