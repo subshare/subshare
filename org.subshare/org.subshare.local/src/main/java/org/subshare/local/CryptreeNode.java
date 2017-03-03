@@ -384,44 +384,47 @@ public class CryptreeNode {
 
 		final HistoCryptoRepoFile previousHistoCryptoRepoFile = currentHistoCryptoRepoFile.getHistoCryptoRepoFile();
 
+		HistoCryptoRepoFile histoCryptoRepoFile = null;
 		Collection<HistoCryptoRepoFile> histoCryptoRepoFiles = hcrfDao.getHistoCryptoRepoFiles(cryptoRepoFile);
-		for (HistoCryptoRepoFile histoCryptoRepoFile : histoCryptoRepoFiles) {
-			if (histoFrame.equals(histoCryptoRepoFile.getHistoFrame())) {
+		for (HistoCryptoRepoFile hcrf : histoCryptoRepoFiles) {
+			if (histoFrame.equals(hcrf.getHistoFrame())) {
 //				createCollisionIfNeeded(histoCryptoRepoFile);
-				return histoCryptoRepoFile; // TODO is this the right strategy? Or should we better delete and recreate? I encountered this situation when aborting an up-sync and resuming later.
+				histoCryptoRepoFile = hcrf; // TODO is this the right strategy? Or should we better delete and recreate? I encountered this situation when aborting an up-sync and resuming later.
 //				throw new IllegalStateException("xxx");
 			}
 		}
-
-		HistoCryptoRepoFile histoCryptoRepoFile = new HistoCryptoRepoFile();
-		histoCryptoRepoFile.setCryptoRepoFile(cryptoRepoFile);
-		histoCryptoRepoFile.setPreviousHistoCryptoRepoFile(previousHistoCryptoRepoFile);
-		histoCryptoRepoFile.setHistoFrame(histoFrame);
-		final Date deleted = cryptoRepoFile.getDeleted();
-		histoCryptoRepoFile.setDeleted(deleted);
-		histoCryptoRepoFile.setDeletedByIgnoreRule(cryptoRepoFile.isDeletedByIgnoreRule());
-
-		final PlainCryptoKey plainCryptoKey = getActivePlainCryptoKeyOrCreate(CryptoKeyRole.dataKey, CipherOperationMode.ENCRYPT);
-		final CryptoKey cryptoKey = assertNotNull(plainCryptoKey, "plainCryptoKey").getCryptoKey();
-		histoCryptoRepoFile.setCryptoKey(assertNotNull(cryptoKey, "plainCryptoKey.cryptoKey"));
-
-		if (! cryptoKey.equals(cryptoRepoFile.getCryptoKey())) // sanity check: the key should not have changed inbetween! otherwise we might need a new CryptoChangeSet-upload to the server!!!
-			throw new IllegalStateException(String.format("cryptoKey != cryptoRepoFile.cryptoKey :: %s != %s",
-					cryptoKey, cryptoRepoFile.getCryptoKey()));
-
-		final byte[] repoFileDtoData;
-		if (deleted != null)
-//			repoFileDtoData = getRepoFileDtoDataForDeletedCryptoRepoFile(previousHistoCryptoRepoFile);
-			repoFileDtoData = context.repoFileDtoIo.serializeWithGz(assertNotNull(getRepoFileDto(), "getRepoFileDto()"));
-		else
-			repoFileDtoData = createRepoFileDtoDataForCryptoRepoFile(true);
-
-		histoCryptoRepoFile.setRepoFileDtoData(assertNotNull(encrypt(repoFileDtoData, plainCryptoKey), "encrypt(...)"));
-		histoCryptoRepoFile.setLastSyncFromRepositoryId(null);
-
-		sign(histoCryptoRepoFile);
-
-		histoCryptoRepoFile = hcrfDao.makePersistent(histoCryptoRepoFile);
+		
+		if (histoCryptoRepoFile == null) {
+			histoCryptoRepoFile = new HistoCryptoRepoFile();
+			histoCryptoRepoFile.setCryptoRepoFile(cryptoRepoFile);
+			histoCryptoRepoFile.setPreviousHistoCryptoRepoFile(previousHistoCryptoRepoFile);
+			histoCryptoRepoFile.setHistoFrame(histoFrame);
+			final Date deleted = cryptoRepoFile.getDeleted();
+			histoCryptoRepoFile.setDeleted(deleted);
+			histoCryptoRepoFile.setDeletedByIgnoreRule(cryptoRepoFile.isDeletedByIgnoreRule());
+	
+			final PlainCryptoKey plainCryptoKey = getActivePlainCryptoKeyOrCreate(CryptoKeyRole.dataKey, CipherOperationMode.ENCRYPT);
+			final CryptoKey cryptoKey = assertNotNull(plainCryptoKey, "plainCryptoKey").getCryptoKey();
+			histoCryptoRepoFile.setCryptoKey(assertNotNull(cryptoKey, "plainCryptoKey.cryptoKey"));
+	
+			if (! cryptoKey.equals(cryptoRepoFile.getCryptoKey())) // sanity check: the key should not have changed inbetween! otherwise we might need a new CryptoChangeSet-upload to the server!!!
+				throw new IllegalStateException(String.format("cryptoKey != cryptoRepoFile.cryptoKey :: %s != %s",
+						cryptoKey, cryptoRepoFile.getCryptoKey()));
+	
+			final byte[] repoFileDtoData;
+			if (deleted != null)
+	//			repoFileDtoData = getRepoFileDtoDataForDeletedCryptoRepoFile(previousHistoCryptoRepoFile);
+				repoFileDtoData = context.repoFileDtoIo.serializeWithGz(assertNotNull(getRepoFileDto(), "getRepoFileDto()"));
+			else
+				repoFileDtoData = createRepoFileDtoDataForCryptoRepoFile(true);
+	
+			histoCryptoRepoFile.setRepoFileDtoData(assertNotNull(encrypt(repoFileDtoData, plainCryptoKey), "encrypt(...)"));
+			histoCryptoRepoFile.setLastSyncFromRepositoryId(null);
+	
+			sign(histoCryptoRepoFile);
+	
+			histoCryptoRepoFile = hcrfDao.makePersistent(histoCryptoRepoFile);
+		}
 
 		currentHistoCryptoRepoFile.setHistoCryptoRepoFile(histoCryptoRepoFile);
 		currentHistoCryptoRepoFile.setLastSyncFromRepositoryId(null);
