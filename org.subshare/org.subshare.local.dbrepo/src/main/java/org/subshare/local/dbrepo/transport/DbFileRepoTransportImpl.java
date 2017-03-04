@@ -510,7 +510,8 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 
 			CurrentHistoCryptoRepoFile currentHistoCryptoRepoFile = CurrentHistoCryptoRepoFileDtoConverter.create(transaction).putCurrentHistoCryptoRepoFile(currentHistoCryptoRepoFileDto);
 			currentHistoCryptoRepoFile.setLastSyncFromRepositoryId(clientRepositoryId);
-			HistoCryptoRepoFile histoCryptoRepoFile = currentHistoCryptoRepoFile.getHistoCryptoRepoFile();
+			HistoCryptoRepoFile histoCryptoRepoFile = assertNotNull(currentHistoCryptoRepoFile.getHistoCryptoRepoFile(),
+					"currentHistoCryptoRepoFile[" + currentHistoCryptoRepoFileDto.getCryptoRepoFileId() + "].histoCryptoRepoFile");
 //			final HistoCryptoRepoFile histoCryptoRepoFile = HistoCryptoRepoFileDtoConverter.create(transaction).putHistoCryptoRepoFile(histoCryptoRepoFileDto);
 //
 //			// TO DO must sign CurrentHistoCryptoRepoFile on client-side and upload! DONE?!
@@ -528,6 +529,8 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 
 			for (final FileChunk fileChunk : normalFile.getFileChunks()) {
 				final FileChunkPayload fileChunkPayload = fileChunkPayloadDao.getFileChunkPayload(fileChunk);
+				assertNotNull(fileChunkPayload,
+						"fileChunkPayloadDao.getFileChunkPayload(fileChunk) :: fileChunk.normalFile.name='" + fileChunk.getNormalFile().getName() + "', fileChunk.offset=" + fileChunk.getOffset());
 				HistoFileChunk histoFileChunk = new HistoFileChunk();
 				histoFileChunk.setHistoCryptoRepoFile(histoCryptoRepoFile);
 //				histoFileChunk.setNormalFile(fileChunk.getNormalFile());
