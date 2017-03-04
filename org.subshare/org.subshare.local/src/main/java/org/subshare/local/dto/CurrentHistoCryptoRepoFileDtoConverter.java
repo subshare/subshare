@@ -59,7 +59,8 @@ public class CurrentHistoCryptoRepoFileDtoConverter {
 		final HistoCryptoRepoFile histoCryptoRepoFile;
 		if (histoCryptoRepoFileDto != null) {
 			histoCryptoRepoFile = HistoCryptoRepoFileDtoConverter.create(transaction).putHistoCryptoRepoFile(histoCryptoRepoFileDto);
-			cryptoRepoFile = histoCryptoRepoFile.getCryptoRepoFile();
+			cryptoRepoFile = assertNotNull(histoCryptoRepoFile.getCryptoRepoFile(),
+					"histoCryptoRepoFile[" + histoCryptoRepoFile.getHistoCryptoRepoFileId() + "].cryptoRepoFile");
 		}
 		else {
 			cryptoRepoFile = cryptoRepoFileDao.getCryptoRepoFileOrFail(currentHistoCryptoRepoFileDto.getCryptoRepoFileId());
