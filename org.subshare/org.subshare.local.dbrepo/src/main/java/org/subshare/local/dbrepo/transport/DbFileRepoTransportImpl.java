@@ -510,7 +510,7 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 
 			CurrentHistoCryptoRepoFile currentHistoCryptoRepoFile = CurrentHistoCryptoRepoFileDtoConverter.create(transaction).putCurrentHistoCryptoRepoFile(currentHistoCryptoRepoFileDto);
 			currentHistoCryptoRepoFile.setLastSyncFromRepositoryId(clientRepositoryId);
-			HistoCryptoRepoFile histoCryptoRepoFile = assertNotNull(currentHistoCryptoRepoFile.getHistoCryptoRepoFile(),
+			final HistoCryptoRepoFile histoCryptoRepoFile = assertNotNull(currentHistoCryptoRepoFile.getHistoCryptoRepoFile(),
 					"currentHistoCryptoRepoFile[" + currentHistoCryptoRepoFileDto.getCryptoRepoFileId() + "].histoCryptoRepoFile");
 //			final HistoCryptoRepoFile histoCryptoRepoFile = HistoCryptoRepoFileDtoConverter.create(transaction).putHistoCryptoRepoFile(histoCryptoRepoFileDto);
 //
