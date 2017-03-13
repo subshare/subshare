@@ -6,6 +6,8 @@ import static co.codewizards.cloudstore.core.util.StringUtil.*;
 
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.UUID;
@@ -526,19 +528,32 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 				if (fileChunk.getOffset() >= normalFileDto.getLength())
 					normalFile.getFileChunks().remove(fileChunk); // it's dependentElement => remove causes DELETE in DB
 			}
+			transaction.flush();
+
+			final Collection<HistoFileChunk> histoFileChunks = histoFileChunkDao.getHistoFileChunks(histoCryptoRepoFile);
+			final Map<Long, HistoFileChunk> offset2HistoFileChunk = new HashMap<>(histoFileChunks.size());
+			for (HistoFileChunk histoFileChunk : histoFileChunks)
+				offset2HistoFileChunk.put(histoFileChunk.getOffset(), histoFileChunk);
 
 			for (final FileChunk fileChunk : normalFile.getFileChunks()) {
 				final FileChunkPayload fileChunkPayload = fileChunkPayloadDao.getFileChunkPayload(fileChunk);
+				final long offset = fileChunk.getOffset();
 				assertNotNull(fileChunkPayload,
-						"fileChunkPayloadDao.getFileChunkPayload(fileChunk) :: fileChunk.normalFile.name='" + fileChunk.getNormalFile().getName() + "', fileChunk.offset=" + fileChunk.getOffset());
-				HistoFileChunk histoFileChunk = new HistoFileChunk();
+						"fileChunkPayloadDao.getFileChunkPayload(fileChunk) :: fileChunk.normalFile.name='" + fileChunk.getNormalFile().getName() + "', fileChunk.offset=" + offset);
+
+				HistoFileChunk histoFileChunk = offset2HistoFileChunk.remove(offset);
+				if (histoFileChunk == null)
+					histoFileChunk = new HistoFileChunk();
+
 				histoFileChunk.setHistoCryptoRepoFile(histoCryptoRepoFile);
 //				histoFileChunk.setNormalFile(fileChunk.getNormalFile());
-				histoFileChunk.setOffset(fileChunk.getOffset());
+				histoFileChunk.setOffset(offset);
 				histoFileChunk.setLength(fileChunk.getLength());
 				histoFileChunk.setFileChunkPayload(fileChunkPayload);
 				histoFileChunkDao.makePersistent(histoFileChunk);
 			}
+
+			histoFileChunkDao.deletePersistentAll(offset2HistoFileChunk.values());
 
 			normalFile.setInProgress(false);
 
