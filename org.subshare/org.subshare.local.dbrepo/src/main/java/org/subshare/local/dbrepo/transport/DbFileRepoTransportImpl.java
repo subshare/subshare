@@ -535,6 +535,8 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 			for (HistoFileChunk histoFileChunk : histoFileChunks)
 				offset2HistoFileChunk.put(histoFileChunk.getOffset(), histoFileChunk);
 
+			logger.info("endPutFile: offset2HistoFileChunk contains {} entries already in DB: {}", offset2HistoFileChunk.size(), offset2HistoFileChunk);
+
 			for (final FileChunk fileChunk : normalFile.getFileChunks()) {
 				final FileChunkPayload fileChunkPayload = fileChunkPayloadDao.getFileChunkPayload(fileChunk);
 				final long offset = fileChunk.getOffset();
@@ -553,7 +555,12 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 				histoFileChunkDao.makePersistent(histoFileChunk);
 			}
 
-			histoFileChunkDao.deletePersistentAll(offset2HistoFileChunk.values());
+			if (offset2HistoFileChunk.isEmpty())
+				logger.info("endPutFile: offset2HistoFileChunk is now empty => nothing to delete.");
+			else {
+				logger.info("endPutFile: offset2HistoFileChunk contains {} entries to be deleted: {}", offset2HistoFileChunk.size(), offset2HistoFileChunk);
+				histoFileChunkDao.deletePersistentAll(offset2HistoFileChunk.values());
+			}
 
 			normalFile.setInProgress(false);
 
