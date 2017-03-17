@@ -21,6 +21,19 @@ allprojects {
 
 	[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
+
+	project.ext.mavenDeployerRepoUrl = "file:/tmp/maven"
+	
+	def mavenDeployerRepoUrlSysProp = System.getProperty("mavenDeployerRepoUrl");
+	if (mavenDeployerRepoUrlSysProp != null && ! mavenDeployerRepoUrlSysProp.isEmpty())
+		project.ext.mavenDeployerRepoUrl = mavenDeployerRepoUrlSysProp;
+	
+	if (version.endsWith("-SNAPSHOT"))
+		project.ext.mavenDeployerRepoUrl = project.ext.mavenDeployerRepoUrl + "/snapshot";
+	else
+		project.ext.mavenDeployerRepoUrl = project.ext.mavenDeployerRepoUrl + "/release";
+
+
 	repositories {
 		mavenCentral()
 
@@ -37,6 +50,14 @@ allprojects {
 		maven {
 			url 'http://cloudstore.codewizards.co/maven/release'
 		}
+
+		maven {
+			url 'http://subshare.org/maven/snapshot'
+		}
+		maven {
+			url 'http://subshare.org/maven/release'
+		}
+
 		maven {
 			url 'http://www.datanucleus.org/downloads/maven2-nightly'
 		}
@@ -76,6 +97,14 @@ allprojects {
 		classpath {
 			downloadSources = true
 		}
+	}
+
+	uploadArchives {
+	    repositories {
+	        mavenDeployer {
+	            repository(url: mavenDeployerRepoUrl)
+	        }
+	    }
 	}
 }
 
