@@ -2,6 +2,7 @@ package org.subshare.core.pgp.gnupg;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -9,6 +10,7 @@ import java.util.IdentityHashMap;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import org.bouncycastle.openpgp.wot.IoFile;
 import org.bouncycastle.openpgp.wot.TrustDb;
 import org.bouncycastle.openpgp.wot.key.PgpKeyRegistry;
 import org.slf4j.Logger;
@@ -35,7 +37,12 @@ public class TrustDbFactory {
 	public synchronized TrustDb createTrustDb() {
 		if (trustDb == null) {
 			logger.debug("createTrustDb: Creating *real* TrustDb instance.");
-			trustDb = TrustDb.Helper.createInstance(trustDbFile.getIoFile(), pgpKeyRegistry);
+			try {
+				trustDb = TrustDb.Helper.createInstance(
+						new IoFile(trustDbFile.getIoFile()), pgpKeyRegistry);
+			} catch (IOException x) {
+				throw new RuntimeException(x);
+			}
 		}
 		else
 			logger.trace("createTrustDb: Using existing *real* TrustDb instance.");

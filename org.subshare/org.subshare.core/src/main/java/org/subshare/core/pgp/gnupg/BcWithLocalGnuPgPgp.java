@@ -72,6 +72,7 @@ import org.bouncycastle.openpgp.operator.bc.BcPBESecretKeyEncryptorBuilder;
 import org.bouncycastle.openpgp.operator.bc.BcPGPContentSignerBuilder;
 import org.bouncycastle.openpgp.operator.bc.BcPGPDigestCalculatorProvider;
 import org.bouncycastle.openpgp.operator.bc.BcPGPKeyPair;
+import org.bouncycastle.openpgp.wot.IoFile;
 import org.bouncycastle.openpgp.wot.OwnerTrust;
 import org.bouncycastle.openpgp.wot.TrustDb;
 import org.bouncycastle.openpgp.wot.Validity;
@@ -1699,8 +1700,14 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 
 	protected PgpKeyRegistry getPgpKeyRegistry()
 	{
-		if (pgpKeyRegistry == null)
-			pgpKeyRegistry = PgpKeyRegistry.Helper.createInstance(getPubringFile().getIoFile(), getSecringFile().getIoFile());
+		if (pgpKeyRegistry == null) {
+			try {
+				pgpKeyRegistry = PgpKeyRegistry.Helper.createInstance(
+						new IoFile(getPubringFile().getIoFile()), new IoFile(getSecringFile().getIoFile()));
+			} catch (IOException x) {
+				throw new RuntimeException(x);
+			}
+		}
 
 		return pgpKeyRegistry;
 	}
