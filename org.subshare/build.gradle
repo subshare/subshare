@@ -65,7 +65,9 @@ allprojects {
 
 	project.ext.subshareVersion = version
 
-	project.ext.bouncycastleVersion = '1.52'
+	project.ext.bouncycastleVersion = '1.56'
+	project.ext.bouncycastleWotVersion = bouncycastleVersion + '.0';
+
 	project.ext.cloudstoreVersion = '0.10.0-SNAPSHOT'
 //	project.ext.cloudstoreVersion = '0.10.0'
 	project.ext.slf4jVersion = '1.7.7'
