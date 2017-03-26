@@ -88,8 +88,7 @@ extends AbstractCipher
 	public int update(final byte[] in, final int inOff, final int inLen, final byte[] out, final int outOff)
 	throws DataLengthException, IllegalStateException, CryptoException
 	{
-		delegate.processBytes(in, inOff, inLen, out, outOff);
-		return inLen;
+		return delegate.processBytes(in, inOff, inLen, out, outOff);
 	}
 
 	@Override

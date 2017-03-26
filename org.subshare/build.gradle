@@ -45,22 +45,16 @@ allprojects {
 		mavenLocal()
 
 		maven {
-			url 'http://cloudstore.codewizards.co/maven/snapshot'
+			url 'https://codewizards.co/maven/release'
 		}
 		maven {
-			url 'http://cloudstore.codewizards.co/maven/release'
+			url 'https://codewizards.co/maven/snapshot'
 		}
 
-		maven {
-			url 'http://subshare.org/maven/snapshot'
-		}
-		maven {
-			url 'http://subshare.org/maven/release'
-		}
-
-		maven {
-			url 'http://www.datanucleus.org/downloads/maven2-nightly'
-		}
+// The following is only needed for snapshots -- and we use release-versions only for quite a while.
+//		maven {
+//			url 'http://www.datanucleus.org/downloads/maven2-nightly'
+//		}
 	}
 
 	project.ext.subshareVersion = version
