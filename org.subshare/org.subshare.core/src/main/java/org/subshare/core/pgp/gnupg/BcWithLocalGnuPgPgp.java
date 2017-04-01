@@ -138,6 +138,8 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 
 	private static final List<File> deleteDirsOnExit = new CopyOnWriteArrayList<>();
 
+	private static final String GPG_2_1_SECRET_KEYS_MIGRATED_FILE_NAME = ".gpg-v21-migrated";
+
 	@SuppressWarnings("unused")
 	private final Object finalizer = new Object() {
 		@Override
@@ -586,6 +588,8 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 
 			// ensure that it's re-loaded.
 			secringFileLastModified = 0;
+
+			deleteGpg21SecretKeysMigratedFile();
 			return true;
 		}
 		return false;
@@ -1799,6 +1803,36 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 
 		} catch (IOException | PGPException e) {
 			throw new RuntimeException(e);
+		}
+	}
+
+	/**
+	 * When our user uses GnuPG 2.1, we want it to re-run the migration of the secret keys. Therefore,
+	 * we delete its marker file. This causes it to migrate our newly created/imported secret key(s).
+	 */
+	private void deleteGpg21SecretKeysMigratedFile() {
+		try {
+			final File gpg21SecretKeysMigratedFile = getGnuPgDir().createFile(GPG_2_1_SECRET_KEYS_MIGRATED_FILE_NAME);
+
+			if (! gpg21SecretKeysMigratedFile.exists()) {
+				logger.debug("deleteGpg21SecretKeysMigratedFile: File does not exist (skipping): {}", gpg21SecretKeysMigratedFile);
+				return;
+			}
+
+			if (! gpg21SecretKeysMigratedFile.isFile()) {
+				logger.debug("deleteGpg21SecretKeysMigratedFile: File exists, but is not a normal file (skipping): {}", gpg21SecretKeysMigratedFile);
+				return;
+			}
+
+			gpg21SecretKeysMigratedFile.delete();
+			if (gpg21SecretKeysMigratedFile.isFile()) {
+				logger.warn("deleteGpg21SecretKeysMigratedFile: Deleting file failed (permissions?): {}", gpg21SecretKeysMigratedFile);
+				return;
+			}
+
+			logger.info("deleteGpg21SecretKeysMigratedFile: File deleted: {}", gpg21SecretKeysMigratedFile);
+		} catch (Exception x) {
+			logger.warn("deleteGpg21SecretKeysMigratedFile: " + x, x);
 		}
 	}
 }
