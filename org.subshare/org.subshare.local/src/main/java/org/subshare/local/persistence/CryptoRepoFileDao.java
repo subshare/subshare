@@ -116,15 +116,61 @@ public class CryptoRepoFileDao extends Dao<CryptoRepoFile, CryptoRepoFileDao> {
 			query.closeAll();
 		}
 	}
-
-	public CryptoRepoFile getChildCryptoRepoFile(final CryptoRepoFile parent, final String localName) {
-		final Query query = pm().newNamedQuery(getEntityClass(), "getChildCryptoRepoFile_parent_localName");
+	
+	/**
+	 * @deprecated For debugging only. This situation should not exist -- or it needs special treatment -- let's see...
+	 */
+	protected Collection<CryptoRepoFile> getChildCryptoRepoFiles(final CryptoRepoFile parent, final String localName) {
+		// parent may be null, if we look for the root -- very unlikely, but possible.
+		assertNotNull(localName, "localName");
+		final Query query = pm().newNamedQuery(getEntityClass(), "getChildCryptoRepoFiles_parent_localName");
 		try {
-			final CryptoRepoFile cryptoRepoFile = (CryptoRepoFile) query.execute(parent, localName);
-			return cryptoRepoFile;
+			long startTimestamp = System.currentTimeMillis();
+			@SuppressWarnings("unchecked")
+			Collection<CryptoRepoFile> cryptoRepoFiles = (Collection<CryptoRepoFile>) query.execute(parent, localName);
+			logger.debug("getChildCryptoRepoFiles: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
+
+			startTimestamp = System.currentTimeMillis();
+			cryptoRepoFiles = load(cryptoRepoFiles);
+			logger.debug("getChildCryptoRepoFiles: Loading result-set with {} elements took {} ms.", cryptoRepoFiles.size(), System.currentTimeMillis() - startTimestamp);
+
+			return cryptoRepoFiles;
 		} finally {
 			query.closeAll();
 		}
+	}
+
+	public CryptoRepoFile getChildCryptoRepoFile(final CryptoRepoFile parent, final String localName) {
+		// parent may be null, if we look for the root -- very unlikely, but possible.
+		assertNotNull(localName, "localName");
+
+		// old impl with UNIQUE query:
+//		final Query query = pm().newNamedQuery(getEntityClass(), "getChildCryptoRepoFile_parent_localName");
+//		try {
+//			final CryptoRepoFile cryptoRepoFile = (CryptoRepoFile) query.execute(parent, localName);
+//			return cryptoRepoFile;
+//		} finally {
+//			query.closeAll();
+//		}
+
+		// new impl giving us a better error with more infos:
+		Collection<CryptoRepoFile> childCryptoRepoFiles = getChildCryptoRepoFiles(parent, localName);
+		
+		if (childCryptoRepoFiles.isEmpty())
+			return null;
+		
+		if (childCryptoRepoFiles.size() == 1)
+			return childCryptoRepoFiles.iterator().next();
+		
+		
+		Uid parentCryptoRepoFileId = parent == null ? null : parent.getCryptoRepoFileId();
+		String parentLocalName = parent == null ? null : parent.getLocalName();
+
+		logger.error("getChildCryptoRepoFile: Expected 0 or 1, but found multiple child-CryptoRepoFiles! parentCryptoRepoFileId={}, parentLocalName={}, localName={}, childCryptoRepoFiles={}",
+				parentCryptoRepoFileId, parentLocalName, localName, childCryptoRepoFiles);
+
+		throw new IllegalStateException(String.format("Expected 0 or 1, but found multiple child-CryptoRepoFiles! parentCryptoRepoFileId=%s, parentLocalName=%s, localName=%s",
+				parentCryptoRepoFileId, parentLocalName, localName));
 	}
 
 	public CryptoRepoFile getRootCryptoRepoFile() {

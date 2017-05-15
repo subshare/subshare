@@ -66,7 +66,8 @@ import co.codewizards.cloudstore.local.persistence.RepoFile;
 })
 @Queries({
 	@Query(name="getChildCryptoRepoFiles_parent", value="SELECT WHERE this.parent == :parent"),
-	@Query(name="getChildCryptoRepoFile_parent_localName", value="SELECT UNIQUE WHERE this.parent == :parent && this.localName == :localName"),
+//	@Query(name="getChildCryptoRepoFile_parent_localName", value="SELECT UNIQUE WHERE this.parent == :parent && this.localName == :localName"),
+	@Query(name="getChildCryptoRepoFiles_parent_localName", value="SELECT WHERE this.parent == :parent && this.localName == :localName"),
 	@Query(name="getCryptoRepoFile_repoFile", value="SELECT UNIQUE WHERE this.repoFile == :repoFile"),
 	@Query(name="getCryptoRepoFilesWithoutRepoFileAndNotDeleted", value="SELECT WHERE this.repoFile == null && this.deleted == null"),
 	@Query(name="getCryptoRepoFile_cryptoRepoFileId", value="SELECT UNIQUE WHERE this.cryptoRepoFileId == :cryptoRepoFileId"),
