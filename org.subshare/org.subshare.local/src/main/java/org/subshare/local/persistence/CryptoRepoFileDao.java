@@ -2,9 +2,11 @@ package org.subshare.local.persistence;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -118,7 +120,7 @@ public class CryptoRepoFileDao extends Dao<CryptoRepoFile, CryptoRepoFileDao> {
 	}
 	
 	/**
-	 * @deprecated For debugging only. This situation should not exist -- or it needs special treatment -- let's see...
+	 * @deprecated Only temporarily for debugging.
 	 */
 	protected Collection<CryptoRepoFile> getChildCryptoRepoFiles(final CryptoRepoFile parent, final String localName) {
 		// parent may be null, if we look for the root -- very unlikely, but possible.
@@ -144,16 +146,6 @@ public class CryptoRepoFileDao extends Dao<CryptoRepoFile, CryptoRepoFileDao> {
 		// parent may be null, if we look for the root -- very unlikely, but possible.
 		assertNotNull(localName, "localName");
 
-		// old impl with UNIQUE query:
-//		final Query query = pm().newNamedQuery(getEntityClass(), "getChildCryptoRepoFile_parent_localName");
-//		try {
-//			final CryptoRepoFile cryptoRepoFile = (CryptoRepoFile) query.execute(parent, localName);
-//			return cryptoRepoFile;
-//		} finally {
-//			query.closeAll();
-//		}
-
-		// new impl giving us a better error with more infos:
 		Collection<CryptoRepoFile> childCryptoRepoFiles = getChildCryptoRepoFiles(parent, localName);
 		
 		if (childCryptoRepoFiles.isEmpty())
@@ -161,16 +153,37 @@ public class CryptoRepoFileDao extends Dao<CryptoRepoFile, CryptoRepoFileDao> {
 		
 		if (childCryptoRepoFiles.size() == 1)
 			return childCryptoRepoFiles.iterator().next();
-		
-		
+
 		Uid parentCryptoRepoFileId = parent == null ? null : parent.getCryptoRepoFileId();
 		String parentLocalName = parent == null ? null : parent.getLocalName();
 
-		logger.error("getChildCryptoRepoFile: Expected 0 or 1, but found multiple child-CryptoRepoFiles! parentCryptoRepoFileId={}, parentLocalName={}, localName={}, childCryptoRepoFiles={}",
+		logger.error("getChildCryptoRepoFile: Expected 0 or 1, but found multiple child-CryptoRepoFiles! https://github.com/subshare/subshare/issues/50 parentCryptoRepoFileId={}, parentLocalName={}, localName={}, childCryptoRepoFiles={}",
 				parentCryptoRepoFileId, parentLocalName, localName, childCryptoRepoFiles);
 
-		throw new IllegalStateException(String.format("Expected 0 or 1, but found multiple child-CryptoRepoFiles! parentCryptoRepoFileId=%s, parentLocalName=%s, localName=%s",
-				parentCryptoRepoFileId, parentLocalName, localName));
+		// *** https://github.com/subshare/subshare/issues/50 ***
+		// This is a work-around:
+
+		// First check, if we have *one* non-deleted entry and all others are deleted -- then we return the *one* non-deleted.
+		List<CryptoRepoFile> nonDeletedCrfs = new ArrayList<>();
+		for (CryptoRepoFile crf : childCryptoRepoFiles) {
+			if (crf.getDeleted() == null)
+				nonDeletedCrfs.add(crf);
+		}
+		if (nonDeletedCrfs.size() == 1)
+			return nonDeletedCrfs.get(0);
+
+		if (nonDeletedCrfs.size() > 1) {
+			throw new IllegalStateException(String.format("Found multiple (%s) non-deleted child-CryptoRepoFiles! parentCryptoRepoFileId=%s, parentLocalName=%s, localName=%s",
+					nonDeletedCrfs.size(), parentCryptoRepoFileId, parentLocalName, localName));
+		}
+
+		// All of them are deleted => return the newest one.
+		CryptoRepoFile result = null;
+		for (CryptoRepoFile crf : childCryptoRepoFiles) {
+			if (result == null || result.getSignature().getSignatureCreated().before(crf.getSignature().getSignatureCreated()))
+				result = crf;
+		}
+		return result;
 	}
 
 	public CryptoRepoFile getRootCryptoRepoFile() {
