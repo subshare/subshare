@@ -502,10 +502,12 @@ public class CryptreeNode {
 		}
 		else {
 //			assertNotNull(histoCryptoRepoFile2, "histoCryptoRepoFile2");
-			IllegalStateException x = new IllegalStateException(String.format("duplicateCryptoRepoFile and histoCryptoRepoFile2 are both null!!! cryptoRepoFile=%s localPath=%s localHistoCryptoRepoFile=%s remoteHistoCryptoRepoFile=%s",
-					cryptoRepoFile, localPath, localHistoCryptoRepoFile, remoteHistoCryptoRepoFile));
-			logger.warn("createCollisionIfNeeded: " + x.toString(), x);
-			return null;
+			if (histoCryptoRepoFile2 == null) {
+				IllegalStateException x = new IllegalStateException(String.format("duplicateCryptoRepoFile and histoCryptoRepoFile2 are both null!!! cryptoRepoFile=%s localPath=%s localHistoCryptoRepoFile=%s remoteHistoCryptoRepoFile=%s",
+						cryptoRepoFile, localPath, localHistoCryptoRepoFile, remoteHistoCryptoRepoFile));
+				logger.warn("createCollisionIfNeeded: " + x.toString(), x);
+				return null;
+			}
 		}
 
 		assertNotNull(histoCryptoRepoFile1, "histoCryptoRepoFile1");
