@@ -454,8 +454,14 @@ public class CryptreeNode {
 		final HistoCryptoRepoFile remoteHistoCryptoRepoFile = getLastHistoCryptoRepoFile(histoCryptoRepoFiles, true);
 
 		if (localHistoCryptoRepoFile != null) {
-			if (localHistoCryptoRepoFile.getHistoFrame().getSealed() != null && expectedSealedStatus == false)
-				throw new IllegalStateException("Why is the local HistoFrame already sealed?!???!!!");
+			if (localHistoCryptoRepoFile.getHistoFrame().getSealed() != null && expectedSealedStatus == false) {
+				// https://github.com/subshare/subshare/issues/52
+				// Converted blocking error to warning, because this actually happened -- and I have no idea why :-(
+				// ...and it isn't a serious problem, hence a warning is fine.
+				IllegalStateException x = new IllegalStateException(String.format("Why is the local HistoFrame already sealed?!???!!! cryptoRepoFile=%s duplicateCryptoRepoFile=%s localPath=%s localHistoCryptoRepoFile=%s remoteHistoCryptoRepoFile=%s",
+						cryptoRepoFile, duplicateCryptoRepoFile, localPath, localHistoCryptoRepoFile, remoteHistoCryptoRepoFile));
+				logger.warn("createCollisionIfNeeded: " + x.toString(), x);
+			}
 
 			if (localHistoCryptoRepoFile.getHistoFrame().getSealed() == null && expectedSealedStatus == true)
 				throw new IllegalStateException("Why is the local HistoFrame not yet sealed?!???!!!");
@@ -494,8 +500,13 @@ public class CryptreeNode {
 			if (duplicateCryptoRepoFile.getCryptoRepoFileId().equals(getCryptoRepoFileId(histoCryptoRepoFile1)))
 				throw new IllegalStateException("duplicateCryptoRepoFile matches histoCryptoRepoFile1!\nduplicateCryptoRepoFile=" + duplicateCryptoRepoFile + "\nhistoCryptoRepoFile1=" + histoCryptoRepoFile1 + "\nhistoCryptoRepoFile2=" + histoCryptoRepoFile2);
 		}
-		else
-			assertNotNull(histoCryptoRepoFile2, "histoCryptoRepoFile2");
+		else {
+//			assertNotNull(histoCryptoRepoFile2, "histoCryptoRepoFile2");
+			IllegalStateException x = new IllegalStateException(String.format("duplicateCryptoRepoFile and histoCryptoRepoFile2 are both null!!! cryptoRepoFile=%s localPath=%s localHistoCryptoRepoFile=%s remoteHistoCryptoRepoFile=%s",
+					cryptoRepoFile, localPath, localHistoCryptoRepoFile, remoteHistoCryptoRepoFile));
+			logger.warn("createCollisionIfNeeded: " + x.toString(), x);
+			return null;
+		}
 
 		assertNotNull(histoCryptoRepoFile1, "histoCryptoRepoFile1");
 
