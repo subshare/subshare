@@ -25,7 +25,7 @@ import co.codewizards.cloudstore.core.repo.transport.RepoTransport;
 import co.codewizards.cloudstore.core.repo.transport.RepoTransportFactory;
 import co.codewizards.cloudstore.core.repo.transport.RepoTransportFactoryRegistry;
 import co.codewizards.cloudstore.core.util.UrlUtil;
-import javafx.util.Pair;
+import co.codewizards.cloudstore.core.util.Pair;
 
 public class ServerRepoManagerImpl implements ServerRepoManager {
 
