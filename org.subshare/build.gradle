@@ -62,13 +62,8 @@ allprojects {
 	project.ext.bouncycastleVersion = '1.56'
 	project.ext.bouncycastleWotVersion = bouncycastleVersion + '.1';
 
-<<<<<<< HEAD
 //	project.ext.cloudstoreVersion = '0.10.2-SNAPSHOT'
 	project.ext.cloudstoreVersion = '0.10.1'
-=======
-	project.ext.cloudstoreVersion = '0.10.1-SNAPSHOT'
-//	project.ext.cloudstoreVersion = '0.10.1'
->>>>>>> branch 'master' of https://github.com/subshare/subshare.git
 	project.ext.slf4jVersion = '1.7.7'
 	project.ext.logbackVersion = '1.0.13'
 
