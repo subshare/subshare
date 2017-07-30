@@ -174,10 +174,25 @@ public class BrokenSignatureIT extends AbstractRepoToRepoSyncIT {
 			fail("The broken signature was not detected by the server! caseRandom=" + caseRandom);
 		} catch (final SignatureException x) {
 			logger.info("Caught expected SignatureException: " + x, x);
-			final RemoteException remoteException = ExceptionUtil.getCause(x, RemoteException.class);
-			if (remoteException == null)
+//			final RemoteException remoteException = ExceptionUtil.getCause(x, RemoteException.class);
+//			if (remoteException == null)
+			if (! containsStackTraceElement(x, "org.eclipse.jetty.servlet.ServletHandler", "doHandle"))
 				fail("The broken signature was detected by the client; it should have been sent to the server and detected there! We have to change our code or this test!");
 		}
+	}
+
+	private static boolean containsStackTraceElement(final Throwable throwable, final String className, final String methodName) {
+		Throwable t = assertNotNull(throwable, "throwable");
+		assertNotNull(className, "className");
+		assertNotNull(methodName, "methodName");
+		while (t != null) {
+			for (StackTraceElement ste : t.getStackTrace()) {
+				if (className.equals(ste.getClassName()) && methodName.equals(ste.getMethodName()))
+					return true;
+			}
+			t = t.getCause();
+		}
+		return false;
 	}
 
 	@Test
