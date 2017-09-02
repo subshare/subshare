@@ -2,16 +2,18 @@ package org.subshare.core.fbor;
 
 import static co.codewizards.cloudstore.core.io.StreamUtil.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static co.codewizards.cloudstore.core.util.IOUtil.*;
+import static co.codewizards.cloudstore.core.util.Util.*;
 import static org.subshare.core.file.FileConst.*;
 
-import co.codewizards.cloudstore.core.io.ByteArrayInputStream;
-import co.codewizards.cloudstore.core.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.SortedMap;
@@ -23,15 +25,40 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import co.codewizards.cloudstore.core.io.ByteArrayInputStream;
+import co.codewizards.cloudstore.core.io.ByteArrayOutputStream;
 import co.codewizards.cloudstore.core.io.LockFile;
 import co.codewizards.cloudstore.core.io.LockFileFactory;
 import co.codewizards.cloudstore.core.io.NoCloseInputStream;
 import co.codewizards.cloudstore.core.io.NoCloseOutputStream;
 import co.codewizards.cloudstore.core.oio.File;
+import co.codewizards.cloudstore.core.oio.FileFilter;
+import co.codewizards.cloudstore.core.util.IOUtil;
 
 public abstract class FileBasedObjectRegistry {
 
+	private static final Logger logger = LoggerFactory.getLogger(FileBasedObjectRegistry.class);
+
 	private static final long DEFERRED_WRITE_DELAY_MS = 30_000;
+
+	/**
+	 * Keep this number of backup files.
+	 * <p>
+	 * There may exist more, though, because no file younger than
+	 * {@link #BACKUP_DELETE_MIN_AGE_MSEC} is deleted!
+	 * @see #BACKUP_DELETE_MIN_AGE_MSEC
+	 */
+	private static final int BACKUP_KEEP_MAX_FILE_QTY = 10;
+
+	/**
+	 * Delete a backup file only, if its backup timestamp (not the file age) is older
+	 * than this number of milliseconds.
+	 * @see #BACKUP_KEEP_MAX_FILE_QTY
+	 */
+	private static final long BACKUP_DELETE_MIN_AGE_MSEC = 2L * 24L * 3600L * 1000L;
 
 	protected FileBasedObjectRegistry() {
 		Runtime.getRuntime().addShutdownHook(new Thread(getClass().getSimpleName() + ".shutdownHook") {
@@ -96,6 +123,7 @@ public abstract class FileBasedObjectRegistry {
 
 	protected synchronized void write() {
 		try (LockFile lockFile = acquireLockFile();) {
+			backup(lockFile);
 			try (final OutputStream out = castStream(lockFile.createOutputStream())) {
 				write(out);
 			}
@@ -311,5 +339,104 @@ public abstract class FileBasedObjectRegistry {
 		w.write('=');
 		w.write(value);
 		w.write('\n');
+	}
+
+	private void backup(final LockFile lockFile) throws IOException {
+		final File origFile = assertNotNull(lockFile, "lockFile").getFile();
+		if (origFile.length() == 0)
+			return;
+
+		final File backupDir = origFile.getParentFile().createFile("backup");
+		if (! backupDir.isDirectory())
+			backupDir.mkdir();
+
+		if (! backupDir.isDirectory())
+			throw new IOException("Creating directory failed: " + backupDir.getAbsolutePath());
+
+		final String origFileName = origFile.getName();
+		final String fileNameWithoutExtension = getFileNameWithoutExtension(origFileName);
+		final String fileExtension = getFileExtension(origFileName);
+
+		deleteOldBackupFiles(backupDir, fileNameWithoutExtension, fileExtension);
+
+		final File backupFile = backupDir.createFile(
+				String.format("%s.%s.%s", fileNameWithoutExtension, Long.toString(System.currentTimeMillis(), 36), fileExtension));
+
+		try (final InputStream in = castStream(lockFile.createInputStream())) {
+			try (final OutputStream out = castStream(backupFile.createOutputStream())) {
+				transferStreamData(in, out);
+			}
+		}
+		backupFile.setLastModified(origFile.lastModified());
+	}
+
+	private void deleteOldBackupFiles(final File backupDir, final String fileNameWithoutExtension, final String fileExtension) {
+		assertNotNull(backupDir, "backupDir");
+		assertNotNull(fileNameWithoutExtension, "fileNameWithoutExtension");
+
+		List<File> backupFiles = getBackupFiles(backupDir, fileNameWithoutExtension, fileExtension);
+		SortedMap<Long, File> backupTimestamp2File = new TreeMap<>();
+
+		for (File backupFile : backupFiles) {
+			try {
+				final String name = backupFile.getName();
+				final String fnwe = getFileNameWithoutExtension(name);
+				final String backupTimestampString = assertNotNull(getFileExtension(fnwe), "getFileExtension('" + fnwe + "')");
+				final long backupTimestamp = Long.parseLong(backupTimestampString, 36);
+				backupTimestamp2File.put(backupTimestamp, backupFile);
+			} catch (Exception x) {
+				logger.error("deleteOldBackupFiles: " + x, x);
+				backupFile.delete();
+			}
+		}
+
+		final int maxFilesToDelete = Math.max(0,
+				backupTimestamp2File.size() - BACKUP_KEEP_MAX_FILE_QTY + 1); // +1, because we're just about to create yet one more backup-file.
+		final long maxBackupTimestampToDelete = System.currentTimeMillis() - BACKUP_DELETE_MIN_AGE_MSEC;
+
+		int deletedFilesQty = 0;
+		for (final Map.Entry<Long, File> me : backupTimestamp2File.entrySet()) {
+			if (deletedFilesQty >= maxFilesToDelete)
+				return;
+
+			final long backupTimestamp = me.getKey();
+			if (backupTimestamp >= maxBackupTimestampToDelete)
+				return;
+
+			final File backupFile = me.getValue();
+
+			backupFile.delete();
+			if (backupFile.exists())
+				logger.error("Deleting file failed: {}", backupFile.getAbsolutePath());
+
+			++deletedFilesQty;
+		}
+	}
+
+	/**
+	 * Gets the backup-files in the given {@code backupDir} matching the given name-without-extension and
+	 * extension.
+	 * @param backupDir the backup-directory. Must not be <code>null</code>.
+	 * @param fileNameWithoutExtension the file-name without file-extension. Must not be <code>null</code>.
+	 * See {@link IOUtil#getFileNameWithoutExtension(String)}.
+	 * @param fileExtension the file-extension or <code>null</code>. See {@link IOUtil#getFileExtension(String)}.
+	 * @return the matching backup-files. Never <code>null</code>.
+	 */
+	private List<File> getBackupFiles(final File backupDir, final String fileNameWithoutExtension, final String fileExtension) {
+		assertNotNull(backupDir, "backupDir");
+		assertNotNull(fileNameWithoutExtension, "fileNameWithoutExtension");
+		final String fileNameWithoutExtensionWithDot = fileNameWithoutExtension + '.';
+
+		File[] files = backupDir.listFiles(new FileFilter() {
+			@Override
+			public boolean accept(File file) {
+				final String name = file.getName();
+				final String fnwe = getFileNameWithoutExtension(name);
+				final String fe = getFileExtension(name);
+				return fnwe.startsWith(fileNameWithoutExtensionWithDot) && equal(fileExtension, fe);
+			}
+		});
+
+		return Arrays.asList(files);
 	}
 }

@@ -21,4 +21,6 @@ public interface PgpPrivateKeyPassphraseStore {
 	void putPassphrase(PgpKeyId pgpKeyId, char[] passphrase) throws SecurityException;
 
 	Set<PgpKeyId> getPgpKeyIdsHavingPassphrase();
+
+	void clear();
 }

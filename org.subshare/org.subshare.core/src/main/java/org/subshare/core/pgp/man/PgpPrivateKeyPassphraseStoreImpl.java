@@ -89,4 +89,9 @@ public class PgpPrivateKeyPassphraseStoreImpl implements PgpPrivateKeyPassphrase
 	public synchronized Set<PgpKeyId> getPgpKeyIdsHavingPassphrase() {
 		return Collections.unmodifiableSet(new HashSet<PgpKeyId>(pgpKeyId2Passphrase.keySet()));
 	}
+
+	@Override
+	public synchronized void clear() {
+		pgpKeyId2Passphrase.clear();
+	}
 }

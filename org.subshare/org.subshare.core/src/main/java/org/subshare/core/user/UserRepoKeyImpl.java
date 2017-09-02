@@ -43,7 +43,7 @@ import co.codewizards.cloudstore.core.io.ByteArrayOutputStream;
 public class UserRepoKeyImpl implements UserRepoKey {
 	private final Uid userRepoKeyId;
 	private final UUID serverRepositoryId;
-	private final AsymmetricCipherKeyPair keyPair;
+	private AsymmetricCipherKeyPair keyPair;
 	private final Date validTo; // TODO this - at least - should be signed!
 	private final boolean invitation;
 	private PublicKeyWithSignatureImpl publicKey;
@@ -74,7 +74,7 @@ public class UserRepoKeyImpl implements UserRepoKey {
 		this.invitation = invitation;
 
 		// TODO should we maybe defer the decryption until later, when the key is actually used?!
-		this.keyPair = new AsymmetricCipherKeyPair(verifyPublicKeyData(), decryptVerifyPrivateKeyData());
+//		this.keyPair = new AsymmetricCipherKeyPair(verifyPublicKeyData(), decryptVerifyPrivateKeyData());
 	}
 
 	@Override
@@ -89,6 +89,9 @@ public class UserRepoKeyImpl implements UserRepoKey {
 
 	@Override
 	public AsymmetricCipherKeyPair getKeyPair() {
+		if (keyPair == null)
+			keyPair = new AsymmetricCipherKeyPair(verifyPublicKeyData(), decryptVerifyPrivateKeyData());
+
 		return keyPair;
 	}
 
@@ -96,7 +99,8 @@ public class UserRepoKeyImpl implements UserRepoKey {
 	public PublicKeyWithSignature getPublicKey() {
 		if (publicKey == null)
 			publicKey = new PublicKeyWithSignatureImpl(
-					getUserRepoKeyId(), getServerRepositoryId(), getKeyPair().getPublic(),
+					getUserRepoKeyId(), getServerRepositoryId(),
+					keyPair == null ? verifyPublicKeyData() : keyPair.getPublic(),
 					getSignedPublicKeyData(), getValidTo(), isInvitation());
 
 		return publicKey;

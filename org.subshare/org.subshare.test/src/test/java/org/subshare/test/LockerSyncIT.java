@@ -554,8 +554,7 @@ public class LockerSyncIT extends AbstractIT {
 	protected UserRegistry createUserRegistry(String ownerName) throws Exception {
 		setupPgp(ownerName);
 
-		UserRegistry userRegistry = new UserRegistryImpl() { // protected constructor => subclass ;-)
-		};
+		UserRegistry userRegistry = invokeConstructor(UserRegistryImpl.class);
 		location2UserRegistry.put(location, userRegistry);
 		return userRegistry;
 	}
@@ -563,8 +562,7 @@ public class LockerSyncIT extends AbstractIT {
 	protected ServerRegistry createServerRegistry(String ownerName) throws Exception {
 		setupPgp(ownerName);
 
-		ServerRegistry serverRegistry = new ServerRegistryImpl() { // protected constructor => subclass ;-)
-		};
+		ServerRegistry serverRegistry = invokeConstructor(ServerRegistryImpl.class);
 		location2ServerRegistry.put(location, serverRegistry);
 		return serverRegistry;
 	}
