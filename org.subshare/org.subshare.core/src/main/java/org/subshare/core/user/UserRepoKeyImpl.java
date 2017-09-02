@@ -73,7 +73,7 @@ public class UserRepoKeyImpl implements UserRepoKey {
 		this.validTo = validTo;
 		this.invitation = invitation;
 
-		// TODO should we maybe defer the decryption until later, when the key is actually used?!
+		// defer the decryption until later, when the key is actually used!
 //		this.keyPair = new AsymmetricCipherKeyPair(verifyPublicKeyData(), decryptVerifyPrivateKeyData());
 	}
 
