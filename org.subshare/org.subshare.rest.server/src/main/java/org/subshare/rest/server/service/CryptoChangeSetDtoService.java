@@ -10,6 +10,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import org.slf4j.Logger;
@@ -35,7 +36,7 @@ public class CryptoChangeSetDtoService extends AbstractServiceWithRepoToRepoAuth
 	private LocalRepoTransaction transaction;
 
 	@GET
-	public CryptoChangeSetDto getCryptoChangeSetDto() {
+	public CryptoChangeSetDto getCryptoChangeSetDto(@QueryParam("lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced") final Long lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced) {
 		CryptoChangeSetDto cryptoChangeSetDto;
 		try (final RepoTransport repoTransport = authenticateAndCreateLocalRepoTransport();) {
 			final UUID clientRepositoryId = assertNotNull(repoTransport.getClientRepositoryId(), "clientRepositoryId");
@@ -45,7 +46,7 @@ public class CryptoChangeSetDtoService extends AbstractServiceWithRepoToRepoAuth
 				final CryptreeFactory cryptreeFactory = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail();
 				final Cryptree cryptree = cryptreeFactory.getCryptreeOrCreate(transaction, clientRepositoryId);
 				cryptree.initLocalRepositoryType();
-				cryptoChangeSetDto = cryptree.getCryptoChangeSetDtoWithCryptoRepoFiles();
+				cryptoChangeSetDto = cryptree.getCryptoChangeSetDtoWithCryptoRepoFiles(lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced);
 
 				transaction.commit();
 			} finally {

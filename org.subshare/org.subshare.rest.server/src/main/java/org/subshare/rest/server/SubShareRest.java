@@ -13,6 +13,7 @@ import org.subshare.rest.server.service.CreateRepositoryService;
 import org.subshare.rest.server.service.CryptoChangeSetDtoService;
 import org.subshare.rest.server.service.DeleteService;
 import org.subshare.rest.server.service.GetHistoFileDataService;
+import org.subshare.rest.server.service.GetLastCryptoKeySyncFromRemoteRepoRemoteRepositoryRevisionSyncedService;
 import org.subshare.rest.server.service.HistoFrameDtoService;
 import org.subshare.rest.server.service.LockerService;
 import org.subshare.rest.server.service.PgpPublicKeyService;
@@ -64,6 +65,7 @@ public class SubShareRest extends CloudStoreRest {
 				CryptoChangeSetDtoService.class,
 				DeleteService.class,
 				GetHistoFileDataService.class,
+				GetLastCryptoKeySyncFromRemoteRepoRemoteRepositoryRevisionSyncedService.class,
 				HistoFrameDtoService.class,
 				LockerService.class,
 				PgpPublicKeyService.class,

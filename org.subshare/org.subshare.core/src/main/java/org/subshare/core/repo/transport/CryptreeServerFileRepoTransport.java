@@ -20,4 +20,6 @@ public interface CryptreeServerFileRepoTransport extends CryptreeFileRepoTranspo
 	void endPutFile(String path, SsNormalFileDto normalFileDto, CurrentHistoCryptoRepoFileDto currentHistoCryptoRepoFileDto);
 
 	byte[] getHistoFileData(Uid histoCryptoRepoFileId, long offset);
+
+	Long getLastCryptoKeySyncFromRemoteRepoRemoteRepositoryRevisionSynced();
 }

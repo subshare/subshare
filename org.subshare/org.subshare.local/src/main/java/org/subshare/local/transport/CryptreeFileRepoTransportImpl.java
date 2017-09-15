@@ -17,6 +17,7 @@ import org.subshare.core.CryptreeFactory;
 import org.subshare.core.CryptreeFactoryRegistry;
 import org.subshare.core.LocalRepoStorage;
 import org.subshare.core.LocalRepoStorageFactoryRegistry;
+import org.subshare.core.dto.CryptoChangeSetDto;
 import org.subshare.core.dto.SsFileChunkDto;
 import org.subshare.core.dto.SsNormalFileDto;
 import org.subshare.core.repo.transport.CryptreeClientFileRepoTransport;
@@ -403,6 +404,44 @@ public class CryptreeFileRepoTransportImpl extends FileRepoTransport implements 
 			}
 
 			crf = crf.getParent();
+		}
+	}
+
+//	@Override
+//	public boolean setLastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced(long revision) {
+//		if (revision < 0)
+//			throw new IllegalArgumentException("revision < 0");
+//
+//		boolean result;
+//		try ( final LocalRepoTransaction tx = getLocalRepoManager().beginWriteTransaction(); ) {
+//			final RemoteRepository remoteRepository = tx.getDao(RemoteRepositoryDao.class)
+//					.getRemoteRepositoryOrFail(getClientRepositoryIdOrFail());
+//
+//			final LastCryptoKeySyncToRemoteRepoDao lckstrrDao = tx.getDao(LastCryptoKeySyncToRemoteRepoDao.class);
+//			LastCryptoKeySyncToRemoteRepo lckstrr = lckstrrDao.getLastCryptoKeySyncToRemoteRepo(remoteRepository);
+//			if (lckstrr == null) {
+//				lckstrr = new LastCryptoKeySyncToRemoteRepo();
+//				lckstrr.setRemoteRepository(remoteRepository);
+//			}
+//			result = lckstrr.getLocalRepositoryRevisionSynced() != revision;
+//			if (result) {
+//				logger.warn("setLastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced: oldRevision={} newRevision={}",
+//						lckstrr.getLocalRepositoryRevisionSynced(), revision);
+//			}
+//			lckstrr.setLocalRepositoryRevisionSynced(revision);
+//			lckstrrDao.makePersistent(lckstrr);
+//			tx.commit();
+//		}
+//		return result;
+//	}
+
+	@Override
+	public CryptoChangeSetDto getCryptoChangeSetDto(Long lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced) {
+		try ( final LocalRepoTransaction tx = getLocalRepoManager().beginWriteTransaction(); ) {
+			Cryptree cryptree = getCryptree(tx);
+			CryptoChangeSetDto cryptoChangeSetDto = cryptree.getCryptoChangeSetDtoWithCryptoRepoFiles(lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced);
+			tx.commit();
+			return cryptoChangeSetDto;
 		}
 	}
 }

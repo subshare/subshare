@@ -2,6 +2,7 @@ package org.subshare.core.repo.transport;
 
 import java.util.UUID;
 
+import org.subshare.core.dto.CryptoChangeSetDto;
 import org.subshare.core.dto.SsDeleteModificationDto;
 import org.subshare.core.pgp.PgpKey;
 
@@ -20,4 +21,9 @@ public interface CryptreeRestRepoTransport extends RepoTransport, CryptreeRepoTr
 	void endPutFile(String path, NormalFileDto fromNormalFileDto);
 
 	byte[] getHistoFileData(Uid histoCryptoRepoFileId, long offset);
+
+	// Invoked during syncUp, only.
+	Long getLastCryptoKeySyncFromRemoteRepoRemoteRepositoryRevisionSynced();
+
+	void putCryptoChangeSetDto(CryptoChangeSetDto cryptoChangeSetDto);
 }

@@ -33,7 +33,7 @@
 	<logger name="org.subshare.core.user.UserImpl" level="DEBUG"/>
 	<logger name="org.subshare.local.UserRepoKeyPublicKeyHelper" level="DEBUG"/>
 
-	<logger name="co.codewizards.cloudstore.local.LocalRepoManagerImpl" level="WARN"/>
+	<logger name="co.codewizards.cloudstore.local.LocalRepoManagerImpl" level="INFO"/>
 
 	<root level="INFO">
 		<appender-ref ref="STDOUT" />

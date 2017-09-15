@@ -96,9 +96,10 @@ public interface Cryptree {
 	 * <p>
 	 * <b>This method is used on the server side.</b> The server sends not only the changed keys + links,
 	 * but also all changed {@code CryptoRepoFile}s.
+	 * @param lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced TODO
 	 * @return a {@link CryptoChangeSetDto}. Never <code>null</code>.
 	 */
-	CryptoChangeSetDto getCryptoChangeSetDtoWithCryptoRepoFiles();
+	CryptoChangeSetDto getCryptoChangeSetDtoWithCryptoRepoFiles(Long lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced);
 
 	void updateLastCryptoKeySyncToRemoteRepo();
 
@@ -212,6 +213,9 @@ public interface Cryptree {
 	void removeOrphanedInvitationUserRepoKeyPublicKeys();
 	ConfigPropSetDto getParentConfigPropSetDtoIfNeeded();
 	void updatePlainHistoCryptoRepoFiles(Set<Uid> histoCryptoRepoFileIds);
+
+	Long getLastCryptoKeySyncFromRemoteRepoRemoteRepositoryRevisionSynced();
+//	void setLastCryptoKeySyncFromRemoteRepoRemoteRepositoryRevisionSynced(long revision);
 
 //	void createCollisionIfNeeded(String localPath);
 }

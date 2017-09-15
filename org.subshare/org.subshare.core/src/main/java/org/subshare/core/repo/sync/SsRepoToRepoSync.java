@@ -8,6 +8,7 @@ import java.net.URL;
 
 import org.subshare.core.LocalRepoStorage;
 import org.subshare.core.LocalRepoStorageFactoryRegistry;
+import org.subshare.core.dto.CryptoChangeSetDto;
 import org.subshare.core.dto.SsDeleteModificationDto;
 import org.subshare.core.dto.SsFileChunkDto;
 import org.subshare.core.dto.SsNormalFileDto;
@@ -33,6 +34,7 @@ import co.codewizards.cloudstore.core.repo.transport.RepoTransport;
 public class SsRepoToRepoSync extends RepoToRepoSync {
 
 	private Boolean metaOnly;
+	private boolean firstSyncUp;
 
 	protected SsRepoToRepoSync(final File localRoot, final URL remoteRoot) {
 		super(localRoot, remoteRoot);
@@ -43,7 +45,31 @@ public class SsRepoToRepoSync extends RepoToRepoSync {
 		if (isMetaOnly())
 			return; // Currently, meta-only implies read-only, too. Hence we don't need to up-sync as it can never change locally.
 
+		if (firstSyncUp) {
+			updateLastCryptoKeySyncToRemoteRepo(monitor);
+			firstSyncUp = false;
+		}
 		super.syncUp(monitor);
+	}
+
+	/**
+	 * Update the local {@code LastCryptoKeySyncToRemoteRepo.localRepositoryRevisionSynced}
+	 * with the value from the remote {@code LastCryptoKeySyncFromRemoteRepo.remoteRepositoryRevisionSynced},
+	 * because the server's repo might have been rolled back to an older version due to a backup+restore.
+	 * <p>
+	 * Invoked during {@link #syncUp(ProgressMonitor)}, only.
+	 * @param monitor the progress-monitor.
+	 */
+	private void updateLastCryptoKeySyncToRemoteRepo(ProgressMonitor monitor) {
+		Long revision = ((CryptreeRestRepoTransport) remoteRepoTransport).getLastCryptoKeySyncFromRemoteRepoRemoteRepositoryRevisionSynced();
+		if (revision != null) {
+//			boolean modified = ((CryptreeClientFileRepoTransport) localRepoTransport).setLastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced(revision);
+//			if (modified) {
+				CryptoChangeSetDto cryptoChangeSetDto = ((CryptreeClientFileRepoTransport) localRepoTransport).getCryptoChangeSetDto(revision);
+				if (! cryptoChangeSetDto.isEmpty())
+					((CryptreeRestRepoTransport) remoteRepoTransport).putCryptoChangeSetDto(cryptoChangeSetDto);
+//			}
+		}
 	}
 
 	private boolean isMetaOnly() {
@@ -59,6 +85,7 @@ public class SsRepoToRepoSync extends RepoToRepoSync {
 
 	@Override
 	public void sync(final ProgressMonitor monitor) {
+		firstSyncUp = true;
 		assertNotNull(monitor, "monitor");
 		monitor.beginTask("Synchronising...", 251);
 		try {

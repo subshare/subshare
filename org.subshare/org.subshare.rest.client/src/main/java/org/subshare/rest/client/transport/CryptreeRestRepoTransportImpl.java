@@ -60,6 +60,7 @@ import org.subshare.rest.client.transport.request.CreateRepository;
 import org.subshare.rest.client.transport.request.EndGetCryptoChangeSetDto;
 import org.subshare.rest.client.transport.request.GetCryptoChangeSetDto;
 import org.subshare.rest.client.transport.request.GetHistoFileData;
+import org.subshare.rest.client.transport.request.GetLastCryptoKeySyncFromRemoteRepoRemoteRepositoryRevisionSynced;
 import org.subshare.rest.client.transport.request.PutCryptoChangeSetDto;
 import org.subshare.rest.client.transport.request.SsBeginPutFile;
 import org.subshare.rest.client.transport.request.SsDelete;
@@ -104,6 +105,11 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 	@Override
 	public RepositoryDto getRepositoryDto() {
 		return getRestRepoTransport().getRepositoryDto();
+	}
+
+	@Override
+	public RepositoryDto getClientRepositoryDto() {
+		return getRestRepoTransport().getClientRepositoryDto();
 	}
 
 	@Override
@@ -153,8 +159,8 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 	}
 
 	@Override
-	public ChangeSetDto getChangeSetDto(final boolean localSync) {
-		final ChangeSetDto changeSetDto = getRestRepoTransport().getChangeSetDto(localSync);
+	public ChangeSetDto getChangeSetDto(final boolean localSync, final Long lastSyncToRemoteRepoLocalRepositoryRevisionSynced) {
+		final ChangeSetDto changeSetDto = getRestRepoTransport().getChangeSetDto(localSync, lastSyncToRemoteRepoLocalRepositoryRevisionSynced);
 
 		if (logger.isInfoEnabled()) {
 			logger.info("getChangeSetDto: clientRepositoryId={} serverRepositoryId={}: repoFileDtos.size={}",
@@ -205,8 +211,16 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 	}
 
 	private void syncCryptoKeysFromRemoteRepo() {
-		final CryptoChangeSetDto cryptoChangeSetDto = getClient().execute(new GetCryptoChangeSetDto(getRepositoryId().toString()));
 		final LocalRepoManager localRepoManager = getLocalRepoManager();
+
+		Long lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced = null; // naming perspective from remote side
+		try (final LocalRepoTransaction transaction = localRepoManager.beginReadTransaction();) {
+			final Cryptree cryptree = getCryptree(transaction);
+			lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced =
+					cryptree.getLastCryptoKeySyncFromRemoteRepoRemoteRepositoryRevisionSynced(); // naming perspective from this (local) side
+		}
+
+		final CryptoChangeSetDto cryptoChangeSetDto = getClient().execute(new GetCryptoChangeSetDto(getRepositoryId().toString(), lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced));
 
 		if (logger.isInfoEnabled()) {
 			logger.info("syncCryptoKeysFromRemoteRepo: clientRepositoryId={} serverRepositoryId={}: "
@@ -1015,10 +1029,11 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 		}
 	}
 
-	private void putCryptoChangeSetDto(final CryptoChangeSetDto cryptoChangeSetDto) {
+	@Override
+	public void putCryptoChangeSetDto(final CryptoChangeSetDto cryptoChangeSetDto) {
 		assertNotNull(cryptoChangeSetDto, "cryptoChangeSetDto");
-		if (! cryptoChangeSetDto.isEmpty())
-			getClient().execute(new PutCryptoChangeSetDto(getRepositoryId().toString(), cryptoChangeSetDto));
+//		if (! cryptoChangeSetDto.isEmpty()) // We *always* write it, because we need to update LastCryptoKeySyncFromRemoteRepo.emoteRepositoryRevisionSynced.
+		getClient().execute(new PutCryptoChangeSetDto(getRepositoryId().toString(), cryptoChangeSetDto));
 	}
 
 	@Override
@@ -1050,7 +1065,7 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 
 			cryptree.sealUnsealedHistoryFrame();
 
-			cryptoChangeSetDto = cryptree.getCryptoChangeSetDtoWithCryptoRepoFiles();
+			cryptoChangeSetDto = cryptree.getCryptoChangeSetDtoWithCryptoRepoFiles(null);
 
 			cryptree.removeOrphanedInvitationUserRepoKeyPublicKeys(); // TODO is this location good or should we move this somewhere else?
 
@@ -1065,6 +1080,12 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 			transaction.commit();
 		}
 		getRestRepoTransport().endSyncToRepository(fromLocalRevision);
+	}
+
+	@Override
+	public Long getLastCryptoKeySyncFromRemoteRepoRemoteRepositoryRevisionSynced() {
+		return getClient().execute(new GetLastCryptoKeySyncFromRemoteRepoRemoteRepositoryRevisionSynced(
+				getRepositoryId().toString()));
 	}
 
 	@Override

@@ -31,6 +31,8 @@ import org.subshare.local.persistence.HistoCryptoRepoFile;
 import org.subshare.local.persistence.HistoCryptoRepoFileDao;
 import org.subshare.local.persistence.HistoFileChunk;
 import org.subshare.local.persistence.HistoFileChunkDao;
+import org.subshare.local.persistence.LastCryptoKeySyncFromRemoteRepo;
+import org.subshare.local.persistence.LastCryptoKeySyncFromRemoteRepoDao;
 import org.subshare.local.persistence.SsDirectory;
 import org.subshare.local.persistence.SsNormalFile;
 import org.subshare.local.persistence.SsSymlink;
@@ -47,6 +49,8 @@ import co.codewizards.cloudstore.local.LocalRepoSync;
 import co.codewizards.cloudstore.local.persistence.Directory;
 import co.codewizards.cloudstore.local.persistence.FileChunk;
 import co.codewizards.cloudstore.local.persistence.NormalFile;
+import co.codewizards.cloudstore.local.persistence.RemoteRepository;
+import co.codewizards.cloudstore.local.persistence.RemoteRepositoryDao;
 import co.codewizards.cloudstore.local.persistence.RepoFile;
 import co.codewizards.cloudstore.local.persistence.RepoFileDao;
 import co.codewizards.cloudstore.local.persistence.Symlink;
@@ -579,11 +583,29 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 	}
 
 	@Override
-	public ChangeSetDto getChangeSetDto(boolean localSync) {
+	public ChangeSetDto getChangeSetDto(final boolean localSync, final Long lastSyncToRemoteRepoLocalRepositoryRevisionSynced) {
 //		if (isOnClient())
 //			return getDelegateOnClient().getChangeSetDto(localSync);
 //		else
-			return super.getChangeSetDto(false); // we must *never* do a LocalSync on the server!
+			// we must *never* do a LocalSync on the server!
+			return super.getChangeSetDto(false, lastSyncToRemoteRepoLocalRepositoryRevisionSynced);
+	}
+
+	@Override
+	public Long getLastCryptoKeySyncFromRemoteRepoRemoteRepositoryRevisionSynced() {
+		try ( final LocalRepoTransaction tx = getLocalRepoManager().beginReadTransaction(); ) {
+			final RemoteRepository remoteRepository = tx.getDao(RemoteRepositoryDao.class)
+					.getRemoteRepositoryOrFail(getClientRepositoryIdOrFail());
+
+			final LastCryptoKeySyncFromRemoteRepo lcksfrr = tx.getDao(LastCryptoKeySyncFromRemoteRepoDao.class)
+					.getLastCryptoKeySyncFromRemoteRepo(remoteRepository);
+			if (lcksfrr == null)
+				return null;
+
+			final long result = lcksfrr.getRemoteRepositoryRevisionSynced();
+			tx.commit();
+			return result < 0 ? null : result;
+		}
 	}
 
 //	protected boolean isOnServer() {

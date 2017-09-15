@@ -13,18 +13,18 @@ public class LastCryptoKeySyncToRemoteRepoDao extends Dao<LastCryptoKeySyncToRem
 		assertNotNull(remoteRepository, "remoteRepository");
 		final Query query = pm().newNamedQuery(getEntityClass(), "getLastCryptoKeySyncToRemoteRepo_remoteRepository");
 		try {
-			final LastCryptoKeySyncToRemoteRepo lastSyncToRemoteRepo = (LastCryptoKeySyncToRemoteRepo) query.execute(remoteRepository);
-			return lastSyncToRemoteRepo;
+			final LastCryptoKeySyncToRemoteRepo result = (LastCryptoKeySyncToRemoteRepo) query.execute(remoteRepository);
+			return result;
 		} finally {
 			query.closeAll();
 		}
 	}
 
 	public LastCryptoKeySyncToRemoteRepo getLastCryptoKeySyncToRemoteRepoOrFail(final RemoteRepository remoteRepository) {
-		final LastCryptoKeySyncToRemoteRepo lastSyncToRemoteRepo = getLastCryptoKeySyncToRemoteRepo(remoteRepository);
-		if (lastSyncToRemoteRepo == null)
+		final LastCryptoKeySyncToRemoteRepo result = getLastCryptoKeySyncToRemoteRepo(remoteRepository);
+		if (result == null)
 			throw new IllegalStateException("There is no LastCryptoKeySyncToRemoteRepo for the RemoteRepository with repositoryId=" + remoteRepository.getRepositoryId());
 
-		return lastSyncToRemoteRepo;
+		return result;
 	}
 }

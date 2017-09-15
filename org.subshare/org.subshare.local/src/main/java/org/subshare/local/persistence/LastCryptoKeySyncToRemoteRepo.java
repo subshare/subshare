@@ -8,6 +8,9 @@ import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.Query;
 import javax.jdo.annotations.Unique;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import co.codewizards.cloudstore.local.persistence.AutoTrackLocalRevision;
 import co.codewizards.cloudstore.local.persistence.Entity;
 import co.codewizards.cloudstore.local.persistence.LocalRepository;
@@ -17,6 +20,8 @@ import co.codewizards.cloudstore.local.persistence.RemoteRepository;
 @Unique(name="LastCryptoKeySyncToRemoteRepo_remoteRepository", members="remoteRepository")
 @Query(name="getLastCryptoKeySyncToRemoteRepo_remoteRepository", value="SELECT UNIQUE WHERE this.remoteRepository == :remoteRepository")
 public class LastCryptoKeySyncToRemoteRepo extends Entity {
+
+	private static final Logger logger = LoggerFactory.getLogger(LastCryptoKeySyncToRemoteRepo.class);
 
 	@Persistent(nullValue=NullValue.EXCEPTION)
 	private RemoteRepository remoteRepository;
@@ -44,16 +49,24 @@ public class LastCryptoKeySyncToRemoteRepo extends Entity {
 	public long getLocalRepositoryRevisionSynced() {
 		return localRepositoryRevisionSynced;
 	}
-	public void setLocalRepositoryRevisionSynced(final long localRepositoryRevision) {
-		if (! equal(this.localRepositoryRevisionSynced, localRepositoryRevision))
-			this.localRepositoryRevisionSynced = localRepositoryRevision;
+	public void setLocalRepositoryRevisionSynced(final long revision) {
+		if (! equal(this.localRepositoryRevisionSynced, revision)) {
+			logger.info("setLocalRepositoryRevisionSynced: remoteRepositoryId={}, this.localRepositoryRevisionSynced={}, revision={}",
+					(remoteRepository == null ? null : remoteRepository.getRepositoryId()),
+					this.localRepositoryRevisionSynced, revision);
+			this.localRepositoryRevisionSynced = revision;
+		}
 	}
 
 	public long getLocalRepositoryRevisionInProgress() {
 		return localRepositoryRevisionInProgress;
 	}
-	public void setLocalRepositoryRevisionInProgress(final long localRepositoryRevisionInProgress) {
-		if (! equal(this.localRepositoryRevisionInProgress, localRepositoryRevisionInProgress))
-			this.localRepositoryRevisionInProgress = localRepositoryRevisionInProgress;
+	public void setLocalRepositoryRevisionInProgress(final long revision) {
+		if (! equal(this.localRepositoryRevisionInProgress, revision)) {
+			logger.info("setLocalRepositoryRevisionInProgress: remoteRepositoryId={}, this.localRepositoryRevisionInProgress={}, revision={}",
+					(remoteRepository == null ? null : remoteRepository.getRepositoryId()),
+					this.localRepositoryRevisionInProgress, revision);
+			this.localRepositoryRevisionInProgress = revision;
+		}
 	}
 }

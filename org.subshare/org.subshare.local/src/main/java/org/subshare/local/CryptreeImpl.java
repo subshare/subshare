@@ -12,7 +12,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -95,6 +94,8 @@ import org.subshare.local.persistence.HistoCryptoRepoFileDao;
 import org.subshare.local.persistence.HistoFrame;
 import org.subshare.local.persistence.HistoFrameDao;
 import org.subshare.local.persistence.InvitationUserRepoKeyPublicKey;
+import org.subshare.local.persistence.LastCryptoKeySyncFromRemoteRepo;
+import org.subshare.local.persistence.LastCryptoKeySyncFromRemoteRepoDao;
 import org.subshare.local.persistence.LastCryptoKeySyncToRemoteRepo;
 import org.subshare.local.persistence.LastCryptoKeySyncToRemoteRepoDao;
 import org.subshare.local.persistence.LocalRepositoryType;
@@ -165,6 +166,8 @@ public class CryptreeImpl extends AbstractCryptree {
 	private Uid rootCryptoRepoFileId;
 
 	private LocalRepoStorage localRepoStorage;
+
+	private static final UUID NULL_UUID = new UUID(0, 0);
 
 	@Override
 	public UserRepoKeyPublicKeyLookup getUserRepoKeyPublicKeyLookup() {
@@ -322,13 +325,25 @@ public class CryptreeImpl extends AbstractCryptree {
 		return serverRepositoryId;
 	}
 
+	private boolean resyncMode;
+
 	@Override
-	public CryptoChangeSetDto getCryptoChangeSetDtoWithCryptoRepoFiles() {
+	public CryptoChangeSetDto getCryptoChangeSetDtoWithCryptoRepoFiles(Long lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced) {
 		claimRepositoryOwnershipIfUnowned();
 		processUserRepoKeyPublicKeyReplacementRequests();
 		createMissingUserIdentities();
 		final LocalRepository localRepository = getTransactionOrFail().getDao(LocalRepositoryDao.class).getLocalRepositoryOrFail();
 		final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo = getLastCryptoKeySyncToRemoteRepo();
+
+		if (lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced != null) {
+			resyncMode = lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced.longValue() != lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced();
+			if (resyncMode) {
+				logger.warn("getCryptoChangeSetDtoWithCryptoRepoFiles: Enabling resyncMode! lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced={} overwrites lastCryptoKeySyncToRemoteRepo.localRepositoryRevisionSynced={}",
+						lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced, lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced());
+			}
+			lastCryptoKeySyncToRemoteRepo.setLocalRepositoryRevisionSynced(lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced);
+		}
+
 		lastCryptoKeySyncToRemoteRepo.setLocalRepositoryRevisionInProgress(localRepository.getRevision());
 
 		final CryptoChangeSetDto cryptoChangeSetDto = new CryptoChangeSetDto();
@@ -363,6 +378,9 @@ public class CryptreeImpl extends AbstractCryptree {
 	public void putCryptoChangeSetDto(final CryptoChangeSetDto cryptoChangeSetDto) {
 		assertNotNull(cryptoChangeSetDto, "cryptoChangeSetDto");
 		final LocalRepoTransaction transaction = getTransactionOrFail();
+
+		if (cryptoChangeSetDto.getRevision() >= 0) // downward compatibility! a remote peer older than version 0.10.2 does not contain this, yet!
+			setLastCryptoKeySyncFromRemoteRepoRemoteRepositoryRevisionSynced(cryptoChangeSetDto.getRevision());
 
 		final Map<CryptoRepoFileDto, CryptoRepoFile> cryptoRepoFileDto2CryptoRepoFile = new HashMap<>();
 		final Map<Uid, CryptoKey> cryptoKeyId2CryptoKey = new HashMap<>();
@@ -530,7 +548,7 @@ public class CryptreeImpl extends AbstractCryptree {
 		for (UserRepoKeyPublicKeyReplacementRequestDeletionDto requestDeletionDto : cryptoChangeSetDto.getUserRepoKeyPublicKeyReplacementRequestDeletionDtos())
 			putUserRepoKeyPublicKeyReplacementRequestDeletionDto(requestDeletionDto);
 
-		issue_5_cleanUpExpiredInvitationUserRepoKeys();
+//		issue_5_cleanUpExpiredInvitationUserRepoKeys();
 
 		if (! isOnServer())
 			new UserRepoKeyPublicKeyHelper(getCryptreeContext()).updateUserRepoKeyRingFromUserIdentities();
@@ -552,40 +570,40 @@ public class CryptreeImpl extends AbstractCryptree {
 		return cryptreeNode.getParentConfigPropSetDtoIfNeeded();
 	}
 
-	private void issue_5_cleanUpExpiredInvitationUserRepoKeys() {
-		// This is a quick'n'dirty data-fix for the broken data of issue 5: https://github.com/subshare/subshare/issues/5
-		// There is currently no clean code to really remove expired InvitationUserRepoKeys!
-		// TODO This method is going to be removed completely in a newer version!
-		if (new Date().after(new Date(2017, 1, 1)))
-			return;
-
-		final LocalRepoTransaction transaction = getTransactionOrFail();
-		final UserRepoKeyPublicKeyDao urkpkDao = transaction.getDao(UserRepoKeyPublicKeyDao.class);
-		final Date candidateInvitationThresholdDate = new Date(2016, 7, 31);
-		final Date now = new Date();
-		final long deleteReserveMillis = 7L * 24L * 3600L * 1000L;
-		final List<InvitationUserRepoKeyPublicKey> invitationKeysToDelete = new LinkedList<>();
-		for (final UserRepoKeyPublicKey userRepoKeyPublicKey : urkpkDao.getObjects()) {
-			if (! (userRepoKeyPublicKey instanceof InvitationUserRepoKeyPublicKey))
-				continue;
-
-			final InvitationUserRepoKeyPublicKey invitationUserRepoKeyPublicKey = (InvitationUserRepoKeyPublicKey) userRepoKeyPublicKey;
-			if (! invitationUserRepoKeyPublicKey.getCreated().before(candidateInvitationThresholdDate))
-				continue;
-
-			Date validTo = invitationUserRepoKeyPublicKey.getValidTo();
-			if (validTo == null)
-				validTo = new Date(invitationUserRepoKeyPublicKey.getCreated().getTime() + (31L * 24L * 3600L * 1000L));
-
-			if (now.getTime() - validTo.getTime() < deleteReserveMillis)
-				continue;
-
-			invitationKeysToDelete.add(invitationUserRepoKeyPublicKey);
-		}
-
-		for (InvitationUserRepoKeyPublicKey invitationUserRepoKeyPublicKey : invitationKeysToDelete)
-			deleteUserRepoKeyPublicKeyReplacementRequestWithOldKey(null, invitationUserRepoKeyPublicKey);
-	}
+//	private void issue_5_cleanUpExpiredInvitationUserRepoKeys() {
+//		// This is a quick'n'dirty data-fix for the broken data of issue 5: https://github.com/subshare/subshare/issues/5
+//		// There is currently no clean code to really remove expired InvitationUserRepoKeys!
+//		// TODO This method is going to be removed completely in a newer version!
+//		if (new Date().after(new Date(2017, 1, 1)))
+//			return;
+//
+//		final LocalRepoTransaction transaction = getTransactionOrFail();
+//		final UserRepoKeyPublicKeyDao urkpkDao = transaction.getDao(UserRepoKeyPublicKeyDao.class);
+//		final Date candidateInvitationThresholdDate = new Date(2016, 7, 31);
+//		final Date now = new Date();
+//		final long deleteReserveMillis = 7L * 24L * 3600L * 1000L;
+//		final List<InvitationUserRepoKeyPublicKey> invitationKeysToDelete = new LinkedList<>();
+//		for (final UserRepoKeyPublicKey userRepoKeyPublicKey : urkpkDao.getObjects()) {
+//			if (! (userRepoKeyPublicKey instanceof InvitationUserRepoKeyPublicKey))
+//				continue;
+//
+//			final InvitationUserRepoKeyPublicKey invitationUserRepoKeyPublicKey = (InvitationUserRepoKeyPublicKey) userRepoKeyPublicKey;
+//			if (! invitationUserRepoKeyPublicKey.getCreated().before(candidateInvitationThresholdDate))
+//				continue;
+//
+//			Date validTo = invitationUserRepoKeyPublicKey.getValidTo();
+//			if (validTo == null)
+//				validTo = new Date(invitationUserRepoKeyPublicKey.getCreated().getTime() + (31L * 24L * 3600L * 1000L));
+//
+//			if (now.getTime() - validTo.getTime() < deleteReserveMillis)
+//				continue;
+//
+//			invitationKeysToDelete.add(invitationUserRepoKeyPublicKey);
+//		}
+//
+//		for (InvitationUserRepoKeyPublicKey invitationUserRepoKeyPublicKey : invitationKeysToDelete)
+//			deleteUserRepoKeyPublicKeyReplacementRequestWithOldKey(null, invitationUserRepoKeyPublicKey);
+//	}
 
 	private void putHistoCryptoRepoFileDtos(
 			final HistoCryptoRepoFileDtoConverter histoCryptoRepoFileDtoConverter,
@@ -1710,6 +1728,11 @@ public class CryptreeImpl extends AbstractCryptree {
 
 		final CryptoChangeSetDto cryptoChangeSetDto = new CryptoChangeSetDto();
 		cryptoChangeSetDto.getCryptoRepoFileDtos().add(CryptoRepoFileDtoConverter.create().toCryptoRepoFileDto(cryptoRepoFile));
+
+//		// TODO why did I only populate this one single CryptoRepoFileDto?! Shouldn't we better always send all changed ones?!
+//		// Currently trying this out... If this works fine, we should refactor!
+//		populateChangedCryptoRepoFileDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
+
 		populateCryptoChangeSetDtoWithAllButCryptoRepoFiles(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 
 		logger.debug("getCryptoChangeSetDto({}): {}", cryptoRepoFile, cryptoChangeSetDto);
@@ -1717,6 +1740,12 @@ public class CryptreeImpl extends AbstractCryptree {
 	}
 
 	private void populateCryptoChangeSetDtoWithAllButCryptoRepoFiles(final CryptoChangeSetDto cryptoChangeSetDto, final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {
+		logger.info("populateCryptoChangeSetDtoWithAllButCryptoRepoFiles: localRepositoryId={} remoteRepositoryId={}, lastCryptoKeySyncToRemoteRepo.localRepositoryRevisionSynced={}, lastCryptoKeySyncToRemoteRepo.localRepositoryRevisionInProgress={}",
+				getLocalRepositoryIdOrFail(),
+				lastCryptoKeySyncToRemoteRepo.getRemoteRepository().getRepositoryId(),
+				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced(),
+				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionInProgress());
+		populateRevision(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 		populateChangedUserRepoKeyPublicKeyDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 		populateChangedCryptoLinkDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 		populateChangedCryptoKeyDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
@@ -1735,12 +1764,19 @@ public class CryptreeImpl extends AbstractCryptree {
 		populateChangedCryptoConfigPropSetDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 	}
 
+	private void populateRevision(CryptoChangeSetDto cryptoChangeSetDto, LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {
+		cryptoChangeSetDto.setRevision(lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionInProgress());
+		if (cryptoChangeSetDto.getRevision() < 0)
+			throw new IllegalStateException("cryptoChangeSetDto.revision < 0");
+	}
+
 	private void populateChangedCryptoConfigPropSetDtos(CryptoChangeSetDto cryptoChangeSetDto, LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {
 		final CryptoConfigPropSetDtoConverter converter = CryptoConfigPropSetDtoConverter.create(getTransactionOrFail());
 		final CryptoConfigPropSetDao dao = getTransactionOrFail().getDao(CryptoConfigPropSetDao.class);
 
 		final Collection<CryptoConfigPropSet> entities = dao.getCryptoConfigPropSetsChangedAfterExclLastSyncFromRepositoryId(
-				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced(), getRemoteRepositoryIdOrFail());
+				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced(),
+				resyncMode ? NULL_UUID : getRemoteRepositoryIdOrFail());
 
 		for (final CryptoConfigPropSet entity : entities)
 			cryptoChangeSetDto.getCryptoConfigPropSetDtos().add(converter.toCryptoConfigPropSetDto(entity));
@@ -1758,42 +1794,42 @@ public class CryptreeImpl extends AbstractCryptree {
 	}
 
 	private void populateChangedHistoFrameDtos(final CryptoChangeSetDto cryptoChangeSetDto, final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {
-//		if (! isOnServer())
-//			return; // We *up*load them exclusively individually. The CryptoChangeSet is only used for *down*load.
-
 		final HistoFrameDtoConverter converter = HistoFrameDtoConverter.create(getTransactionOrFail());
 		final HistoFrameDao dao = getTransactionOrFail().getDao(HistoFrameDao.class);
 
 		final Collection<HistoFrame> entities = dao.getHistoFramesChangedAfterExclLastSyncFromRepositoryId(
-				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced(), getRemoteRepositoryIdOrFail());
+				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced(),
+				resyncMode ? NULL_UUID : getRemoteRepositoryIdOrFail());
 
 		for (final HistoFrame entity : entities)
 			cryptoChangeSetDto.getHistoFrameDtos().add(converter.toHistoFrameDto(entity));
 	}
 
 	private void populateChangedHistoCryptoRepoFileDtos(final CryptoChangeSetDto cryptoChangeSetDto, final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {
-		if (! isOnServer())
+		if (! isOnServer() && ! resyncMode)
 			return; // We *up*load them exclusively individually. The CryptoChangeSet is only used for *down*load.
 
 		final HistoCryptoRepoFileDtoConverter converter = HistoCryptoRepoFileDtoConverter.create(getTransactionOrFail());
 		final HistoCryptoRepoFileDao dao = getTransactionOrFail().getDao(HistoCryptoRepoFileDao.class);
 
 		final Collection<HistoCryptoRepoFile> entities = dao.getHistoCryptoRepoFilesChangedAfterExclLastSyncFromRepositoryId(
-				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced(), getRemoteRepositoryIdOrFail());
+				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced(),
+				resyncMode ? NULL_UUID : getRemoteRepositoryIdOrFail());
 
 		for (final HistoCryptoRepoFile entity : entities)
 			cryptoChangeSetDto.getHistoCryptoRepoFileDtos().add(converter.toHistoCryptoRepoFileDto(entity));
 	}
 
 	private void populateChangedCurrentHistoCryptoRepoFileDtos(final CryptoChangeSetDto cryptoChangeSetDto, final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {
-		if (! isOnServer())
+		if (! isOnServer() && ! resyncMode)
 			return; // We *up*load them exclusively individually. The CryptoChangeSet is only used for *down*load.
 
 		final CurrentHistoCryptoRepoFileDtoConverter converter = CurrentHistoCryptoRepoFileDtoConverter.create(getTransactionOrFail());
 		final CurrentHistoCryptoRepoFileDao dao = getTransactionOrFail().getDao(CurrentHistoCryptoRepoFileDao.class);
 
 		final Collection<CurrentHistoCryptoRepoFile> entities = dao.getCurrentHistoCryptoRepoFilesChangedAfterExclLastSyncFromRepositoryId(
-				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced(), getRemoteRepositoryIdOrFail());
+				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced(),
+				resyncMode ? NULL_UUID : getRemoteRepositoryIdOrFail());
 
 		for (final CurrentHistoCryptoRepoFile entity : entities)
 			cryptoChangeSetDto.getCurrentHistoCryptoRepoFileDtos().add(converter.toCurrentHistoCryptoRepoFileDto(entity, false));
@@ -1814,7 +1850,8 @@ public class CryptreeImpl extends AbstractCryptree {
 		final CryptoRepoFileDao cryptoRepoFileDao = getTransactionOrFail().getDao(CryptoRepoFileDao.class);
 
 		final Collection<CryptoRepoFile> cryptoRepoFiles = cryptoRepoFileDao.getCryptoRepoFilesChangedAfterExclLastSyncFromRepositoryId(
-				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced(), getRemoteRepositoryIdOrFail());
+				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced(),
+				resyncMode ? NULL_UUID : getRemoteRepositoryIdOrFail());
 
 		final CryptoRepoFileDtoConverter cryptoRepoFileDtoConverter = CryptoRepoFileDtoConverter.create();
 		for (final CryptoRepoFile cryptoRepoFile : cryptoRepoFiles)
@@ -1825,7 +1862,8 @@ public class CryptreeImpl extends AbstractCryptree {
 		final CryptoLinkDao cryptoLinkDao = getTransactionOrFail().getDao(CryptoLinkDao.class);
 
 		final Collection<CryptoLink> cryptoLinks = cryptoLinkDao.getCryptoLinksChangedAfterExclLastSyncFromRepositoryId(
-				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced(), getRemoteRepositoryIdOrFail());
+				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced(),
+				resyncMode ? NULL_UUID : getRemoteRepositoryIdOrFail());
 
 		for (final CryptoLink cryptoLink : cryptoLinks)
 			cryptoChangeSetDto.getCryptoLinkDtos().add(toCryptoLinkDto(cryptoLink));
@@ -1835,7 +1873,8 @@ public class CryptreeImpl extends AbstractCryptree {
 		final CryptoKeyDao cryptoKeyDao = getTransactionOrFail().getDao(CryptoKeyDao.class);
 
 		final Collection<CryptoKey> cryptoKeys = cryptoKeyDao.getCryptoKeysChangedAfterExclLastSyncFromRepositoryId(
-				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced(), getRemoteRepositoryIdOrFail());
+				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced(),
+				resyncMode ? NULL_UUID : getRemoteRepositoryIdOrFail());
 
 		for (final CryptoKey cryptoKey : cryptoKeys)
 			cryptoChangeSetDto.getCryptoKeyDtos().add(toCryptoKeyDto(cryptoKey));
@@ -1970,7 +2009,8 @@ public class CryptreeImpl extends AbstractCryptree {
 		final UserIdentityDtoConverter converter = new UserIdentityDtoConverter();
 		final UserIdentityDao dao = getTransactionOrFail().getDao(UserIdentityDao.class);
 
-		final Collection<UserIdentity> userIdentities = dao.getUserIdentitiesChangedAfter(lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced());
+		final Collection<UserIdentity> userIdentities = dao.getUserIdentitiesChangedAfter(
+				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced());
 
 		for (UserIdentity userIdentity : userIdentities)
 			cryptoChangeSetDto.getUserIdentityDtos().add(converter.toUserIdentityDto(userIdentity));
@@ -1980,7 +2020,8 @@ public class CryptreeImpl extends AbstractCryptree {
 		final UserIdentityLinkDtoConverter converter = new UserIdentityLinkDtoConverter();
 		final UserIdentityLinkDao dao = getTransactionOrFail().getDao(UserIdentityLinkDao.class);
 
-		final Collection<UserIdentityLink> userIdentityLinks = dao.getUserIdentityLinksChangedAfter(lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced());
+		final Collection<UserIdentityLink> userIdentityLinks = dao.getUserIdentityLinksChangedAfter(
+				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced());
 
 		for (UserIdentityLink userIdentityLink : userIdentityLinks)
 			cryptoChangeSetDto.getUserIdentityLinkDtos().add(converter.toUserIdentityLinkDto(userIdentityLink));
@@ -2258,7 +2299,7 @@ public class CryptreeImpl extends AbstractCryptree {
 			histoCryptoRepoFiles.add(cryptreeNode.createHistoCryptoRepoFileIfNeeded());
 		}
 
-		final CryptoChangeSetDto cryptoChangeSetDto = getCryptoChangeSetDtoWithCryptoRepoFiles();
+		final CryptoChangeSetDto cryptoChangeSetDto = getCryptoChangeSetDtoWithCryptoRepoFiles(null);
 
 		final CurrentHistoCryptoRepoFileDao chcrfDao = tx.getDao(CurrentHistoCryptoRepoFileDao.class);
 		final HistoCryptoRepoFileDtoConverter hcrfdConverter = HistoCryptoRepoFileDtoConverter.create(tx);
@@ -2594,6 +2635,39 @@ public class CryptreeImpl extends AbstractCryptree {
 		final CollisionPrivateDto oldCollisionPrivateDto = cryptreeNode.getCollisionPrivateDto(collision);
 		if (! isDeeplyEqual(collisionPrivateDto, oldCollisionPrivateDto))
 			cryptreeNode.putCollisionPrivateDto(collision, collisionPrivateDto);
+	}
+
+	@Override
+	public Long getLastCryptoKeySyncFromRemoteRepoRemoteRepositoryRevisionSynced() {
+		final LocalRepoTransaction tx = getTransactionOrFail();
+		final RemoteRepository remoteRepository = tx.getDao(RemoteRepositoryDao.class)
+				.getRemoteRepositoryOrFail(getRemoteRepositoryIdOrFail());
+
+		final LastCryptoKeySyncFromRemoteRepo lcksfrr = tx.getDao(LastCryptoKeySyncFromRemoteRepoDao.class)
+				.getLastCryptoKeySyncFromRemoteRepo(remoteRepository);
+		if (lcksfrr == null)
+			return null;
+
+		final long result = lcksfrr.getRemoteRepositoryRevisionSynced();
+		return result < 0 ? null : result;
+	}
+
+	protected void setLastCryptoKeySyncFromRemoteRepoRemoteRepositoryRevisionSynced(long revision) {
+		if (revision < 0)
+			throw new IllegalArgumentException("revision < 0");
+
+		final LocalRepoTransaction tx = getTransactionOrFail();
+		final RemoteRepository remoteRepository = tx.getDao(RemoteRepositoryDao.class)
+				.getRemoteRepositoryOrFail(getRemoteRepositoryIdOrFail());
+
+		final LastCryptoKeySyncFromRemoteRepoDao lcksfrrDao = tx.getDao(LastCryptoKeySyncFromRemoteRepoDao.class);
+		LastCryptoKeySyncFromRemoteRepo lcksfrr = lcksfrrDao.getLastCryptoKeySyncFromRemoteRepo(remoteRepository);
+		if (lcksfrr == null) {
+			lcksfrr = new LastCryptoKeySyncFromRemoteRepo();
+			lcksfrr.setRemoteRepository(remoteRepository);
+		}
+		lcksfrr.setRemoteRepositoryRevisionSynced(revision);
+		lcksfrrDao.makePersistent(lcksfrr);
 	}
 
 	private boolean isDeeplyEqual(CollisionPrivateDto dto1, CollisionPrivateDto dto2) {

@@ -9,6 +9,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class CryptoChangeSetDto {
 
+	private long revision = -1;
+
 	private List<CryptoRepoFileDto> cryptoRepoFileDtos;
 
 	private List<HistoFrameDto> histoFrameDtos;
@@ -42,6 +44,15 @@ public class CryptoChangeSetDto {
 	private List<CollisionDto> collisionDtos;
 
 	private List<CryptoConfigPropSetDto> cryptoConfigPropSetDtos;
+
+	public CryptoChangeSetDto() { }
+
+	public long getRevision() {
+		return revision;
+	}
+	public void setRevision(long revision) {
+		this.revision = revision;
+	}
 
 	public List<CryptoRepoFileDto> getCryptoRepoFileDtos() {
 		if (cryptoRepoFileDtos == null)

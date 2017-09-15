@@ -8,7 +8,7 @@ public class CloudStorePersistenceCapableClassesProviderImpl extends AbstractClo
 	public Class<?>[] getPersistenceCapableClasses() {
 		return new Class<?>[] {
 				// The various sub-classes of CloudStore-entities do not need to be enlisted here, because they are already
-				// resolved using the ClassExtension mechanism. We thus only need classes newly introduced by Subshare here.
+				// resolved using the ClassExtension mechanism. We thus only need entities newly introduced by Subshare here.
 				Collision.class,
 				CollisionPrivate.class,
 				CryptoConfigPropSet.class,
@@ -21,6 +21,7 @@ public class CloudStorePersistenceCapableClassesProviderImpl extends AbstractClo
 				HistoFileChunk.class,
 				HistoFrame.class,
 				InvitationUserRepoKeyPublicKey.class,
+				LastCryptoKeySyncFromRemoteRepo.class,
 				LastCryptoKeySyncToRemoteRepo.class,
 				Permission.class,
 				PermissionSet.class,

@@ -17,8 +17,8 @@ import co.codewizards.cloudstore.rest.server.service.ChangeSetDtoService;
 public class SsChangeSetDtoService extends ChangeSetDtoService {
 
 	@Override
-	protected ChangeSetDto getChangeSetDto(final RepoTransport repoTransport, final boolean localSync) {
-		final ChangeSetDto changeSetDto = super.getChangeSetDto(repoTransport, localSync);
+	protected ChangeSetDto getChangeSetDto(final RepoTransport repoTransport, final boolean localSync, final Long lastSyncToRemoteRepoLocalRepositoryRevisionSynced) {
+		final ChangeSetDto changeSetDto = super.getChangeSetDto(repoTransport, localSync, lastSyncToRemoteRepoLocalRepositoryRevisionSynced);
 
 		// If this is a virgin repository, there is one single RepoFile (the root) which is
 		// *not* signed. In this case, we simply filter it out, so that it is guaranteed that
