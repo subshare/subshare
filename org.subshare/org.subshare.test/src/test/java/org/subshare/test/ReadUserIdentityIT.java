@@ -136,7 +136,7 @@ public class ReadUserIdentityIT extends AbstractUserRegistryIT {
 		for (final CryptoChangeSetDto cryptoChangeSetDto : cryptoChangeSetDtos)
 			assertThat(cryptoChangeSetDto.isEmpty()).isTrue();
 
-		assertThat(cryptoChangeSetDtos).hasSize(2);
+		assertThat(cryptoChangeSetDtos).hasSize(4);
 
 
 		// *** OWNER machine with owner's repository ***
@@ -151,7 +151,7 @@ public class ReadUserIdentityIT extends AbstractUserRegistryIT {
 		for (final CryptoChangeSetDto cryptoChangeSetDto : cryptoChangeSetDtos)
 			assertThat(cryptoChangeSetDto.isEmpty()).isTrue();
 
-		assertThat(cryptoChangeSetDtos).hasSize(2);
+		assertThat(cryptoChangeSetDtos).hasSize(4);
 	}
 
 }
