@@ -23,7 +23,7 @@ public class BackupRestoreRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 
 	@BeforeClass
 	public static void backupRestoreRepoToRepoSyncIT_beforeClass() {
-		System.setProperty(LocalRepoManager.SYSTEM_PROPERTY_CLOSE_DEFERRED_MILLIS, "7000");
+		System.setProperty(LocalRepoManager.SYSTEM_PROPERTY_CLOSE_DEFERRED_MILLIS, "10000");
 	}
 
 	@AfterClass
@@ -220,6 +220,6 @@ public class BackupRestoreRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 	protected void waitForLocalRepoManagersToBeClosed() throws Exception {
 		logger.info("************************************************************************************");
 		logger.info("Waiting for LocalRepoManager to be really closed.");
-		Thread.sleep(15000);
+		Thread.sleep(20000);
 	}
 }
