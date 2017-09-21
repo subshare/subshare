@@ -389,7 +389,7 @@ public class CryptreeImpl extends AbstractCryptree {
 		for (final UserRepoKeyPublicKeyDto userRepoKeyPublicKeyDto : cryptoChangeSetDto.getUserRepoKeyPublicKeyDtos())
 			putUserRepoKeyPublicKeyDto(userRepoKeyPublicKeyDto);
 
-		for (final CryptoRepoFileDto cryptoRepoFileDto : cryptoChangeSetDto.getCryptoRepoFileDtos())
+		for (final CryptoRepoFileDto cryptoRepoFileDto : sortCryptoRepoFileDtos(cryptoChangeSetDto.getCryptoRepoFileDtos()))
 			cryptoRepoFileDto2CryptoRepoFile.put(cryptoRepoFileDto, putCryptoRepoFileDto(cryptoRepoFileDto));
 
 		for (final CryptoKeyDto cryptoKeyDto : cryptoChangeSetDto.getCryptoKeyDtos()) {
@@ -554,6 +554,55 @@ public class CryptreeImpl extends AbstractCryptree {
 			new UserRepoKeyPublicKeyHelper(getCryptreeContext()).updateUserRepoKeyRingFromUserIdentities();
 
 		getCryptreeContext().getUserRegistry().writeIfNeeded();
+	}
+
+	protected List<CryptoRepoFileDto> sortCryptoRepoFileDtos(final List<CryptoRepoFileDto> cryptoRepoFileDtos) {
+		assertNotNull(cryptoRepoFileDtos, "cryptoRepoFileDtos");
+
+		final Map<Uid, CryptoRepoFileDto> cryptoRepoFileId2CryptoRepoFileDto = new HashMap<>(cryptoRepoFileDtos.size());
+		for (final CryptoRepoFileDto cryptoRepoFileDto : cryptoRepoFileDtos) {
+			final Uid cryptoRepoFileId = assertNotNull(cryptoRepoFileDto.getCryptoRepoFileId(), "cryptoRepoFileDto.cryptoRepoFileId");
+			final CryptoRepoFileDto old = cryptoRepoFileId2CryptoRepoFileDto.put(cryptoRepoFileId, cryptoRepoFileDto);
+			if (old != null)
+				throw new IllegalArgumentException("cryptoRepoFileDtos contains duplicate cryptoRepoFileDto.cryptoRepoFileId: " + cryptoRepoFileId);
+		}
+
+		final List<CryptoRepoFileDto> result = new ArrayList<>(cryptoRepoFileDtos.size());
+		final Set<Uid> resultCryptoRepoFileIds = new HashSet<>(cryptoRepoFileDtos.size());
+
+		for (final CryptoRepoFileDto cryptoRepoFileDto : cryptoRepoFileDtos)
+			sortCryptoRepoFileDtos_addCryptoRepoFileDtoWithParentsFirst(result, resultCryptoRepoFileIds, cryptoRepoFileDto, cryptoRepoFileId2CryptoRepoFileDto);
+
+		if (result.size() != cryptoRepoFileDtos.size())
+			throw new IllegalStateException(String.format("result.size != cryptoRepoFileDtos.size :: %s != %s", result.size(), cryptoRepoFileDtos.size()));
+
+		return result;
+	}
+
+	protected void sortCryptoRepoFileDtos_addCryptoRepoFileDtoWithParentsFirst(final List<CryptoRepoFileDto> result, final Set<Uid> resultCryptoRepoFileIds,
+			final CryptoRepoFileDto cryptoRepoFileDto, final Map<Uid, CryptoRepoFileDto> cryptoRepoFileId2CryptoRepoFileDto) {
+		assertNotNull(result, "result");
+		assertNotNull(resultCryptoRepoFileIds, "resultCryptoRepoFileIds");
+		assertNotNull(cryptoRepoFileDto, "cryptoRepoFileDto");
+		assertNotNull(cryptoRepoFileId2CryptoRepoFileDto, "cryptoRepoFileId2CryptoRepoFileDto");
+
+		final Uid cryptoRepoFileId = assertNotNull(cryptoRepoFileDto.getCryptoRepoFileId(), "cryptoRepoFileDto.cryptoRepoFileId");
+		if (resultCryptoRepoFileIds.contains(cryptoRepoFileId))
+			return;
+
+		final Uid parentCryptoRepoFileId = cryptoRepoFileDto.getParentCryptoRepoFileId();
+		if (! resultCryptoRepoFileIds.contains(parentCryptoRepoFileId)) {
+			final CryptoRepoFileDto parentCryptoRepoFileDto = cryptoRepoFileId2CryptoRepoFileDto.get(parentCryptoRepoFileId);
+			if (parentCryptoRepoFileDto != null) {
+				logger.info("sortCryptoRepoFileDtos_addCryptoRepoFileDtoWithParentsFirst: parent is not yet in result, but part of the CryptoChangeSet -- adding parent to result first: cryptoRepoFileId={}, parentCryptoRepoFileId={}",
+						cryptoRepoFileId, parentCryptoRepoFileId);
+
+				sortCryptoRepoFileDtos_addCryptoRepoFileDtoWithParentsFirst(result, resultCryptoRepoFileIds, parentCryptoRepoFileDto, cryptoRepoFileId2CryptoRepoFileDto);
+			}
+		}
+
+		result.add(cryptoRepoFileDto);
+		resultCryptoRepoFileIds.add(cryptoRepoFileId);
 	}
 
 	@Override
