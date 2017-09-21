@@ -224,7 +224,7 @@ public class CryptoChangeSetDto {
 
 	@Override
 	public String toString() {
-		return "CryptoChangeSetDto[cryptoRepoFileDtos=" + cryptoRepoFileDtos
+		return "CryptoChangeSetDto[revision="+ revision +", cryptoRepoFileDtos=" + cryptoRepoFileDtos
 				+ ", histoCryptoRepoFileDtos=" + histoCryptoRepoFileDtos
 				+ ", cryptoKeyDtos=" + cryptoKeyDtos + ", cryptoLinkDtos=" + cryptoLinkDtos
 				+ ", repositoryOwnerDto=" + repositoryOwnerDto

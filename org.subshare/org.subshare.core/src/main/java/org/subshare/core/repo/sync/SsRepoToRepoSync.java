@@ -63,12 +63,9 @@ public class SsRepoToRepoSync extends RepoToRepoSync {
 	private void updateLastCryptoKeySyncToRemoteRepo(ProgressMonitor monitor) {
 		Long revision = ((CryptreeRestRepoTransport) remoteRepoTransport).getLastCryptoKeySyncFromRemoteRepoRemoteRepositoryRevisionSynced();
 		if (revision != null) {
-//			boolean modified = ((CryptreeClientFileRepoTransport) localRepoTransport).setLastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced(revision);
-//			if (modified) {
-				CryptoChangeSetDto cryptoChangeSetDto = ((CryptreeClientFileRepoTransport) localRepoTransport).getCryptoChangeSetDto(revision);
-				if (! cryptoChangeSetDto.isEmpty())
-					((CryptreeRestRepoTransport) remoteRepoTransport).putCryptoChangeSetDto(cryptoChangeSetDto);
-//			}
+			CryptoChangeSetDto cryptoChangeSetDto = ((CryptreeClientFileRepoTransport) localRepoTransport).getCryptoChangeSetDto(revision);
+			if (! cryptoChangeSetDto.isEmpty())
+				((CryptreeRestRepoTransport) remoteRepoTransport).putCryptoChangeSetDto(cryptoChangeSetDto);
 		}
 	}
 
