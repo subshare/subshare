@@ -58,6 +58,8 @@ import org.subshare.local.persistence.CryptoRepoFileDao;
 import org.subshare.local.persistence.HistoFrame;
 import org.subshare.local.persistence.HistoFrameDao;
 import org.subshare.local.persistence.InvitationUserRepoKeyPublicKey;
+import org.subshare.local.persistence.LastCryptoKeySyncFromRemoteRepo;
+import org.subshare.local.persistence.LastCryptoKeySyncFromRemoteRepoDao;
 import org.subshare.local.persistence.ScheduledReupload;
 import org.subshare.local.persistence.ScheduledReuploadDao;
 import org.subshare.local.persistence.UserIdentity;
@@ -545,6 +547,33 @@ public class SsLocalRepoMetaDataImpl extends LocalRepoMetaDataImpl implements Ss
 				userRepoKey.getServerRepositoryId();
 			else if (! dto.getServerRepositoryId().equals(userRepoKey.getServerRepositoryId()))
 				throw new IllegalStateException("dto.serverRepositoryId != userRepoKey.serverRepositoryId");
+		}
+	}
+
+	@Override
+	public void resetLastCryptoKeySyncFromRemoteRepoRemoteRepositoryRevisionSynced() {
+		try (final LocalRepoTransaction tx = getLocalRepoManagerOrFail().beginWriteTransaction();) {
+			final LastCryptoKeySyncFromRemoteRepoDao dao = tx.getDao(LastCryptoKeySyncFromRemoteRepoDao.class);
+			for (LastCryptoKeySyncFromRemoteRepo lastCryptoKeySyncFromRemoteRepo : dao.getObjects()) {
+				// We set it to 0 and not to -1, because -1 would not be sent to the server (it is treated as null)
+				// and because we can very safely assume that revision 0 was always properly synced.
+				lastCryptoKeySyncFromRemoteRepo.setRemoteRepositoryRevisionSynced(0);
+			}
+			tx.commit();
+		}
+	}
+
+	@Deprecated
+	@Override
+	public void resetLastSyncFromRemoteRepoRemoteRepositoryRevisionSynced() {
+		try (final LocalRepoTransaction tx = getLocalRepoManagerOrFail().beginWriteTransaction();) {
+			final RemoteRepositoryDao dao = tx.getDao(RemoteRepositoryDao.class);
+			for (RemoteRepository remoteRepo : dao.getObjects()) {
+				// We set it to 0 and not to -1, because -1 would not be sent to the server (it is treated as null)
+				// and because we can very safely assume that revision 0 was always properly synced.
+				remoteRepo.setRevision(0);
+			}
+			tx.commit();
 		}
 	}
 }

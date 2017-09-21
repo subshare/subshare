@@ -7,6 +7,7 @@ import static org.subshare.gui.util.FxmlUtil.*;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -29,6 +30,7 @@ import org.subshare.gui.severity.SeverityImageRegistry;
 import org.subshare.gui.wizard.WizardDialog;
 
 import co.codewizards.cloudstore.core.Severity;
+import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.repo.sync.RepoSyncActivity;
 import co.codewizards.cloudstore.core.repo.sync.RepoSyncDaemon;
 import co.codewizards.cloudstore.core.repo.sync.RepoSyncState;
@@ -49,6 +51,9 @@ import javafx.scene.layout.GridPane;
 
 public class LocalRepoListPane extends GridPane {
 	private static final Image syncIcon = new Image(LocalRepoListPane.class.getResource("sync_16x16.png").toExternalForm());
+
+	@FXML
+	private Button syncAllButton;
 
 	@FXML
 	private Button syncButton;
@@ -174,14 +179,42 @@ public class LocalRepoListPane extends GridPane {
 
 	@FXML
 	private void syncAllButtonClicked(final ActionEvent event) {
-		for (LocalRepo localRepo : getLocalRepoRegistry().getLocalRepos())
-			getRepoSyncDaemon().startSync(localRepo.getLocalRoot());
+		new Service<Void>() {
+			@Override
+			protected Task<Void> createTask() {
+				return new SsTask<Void>() {
+					@Override
+					protected Void call() throws Exception {
+						for (LocalRepo localRepo : getLocalRepoRegistry().getLocalRepos())
+							getRepoSyncDaemon().startSync(localRepo.getLocalRoot());
+
+						return null;
+					}
+				};
+			}
+		}.start();
 	}
 
 	@FXML
 	private void syncButtonClicked(final ActionEvent event) {
+		final List<File> selectedLocalRoots = new ArrayList<>();
 		for (LocalRepoListItem li : tableView.getSelectionModel().getSelectedItems())
-			getRepoSyncDaemon().startSync(li.getLocalRoot());
+			selectedLocalRoots.add(li.getLocalRoot());
+
+		new Service<Void>() {
+			@Override
+			protected Task<Void> createTask() {
+				return new SsTask<Void>() {
+					@Override
+					protected Void call() throws Exception {
+						for (File localRoot : selectedLocalRoots)
+							getRepoSyncDaemon().startSync(localRoot);
+
+						return null;
+					}
+				};
+			}
+		}.start();
 	}
 
 	@FXML

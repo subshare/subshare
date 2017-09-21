@@ -35,6 +35,15 @@ dynamic component ServerRepoPane resourcefile 'messages.properties' {
 				static columnIndex : 1,
 				static rowIndex : 1,
 				static margin : Insets { right : 8, bottom : 8}
+			},
+
+			Button id redownMetaButton {
+				text : "Re-download meta-data",
+				tooltip : Tooltip { text : "Reset the last synced revision number (to 0) of the crypto-meta-data and download it all again." },
+				onAction : controllermethod redownMetaButtonClicked,
+				static columnIndex : 0,
+				static rowIndex : 2,
+				static columnSpan : 2
 			}
 		]
 	}

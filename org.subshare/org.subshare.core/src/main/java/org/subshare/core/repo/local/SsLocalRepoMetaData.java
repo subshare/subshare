@@ -85,4 +85,21 @@ public interface SsLocalRepoMetaData extends LocalRepoMetaData {
 	void putCollisionPrivateDto(CollisionPrivateDto collisionPrivateDto);
 
 	Collection<DebugUserRepoKeyDto> getDebugUserRepoKeyDtos();
+
+	/**
+	 * Resets locally the crypto-sync-revision specifying the last server version downloaded.
+	 * <p>
+	 * This causes all the crypto-meta-data to be *down*loaded again (when the next sync is run).
+	 * This method is only used to repair a broken sync. This kind of repair should not be necessary
+	 * after
+	 * <p>
+	 * See: <a href="https://github.com/subshare/subshare/issues/53">subshare#53</a>
+	 */
+	void resetLastCryptoKeySyncFromRemoteRepoRemoteRepositoryRevisionSynced();
+
+	/**
+	 * @deprecated So far not (yet) needed. May be removed again.
+	 */
+	@Deprecated
+	void resetLastSyncFromRemoteRepoRemoteRepositoryRevisionSynced();
 }

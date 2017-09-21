@@ -130,7 +130,26 @@ dynamic component LocalRepoPane resourcefile 'messages.properties' {
 			//			},
 						static columnIndex : 1,
 						static rowIndex : 6
+					},
+
+					Button id redownMetaButton {
+						text : "Re-download meta-data",
+						tooltip : Tooltip { text : "Reset the last synced revision number (to 0) of the crypto-meta-data and download it all again." },
+						onAction : controllermethod redownMetaButtonClicked,
+						static columnIndex : 0,
+						static rowIndex : 7,
+						static columnSpan : 4
 					}
+
+// I think, the following is not needed -- so better omit it to avoid abuse ;-) There should not be much harm, but well...
+//					Button id redownPayloadButton {
+//						text : "Re-download payload data",
+//						tooltip : Tooltip { text : "Reset the last synced revision number (to 0) of the payload data and download it all again." },
+//						onAction : controllermethod redownPayloadButtonClicked,
+//						static columnIndex : 0,
+//						static rowIndex : 8,
+//						static columnSpan : 4
+//					}
 				}
 			},
 
@@ -140,7 +159,9 @@ dynamic component LocalRepoPane resourcefile 'messages.properties' {
 
 			Tab id userRepoKeyListTab {
 				text : "UserRepoKeys"
-			}
+			},
+			
+			static vgrow : "ALWAYS"
 		}
 	}
 }

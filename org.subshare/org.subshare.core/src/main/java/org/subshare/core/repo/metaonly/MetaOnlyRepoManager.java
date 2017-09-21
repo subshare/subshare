@@ -15,4 +15,6 @@ public interface MetaOnlyRepoManager {
 
 	File getBaseDir();
 
+	File getLocalRoot(ServerRepo serverRepo);
+
 }

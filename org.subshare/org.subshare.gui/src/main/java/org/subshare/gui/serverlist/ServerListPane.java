@@ -64,6 +64,8 @@ public class ServerListPane extends GridPane {
 	private Button addButton;
 	@FXML
 	private Button deleteButton;
+	@FXML
+	private Button syncButton;
 
 	@FXML
 	private TableView<ServerListItem> tableView;
@@ -296,7 +298,18 @@ public class ServerListPane extends GridPane {
 
 	@FXML
 	private void syncButtonClicked(final ActionEvent event) {
-		getPgpSyncDaemon().sync();
-		getLockerSyncDaemon().sync();
+		new Service<Void>() {
+			@Override
+			protected Task<Void> createTask() {
+				return new SsTask<Void>() {
+					@Override
+					protected Void call() throws Exception {
+						getPgpSyncDaemon().sync();
+						getLockerSyncDaemon().sync();
+						return null;
+					}
+				};
+			}
+		}.start();
 	}
 }

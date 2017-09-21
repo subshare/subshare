@@ -4,9 +4,15 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static org.subshare.gui.util.FxmlUtil.*;
 
 import org.subshare.core.repo.ServerRepo;
+import org.subshare.core.repo.local.SsLocalRepoMetaData;
 import org.subshare.core.server.Server;
 import org.subshare.gui.checkout.CheckOutWizard;
+import org.subshare.gui.ls.LocalRepoManagerFactoryLs;
+import org.subshare.gui.ls.MetaOnlyRepoManagerLs;
+import org.subshare.gui.ls.MetaOnlyRepoSyncDaemonLs;
 
+import co.codewizards.cloudstore.core.oio.File;
+import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import javafx.beans.property.StringProperty;
 import javafx.beans.property.adapter.JavaBeanStringPropertyBuilder;
 import javafx.event.ActionEvent;
@@ -40,5 +46,19 @@ public class ServerRepoPane extends GridPane {
 	@FXML
 	private void checkOutButtonClicked(final ActionEvent event) {
 		new CheckOutWizard(server, serverRepo).checkOut(getScene().getWindow());
+	}
+
+	@FXML
+	private void redownMetaButtonClicked(final ActionEvent event) {
+		try (final LocalRepoManager localRepoManager = createLocalRepoManager()) {
+			final SsLocalRepoMetaData localRepoMetaData = (SsLocalRepoMetaData) localRepoManager.getLocalRepoMetaData();
+			localRepoMetaData.resetLastCryptoKeySyncFromRemoteRepoRemoteRepositoryRevisionSynced();
+		}
+		MetaOnlyRepoSyncDaemonLs.getMetaOnlyRepoSyncDaemon().sync();
+	}
+
+	private LocalRepoManager createLocalRepoManager() {
+		File localRoot = MetaOnlyRepoManagerLs.getMetaOnlyRepoManager().getLocalRoot(serverRepo);
+		return LocalRepoManagerFactoryLs.getLocalRepoManagerFactory().createLocalRepoManagerForExistingRepository(localRoot);
 	}
 }

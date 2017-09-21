@@ -20,6 +20,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.UnaryOperator;
 
 import org.subshare.core.repo.LocalRepo;
+import org.subshare.core.repo.local.SsLocalRepoMetaData;
 import org.subshare.core.repo.sync.RepoSyncTimer;
 import org.subshare.gui.IconSize;
 import org.subshare.gui.control.TimePeriodTextField;
@@ -30,6 +31,7 @@ import org.subshare.gui.invitation.issue.IssueInvitationData;
 import org.subshare.gui.invitation.issue.IssueInvitationWizard;
 import org.subshare.gui.localrepo.userrepokeylist.UserRepoKeyListPane;
 import org.subshare.gui.ls.ConfigLs;
+import org.subshare.gui.ls.LocalRepoManagerFactoryLs;
 import org.subshare.gui.ls.RepoSyncDaemonLs;
 import org.subshare.gui.ls.RepoSyncTimerLs;
 import org.subshare.gui.severity.SeverityImageRegistry;
@@ -41,6 +43,7 @@ import co.codewizards.cloudstore.core.TimePeriod;
 import co.codewizards.cloudstore.core.config.Config;
 import co.codewizards.cloudstore.core.dto.Error;
 import co.codewizards.cloudstore.core.oio.File;
+import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import co.codewizards.cloudstore.core.repo.sync.RepoSyncActivity;
 import co.codewizards.cloudstore.core.repo.sync.RepoSyncDaemon;
 import co.codewizards.cloudstore.core.repo.sync.RepoSyncState;
@@ -394,7 +397,6 @@ public class LocalRepoPane extends VBox implements HistoryPaneContainer {
 
 	@FXML
 	private void syncButtonClicked(final ActionEvent event) {
-		final RepoSyncDaemon repoSyncDaemon = RepoSyncDaemonLs.getRepoSyncDaemon();
 		repoSyncDaemon.startSync(localRepo.getLocalRoot());
 	}
 
@@ -403,6 +405,28 @@ public class LocalRepoPane extends VBox implements HistoryPaneContainer {
 		final IssueInvitationWizard wizard = new IssueInvitationWizard(new IssueInvitationData(localRepo, localRepo.getLocalRoot()));
 		final WizardDialog dialog = new WizardDialog(getScene().getWindow(), wizard);
 		dialog.show(); // no need to wait ;-)
+	}
+
+	@FXML
+	private void redownMetaButtonClicked(final ActionEvent event) {
+		try (final LocalRepoManager localRepoManager = createLocalRepoManager()) {
+			final SsLocalRepoMetaData localRepoMetaData = (SsLocalRepoMetaData) localRepoManager.getLocalRepoMetaData();
+			localRepoMetaData.resetLastCryptoKeySyncFromRemoteRepoRemoteRepositoryRevisionSynced();
+		}
+		repoSyncDaemon.startSync(localRepo.getLocalRoot());
+	}
+
+	/**
+	 * @deprecated Currently not needed -- maybe soon removed again.
+	 */
+	@Deprecated
+	@FXML
+	private void redownPayloadButtonClicked(final ActionEvent event) {
+		try (final LocalRepoManager localRepoManager = createLocalRepoManager()) {
+			final SsLocalRepoMetaData localRepoMetaData = (SsLocalRepoMetaData) localRepoManager.getLocalRepoMetaData();
+			localRepoMetaData.resetLastSyncFromRemoteRepoRemoteRepositoryRevisionSynced();
+		}
+		repoSyncDaemon.startSync(localRepo.getLocalRoot());
 	}
 
 	@Override
@@ -433,5 +457,9 @@ public class LocalRepoPane extends VBox implements HistoryPaneContainer {
 	@Override
 	public Button getExportFromHistoryButton() {
 		return exportFromHistoryButton;
+	}
+
+	private LocalRepoManager createLocalRepoManager() {
+		return LocalRepoManagerFactoryLs.getLocalRepoManagerFactory().createLocalRepoManagerForExistingRepository(localRepo.getLocalRoot());
 	}
 }

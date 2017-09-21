@@ -45,5 +45,10 @@
 				<Insets right="8" bottom="8"/> 
 			</GridPane.margin>
 		</TextField>
+		<Button fx:id="redownMetaButton" text="Re-download meta-data" onAction="#redownMetaButtonClicked" GridPane.columnIndex="0" GridPane.rowIndex="2" GridPane.columnSpan="2"> 
+			<tooltip>
+				<Tooltip text="Reset the last synced revision number (to 0) of the crypto-meta-data and download it all again."/> 
+			</tooltip>
+		</Button>
 	</children>
 </fx:root>
