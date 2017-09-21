@@ -14,6 +14,8 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,6 +76,7 @@ public class SubShareGui extends Application {
 	private Stage primaryStage;
 	private Stage splashStage;
 	private SplashPane splashPane;
+	private volatile File localServerStopFile;
 	private volatile ExitCode exitCode = ExitCode.SUCCESS;
 	private static final List<Image> icons;
 	private volatile boolean updaterDirAlreadyCreated;
@@ -85,6 +88,9 @@ public class SubShareGui extends Application {
 				loadImage("subshare_256x256.png")
 				));
 	}
+
+	private final Timer localServerStopFileTimer = new Timer("localServerStopFileTimer", true);
+	private TimerTask localServerStopFileTimerTask;
 
 	private static final Image loadImage(String fileName) {
 		final URL url = SubShareGui.class.getResource(fileName);
@@ -169,6 +175,10 @@ public class SubShareGui extends Application {
 						localServer = null;
 
 					LocalServerInitLs.initPrepare();
+
+					// Automatically close the client, if the separate server process ends (if it actually is a separate process).
+					if (LocalServerClient.getInstance().isLocalServerInSeparateProcess())
+						createLocalServerStopFileTimerTask();
 
 					final Set<PgpKeyId> pgpKeyIdsHavingPrivateKeyBeforeRestore = getIdsOfMasterKeysWithPrivateKey();
 					tryPgpKeysNoPassphrase();
@@ -458,5 +468,48 @@ public class SubShareGui extends Application {
 		alert.getDialogPane().setContent(contentTextContainer);
 
 		alert.showAndWait();
+	}
+
+	protected File getLocalServerStopFile() {
+		if (localServerStopFile == null)
+			localServerStopFile = createFile(ConfigDir.getInstance().getFile(), "localServerRunning.deleteToStop");
+
+		return localServerStopFile;
+	}
+
+	private void createLocalServerStopFileTimerTask() {
+		final File localServerStopFile = getLocalServerStopFile();
+		if (! localServerStopFile.exists())
+			logger.warn("localServerStopFileTimerTask.run: file '{}' does not exist during GUI client startup!", localServerStopFile);
+
+		synchronized (localServerStopFileTimer) {
+			cancelLocalServerStopFileTimerTask();
+
+			localServerStopFileTimerTask = new TimerTask() {
+				@Override
+				public void run() {
+					if (localServerStopFile.exists()) {
+						logger.debug("localServerStopFileTimerTask.run: file '{}' exists => nothing to do.", localServerStopFile);
+						return;
+					}
+					logger.info("localServerStopFileTimerTask.run: file '{}' does not exist => stopping server!", localServerStopFile);
+
+					exitCode = ExitCode.LOCAL_SERVER_STOPPED;
+					stopLater();
+				}
+			};
+
+			final long period = 5000L;
+			localServerStopFileTimer.schedule(localServerStopFileTimerTask, period, period);
+		}
+	}
+
+	private void cancelLocalServerStopFileTimerTask() {
+		synchronized (localServerStopFileTimer) {
+			if (localServerStopFileTimerTask != null) {
+				localServerStopFileTimerTask.cancel();
+				localServerStopFileTimerTask = null;
+			}
+		}
 	}
 }

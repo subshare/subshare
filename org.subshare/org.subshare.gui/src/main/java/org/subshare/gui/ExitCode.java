@@ -8,6 +8,8 @@ public enum ExitCode {
 
 	INTRO_WIZARD_ABORTED(2),
 
+	LOCAL_SERVER_STOPPED(300),
+
 	EXCEPTION_CAUGHT(666)
 	;
 
