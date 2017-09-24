@@ -13,8 +13,8 @@ allprojects {
 	}
 
 	group = 'org.subshare'
-	version = '0.10.2-SNAPSHOT'
-//	version = '0.10.2'
+//	version = '0.10.3-SNAPSHOT'
+	version = '0.10.2'
 
 	sourceCompatibility = JavaVersion.VERSION_1_7
 	targetCompatibility = JavaVersion.VERSION_1_7
@@ -62,8 +62,8 @@ allprojects {
 	project.ext.bouncycastleVersion = '1.56'
 	project.ext.bouncycastleWotVersion = bouncycastleVersion + '.1';
 
-	project.ext.cloudstoreVersion = '0.10.2-SNAPSHOT'
-//	project.ext.cloudstoreVersion = '0.10.2'
+//	project.ext.cloudstoreVersion = '0.10.3-SNAPSHOT'
+	project.ext.cloudstoreVersion = '0.10.2'
 	project.ext.slf4jVersion = '1.7.7'
 	project.ext.logbackVersion = '1.0.13'
 
