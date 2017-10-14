@@ -137,10 +137,13 @@ public class CollisionDto implements Signable, Serializable {
 
 	@Override
 	public String toString() {
-		return this.getClass().getSimpleName() + "[collisionId=" + collisionId
+		return getClass().getSimpleName() + '[' + toString_getProperties() + ']';
+	}
+
+	protected String toString_getProperties() {
+		return "collisionId=" + collisionId
 				+ ", histoCryptoRepoFileId1=" + histoCryptoRepoFileId1
 				+ ", histoCryptoRepoFileId2=" + histoCryptoRepoFileId2
-				+ ", duplicateCryptoRepoFileId=" + duplicateCryptoRepoFileId
-				+ "]";
+				+ ", duplicateCryptoRepoFileId=" + duplicateCryptoRepoFileId;
 	}
 }

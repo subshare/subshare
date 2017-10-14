@@ -3,6 +3,7 @@ package org.subshare.local.persistence;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -33,6 +34,26 @@ public class CollisionDao extends Dao<Collision, CollisionDao> {
 		final Query query = pm().newNamedQuery(getEntityClass(), "getCollision_collisionId");
 		try {
 			final Collision result = (Collision) query.execute(collisionId.toString());
+			return result;
+		} finally {
+			query.closeAll();
+		}
+	}
+
+	public Collection<Collision> getCollisionsSignedBetween(final Date fromIncl, final Date toExcl) {
+		assertNotNull(fromIncl, "fromIncl");
+		assertNotNull(toExcl, "toExcl");
+		final Query query = pm().newNamedQuery(getEntityClass(), "getCollisionsSignedBetween_fromIncl_toExcl");
+		try {
+			long startTimestamp = System.currentTimeMillis();
+			@SuppressWarnings("unchecked")
+			Collection<Collision> result = (Collection<Collision>) query.execute(fromIncl, toExcl);
+			logger.debug("getCollisionsSignedBetween: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
+
+			startTimestamp = System.currentTimeMillis();
+			result = load(result);
+			logger.debug("getCollisionsSignedBetween: Loading result-set with {} elements took {} ms.", result.size(), System.currentTimeMillis() - startTimestamp);
+
 			return result;
 		} finally {
 			query.closeAll();
@@ -309,5 +330,30 @@ public class CollisionDao extends Dao<Collision, CollisionDao> {
 		assertNotNull(qf, "qf");
 		if (qf.length() > 0)
 			qf.append(" && ");
+	}
+
+	@Override
+	public void deletePersistent(Collision entity) {
+		assertNotNull(entity, "entity");
+		final CollisionPrivateDao cpDao = getDao(CollisionPrivateDao.class);
+		final CollisionPrivate collisionPrivate = cpDao.getCollisionPrivate(entity);
+		if (collisionPrivate != null) {
+			cpDao.deletePersistent(collisionPrivate);
+			pm().flush();
+		}
+		super.deletePersistent(entity);
+	}
+
+	@Override
+	public void deletePersistentAll(Collection<? extends Collision> entities) {
+		assertNotNull(entities, "entities");
+		final CollisionPrivateDao cpDao = getDao(CollisionPrivateDao.class);
+		for (Collision collision : entities) {
+			final CollisionPrivate collisionPrivate = cpDao.getCollisionPrivate(collision);
+			if (collisionPrivate != null)
+				cpDao.deletePersistent(collisionPrivate);
+		}
+		pm().flush();
+		super.deletePersistentAll(entities);
 	}
 }

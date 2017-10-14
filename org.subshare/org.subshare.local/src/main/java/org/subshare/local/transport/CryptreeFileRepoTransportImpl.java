@@ -20,6 +20,7 @@ import org.subshare.core.LocalRepoStorageFactoryRegistry;
 import org.subshare.core.dto.CryptoChangeSetDto;
 import org.subshare.core.dto.SsFileChunkDto;
 import org.subshare.core.dto.SsNormalFileDto;
+import org.subshare.core.repair.RepairDeleteCollisionConfig;
 import org.subshare.core.repo.transport.CryptreeClientFileRepoTransport;
 import org.subshare.core.user.UserRepoKeyRing;
 import org.subshare.core.user.UserRepoKeyRingLookup;
@@ -266,9 +267,16 @@ public class CryptreeFileRepoTransportImpl extends FileRepoTransport implements 
 		if (localPath == null)
 			assertNotNull(file, "localPath/file");
 
+		if (RepairDeleteCollisionConfig.isCreateCollisionSuppressed()) {
+			logger.warn("createAndPersistPreliminaryCollision: SKIPPED (createCollisionSuppressed=true): localRoot='{}' localRepositoryId={} file='{}' localPath='{}' cryptoRepoFileId={}",
+					localRepoManager.getLocalRoot(), getRepositoryId(), (file == null ? "" : file.getAbsolutePath()),
+					(localPath == null ? "" : localPath), cryptoRepoFileId);
+			return;
+		}
+
 		logger.debug("createAndPersistPreliminaryCollision: localRoot='{}' localRepositoryId={} file='{}' localPath='{}' cryptoRepoFileId={}",
 				localRepoManager.getLocalRoot(), getRepositoryId(), (file == null ? "" : file.getAbsolutePath()),
-						(localPath == null ? "" : localPath), cryptoRepoFileId);
+				(localPath == null ? "" : localPath), cryptoRepoFileId);
 
 		try (final LocalRepoTransaction tx = localRepoManager.beginWriteTransaction();) {
 			if (localPath == null)

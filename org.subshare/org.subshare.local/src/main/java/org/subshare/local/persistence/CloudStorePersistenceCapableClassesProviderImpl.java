@@ -16,6 +16,7 @@ public class CloudStorePersistenceCapableClassesProviderImpl extends AbstractClo
 				CryptoKeyDeactivation.class,
 				CryptoLink.class,
 				CurrentHistoCryptoRepoFile.class,
+				DeletedCollision.class,
 				FileChunkPayload.class,
 				HistoCryptoRepoFile.class,
 				HistoFileChunk.class,

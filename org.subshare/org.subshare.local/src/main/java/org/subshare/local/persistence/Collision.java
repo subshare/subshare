@@ -55,6 +55,10 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 			value="SELECT WHERE this.localRevision > :localRevision"),
 
 	@Query(
+			name="getCollisionsSignedBetween_fromIncl_toExcl",
+			value="SELECT WHERE this.signature.signatureCreated >= :fromIncl && this.signature.signatureCreated < :toExcl"),
+
+	@Query(
 			name = "getCollision_histoCryptoRepoFile1_histoCryptoRepoFile2",
 			value = "SELECT UNIQUE WHERE"
 					+ "  (this.histoCryptoRepoFile1 == :histoCryptoRepoFile1 && this.histoCryptoRepoFile2 == :histoCryptoRepoFile2 && this.duplicateCryptoRepoFileId == null)"

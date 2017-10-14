@@ -39,6 +39,7 @@ import org.subshare.core.dto.CryptoKeyDto;
 import org.subshare.core.dto.CryptoLinkDto;
 import org.subshare.core.dto.CryptoRepoFileDto;
 import org.subshare.core.dto.CurrentHistoCryptoRepoFileDto;
+import org.subshare.core.dto.DeletedCollisionDto;
 import org.subshare.core.dto.HistoCryptoRepoFileDto;
 import org.subshare.core.dto.HistoFrameDto;
 import org.subshare.core.dto.InvitationUserRepoKeyPublicKeyDto;
@@ -57,6 +58,7 @@ import org.subshare.core.dto.UserIdentityPayloadDto;
 import org.subshare.core.dto.UserRepoKeyPublicKeyDto;
 import org.subshare.core.dto.UserRepoKeyPublicKeyReplacementRequestDeletionDto;
 import org.subshare.core.dto.UserRepoKeyPublicKeyReplacementRequestDto;
+import org.subshare.core.repair.RepairDeleteCollisionConfig;
 import org.subshare.core.repo.local.PlainHistoCryptoRepoFileFilter;
 import org.subshare.core.sign.Signature;
 import org.subshare.core.sign.WriteProtected;
@@ -69,6 +71,7 @@ import org.subshare.local.dto.CollisionDtoConverter;
 import org.subshare.local.dto.CryptoConfigPropSetDtoConverter;
 import org.subshare.local.dto.CryptoRepoFileDtoConverter;
 import org.subshare.local.dto.CurrentHistoCryptoRepoFileDtoConverter;
+import org.subshare.local.dto.DeletedCollisionDtoConverter;
 import org.subshare.local.dto.HistoCryptoRepoFileDtoConverter;
 import org.subshare.local.dto.HistoFrameDtoConverter;
 import org.subshare.local.dto.UserIdentityDtoConverter;
@@ -89,6 +92,8 @@ import org.subshare.local.persistence.CryptoRepoFile;
 import org.subshare.local.persistence.CryptoRepoFileDao;
 import org.subshare.local.persistence.CurrentHistoCryptoRepoFile;
 import org.subshare.local.persistence.CurrentHistoCryptoRepoFileDao;
+import org.subshare.local.persistence.DeletedCollision;
+import org.subshare.local.persistence.DeletedCollisionDao;
 import org.subshare.local.persistence.HistoCryptoRepoFile;
 import org.subshare.local.persistence.HistoCryptoRepoFileDao;
 import org.subshare.local.persistence.HistoFrame;
@@ -539,6 +544,11 @@ public class CryptreeImpl extends AbstractCryptree {
 			}
 		}
 
+		for (DeletedCollisionDto deletedCollisionDto : cryptoChangeSetDto.getDeletedCollisionDtos())
+			putDeletedCollisionDto(deletedCollisionDto);
+
+		transaction.flush();
+
 		putCryptoConfigPropSetDtos(cryptoChangeSetDto.getCryptoConfigPropSetDtos());
 
 		transaction.flush();
@@ -554,6 +564,19 @@ public class CryptreeImpl extends AbstractCryptree {
 			new UserRepoKeyPublicKeyHelper(getCryptreeContext()).updateUserRepoKeyRingFromUserIdentities();
 
 		getCryptreeContext().getUserRegistry().writeIfNeeded();
+	}
+
+	private void putDeletedCollisionDto(final DeletedCollisionDto deletedCollisionDto) {
+		assertNotNull(deletedCollisionDto, "deletedCollisionDto");
+		final LocalRepoTransaction tx = getTransactionOrFail();
+		final DeletedCollisionDtoConverter dcDtoConverter = DeletedCollisionDtoConverter.create(tx);
+		final CollisionDao cDao = tx.getDao(CollisionDao.class);
+
+		final DeletedCollision deletedCollision = dcDtoConverter.putDeletedCollisionDto(deletedCollisionDto);
+
+		final Collision collision = cDao.getCollision(deletedCollision.getCollisionId());
+		if (collision != null)
+			cDao.deletePersistent(collision);
 	}
 
 	protected List<CryptoRepoFileDto> sortCryptoRepoFileDtos(final List<CryptoRepoFileDto> cryptoRepoFileDtos) {
@@ -1810,6 +1833,7 @@ public class CryptreeImpl extends AbstractCryptree {
 		populateChangedHistoCryptoRepoFileDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 		populateChangedHistoFrameDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 		populateChangedCollisionDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
+		populateChangedDeletedCollisionDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 		populateChangedCryptoConfigPropSetDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 	}
 
@@ -1840,6 +1864,17 @@ public class CryptreeImpl extends AbstractCryptree {
 
 		for (final Collision entity : entities)
 			cryptoChangeSetDto.getCollisionDtos().add(converter.toCollisionDto(entity));
+	}
+
+	private void populateChangedDeletedCollisionDtos(CryptoChangeSetDto cryptoChangeSetDto, LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {
+		final DeletedCollisionDtoConverter converter = DeletedCollisionDtoConverter.create(getTransactionOrFail());
+		final DeletedCollisionDao dao = getTransactionOrFail().getDao(DeletedCollisionDao.class);
+
+		final Collection<DeletedCollision> entities = dao.getDeletedCollisionsChangedAfter(
+				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced());
+
+		for (final DeletedCollision entity : entities)
+			cryptoChangeSetDto.getDeletedCollisionDtos().add(converter.toDeletedCollisionDto(entity));
 	}
 
 	private void populateChangedHistoFrameDtos(final CryptoChangeSetDto cryptoChangeSetDto, final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {
@@ -2334,6 +2369,7 @@ public class CryptreeImpl extends AbstractCryptree {
 	@Override
 	public CryptoChangeSetDto createHistoCryptoRepoFilesForDeletedCryptoRepoFiles() {
 		convertPreliminaryDeletions();
+		repairDeleteCollisionsIfNeeded();
 
 		final LocalRepoTransaction tx = getTransactionOrFail();
 		final CryptoRepoFileDao cryptoRepoFileDao = tx.getDao(CryptoRepoFileDao.class);
@@ -2362,6 +2398,35 @@ public class CryptreeImpl extends AbstractCryptree {
 			cryptoChangeSetDto.getCurrentHistoCryptoRepoFileDtos().add(chcrfdConverter.toCurrentHistoCryptoRepoFileDto(currentHistoCryptoRepoFile, false));
 		}
 		return cryptoChangeSetDto;
+	}
+
+	protected void repairDeleteCollisionsIfNeeded() {
+		final Date[] deleteCollisionsFromInclToExclRange = RepairDeleteCollisionConfig.getDeleteCollisionsFromInclToExclRange();
+		if (deleteCollisionsFromInclToExclRange == null)
+			return;
+
+		final LocalRepoTransaction tx = getTransactionOrFail();
+		final CollisionDao cDao = tx.getDao(CollisionDao.class);
+		final DeletedCollisionDao dcDao = tx.getDao(DeletedCollisionDao.class);
+
+		final Collection<Collision> collisions = cDao.getCollisionsSignedBetween(
+				deleteCollisionsFromInclToExclRange[0], deleteCollisionsFromInclToExclRange[1]);
+		if (collisions.isEmpty())
+			return;
+
+		final UserRepoKey userRepoKey = getUserRepoKeyOrFail(null, PermissionType.write);
+
+		for (final Collision collision : collisions) {
+			final Uid collisionId = collision.getCollisionId();
+			DeletedCollision deletedCollision = dcDao.getDeletedCollision(collisionId);
+			if (deletedCollision == null) // should always be the case -- but better be fault-tolerant!
+				deletedCollision = new DeletedCollision(collisionId);
+
+			getCryptreeContext().getSignableSigner(userRepoKey).sign(deletedCollision);
+			deletedCollision = dcDao.makePersistent(deletedCollision);
+			cDao.deletePersistent(collision);
+			tx.flush();
+		}
 	}
 
 	@Override
@@ -2393,7 +2458,14 @@ public class CryptreeImpl extends AbstractCryptree {
 		final RepoFileDao rfDao = tx.getDao(RepoFileDao.class);
 		final CryptoRepoFileDao crfDao = tx.getDao(CryptoRepoFileDao.class);
 
-		for (PreliminaryCollision preliminaryCollision : pcDao.getObjects()) {
+		final Collection<PreliminaryCollision> preliminaryCollisions = pcDao.getObjects();
+		if (RepairDeleteCollisionConfig.isCreateCollisionSuppressed()) {
+			logger.warn("convertPreliminaryCollisions: SKIPPED (createCollisionSuppressed=true): Deleting preliminaryCollisions={}", preliminaryCollisions);
+			pcDao.deletePersistentAll(preliminaryCollisions);
+			return;
+		}
+
+		for (PreliminaryCollision preliminaryCollision : preliminaryCollisions) {
 			File file = createFile(tx.getLocalRepoManager().getLocalRoot(), preliminaryCollision.getPath());
 			RepoFile repoFile = rfDao.getRepoFile(tx.getLocalRepoManager().getLocalRoot(), file);
 			CryptoRepoFile cryptoRepoFile = repoFile == null ? null : crfDao.getCryptoRepoFileOrFail(repoFile);

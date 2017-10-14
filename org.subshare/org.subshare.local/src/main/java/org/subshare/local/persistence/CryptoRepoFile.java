@@ -448,11 +448,10 @@ public class CryptoRepoFile extends Entity implements WriteProtected, AutoTrackL
 	}
 
 	@Override
-	public String toString() {
-		return String.format("%s{cryptoRepoFileId=%s, localName=%s, deleted=%s}",
-				super.toString(),
-				cryptoRepoFileId,
-				localName,
-				deleted);
+	protected String toString_getProperties() {
+		return super.toString_getProperties()
+				+ ", cryptoRepoFileId=" + cryptoRepoFileId
+				+ ", localName=" + localName
+				+ ", deleted=" + deleted;
 	}
 }

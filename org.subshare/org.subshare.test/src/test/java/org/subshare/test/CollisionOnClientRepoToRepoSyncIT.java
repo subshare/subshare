@@ -4,6 +4,7 @@ import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static org.assertj.core.api.Assertions.*;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 
 import org.junit.Test;
@@ -12,19 +13,29 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.subshare.core.dto.CollisionDto;
 import org.subshare.core.dto.PlainHistoCryptoRepoFileDto;
+import org.subshare.core.repair.RepairDeleteCollisionConfig;
 import org.subshare.core.repo.histo.ExportFileParam;
 import org.subshare.core.repo.histo.HistoExporter;
 import org.subshare.core.repo.histo.HistoExporterImpl;
 import org.subshare.core.repo.local.CollisionFilter;
 import org.subshare.core.repo.local.SsLocalRepoMetaData;
 
+import co.codewizards.cloudstore.core.config.Config;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.util.IOUtil;
+import co.codewizards.cloudstore.core.util.ISO8601;
 import mockit.integration.junit4.JMockit;
 
 @RunWith(JMockit.class)
 public class CollisionOnClientRepoToRepoSyncIT extends CollisionRepoToRepoSyncIT {
 	private static final Logger logger = LoggerFactory.getLogger(CollisionOnClientRepoToRepoSyncIT.class);
+
+	@Override
+	public void after() throws Exception {
+		System.clearProperty(Config.SYSTEM_PROPERTY_PREFIX + RepairDeleteCollisionConfig.CONFIG_KEY_DELETE_COLLISIONS_FROM);
+		System.clearProperty(Config.SYSTEM_PROPERTY_PREFIX + RepairDeleteCollisionConfig.CONFIG_KEY_DELETE_COLLISIONS_TO);
+		super.after();
+	}
 
 	/**
 	 * Two clients simultaneously create a file with the same name in the same directory.
@@ -115,6 +126,39 @@ public class CollisionOnClientRepoToRepoSyncIT extends CollisionRepoToRepoSyncIT
 
 		assertThat(collisionDto.getHistoCryptoRepoFileId2())
 		.isEqualTo(plainHistoCryptoRepoFileDtos.get(0).getHistoCryptoRepoFileDto().getHistoCryptoRepoFileId());
+
+		// Verify that the collision exists in both client-repos.
+		SsLocalRepoMetaData localDestLocalRepoMetaData = (SsLocalRepoMetaData) localDestRepoManagerLocal.getLocalRepoMetaData();
+		collisionDtos = localDestLocalRepoMetaData.getCollisionDtos(new CollisionFilter());
+		assertThat(collisionDtos).hasSize(1);
+
+
+		// Delete the collision!
+
+		System.setProperty(Config.SYSTEM_PROPERTY_PREFIX + RepairDeleteCollisionConfig.CONFIG_KEY_DELETE_COLLISIONS_FROM,
+				ISO8601.formatDate(new Date(0L)));
+
+		System.setProperty(Config.SYSTEM_PROPERTY_PREFIX + RepairDeleteCollisionConfig.CONFIG_KEY_DELETE_COLLISIONS_TO,
+				ISO8601.formatDate(new Date()));
+
+		syncFromLocalSrcToRemote();
+
+		System.clearProperty(Config.SYSTEM_PROPERTY_PREFIX + RepairDeleteCollisionConfig.CONFIG_KEY_DELETE_COLLISIONS_FROM);
+		System.clearProperty(Config.SYSTEM_PROPERTY_PREFIX + RepairDeleteCollisionConfig.CONFIG_KEY_DELETE_COLLISIONS_TO);
+
+		// Verify that it disappeared locally, already.
+		collisionDtos = localRepoMetaData.getCollisionDtos(new CollisionFilter());
+		assertThat(collisionDtos).isEmpty();
+
+		// Verify that it still exists in the remote client's repo.
+		collisionDtos = localDestLocalRepoMetaData.getCollisionDtos(new CollisionFilter());
+		assertThat(collisionDtos).hasSize(1);
+
+		syncFromRemoteToLocalDest();
+
+		// Verify that the deletion of the collision was synced to the remote client's repo.
+		collisionDtos = localDestLocalRepoMetaData.getCollisionDtos(new CollisionFilter());
+		assertThat(collisionDtos).isEmpty();
 	}
 
 	/**

@@ -99,4 +99,14 @@ public class SignatureDto implements Signature, Serializable {
 
 		return new SignatureDto(signature.getSignatureCreated(), signature.getSigningUserRepoKeyId(), signature.getSignatureData());
 	}
+
+	@Override
+	public String toString() {
+		return getClass().getSimpleName() + '[' + toString_getProperties() + ']';
+	}
+
+	protected String toString_getProperties() {
+		return "signatureCreated=" + signatureCreated
+				+ ", signingUserRepoKeyId=" + signingUserRepoKeyId;
+	}
 }

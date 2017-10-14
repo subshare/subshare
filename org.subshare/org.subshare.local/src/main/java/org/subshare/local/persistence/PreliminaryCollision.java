@@ -51,4 +51,11 @@ public class PreliminaryCollision extends Entity {
 	public void setCryptoRepoFile(CryptoRepoFile cryptoRepoFile) {
 		this.cryptoRepoFile = cryptoRepoFile;
 	}
+
+	@Override
+	protected String toString_getProperties() {
+		return super.toString_getProperties()
+				+ ", path=" + path
+				+ ", cryptoRepoFile=" + cryptoRepoFile;
+	}
 }
