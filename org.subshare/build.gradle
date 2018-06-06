@@ -59,8 +59,8 @@ allprojects {
 
 	project.ext.subshareVersion = version
 
-	project.ext.bouncycastleVersion = '1.56'
-	project.ext.bouncycastleWotVersion = bouncycastleVersion + '.1';
+	project.ext.bouncycastleVersion = '1.59'
+	project.ext.bouncycastleWotVersion = bouncycastleVersion + '.0';
 
 	project.ext.cloudstoreVersion = '0.10.4-SNAPSHOT'
 //	project.ext.cloudstoreVersion = '0.10.4'
@@ -121,7 +121,7 @@ subprojects {
 	}
 
 	tasks.withType(Test) {
-		jvmArgs "-XX:MaxPermSize=256m"
+//		jvmArgs "-XX:MaxPermSize=256m"
 		jvmArgs "-Xmx512m"
 
 		String igFa = System.properties['test.ignoreFailures'];
