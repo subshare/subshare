@@ -28,6 +28,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 
 public class ErrorHandler {
 
@@ -172,7 +173,9 @@ public class ErrorHandler {
 		alert.setHeaderText(getHeaderText());
 		alert.setContentText(getContentText());
 
-		alert.getDialogPane().setMinSize(500, 250);
+//		alert.getDialogPane().setMinSize(500, 250);
+		alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
+		alert.getDialogPane().setMinWidth(Region.USE_PREF_SIZE);
 
 		if (error != null) {
 			Label label = new Label("The exception stacktrace was:");
@@ -193,6 +196,8 @@ public class ErrorHandler {
 
 			// Set expandable Exception into the dialog pane.
 			alert.getDialogPane().setExpandableContent(expContent);
+			
+			alert.getDialogPane().getChildren().stream().filter(node -> node instanceof Label).forEach(node -> ((Label)node).setMinSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE));
 
 			setUpExpandCollapseWorkaround();
 		}
@@ -241,6 +246,16 @@ public class ErrorHandler {
 					public void run() {
 						deferredWidthHeightHandlingTimerTask = null;
 						final boolean expanded = alert.getDialogPane().isExpanded();
+						final double minWidth = 500;
+						final double minHeight = 300;
+						if (alert.getWidth() < minWidth) {
+							logger.warn("widthHeightPropertyChangeListener: alert.width={} too small! Increasing to {}.", alert.getWidth(), minWidth);
+							alert.setWidth(minWidth);
+						}
+						if (alert.getHeight() < minHeight) {
+							logger.warn("widthHeightPropertyChangeListener: alert.height={} too small! Increasing to {}.", alert.getHeight(), minHeight);
+							alert.setHeight(minHeight);
+						}
 						final double[] widthHeight = new double[] { alert.getWidth(), alert.getHeight() };
 						expanded2WidthHeight.put(expanded, widthHeight);
 						logger.debug("widthHeightPropertyChangeListener: expanded={} width={} height={}",
