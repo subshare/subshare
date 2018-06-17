@@ -205,6 +205,7 @@ public interface Cryptree {
 	void preDelete(String localPath, boolean deletedByIgnoreRule);
 	CryptoChangeSetDto createHistoCryptoRepoFilesForDeletedCryptoRepoFiles();
 	void createSyntheticDeleteModifications(ChangeSetDto changeSetDto);
+//	void createSyntheticDeleteModifications(ChangeSetDto changeSetDto, CryptoChangeSetDto cryptoChangeSetDto);
 	Collection<PlainHistoCryptoRepoFileDto> getPlainHistoCryptoRepoFileDtos(PlainHistoCryptoRepoFileFilter filter);
 	PlainHistoCryptoRepoFileDto getPlainHistoCryptoRepoFileDto(Uid histoCryptoRepoFileId);
 	void clearCryptoRepoFileDeleted(String localPath);

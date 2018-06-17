@@ -135,6 +135,75 @@ public class RepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 		.isEqualTo(plainHistoCryptoRepoFileDtos.get(2).getHistoCryptoRepoFileDto().getCryptoRepoFileId());
 	}
 
+	@Test
+	public void syncFromLocalToRemoteToLocalAfterCreateAndDeleteFile() throws Exception {
+		syncFromLocalToRemoteToLocal();
+
+		// Create and delete file /2/z in local source repository and sync both to server, but not yet to other working copy.
+		final File src_child_2 = createFile(localSrcRoot, "2");
+		final File src_child_2_x = createFileWithRandomContent(src_child_2, "x");
+		final File src_child_2_y = createDirectory(src_child_2, "y");
+		final File src_child_2_y_z = createFileWithRandomContent(src_child_2_y, "z");
+		assertThat(src_child_2_x.getIoFile()).isFile();
+		assertThat(src_child_2_y.getIoFile()).isDirectory();
+		assertThat(src_child_2_y_z.getIoFile()).isFile();
+
+		// sync creation to server
+		syncFromLocalSrcToRemote();
+
+		src_child_2_y_z.delete();
+		src_child_2_y.delete();
+		src_child_2_x.delete();
+		assertThat(src_child_2_x.getIoFile()).doesNotExist();
+		assertThat(src_child_2_y.getIoFile()).doesNotExist();
+		assertThat(src_child_2_y_z.getIoFile()).doesNotExist();
+
+		// sync deletion to server
+		syncFromLocalSrcToRemote();
+
+		// sync from server to destination working copy
+		syncFromRemoteToLocalDest();
+
+		final File dest_child_2 = createFile(localDestRoot, "2");
+		final File dest_child_2_x = createFile(dest_child_2, "x");
+		final File dest_child_2_y = createFile(dest_child_2, "y");
+		final File dest_child_2_y_z = createFile(dest_child_2_y, "z");
+
+		assertThat(dest_child_2_x.getIoFile()).doesNotExist();
+		assertThat(dest_child_2_y.getIoFile()).doesNotExist();
+		assertThat(dest_child_2_y_z.getIoFile()).doesNotExist();
+
+		List<PlainHistoCryptoRepoFileDto> plainHistoCryptoRepoFileDtos = getPlainHistoCryptoRepoFileDtos(localSrcRepoManagerLocal, src_child_2_x);
+		assertThat(plainHistoCryptoRepoFileDtos.size()).isEqualTo(2);
+		assertThat(plainHistoCryptoRepoFileDtos.get(0).getHistoCryptoRepoFileDto().getDeleted()).isNull();
+		assertThat(plainHistoCryptoRepoFileDtos.get(1).getHistoCryptoRepoFileDto().getDeleted()).isNotNull();
+
+		plainHistoCryptoRepoFileDtos = getPlainHistoCryptoRepoFileDtos(localSrcRepoManagerLocal, src_child_2_y);
+		assertThat(plainHistoCryptoRepoFileDtos.size()).isEqualTo(2);
+		assertThat(plainHistoCryptoRepoFileDtos.get(0).getHistoCryptoRepoFileDto().getDeleted()).isNull();
+		assertThat(plainHistoCryptoRepoFileDtos.get(1).getHistoCryptoRepoFileDto().getDeleted()).isNotNull();
+
+		plainHistoCryptoRepoFileDtos = getPlainHistoCryptoRepoFileDtos(localSrcRepoManagerLocal, src_child_2_y_z);
+		assertThat(plainHistoCryptoRepoFileDtos.size()).isEqualTo(2);
+		assertThat(plainHistoCryptoRepoFileDtos.get(0).getHistoCryptoRepoFileDto().getDeleted()).isNull();
+		assertThat(plainHistoCryptoRepoFileDtos.get(1).getHistoCryptoRepoFileDto().getDeleted()).isNotNull();
+
+		plainHistoCryptoRepoFileDtos = getPlainHistoCryptoRepoFileDtos(localDestRepoManagerLocal, dest_child_2_x);
+		assertThat(plainHistoCryptoRepoFileDtos.size()).isEqualTo(2);
+		assertThat(plainHistoCryptoRepoFileDtos.get(0).getHistoCryptoRepoFileDto().getDeleted()).isNull();
+		assertThat(plainHistoCryptoRepoFileDtos.get(1).getHistoCryptoRepoFileDto().getDeleted()).isNotNull();
+
+		plainHistoCryptoRepoFileDtos = getPlainHistoCryptoRepoFileDtos(localDestRepoManagerLocal, dest_child_2_y);
+		assertThat(plainHistoCryptoRepoFileDtos.size()).isEqualTo(2);
+		assertThat(plainHistoCryptoRepoFileDtos.get(0).getHistoCryptoRepoFileDto().getDeleted()).isNull();
+		assertThat(plainHistoCryptoRepoFileDtos.get(1).getHistoCryptoRepoFileDto().getDeleted()).isNotNull();
+
+		plainHistoCryptoRepoFileDtos = getPlainHistoCryptoRepoFileDtos(localDestRepoManagerLocal, dest_child_2_y_z);
+		assertThat(plainHistoCryptoRepoFileDtos.size()).isEqualTo(2);
+		assertThat(plainHistoCryptoRepoFileDtos.get(0).getHistoCryptoRepoFileDto().getDeleted()).isNull();
+		assertThat(plainHistoCryptoRepoFileDtos.get(1).getHistoCryptoRepoFileDto().getDeleted()).isNotNull();
+	}
+
 	protected void assertPaddingsAreEqual(File localSrcRoot, File localDestRoot) {
 		try (final LocalRepoManager localRepoManagerSrc = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(localSrcRoot);) {
 			try (final LocalRepoManager localRepoManagerDest = localRepoManagerFactory.createLocalRepoManagerForExistingRepository(localDestRoot);) {

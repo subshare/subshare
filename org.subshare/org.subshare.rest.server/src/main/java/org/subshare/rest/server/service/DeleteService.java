@@ -19,6 +19,10 @@ import co.codewizards.cloudstore.rest.server.service.AbstractServiceWithRepoToRe
 @Produces(MediaType.APPLICATION_XML)
 public class DeleteService extends AbstractServiceWithRepoToRepoAuth {
 
+	/**
+	 * @deprecated Dead code! Never invoked! The deletion of RepoFiles is done in CryptreeImpl.putCryptoChangeSetDto(...)!
+	 */
+	@Deprecated
 	@PUT
 	public void delete(final SsDeleteModificationDto deleteModificationDto) {
 		assertNotNull(deleteModificationDto, "deleteModificationDto");

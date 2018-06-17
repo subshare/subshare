@@ -182,6 +182,8 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 		try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
 			final Cryptree cryptree = getCryptree(transaction);
 			cryptoChangeSetDto = cryptree.createHistoCryptoRepoFilesForDeletedCryptoRepoFiles();
+//			if (cryptoChangeSetDto != null)
+//				cryptree.createSyntheticDeleteModifications(changeSetDto, cryptoChangeSetDto);
 
 			transaction.commit();
 		}
@@ -674,13 +676,18 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 
 	@Override
 	public void delete(final SsDeleteModificationDto deleteModificationDto) {
-		try (final LocalRepoTransaction transaction = localRepoManager.beginReadTransaction();) {
-			final Cryptree cryptree = getCryptree(transaction);
-			cryptree.sign(deleteModificationDto);
-			deleteModificationDto.setPath(null); // path is *not* signed and *must* *not* be transferred to the server! It is secret!
-			transaction.commit();
+		final String path = deleteModificationDto.getPath();
+		try {
+			try (final LocalRepoTransaction transaction = localRepoManager.beginReadTransaction();) {
+				final Cryptree cryptree = getCryptree(transaction);
+				cryptree.sign(deleteModificationDto);
+				deleteModificationDto.setPath(null); // path is *not* signed and *must* *not* be transferred to the server! It is secret!
+				transaction.commit();
+			}
+			getClient().execute(new SsDelete(getRepositoryId().toString(), deleteModificationDto));
+		} finally {
+			deleteModificationDto.setPath(path); // restore after sending to server
 		}
-		getClient().execute(new SsDelete(getRepositoryId().toString(), deleteModificationDto));
 	}
 
 	@Override

@@ -83,7 +83,7 @@ public class UserRegistryTest {
 		email2ExpectedPgpKeyTrustLevel.put("daniel@nightlabs.de", PgpKeyValidity.FULL);
 		email2ExpectedPgpKeyTrustLevel.put("janmorti@gmx.de", PgpKeyValidity.NOT_TRUSTED);
 		email2ExpectedPgpKeyTrustLevel.put("jonathan@codewizards.co", PgpKeyValidity.FULL); // PgpKeyValidity.NOT_TRUSTED);
-		email2ExpectedPgpKeyTrustLevel.put("marc@nightlabs.de", PgpKeyValidity.NOT_TRUSTED);
+		email2ExpectedPgpKeyTrustLevel.put("marc@nightlabs.de", PgpKeyValidity.EXPIRED);
 
 		User marco = userRegistry.getUsersByEmail("marco@codewizards.co").iterator().next();
 		pgp.setOwnerTrust(marco.getPgpKeys().iterator().next(), PgpOwnerTrust.ULTIMATE);

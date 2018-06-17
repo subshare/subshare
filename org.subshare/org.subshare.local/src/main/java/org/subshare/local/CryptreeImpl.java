@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -173,6 +174,8 @@ public class CryptreeImpl extends AbstractCryptree {
 	private LocalRepoStorage localRepoStorage;
 
 	private static final UUID NULL_UUID = new UUID(0, 0);
+
+	private static final AtomicLong nextModificationId = new AtomicLong();
 
 	@Override
 	public UserRepoKeyPublicKeyLookup getUserRepoKeyPublicKeyLookup() {
@@ -2573,10 +2576,33 @@ public class CryptreeImpl extends AbstractCryptree {
 
 			final String path = cryptoRepoFile.getRepoFile().getPath();
 			final DeleteModificationDto deleteModificationDto = new DeleteModificationDto();
+			deleteModificationDto.setId(nextModificationId.getAndIncrement());
 			deleteModificationDto.setPath(path);
 			changeSetDto.getModificationDtos().add(deleteModificationDto);
 		}
 	}
+
+//	@Override
+//	public void createSyntheticDeleteModifications(final ChangeSetDto changeSetDto, final CryptoChangeSetDto cryptoChangeSetDto) {
+//		assertNotNull(changeSetDto, "changeSetDto");
+//		assertNotNull(cryptoChangeSetDto, "cryptoChangeSetDto");
+//		final LocalRepoTransaction tx = getTransactionOrFail();
+//		final CryptoRepoFileDao cryptoRepoFileDao = tx.getDao(CryptoRepoFileDao.class);
+//		for (final CryptoRepoFileDto cryptoRepoFileDto : cryptoChangeSetDto.getCryptoRepoFileDtos()) {
+//			final Uid cryptoRepoFileId = assertNotNull(cryptoRepoFileDto.getCryptoRepoFileId(), "cryptoRepoFileDto.cryptoRepoFileId");
+//			if (cryptoRepoFileDto.getDeleted() != null) {
+//				final CryptoRepoFile cryptoRepoFile = cryptoRepoFileDao.getCryptoRepoFileOrFail(cryptoRepoFileId);
+//				final String localPath = cryptoRepoFile.getLocalPathOrFail();
+//				final SsDeleteModificationDto deleteModificationDto = new SsDeleteModificationDto();
+//				deleteModificationDto.setId(nextModificationId.getAndIncrement());
+//				deleteModificationDto.setCryptoRepoFileIdControllingPermissions(cryptoRepoFileId);
+//				deleteModificationDto.setPath(localPath); // for debugging only -- is cleared before uploading!
+//				deleteModificationDto.setServerPath(getServerPath(localPath));
+//				// no need to sign now -- is signed directly before upload.
+//				changeSetDto.getModificationDtos().add(deleteModificationDto);
+//			}
+//		}
+//	}
 
 	@Override
 	public Collection<PlainHistoCryptoRepoFileDto> getPlainHistoCryptoRepoFileDtos(PlainHistoCryptoRepoFileFilter filter) {

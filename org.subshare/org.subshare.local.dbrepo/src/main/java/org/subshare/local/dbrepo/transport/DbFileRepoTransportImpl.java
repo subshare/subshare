@@ -14,8 +14,6 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.subshare.core.Cryptree;
-import org.subshare.core.CryptreeFactoryRegistry;
 import org.subshare.core.dto.CurrentHistoCryptoRepoFileDto;
 import org.subshare.core.dto.SsDeleteModificationDto;
 import org.subshare.core.dto.SsDirectoryDto;
@@ -42,10 +40,7 @@ import org.subshare.local.persistence.TempFileChunkDao;
 import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.core.dto.ChangeSetDto;
 import co.codewizards.cloudstore.core.oio.File;
-import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
-import co.codewizards.cloudstore.core.repo.transport.DeleteModificationCollisionException;
-import co.codewizards.cloudstore.local.LocalRepoSync;
 import co.codewizards.cloudstore.local.persistence.Directory;
 import co.codewizards.cloudstore.local.persistence.FileChunk;
 import co.codewizards.cloudstore.local.persistence.NormalFile;
@@ -75,38 +70,39 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 
 	@Override
 	public void delete(final SsDeleteModificationDto deleteModificationDto) {
-		assertNotNull(deleteModificationDto, "deleteModificationDto");
-//		if (! isOnServer())
-//			throw new IllegalStateException("This method should only be invoked on the server!");
-
-		final UUID clientRepositoryId = assertNotNull(getClientRepositoryId(), "clientRepositoryId");
-
-		final LocalRepoManager localRepoManager = getLocalRepoManager();
-		try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
-			final String path = deleteModificationDto.getServerPath();
-			final File file = getFile(path); // we *must* *not* prefix this path! It is absolute inside the repository (= relative to the repository's root - not the connection point)!
-
-			final RepoFile repoFile = transaction.getDao(RepoFileDao.class).getRepoFile(getLocalRepoManager().getLocalRoot(), file);
-			if (repoFile == null)
-				return; // already deleted (probably by other client) => no need to do anything (and a DB rollback is fine)
-
-			// We check first, if the file exists, because we cannot check the validity of the signature (more precisely the
-			// permissions), if the parent was deleted.
-
-			final Cryptree cryptree = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail().getCryptreeOrCreate(transaction, clientRepositoryId);
-			cryptree.assertSignatureOk(deleteModificationDto);
-
-			final boolean collision = detectFileCollisionRecursively(transaction, clientRepositoryId, file);
-			if (collision) // TODO find out what exactly was modified and return these more precise infos to the client!
-				throw new DeleteModificationCollisionException(String.format("Collision in repository %s: The file/directory '%s' cannot be deleted, because it was modified by someone else in the meantime.", localRepoManager.getRepositoryId(), path));
-
-//			createAndPersistDeleteModifications(transaction, deleteModificationDto);
-
-			final LocalRepoSync localRepoSync = LocalRepoSync.create(transaction);
-			localRepoSync.deleteRepoFile(repoFile, false);
-
-			transaction.commit();
-		}
+//		assertNotNull(deleteModificationDto, "deleteModificationDto");
+////		if (! isOnServer())
+////			throw new IllegalStateException("This method should only be invoked on the server!");
+//
+//		final UUID clientRepositoryId = assertNotNull(getClientRepositoryId(), "clientRepositoryId");
+//
+//		final LocalRepoManager localRepoManager = getLocalRepoManager();
+//		try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
+//			final String path = deleteModificationDto.getServerPath();
+//			final File file = getFile(path); // we *must* *not* prefix this path! It is absolute inside the repository (= relative to the repository's root - not the connection point)!
+//
+//			final RepoFile repoFile = transaction.getDao(RepoFileDao.class).getRepoFile(getLocalRepoManager().getLocalRoot(), file);
+//			if (repoFile == null)
+//				return; // already deleted (probably by other client) => no need to do anything (and a DB rollback is fine)
+//
+//			// We check first, if the file exists, because we cannot check the validity of the signature (more precisely the
+//			// permissions), if the parent was deleted.
+//
+//			final Cryptree cryptree = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail().getCryptreeOrCreate(transaction, clientRepositoryId);
+//			cryptree.assertSignatureOk(deleteModificationDto);
+//
+//			final boolean collision = detectFileCollisionRecursively(transaction, clientRepositoryId, file);
+//			if (collision) // TODO find out what exactly was modified and return these more precise infos to the client!
+//				throw new DeleteModificationCollisionException(String.format("Collision in repository %s: The file/directory '%s' cannot be deleted, because it was modified by someone else in the meantime.", localRepoManager.getRepositoryId(), path));
+//
+////			createAndPersistDeleteModifications(transaction, deleteModificationDto);
+//
+//			final LocalRepoSync localRepoSync = LocalRepoSync.create(transaction);
+//			localRepoSync.deleteRepoFile(repoFile, false);
+//
+//			transaction.commit();
+//		}
+		throw new IllegalStateException("This method is unnecessary! The deletion of RepoFiles is done in CryptreeImpl.putCryptoChangeSetDto(...)!");
 	}
 
 	@Override

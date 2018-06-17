@@ -17,9 +17,8 @@ import org.subshare.core.pgp.PgpRegistry;
 /**
  * In-memory store holding the passwords for the private OpenPGP keys.
  * <p>
- * TODO even though only the current user is able to access the LocalServer, we might still try to make
- * this a one-way street, i.e. only putting passphrases via the Ls-protocoal should be possible, reading
- * them should be impossible. Low priority, though, because the current user probably can
+ * Note: <i>AllowSubShareInvocationFilter</i> denies reading passphrases from this object.
+ *
  * @author Marco หงุ่ยตระกูล-Schulze - marco at codewizards dot co
  */
 public class PgpPrivateKeyPassphraseStoreImpl implements PgpPrivateKeyPassphraseStore {
