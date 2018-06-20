@@ -1847,12 +1847,17 @@ public class CryptreeImpl extends AbstractCryptree {
 	}
 
 	private void populateRevision(CryptoChangeSetDto cryptoChangeSetDto, LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {
+		final long beginTimestamp = System.currentTimeMillis();
+
 		cryptoChangeSetDto.setRevision(lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionInProgress());
 		if (cryptoChangeSetDto.getRevision() < 0)
 			throw new IllegalStateException("cryptoChangeSetDto.revision < 0");
+
+		logger.debug("populateRevision: Took {} ms.", System.currentTimeMillis() - beginTimestamp);
 	}
 
 	private void populateChangedCryptoConfigPropSetDtos(CryptoChangeSetDto cryptoChangeSetDto, LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {
+		final long beginTimestamp = System.currentTimeMillis();
 		final CryptoConfigPropSetDtoConverter converter = CryptoConfigPropSetDtoConverter.create(getTransactionOrFail());
 		final CryptoConfigPropSetDao dao = getTransactionOrFail().getDao(CryptoConfigPropSetDao.class);
 
@@ -1862,9 +1867,12 @@ public class CryptreeImpl extends AbstractCryptree {
 
 		for (final CryptoConfigPropSet entity : entities)
 			cryptoChangeSetDto.getCryptoConfigPropSetDtos().add(converter.toCryptoConfigPropSetDto(entity));
+
+		logger.debug("populateChangedCryptoConfigPropSetDtos: Took {} ms for {} entities.", System.currentTimeMillis() - beginTimestamp, entities.size());
 	}
 
 	private void populateChangedCollisionDtos(CryptoChangeSetDto cryptoChangeSetDto, LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {
+		final long beginTimestamp = System.currentTimeMillis();
 		final CollisionDtoConverter converter = CollisionDtoConverter.create(getTransactionOrFail());
 		final CollisionDao dao = getTransactionOrFail().getDao(CollisionDao.class);
 
@@ -1873,9 +1881,12 @@ public class CryptreeImpl extends AbstractCryptree {
 
 		for (final Collision entity : entities)
 			cryptoChangeSetDto.getCollisionDtos().add(converter.toCollisionDto(entity));
+
+		logger.debug("populateChangedCollisionDtos: Took {} ms for {} entities.", System.currentTimeMillis() - beginTimestamp, entities.size());
 	}
 
 	private void populateChangedDeletedCollisionDtos(CryptoChangeSetDto cryptoChangeSetDto, LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {
+		final long beginTimestamp = System.currentTimeMillis();
 		final DeletedCollisionDtoConverter converter = DeletedCollisionDtoConverter.create(getTransactionOrFail());
 		final DeletedCollisionDao dao = getTransactionOrFail().getDao(DeletedCollisionDao.class);
 
@@ -1884,9 +1895,12 @@ public class CryptreeImpl extends AbstractCryptree {
 
 		for (final DeletedCollision entity : entities)
 			cryptoChangeSetDto.getDeletedCollisionDtos().add(converter.toDeletedCollisionDto(entity));
+
+		logger.debug("populateChangedDeletedCollisionDtos: Took {} ms for {} entities.", System.currentTimeMillis() - beginTimestamp, entities.size());
 	}
 
 	private void populateChangedHistoFrameDtos(final CryptoChangeSetDto cryptoChangeSetDto, final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {
+		final long beginTimestamp = System.currentTimeMillis();
 		final HistoFrameDtoConverter converter = HistoFrameDtoConverter.create(getTransactionOrFail());
 		final HistoFrameDao dao = getTransactionOrFail().getDao(HistoFrameDao.class);
 
@@ -1896,12 +1910,15 @@ public class CryptreeImpl extends AbstractCryptree {
 
 		for (final HistoFrame entity : entities)
 			cryptoChangeSetDto.getHistoFrameDtos().add(converter.toHistoFrameDto(entity));
+
+		logger.debug("populateChangedHistoFrameDtos: Took {} ms for {} entities.", System.currentTimeMillis() - beginTimestamp, entities.size());
 	}
 
 	private void populateChangedHistoCryptoRepoFileDtos(final CryptoChangeSetDto cryptoChangeSetDto, final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {
 		if (! isOnServer() && ! resyncMode)
 			return; // We *up*load them exclusively individually. The CryptoChangeSet is only used for *down*load.
 
+		final long beginTimestamp = System.currentTimeMillis();
 		final HistoCryptoRepoFileDtoConverter converter = HistoCryptoRepoFileDtoConverter.create(getTransactionOrFail());
 		final HistoCryptoRepoFileDao dao = getTransactionOrFail().getDao(HistoCryptoRepoFileDao.class);
 
@@ -1911,12 +1928,15 @@ public class CryptreeImpl extends AbstractCryptree {
 
 		for (final HistoCryptoRepoFile entity : entities)
 			cryptoChangeSetDto.getHistoCryptoRepoFileDtos().add(converter.toHistoCryptoRepoFileDto(entity));
+
+		logger.debug("populateChangedHistoCryptoRepoFileDtos: Took {} ms for {} entities.", System.currentTimeMillis() - beginTimestamp, entities.size());
 	}
 
 	private void populateChangedCurrentHistoCryptoRepoFileDtos(final CryptoChangeSetDto cryptoChangeSetDto, final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {
 		if (! isOnServer() && ! resyncMode)
 			return; // We *up*load them exclusively individually. The CryptoChangeSet is only used for *down*load.
 
+		final long beginTimestamp = System.currentTimeMillis();
 		final CurrentHistoCryptoRepoFileDtoConverter converter = CurrentHistoCryptoRepoFileDtoConverter.create(getTransactionOrFail());
 		final CurrentHistoCryptoRepoFileDao dao = getTransactionOrFail().getDao(CurrentHistoCryptoRepoFileDao.class);
 
@@ -1926,87 +1946,107 @@ public class CryptreeImpl extends AbstractCryptree {
 
 		for (final CurrentHistoCryptoRepoFile entity : entities)
 			cryptoChangeSetDto.getCurrentHistoCryptoRepoFileDtos().add(converter.toCurrentHistoCryptoRepoFileDto(entity, false));
+
+		logger.debug("populateChangedCurrentHistoCryptoRepoFileDtos: Took {} ms for {} entities.", System.currentTimeMillis() - beginTimestamp, entities.size());
 	}
 
 	private void populateChangedUserRepoKeyPublicKeyDtos(final CryptoChangeSetDto cryptoChangeSetDto, final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {
+		final long beginTimestamp = System.currentTimeMillis();
 		final UserRepoKeyPublicKeyDtoConverter userRepoKeyPublicKeyDtoConverter = new UserRepoKeyPublicKeyDtoConverter();
 		final UserRepoKeyPublicKeyDao userRepoKeyPublicKeyDao = getTransactionOrFail().getDao(UserRepoKeyPublicKeyDao.class);
 
-		final Collection<UserRepoKeyPublicKey> userRepoKeyPublicKeys = userRepoKeyPublicKeyDao.getUserRepoKeyPublicKeysChangedAfter(
+		final Collection<UserRepoKeyPublicKey> entities = userRepoKeyPublicKeyDao.getUserRepoKeyPublicKeysChangedAfter(
 				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced());
 
-		for (final UserRepoKeyPublicKey userRepoKeyPublicKey : userRepoKeyPublicKeys)
+		for (final UserRepoKeyPublicKey userRepoKeyPublicKey : entities)
 			cryptoChangeSetDto.getUserRepoKeyPublicKeyDtos().add(userRepoKeyPublicKeyDtoConverter.toUserRepoKeyPublicKeyDto(userRepoKeyPublicKey));
+
+		logger.debug("populateChangedUserRepoKeyPublicKeyDtos: Took {} ms for {} entities.", System.currentTimeMillis() - beginTimestamp, entities.size());
 	}
 
 	private void populateChangedCryptoRepoFileDtos(final CryptoChangeSetDto cryptoChangeSetDto, final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {
+		final long beginTimestamp = System.currentTimeMillis();
 		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.CRYPTO_CHANGE_SET_DTO);
 		final CryptoRepoFileDao cryptoRepoFileDao = getTransactionOrFail().getDao(CryptoRepoFileDao.class);
 
-		final Collection<CryptoRepoFile> cryptoRepoFiles = cryptoRepoFileDao.getCryptoRepoFilesChangedAfterExclLastSyncFromRepositoryId(
+		final Collection<CryptoRepoFile> entities = cryptoRepoFileDao.getCryptoRepoFilesChangedAfterExclLastSyncFromRepositoryId(
 				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced(),
 				resyncMode ? NULL_UUID : getRemoteRepositoryIdOrFail());
 
 		final CryptoRepoFileDtoConverter cryptoRepoFileDtoConverter = CryptoRepoFileDtoConverter.create();
-		for (final CryptoRepoFile cryptoRepoFile : cryptoRepoFiles)
+		for (final CryptoRepoFile cryptoRepoFile : entities)
 			cryptoChangeSetDto.getCryptoRepoFileDtos().add(cryptoRepoFileDtoConverter.toCryptoRepoFileDto(cryptoRepoFile));
+
+		logger.debug("populateChangedCryptoRepoFileDtos: Took {} ms for {} entities.", System.currentTimeMillis() - beginTimestamp, entities.size());
 	}
 
 	private void populateChangedCryptoLinkDtos(final CryptoChangeSetDto cryptoChangeSetDto, final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {
+		final long beginTimestamp = System.currentTimeMillis();
 		final CryptoLinkDao cryptoLinkDao = getTransactionOrFail().getDao(CryptoLinkDao.class);
 
-		final Collection<CryptoLink> cryptoLinks = cryptoLinkDao.getCryptoLinksChangedAfterExclLastSyncFromRepositoryId(
+		final Collection<CryptoLink> entities = cryptoLinkDao.getCryptoLinksChangedAfterExclLastSyncFromRepositoryId(
 				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced(),
 				resyncMode ? NULL_UUID : getRemoteRepositoryIdOrFail());
 
-		for (final CryptoLink cryptoLink : cryptoLinks)
+		for (final CryptoLink cryptoLink : entities)
 			cryptoChangeSetDto.getCryptoLinkDtos().add(toCryptoLinkDto(cryptoLink));
+
+		logger.debug("populateChangedCryptoLinkDtos: Took {} ms for {} entities.", System.currentTimeMillis() - beginTimestamp, entities.size());
 	}
 
 	private void populateChangedCryptoKeyDtos(final CryptoChangeSetDto cryptoChangeSetDto, final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {
+		final long beginTimestamp = System.currentTimeMillis();
 		final CryptoKeyDao cryptoKeyDao = getTransactionOrFail().getDao(CryptoKeyDao.class);
 
-		final Collection<CryptoKey> cryptoKeys = cryptoKeyDao.getCryptoKeysChangedAfterExclLastSyncFromRepositoryId(
+		final Collection<CryptoKey> entities = cryptoKeyDao.getCryptoKeysChangedAfterExclLastSyncFromRepositoryId(
 				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced(),
 				resyncMode ? NULL_UUID : getRemoteRepositoryIdOrFail());
 
-		for (final CryptoKey cryptoKey : cryptoKeys)
+		for (final CryptoKey cryptoKey : entities)
 			cryptoChangeSetDto.getCryptoKeyDtos().add(toCryptoKeyDto(cryptoKey));
+
+		logger.debug("populateChangedCryptoKeyDtos: Took {} ms for {} entities.", System.currentTimeMillis() - beginTimestamp, entities.size());
 	}
 
 	private void populateChangedRepositoryOwnerDto(final CryptoChangeSetDto cryptoChangeSetDto, final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {
+		final long beginTimestamp = System.currentTimeMillis();
 		final RepositoryOwnerDao repositoryOwnerDao = getTransactionOrFail().getDao(RepositoryOwnerDao.class);
 		final RepositoryOwner repositoryOwner = repositoryOwnerDao.getRepositoryOwner(getServerRepositoryIdOrFail());
 		if (repositoryOwner != null
 				&& repositoryOwner.getLocalRevision() > lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced()) {
 			cryptoChangeSetDto.setRepositoryOwnerDto(toRepositoryOwnerDto(repositoryOwner));
 		}
+		logger.debug("populateChangedRepositoryOwnerDto: Took {} ms.", System.currentTimeMillis() - beginTimestamp);
 	}
 
 	private void populateChangedPermissionDtos(final CryptoChangeSetDto cryptoChangeSetDto, final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {
+		final long beginTimestamp = System.currentTimeMillis();
 		final PermissionDao permissionDao = getTransactionOrFail().getDao(PermissionDao.class);
 
-		final Collection<Permission> permissions = permissionDao.getPermissionsChangedAfter(
+		final Collection<Permission> entities = permissionDao.getPermissionsChangedAfter(
 				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced());
 
-		for (final Permission permission : permissions) {
+		for (final Permission permission : entities) {
 			enactPermissionRevocationIfNeededAndPossible(permission);
 
 			cryptoChangeSetDto.getPermissionDtos().add(toPermissionDto(permission));
 		}
+		logger.debug("populateChangedPermissionDtos: Took {} ms for {} entities.", System.currentTimeMillis() - beginTimestamp, entities.size());
 	}
 
 	private void populateChangedPermissionSetInheritanceDtos(final CryptoChangeSetDto cryptoChangeSetDto, final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {
+		final long beginTimestamp = System.currentTimeMillis();
 		final PermissionSetInheritanceDao psInheritanceDao = getTransactionOrFail().getDao(PermissionSetInheritanceDao.class);
 
-		final Collection<PermissionSetInheritance> psInheritances = psInheritanceDao.getPermissionSetInheritancesChangedAfter(
+		final Collection<PermissionSetInheritance> entities = psInheritanceDao.getPermissionSetInheritancesChangedAfter(
 				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced());
 
-		for (final PermissionSetInheritance psInheritance : psInheritances) {
+		for (final PermissionSetInheritance psInheritance : entities) {
 			enactPermissionSetInheritanceRevocationIfNeededAndPossible(psInheritance);
 
 			cryptoChangeSetDto.getPermissionSetInheritanceDtos().add(toPermissionSetInheritanceDto(psInheritance));
 		}
+		logger.debug("populateChangedPermissionSetInheritanceDtos: Took {} ms for {} entities.", System.currentTimeMillis() - beginTimestamp, entities.size());
 	}
 
 	private void enactPermissionRevocationIfNeededAndPossible(final Permission permission) {
@@ -2066,59 +2106,74 @@ public class CryptreeImpl extends AbstractCryptree {
 	}
 
 	private void populateChangedPermissionSetDtos(final CryptoChangeSetDto cryptoChangeSetDto, final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {
+		final long beginTimestamp = System.currentTimeMillis();
 		final PermissionSetDao permissionSetDao = getTransactionOrFail().getDao(PermissionSetDao.class);
 
-		final Collection<PermissionSet> permissionSets = permissionSetDao.getPermissionSetsChangedAfter(
+		final Collection<PermissionSet> entities = permissionSetDao.getPermissionSetsChangedAfter(
 				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced());
 
-		for (final PermissionSet permissionSet : permissionSets)
+		for (final PermissionSet permissionSet : entities)
 			cryptoChangeSetDto.getPermissionSetDtos().add(toPermissionSetDto(permissionSet));
+
+		logger.debug("populateChangedPermissionSetDtos: Took {} ms for {} entities.", System.currentTimeMillis() - beginTimestamp, entities.size());
 	}
 
 	private void populateChangedUserRepoKeyPublicKeyReplacementRequestDtos(final CryptoChangeSetDto cryptoChangeSetDto, final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo)
 	{
+		final long beginTimestamp = System.currentTimeMillis();
 		final UserRepoKeyPublicKeyReplacementRequestDtoConverter converter = new UserRepoKeyPublicKeyReplacementRequestDtoConverter();
 		final UserRepoKeyPublicKeyReplacementRequestDao dao = getTransactionOrFail().getDao(UserRepoKeyPublicKeyReplacementRequestDao.class);
 
-		final Collection<UserRepoKeyPublicKeyReplacementRequest> requests = dao.getUserRepoKeyPublicKeyReplacementRequestsChangedAfter(
+		final Collection<UserRepoKeyPublicKeyReplacementRequest> entities = dao.getUserRepoKeyPublicKeyReplacementRequestsChangedAfter(
 				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced());
 
-		for (final UserRepoKeyPublicKeyReplacementRequest request : requests)
+		for (final UserRepoKeyPublicKeyReplacementRequest request : entities)
 			cryptoChangeSetDto.getUserRepoKeyPublicKeyReplacementRequestDtos().add(converter.toUserRepoKeyPublicKeyReplacementRequestDto(request));
+
+		logger.debug("populateChangedUserRepoKeyPublicKeyReplacementRequestDtos: Took {} ms for {} entities.", System.currentTimeMillis() - beginTimestamp, entities.size());
 	}
 
 	private void populateChangedUserRepoKeyPublicKeyReplacementRequestDeletionDtos(final CryptoChangeSetDto cryptoChangeSetDto, final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo)
 	{
+		final long beginTimestamp = System.currentTimeMillis();
 		final UserRepoKeyPublicKeyReplacementRequestDeletionDtoConverter converter = new UserRepoKeyPublicKeyReplacementRequestDeletionDtoConverter();
 		final UserRepoKeyPublicKeyReplacementRequestDeletionDao dao = getTransactionOrFail().getDao(UserRepoKeyPublicKeyReplacementRequestDeletionDao.class);
 
-		final Collection<UserRepoKeyPublicKeyReplacementRequestDeletion> requestDeletions = dao.getUserRepoKeyPublicKeyReplacementRequestDeletionsChangedAfter(
+		final Collection<UserRepoKeyPublicKeyReplacementRequestDeletion> entities = dao.getUserRepoKeyPublicKeyReplacementRequestDeletionsChangedAfter(
 				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced());
 
-		for (UserRepoKeyPublicKeyReplacementRequestDeletion requestDeletion : requestDeletions)
+		for (UserRepoKeyPublicKeyReplacementRequestDeletion requestDeletion : entities)
 			cryptoChangeSetDto.getUserRepoKeyPublicKeyReplacementRequestDeletionDtos().add(converter.toUserRepoKeyPublicKeyReplacementRequestDeletionDto(requestDeletion));
+
+		logger.debug("populateChangedUserRepoKeyPublicKeyReplacementRequestDeletionDtos: Took {} ms for {} entities.", System.currentTimeMillis() - beginTimestamp, entities.size());
 	}
 
 	private void populateChangedUserIdentityDtos(final CryptoChangeSetDto cryptoChangeSetDto, final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {
+		final long beginTimestamp = System.currentTimeMillis();
 		final UserIdentityDtoConverter converter = new UserIdentityDtoConverter();
 		final UserIdentityDao dao = getTransactionOrFail().getDao(UserIdentityDao.class);
 
-		final Collection<UserIdentity> userIdentities = dao.getUserIdentitiesChangedAfter(
+		final Collection<UserIdentity> entities = dao.getUserIdentitiesChangedAfter(
 				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced());
 
-		for (UserIdentity userIdentity : userIdentities)
+		for (UserIdentity userIdentity : entities)
 			cryptoChangeSetDto.getUserIdentityDtos().add(converter.toUserIdentityDto(userIdentity));
+
+		logger.debug("populateChangedUserIdentityDtos: Took {} ms for {} entities.", System.currentTimeMillis() - beginTimestamp, entities.size());
 	}
 
 	private void populateChangedUserIdentityLinkDtos(final CryptoChangeSetDto cryptoChangeSetDto, final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {
+		final long beginTimestamp = System.currentTimeMillis();
 		final UserIdentityLinkDtoConverter converter = new UserIdentityLinkDtoConverter();
 		final UserIdentityLinkDao dao = getTransactionOrFail().getDao(UserIdentityLinkDao.class);
 
-		final Collection<UserIdentityLink> userIdentityLinks = dao.getUserIdentityLinksChangedAfter(
+		final Collection<UserIdentityLink> entities = dao.getUserIdentityLinksChangedAfter(
 				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced());
 
-		for (UserIdentityLink userIdentityLink : userIdentityLinks)
+		for (UserIdentityLink userIdentityLink : entities)
 			cryptoChangeSetDto.getUserIdentityLinkDtos().add(converter.toUserIdentityLinkDto(userIdentityLink));
+
+		logger.debug("populateChangedUserIdentityLinkDtos: Took {} ms for {} entities.", System.currentTimeMillis() - beginTimestamp, entities.size());
 	}
 
 	private CryptoLinkDto toCryptoLinkDto(final CryptoLink cryptoLink) {
