@@ -364,7 +364,7 @@ public class CryptreeImpl extends AbstractCryptree {
 
 		populateCryptoChangeSetDtoWithAllButCryptoRepoFiles(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 
-		logger.debug("getCryptoChangeSetDtoWithCryptoRepoFiles(): {}", cryptoChangeSetDto);
+		logger.trace("getCryptoChangeSetDtoWithCryptoRepoFiles(): {}", cryptoChangeSetDto);
 		return cryptoChangeSetDto;
 	}
 
