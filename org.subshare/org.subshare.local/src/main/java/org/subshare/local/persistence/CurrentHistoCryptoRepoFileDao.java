@@ -5,12 +5,14 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import java.util.Collection;
 import java.util.UUID;
 
+import javax.jdo.PersistenceManager;
 import javax.jdo.Query;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import co.codewizards.cloudstore.local.persistence.Dao;
+import co.codewizards.cloudstore.local.persistence.FetchPlanBackup;
 
 public class CurrentHistoCryptoRepoFileDao extends Dao<CurrentHistoCryptoRepoFile, CurrentHistoCryptoRepoFileDao> {
 
@@ -20,13 +22,17 @@ public class CurrentHistoCryptoRepoFileDao extends Dao<CurrentHistoCryptoRepoFil
 			final long localRevision, final UUID exclLastSyncFromRepositoryId) {
 		assertNotNull(exclLastSyncFromRepositoryId, "exclLastSyncFromRepositoryId");
 
-		final Query query = pm().newNamedQuery(getEntityClass(), "getCurrentHistoCryptoRepoFilesChangedAfter_localRevision_exclLastSyncFromRepositoryId");
+		final PersistenceManager pm = pm();
+		final FetchPlanBackup fetchPlanBackup = FetchPlanBackup.createFrom(pm);
+		final Query query = pm.newNamedQuery(getEntityClass(), "getCurrentHistoCryptoRepoFilesChangedAfter_localRevision_exclLastSyncFromRepositoryId");
 		try {
+			clearFetchGroups();
 			long startTimestamp = System.currentTimeMillis();
 			@SuppressWarnings("unchecked")
 			Collection<CurrentHistoCryptoRepoFile> result = (Collection<CurrentHistoCryptoRepoFile>) query.execute(localRevision, exclLastSyncFromRepositoryId.toString());
 			logger.debug("getCurrentHistoCryptoRepoFilesChangedAfter: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
 
+			fetchPlanBackup.restore(pm);
 			startTimestamp = System.currentTimeMillis();
 			result = load(result);
 			logger.debug("getCurrentHistoCryptoRepoFilesChangedAfter: Loading result-set with {} elements took {} ms.", result.size(), System.currentTimeMillis() - startTimestamp);
@@ -34,6 +40,7 @@ public class CurrentHistoCryptoRepoFileDao extends Dao<CurrentHistoCryptoRepoFil
 			return result;
 		} finally {
 			query.closeAll();
+			fetchPlanBackup.restore(pm);
 		}
 	}
 

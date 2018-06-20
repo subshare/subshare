@@ -8,6 +8,8 @@ import java.io.InputStream;
 import java.util.UUID;
 
 import javax.jdo.annotations.Embedded;
+import javax.jdo.annotations.FetchGroup;
+import javax.jdo.annotations.FetchGroups;
 import javax.jdo.annotations.Index;
 import javax.jdo.annotations.Indices;
 import javax.jdo.annotations.Inheritance;
@@ -48,6 +50,12 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 	@Query(
 			name="getCurrentHistoCryptoRepoFilesChangedAfter_localRevision_exclLastSyncFromRepositoryId",
 			value="SELECT WHERE this.localRevision > :localRevision && (this.lastSyncFromRepositoryId == null || this.lastSyncFromRepositoryId != :lastSyncFromRepositoryId)") // TODO this necessary == null is IMHO a DN bug!
+})
+@FetchGroups({
+	@FetchGroup(name = FetchGroupConst.CRYPTO_CHANGE_SET_DTO, members = {
+//			@Persistent(name = "histoCryptoRepoFile"), // should *always* be in cache
+			@Persistent(name = "cryptoRepoFile"),
+			@Persistent(name = "signature")})
 })
 public class CurrentHistoCryptoRepoFile extends Entity implements WriteProtected, AutoTrackLocalRevision, StoreCallback {
 

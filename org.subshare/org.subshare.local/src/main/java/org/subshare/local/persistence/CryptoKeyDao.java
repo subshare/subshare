@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
+import javax.jdo.PersistenceManager;
 import javax.jdo.Query;
 
 import org.slf4j.Logger;
@@ -15,6 +16,7 @@ import org.subshare.core.dto.CryptoKeyRole;
 
 import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.local.persistence.Dao;
+import co.codewizards.cloudstore.local.persistence.FetchPlanBackup;
 
 public class CryptoKeyDao extends Dao<CryptoKey, CryptoKeyDao> {
 	private static final Logger logger = LoggerFactory.getLogger(CryptoKeyDao.class);
@@ -75,13 +77,17 @@ public class CryptoKeyDao extends Dao<CryptoKey, CryptoKeyDao> {
 			final long localRevision, final UUID exclLastSyncFromRepositoryId) {
 		assertNotNull(exclLastSyncFromRepositoryId, "exclLastSyncFromRepositoryId");
 
-		final Query query = pm().newNamedQuery(getEntityClass(), "getCryptoKeysChangedAfter_localRevision_exclLastSyncFromRepositoryId");
+		final PersistenceManager pm = pm();
+		final FetchPlanBackup fetchPlanBackup = FetchPlanBackup.createFrom(pm);
+		final Query query = pm.newNamedQuery(getEntityClass(), "getCryptoKeysChangedAfter_localRevision_exclLastSyncFromRepositoryId");
 		try {
+			clearFetchGroups();
 			long startTimestamp = System.currentTimeMillis();
 			@SuppressWarnings("unchecked")
 			Collection<CryptoKey> cryptoKeys = (Collection<CryptoKey>) query.execute(localRevision, exclLastSyncFromRepositoryId.toString());
 			logger.debug("getCryptoKeysChangedAfter: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
 
+			fetchPlanBackup.restore(pm);
 			startTimestamp = System.currentTimeMillis();
 			cryptoKeys = load(cryptoKeys);
 			logger.debug("getCryptoKeysChangedAfter: Loading result-set with {} elements took {} ms.", cryptoKeys.size(), System.currentTimeMillis() - startTimestamp);
@@ -89,6 +95,7 @@ public class CryptoKeyDao extends Dao<CryptoKey, CryptoKeyDao> {
 			return cryptoKeys;
 		} finally {
 			query.closeAll();
+			fetchPlanBackup.restore(pm);
 		}
 	}
 

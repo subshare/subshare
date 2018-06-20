@@ -3,6 +3,7 @@ package org.subshare.rest.server.service;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.util.UUID;
+import java.util.concurrent.Callable;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -20,6 +21,8 @@ import org.subshare.core.CryptreeFactory;
 import org.subshare.core.CryptreeFactoryRegistry;
 import org.subshare.core.dto.CryptoChangeSetDto;
 
+import co.codewizards.cloudstore.core.concurrent.CallableProvider;
+import co.codewizards.cloudstore.core.concurrent.DeferrableExecutor;
 import co.codewizards.cloudstore.core.repo.local.ContextWithLocalRepoManager;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
@@ -37,23 +40,51 @@ public class CryptoChangeSetDtoService extends AbstractServiceWithRepoToRepoAuth
 
 	@GET
 	public CryptoChangeSetDto getCryptoChangeSetDto(@QueryParam("lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced") final Long lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced) {
-		CryptoChangeSetDto cryptoChangeSetDto;
-		try (final RepoTransport repoTransport = authenticateAndCreateLocalRepoTransport();) {
-			final UUID clientRepositoryId = assertNotNull(repoTransport.getClientRepositoryId(), "clientRepositoryId");
-			final LocalRepoManager localRepoManager = ((ContextWithLocalRepoManager) repoTransport).getLocalRepoManager();
-			transaction = localRepoManager.beginWriteTransaction(); // We write LastCryptoKeySyncToRemoteRepo.
-			try {
-				final CryptreeFactory cryptreeFactory = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail();
-				final Cryptree cryptree = cryptreeFactory.getCryptreeOrCreate(transaction, clientRepositoryId);
-				cryptree.initLocalRepositoryType();
-				cryptoChangeSetDto = cryptree.getCryptoChangeSetDtoWithCryptoRepoFiles(lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced);
-
-				transaction.commit();
-			} finally {
-				transaction.rollbackIfActive();
-			}
+		final RepoTransport[] repoTransport = new RepoTransport[] { authenticateAndCreateLocalRepoTransport() };
+		try {
+			final String callIdentifier = CryptoChangeSetDtoService.class.getName() + ".getCryptoChangeSetDto|" + repositoryName + '|' + getAuth().getUserName() + '|' + lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced;
+			return DeferrableExecutor.getInstance().call(
+					callIdentifier,
+					new CallableProvider<CryptoChangeSetDto>() {
+						@Override
+						public Callable<CryptoChangeSetDto> getCallable() { // called synchronously during DeferrableExecutor.call(...) - if called at all
+							final RepoTransport rt = repoTransport[0];
+							repoTransport[0] = null;
+							return new Callable<CryptoChangeSetDto>() {
+								@Override
+								public CryptoChangeSetDto call() throws Exception { // called *A*synchronously
+									try {
+										final CryptoChangeSetDto cryptoChangeSetDto = getCryptoChangeSetDto(rt, lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced);
+										return cryptoChangeSetDto;
+									} finally {
+										rt.close();
+									}
+								}
+							};
+						}
+					});
+		} finally {
+			if (repoTransport[0] != null)
+				repoTransport[0].close();
 		}
-		return cryptoChangeSetDto;
+	}
+
+	protected CryptoChangeSetDto getCryptoChangeSetDto(final RepoTransport repoTransport, final Long lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced) {
+		final UUID clientRepositoryId = assertNotNull(repoTransport.getClientRepositoryId(), "clientRepositoryId");
+		final LocalRepoManager localRepoManager = ((ContextWithLocalRepoManager) repoTransport).getLocalRepoManager();
+		transaction = localRepoManager.beginWriteTransaction(); // We write LastCryptoKeySyncToRemoteRepo.
+		try {
+			final CryptreeFactory cryptreeFactory = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail();
+			final Cryptree cryptree = cryptreeFactory.getCryptreeOrCreate(transaction, clientRepositoryId);
+			cryptree.initLocalRepositoryType();
+			final CryptoChangeSetDto cryptoChangeSetDto = cryptree.getCryptoChangeSetDtoWithCryptoRepoFiles(
+					lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced);
+
+			transaction.commit();
+			return cryptoChangeSetDto;
+		} finally {
+			transaction.rollbackIfActive();
+		}
 	}
 
 	@POST

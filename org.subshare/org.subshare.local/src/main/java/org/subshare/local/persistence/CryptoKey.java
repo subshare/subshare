@@ -11,6 +11,8 @@ import java.util.UUID;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Embedded;
+import javax.jdo.annotations.FetchGroup;
+import javax.jdo.annotations.FetchGroups;
 import javax.jdo.annotations.Index;
 import javax.jdo.annotations.Indices;
 import javax.jdo.annotations.Inheritance;
@@ -70,6 +72,12 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 	@Query(
 			name = "getCryptoKeysChangedAfter_localRevision_exclLastSyncFromRepositoryId",
 			value = "SELECT WHERE this.localRevision > :localRevision && (this.lastSyncFromRepositoryId == null || this.lastSyncFromRepositoryId != :lastSyncFromRepositoryId)") // TODO this necessary == null is IMHO a DN bug!
+})
+@FetchGroups({
+	@FetchGroup(name = FetchGroupConst.CRYPTO_CHANGE_SET_DTO, members = {
+			@Persistent(name = "cryptoRepoFile"),
+			@Persistent(name = "cryptoKeyDeactivation"),
+			@Persistent(name = "signature")})
 })
 public class CryptoKey extends Entity implements WriteProtected, AutoTrackLocalRevision, StoreCallback {
 

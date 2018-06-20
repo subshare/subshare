@@ -18,6 +18,9 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
+import javax.jdo.FetchPlan;
+import javax.jdo.PersistenceManager;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.subshare.core.AbstractCryptree;
@@ -95,6 +98,7 @@ import org.subshare.local.persistence.CurrentHistoCryptoRepoFile;
 import org.subshare.local.persistence.CurrentHistoCryptoRepoFileDao;
 import org.subshare.local.persistence.DeletedCollision;
 import org.subshare.local.persistence.DeletedCollisionDao;
+import org.subshare.local.persistence.FetchGroupConst;
 import org.subshare.local.persistence.HistoCryptoRepoFile;
 import org.subshare.local.persistence.HistoCryptoRepoFileDao;
 import org.subshare.local.persistence.HistoFrame;
@@ -151,6 +155,7 @@ import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
 import co.codewizards.cloudstore.core.repo.transport.CollisionException;
 import co.codewizards.cloudstore.core.util.StringUtil;
+import co.codewizards.cloudstore.local.ContextWithPersistenceManager;
 import co.codewizards.cloudstore.local.persistence.LocalRepository;
 import co.codewizards.cloudstore.local.persistence.LocalRepositoryDao;
 import co.codewizards.cloudstore.local.persistence.RemoteRepository;
@@ -1820,6 +1825,7 @@ public class CryptreeImpl extends AbstractCryptree {
 				lastCryptoKeySyncToRemoteRepo.getRemoteRepository().getRepositoryId(),
 				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced(),
 				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionInProgress());
+		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.CRYPTO_CHANGE_SET_DTO);
 		populateRevision(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 		populateChangedUserRepoKeyPublicKeyDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
 		populateChangedCryptoLinkDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
@@ -1934,6 +1940,7 @@ public class CryptreeImpl extends AbstractCryptree {
 	}
 
 	private void populateChangedCryptoRepoFileDtos(final CryptoChangeSetDto cryptoChangeSetDto, final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {
+		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.CRYPTO_CHANGE_SET_DTO);
 		final CryptoRepoFileDao cryptoRepoFileDao = getTransactionOrFail().getDao(CryptoRepoFileDao.class);
 
 		final Collection<CryptoRepoFile> cryptoRepoFiles = cryptoRepoFileDao.getCryptoRepoFilesChangedAfterExclLastSyncFromRepositoryId(
@@ -2823,5 +2830,9 @@ public class CryptreeImpl extends AbstractCryptree {
 				&& equal(dto1.getComment(), dto2.getComment())
 				&& equal(dto1.getResolved(), dto2.getResolved())
 				);
+	}
+
+	protected PersistenceManager pm() {
+		return ((ContextWithPersistenceManager)getTransactionOrFail()).getPersistenceManager();
 	}
 }

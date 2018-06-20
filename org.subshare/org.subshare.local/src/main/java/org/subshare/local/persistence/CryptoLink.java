@@ -9,6 +9,8 @@ import java.util.UUID;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Embedded;
+import javax.jdo.annotations.FetchGroup;
+import javax.jdo.annotations.FetchGroups;
 import javax.jdo.annotations.Index;
 import javax.jdo.annotations.Indices;
 import javax.jdo.annotations.Inheritance;
@@ -68,6 +70,14 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 
 	@Query(name = "getCryptoLinks_signingUserRepoKeyId",
 			value = "SELECT WHERE this.signature.signingUserRepoKeyId == :signingUserRepoKeyId")
+})
+@FetchGroups({
+	@FetchGroup(name = FetchGroupConst.CRYPTO_CHANGE_SET_DTO, members = {
+			@Persistent(name = "fromCryptoKey"),
+			@Persistent(name = "fromUserRepoKeyPublicKey"),
+			@Persistent(name = "toCryptoKeyData"),
+			@Persistent(name = "toCryptoKey"),
+			@Persistent(name = "signature")})
 })
 public class CryptoLink extends Entity implements WriteProtected, AutoTrackLocalRevision, StoreCallback {
 

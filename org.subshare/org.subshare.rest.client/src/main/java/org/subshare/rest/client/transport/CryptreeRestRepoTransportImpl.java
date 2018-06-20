@@ -70,6 +70,8 @@ import org.subshare.rest.client.transport.request.SsMakeSymlink;
 
 import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.core.auth.SignatureException;
+import co.codewizards.cloudstore.core.concurrent.DeferredCompletionException;
+import co.codewizards.cloudstore.core.config.ConfigImpl;
 import co.codewizards.cloudstore.core.dto.ChangeSetDto;
 import co.codewizards.cloudstore.core.dto.ConfigPropSetDto;
 import co.codewizards.cloudstore.core.dto.ModificationDto;
@@ -80,6 +82,7 @@ import co.codewizards.cloudstore.core.dto.RepositoryDto;
 import co.codewizards.cloudstore.core.dto.VersionInfoDto;
 import co.codewizards.cloudstore.core.io.ByteArrayInputStream;
 import co.codewizards.cloudstore.core.io.ByteArrayOutputStream;
+import co.codewizards.cloudstore.core.io.TimeoutException;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.repo.local.ContextWithLocalRepoManager;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
@@ -96,6 +99,12 @@ import co.codewizards.cloudstore.rest.client.request.RequestRepoConnection;
 
 public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport implements CryptreeRestRepoTransport, ContextWithLocalRepoManager {
 	private static final Logger logger = LoggerFactory.getLogger(CryptreeRestRepoTransportImpl.class);
+
+	public static final String CONFIG_KEY_GET_CRYPTO_CHANGE_SET_DTO_TIMEOUT = "getCryptoChangeSetDtoTimeout";
+	public static final long CONFIG_DEFAULT_VALUE_GET_CRYPTO_CHANGE_SET_DTO_TIMEOUT = 60L * 60L * 1000L;
+
+	private final long cryptoChangeSetTimeout = ConfigImpl.getInstance().getPropertyAsPositiveOrZeroLong(
+			CONFIG_KEY_GET_CRYPTO_CHANGE_SET_DTO_TIMEOUT, CONFIG_DEFAULT_VALUE_GET_CRYPTO_CHANGE_SET_DTO_TIMEOUT);
 
 	private CryptreeFactory cryptreeFactory;
 	private RestRepoTransport restRepoTransport;
@@ -222,7 +231,19 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 					cryptree.getLastCryptoKeySyncFromRemoteRepoRemoteRepositoryRevisionSynced(); // naming perspective from this (local) side
 		}
 
-		final CryptoChangeSetDto cryptoChangeSetDto = getClient().execute(new GetCryptoChangeSetDto(getRepositoryId().toString(), lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced));
+		CryptoChangeSetDto cryptoChangeSetDto;
+		final long beginTimestamp = System.currentTimeMillis();
+		while (true) {
+			try {
+				cryptoChangeSetDto = getClient().execute(new GetCryptoChangeSetDto(getRepositoryId().toString(), lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced));
+				break;
+			} catch (final DeferredCompletionException x) {
+				if (System.currentTimeMillis() > beginTimestamp + cryptoChangeSetTimeout)
+					throw new TimeoutException(String.format("Could not get crypto-change-set within %s milliseconds!", cryptoChangeSetTimeout), x);
+
+				logger.info("syncCryptoKeysFromRemoteRepo: Got DeferredCompletionException; will retry.");
+			}
+		}
 
 		if (logger.isInfoEnabled()) {
 			logger.info("syncCryptoKeysFromRemoteRepo: clientRepositoryId={} serverRepositoryId={}: "

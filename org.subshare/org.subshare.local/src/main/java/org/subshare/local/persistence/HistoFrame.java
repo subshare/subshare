@@ -9,6 +9,8 @@ import java.util.UUID;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Embedded;
+import javax.jdo.annotations.FetchGroup;
+import javax.jdo.annotations.FetchGroups;
 import javax.jdo.annotations.Index;
 import javax.jdo.annotations.Indices;
 import javax.jdo.annotations.Inheritance;
@@ -65,6 +67,10 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 	@Query(
 			name="getHistoFrame_fromRepositoryId_sealed",
 			value="SELECT UNIQUE WHERE this.fromRepositoryId == :fromRepositoryId && this.sealed == :sealed")
+})
+@FetchGroups({
+	@FetchGroup(name = FetchGroupConst.CRYPTO_CHANGE_SET_DTO, members = {
+			@Persistent(name = "signature")})
 })
 public class HistoFrame extends Entity implements WriteProtected, AutoTrackLocalRevision, StoreCallback {
 

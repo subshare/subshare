@@ -14,6 +14,8 @@ import java.util.zip.GZIPOutputStream;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Embedded;
+import javax.jdo.annotations.FetchGroup;
+import javax.jdo.annotations.FetchGroups;
 import javax.jdo.annotations.Index;
 import javax.jdo.annotations.Indices;
 import javax.jdo.annotations.Inheritance;
@@ -77,6 +79,15 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 	@Query(
 			name="getHistoCryptoRepoFilesWithoutPlainHistoCryptoRepoFile",
 			value="SELECT WHERE 0 == (SELECT count(p) FROM org.subshare.local.persistence.PlainHistoCryptoRepoFile p WHERE p.histoCryptoRepoFile == this)")
+})
+@FetchGroups({
+	@FetchGroup(name = FetchGroupConst.CRYPTO_CHANGE_SET_DTO, members = {
+			@Persistent(name = "histoFrame"),
+			@Persistent(name = "cryptoRepoFile"),
+			@Persistent(name = "previousHistoCryptoRepoFile"),
+			@Persistent(name = "cryptoKey"),
+			@Persistent(name = "repoFileDtoData"),
+			@Persistent(name = "signature")})
 })
 public class HistoCryptoRepoFile extends Entity implements WriteProtected, AutoTrackLocalRevision, StoreCallback {
 

@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
+import javax.jdo.PersistenceManager;
 import javax.jdo.Query;
 
 import org.slf4j.Logger;
@@ -14,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.local.persistence.Dao;
+import co.codewizards.cloudstore.local.persistence.FetchPlanBackup;
 
 public class HistoCryptoRepoFileDao extends Dao<HistoCryptoRepoFile, HistoCryptoRepoFileDao> {
 
@@ -23,13 +25,17 @@ public class HistoCryptoRepoFileDao extends Dao<HistoCryptoRepoFile, HistoCrypto
 			final long localRevision, final UUID exclLastSyncFromRepositoryId) {
 		assertNotNull(exclLastSyncFromRepositoryId, "exclLastSyncFromRepositoryId");
 
-		final Query query = pm().newNamedQuery(getEntityClass(), "getHistoCryptoRepoFilesChangedAfter_localRevision_exclLastSyncFromRepositoryId");
+		final PersistenceManager pm = pm();
+		final FetchPlanBackup fetchPlanBackup = FetchPlanBackup.createFrom(pm);
+		final Query query = pm.newNamedQuery(getEntityClass(), "getHistoCryptoRepoFilesChangedAfter_localRevision_exclLastSyncFromRepositoryId");
 		try {
+			clearFetchGroups();
 			long startTimestamp = System.currentTimeMillis();
 			@SuppressWarnings("unchecked")
 			Collection<HistoCryptoRepoFile> result = (Collection<HistoCryptoRepoFile>) query.execute(localRevision, exclLastSyncFromRepositoryId.toString());
 			logger.debug("getHistoCryptoRepoFilesChangedAfter: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
 
+			fetchPlanBackup.restore(pm);
 			startTimestamp = System.currentTimeMillis();
 			result = load(result);
 			logger.debug("getHistoCryptoRepoFilesChangedAfter: Loading result-set with {} elements took {} ms.", result.size(), System.currentTimeMillis() - startTimestamp);
@@ -37,6 +43,7 @@ public class HistoCryptoRepoFileDao extends Dao<HistoCryptoRepoFile, HistoCrypto
 			return result;
 		} finally {
 			query.closeAll();
+			fetchPlanBackup.restore(pm);
 		}
 	}
 

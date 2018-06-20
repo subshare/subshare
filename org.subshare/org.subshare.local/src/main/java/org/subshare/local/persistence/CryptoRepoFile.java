@@ -17,6 +17,8 @@ import javax.jdo.JDOHelper;
 import javax.jdo.PersistenceManager;
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Embedded;
+import javax.jdo.annotations.FetchGroup;
+import javax.jdo.annotations.FetchGroups;
 import javax.jdo.annotations.Index;
 import javax.jdo.annotations.Indices;
 import javax.jdo.annotations.Inheritance;
@@ -74,6 +76,13 @@ import co.codewizards.cloudstore.local.persistence.RepoFile;
 	@Query(
 			name="getCryptoRepoFilesChangedAfter_localRevision_exclLastSyncFromRepositoryId",
 			value="SELECT WHERE this.localRevision > :localRevision && (this.lastSyncFromRepositoryId == null || this.lastSyncFromRepositoryId != :lastSyncFromRepositoryId)") // TODO this necessary == null is IMHO a DN bug!
+})
+@FetchGroups({
+	@FetchGroup(name = FetchGroupConst.CRYPTO_CHANGE_SET_DTO, members = {
+			@Persistent(name = "parent"),
+			@Persistent(name = "cryptoKey"),
+			@Persistent(name = "repoFileDtoData"),
+			@Persistent(name = "signature")})
 })
 public class CryptoRepoFile extends Entity implements WriteProtected, AutoTrackLocalRevision, StoreCallback {
 

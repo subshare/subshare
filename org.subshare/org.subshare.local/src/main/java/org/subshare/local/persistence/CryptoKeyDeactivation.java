@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import javax.jdo.annotations.Embedded;
+import javax.jdo.annotations.FetchGroup;
+import javax.jdo.annotations.FetchGroups;
 import javax.jdo.annotations.Inheritance;
 import javax.jdo.annotations.InheritanceStrategy;
 import javax.jdo.annotations.NullValue;
@@ -25,6 +27,11 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 
 @PersistenceCapable
 @Inheritance(strategy=InheritanceStrategy.NEW_TABLE)
+@FetchGroups({
+	@FetchGroup(name = FetchGroupConst.CRYPTO_CHANGE_SET_DTO, members = {
+			@Persistent(name = "cryptoKey"),
+			@Persistent(name = "signature")})
+})
 public class CryptoKeyDeactivation extends Entity implements WriteProtected {
 
 	public CryptoKeyDeactivation() { }

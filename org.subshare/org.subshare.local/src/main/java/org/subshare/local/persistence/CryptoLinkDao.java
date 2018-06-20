@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
+import javax.jdo.PersistenceManager;
 import javax.jdo.Query;
 
 import org.slf4j.Logger;
@@ -17,6 +18,7 @@ import org.subshare.core.dto.CryptoKeyRole;
 
 import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.local.persistence.Dao;
+import co.codewizards.cloudstore.local.persistence.FetchPlanBackup;
 
 public class CryptoLinkDao extends Dao<CryptoLink, CryptoLinkDao> {
 	private static final Logger logger = LoggerFactory.getLogger(CryptoLinkDao.class);
@@ -57,13 +59,17 @@ public class CryptoLinkDao extends Dao<CryptoLink, CryptoLinkDao> {
 			final long localRevision, final UUID exclLastSyncFromRepositoryId) {
 		assertNotNull(exclLastSyncFromRepositoryId, "exclLastSyncFromRepositoryId");
 
-		final Query query = pm().newNamedQuery(getEntityClass(), "getCryptoLinksChangedAfter_localRevision_exclLastSyncFromRepositoryId");
+		final PersistenceManager pm = pm();
+		final FetchPlanBackup fetchPlanBackup = FetchPlanBackup.createFrom(pm);
+		final Query query = pm.newNamedQuery(getEntityClass(), "getCryptoLinksChangedAfter_localRevision_exclLastSyncFromRepositoryId");
 		try {
+			clearFetchGroups();
 			long startTimestamp = System.currentTimeMillis();
 			@SuppressWarnings("unchecked")
 			Collection<CryptoLink> cryptoLinks = (Collection<CryptoLink>) query.execute(localRevision, exclLastSyncFromRepositoryId.toString());
 			logger.debug("getCryptoLinksChangedAfter: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
 
+			fetchPlanBackup.restore(pm);
 			startTimestamp = System.currentTimeMillis();
 			cryptoLinks = load(cryptoLinks);
 			logger.debug("getCryptoLinksChangedAfter: Loading result-set with {} elements took {} ms.", cryptoLinks.size(), System.currentTimeMillis() - startTimestamp);
@@ -71,6 +77,7 @@ public class CryptoLinkDao extends Dao<CryptoLink, CryptoLinkDao> {
 			return cryptoLinks;
 		} finally {
 			query.closeAll();
+			fetchPlanBackup.restore(pm);
 		}
 	}
 

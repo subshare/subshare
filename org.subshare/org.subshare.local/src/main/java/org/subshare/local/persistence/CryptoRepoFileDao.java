@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import javax.jdo.PersistenceManager;
 import javax.jdo.Query;
 
 import org.slf4j.Logger;
@@ -17,6 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.local.persistence.Dao;
+import co.codewizards.cloudstore.local.persistence.FetchPlanBackup;
 import co.codewizards.cloudstore.local.persistence.RemoteRepository;
 import co.codewizards.cloudstore.local.persistence.RepoFile;
 
@@ -84,13 +86,17 @@ public class CryptoRepoFileDao extends Dao<CryptoRepoFile, CryptoRepoFileDao> {
 			final long localRevision, final UUID exclLastSyncFromRepositoryId) {
 
 		assertNotNull(exclLastSyncFromRepositoryId, "exclLastSyncFromRepositoryId");
-		final Query query = pm().newNamedQuery(getEntityClass(), "getCryptoRepoFilesChangedAfter_localRevision_exclLastSyncFromRepositoryId");
+		final PersistenceManager pm = pm();
+		final FetchPlanBackup fetchPlanBackup = FetchPlanBackup.createFrom(pm);
+		final Query query = pm.newNamedQuery(getEntityClass(), "getCryptoRepoFilesChangedAfter_localRevision_exclLastSyncFromRepositoryId");
 		try {
+			clearFetchGroups();
 			long startTimestamp = System.currentTimeMillis();
 			@SuppressWarnings("unchecked")
 			Collection<CryptoRepoFile> cryptoRepoFiles = (Collection<CryptoRepoFile>) query.execute(localRevision, exclLastSyncFromRepositoryId.toString());
 			logger.debug("getCryptoRepoFileChangedAfterExclLastSyncFromRepositoryId: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
 
+			fetchPlanBackup.restore(pm);
 			startTimestamp = System.currentTimeMillis();
 			cryptoRepoFiles = load(cryptoRepoFiles);
 			logger.debug("getCryptoRepoFileChangedAfterExclLastSyncFromRepositoryId: Loading result-set with {} elements took {} ms.", cryptoRepoFiles.size(), System.currentTimeMillis() - startTimestamp);
@@ -98,6 +104,7 @@ public class CryptoRepoFileDao extends Dao<CryptoRepoFile, CryptoRepoFileDao> {
 			return cryptoRepoFiles;
 		} finally {
 			query.closeAll();
+			fetchPlanBackup.restore(pm);
 		}
 	}
 
@@ -118,10 +125,11 @@ public class CryptoRepoFileDao extends Dao<CryptoRepoFile, CryptoRepoFileDao> {
 			query.closeAll();
 		}
 	}
-	
+
 	/**
 	 * @deprecated Only temporarily for debugging.
 	 */
+	@Deprecated
 	protected Collection<CryptoRepoFile> getChildCryptoRepoFiles(final CryptoRepoFile parent, final String localName) {
 		// parent may be null, if we look for the root -- very unlikely, but possible.
 		assertNotNull(localName, "localName");
@@ -147,10 +155,10 @@ public class CryptoRepoFileDao extends Dao<CryptoRepoFile, CryptoRepoFileDao> {
 		assertNotNull(localName, "localName");
 
 		Collection<CryptoRepoFile> childCryptoRepoFiles = getChildCryptoRepoFiles(parent, localName);
-		
+
 		if (childCryptoRepoFiles.isEmpty())
 			return null;
-		
+
 		if (childCryptoRepoFiles.size() == 1)
 			return childCryptoRepoFiles.iterator().next();
 
