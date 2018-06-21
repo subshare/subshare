@@ -101,7 +101,7 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 	private static final Logger logger = LoggerFactory.getLogger(CryptreeRestRepoTransportImpl.class);
 
 	public static final String CONFIG_KEY_GET_CRYPTO_CHANGE_SET_DTO_TIMEOUT = "getCryptoChangeSetDtoTimeout";
-	public static final long CONFIG_DEFAULT_VALUE_GET_CRYPTO_CHANGE_SET_DTO_TIMEOUT = 60L * 60L * 1000L;
+	public static final long CONFIG_DEFAULT_VALUE_GET_CRYPTO_CHANGE_SET_DTO_TIMEOUT = 2 * 60L * 60L * 1000L; // 2 hours
 
 	private final long cryptoChangeSetTimeout = ConfigImpl.getInstance().getPropertyAsPositiveOrZeroLong(
 			CONFIG_KEY_GET_CRYPTO_CHANGE_SET_DTO_TIMEOUT, CONFIG_DEFAULT_VALUE_GET_CRYPTO_CHANGE_SET_DTO_TIMEOUT);
