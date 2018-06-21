@@ -4,4 +4,5 @@ public interface FetchGroupConst extends co.codewizards.cloudstore.local.persist
 
 	String CRYPTO_CHANGE_SET_DTO = "CryptoChangeSetDto";
 
+	String SIGNATURE = "Signature";
 }

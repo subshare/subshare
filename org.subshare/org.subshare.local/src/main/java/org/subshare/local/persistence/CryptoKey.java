@@ -77,7 +77,8 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 	@FetchGroup(name = FetchGroupConst.CRYPTO_CHANGE_SET_DTO, members = {
 			@Persistent(name = "cryptoRepoFile"),
 			@Persistent(name = "cryptoKeyDeactivation"),
-			@Persistent(name = "signature")})
+			@Persistent(name = "signature")}),
+	@FetchGroup(name = FetchGroupConst.SIGNATURE, members = {@Persistent(name = "signature")})
 })
 public class CryptoKey extends Entity implements WriteProtected, AutoTrackLocalRevision, StoreCallback {
 

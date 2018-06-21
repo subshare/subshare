@@ -87,7 +87,8 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 			@Persistent(name = "previousHistoCryptoRepoFile"),
 			@Persistent(name = "cryptoKey"),
 			@Persistent(name = "repoFileDtoData"),
-			@Persistent(name = "signature")})
+			@Persistent(name = "signature")}),
+	@FetchGroup(name = FetchGroupConst.SIGNATURE, members = {@Persistent(name = "signature")})
 })
 public class HistoCryptoRepoFile extends Entity implements WriteProtected, AutoTrackLocalRevision, StoreCallback {
 

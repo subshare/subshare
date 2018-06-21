@@ -70,7 +70,8 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 })
 @FetchGroups({
 	@FetchGroup(name = FetchGroupConst.CRYPTO_CHANGE_SET_DTO, members = {
-			@Persistent(name = "signature")})
+			@Persistent(name = "signature")}),
+	@FetchGroup(name = FetchGroupConst.SIGNATURE, members = {@Persistent(name = "signature")})
 })
 public class HistoFrame extends Entity implements WriteProtected, AutoTrackLocalRevision, StoreCallback {
 

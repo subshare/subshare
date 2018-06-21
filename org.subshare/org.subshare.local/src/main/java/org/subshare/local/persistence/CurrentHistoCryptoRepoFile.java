@@ -55,7 +55,8 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 	@FetchGroup(name = FetchGroupConst.CRYPTO_CHANGE_SET_DTO, members = {
 //			@Persistent(name = "histoCryptoRepoFile"), // should *always* be in cache
 			@Persistent(name = "cryptoRepoFile"),
-			@Persistent(name = "signature")})
+			@Persistent(name = "signature")}),
+	@FetchGroup(name = FetchGroupConst.SIGNATURE, members = {@Persistent(name = "signature")})
 })
 public class CurrentHistoCryptoRepoFile extends Entity implements WriteProtected, AutoTrackLocalRevision, StoreCallback {
 
