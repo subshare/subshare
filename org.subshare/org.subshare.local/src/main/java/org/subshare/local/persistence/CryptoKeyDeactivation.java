@@ -28,10 +28,10 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 @PersistenceCapable
 @Inheritance(strategy=InheritanceStrategy.NEW_TABLE)
 @FetchGroups({
-	@FetchGroup(name = FetchGroupConst.CRYPTO_CHANGE_SET_DTO, members = {
-			@Persistent(name = "cryptoKey"),
-			@Persistent(name = "signature")}),
-	@FetchGroup(name = FetchGroupConst.SIGNATURE, members = {@Persistent(name = "signature")})
+	@FetchGroup(name = FetchGroupConst.CRYPTO_KEY_DTO, members = {
+//			@Persistent(name = "cryptoKey"), // is passed through stack during DTO-creation -- no need to include here!
+			@Persistent(name = "signature")
+	})
 })
 public class CryptoKeyDeactivation extends Entity implements WriteProtected {
 

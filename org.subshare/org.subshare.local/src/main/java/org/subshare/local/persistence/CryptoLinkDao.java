@@ -66,15 +66,15 @@ public class CryptoLinkDao extends Dao<CryptoLink, CryptoLinkDao> {
 			clearFetchGroups();
 			long startTimestamp = System.currentTimeMillis();
 			@SuppressWarnings("unchecked")
-			Collection<CryptoLink> cryptoLinks = (Collection<CryptoLink>) query.execute(localRevision, exclLastSyncFromRepositoryId.toString());
+			Collection<CryptoLink> result = (Collection<CryptoLink>) query.execute(localRevision, exclLastSyncFromRepositoryId.toString());
 			logger.debug("getCryptoLinksChangedAfter: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
 
 			fetchPlanBackup.restore(pm);
 			startTimestamp = System.currentTimeMillis();
-			cryptoLinks = load(cryptoLinks);
-			logger.debug("getCryptoLinksChangedAfter: Loading result-set with {} elements took {} ms.", cryptoLinks.size(), System.currentTimeMillis() - startTimestamp);
+			result = load(result);
+			logger.debug("getCryptoLinksChangedAfter: Loading result-set with {} elements took {} ms.", result.size(), System.currentTimeMillis() - startTimestamp);
 
-			return cryptoLinks;
+			return result;
 		} finally {
 			query.closeAll();
 			fetchPlanBackup.restore(pm);

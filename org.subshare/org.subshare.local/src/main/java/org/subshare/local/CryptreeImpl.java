@@ -64,7 +64,6 @@ import org.subshare.core.dto.UserRepoKeyPublicKeyReplacementRequestDeletionDto;
 import org.subshare.core.dto.UserRepoKeyPublicKeyReplacementRequestDto;
 import org.subshare.core.repair.RepairDeleteCollisionConfig;
 import org.subshare.core.repo.local.PlainHistoCryptoRepoFileFilter;
-import org.subshare.core.sign.Signature;
 import org.subshare.core.sign.WriteProtected;
 import org.subshare.core.user.User;
 import org.subshare.core.user.UserRepoKey;
@@ -1860,13 +1859,11 @@ public class CryptreeImpl extends AbstractCryptree {
 		final CryptoConfigPropSetDtoConverter converter = CryptoConfigPropSetDtoConverter.create(getTransactionOrFail());
 		final CryptoConfigPropSetDao dao = getTransactionOrFail().getDao(CryptoConfigPropSetDao.class);
 
-		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.CRYPTO_CHANGE_SET_DTO);
+		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.CRYPTO_CONFIG_PROP_SET_DTO);
 		final Collection<CryptoConfigPropSet> entities = dao.getCryptoConfigPropSetsChangedAfterExclLastSyncFromRepositoryId(
 				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced(),
 				resyncMode ? NULL_UUID : getRemoteRepositoryIdOrFail());
 
-		// minimize unnecessary JOINs in potential queries for lazy-loading of not-yet-resolved relations.
-		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.SIGNATURE);
 		for (final CryptoConfigPropSet entity : entities)
 			cryptoChangeSetDto.getCryptoConfigPropSetDtos().add(converter.toCryptoConfigPropSetDto(entity));
 
@@ -1878,12 +1875,10 @@ public class CryptreeImpl extends AbstractCryptree {
 		final CollisionDtoConverter converter = CollisionDtoConverter.create(getTransactionOrFail());
 		final CollisionDao dao = getTransactionOrFail().getDao(CollisionDao.class);
 
-		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.CRYPTO_CHANGE_SET_DTO);
+		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.COLLISION_DTO);
 		final Collection<Collision> entities = dao.getCollisionsChangedAfter(
 				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced());
 
-		// minimize unnecessary JOINs in potential queries for lazy-loading of not-yet-resolved relations.
-		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.SIGNATURE);
 		for (final Collision entity : entities)
 			cryptoChangeSetDto.getCollisionDtos().add(converter.toCollisionDto(entity));
 
@@ -1895,12 +1890,10 @@ public class CryptreeImpl extends AbstractCryptree {
 		final DeletedCollisionDtoConverter converter = DeletedCollisionDtoConverter.create(getTransactionOrFail());
 		final DeletedCollisionDao dao = getTransactionOrFail().getDao(DeletedCollisionDao.class);
 
-		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.CRYPTO_CHANGE_SET_DTO);
+		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.DELETED_COLLISION_DTO);
 		final Collection<DeletedCollision> entities = dao.getDeletedCollisionsChangedAfter(
 				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced());
 
-		// minimize unnecessary JOINs in potential queries for lazy-loading of not-yet-resolved relations.
-		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.SIGNATURE);
 		for (final DeletedCollision entity : entities)
 			cryptoChangeSetDto.getDeletedCollisionDtos().add(converter.toDeletedCollisionDto(entity));
 
@@ -1912,13 +1905,11 @@ public class CryptreeImpl extends AbstractCryptree {
 		final HistoFrameDtoConverter converter = HistoFrameDtoConverter.create(getTransactionOrFail());
 		final HistoFrameDao dao = getTransactionOrFail().getDao(HistoFrameDao.class);
 
-		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.CRYPTO_CHANGE_SET_DTO);
+		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.HISTO_FRAME_DTO);
 		final Collection<HistoFrame> entities = dao.getHistoFramesChangedAfterExclLastSyncFromRepositoryId(
 				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced(),
 				resyncMode ? NULL_UUID : getRemoteRepositoryIdOrFail());
 
-		// minimize unnecessary JOINs in potential queries for lazy-loading of not-yet-resolved relations.
-		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.SIGNATURE);
 		for (final HistoFrame entity : entities)
 			cryptoChangeSetDto.getHistoFrameDtos().add(converter.toHistoFrameDto(entity));
 
@@ -1933,13 +1924,11 @@ public class CryptreeImpl extends AbstractCryptree {
 		final HistoCryptoRepoFileDtoConverter converter = HistoCryptoRepoFileDtoConverter.create(getTransactionOrFail());
 		final HistoCryptoRepoFileDao dao = getTransactionOrFail().getDao(HistoCryptoRepoFileDao.class);
 
-		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.CRYPTO_CHANGE_SET_DTO);
+		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.HISTO_CRYPTO_REPO_FILE_DTO);
 		final Collection<HistoCryptoRepoFile> entities = dao.getHistoCryptoRepoFilesChangedAfterExclLastSyncFromRepositoryId(
 				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced(),
 				resyncMode ? NULL_UUID : getRemoteRepositoryIdOrFail());
 
-		// minimize unnecessary JOINs in potential queries for lazy-loading of not-yet-resolved relations.
-		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.SIGNATURE);
 		for (final HistoCryptoRepoFile entity : entities)
 			cryptoChangeSetDto.getHistoCryptoRepoFileDtos().add(converter.toHistoCryptoRepoFileDto(entity));
 
@@ -1954,13 +1943,11 @@ public class CryptreeImpl extends AbstractCryptree {
 		final CurrentHistoCryptoRepoFileDtoConverter converter = CurrentHistoCryptoRepoFileDtoConverter.create(getTransactionOrFail());
 		final CurrentHistoCryptoRepoFileDao dao = getTransactionOrFail().getDao(CurrentHistoCryptoRepoFileDao.class);
 
-		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.CRYPTO_CHANGE_SET_DTO);
+		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.CURRENT_HISTO_CRYPTO_REPO_FILE_DTO);
 		final Collection<CurrentHistoCryptoRepoFile> entities = dao.getCurrentHistoCryptoRepoFilesChangedAfterExclLastSyncFromRepositoryId(
 				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced(),
 				resyncMode ? NULL_UUID : getRemoteRepositoryIdOrFail());
 
-		// minimize unnecessary JOINs in potential queries for lazy-loading of not-yet-resolved relations.
-		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.SIGNATURE);
 		for (final CurrentHistoCryptoRepoFile entity : entities)
 			cryptoChangeSetDto.getCurrentHistoCryptoRepoFileDtos().add(converter.toCurrentHistoCryptoRepoFileDto(entity, false));
 
@@ -1972,12 +1959,10 @@ public class CryptreeImpl extends AbstractCryptree {
 		final UserRepoKeyPublicKeyDtoConverter userRepoKeyPublicKeyDtoConverter = new UserRepoKeyPublicKeyDtoConverter();
 		final UserRepoKeyPublicKeyDao userRepoKeyPublicKeyDao = getTransactionOrFail().getDao(UserRepoKeyPublicKeyDao.class);
 
-		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.CRYPTO_CHANGE_SET_DTO);
+		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.USER_REPO_KEY_PUBLIC_KEY_DTO);
 		final Collection<UserRepoKeyPublicKey> entities = userRepoKeyPublicKeyDao.getUserRepoKeyPublicKeysChangedAfter(
 				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced());
 
-		// minimize unnecessary JOINs in potential queries for lazy-loading of not-yet-resolved relations.
-		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.SIGNATURE);
 		for (final UserRepoKeyPublicKey userRepoKeyPublicKey : entities)
 			cryptoChangeSetDto.getUserRepoKeyPublicKeyDtos().add(userRepoKeyPublicKeyDtoConverter.toUserRepoKeyPublicKeyDto(userRepoKeyPublicKey));
 
@@ -1988,13 +1973,11 @@ public class CryptreeImpl extends AbstractCryptree {
 		final long beginTimestamp = System.currentTimeMillis();
 		final CryptoRepoFileDao cryptoRepoFileDao = getTransactionOrFail().getDao(CryptoRepoFileDao.class);
 
-		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.CRYPTO_CHANGE_SET_DTO);
+		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.CRYPTO_REPO_FILE_DTO);
 		final Collection<CryptoRepoFile> entities = cryptoRepoFileDao.getCryptoRepoFilesChangedAfterExclLastSyncFromRepositoryId(
 				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced(),
 				resyncMode ? NULL_UUID : getRemoteRepositoryIdOrFail());
 
-		// minimize unnecessary JOINs in potential queries for lazy-loading of not-yet-resolved relations.
-		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.SIGNATURE);
 		final CryptoRepoFileDtoConverter cryptoRepoFileDtoConverter = CryptoRepoFileDtoConverter.create();
 		for (final CryptoRepoFile cryptoRepoFile : entities)
 			cryptoChangeSetDto.getCryptoRepoFileDtos().add(cryptoRepoFileDtoConverter.toCryptoRepoFileDto(cryptoRepoFile));
@@ -2006,13 +1989,11 @@ public class CryptreeImpl extends AbstractCryptree {
 		final long beginTimestamp = System.currentTimeMillis();
 		final CryptoLinkDao cryptoLinkDao = getTransactionOrFail().getDao(CryptoLinkDao.class);
 
-		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.CRYPTO_CHANGE_SET_DTO);
+		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.CRYPTO_LINK_DTO);
 		final Collection<CryptoLink> entities = cryptoLinkDao.getCryptoLinksChangedAfterExclLastSyncFromRepositoryId(
 				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced(),
 				resyncMode ? NULL_UUID : getRemoteRepositoryIdOrFail());
 
-		// minimize unnecessary JOINs in potential queries for lazy-loading of not-yet-resolved relations.
-		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.SIGNATURE);
 		for (final CryptoLink cryptoLink : entities)
 			cryptoChangeSetDto.getCryptoLinkDtos().add(toCryptoLinkDto(cryptoLink));
 
@@ -2023,13 +2004,11 @@ public class CryptreeImpl extends AbstractCryptree {
 		final long beginTimestamp = System.currentTimeMillis();
 		final CryptoKeyDao cryptoKeyDao = getTransactionOrFail().getDao(CryptoKeyDao.class);
 
-		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.CRYPTO_CHANGE_SET_DTO);
+		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.CRYPTO_KEY_DTO);
 		final Collection<CryptoKey> entities = cryptoKeyDao.getCryptoKeysChangedAfterExclLastSyncFromRepositoryId(
 				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced(),
 				resyncMode ? NULL_UUID : getRemoteRepositoryIdOrFail());
 
-		// minimize unnecessary JOINs in potential queries for lazy-loading of not-yet-resolved relations.
-		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.SIGNATURE);
 		for (final CryptoKey cryptoKey : entities)
 			cryptoChangeSetDto.getCryptoKeyDtos().add(toCryptoKeyDto(cryptoKey));
 
@@ -2039,8 +2018,8 @@ public class CryptreeImpl extends AbstractCryptree {
 	private void populateChangedRepositoryOwnerDto(final CryptoChangeSetDto cryptoChangeSetDto, final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {
 		final long beginTimestamp = System.currentTimeMillis();
 		final RepositoryOwnerDao repositoryOwnerDao = getTransactionOrFail().getDao(RepositoryOwnerDao.class);
-		
-		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.CRYPTO_CHANGE_SET_DTO);
+
+		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.REPOSITORY_OWNER_DTO);
 		final RepositoryOwner repositoryOwner = repositoryOwnerDao.getRepositoryOwner(getServerRepositoryIdOrFail());
 		if (repositoryOwner != null
 				&& repositoryOwner.getLocalRevision() > lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced()) {
@@ -2053,12 +2032,10 @@ public class CryptreeImpl extends AbstractCryptree {
 		final long beginTimestamp = System.currentTimeMillis();
 		final PermissionDao permissionDao = getTransactionOrFail().getDao(PermissionDao.class);
 
-		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.CRYPTO_CHANGE_SET_DTO);
+		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.PERMISSION_DTO);
 		final Collection<Permission> entities = permissionDao.getPermissionsChangedAfter(
 				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced());
 
-		// minimize unnecessary JOINs in potential queries for lazy-loading of not-yet-resolved relations.
-		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.SIGNATURE);
 		for (final Permission permission : entities) {
 			enactPermissionRevocationIfNeededAndPossible(permission);
 
@@ -2071,12 +2048,10 @@ public class CryptreeImpl extends AbstractCryptree {
 		final long beginTimestamp = System.currentTimeMillis();
 		final PermissionSetInheritanceDao psInheritanceDao = getTransactionOrFail().getDao(PermissionSetInheritanceDao.class);
 
-		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.CRYPTO_CHANGE_SET_DTO);
+		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.PERMISSION_SET_INHERITANCE_DTO);
 		final Collection<PermissionSetInheritance> entities = psInheritanceDao.getPermissionSetInheritancesChangedAfter(
 				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced());
 
-		// minimize unnecessary JOINs in potential queries for lazy-loading of not-yet-resolved relations.
-		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.SIGNATURE);
 		for (final PermissionSetInheritance psInheritance : entities) {
 			enactPermissionSetInheritanceRevocationIfNeededAndPossible(psInheritance);
 
@@ -2145,12 +2120,10 @@ public class CryptreeImpl extends AbstractCryptree {
 		final long beginTimestamp = System.currentTimeMillis();
 		final PermissionSetDao permissionSetDao = getTransactionOrFail().getDao(PermissionSetDao.class);
 
-		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.CRYPTO_CHANGE_SET_DTO);
+		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.PERMISSION_SET_DTO);
 		final Collection<PermissionSet> entities = permissionSetDao.getPermissionSetsChangedAfter(
 				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced());
 
-		// minimize unnecessary JOINs in potential queries for lazy-loading of not-yet-resolved relations.
-		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.SIGNATURE);
 		for (final PermissionSet permissionSet : entities)
 			cryptoChangeSetDto.getPermissionSetDtos().add(toPermissionSetDto(permissionSet));
 
@@ -2167,8 +2140,6 @@ public class CryptreeImpl extends AbstractCryptree {
 		final Collection<UserRepoKeyPublicKeyReplacementRequest> entities = dao.getUserRepoKeyPublicKeyReplacementRequestsChangedAfter(
 				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced());
 
-		// minimize unnecessary JOINs in potential queries for lazy-loading of not-yet-resolved relations.
-		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.SIGNATURE);
 		for (final UserRepoKeyPublicKeyReplacementRequest request : entities)
 			cryptoChangeSetDto.getUserRepoKeyPublicKeyReplacementRequestDtos().add(converter.toUserRepoKeyPublicKeyReplacementRequestDto(request));
 
@@ -2185,8 +2156,6 @@ public class CryptreeImpl extends AbstractCryptree {
 		final Collection<UserRepoKeyPublicKeyReplacementRequestDeletion> entities = dao.getUserRepoKeyPublicKeyReplacementRequestDeletionsChangedAfter(
 				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced());
 
-		// minimize unnecessary JOINs in potential queries for lazy-loading of not-yet-resolved relations.
-		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.SIGNATURE);
 		for (UserRepoKeyPublicKeyReplacementRequestDeletion requestDeletion : entities)
 			cryptoChangeSetDto.getUserRepoKeyPublicKeyReplacementRequestDeletionDtos().add(converter.toUserRepoKeyPublicKeyReplacementRequestDeletionDto(requestDeletion));
 
@@ -2202,8 +2171,6 @@ public class CryptreeImpl extends AbstractCryptree {
 		final Collection<UserIdentity> entities = dao.getUserIdentitiesChangedAfter(
 				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced());
 
-		// minimize unnecessary JOINs in potential queries for lazy-loading of not-yet-resolved relations.
-		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.SIGNATURE);
 		for (UserIdentity userIdentity : entities)
 			cryptoChangeSetDto.getUserIdentityDtos().add(converter.toUserIdentityDto(userIdentity));
 
@@ -2219,8 +2186,6 @@ public class CryptreeImpl extends AbstractCryptree {
 		final Collection<UserIdentityLink> entities = dao.getUserIdentityLinksChangedAfter(
 				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced());
 
-		// minimize unnecessary JOINs in potential queries for lazy-loading of not-yet-resolved relations.
-		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.SIGNATURE);
 		for (UserIdentityLink userIdentityLink : entities)
 			cryptoChangeSetDto.getUserIdentityLinkDtos().add(converter.toUserIdentityLinkDto(userIdentityLink));
 
@@ -2254,24 +2219,23 @@ public class CryptreeImpl extends AbstractCryptree {
 //		cryptoKeyDto.setActive(cryptoKey.isActive());
 		final CryptoKeyDeactivation cryptoKeyDeactivation = cryptoKey.getCryptoKeyDeactivation();
 		if (cryptoKeyDeactivation != null)
-			cryptoKeyDto.setCryptoKeyDeactivationDto(toCryptoKeyDeactivationDto(cryptoKeyDeactivation));
+			cryptoKeyDto.setCryptoKeyDeactivationDto(toCryptoKeyDeactivationDto(cryptoKeyDeactivation, cryptoKey));
 
 		cryptoKeyDto.setCryptoKeyRole(assertNotNull(cryptoKey.getCryptoKeyRole(), "cryptoKey.cryptoKeyRole"));
 		cryptoKeyDto.setCryptoKeyType(assertNotNull(cryptoKey.getCryptoKeyType(), "cryptoKey.cryptoKeyType"));
-
-		final Signature signature = cryptoKey.getSignature();
-		cryptoKeyDto.setSignature(assertNotNull(signature, "cryptoKey.signature"));
-		assertNotNull(signature.getSignatureCreated(), "cryptoKey.signature.signatureCreated");
-		assertNotNull(signature.getSigningUserRepoKeyId(), "cryptoKey.signature.signingUserRepoKeyId");
-		assertNotNull(signature.getSignatureData(), "cryptoKey.signature.signatureData");
+		cryptoKeyDto.setSignature(assertNotNull(cryptoKey.getSignature(), "cryptoKey.signature"));
 
 		return cryptoKeyDto;
 	}
 
-	private CryptoKeyDeactivationDto toCryptoKeyDeactivationDto(final CryptoKeyDeactivation cryptoKeyDeactivation) {
+	private CryptoKeyDeactivationDto toCryptoKeyDeactivationDto(final CryptoKeyDeactivation cryptoKeyDeactivation, final CryptoKey cryptoKey) {
 		assertNotNull(cryptoKeyDeactivation, "cryptoKeyDeactivation");
+		assertNotNull(cryptoKey, "cryptoKey"); // we pass this for performance optimisation.
+
+//		if (cryptoKey == null)
+//			cryptoKey = assertNotNull(cryptoKeyDeactivation.getCryptoKey(), "cryptoKeyDeactivation.cryptoKey");
+
 		final CryptoKeyDeactivationDto cryptoKeyDeactivationDto = new CryptoKeyDeactivationDto();
-		final CryptoKey cryptoKey = assertNotNull(cryptoKeyDeactivation.getCryptoKey(), "cryptoKeyDeactivation.cryptoKey");
 		cryptoKeyDeactivationDto.setCryptoKeyId(assertNotNull(cryptoKey.getCryptoKeyId(), "cryptoKeyDeactivation.cryptoKey.cryptoKeyId"));
 		cryptoKeyDeactivationDto.setSignature(cryptoKeyDeactivation.getSignature());
 		return cryptoKeyDeactivationDto;

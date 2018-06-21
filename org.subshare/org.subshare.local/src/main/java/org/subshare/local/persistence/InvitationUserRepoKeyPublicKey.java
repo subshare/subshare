@@ -9,6 +9,8 @@ import java.util.Date;
 import javax.jdo.annotations.Discriminator;
 import javax.jdo.annotations.DiscriminatorStrategy;
 import javax.jdo.annotations.Embedded;
+import javax.jdo.annotations.FetchGroup;
+import javax.jdo.annotations.FetchGroups;
 import javax.jdo.annotations.Inheritance;
 import javax.jdo.annotations.InheritanceStrategy;
 import javax.jdo.annotations.NullValue;
@@ -30,6 +32,11 @@ import co.codewizards.cloudstore.core.Uid;
 @PersistenceCapable
 @Discriminator(strategy=DiscriminatorStrategy.VALUE_MAP, value="InvitationUserRepoKeyPublicKey")
 @Inheritance(strategy=InheritanceStrategy.SUPERCLASS_TABLE)
+@FetchGroups({
+	@FetchGroup(name = FetchGroupConst.USER_REPO_KEY_PUBLIC_KEY_DTO, members = {
+			@Persistent(name = "signature")
+	})
+})
 public class InvitationUserRepoKeyPublicKey extends UserRepoKeyPublicKey implements Signable {
 
 	private Date validTo;

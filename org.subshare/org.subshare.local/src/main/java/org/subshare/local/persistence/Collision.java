@@ -15,6 +15,8 @@ import javax.jdo.JDOHelper;
 import javax.jdo.PersistenceManager;
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Embedded;
+import javax.jdo.annotations.FetchGroup;
+import javax.jdo.annotations.FetchGroups;
 import javax.jdo.annotations.Inheritance;
 import javax.jdo.annotations.InheritanceStrategy;
 import javax.jdo.annotations.Join;
@@ -73,6 +75,15 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 			name = "getCollisions_duplicateCryptoRepoFileId",
 			value = "SELECT WHERE"
 					+ "  this.histoCryptoRepoFile2 == null && this.duplicateCryptoRepoFileId == :duplicateCryptoRepoFileId")
+})
+@FetchGroups({
+	@FetchGroup(name = FetchGroupConst.COLLISION_DTO, members = {
+			@Persistent(name = "histoCryptoRepoFile1"),
+			@Persistent(name = "histoCryptoRepoFile2"),
+			@Persistent(name = "cryptoKey"),
+			@Persistent(name = "collisionPrivateDtoData"),
+			@Persistent(name = "signature")
+	})
 })
 public class Collision extends Entity implements WriteProtected, AutoTrackLocalRevision, StoreCallback {
 

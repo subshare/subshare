@@ -81,14 +81,14 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 			value="SELECT WHERE 0 == (SELECT count(p) FROM org.subshare.local.persistence.PlainHistoCryptoRepoFile p WHERE p.histoCryptoRepoFile == this)")
 })
 @FetchGroups({
-	@FetchGroup(name = FetchGroupConst.CRYPTO_CHANGE_SET_DTO, members = {
+	@FetchGroup(name = FetchGroupConst.HISTO_CRYPTO_REPO_FILE_DTO, members = {
 			@Persistent(name = "histoFrame"),
 			@Persistent(name = "cryptoRepoFile"),
 			@Persistent(name = "previousHistoCryptoRepoFile"),
 			@Persistent(name = "cryptoKey"),
 			@Persistent(name = "repoFileDtoData"),
-			@Persistent(name = "signature")}),
-	@FetchGroup(name = FetchGroupConst.SIGNATURE, members = {@Persistent(name = "signature")})
+			@Persistent(name = "signature")
+	})
 })
 public class HistoCryptoRepoFile extends Entity implements WriteProtected, AutoTrackLocalRevision, StoreCallback {
 

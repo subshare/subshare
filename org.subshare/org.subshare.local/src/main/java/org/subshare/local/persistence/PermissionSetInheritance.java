@@ -9,6 +9,8 @@ import java.util.Date;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Embedded;
+import javax.jdo.annotations.FetchGroup;
+import javax.jdo.annotations.FetchGroups;
 import javax.jdo.annotations.Inheritance;
 import javax.jdo.annotations.InheritanceStrategy;
 import javax.jdo.annotations.NullValue;
@@ -35,6 +37,12 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 @Queries({
 	@Query(name="getPermissionSetInheritance_permissionSetInheritanceId", value="SELECT UNIQUE WHERE this.permissionSetInheritanceId == :permissionSetInheritanceId"),
 	@Query(name="getPermissionSetInheritancesChangedAfter_localRevision", value="SELECT WHERE this.localRevision > :localRevision")
+})
+@FetchGroups({
+	@FetchGroup(name = FetchGroupConst.PERMISSION_SET_INHERITANCE_DTO, members = {
+			@Persistent(name = "permissionSet"),
+			@Persistent(name = "signature")
+	})
 })
 public class PermissionSetInheritance extends Entity implements WriteProtected, AutoTrackLocalRevision {
 

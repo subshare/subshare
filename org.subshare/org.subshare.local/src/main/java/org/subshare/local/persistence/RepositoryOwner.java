@@ -8,6 +8,8 @@ import java.util.UUID;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Embedded;
+import javax.jdo.annotations.FetchGroup;
+import javax.jdo.annotations.FetchGroups;
 import javax.jdo.annotations.Inheritance;
 import javax.jdo.annotations.InheritanceStrategy;
 import javax.jdo.annotations.NullValue;
@@ -32,6 +34,12 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 @Unique(name="RepositoryOwner_serverRepositoryId", members="serverRepositoryId")
 @Queries({
 	@Query(name="getRepositoryOwner_serverRepositoryId", value="SELECT UNIQUE WHERE this.serverRepositoryId == :serverRepositoryId")
+})
+@FetchGroups({
+	@FetchGroup(name = FetchGroupConst.REPOSITORY_OWNER_DTO, members = {
+			@Persistent(name = "userRepoKeyPublicKey"),
+			@Persistent(name = "signature")
+	})
 })
 public class RepositoryOwner extends Entity implements Signable, AutoTrackLocalRevision, StoreCallback {
 

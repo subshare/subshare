@@ -72,13 +72,13 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 			value = "SELECT WHERE this.signature.signingUserRepoKeyId == :signingUserRepoKeyId")
 })
 @FetchGroups({
-	@FetchGroup(name = FetchGroupConst.CRYPTO_CHANGE_SET_DTO, members = {
+	@FetchGroup(name = FetchGroupConst.CRYPTO_LINK_DTO, members = {
 			@Persistent(name = "fromCryptoKey"),
 			@Persistent(name = "fromUserRepoKeyPublicKey"),
 			@Persistent(name = "toCryptoKeyData"),
 			@Persistent(name = "toCryptoKey"),
-			@Persistent(name = "signature")}),
-	@FetchGroup(name = FetchGroupConst.SIGNATURE, members = {@Persistent(name = "signature")})
+			@Persistent(name = "signature")
+	})
 })
 public class CryptoLink extends Entity implements WriteProtected, AutoTrackLocalRevision, StoreCallback {
 

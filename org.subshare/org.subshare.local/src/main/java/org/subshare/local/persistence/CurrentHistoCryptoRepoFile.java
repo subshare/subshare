@@ -52,11 +52,11 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 			value="SELECT WHERE this.localRevision > :localRevision && (this.lastSyncFromRepositoryId == null || this.lastSyncFromRepositoryId != :lastSyncFromRepositoryId)") // TODO this necessary == null is IMHO a DN bug!
 })
 @FetchGroups({
-	@FetchGroup(name = FetchGroupConst.CRYPTO_CHANGE_SET_DTO, members = {
-//			@Persistent(name = "histoCryptoRepoFile"), // should *always* be in cache
+	@FetchGroup(name = FetchGroupConst.CURRENT_HISTO_CRYPTO_REPO_FILE_DTO, members = {
+			@Persistent(name = "histoCryptoRepoFile"),
 			@Persistent(name = "cryptoRepoFile"),
-			@Persistent(name = "signature")}),
-	@FetchGroup(name = FetchGroupConst.SIGNATURE, members = {@Persistent(name = "signature")})
+			@Persistent(name = "signature")
+	})
 })
 public class CurrentHistoCryptoRepoFile extends Entity implements WriteProtected, AutoTrackLocalRevision, StoreCallback {
 

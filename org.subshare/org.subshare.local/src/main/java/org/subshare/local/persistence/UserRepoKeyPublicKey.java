@@ -10,6 +10,8 @@ import java.util.UUID;
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Discriminator;
 import javax.jdo.annotations.DiscriminatorStrategy;
+import javax.jdo.annotations.FetchGroup;
+import javax.jdo.annotations.FetchGroups;
 import javax.jdo.annotations.Index;
 import javax.jdo.annotations.Inheritance;
 import javax.jdo.annotations.InheritanceStrategy;
@@ -39,6 +41,11 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 @Queries({
 	@Query(name="getUserRepoKeyPublicKey_userRepoKeyId", value="SELECT UNIQUE WHERE this.userRepoKeyId == :userRepoKeyId"),
 	@Query(name="getUserRepoKeyPublicKeysChangedAfter_localRevision", value="SELECT WHERE this.localRevision > :localRevision")
+})
+@FetchGroups({
+	@FetchGroup(name = FetchGroupConst.USER_REPO_KEY_PUBLIC_KEY_DTO, members = {
+			@Persistent(name = "publicKeyData")
+	})
 })
 public class UserRepoKeyPublicKey extends Entity implements AutoTrackLocalRevision {
 

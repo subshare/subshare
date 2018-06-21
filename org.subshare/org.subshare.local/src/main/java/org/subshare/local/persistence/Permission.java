@@ -9,6 +9,8 @@ import java.util.Date;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Embedded;
+import javax.jdo.annotations.FetchGroup;
+import javax.jdo.annotations.FetchGroups;
 import javax.jdo.annotations.Index;
 import javax.jdo.annotations.Indices;
 import javax.jdo.annotations.Inheritance;
@@ -96,6 +98,13 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 			value="SELECT WHERE this.signature.signingUserRepoKeyId == :signingUserRepoKeyId"
 			),
 	@Query(name="getPermissionsChangedAfter_localRevision", value="SELECT WHERE this.localRevision > :localRevision")
+})
+@FetchGroups({
+	@FetchGroup(name = FetchGroupConst.PERMISSION_DTO, members = {
+			@Persistent(name = "permissionSet"),
+			@Persistent(name = "userRepoKeyPublicKey"),
+			@Persistent(name = "signature")
+	})
 })
 public class Permission extends Entity implements WriteProtected, AutoTrackLocalRevision, StoreCallback {
 

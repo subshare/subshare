@@ -90,12 +90,12 @@ public class SignatureDto implements Signature, Serializable {
 		if (signature == null)
 			return null;
 
-		if (signature instanceof SignatureDto)
-			return (SignatureDto) signature;
-
 		assertNotNull(signature.getSignatureCreated(), "signature.signatureCreated");
 		assertNotNull(signature.getSigningUserRepoKeyId(), "signature.signingUserRepoKeyId");
 		assertNotNull(signature.getSignatureData(), "signature.signatureData");
+
+		if (signature instanceof SignatureDto)
+			return (SignatureDto) signature;
 
 		return new SignatureDto(signature.getSignatureCreated(), signature.getSigningUserRepoKeyId(), signature.getSignatureData());
 	}

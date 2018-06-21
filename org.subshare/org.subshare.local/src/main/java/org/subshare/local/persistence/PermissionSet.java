@@ -10,6 +10,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.jdo.annotations.Embedded;
+import javax.jdo.annotations.FetchGroup;
+import javax.jdo.annotations.FetchGroups;
 import javax.jdo.annotations.Inheritance;
 import javax.jdo.annotations.InheritanceStrategy;
 import javax.jdo.annotations.NullValue;
@@ -38,6 +40,18 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 @Queries({
 	@Query(name="getPermissionSet_cryptoRepoFile", value="SELECT UNIQUE WHERE this.cryptoRepoFile == :cryptoRepoFile"),
 	@Query(name="getPermissionSetsChangedAfter_localRevision", value="SELECT WHERE this.localRevision > :localRevision")
+})
+@FetchGroups({
+	@FetchGroup(name = FetchGroupConst.PERMISSION_SET_DTO, members = {
+			@Persistent(name = "cryptoRepoFile"),
+			@Persistent(name = "signature")
+	}),
+	@FetchGroup(name = FetchGroupConst.PERMISSION_DTO, members = {
+			@Persistent(name = "cryptoRepoFile")
+	}),
+	@FetchGroup(name = FetchGroupConst.PERMISSION_SET_INHERITANCE_DTO, members = {
+			@Persistent(name = "cryptoRepoFile")
+	})
 })
 public class PermissionSet extends Entity implements WriteProtected, AutoTrackLocalRevision {
 

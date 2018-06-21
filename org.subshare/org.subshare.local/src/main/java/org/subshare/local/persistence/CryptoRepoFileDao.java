@@ -93,15 +93,15 @@ public class CryptoRepoFileDao extends Dao<CryptoRepoFile, CryptoRepoFileDao> {
 			clearFetchGroups();
 			long startTimestamp = System.currentTimeMillis();
 			@SuppressWarnings("unchecked")
-			Collection<CryptoRepoFile> cryptoRepoFiles = (Collection<CryptoRepoFile>) query.execute(localRevision, exclLastSyncFromRepositoryId.toString());
+			Collection<CryptoRepoFile> result = (Collection<CryptoRepoFile>) query.execute(localRevision, exclLastSyncFromRepositoryId.toString());
 			logger.debug("getCryptoRepoFileChangedAfterExclLastSyncFromRepositoryId: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
 
 			fetchPlanBackup.restore(pm);
 			startTimestamp = System.currentTimeMillis();
-			cryptoRepoFiles = load(cryptoRepoFiles);
-			logger.debug("getCryptoRepoFileChangedAfterExclLastSyncFromRepositoryId: Loading result-set with {} elements took {} ms.", cryptoRepoFiles.size(), System.currentTimeMillis() - startTimestamp);
+			result = load(result);
+			logger.debug("getCryptoRepoFileChangedAfterExclLastSyncFromRepositoryId: Loading result-set with {} elements took {} ms.", result.size(), System.currentTimeMillis() - startTimestamp);
 
-			return cryptoRepoFiles;
+			return result;
 		} finally {
 			query.closeAll();
 			fetchPlanBackup.restore(pm);

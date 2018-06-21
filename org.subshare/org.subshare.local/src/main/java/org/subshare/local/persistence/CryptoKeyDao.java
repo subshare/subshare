@@ -84,15 +84,15 @@ public class CryptoKeyDao extends Dao<CryptoKey, CryptoKeyDao> {
 			clearFetchGroups();
 			long startTimestamp = System.currentTimeMillis();
 			@SuppressWarnings("unchecked")
-			Collection<CryptoKey> cryptoKeys = (Collection<CryptoKey>) query.execute(localRevision, exclLastSyncFromRepositoryId.toString());
+			Collection<CryptoKey> result = (Collection<CryptoKey>) query.execute(localRevision, exclLastSyncFromRepositoryId.toString());
 			logger.debug("getCryptoKeysChangedAfter: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
 
 			fetchPlanBackup.restore(pm);
 			startTimestamp = System.currentTimeMillis();
-			cryptoKeys = load(cryptoKeys);
-			logger.debug("getCryptoKeysChangedAfter: Loading result-set with {} elements took {} ms.", cryptoKeys.size(), System.currentTimeMillis() - startTimestamp);
+			result = load(result);
+			logger.debug("getCryptoKeysChangedAfter: Loading result-set with {} elements took {} ms.", result.size(), System.currentTimeMillis() - startTimestamp);
 
-			return cryptoKeys;
+			return result;
 		} finally {
 			query.closeAll();
 			fetchPlanBackup.restore(pm);

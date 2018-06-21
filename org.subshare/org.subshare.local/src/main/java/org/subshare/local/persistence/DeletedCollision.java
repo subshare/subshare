@@ -8,6 +8,8 @@ import java.io.InputStream;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Embedded;
+import javax.jdo.annotations.FetchGroup;
+import javax.jdo.annotations.FetchGroups;
 import javax.jdo.annotations.Inheritance;
 import javax.jdo.annotations.InheritanceStrategy;
 import javax.jdo.annotations.NullValue;
@@ -39,6 +41,11 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 	@Query(
 			name="getDeletedCollisionsChangedAfter_localRevision",
 			value="SELECT WHERE this.localRevision > :localRevision"),
+})
+@FetchGroups({
+	@FetchGroup(name = FetchGroupConst.DELETED_COLLISION_DTO, members = {
+			@Persistent(name = "signature")
+	})
 })
 public class DeletedCollision extends Entity implements WriteProtected, AutoTrackLocalRevision {
 

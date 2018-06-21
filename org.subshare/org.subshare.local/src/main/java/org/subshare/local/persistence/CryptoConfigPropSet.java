@@ -9,6 +9,8 @@ import java.util.UUID;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Embedded;
+import javax.jdo.annotations.FetchGroup;
+import javax.jdo.annotations.FetchGroups;
 import javax.jdo.annotations.Inheritance;
 import javax.jdo.annotations.InheritanceStrategy;
 import javax.jdo.annotations.NullValue;
@@ -41,6 +43,13 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 	@Query(
 			name="getCryptoConfigPropSetsChangedAfter_localRevision_exclLastSyncFromRepositoryId",
 			value="SELECT WHERE this.localRevision > :localRevision && (this.lastSyncFromRepositoryId == null || this.lastSyncFromRepositoryId != :lastSyncFromRepositoryId)") // TODO this necessary == null is IMHO a DN bug!
+})
+@FetchGroups({
+	@FetchGroup(name = FetchGroupConst.CRYPTO_CONFIG_PROP_SET_DTO, members = {
+			@Persistent(name = "cryptoKey"),
+			@Persistent(name = "configPropSetDtoData"),
+			@Persistent(name = "signature")
+	})
 })
 public class CryptoConfigPropSet extends Entity implements WriteProtected, AutoTrackLocalRevision {
 

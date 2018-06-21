@@ -78,12 +78,12 @@ import co.codewizards.cloudstore.local.persistence.RepoFile;
 			value="SELECT WHERE this.localRevision > :localRevision && (this.lastSyncFromRepositoryId == null || this.lastSyncFromRepositoryId != :lastSyncFromRepositoryId)") // TODO this necessary == null is IMHO a DN bug!
 })
 @FetchGroups({
-	@FetchGroup(name = FetchGroupConst.CRYPTO_CHANGE_SET_DTO, members = {
+	@FetchGroup(name = FetchGroupConst.CRYPTO_REPO_FILE_DTO, members = {
 			@Persistent(name = "parent"),
 			@Persistent(name = "cryptoKey"),
 			@Persistent(name = "repoFileDtoData"),
-			@Persistent(name = "signature")}),
-	@FetchGroup(name = FetchGroupConst.SIGNATURE, members = {@Persistent(name = "signature")})
+			@Persistent(name = "signature")
+	})
 })
 public class CryptoRepoFile extends Entity implements WriteProtected, AutoTrackLocalRevision, StoreCallback {
 
