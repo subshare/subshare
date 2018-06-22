@@ -51,6 +51,9 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 	}),
 	@FetchGroup(name = FetchGroupConst.PERMISSION_SET_INHERITANCE_DTO, members = {
 			@Persistent(name = "cryptoRepoFile")
+	}),
+	@FetchGroup(name = FetchGroupConst.SIGNATURE, members = {
+			@Persistent(name = "signature")
 	})
 })
 public class PermissionSet extends Entity implements WriteProtected, AutoTrackLocalRevision {

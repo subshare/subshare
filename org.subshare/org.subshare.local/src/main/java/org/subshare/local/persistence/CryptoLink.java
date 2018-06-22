@@ -78,6 +78,9 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 			@Persistent(name = "toCryptoKeyData"),
 			@Persistent(name = "toCryptoKey"),
 			@Persistent(name = "signature")
+	}),
+	@FetchGroup(name = FetchGroupConst.SIGNATURE, members = {
+			@Persistent(name = "signature")
 	})
 })
 public class CryptoLink extends Entity implements WriteProtected, AutoTrackLocalRevision, StoreCallback {

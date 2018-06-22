@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import javax.jdo.annotations.Embedded;
+import javax.jdo.annotations.FetchGroup;
+import javax.jdo.annotations.FetchGroups;
 import javax.jdo.annotations.Index;
 import javax.jdo.annotations.Indices;
 import javax.jdo.annotations.Inheritance;
@@ -44,6 +46,11 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 	@Query(name="getUserRepoKeyPublicKeyReplacementRequests_oldKey", value="SELECT WHERE this.oldKey == :oldKey"),
 //	@Query(name="getUserRepoKeyPublicKeyReplacementRequests_newKey", value="SELECT WHERE this.newKey == :newKey"),
 	@Query(name="getUserRepoKeyPublicKeyReplacementRequestsChangedAfter_localRevision", value="SELECT WHERE this.localRevision > :localRevision")
+})
+@FetchGroups({
+	@FetchGroup(name = FetchGroupConst.SIGNATURE, members = {
+			@Persistent(name = "signature")
+	})
 })
 public class UserRepoKeyPublicKeyReplacementRequest extends Entity implements Signable, AutoTrackLocalRevision, StoreCallback {
 

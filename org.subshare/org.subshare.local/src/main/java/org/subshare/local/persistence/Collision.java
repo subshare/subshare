@@ -83,6 +83,9 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 			@Persistent(name = "cryptoKey"),
 			@Persistent(name = "collisionPrivateDtoData"),
 			@Persistent(name = "signature")
+	}),
+	@FetchGroup(name = FetchGroupConst.SIGNATURE, members = {
+			@Persistent(name = "signature")
 	})
 })
 public class Collision extends Entity implements WriteProtected, AutoTrackLocalRevision, StoreCallback {

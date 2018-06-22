@@ -69,7 +69,10 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 			value="SELECT UNIQUE WHERE this.fromRepositoryId == :fromRepositoryId && this.sealed == :sealed")
 })
 @FetchGroups({
-	@FetchGroup(name = FetchGroupConst.HISTO_FRAME_DTO, members = {@Persistent(name = "signature")})
+	@FetchGroup(name = FetchGroupConst.HISTO_FRAME_DTO, members = {@Persistent(name = "signature")}),
+	@FetchGroup(name = FetchGroupConst.SIGNATURE, members = {
+			@Persistent(name = "signature")
+	})
 })
 public class HistoFrame extends Entity implements WriteProtected, AutoTrackLocalRevision, StoreCallback {
 

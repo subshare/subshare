@@ -39,6 +39,9 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 	@FetchGroup(name = FetchGroupConst.REPOSITORY_OWNER_DTO, members = {
 			@Persistent(name = "userRepoKeyPublicKey"),
 			@Persistent(name = "signature")
+	}),
+	@FetchGroup(name = FetchGroupConst.SIGNATURE, members = {
+			@Persistent(name = "signature")
 	})
 })
 public class RepositoryOwner extends Entity implements Signable, AutoTrackLocalRevision, StoreCallback {

@@ -7,6 +7,8 @@ import java.io.InputStream;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Embedded;
+import javax.jdo.annotations.FetchGroup;
+import javax.jdo.annotations.FetchGroups;
 import javax.jdo.annotations.Index;
 import javax.jdo.annotations.Inheritance;
 import javax.jdo.annotations.InheritanceStrategy;
@@ -37,6 +39,11 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 	@Query(name="getUserIdentity_userIdentityId", value="SELECT UNIQUE WHERE this.userIdentityId == :userIdentityId"),
 	@Query(name="getUserIdentitiesChangedAfter_localRevision", value="SELECT WHERE this.localRevision > :localRevision"),
 	@Query(name="getUserIdentities_ofUserRepoKeyPublicKey", value="SELECT WHERE this.ofUserRepoKeyPublicKey == :ofUserRepoKeyPublicKey")
+})
+@FetchGroups({
+	@FetchGroup(name = FetchGroupConst.SIGNATURE, members = {
+			@Persistent(name = "signature")
+	})
 })
 public class UserIdentity extends Entity implements WriteProtected, AutoTrackLocalRevision, StoreCallback {
 

@@ -8,6 +8,8 @@ import java.io.InputStream;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Embedded;
+import javax.jdo.annotations.FetchGroup;
+import javax.jdo.annotations.FetchGroups;
 import javax.jdo.annotations.Index;
 import javax.jdo.annotations.Inheritance;
 import javax.jdo.annotations.InheritanceStrategy;
@@ -40,6 +42,11 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 	@Query(name="getUserIdentityLinks_ofUserRepoKeyPublicKey", value="SELECT WHERE this.userIdentity.ofUserRepoKeyPublicKey == :ofUserRepoKeyPublicKey"),
 	@Query(name="getUserIdentityLinks_forUserRepoKeyPublicKey", value="SELECT WHERE this.forUserRepoKeyPublicKey == :forUserRepoKeyPublicKey"),
 	@Query(name="getUserIdentityLinks_ofUserRepoKeyPublicKey_forUserRepoKeyPublicKey", value="SELECT WHERE this.userIdentity.ofUserRepoKeyPublicKey == :ofUserRepoKeyPublicKey && this.forUserRepoKeyPublicKey == :forUserRepoKeyPublicKey")
+})
+@FetchGroups({
+	@FetchGroup(name = FetchGroupConst.SIGNATURE, members = {
+			@Persistent(name = "signature")
+	})
 })
 public class UserIdentityLink extends Entity implements WriteProtected, AutoTrackLocalRevision, StoreCallback {
 	public static final String SIGNED_DATA_TYPE = "UserIdentityLink";

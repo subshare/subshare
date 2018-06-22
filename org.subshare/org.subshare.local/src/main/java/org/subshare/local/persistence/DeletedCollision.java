@@ -45,6 +45,9 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 @FetchGroups({
 	@FetchGroup(name = FetchGroupConst.DELETED_COLLISION_DTO, members = {
 			@Persistent(name = "signature")
+	}),
+	@FetchGroup(name = FetchGroupConst.SIGNATURE, members = {
+			@Persistent(name = "signature")
 	})
 })
 public class DeletedCollision extends Entity implements WriteProtected, AutoTrackLocalRevision {

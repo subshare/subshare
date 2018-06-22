@@ -104,6 +104,9 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 			@Persistent(name = "permissionSet"),
 			@Persistent(name = "userRepoKeyPublicKey"),
 			@Persistent(name = "signature")
+	}),
+	@FetchGroup(name = FetchGroupConst.SIGNATURE, members = {
+			@Persistent(name = "signature")
 	})
 })
 public class Permission extends Entity implements WriteProtected, AutoTrackLocalRevision, StoreCallback {

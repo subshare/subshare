@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import javax.jdo.annotations.Embedded;
+import javax.jdo.annotations.FetchGroup;
+import javax.jdo.annotations.FetchGroups;
 import javax.jdo.annotations.Inheritance;
 import javax.jdo.annotations.InheritanceStrategy;
 import javax.jdo.annotations.NullValue;
@@ -36,6 +38,11 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 @Queries({
 	@Query(name="getUserRepoKeyPublicKeyReplacementRequestDeletion_requestId", value="SELECT UNIQUE WHERE this.requestId == :requestId"),
 	@Query(name="getUserRepoKeyPublicKeyReplacementRequestDeletionsChangedAfter_localRevision", value="SELECT WHERE this.localRevision > :localRevision")
+})
+@FetchGroups({
+	@FetchGroup(name = FetchGroupConst.SIGNATURE, members = {
+			@Persistent(name = "signature")
+	})
 })
 public class UserRepoKeyPublicKeyReplacementRequestDeletion extends Entity implements WriteProtected, AutoTrackLocalRevision {
 

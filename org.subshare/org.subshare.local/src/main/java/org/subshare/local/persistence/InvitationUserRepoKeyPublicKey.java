@@ -35,6 +35,9 @@ import co.codewizards.cloudstore.core.Uid;
 @FetchGroups({
 	@FetchGroup(name = FetchGroupConst.USER_REPO_KEY_PUBLIC_KEY_DTO, members = {
 			@Persistent(name = "signature")
+	}),
+	@FetchGroup(name = FetchGroupConst.SIGNATURE, members = {
+			@Persistent(name = "signature")
 	})
 })
 public class InvitationUserRepoKeyPublicKey extends UserRepoKeyPublicKey implements Signable {
