@@ -340,7 +340,7 @@ public class CryptreeImpl extends AbstractCryptree {
 	private boolean resyncMode;
 
 	@Override
-	public CryptoChangeSetDto getCryptoChangeSetDtoWithCryptoRepoFiles(Long lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced) {
+	public void prepareGetCryptoChangeSetDtoWithCryptoRepoFiles(Long lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced) {
 		claimRepositoryOwnershipIfUnowned();
 		processUserRepoKeyPublicKeyReplacementRequests();
 		createMissingUserIdentities();
@@ -357,6 +357,14 @@ public class CryptreeImpl extends AbstractCryptree {
 		}
 
 		lastCryptoKeySyncToRemoteRepo.setLocalRepositoryRevisionInProgress(localRepository.getRevision());
+
+		enactPermissionRevocationsOfChangedPermissionsIfNeededAndPossible(lastCryptoKeySyncToRemoteRepo);
+		enactPermissionSetInheritanceRevocationsOfChangedPermissionSetInheritancesIfNeededAndPossible(lastCryptoKeySyncToRemoteRepo);
+	}
+
+	@Override
+	public CryptoChangeSetDto getCryptoChangeSetDtoWithCryptoRepoFiles(Long lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced) {
+		final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo = getLastCryptoKeySyncToRemoteRepo();
 
 		final CryptoChangeSetDto cryptoChangeSetDto = new CryptoChangeSetDto();
 		populateChangedCryptoRepoFileDtos(cryptoChangeSetDto, lastCryptoKeySyncToRemoteRepo);
@@ -1932,17 +1940,23 @@ public class CryptreeImpl extends AbstractCryptree {
 		final HistoCryptoRepoFileDtoConverter converter = HistoCryptoRepoFileDtoConverter.create(getTransactionOrFail());
 		final HistoCryptoRepoFileDao dao = getTransactionOrFail().getDao(HistoCryptoRepoFileDao.class);
 
-		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.HISTO_CRYPTO_REPO_FILE_DTO);
-		final Collection<HistoCryptoRepoFile> entities = dao.getHistoCryptoRepoFilesChangedAfterExclLastSyncFromRepositoryId(
-				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced(),
-				resyncMode ? NULL_UUID : getRemoteRepositoryIdOrFail());
+//		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.HISTO_CRYPTO_REPO_FILE_DTO);
+//		final Collection<HistoCryptoRepoFile> entities = dao.getHistoCryptoRepoFilesChangedAfterExclLastSyncFromRepositoryId(
+//				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced(),
+//				resyncMode ? NULL_UUID : getRemoteRepositoryIdOrFail());
+//
+//		// minimize unnecessary JOINs in potential queries for lazy-loading of not-yet-resolved relations. Should not be necessary, but is :-(
+//		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.SIGNATURE);
+//		for (final HistoCryptoRepoFile entity : entities)
+//			cryptoChangeSetDto.getHistoCryptoRepoFileDtos().add(converter.toHistoCryptoRepoFileDto(entity));
 
-		// minimize unnecessary JOINs in potential queries for lazy-loading of not-yet-resolved relations. Should not be necessary, but is :-(
-		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.SIGNATURE);
-		for (final HistoCryptoRepoFile entity : entities)
-			cryptoChangeSetDto.getHistoCryptoRepoFileDtos().add(converter.toHistoCryptoRepoFileDto(entity));
+		cryptoChangeSetDto.setHistoCryptoRepoFileDtos(
+				dao.getHistoCryptoRepoFileDtosChangedAfterExclLastSyncFromRepositoryId(
+						lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced(),
+						resyncMode ? NULL_UUID : getRemoteRepositoryIdOrFail()));
 
-		logger.debug("populateChangedHistoCryptoRepoFileDtos: Took {} ms for {} entities.", System.currentTimeMillis() - beginTimestamp, entities.size());
+		logger.debug("populateChangedHistoCryptoRepoFileDtos: Took {} ms for {} entities.", System.currentTimeMillis() - beginTimestamp,
+				cryptoChangeSetDto.getHistoCryptoRepoFileDtos().size());
 	}
 
 	private void populateChangedCurrentHistoCryptoRepoFileDtos(final CryptoChangeSetDto cryptoChangeSetDto, final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {
@@ -1953,17 +1967,23 @@ public class CryptreeImpl extends AbstractCryptree {
 		final CurrentHistoCryptoRepoFileDtoConverter converter = CurrentHistoCryptoRepoFileDtoConverter.create(getTransactionOrFail());
 		final CurrentHistoCryptoRepoFileDao dao = getTransactionOrFail().getDao(CurrentHistoCryptoRepoFileDao.class);
 
-		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.CURRENT_HISTO_CRYPTO_REPO_FILE_DTO);
-		final Collection<CurrentHistoCryptoRepoFile> entities = dao.getCurrentHistoCryptoRepoFilesChangedAfterExclLastSyncFromRepositoryId(
-				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced(),
-				resyncMode ? NULL_UUID : getRemoteRepositoryIdOrFail());
+//		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.CURRENT_HISTO_CRYPTO_REPO_FILE_DTO);
+//		final Collection<CurrentHistoCryptoRepoFile> entities = dao.getCurrentHistoCryptoRepoFilesChangedAfterExclLastSyncFromRepositoryId(
+//				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced(),
+//				resyncMode ? NULL_UUID : getRemoteRepositoryIdOrFail());
+//
+//		// minimize unnecessary JOINs in potential queries for lazy-loading of not-yet-resolved relations. Should not be necessary, but is :-(
+//		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.SIGNATURE);
+//		for (final CurrentHistoCryptoRepoFile entity : entities)
+//			cryptoChangeSetDto.getCurrentHistoCryptoRepoFileDtos().add(converter.toCurrentHistoCryptoRepoFileDto(entity, false));
 
-		// minimize unnecessary JOINs in potential queries for lazy-loading of not-yet-resolved relations. Should not be necessary, but is :-(
-		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.SIGNATURE);
-		for (final CurrentHistoCryptoRepoFile entity : entities)
-			cryptoChangeSetDto.getCurrentHistoCryptoRepoFileDtos().add(converter.toCurrentHistoCryptoRepoFileDto(entity, false));
+		cryptoChangeSetDto.setCurrentHistoCryptoRepoFileDtos(
+				dao.getCurrentHistoCryptoRepoFileDtosChangedAfterExclLastSyncFromRepositoryId(
+						lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced(),
+						resyncMode ? NULL_UUID : getRemoteRepositoryIdOrFail()));
 
-		logger.debug("populateChangedCurrentHistoCryptoRepoFileDtos: Took {} ms for {} entities.", System.currentTimeMillis() - beginTimestamp, entities.size());
+		logger.debug("populateChangedCurrentHistoCryptoRepoFileDtos: Took {} ms for {} entities.", System.currentTimeMillis() - beginTimestamp,
+				cryptoChangeSetDto.getCurrentHistoCryptoRepoFileDtos().size());
 	}
 
 	private void populateChangedUserRepoKeyPublicKeyDtos(final CryptoChangeSetDto cryptoChangeSetDto, final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {
@@ -1987,52 +2007,70 @@ public class CryptreeImpl extends AbstractCryptree {
 		final long beginTimestamp = System.currentTimeMillis();
 		final CryptoRepoFileDao cryptoRepoFileDao = getTransactionOrFail().getDao(CryptoRepoFileDao.class);
 
-		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.CRYPTO_REPO_FILE_DTO);
-		final Collection<CryptoRepoFile> entities = cryptoRepoFileDao.getCryptoRepoFilesChangedAfterExclLastSyncFromRepositoryId(
-				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced(),
-				resyncMode ? NULL_UUID : getRemoteRepositoryIdOrFail());
+//		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.CRYPTO_REPO_FILE_DTO);
+//		final Collection<CryptoRepoFile> entities = cryptoRepoFileDao.getCryptoRepoFilesChangedAfterExclLastSyncFromRepositoryId(
+//				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced(),
+//				resyncMode ? NULL_UUID : getRemoteRepositoryIdOrFail());
+//
+//		// minimize unnecessary JOINs in potential queries for lazy-loading of not-yet-resolved relations. Should not be necessary, but is :-(
+//		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.SIGNATURE);
+//		final CryptoRepoFileDtoConverter cryptoRepoFileDtoConverter = CryptoRepoFileDtoConverter.create();
+//		for (final CryptoRepoFile cryptoRepoFile : entities)
+//			cryptoChangeSetDto.getCryptoRepoFileDtos().add(cryptoRepoFileDtoConverter.toCryptoRepoFileDto(cryptoRepoFile));
 
-		// minimize unnecessary JOINs in potential queries for lazy-loading of not-yet-resolved relations. Should not be necessary, but is :-(
-		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.SIGNATURE);
-		final CryptoRepoFileDtoConverter cryptoRepoFileDtoConverter = CryptoRepoFileDtoConverter.create();
-		for (final CryptoRepoFile cryptoRepoFile : entities)
-			cryptoChangeSetDto.getCryptoRepoFileDtos().add(cryptoRepoFileDtoConverter.toCryptoRepoFileDto(cryptoRepoFile));
+		cryptoChangeSetDto.setCryptoRepoFileDtos(
+				cryptoRepoFileDao.getCryptoRepoFileDtosChangedAfterExclLastSyncFromRepositoryId(
+						lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced(),
+						resyncMode ? NULL_UUID : getRemoteRepositoryIdOrFail()));
 
-		logger.debug("populateChangedCryptoRepoFileDtos: Took {} ms for {} entities.", System.currentTimeMillis() - beginTimestamp, entities.size());
+		logger.debug("populateChangedCryptoRepoFileDtos: Took {} ms for {} entities.", System.currentTimeMillis() - beginTimestamp,
+				cryptoChangeSetDto.getCryptoRepoFileDtos().size());
 	}
 
 	private void populateChangedCryptoLinkDtos(final CryptoChangeSetDto cryptoChangeSetDto, final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {
 		final long beginTimestamp = System.currentTimeMillis();
 		final CryptoLinkDao cryptoLinkDao = getTransactionOrFail().getDao(CryptoLinkDao.class);
 
-		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.CRYPTO_LINK_DTO);
-		final Collection<CryptoLink> entities = cryptoLinkDao.getCryptoLinksChangedAfterExclLastSyncFromRepositoryId(
-				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced(),
-				resyncMode ? NULL_UUID : getRemoteRepositoryIdOrFail());
+//		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.CRYPTO_LINK_DTO);
+//		final Collection<CryptoLink> entities = cryptoLinkDao.getCryptoLinksChangedAfterExclLastSyncFromRepositoryId(
+//				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced(),
+//				resyncMode ? NULL_UUID : getRemoteRepositoryIdOrFail());
+//
+//		// minimize unnecessary JOINs in potential queries for lazy-loading of not-yet-resolved relations. Should not be necessary, but is :-(
+//		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.SIGNATURE);
+//		for (final CryptoLink cryptoLink : entities)
+//			cryptoChangeSetDto.getCryptoLinkDtos().add(toCryptoLinkDto(cryptoLink));
 
-		// minimize unnecessary JOINs in potential queries for lazy-loading of not-yet-resolved relations. Should not be necessary, but is :-(
-		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.SIGNATURE);
-		for (final CryptoLink cryptoLink : entities)
-			cryptoChangeSetDto.getCryptoLinkDtos().add(toCryptoLinkDto(cryptoLink));
+		cryptoChangeSetDto.setCryptoLinkDtos(
+				cryptoLinkDao.getCryptoLinkDtosChangedAfterExclLastSyncFromRepositoryId(
+						lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced(),
+						resyncMode ? NULL_UUID : getRemoteRepositoryIdOrFail()));
 
-		logger.debug("populateChangedCryptoLinkDtos: Took {} ms for {} entities.", System.currentTimeMillis() - beginTimestamp, entities.size());
+		logger.debug("populateChangedCryptoLinkDtos: Took {} ms for {} entities.", System.currentTimeMillis() - beginTimestamp,
+				cryptoChangeSetDto.getCryptoLinkDtos().size());
 	}
 
 	private void populateChangedCryptoKeyDtos(final CryptoChangeSetDto cryptoChangeSetDto, final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {
 		final long beginTimestamp = System.currentTimeMillis();
 		final CryptoKeyDao cryptoKeyDao = getTransactionOrFail().getDao(CryptoKeyDao.class);
 
-		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.CRYPTO_KEY_DTO);
-		final Collection<CryptoKey> entities = cryptoKeyDao.getCryptoKeysChangedAfterExclLastSyncFromRepositoryId(
-				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced(),
-				resyncMode ? NULL_UUID : getRemoteRepositoryIdOrFail());
+//		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.CRYPTO_KEY_DTO);
+//		final Collection<CryptoKey> entities = cryptoKeyDao.getCryptoKeysChangedAfterExclLastSyncFromRepositoryId(
+//				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced(),
+//				resyncMode ? NULL_UUID : getRemoteRepositoryIdOrFail());
+//
+//		// minimize unnecessary JOINs in potential queries for lazy-loading of not-yet-resolved relations. Should not be necessary, but is :-(
+//		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.SIGNATURE);
+//		for (final CryptoKey cryptoKey : entities)
+//			cryptoChangeSetDto.getCryptoKeyDtos().add(toCryptoKeyDto(cryptoKey));
 
-		// minimize unnecessary JOINs in potential queries for lazy-loading of not-yet-resolved relations. Should not be necessary, but is :-(
-		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.SIGNATURE);
-		for (final CryptoKey cryptoKey : entities)
-			cryptoChangeSetDto.getCryptoKeyDtos().add(toCryptoKeyDto(cryptoKey));
+		cryptoChangeSetDto.setCryptoKeyDtos(
+				cryptoKeyDao.getCryptoKeyDtosChangedAfterExclLastSyncFromRepositoryId(
+						lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced(),
+						resyncMode ? NULL_UUID : getRemoteRepositoryIdOrFail()));
 
-		logger.debug("populateChangedCryptoKeyDtos: Took {} ms for {} entities.", System.currentTimeMillis() - beginTimestamp, entities.size());
+		logger.debug("populateChangedCryptoKeyDtos: Took {} ms for {} entities.", System.currentTimeMillis() - beginTimestamp,
+				cryptoChangeSetDto.getCryptoKeyDtos().size());
 	}
 
 	private void populateChangedRepositoryOwnerDto(final CryptoChangeSetDto cryptoChangeSetDto, final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {
@@ -2058,12 +2096,28 @@ public class CryptreeImpl extends AbstractCryptree {
 
 		// minimize unnecessary JOINs in potential queries for lazy-loading of not-yet-resolved relations. Should not be necessary, but is :-(
 		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.SIGNATURE);
-		for (final Permission permission : entities) {
-			enactPermissionRevocationIfNeededAndPossible(permission);
-
+		for (final Permission permission : entities)
 			cryptoChangeSetDto.getPermissionDtos().add(toPermissionDto(permission));
-		}
+
 		logger.debug("populateChangedPermissionDtos: Took {} ms for {} entities.", System.currentTimeMillis() - beginTimestamp, entities.size());
+	}
+
+	private void enactPermissionRevocationsOfChangedPermissionsIfNeededAndPossible(final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {
+		final PermissionDao permissionDao = getTransactionOrFail().getDao(PermissionDao.class);
+		final Collection<Permission> entities = permissionDao.getPermissionsChangedAfter(
+				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced());
+
+		for (final Permission permission : entities)
+			enactPermissionRevocationIfNeededAndPossible(permission);
+	}
+
+	private void enactPermissionSetInheritanceRevocationsOfChangedPermissionSetInheritancesIfNeededAndPossible(final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {
+		final PermissionSetInheritanceDao psInheritanceDao = getTransactionOrFail().getDao(PermissionSetInheritanceDao.class);
+		final Collection<PermissionSetInheritance> entities = psInheritanceDao.getPermissionSetInheritancesChangedAfter(
+				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced());
+
+		for (final PermissionSetInheritance psInheritance : entities)
+			enactPermissionSetInheritanceRevocationIfNeededAndPossible(psInheritance);
 	}
 
 	private void populateChangedPermissionSetInheritanceDtos(final CryptoChangeSetDto cryptoChangeSetDto, final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {
@@ -2076,11 +2130,9 @@ public class CryptreeImpl extends AbstractCryptree {
 
 		// minimize unnecessary JOINs in potential queries for lazy-loading of not-yet-resolved relations. Should not be necessary, but is :-(
 		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.SIGNATURE);
-		for (final PermissionSetInheritance psInheritance : entities) {
-			enactPermissionSetInheritanceRevocationIfNeededAndPossible(psInheritance);
-
+		for (final PermissionSetInheritance psInheritance : entities)
 			cryptoChangeSetDto.getPermissionSetInheritanceDtos().add(toPermissionSetInheritanceDto(psInheritance));
-		}
+
 		logger.debug("populateChangedPermissionSetInheritanceDtos: Took {} ms for {} entities.", System.currentTimeMillis() - beginTimestamp, entities.size());
 	}
 
@@ -2236,7 +2288,7 @@ public class CryptreeImpl extends AbstractCryptree {
 
 		final UserRepoKeyPublicKey fromUserRepoKeyPublicKey = cryptoLink.getFromUserRepoKeyPublicKey();
 		cryptoLinkDto.setFromUserRepoKeyId(fromUserRepoKeyPublicKey == null ? null : fromUserRepoKeyPublicKey.getUserRepoKeyId());
-		cryptoLinkDto.setLocalRevision(cryptoLink.getLocalRevision());
+//		cryptoLinkDto.setLocalRevision(cryptoLink.getLocalRevision());
 		cryptoLinkDto.setToCryptoKeyData(cryptoLink.getToCryptoKeyData());
 		cryptoLinkDto.setToCryptoKeyId(cryptoLink.getToCryptoKey().getCryptoKeyId());
 		cryptoLinkDto.setToCryptoKeyPart(cryptoLink.getToCryptoKeyPart());
@@ -2498,6 +2550,7 @@ public class CryptreeImpl extends AbstractCryptree {
 			histoCryptoRepoFiles.add(cryptreeNode.createHistoCryptoRepoFileIfNeeded());
 		}
 
+		prepareGetCryptoChangeSetDtoWithCryptoRepoFiles(null);
 		final CryptoChangeSetDto cryptoChangeSetDto = getCryptoChangeSetDtoWithCryptoRepoFiles(null);
 
 		final CurrentHistoCryptoRepoFileDao chcrfDao = tx.getDao(CurrentHistoCryptoRepoFileDao.class);

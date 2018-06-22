@@ -20,7 +20,7 @@ public class CryptoLinkDto implements Signable {
 
 	private Uid cryptoLinkId;
 
-	private long localRevision;
+//	private long localRevision;
 
 	private Uid fromCryptoKeyId;
 
@@ -35,6 +35,34 @@ public class CryptoLinkDto implements Signable {
 	@XmlElement
 	private SignatureDto signatureDto;
 
+	public CryptoLinkDto() {
+	}
+
+	/**
+	 * JDO-direct-loading constructor.
+	 * <p>
+	 * <b>Important:</b> Do not use this constructor in Java code!
+	 * <p>
+	 * <b>Important:</b> When modifying this constructor, make sure all DAO-JDO-query-result-code matche it.
+	 */
+	public CryptoLinkDto(
+			String cryptoLinkId,
+			String fromCryptoKeyId,
+			String fromUserRepoKeyId,
+			String toCryptoKeyId,
+			Enum<?> toCryptoKeyPart,
+			byte[] toCryptoKeyData,
+			Signature signature)
+	{
+		this.cryptoLinkId = Uid.valueOf(cryptoLinkId);
+		this.fromCryptoKeyId = Uid.valueOf(fromCryptoKeyId);
+		this.fromUserRepoKeyId = Uid.valueOf(fromUserRepoKeyId);
+		this.toCryptoKeyId = Uid.valueOf(toCryptoKeyId);
+		this.toCryptoKeyPart = (CryptoKeyPart) toCryptoKeyPart;
+		this.toCryptoKeyData = toCryptoKeyData;
+		this.setSignature(signature);
+	}
+
 	public Uid getCryptoLinkId() {
 		return cryptoLinkId;
 	}
@@ -42,12 +70,12 @@ public class CryptoLinkDto implements Signable {
 		this.cryptoLinkId = cryptoLinkId;
 	}
 
-	public long getLocalRevision() {
-		return localRevision;
-	}
-	public void setLocalRevision(final long localRevision) {
-		this.localRevision = localRevision;
-	}
+//	public long getLocalRevision() {
+//		return localRevision;
+//	}
+//	public void setLocalRevision(final long localRevision) {
+//		this.localRevision = localRevision;
+//	}
 
 	public Uid getFromCryptoKeyId() {
 		return fromCryptoKeyId;
@@ -139,8 +167,9 @@ public class CryptoLinkDto implements Signable {
 	@Override
 	public String toString() {
 		return "CryptoLinkDto[cryptoLinkId=" + cryptoLinkId
-				+ ", localRevision=" + localRevision + ", fromCryptoKeyId="
-				+ fromCryptoKeyId + ", fromUserRepoKeyId=" + fromUserRepoKeyId
+//				+ ", localRevision=" + localRevision
+				+ ", fromCryptoKeyId=" + fromCryptoKeyId
+				+ ", fromUserRepoKeyId=" + fromUserRepoKeyId
 				+ ", toCryptoKeyId=" + toCryptoKeyId + ", toCryptoKeyPart="
 				+ toCryptoKeyPart + "]";
 	}

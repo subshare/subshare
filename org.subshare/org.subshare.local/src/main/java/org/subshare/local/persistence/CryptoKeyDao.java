@@ -4,6 +4,7 @@ import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -12,6 +13,7 @@ import javax.jdo.Query;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.subshare.core.dto.CryptoKeyDto;
 import org.subshare.core.dto.CryptoKeyRole;
 
 import co.codewizards.cloudstore.core.Uid;
@@ -85,18 +87,51 @@ public class CryptoKeyDao extends Dao<CryptoKey, CryptoKeyDao> {
 			long startTimestamp = System.currentTimeMillis();
 			@SuppressWarnings("unchecked")
 			Collection<CryptoKey> result = (Collection<CryptoKey>) query.execute(localRevision, exclLastSyncFromRepositoryId.toString());
-			logger.debug("getCryptoKeysChangedAfter: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
+			logger.debug("getCryptoKeysChangedAfterExclLastSyncFromRepositoryId: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
 
 			fetchPlanBackup.restore(pm);
 			startTimestamp = System.currentTimeMillis();
 			result = load(result);
-			logger.debug("getCryptoKeysChangedAfter: Loading result-set with {} elements took {} ms.", result.size(), System.currentTimeMillis() - startTimestamp);
+			logger.debug("getCryptoKeysChangedAfterExclLastSyncFromRepositoryId: Loading result-set with {} elements took {} ms.", result.size(), System.currentTimeMillis() - startTimestamp);
 
 			return result;
 		} finally {
 			query.closeAll();
 			fetchPlanBackup.restore(pm);
 		}
+	}
+
+	public List<CryptoKeyDto> getCryptoKeyDtosChangedAfterExclLastSyncFromRepositoryId(
+			final long localRevision, final UUID exclLastSyncFromRepositoryId) {
+		assertNotNull(exclLastSyncFromRepositoryId, "exclLastSyncFromRepositoryId");
+
+		final PersistenceManager pm = pm();
+		final FetchPlanBackup fetchPlanBackup = FetchPlanBackup.createFrom(pm);
+		final Query query = pm.newNamedQuery(getEntityClass(), "getCryptoKeysChangedAfter_localRevision_exclLastSyncFromRepositoryId");
+		try {
+			clearFetchGroups();
+			long startTimestamp = System.currentTimeMillis();
+			@SuppressWarnings("unchecked")
+			Collection<CryptoKey> result = (Collection<CryptoKey>) query.execute(localRevision, exclLastSyncFromRepositoryId.toString());
+			logger.debug("getCryptoKeyDtosChangedAfterExclLastSyncFromRepositoryId: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
+
+			fetchPlanBackup.restore(pm);
+			startTimestamp = System.currentTimeMillis();
+			List<CryptoKeyDto> resultDtos = loadDtos(result);
+			logger.debug("getCryptoKeyDtosChangedAfterExclLastSyncFromRepositoryId: Loading result-set with {} elements took {} ms.", resultDtos.size(), System.currentTimeMillis() - startTimestamp);
+
+			return resultDtos;
+		} finally {
+			query.closeAll();
+			fetchPlanBackup.restore(pm);
+		}
+	}
+
+	protected List<CryptoKeyDto> loadDtos(Collection<CryptoKey> entities) {
+		return super.loadDtos(entities, CryptoKeyDto.class,
+				"this.cryptoKeyId, this.cryptoRepoFile.cryptoRepoFileId, this.cryptoKeyType, "
+				+ "this.cryptoKeyRole, this.signature, "
+				+ "this.cryptoKeyDeactivation.cryptoKey.cryptoKeyId, this.cryptoKeyDeactivation.signature");
 	}
 
 	public Collection<CryptoKey> getCryptoKeys(final CryptoRepoFile cryptoRepoFile) {

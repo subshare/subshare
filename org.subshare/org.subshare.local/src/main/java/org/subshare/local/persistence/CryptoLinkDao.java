@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.subshare.core.dto.CryptoKeyPart;
 import org.subshare.core.dto.CryptoKeyRole;
+import org.subshare.core.dto.CryptoLinkDto;
 
 import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.local.persistence.Dao;
@@ -67,18 +68,49 @@ public class CryptoLinkDao extends Dao<CryptoLink, CryptoLinkDao> {
 			long startTimestamp = System.currentTimeMillis();
 			@SuppressWarnings("unchecked")
 			Collection<CryptoLink> result = (Collection<CryptoLink>) query.execute(localRevision, exclLastSyncFromRepositoryId.toString());
-			logger.debug("getCryptoLinksChangedAfter: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
+			logger.debug("getCryptoLinksChangedAfterExclLastSyncFromRepositoryId: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
 
 			fetchPlanBackup.restore(pm);
 			startTimestamp = System.currentTimeMillis();
 			result = load(result);
-			logger.debug("getCryptoLinksChangedAfter: Loading result-set with {} elements took {} ms.", result.size(), System.currentTimeMillis() - startTimestamp);
+			logger.debug("getCryptoLinksChangedAfterExclLastSyncFromRepositoryId: Loading result-set with {} elements took {} ms.", result.size(), System.currentTimeMillis() - startTimestamp);
 
 			return result;
 		} finally {
 			query.closeAll();
 			fetchPlanBackup.restore(pm);
 		}
+	}
+
+	public List<CryptoLinkDto> getCryptoLinkDtosChangedAfterExclLastSyncFromRepositoryId(
+			final long localRevision, final UUID exclLastSyncFromRepositoryId) {
+		assertNotNull(exclLastSyncFromRepositoryId, "exclLastSyncFromRepositoryId");
+
+		final PersistenceManager pm = pm();
+		final FetchPlanBackup fetchPlanBackup = FetchPlanBackup.createFrom(pm);
+		final Query query = pm.newNamedQuery(getEntityClass(), "getCryptoLinksChangedAfter_localRevision_exclLastSyncFromRepositoryId");
+		try {
+			clearFetchGroups();
+			long startTimestamp = System.currentTimeMillis();
+			@SuppressWarnings("unchecked")
+			Collection<CryptoLink> result = (Collection<CryptoLink>) query.execute(localRevision, exclLastSyncFromRepositoryId.toString());
+			logger.debug("getCryptoLinkDtosChangedAfterExclLastSyncFromRepositoryId: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
+
+			startTimestamp = System.currentTimeMillis();
+			List<CryptoLinkDto> resultDtos = loadDtos(result);
+			logger.debug("getCryptoLinkDtosChangedAfterExclLastSyncFromRepositoryId: Loading result-set with {} elements took {} ms.", resultDtos.size(), System.currentTimeMillis() - startTimestamp);
+
+			return resultDtos;
+		} finally {
+			query.closeAll();
+			fetchPlanBackup.restore(pm);
+		}
+	}
+
+	protected List<CryptoLinkDto> loadDtos(Collection<CryptoLink> entities) {
+		return super.loadDtos(entities, CryptoLinkDto.class,
+				"this.cryptoLinkId, this.fromCryptoKey.cryptoKeyId, this.fromUserRepoKeyPublicKey.userRepoKeyId, "
+				+ "this.toCryptoKey.cryptoKeyId, this.toCryptoKeyPart, this.toCryptoKeyData, this.signature");
 	}
 
 	public Collection<CryptoLink> getActiveCryptoLinks(final CryptoRepoFile toCryptoRepoFile, final CryptoKeyRole toCryptoKeyRole, final CryptoKeyPart toCryptoKeyPart) {

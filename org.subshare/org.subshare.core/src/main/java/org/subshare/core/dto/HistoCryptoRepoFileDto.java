@@ -47,6 +47,38 @@ public class HistoCryptoRepoFileDto implements Signable, Serializable {
 	@XmlElement
 	private SignatureDto signatureDto;
 
+	public HistoCryptoRepoFileDto() {
+	}
+
+	/**
+	 * JDO-direct-loading constructor.
+	 * <p>
+	 * <b>Important:</b> Do not use this constructor in Java code!
+	 * <p>
+	 * <b>Important:</b> When modifying this constructor, make sure all DAO-JDO-query-result-code matche it.
+	 */
+	public HistoCryptoRepoFileDto(
+			String histoCryptoRepoFileId,
+			String previousHistoCryptoRepoFileId,
+			String cryptoRepoFileId,
+			String histoFrameId,
+			String cryptoKeyId,
+			byte[] repoFileDtoData,
+			Date deleted,
+			boolean deletedByIgnoreRule,
+			Signature signature)
+	{
+		this.histoCryptoRepoFileId = Uid.valueOf(histoCryptoRepoFileId);
+		this.previousHistoCryptoRepoFileId = Uid.valueOf(previousHistoCryptoRepoFileId);
+		this.cryptoRepoFileId = Uid.valueOf(cryptoRepoFileId);
+		this.histoFrameId = Uid.valueOf(histoFrameId);
+		this.cryptoKeyId = Uid.valueOf(cryptoKeyId);
+		this.repoFileDtoData = repoFileDtoData;
+		this.deleted = deleted;
+		this.deletedByIgnoreRule = deletedByIgnoreRule;
+		this.setSignature(signature);
+	}
+
 	public Uid getHistoCryptoRepoFileId() {
 		return histoCryptoRepoFileId;
 	}

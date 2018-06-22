@@ -447,6 +447,11 @@ public class CryptreeFileRepoTransportImpl extends FileRepoTransport implements 
 	public CryptoChangeSetDto getCryptoChangeSetDto(Long lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced) {
 		try ( final LocalRepoTransaction tx = getLocalRepoManager().beginWriteTransaction(); ) {
 			Cryptree cryptree = getCryptree(tx);
+			cryptree.prepareGetCryptoChangeSetDtoWithCryptoRepoFiles(lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced);
+			tx.commit();
+		}
+		try ( final LocalRepoTransaction tx = getLocalRepoManager().beginReadTransaction(); ) {
+			Cryptree cryptree = getCryptree(tx);
 			CryptoChangeSetDto cryptoChangeSetDto = cryptree.getCryptoChangeSetDtoWithCryptoRepoFiles(lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced);
 			tx.commit();
 			return cryptoChangeSetDto;

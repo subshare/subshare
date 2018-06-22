@@ -89,6 +89,8 @@ public interface Cryptree {
 	String getServerPath(String localPath);
 	String getLocalPath(String serverPath);
 
+	void prepareGetCryptoChangeSetDtoWithCryptoRepoFiles(Long lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced);
+
 	/**
 	 * Gets a {@link CryptoChangeSetDto} with all those {@link CryptoRepoFileDto}s, {@link CryptoKeyDto}s
 	 * and {@link CryptoLinkDto}s that were changed after the last invocation of

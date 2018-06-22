@@ -3,8 +3,6 @@ package org.subshare.local.sign;
 import static co.codewizards.cloudstore.core.util.Util.*;
 import static org.assertj.core.api.Assertions.*;
 
-import co.codewizards.cloudstore.core.io.ByteArrayInputStream;
-import co.codewizards.cloudstore.core.io.ByteArrayOutputStream;
 import java.util.Date;
 import java.util.UUID;
 
@@ -27,6 +25,8 @@ import org.subshare.local.AbstractTest;
 import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.core.auth.SignatureException;
 import co.codewizards.cloudstore.core.dto.jaxb.DtoIo;
+import co.codewizards.cloudstore.core.io.ByteArrayInputStream;
+import co.codewizards.cloudstore.core.io.ByteArrayOutputStream;
 
 public class SignableTest extends AbstractTest {
 
@@ -144,17 +144,17 @@ public class SignableTest extends AbstractTest {
 		signableVerifier.verify(cryptoKeyDto);
 	}
 
-	public void signAndModifyLocalRevisionAndVerify() {
-		final CryptoKeyDto cryptoKeyDto = createCryptoRepoKeyDto();
-
-		final SignableSigner signableSigner = new SignableSigner(userRepoKey);
-		signableSigner.sign(cryptoKeyDto);
-
-		cryptoKeyDto.setLocalRevision(7); // *not* signed => no effect
-
-		final SignableVerifier signableVerifier = new SignableVerifier(userRepoKeyPublicKeyLookup);
-		signableVerifier.verify(cryptoKeyDto);
-	}
+//	public void signAndModifyLocalRevisionAndVerify() {
+//		final CryptoKeyDto cryptoKeyDto = createCryptoRepoKeyDto();
+//
+//		final SignableSigner signableSigner = new SignableSigner(userRepoKey);
+//		signableSigner.sign(cryptoKeyDto);
+//
+////		cryptoKeyDto.setLocalRevision(7); // *not* signed => no effect
+//
+//		final SignableVerifier signableVerifier = new SignableVerifier(userRepoKeyPublicKeyLookup);
+//		signableVerifier.verify(cryptoKeyDto);
+//	}
 
 	private static final class CryptoKeyDtoIo extends DtoIo<CryptoKeyDto> { }
 
@@ -165,7 +165,7 @@ public class SignableTest extends AbstractTest {
 		cryptoKeyDto.setCryptoKeyRole(CryptoKeyRole.dataKey);
 		cryptoKeyDto.setCryptoKeyType(CryptoKeyType.symmetric);
 		cryptoKeyDto.setCryptoRepoFileId(new Uid());
-		cryptoKeyDto.setLocalRevision(4);
+//		cryptoKeyDto.setLocalRevision(4);
 		return cryptoKeyDto;
 	}
 

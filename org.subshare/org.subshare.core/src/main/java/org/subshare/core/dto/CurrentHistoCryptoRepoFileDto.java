@@ -32,6 +32,23 @@ public class CurrentHistoCryptoRepoFileDto implements Signable {
 	public CurrentHistoCryptoRepoFileDto() {
 	}
 
+	/**
+	 * JDO-direct-loading constructor.
+	 * <p>
+	 * <b>Important:</b> Do not use this constructor in Java code!
+	 * <p>
+	 * <b>Important:</b> When modifying this constructor, make sure all DAO-JDO-query-result-code matche it.
+	 */
+	public CurrentHistoCryptoRepoFileDto(
+			String cryptoRepoFileId,
+			String histoCryptoRepoFileId,
+			Signature signature)
+	{
+		this.cryptoRepoFileId = Uid.valueOf(cryptoRepoFileId);
+		this.histoCryptoRepoFileId = Uid.valueOf(histoCryptoRepoFileId);
+		this.setSignature(signature);
+	}
+
 	public Uid getCryptoRepoFileId() {
 		return cryptoRepoFileId;
 	}

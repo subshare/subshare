@@ -72,11 +72,23 @@ public class CryptoChangeSetDtoService extends AbstractServiceWithRepoToRepoAuth
 	protected CryptoChangeSetDto getCryptoChangeSetDto(final RepoTransport repoTransport, final Long lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced) {
 		final UUID clientRepositoryId = assertNotNull(repoTransport.getClientRepositoryId(), "clientRepositoryId");
 		final LocalRepoManager localRepoManager = ((ContextWithLocalRepoManager) repoTransport).getLocalRepoManager();
-		transaction = localRepoManager.beginWriteTransaction(); // We write LastCryptoKeySyncToRemoteRepo.
+		transaction = localRepoManager.beginWriteTransaction(); // We write LastCryptoKeySyncToRemoteRepo in this *short* tx.
 		try {
 			final CryptreeFactory cryptreeFactory = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail();
 			final Cryptree cryptree = cryptreeFactory.getCryptreeOrCreate(transaction, clientRepositoryId);
 			cryptree.initLocalRepositoryType();
+			cryptree.prepareGetCryptoChangeSetDtoWithCryptoRepoFiles(
+					lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced);
+
+			transaction.commit();
+		} finally {
+			transaction.rollbackIfActive();
+		}
+
+		transaction = localRepoManager.beginReadTransaction(); // We write LastCryptoKeySyncToRemoteRepo already before.
+		try {
+			final CryptreeFactory cryptreeFactory = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail();
+			final Cryptree cryptree = cryptreeFactory.getCryptreeOrCreate(transaction, clientRepositoryId);
 			final CryptoChangeSetDto cryptoChangeSetDto = cryptree.getCryptoChangeSetDtoWithCryptoRepoFiles(
 					lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced);
 

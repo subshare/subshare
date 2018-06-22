@@ -41,6 +41,38 @@ public class CryptoRepoFileDto implements Signable {
 	@XmlElement
 	private SignatureDto signatureDto;
 
+	public CryptoRepoFileDto() {
+	}
+
+	/**
+	 * JDO-direct-loading constructor.
+	 * <p>
+	 * <b>Important:</b> Do not use this constructor in Java code!
+	 * <p>
+	 * <b>Important:</b> When modifying this constructor, make sure all DAO-JDO-query-result-code matche it.
+	 */
+	public CryptoRepoFileDto(
+			String cryptoRepoFileId,
+			String parentCryptoRepoFileId,
+			String cryptoKeyId,
+			boolean directory,
+			byte[] repoFileDtoData,
+			Date cryptoRepoFileCreated,
+			Date deleted,
+			boolean deletedByIgnoreRule,
+			Signature signature)
+	{
+		this.cryptoRepoFileId = Uid.valueOf(cryptoRepoFileId);
+		this.parentCryptoRepoFileId = Uid.valueOf(parentCryptoRepoFileId);
+		this.cryptoKeyId = Uid.valueOf(cryptoKeyId);
+		this.directory = directory;
+		this.repoFileDtoData = repoFileDtoData;
+		this.cryptoRepoFileCreated = cryptoRepoFileCreated;
+		this.deleted = deleted;
+		this.deletedByIgnoreRule = deletedByIgnoreRule;
+		this.setSignature(signature);
+	}
+
 	public Uid getCryptoRepoFileId() {
 		return cryptoRepoFileId;
 	}

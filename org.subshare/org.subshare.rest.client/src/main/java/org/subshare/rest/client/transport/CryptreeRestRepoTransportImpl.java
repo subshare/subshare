@@ -1093,6 +1093,7 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 
 			cryptree.sealUnsealedHistoryFrame();
 
+			cryptree.prepareGetCryptoChangeSetDtoWithCryptoRepoFiles(null);
 			cryptoChangeSetDto = cryptree.getCryptoChangeSetDtoWithCryptoRepoFiles(null);
 
 			cryptree.removeOrphanedInvitationUserRepoKeyPublicKeys(); // TODO is this location good or should we move this somewhere else?

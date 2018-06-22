@@ -15,6 +15,7 @@ import javax.jdo.Query;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.subshare.core.dto.CryptoRepoFileDto;
 
 import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.local.persistence.Dao;
@@ -106,6 +107,38 @@ public class CryptoRepoFileDao extends Dao<CryptoRepoFile, CryptoRepoFileDao> {
 			query.closeAll();
 			fetchPlanBackup.restore(pm);
 		}
+	}
+
+	public List<CryptoRepoFileDto> getCryptoRepoFileDtosChangedAfterExclLastSyncFromRepositoryId(
+			final long localRevision, final UUID exclLastSyncFromRepositoryId) {
+
+		assertNotNull(exclLastSyncFromRepositoryId, "exclLastSyncFromRepositoryId");
+		final PersistenceManager pm = pm();
+		final FetchPlanBackup fetchPlanBackup = FetchPlanBackup.createFrom(pm);
+		final Query query = pm.newNamedQuery(getEntityClass(), "getCryptoRepoFilesChangedAfter_localRevision_exclLastSyncFromRepositoryId");
+		try {
+			clearFetchGroups();
+			long startTimestamp = System.currentTimeMillis();
+			@SuppressWarnings("unchecked")
+			Collection<CryptoRepoFile> result = (Collection<CryptoRepoFile>) query.execute(localRevision, exclLastSyncFromRepositoryId.toString());
+			logger.debug("getCryptoRepoFileDtosChangedAfterExclLastSyncFromRepositoryId: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
+
+			startTimestamp = System.currentTimeMillis();
+			List<CryptoRepoFileDto> resultDtos = loadDtos(result);
+			logger.debug("getCryptoRepoFileDtosChangedAfterExclLastSyncFromRepositoryId: Loading result-set with {} elements took {} ms.", resultDtos.size(), System.currentTimeMillis() - startTimestamp);
+
+			return resultDtos;
+		} finally {
+			query.closeAll();
+			fetchPlanBackup.restore(pm);
+		}
+	}
+
+	protected List<CryptoRepoFileDto> loadDtos(final Collection<CryptoRepoFile> entities) {
+		return loadDtos(entities, CryptoRepoFileDto.class,
+				"this.cryptoRepoFileId, this.parent.cryptoRepoFileId, this.cryptoKey.cryptoKeyId, "
+				+ "this.directory, this.repoFileDtoData, this.cryptoRepoFileCreated, "
+				+ "this.deleted, this.deletedByIgnoreRule, this.signature");
 	}
 
 	public Collection<CryptoRepoFile> getChildCryptoRepoFiles(final CryptoRepoFile parent) {

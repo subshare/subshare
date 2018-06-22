@@ -26,12 +26,44 @@ public class CryptoKeyDto implements Signable {
 
 	private CryptoKeyRole cryptoKeyRole;
 
-	private long localRevision;
+//	private long localRevision;
 
 	@XmlElement
 	private SignatureDto signatureDto;
 
 	private CryptoKeyDeactivationDto cryptoKeyDeactivationDto;
+
+	public CryptoKeyDto() {
+	}
+
+	/**
+	 * JDO-direct-loading constructor.
+	 * <p>
+	 * <b>Important:</b> Do not use this constructor in Java code!
+	 * <p>
+	 * <b>Important:</b> When modifying this constructor, make sure all DAO-JDO-query-result-code matche it.
+	 */
+	public CryptoKeyDto(
+			String cryptoKeyId,
+			String cryptoRepoFileId,
+			Enum<?> cryptoKeyType,
+			Enum<?> cryptoKeyRole,
+			Signature signature,
+			String cryptoKeyDeactivation_cryptoKeyId,
+			Signature cryptoKeyDeactivation_signature)
+	{
+		this.cryptoKeyId = Uid.valueOf(cryptoKeyId);
+		this.cryptoRepoFileId = Uid.valueOf(cryptoRepoFileId);
+		this.cryptoKeyType = (CryptoKeyType) cryptoKeyType;
+		this.cryptoKeyRole = (CryptoKeyRole) cryptoKeyRole;
+		this.setSignature(signature);
+
+		if (cryptoKeyDeactivation_cryptoKeyId != null) {
+			this.cryptoKeyDeactivationDto = new CryptoKeyDeactivationDto();
+			this.cryptoKeyDeactivationDto.setCryptoKeyId(new Uid(cryptoKeyDeactivation_cryptoKeyId));
+			this.cryptoKeyDeactivationDto.setSignature(cryptoKeyDeactivation_signature);
+		}
+	}
 
 	public Uid getCryptoKeyId() {
 		return cryptoKeyId;
@@ -61,12 +93,12 @@ public class CryptoKeyDto implements Signable {
 		this.cryptoKeyRole = cryptoKeyRole;
 	}
 
-	public long getLocalRevision() {
-		return localRevision;
-	}
-	public void setLocalRevision(final long localRevision) {
-		this.localRevision = localRevision;
-	}
+//	public long getLocalRevision() {
+//		return localRevision;
+//	}
+//	public void setLocalRevision(final long localRevision) {
+//		this.localRevision = localRevision;
+//	}
 
 	public CryptoKeyDeactivationDto getCryptoKeyDeactivationDto() {
 		return cryptoKeyDeactivationDto;
@@ -131,7 +163,8 @@ public class CryptoKeyDto implements Signable {
 	public String toString() {
 		return "CryptoKeyDto[cryptoKeyId=" + cryptoKeyId
 				+ ", cryptoRepoFileId=" + cryptoRepoFileId + ", cryptoKeyType=" + cryptoKeyType
-				+ ", cryptoKeyRole=" + cryptoKeyRole + ", localRevision="
-				+ localRevision + ", cryptoKeyDeactivationDto=" + cryptoKeyDeactivationDto + "]";
+				+ ", cryptoKeyRole=" + cryptoKeyRole
+//				+ ", localRevision=" + localRevision
+				+ ", cryptoKeyDeactivationDto=" + cryptoKeyDeactivationDto + "]";
 	}
 }
