@@ -30,8 +30,8 @@
 -->
 
 <!--
--->
 	<logger name="DataNucleus.Datastore.Native" level="ALL" />
+-->
 
 	<logger name="org.subshare.core.pgp.gnupg.BcPgpDecoder" level="DEBUG"/>
 	<logger name="org.subshare.core.user.UserImpl" level="DEBUG"/>

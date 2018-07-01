@@ -3,6 +3,7 @@ package org.subshare.local;
 import static co.codewizards.cloudstore.core.objectfactory.ObjectFactoryUtil.*;
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static co.codewizards.cloudstore.core.util.DebugUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
 import static org.subshare.local.CryptreeNodeUtil.*;
 
@@ -140,6 +141,7 @@ import org.subshare.local.persistence.UserRepoKeyPublicKeyReplacementRequest;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyReplacementRequestDao;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyReplacementRequestDeletion;
 import org.subshare.local.persistence.UserRepoKeyPublicKeyReplacementRequestDeletionDao;
+import org.subshare.local.persistence.VerifySignableAndWriteProtectedEntityListener;
 
 import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.core.auth.SignatureException;
@@ -397,10 +399,17 @@ public class CryptreeImpl extends AbstractCryptree {
 	@Override
 	public void putCryptoChangeSetDto(final CryptoChangeSetDto cryptoChangeSetDto) {
 		assertNotNull(cryptoChangeSetDto, "cryptoChangeSetDto");
-		final LocalRepoTransaction transaction = getTransactionOrFail();
 
 		if (cryptoChangeSetDto.getRevision() >= 0) // downward compatibility! a remote peer older than version 0.10.2 does not contain this, yet!
 			setLastCryptoKeySyncFromRemoteRepoRemoteRepositoryRevisionSynced(cryptoChangeSetDto.getRevision());
+
+		putCryptoChangeSetDto_essentials(cryptoChangeSetDto);
+		putCryptoChangeSetDto_others(cryptoChangeSetDto);
+	}
+
+	protected void putCryptoChangeSetDto_essentials(final CryptoChangeSetDto cryptoChangeSetDto) {
+		assertNotNull(cryptoChangeSetDto, "cryptoChangeSetDto");
+		final LocalRepoTransaction transaction = getTransactionOrFail();
 
 		final Map<CryptoRepoFileDto, CryptoRepoFile> cryptoRepoFileDto2CryptoRepoFile = new HashMap<>();
 		final Map<Uid, CryptoKey> cryptoKeyId2CryptoKey = new HashMap<>();
@@ -409,16 +418,36 @@ public class CryptreeImpl extends AbstractCryptree {
 		for (final UserRepoKeyPublicKeyDto userRepoKeyPublicKeyDto : cryptoChangeSetDto.getUserRepoKeyPublicKeyDtos())
 			putUserRepoKeyPublicKeyDto(userRepoKeyPublicKeyDto);
 
+		if (! cryptoChangeSetDto.getUserRepoKeyPublicKeyDtos().isEmpty()) {
+			logger.info("putCryptoChangeSetDto_essentials: after all putUserRepoKeyPublicKeyDto(...)");
+			logMemoryStats(logger);
+		}
+
 		for (final CryptoRepoFileDto cryptoRepoFileDto : sortCryptoRepoFileDtos(cryptoChangeSetDto.getCryptoRepoFileDtos()))
 			cryptoRepoFileDto2CryptoRepoFile.put(cryptoRepoFileDto, putCryptoRepoFileDto(cryptoRepoFileDto));
+
+		if (! cryptoChangeSetDto.getCryptoRepoFileDtos().isEmpty()) {
+			logger.info("putCryptoChangeSetDto_essentials: after {} putCryptoRepoFileDto(...):", cryptoChangeSetDto.getCryptoRepoFileDtos().size());
+			logMemoryStats(logger);
+		}
 
 		for (final CryptoKeyDto cryptoKeyDto : cryptoChangeSetDto.getCryptoKeyDtos()) {
 			final CryptoKey cryptoKey = putCryptoKeyDto(cryptoKeyDto);
 			cryptoKeyId2CryptoKey.put(cryptoKey.getCryptoKeyId(), cryptoKey);
 		}
 
+		if (! cryptoChangeSetDto.getCryptoKeyDtos().isEmpty()) {
+			logger.info("putCryptoChangeSetDto_essentials: after {} putCryptoKeyDto(...):", cryptoChangeSetDto.getCryptoKeyDtos().size());
+			logMemoryStats(logger);
+		}
+
 		for (final CryptoLinkDto cryptoLinkDto : cryptoChangeSetDto.getCryptoLinkDtos())
 			putCryptoLinkDto(cryptoLinkDto);
+
+		if (! cryptoChangeSetDto.getCryptoLinkDtos().isEmpty()) {
+			logger.info("putCryptoChangeSetDto_essentials: after {} putCryptoLinkDto(...):", cryptoChangeSetDto.getCryptoLinkDtos().size());
+			logMemoryStats(logger);
+		}
 
 		for (final Map.Entry<CryptoRepoFileDto, CryptoRepoFile> me : cryptoRepoFileDto2CryptoRepoFile.entrySet()) {
 			final Uid cryptoKeyId = me.getKey().getCryptoKeyId();
@@ -442,7 +471,7 @@ public class CryptreeImpl extends AbstractCryptree {
 					if (repoFile != null)
 						deleteRepoFileWithAllChildrenRecursively(repoFile);
 					else
-						logger.warn("putCryptoChangeSetDto: repoFile == null!!! {}", cryptoRepoFile);
+						logger.warn("putCryptoChangeSetDto_essentials: repoFile == null!!! {}", cryptoRepoFile);
 				}
 			}
 		}
@@ -471,13 +500,13 @@ public class CryptreeImpl extends AbstractCryptree {
 		for (final PermissionDto permissionDto : cryptoChangeSetDto.getPermissionDtos())
 			putPermissionDto(permissionDto);
 
-		for (UserRepoKeyPublicKeyReplacementRequestDto requestDto : cryptoChangeSetDto.getUserRepoKeyPublicKeyReplacementRequestDtos())
+		for (final UserRepoKeyPublicKeyReplacementRequestDto requestDto : cryptoChangeSetDto.getUserRepoKeyPublicKeyReplacementRequestDtos())
 			putUserRepoKeyPublicKeyReplacementRequestDto(requestDto);
 
-		for (UserIdentityDto userIdentityDto : cryptoChangeSetDto.getUserIdentityDtos())
+		for (final UserIdentityDto userIdentityDto : cryptoChangeSetDto.getUserIdentityDtos())
 			putUserIdentityDto(userIdentityDto);
 
-		for (UserIdentityLinkDto userIdentityLinkDto : cryptoChangeSetDto.getUserIdentityLinkDtos())
+		for (final UserIdentityLinkDto userIdentityLinkDto : cryptoChangeSetDto.getUserIdentityLinkDtos())
 			putUserIdentityLinkDto(userIdentityLinkDto);
 
 		// putPermissionSetInheritanceDto(...) must be called *after* all PermissionSet and Permission objects are written to the DB!
@@ -486,47 +515,79 @@ public class CryptreeImpl extends AbstractCryptree {
 		for (final PermissionSetInheritanceDto permissionSetInheritanceDto : cryptoChangeSetDto.getPermissionSetInheritanceDtos())
 			putPermissionSetInheritanceDto(permissionSetInheritanceDto);
 
-		transaction.flush();
+		logger.info("putCryptoChangeSetDto_essentials: after all puts, before eviction:");
+		logMemoryStats(logger);
+
+		flushAndVerifySignableAndWriteProtectedEntitiesBeforeCommit();
+		evictAllCryptoEntities();
+
+		logger.info("putCryptoChangeSetDto_essentials: after all puts, after eviction:");
+		logMemoryStats(logger);
+	}
+
+	protected void putCryptoChangeSetDto_others(final CryptoChangeSetDto cryptoChangeSetDto) {
+		assertNotNull(cryptoChangeSetDto, "cryptoChangeSetDto");
+		final LocalRepoTransaction transaction = getTransactionOrFail();
+		final PersistenceManager pm = pm();
 
 		final HistoCryptoRepoFileDtoConverter histoCryptoRepoFileDtoConverter = HistoCryptoRepoFileDtoConverter.create(getTransactionOrFail());
 
-		final Map<HistoCryptoRepoFileDto, HistoCryptoRepoFile> histoCryptoRepoFileDto2HistoCryptoRepoFile =
-				new HashMap<>();
+//		final Map<HistoCryptoRepoFileDto, HistoCryptoRepoFile> histoCryptoRepoFileDto2HistoCryptoRepoFile =
+//				new HashMap<>();
 
 		for (HistoFrameDto histoFrameDto : cryptoChangeSetDto.getHistoFrameDtos())
 			putHistoFrameDto(histoFrameDto);
 
+		final Set<Uid> processedPlainHistoCryptoRepoFileIds = new HashSet<>();
 		putHistoCryptoRepoFileDtos(
 				histoCryptoRepoFileDtoConverter,
-				histoCryptoRepoFileDto2HistoCryptoRepoFile,
+				processedPlainHistoCryptoRepoFileIds,
+//				histoCryptoRepoFileDto2HistoCryptoRepoFile,
 				cryptoChangeSetDto.getHistoCryptoRepoFileDtos()
 				);
 
-		final Set<Uid> dirtyPlainHistoCryptoRepoFileIds = new HashSet<>();
-		final List<Collision> collisions = new ArrayList<>();
-		for (CollisionDto collisionDto : cryptoChangeSetDto.getCollisionDtos()) {
-			collisions.add(putCollisionDto(collisionDto));
+		if (! cryptoChangeSetDto.getHistoCryptoRepoFileDtos().isEmpty()) {
+			logger.info("putCryptoChangeSetDto_others: after putHistoCryptoRepoFileDtos:");
+			evictAllCryptoEntities();
+		}
+
+		final Set<Uid> dirtyPlainHistoCryptoRepoFileIds = processedPlainHistoCryptoRepoFileIds; // we can directly work with the processed ones ;-)
+//		final List<Collision> collisions = new ArrayList<>();
+		for (final CollisionDto collisionDto : cryptoChangeSetDto.getCollisionDtos()) {
+			putCollisionDto(collisionDto);
 			dirtyPlainHistoCryptoRepoFileIds.add(collisionDto.getHistoCryptoRepoFileId1());
 			dirtyPlainHistoCryptoRepoFileIds.add(collisionDto.getHistoCryptoRepoFileId2());
 		}
 		dirtyPlainHistoCryptoRepoFileIds.remove(null);
 
-		for (final HistoCryptoRepoFile histoCryptoRepoFile : histoCryptoRepoFileDto2HistoCryptoRepoFile.values())
-			dirtyPlainHistoCryptoRepoFileIds.add(histoCryptoRepoFile.getHistoCryptoRepoFileId());
+//		for (final HistoCryptoRepoFile histoCryptoRepoFile : histoCryptoRepoFileDto2HistoCryptoRepoFile.values()) // using the processedPlainHistoCryptoRepoFileIds instead -- above
+//			dirtyPlainHistoCryptoRepoFileIds.add(histoCryptoRepoFile.getHistoCryptoRepoFileId());
 
 		CurrentHistoCryptoRepoFileDtoConverter currentHistoCryptoRepoFileDtoConverter = CurrentHistoCryptoRepoFileDtoConverter.create(transaction);
 		for (CurrentHistoCryptoRepoFileDto currentHistoCryptoRepoFileDto : cryptoChangeSetDto.getCurrentHistoCryptoRepoFileDtos()) {
 			CurrentHistoCryptoRepoFile currentHistoCryptoRepoFile = currentHistoCryptoRepoFileDtoConverter.putCurrentHistoCryptoRepoFile(currentHistoCryptoRepoFileDto);
 			currentHistoCryptoRepoFile.setLastSyncFromRepositoryId(getRemoteRepositoryIdOrFail());
+			flushAndVerifySignableAndWriteProtectedEntitiesBeforeCommit();
+			evictNullSave(currentHistoCryptoRepoFile.getHistoCryptoRepoFile());
+			evictNullSave(currentHistoCryptoRepoFile.getCryptoRepoFile());
+			pm.evict(currentHistoCryptoRepoFile);
+		}
+
+		if (! cryptoChangeSetDto.getCurrentHistoCryptoRepoFileDtos().isEmpty()) {
+			logger.info("putCryptoChangeSetDto_others: after all putCurrentHistoCryptoRepoFile:");
+			evictAllCryptoEntities();
 		}
 
 		if (! isOnServer()) {
 			final SsLocalRepository localRepository = (SsLocalRepository) transaction.getDao(LocalRepositoryDao.class).getLocalRepositoryOrFail();
 
 			if (localRepository.getLocalRepositoryType() == LocalRepositoryType.CLIENT_META_ONLY) {
+				final HistoCryptoRepoFileDao hcrfDao = transaction.getDao(HistoCryptoRepoFileDao.class);
 				final Map<CryptoRepoFile, RepoFileDto> cryptoRepoFile2DecryptedRepoFileDto = new HashMap<>();
 
-				for (final HistoCryptoRepoFile histoCryptoRepoFile : histoCryptoRepoFileDto2HistoCryptoRepoFile.values()) {
+//				for (final HistoCryptoRepoFile histoCryptoRepoFile : histoCryptoRepoFileDto2HistoCryptoRepoFile.values()) {
+				for (final HistoCryptoRepoFileDto histoCryptoRepoFileDto : cryptoChangeSetDto.getHistoCryptoRepoFileDtos()) {
+					final HistoCryptoRepoFile histoCryptoRepoFile = hcrfDao.getHistoCryptoRepoFileOrFail(histoCryptoRepoFileDto.getHistoCryptoRepoFileId());
 					if (histoCryptoRepoFile.getCryptoRepoFile().getDeleted() != null)
 						continue;
 
@@ -537,10 +598,14 @@ public class CryptreeImpl extends AbstractCryptree {
 						continue;
 					}
 					cryptoRepoFile2DecryptedRepoFileDto.put(histoCryptoRepoFile.getCryptoRepoFile(), decryptedRepoFileDto);
+					flushAndVerifySignableAndWriteProtectedEntitiesBeforeCommit();
+					pm.evict(histoCryptoRepoFile);
 				}
 				putDecryptedRepoFiles(cryptoRepoFile2DecryptedRepoFileDto);
 			}
 			else {
+				final CollisionDao collisionDao = transaction.getDao(CollisionDao.class);
+
 				// history not needed in meta-only-repo
 				final HistoCryptoRepoFileDao histoCryptoRepoFileDao = getTransactionOrFail().getDao(HistoCryptoRepoFileDao.class);
 				for (final Uid histoCryptoRepoFileId : dirtyPlainHistoCryptoRepoFileIds) {
@@ -551,7 +616,8 @@ public class CryptreeImpl extends AbstractCryptree {
 				}
 
 				// plain-collisions not needed in meta-only-repo
-				for (final Collision collision : collisions) {
+				for (CollisionDto collisionDto : cryptoChangeSetDto.getCollisionDtos()) {
+					final Collision collision = collisionDao.getCollisionOrFail(collisionDto.getCollisionId());
 					final Uid cryptoRepoFileId = collision.getHistoCryptoRepoFile1().getCryptoRepoFile().getCryptoRepoFileId();
 					final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(cryptoRepoFileId);
 					cryptreeNode.updateCollisionPrivate(collision);
@@ -579,6 +645,36 @@ public class CryptreeImpl extends AbstractCryptree {
 			new UserRepoKeyPublicKeyHelper(getCryptreeContext()).updateUserRepoKeyRingFromUserIdentities();
 
 		getCryptreeContext().getUserRegistry().writeIfNeeded();
+	}
+
+	private void evictAllCryptoEntities() {
+		final PersistenceManager pm = pm();
+
+		logger.info("evictAllCryptoEntities: before eviction:");
+		logMemoryStats(logger);
+		pm.flush();
+
+		pm.evictAll(true, CryptoRepoFile.class);
+		pm.evictAll(true, HistoFrame.class);
+		pm.evictAll(true, HistoCryptoRepoFile.class);
+		pm.evictAll(true, CurrentHistoCryptoRepoFile.class);
+		pm.evictAll(true, CryptoKey.class);
+		pm.evictAll(true, CryptoLink.class);
+		pm.evictAll(true, UserRepoKeyPublicKey.class);
+		pm.evictAll(true, RepositoryOwner.class);
+		pm.evictAll(true, PermissionSet.class);
+		pm.evictAll(true, Permission.class);
+		pm.evictAll(true, PermissionSetInheritance.class);
+		pm.evictAll(true, UserRepoKeyPublicKeyReplacementRequest.class);
+		pm.evictAll(true, UserRepoKeyPublicKeyReplacementRequestDeletion.class);
+		pm.evictAll(true, UserIdentity.class);
+		pm.evictAll(true, UserIdentityLink.class);
+		pm.evictAll(true, Collision.class);
+		pm.evictAll(true, CryptoConfigPropSet.class);
+		pm.evictAll(true, DeletedCollision.class);
+
+		logger.info("evictAllCryptoEntities: after eviction:");
+		logMemoryStats(logger);
 	}
 
 	private void putDeletedCollisionDto(final DeletedCollisionDto deletedCollisionDto) {
@@ -694,7 +790,8 @@ public class CryptreeImpl extends AbstractCryptree {
 
 	private void putHistoCryptoRepoFileDtos(
 			final HistoCryptoRepoFileDtoConverter histoCryptoRepoFileDtoConverter,
-			final Map<HistoCryptoRepoFileDto, HistoCryptoRepoFile> histoCryptoRepoFileDto2HistoCryptoRepoFile,
+			final Set<Uid> processedHistoCryptoRepoFileIds,
+//			final Map<HistoCryptoRepoFileDto, HistoCryptoRepoFile> histoCryptoRepoFileDto2HistoCryptoRepoFile,
 			final List<HistoCryptoRepoFileDto> histoCryptoRepoFileDtos) {
 
 		final Map<Uid, HistoCryptoRepoFileDto> histoCryptoRepoFileId2HistoCryptoRepoFileDto = new HashMap<>(histoCryptoRepoFileDtos.size());
@@ -704,30 +801,40 @@ public class CryptreeImpl extends AbstractCryptree {
 
 		putHistoCryptoRepoFileDtos(
 				histoCryptoRepoFileDtoConverter,
-				histoCryptoRepoFileDto2HistoCryptoRepoFile, histoCryptoRepoFileId2HistoCryptoRepoFileDto);
+				processedHistoCryptoRepoFileIds,
+//				histoCryptoRepoFileDto2HistoCryptoRepoFile,
+				histoCryptoRepoFileId2HistoCryptoRepoFileDto);
 	}
 
 	private void putHistoCryptoRepoFileDtos(
 			final HistoCryptoRepoFileDtoConverter histoCryptoRepoFileDtoConverter,
-			final Map<HistoCryptoRepoFileDto, HistoCryptoRepoFile> histoCryptoRepoFileDto2HistoCryptoRepoFile,
+			final Set<Uid> processedHistoCryptoRepoFileIds,
+//			final Map<HistoCryptoRepoFileDto, HistoCryptoRepoFile> histoCryptoRepoFileDto2HistoCryptoRepoFile,
 			final Map<Uid, HistoCryptoRepoFileDto> histoCryptoRepoFileId2HistoCryptoRepoFileDto) {
 
 		for (HistoCryptoRepoFileDto histoCryptoRepoFileDto : histoCryptoRepoFileId2HistoCryptoRepoFileDto.values())
 			putHistoCryptoRepoFileDto(
 					histoCryptoRepoFileDtoConverter,
-					histoCryptoRepoFileDto2HistoCryptoRepoFile, histoCryptoRepoFileId2HistoCryptoRepoFileDto,
+					processedHistoCryptoRepoFileIds,
+//					histoCryptoRepoFileDto2HistoCryptoRepoFile,
+					histoCryptoRepoFileId2HistoCryptoRepoFileDto,
 					histoCryptoRepoFileDto);
 	}
 
 	private void putHistoCryptoRepoFileDto(
 			final HistoCryptoRepoFileDtoConverter histoCryptoRepoFileDtoConverter,
-			final Map<HistoCryptoRepoFileDto, HistoCryptoRepoFile> histoCryptoRepoFileDto2HistoCryptoRepoFile,
+			final Set<Uid> processedHistoCryptoRepoFileIds,
+//			final Map<HistoCryptoRepoFileDto, HistoCryptoRepoFile> histoCryptoRepoFileDto2HistoCryptoRepoFile,
 			final Map<Uid, HistoCryptoRepoFileDto> histoCryptoRepoFileId2HistoCryptoRepoFileDto,
 			final HistoCryptoRepoFileDto histoCryptoRepoFileDto) {
 
-		HistoCryptoRepoFile histoCryptoRepoFile = histoCryptoRepoFileDto2HistoCryptoRepoFile.get(histoCryptoRepoFileDto);
-		if (histoCryptoRepoFile != null)
+		final Uid histoCryptoRepoFileId = histoCryptoRepoFileDto.getHistoCryptoRepoFileId();
+		if (! processedHistoCryptoRepoFileIds.add(histoCryptoRepoFileId))
 			return;
+
+//		HistoCryptoRepoFile histoCryptoRepoFile = histoCryptoRepoFileDto2HistoCryptoRepoFile.get(histoCryptoRepoFileDto);
+//		if (histoCryptoRepoFile != null)
+//			return;
 
 		final Uid previousHistoCryptoRepoFileId = histoCryptoRepoFileDto.getPreviousHistoCryptoRepoFileId();
 		if (previousHistoCryptoRepoFileId != null) {
@@ -735,13 +842,29 @@ public class CryptreeImpl extends AbstractCryptree {
 			if (previousHistoCryptoRepoFileDto != null)
 				putHistoCryptoRepoFileDto(
 						histoCryptoRepoFileDtoConverter,
-						histoCryptoRepoFileDto2HistoCryptoRepoFile, histoCryptoRepoFileId2HistoCryptoRepoFileDto,
+						processedHistoCryptoRepoFileIds,
+//						histoCryptoRepoFileDto2HistoCryptoRepoFile,
+						histoCryptoRepoFileId2HistoCryptoRepoFileDto,
 						previousHistoCryptoRepoFileDto);
 		}
 
-		histoCryptoRepoFile = histoCryptoRepoFileDtoConverter.putHistoCryptoRepoFile(histoCryptoRepoFileDto);
+		HistoCryptoRepoFile histoCryptoRepoFile = histoCryptoRepoFileDtoConverter.putHistoCryptoRepoFile(histoCryptoRepoFileDto);
 		histoCryptoRepoFile.setLastSyncFromRepositoryId(getRemoteRepositoryId());
-		histoCryptoRepoFileDto2HistoCryptoRepoFile.put(histoCryptoRepoFileDto, histoCryptoRepoFile);
+//		histoCryptoRepoFileDto2HistoCryptoRepoFile.put(histoCryptoRepoFileDto, histoCryptoRepoFile);
+
+		flushAndVerifySignableAndWriteProtectedEntitiesBeforeCommit();
+		evictNullSave(histoCryptoRepoFile.getPreviousHistoCryptoRepoFile());
+		evictNullSave(histoCryptoRepoFile.getCryptoRepoFile());
+		pm().evict(histoCryptoRepoFile);
+	}
+
+	protected void flushAndVerifySignableAndWriteProtectedEntitiesBeforeCommit() {
+		logger.debug("flushAndVerifySignableAndWriteProtectedEntitiesBeforeCommit: enter.");
+		final LocalRepoTransaction transaction = getTransactionOrFail();
+		transaction.flush();
+		final VerifySignableAndWriteProtectedEntityListener listener = transaction.getContextObject(VerifySignableAndWriteProtectedEntityListener.class);
+		assertNotNull(listener, "listener").onCommit();
+		logger.debug("flushAndVerifySignableAndWriteProtectedEntitiesBeforeCommit: exit.");
 	}
 
 	private void putDecryptedRepoFiles(final Map<CryptoRepoFile, RepoFileDto> cryptoRepoFile2DecryptedRepoFileDto) {
@@ -1475,7 +1598,7 @@ public class CryptreeImpl extends AbstractCryptree {
 		repoFileDao.deletePersistent(repoFile);
 	}
 
-	private UserRepoKeyPublicKey putUserRepoKeyPublicKeyDto(final UserRepoKeyPublicKeyDto userRepoKeyPublicKeyDto) {
+	private void putUserRepoKeyPublicKeyDto(final UserRepoKeyPublicKeyDto userRepoKeyPublicKeyDto) {
 		assertNotNull(userRepoKeyPublicKeyDto, "userRepoKeyPublicKeyDto");
 		final LocalRepoTransaction transaction = getTransactionOrFail();
 		final UserRepoKeyPublicKeyDao userRepoKeyPublicKeyDao = transaction.getDao(UserRepoKeyPublicKeyDao.class);
@@ -1502,7 +1625,8 @@ public class CryptreeImpl extends AbstractCryptree {
 			invUserRepoKeyPublicKey.setSignature(invUserRepoKeyPublicKeyDto.getSignature());
 		}
 
-		return userRepoKeyPublicKeyDao.makePersistent(userRepoKeyPublicKey);
+		userRepoKeyPublicKeyDao.makePersistent(userRepoKeyPublicKey);
+		transaction.flush();
 	}
 
 	private UserRepoKeyPublicKeyReplacementRequest putUserRepoKeyPublicKeyReplacementRequestDto(final UserRepoKeyPublicKeyReplacementRequestDto requestDto) {
@@ -1593,7 +1717,7 @@ public class CryptreeImpl extends AbstractCryptree {
 		return cryptoKeyDao.makePersistent(cryptoKey);
 	}
 
-	private CryptoLink putCryptoLinkDto(final CryptoLinkDto cryptoLinkDto) {
+	private void putCryptoLinkDto(final CryptoLinkDto cryptoLinkDto) {
 		assertNotNull(cryptoLinkDto, "cryptoLinkDto");
 		final LocalRepoTransaction transaction = getTransactionOrFail();
 		final CryptoLinkDao cryptoLinkDao = transaction.getDao(CryptoLinkDao.class);
@@ -1621,7 +1745,8 @@ public class CryptreeImpl extends AbstractCryptree {
 		cryptoLink.setLastSyncFromRepositoryId(getRemoteRepositoryIdOrFail());
 
 		toCryptoKey.getInCryptoLinks().add(cryptoLink);
-		return cryptoLinkDao.makePersistent(cryptoLink);
+
+		cryptoLinkDao.makePersistent(cryptoLink);
 	}
 
 	private void putCryptoConfigPropSetDtos(final List<CryptoConfigPropSetDto> cryptoConfigPropSetDtos) {
@@ -2681,14 +2806,26 @@ public class CryptreeImpl extends AbstractCryptree {
 		final LocalRepoTransaction tx = getTransactionOrFail();
 		final HistoFrame histoFrame = HistoFrameDtoConverter.create(tx).putHistoFrameDto(histoFrameDto);
 		histoFrame.setLastSyncFromRepositoryId(getRemoteRepositoryIdOrFail());
+		flushAndVerifySignableAndWriteProtectedEntitiesBeforeCommit();
+		pm().evict(histoFrame);
 	}
 
-	private Collision putCollisionDto(final CollisionDto collisionDto) {
+	private void putCollisionDto(final CollisionDto collisionDto) {
 		assertNotNull(collisionDto, "collisionDto");
 		final LocalRepoTransaction tx = getTransactionOrFail();
 		final Collision collision = CollisionDtoConverter.create(tx).putCollisionDto(collisionDto);
 		DuplicateCryptoRepoFileHandler.createInstance(tx).deduplicateFromCollisionIfNeeded(collision);
-		return collision;
+
+		flushAndVerifySignableAndWriteProtectedEntitiesBeforeCommit();
+		evictNullSave(collision.getCryptoKey());
+		evictNullSave(collision.getHistoCryptoRepoFile1());
+		evictNullSave(collision.getHistoCryptoRepoFile2());
+		pm().evict(collision);
+	}
+
+	protected void evictNullSave(final Object entity) {
+		if (entity != null)
+			pm().evict(entity);
 	}
 
 	@Override
