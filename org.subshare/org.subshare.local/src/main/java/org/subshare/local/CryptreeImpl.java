@@ -535,8 +535,16 @@ public class CryptreeImpl extends AbstractCryptree {
 //		final Map<HistoCryptoRepoFileDto, HistoCryptoRepoFile> histoCryptoRepoFileDto2HistoCryptoRepoFile =
 //				new HashMap<>();
 
-		for (HistoFrameDto histoFrameDto : cryptoChangeSetDto.getHistoFrameDtos())
+		int entityCount = 0;
+		for (HistoFrameDto histoFrameDto : cryptoChangeSetDto.getHistoFrameDtos()) {
 			putHistoFrameDto(histoFrameDto);
+			if (++entityCount % 1000 == 0) {
+				flushAndVerifySignableAndWriteProtectedEntitiesBeforeCommit();
+				evictAllCryptoEntities();
+			}
+		}
+
+		flushAndVerifySignableAndWriteProtectedEntitiesBeforeCommit();
 
 		final Set<Uid> processedPlainHistoCryptoRepoFileIds = new HashSet<>();
 		putHistoCryptoRepoFileDtos(
@@ -546,32 +554,44 @@ public class CryptreeImpl extends AbstractCryptree {
 				cryptoChangeSetDto.getHistoCryptoRepoFileDtos()
 				);
 
+		flushAndVerifySignableAndWriteProtectedEntitiesBeforeCommit();
+
 		if (! cryptoChangeSetDto.getHistoCryptoRepoFileDtos().isEmpty()) {
 			logger.info("putCryptoChangeSetDto_others: after putHistoCryptoRepoFileDtos:");
 			evictAllCryptoEntities();
 		}
 
+		entityCount = 0;
 		final Set<Uid> dirtyPlainHistoCryptoRepoFileIds = processedPlainHistoCryptoRepoFileIds; // we can directly work with the processed ones ;-)
 //		final List<Collision> collisions = new ArrayList<>();
 		for (final CollisionDto collisionDto : cryptoChangeSetDto.getCollisionDtos()) {
 			putCollisionDto(collisionDto);
 			dirtyPlainHistoCryptoRepoFileIds.add(collisionDto.getHistoCryptoRepoFileId1());
 			dirtyPlainHistoCryptoRepoFileIds.add(collisionDto.getHistoCryptoRepoFileId2());
+			if (++entityCount % 1000 == 0) {
+				flushAndVerifySignableAndWriteProtectedEntitiesBeforeCommit();
+				evictAllCryptoEntities();
+			}
 		}
 		dirtyPlainHistoCryptoRepoFileIds.remove(null);
+
+		flushAndVerifySignableAndWriteProtectedEntitiesBeforeCommit();
 
 //		for (final HistoCryptoRepoFile histoCryptoRepoFile : histoCryptoRepoFileDto2HistoCryptoRepoFile.values()) // using the processedPlainHistoCryptoRepoFileIds instead -- above
 //			dirtyPlainHistoCryptoRepoFileIds.add(histoCryptoRepoFile.getHistoCryptoRepoFileId());
 
+		entityCount = 0;
 		CurrentHistoCryptoRepoFileDtoConverter currentHistoCryptoRepoFileDtoConverter = CurrentHistoCryptoRepoFileDtoConverter.create(transaction);
 		for (CurrentHistoCryptoRepoFileDto currentHistoCryptoRepoFileDto : cryptoChangeSetDto.getCurrentHistoCryptoRepoFileDtos()) {
 			CurrentHistoCryptoRepoFile currentHistoCryptoRepoFile = currentHistoCryptoRepoFileDtoConverter.putCurrentHistoCryptoRepoFile(currentHistoCryptoRepoFileDto);
 			currentHistoCryptoRepoFile.setLastSyncFromRepositoryId(getRemoteRepositoryIdOrFail());
-			flushAndVerifySignableAndWriteProtectedEntitiesBeforeCommit();
-			evictNullSave(currentHistoCryptoRepoFile.getHistoCryptoRepoFile());
-			evictNullSave(currentHistoCryptoRepoFile.getCryptoRepoFile());
-			pm.evict(currentHistoCryptoRepoFile);
+			if (++entityCount % 1000 == 0) {
+				flushAndVerifySignableAndWriteProtectedEntitiesBeforeCommit();
+				evictAllCryptoEntities();
+			}
 		}
+
+		flushAndVerifySignableAndWriteProtectedEntitiesBeforeCommit();
 
 		if (! cryptoChangeSetDto.getCurrentHistoCryptoRepoFileDtos().isEmpty()) {
 			logger.info("putCryptoChangeSetDto_others: after all putCurrentHistoCryptoRepoFile:");
@@ -812,13 +832,20 @@ public class CryptreeImpl extends AbstractCryptree {
 //			final Map<HistoCryptoRepoFileDto, HistoCryptoRepoFile> histoCryptoRepoFileDto2HistoCryptoRepoFile,
 			final Map<Uid, HistoCryptoRepoFileDto> histoCryptoRepoFileId2HistoCryptoRepoFileDto) {
 
-		for (HistoCryptoRepoFileDto histoCryptoRepoFileDto : histoCryptoRepoFileId2HistoCryptoRepoFileDto.values())
+		int entityCount = 0;
+		for (HistoCryptoRepoFileDto histoCryptoRepoFileDto : histoCryptoRepoFileId2HistoCryptoRepoFileDto.values()) {
 			putHistoCryptoRepoFileDto(
 					histoCryptoRepoFileDtoConverter,
 					processedHistoCryptoRepoFileIds,
 //					histoCryptoRepoFileDto2HistoCryptoRepoFile,
 					histoCryptoRepoFileId2HistoCryptoRepoFileDto,
 					histoCryptoRepoFileDto);
+
+			if (++entityCount % 1000 == 0) {
+				flushAndVerifySignableAndWriteProtectedEntitiesBeforeCommit();
+				evictAllCryptoEntities();
+			}
+		}
 	}
 
 	private void putHistoCryptoRepoFileDto(
@@ -852,10 +879,10 @@ public class CryptreeImpl extends AbstractCryptree {
 		histoCryptoRepoFile.setLastSyncFromRepositoryId(getRemoteRepositoryId());
 //		histoCryptoRepoFileDto2HistoCryptoRepoFile.put(histoCryptoRepoFileDto, histoCryptoRepoFile);
 
-		flushAndVerifySignableAndWriteProtectedEntitiesBeforeCommit();
-		evictNullSave(histoCryptoRepoFile.getPreviousHistoCryptoRepoFile());
-		evictNullSave(histoCryptoRepoFile.getCryptoRepoFile());
-		pm().evict(histoCryptoRepoFile);
+//		flushAndVerifySignableAndWriteProtectedEntitiesBeforeCommit();
+//		evictNullSave(histoCryptoRepoFile.getPreviousHistoCryptoRepoFile());
+//		evictNullSave(histoCryptoRepoFile.getCryptoRepoFile());
+//		pm().evict(histoCryptoRepoFile);
 	}
 
 	protected void flushAndVerifySignableAndWriteProtectedEntitiesBeforeCommit() {
@@ -2806,8 +2833,8 @@ public class CryptreeImpl extends AbstractCryptree {
 		final LocalRepoTransaction tx = getTransactionOrFail();
 		final HistoFrame histoFrame = HistoFrameDtoConverter.create(tx).putHistoFrameDto(histoFrameDto);
 		histoFrame.setLastSyncFromRepositoryId(getRemoteRepositoryIdOrFail());
-		flushAndVerifySignableAndWriteProtectedEntitiesBeforeCommit();
-		pm().evict(histoFrame);
+//		flushAndVerifySignableAndWriteProtectedEntitiesBeforeCommit();
+//		pm().evict(histoFrame);
 	}
 
 	private void putCollisionDto(final CollisionDto collisionDto) {
@@ -2816,17 +2843,17 @@ public class CryptreeImpl extends AbstractCryptree {
 		final Collision collision = CollisionDtoConverter.create(tx).putCollisionDto(collisionDto);
 		DuplicateCryptoRepoFileHandler.createInstance(tx).deduplicateFromCollisionIfNeeded(collision);
 
-		flushAndVerifySignableAndWriteProtectedEntitiesBeforeCommit();
-		evictNullSave(collision.getCryptoKey());
-		evictNullSave(collision.getHistoCryptoRepoFile1());
-		evictNullSave(collision.getHistoCryptoRepoFile2());
-		pm().evict(collision);
+//		flushAndVerifySignableAndWriteProtectedEntitiesBeforeCommit();
+//		evictNullSave(collision.getCryptoKey());
+//		evictNullSave(collision.getHistoCryptoRepoFile1());
+//		evictNullSave(collision.getHistoCryptoRepoFile2());
+//		pm().evict(collision);
 	}
 
-	protected void evictNullSave(final Object entity) {
-		if (entity != null)
-			pm().evict(entity);
-	}
+//	protected void evictNullSave(final Object entity) {
+//		if (entity != null)
+//			pm().evict(entity);
+//	}
 
 	@Override
 	public void preDelete(final String localPath, final boolean deletedByIgnoreRule) {

@@ -36,8 +36,6 @@ public class CryptoChangeSetDtoService extends AbstractServiceWithRepoToRepoAuth
 
 	private static final Logger logger = LoggerFactory.getLogger(CryptoChangeSetDtoService.class);
 
-	private LocalRepoTransaction transaction;
-
 	@GET
 	public CryptoChangeSetDto getCryptoChangeSetDto(@QueryParam("lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced") final Long lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced) {
 		final RepoTransport[] repoTransport = new RepoTransport[] { authenticateAndCreateLocalRepoTransport() };
@@ -72,8 +70,8 @@ public class CryptoChangeSetDtoService extends AbstractServiceWithRepoToRepoAuth
 	protected CryptoChangeSetDto getCryptoChangeSetDto(final RepoTransport repoTransport, final Long lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced) {
 		final UUID clientRepositoryId = assertNotNull(repoTransport.getClientRepositoryId(), "clientRepositoryId");
 		final LocalRepoManager localRepoManager = ((ContextWithLocalRepoManager) repoTransport).getLocalRepoManager();
-		transaction = localRepoManager.beginWriteTransaction(); // We write LastCryptoKeySyncToRemoteRepo in this *short* tx.
-		try {
+		// We *write* LastCryptoKeySyncToRemoteRepo in this *short* tx.
+		try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction()) {
 			final CryptreeFactory cryptreeFactory = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail();
 			final Cryptree cryptree = cryptreeFactory.getCryptreeOrCreate(transaction, clientRepositoryId);
 			cryptree.initLocalRepositoryType();
@@ -81,22 +79,29 @@ public class CryptoChangeSetDtoService extends AbstractServiceWithRepoToRepoAuth
 					lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced);
 
 			transaction.commit();
-		} finally {
-			transaction.rollbackIfActive();
 		}
 
-		transaction = localRepoManager.beginReadTransaction(); // We write LastCryptoKeySyncToRemoteRepo already before.
-		try {
+		final CryptoChangeSetDto cryptoChangeSetDto;
+		// We write LastCryptoKeySyncToRemoteRepo already before => *read*-only.
+		try (final LocalRepoTransaction transaction = localRepoManager.beginReadTransaction()) {
 			final CryptreeFactory cryptreeFactory = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail();
 			final Cryptree cryptree = cryptreeFactory.getCryptreeOrCreate(transaction, clientRepositoryId);
-			final CryptoChangeSetDto cryptoChangeSetDto = cryptree.getCryptoChangeSetDtoWithCryptoRepoFiles(
+			cryptoChangeSetDto = cryptree.getCryptoChangeSetDtoWithCryptoRepoFiles(
 					lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced);
 
 			transaction.commit();
-			return cryptoChangeSetDto;
-		} finally {
-			transaction.rollbackIfActive();
 		}
+
+//		final List<CryptoChangeSetDto> outCryptoChangeSetDtos = CryptoChangeSetDtoSplitter
+//				.createInstance(cryptoChangeSetDto)
+//				.setDestroyInput(true)
+//				.split()
+//				.getOutCryptoChangeSetDtos();
+		// TODO check, if splitting is needed
+		// TODO if yes, create files and throw exception
+		// TODO provide API to retrieve files.
+
+		return cryptoChangeSetDto;
 	}
 
 	@POST
@@ -105,15 +110,12 @@ public class CryptoChangeSetDtoService extends AbstractServiceWithRepoToRepoAuth
 		try (final RepoTransport repoTransport = authenticateAndCreateLocalRepoTransport();) {
 			final UUID clientRepositoryId = assertNotNull(repoTransport.getClientRepositoryId(), "clientRepositoryId");
 			final LocalRepoManager localRepoManager = ((ContextWithLocalRepoManager) repoTransport).getLocalRepoManager();
-			transaction = localRepoManager.beginWriteTransaction();
-			try {
+			try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction()) {
 				final CryptreeFactory cryptreeFactory = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail();
 				final Cryptree cryptree = cryptreeFactory.getCryptreeOrCreate(transaction, clientRepositoryId);
 				cryptree.updateLastCryptoKeySyncToRemoteRepo();
 
 				transaction.commit();
-			} finally {
-				transaction.rollbackIfActive();
 			}
 		}
 	}
@@ -124,15 +126,12 @@ public class CryptoChangeSetDtoService extends AbstractServiceWithRepoToRepoAuth
 		try (final RepoTransport repoTransport = authenticateAndCreateLocalRepoTransport();) {
 			final UUID clientRepositoryId = assertNotNull(repoTransport.getClientRepositoryId(), "clientRepositoryId");
 			final LocalRepoManager localRepoManager = ((ContextWithLocalRepoManager) repoTransport).getLocalRepoManager();
-			transaction = localRepoManager.beginWriteTransaction();
-			try {
+			try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction()) {
 				final CryptreeFactory cryptreeFactory = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail();
 				final Cryptree cryptree = cryptreeFactory.getCryptreeOrCreate(transaction, clientRepositoryId);
 				cryptree.putCryptoChangeSetDto(cryptoChangeSetDto);
 
 				transaction.commit();
-			} finally {
-				transaction.rollbackIfActive();
 			}
 		}
 	}

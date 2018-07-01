@@ -241,6 +241,10 @@ public class CryptoLink extends Entity implements WriteProtected, AutoTrackLocal
 
 		if (fromCryptoKey != null && fromUserRepoKeyPublicKey != null)
 			throw new IllegalStateException("fromCryptoKey != null && fromUserRepoKeyPublicKey != null :: toCryptoKeyData can only be encrypted with one key!");
+
+		// Cannot enforce, because this happens temporarily.
+//		if (fromCryptoKey == null && fromUserRepoKeyPublicKey == null)
+//			throw new IllegalStateException("fromCryptoKey and fromUserRepoKeyPublicKey are both null! Exactly one must be assigned.");
 	}
 
 	@Override

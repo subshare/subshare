@@ -11,6 +11,8 @@ public class CryptoChangeSetDto {
 
 	private long revision = -1;
 
+	private int multiPartIndex = -1;
+
 	private List<CryptoRepoFileDto> cryptoRepoFileDtos;
 
 	private List<HistoFrameDto> histoFrameDtos;
@@ -54,6 +56,13 @@ public class CryptoChangeSetDto {
 	}
 	public void setRevision(long revision) {
 		this.revision = revision;
+	}
+
+	public int getMultiPartIndex() {
+		return multiPartIndex;
+	}
+	public void setMultiPartIndex(int multiPartIndex) {
+		this.multiPartIndex = multiPartIndex;
 	}
 
 	public List<CryptoRepoFileDto> getCryptoRepoFileDtos() {
@@ -236,8 +245,9 @@ public class CryptoChangeSetDto {
 
 	@Override
 	public String toString() {
-		return "CryptoChangeSetDto[revision="+ revision +", cryptoRepoFileDtos=" + cryptoRepoFileDtos
-				+ ", histoCryptoRepoFileDtos=" + histoCryptoRepoFileDtos
+		return "CryptoChangeSetDto[revision="+ revision
+				+ ", multiPartIndex=" + multiPartIndex
+				+ ", cryptoRepoFileDtos=" + cryptoRepoFileDtos
 				+ ", cryptoKeyDtos=" + cryptoKeyDtos + ", cryptoLinkDtos=" + cryptoLinkDtos
 				+ ", repositoryOwnerDto=" + repositoryOwnerDto
 				+ ", permissionSetDtos=" + permissionSetDtos
@@ -257,25 +267,67 @@ public class CryptoChangeSetDto {
 	}
 
 	public boolean isEmpty() {
-		return isEmpty(cryptoRepoFileDtos)
-				&& isEmpty(histoCryptoRepoFileDtos)
-				&& isEmpty(cryptoKeyDtos)
-				&& isEmpty(cryptoLinkDtos)
-				&& isEmpty(userRepoKeyPublicKeyDtos)
-				&& repositoryOwnerDto == null
-				&& isEmpty(permissionSetDtos)
-				&& isEmpty(permissionDtos)
-				&& isEmpty(permissionSetInheritanceDtos)
-				&& isEmpty(userRepoKeyPublicKeyReplacementRequestDtos)
-				&& isEmpty(userRepoKeyPublicKeyReplacementRequestDeletionDtos)
-				&& isEmpty(userIdentityDtos)
-				&& isEmpty(userIdentityLinkDtos)
-				&& isEmpty(histoFrameDtos)
-				&& isEmpty(histoCryptoRepoFileDtos)
-				&& isEmpty(currentHistoCryptoRepoFileDtos)
-				&& isEmpty(collisionDtos)
-				&& isEmpty(cryptoConfigPropSetDtos)
-				&& isEmpty(deletedCollisionDtos);
+		return size() == 0;
+	}
+
+	public long size() {
+		long size = 0;
+
+		if (! isEmpty(cryptoRepoFileDtos))
+			size += cryptoRepoFileDtos.size();
+
+		if (! isEmpty(cryptoKeyDtos))
+			size += cryptoKeyDtos.size();
+
+		if (! isEmpty(cryptoLinkDtos))
+			size += cryptoLinkDtos.size();
+
+		if (! isEmpty(userRepoKeyPublicKeyDtos))
+			size += userRepoKeyPublicKeyDtos.size();
+
+		if (repositoryOwnerDto != null)
+			++size;
+
+		if (! isEmpty(permissionSetDtos))
+			size += permissionSetDtos.size();
+
+		if (! isEmpty(permissionDtos))
+			size += permissionDtos.size();
+
+		if (! isEmpty(permissionSetInheritanceDtos))
+			size += permissionSetInheritanceDtos.size();
+
+		if (! isEmpty(userRepoKeyPublicKeyReplacementRequestDtos))
+			size += userRepoKeyPublicKeyReplacementRequestDtos.size();
+
+		if (! isEmpty(userRepoKeyPublicKeyReplacementRequestDeletionDtos))
+			size += userRepoKeyPublicKeyReplacementRequestDeletionDtos.size();
+
+		if (! isEmpty(userIdentityDtos))
+			size += userIdentityDtos.size();
+
+		if (! isEmpty(userIdentityLinkDtos))
+			size += userIdentityLinkDtos.size();
+
+		if (! isEmpty(histoFrameDtos))
+			size += histoFrameDtos.size();
+
+		if (! isEmpty(histoCryptoRepoFileDtos))
+			size += histoCryptoRepoFileDtos.size();
+
+		if (! isEmpty(currentHistoCryptoRepoFileDtos))
+			size += currentHistoCryptoRepoFileDtos.size();
+
+		if (! isEmpty(collisionDtos))
+			size += collisionDtos.size();
+
+		if (! isEmpty(cryptoConfigPropSetDtos))
+			size += cryptoConfigPropSetDtos.size();
+
+		if (! isEmpty(deletedCollisionDtos))
+			size += deletedCollisionDtos.size();
+
+		return size;
 	}
 
 	private static boolean isEmpty(final Collection<?> c) {
