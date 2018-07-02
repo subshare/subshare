@@ -82,6 +82,7 @@ import org.subshare.local.dto.UserIdentityLinkDtoConverter;
 import org.subshare.local.dto.UserRepoKeyPublicKeyDtoConverter;
 import org.subshare.local.dto.UserRepoKeyPublicKeyReplacementRequestDeletionDtoConverter;
 import org.subshare.local.dto.UserRepoKeyPublicKeyReplacementRequestDtoConverter;
+import org.subshare.local.persistence.AssignCryptoRepoFileRepoFileListener;
 import org.subshare.local.persistence.Collision;
 import org.subshare.local.persistence.CollisionDao;
 import org.subshare.local.persistence.CryptoConfigPropSet;
@@ -398,6 +399,15 @@ public class CryptreeImpl extends AbstractCryptree {
 	public void putCryptoChangeSetDto(final CryptoChangeSetDto cryptoChangeSetDto) {
 		assertNotNull(cryptoChangeSetDto, "cryptoChangeSetDto");
 		final LocalRepoTransaction transaction = getTransactionOrFail();
+		final AssignCryptoRepoFileRepoFileListener acrfrfl = transaction.getContextObject(AssignCryptoRepoFileRepoFileListener.class);
+		assertNotNull(acrfrfl, "assignCryptoRepoFileRepoFileListener");
+
+		boolean lastMultiPart = false;
+		if (cryptoChangeSetDto.getMultiPartCount() > 0) {
+			lastMultiPart = cryptoChangeSetDto.getMultiPartIndex() + 1 == cryptoChangeSetDto.getMultiPartCount();
+			acrfrfl.setForced(lastMultiPart);
+			acrfrfl.setDisabled(! lastMultiPart);
+		}
 
 		if (cryptoChangeSetDto.getRevision() >= 0) // downward compatibility! a remote peer older than version 0.10.2 does not contain this, yet!
 			setLastCryptoKeySyncFromRemoteRepoRemoteRepositoryRevisionSynced(cryptoChangeSetDto.getRevision());
@@ -568,7 +578,8 @@ public class CryptreeImpl extends AbstractCryptree {
 
 		transaction.flush();
 
-		processUserRepoKeyPublicKeyReplacementRequests();
+		if (cryptoChangeSetDto.getMultiPartCount() < 0 || lastMultiPart)
+			processUserRepoKeyPublicKeyReplacementRequests();
 
 		for (UserRepoKeyPublicKeyReplacementRequestDeletionDto requestDeletionDto : cryptoChangeSetDto.getUserRepoKeyPublicKeyReplacementRequestDeletionDtos())
 			putUserRepoKeyPublicKeyReplacementRequestDeletionDto(requestDeletionDto);

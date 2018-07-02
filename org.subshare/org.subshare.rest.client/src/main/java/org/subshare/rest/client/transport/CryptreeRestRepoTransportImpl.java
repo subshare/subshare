@@ -306,7 +306,14 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 			if (cryptoChangeSetDtoSplitFileManager.isCryptoChangeSetDtoImported(multiPartIndex))
 				continue;
 
-			CryptoChangeSetDto cryptoChangeSetDto = cryptoChangeSetDtoSplitFileManager.readCryptoChangeSetDto(multiPartIndex);
+			final CryptoChangeSetDto cryptoChangeSetDto = cryptoChangeSetDtoSplitFileManager.readCryptoChangeSetDto(multiPartIndex);
+
+			if (cryptoChangeSetDto.getMultiPartCount() != multiPartCount)
+				throw new IllegalStateException("cryptoChangeSetDto.getMultiPartCount() != multiPartCount :: " + cryptoChangeSetDto.getMultiPartCount() + " != " + multiPartCount);
+
+			if (cryptoChangeSetDto.getMultiPartIndex() != multiPartIndex)
+				throw new IllegalStateException("cryptoChangeSetDto.getMultiPartIndex() != multiPartIndex :: " + cryptoChangeSetDto.getMultiPartIndex() + " != " + multiPartIndex);
+
 			syncCryptoKeysFromRemoteRepo_putCryptoChangeSetDto(cryptoChangeSetDto);
 
 			cryptoChangeSetDtoSplitFileManager.markCryptoChangeSetDtoImported(multiPartIndex);

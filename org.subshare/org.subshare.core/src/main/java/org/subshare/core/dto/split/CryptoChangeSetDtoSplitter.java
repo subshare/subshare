@@ -56,6 +56,9 @@ public class CryptoChangeSetDtoSplitter {
 	private Set<Uid> cryptoLinkIdsProcessed;
 
 	private CryptoRepoFileDto rootCryptoRepoFileDto;
+	private List<CurrentHistoCryptoRepoFileDto> rootCurrentHistoCryptoRepoFileDtos;
+	private List<HistoCryptoRepoFileDto> rootHistoCryptoRepoFileDtos;
+
 	private Map<Uid, CryptoRepoFileDto> cryptoRepoFileId2CryptoRepoFileDto;
 	private Map<Uid, CryptoKeyDto> cryptoKeyId2CryptoKeyDto;
 	private Map<Uid, List<CryptoLinkDto>> toCryptoKeyId2CryptoLinkDtos;
@@ -82,20 +85,25 @@ public class CryptoChangeSetDtoSplitter {
 		cryptoRepoFileIdsProcessed = new HashSet<>();
 		cryptoKeyIdsProcessed = new HashSet<>();
 		cryptoLinkIdsProcessed = new HashSet<>();
+		histoFrameIdsProcessed = new HashSet<>();
+		histoCryptoRepoFileIdsProcessed = new HashSet<>();
 
 		buildCryptoRepoFileId2CryptoRepoFileDto();
 		buildCryptoKeyId2CryptoKeyDto();
 		buildToCryptoKeyId2CryptoLinkDtos();
+		buildHistoFrameId2HistoFrameDto();
+		buildHistoCryptoRepoFileId2HistoCryptoRepoFileDto();
+		buildRootCurrentHistoCryptoRepoFileDtos();
 
 		// *BEGIN* *ESSENTIALS* never being split
 		// Because it is very hard to test and thus very error-prone, and because we likely *never*
 		// have too many entities of these "essentials", we simply do not split them.
 		addOutRepositoryOwnerDto();
 		addOutUserRepoKeyPublicKeyDtos();
+		addOutUserRepoKeyPublicKeyReplacementRequestDtos();
 		addOutPermissionSetDtos();
 		addOutPermissionDtos();
 		addOutPermissionSetInheritanceDtos();
-//		addOutUserRepoKeyPublicKeyReplacementRequestDtos(); // *must* be *last*
 		addOutUserIdentityDtos();
 		addOutUserIdentityLinkDtos();
 		addOutRootCryptoRepoFileDto();
@@ -104,7 +112,15 @@ public class CryptoChangeSetDtoSplitter {
 		if (outCryptoChangeSetDtos.size() > 1)
 			throw new IllegalStateException("More than one out-CryptoChangeSetDto for the essentials!");
 
-		rootCryptoRepoFileDto = null; // not used, anymore ;-)
+		rootCryptoRepoFileDto = null; // not used, anymore
+		rootCurrentHistoCryptoRepoFileDtos = null;
+		rootHistoCryptoRepoFileDtos = null;
+
+		// Due to the way collisions are resolved, the [Current]HistoCryptoRepoFiles involved *must* be present
+		// together with the CryptoRepoFiles. Hence, we start with them (they pull the CryptoRepoFiles as dependencies).
+		addOutCurrentHistoCryptoRepoFileDtos(); // should only be used in DOWN-syncs!
+		addOutHistoCryptoRepoFileDtos(); // should only be used in DOWN-syncs!
+		addOutHistoFrameDtos();
 
 		// The CryptoRepoFiles, CryptoKeys and CryptoLinks are *partially* essential. Those that are,
 		// are already resolved as dependencies before.
@@ -116,25 +132,12 @@ public class CryptoChangeSetDtoSplitter {
 		cryptoRepoFileIdsProcessed = null;
 		cryptoKeyIdsProcessed = null;
 		cryptoLinkIdsProcessed = null;
+		histoFrameIdsProcessed = null;
+		histoCryptoRepoFileIdsProcessed = null;
 
 		cryptoRepoFileId2CryptoRepoFileDto = null;
 		cryptoKeyId2CryptoKeyDto = null;
 		toCryptoKeyId2CryptoLinkDtos = null;
-
-		// now, we need other indexes and controlling sets
-		histoFrameIdsProcessed = new HashSet<>();
-		histoCryptoRepoFileIdsProcessed = new HashSet<>();
-
-		buildHistoFrameId2HistoFrameDto();
-		buildHistoCryptoRepoFileId2HistoCryptoRepoFileDto();
-
-		addOutHistoCryptoRepoFileDtos(); // should only be used in DOWN-syncs!
-		addOutCurrentHistoCryptoRepoFileDtos(); // should only be used in DOWN-syncs!
-		addOutHistoFrameDtos();
-
-		histoFrameIdsProcessed = null;
-		histoCryptoRepoFileIdsProcessed = null;
-
 		histoFrameId2HistoFrameDto = null;
 		histoCryptoRepoFileId2HistoCryptoRepoFileDto = null;
 
@@ -143,11 +146,11 @@ public class CryptoChangeSetDtoSplitter {
 		addOutCryptoConfigPropSetDtos();
 
 		// *BEGIN* *ESSENTIALS* which *must* be last
-		addOutUserRepoKeyPublicKeyReplacementRequestDtos();
 		addOutUserRepoKeyPublicKeyReplacementRequestDeletionDtos();
 		// *END* *ESSENTIALS* which *must* be last
 
 		deleteEmptyOutCryptoChangeSetDto();
+		updateMultiPartCount();
 
 		if (destroyInput && ! inCryptoChangeSetDto.isEmpty())
 			throw new IllegalStateException("inCryptoChangeSetDto is not empty!");
@@ -157,7 +160,16 @@ public class CryptoChangeSetDtoSplitter {
 
 	private void addOutRootCryptoRepoFileDto() {
 		if (rootCryptoRepoFileDto != null) {
+			prepareOutCryptoChangeSetDto(); // *never* start a new one for it -- make sure *essentials* are always in the first one.
 			addOutCryptoRepoFileDto(rootCryptoRepoFileDto);
+		}
+		for (final HistoCryptoRepoFileDto dto : rootHistoCryptoRepoFileDtos) {
+			prepareOutCryptoChangeSetDto(); // *never* start a new one for it -- make sure *essentials* are always in the first one.
+			addOutHistoCryptoRepoFileDto(dto);
+		}
+		for (final CurrentHistoCryptoRepoFileDto dto : rootCurrentHistoCryptoRepoFileDtos) {
+			prepareOutCryptoChangeSetDto(); // *never* start a new one for it -- make sure *essentials* are always in the first one.
+			addOutCurrentHistoCryptoRepoFileDto(dto);
 		}
 	}
 
@@ -474,6 +486,18 @@ public class CryptoChangeSetDtoSplitter {
 
 		// *first* add dependencies as needed
 
+		// dependency: cryptoRepoFileId => CryptoRepoFileDto
+		final Uid cryptoRepoFileId = assertNotNull(dto.getCryptoRepoFileId(), "histoCryptoRepoFileDto.cryptoRepoFileId");
+		final CryptoRepoFileDto cryptoRepoFileDto = cryptoRepoFileId2CryptoRepoFileDto.get(cryptoRepoFileId);
+		if (cryptoRepoFileDto != null)
+			addOutCryptoRepoFileDto(cryptoRepoFileDto);
+
+		// dependency: cryptoKeyId => CryptoKeyDto
+		final Uid cryptoKeyId = assertNotNull(dto.getCryptoKeyId(), "histoCryptoRepoFileDto.cryptoKeyId");
+		final CryptoKeyDto cryptoKeyDto = cryptoKeyId2CryptoKeyDto.get(cryptoKeyId);
+		if (cryptoKeyDto != null)
+			addOutCryptoKeyDto(cryptoKeyDto);
+
 		// dependency: histoFrameId => HistoFrameDto
 		final Uid histoFrameId = assertNotNull(dto.getHistoFrameId(), "histoCryptoRepoFileDto.histoFrameId");
 		final HistoFrameDto histoFrameDto = histoFrameId2HistoFrameDto.get(histoFrameId);
@@ -498,6 +522,12 @@ public class CryptoChangeSetDtoSplitter {
 		assertNotNull(dto, "dto");
 
 		// *first* add dependencies as needed
+
+		// dependency: cryptoRepoFileId => CryptoRepoFileDto
+		final Uid cryptoRepoFileId = assertNotNull(dto.getCryptoRepoFileId(), "currentHistoCryptoRepoFileDto.cryptoRepoFileId");
+		final CryptoRepoFileDto cryptoRepoFileDto = cryptoRepoFileId2CryptoRepoFileDto.get(cryptoRepoFileId);
+		if (cryptoRepoFileDto != null)
+			addOutCryptoRepoFileDto(cryptoRepoFileDto);
 
 		// dependency: histoCryptoRepoFileId => HistoCryptoRepoFileDto
 		// note: dto.histoCryptoRepoFileId may be null, but it never is in the crypto-change-set we're splitting here!
@@ -613,15 +643,31 @@ public class CryptoChangeSetDtoSplitter {
 	}
 
 	private void buildHistoCryptoRepoFileId2HistoCryptoRepoFileDto() {
+		rootHistoCryptoRepoFileDtos = new ArrayList<>();
 		histoCryptoRepoFileId2HistoCryptoRepoFileDto = null;
 		final Map<Uid, HistoCryptoRepoFileDto> map = new HashMap<>();
-		for (HistoCryptoRepoFileDto dto : inCryptoChangeSetDto.getHistoCryptoRepoFileDtos())
+		final Uid rootCryptoRepoFileId = rootCryptoRepoFileDto == null ? null : rootCryptoRepoFileDto.getCryptoRepoFileId();
+
+		for (HistoCryptoRepoFileDto dto : inCryptoChangeSetDto.getHistoCryptoRepoFileDtos()) {
 			map.put(dto.getHistoCryptoRepoFileId(), dto);
+			if (rootCryptoRepoFileId != null && rootCryptoRepoFileId.equals(dto.getCryptoRepoFileId()))
+				rootHistoCryptoRepoFileDtos.add(dto);
+		}
 
 		histoCryptoRepoFileId2HistoCryptoRepoFileDto = map;
 
 		logger.info("buildHistoCryptoRepoFileId2HistoCryptoRepoFileDto: after indexing {} DTOs:", map.size());
 		logMemoryStats(logger);
+	}
+
+	private void buildRootCurrentHistoCryptoRepoFileDtos() {
+		rootCurrentHistoCryptoRepoFileDtos = new ArrayList<>();
+		final Uid rootCryptoRepoFileId = rootCryptoRepoFileDto == null ? null : rootCryptoRepoFileDto.getCryptoRepoFileId();
+
+		for (CurrentHistoCryptoRepoFileDto dto : inCryptoChangeSetDto.getCurrentHistoCryptoRepoFileDtos()) {
+			if (rootCryptoRepoFileId != null && rootCryptoRepoFileId.equals(dto.getCryptoRepoFileId()))
+				rootCurrentHistoCryptoRepoFileDtos.add(dto);
+		}
 	}
 
 	public int getMaxCryptoChangeSetDtoSize() {
@@ -659,6 +705,11 @@ public class CryptoChangeSetDtoSplitter {
 			outCryptoChangeSetDto = outCryptoChangeSetDtos.isEmpty()
 					? null : outCryptoChangeSetDtos.get(outCryptoChangeSetDtos.size() - 1);
 		}
+	}
+
+	private void updateMultiPartCount() {
+		for (final CryptoChangeSetDto cryptoChangeSetDto : outCryptoChangeSetDtos)
+			cryptoChangeSetDto.setMultiPartCount(outCryptoChangeSetDtos.size());
 	}
 
 	public List<CryptoChangeSetDto> getOutCryptoChangeSetDtos() {

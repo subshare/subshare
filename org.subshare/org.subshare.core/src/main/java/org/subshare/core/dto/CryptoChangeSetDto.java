@@ -13,6 +13,8 @@ public class CryptoChangeSetDto {
 
 	private int multiPartIndex = -1;
 
+	private int multiPartCount = -1;
+
 	private List<CryptoRepoFileDto> cryptoRepoFileDtos;
 
 	private List<HistoFrameDto> histoFrameDtos;
@@ -63,6 +65,13 @@ public class CryptoChangeSetDto {
 	}
 	public void setMultiPartIndex(int multiPartIndex) {
 		this.multiPartIndex = multiPartIndex;
+	}
+
+	public int getMultiPartCount() {
+		return multiPartCount;
+	}
+	public void setMultiPartCount(int multiPartCount) {
+		this.multiPartCount = multiPartCount;
 	}
 
 	public List<CryptoRepoFileDto> getCryptoRepoFileDtos() {

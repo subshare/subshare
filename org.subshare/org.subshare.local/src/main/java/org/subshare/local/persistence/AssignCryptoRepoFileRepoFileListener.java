@@ -29,6 +29,9 @@ public class AssignCryptoRepoFileRepoFileListener extends AbstractLocalRepoTrans
 	private boolean cryptoRepoFilePersisted;
 	private boolean histoCryptoRepoFilePersisted;
 
+	private boolean disabled; // only supported on client-side!!!
+	private boolean forced; // only supported on client-side!!!
+
 	@Override
 	public void onBegin() {
 		final LocalRepoTransaction tx = getTransactionOrFail();
@@ -41,6 +44,9 @@ public class AssignCryptoRepoFileRepoFileListener extends AbstractLocalRepoTrans
 
 	@Override
 	public void postStore(final InstanceLifecycleEvent event) {
+		if (disabled || forced) // on the client, when it is forced, we do it anyway and don't need to enlist stuff.
+			return;
+
 		final Object persistable = assertNotNull(event.getPersistentInstance(), "event.persistentInstance");
 		if (persistable instanceof RepoFile) {
 			final RepoFile repoFile = (RepoFile) persistable;
@@ -54,7 +60,10 @@ public class AssignCryptoRepoFileRepoFileListener extends AbstractLocalRepoTrans
 
 	@Override
 	public void onCommit() {
-		if (repoFileName2RepoFile.isEmpty() && ! cryptoRepoFilePersisted && ! histoCryptoRepoFilePersisted)
+		if (disabled)
+			return;
+
+		if (! forced && repoFileName2RepoFile.isEmpty() && ! cryptoRepoFilePersisted && ! histoCryptoRepoFilePersisted)
 			return;
 
 		final LocalRepoTransaction tx = getTransactionOrFail();
@@ -160,4 +169,17 @@ public class AssignCryptoRepoFileRepoFileListener extends AbstractLocalRepoTrans
 //		}
 //		return cryptree;
 //	}
+
+	public boolean isDisabled() {
+		return disabled;
+	}
+	public void setDisabled(boolean disabled) {
+		this.disabled = disabled;
+	}
+	public boolean isForced() {
+		return forced;
+	}
+	public void setForced(boolean forced) {
+		this.forced = forced;
+	}
 }
