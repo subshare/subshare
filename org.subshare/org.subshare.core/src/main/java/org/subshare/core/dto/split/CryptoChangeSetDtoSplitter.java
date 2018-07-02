@@ -39,8 +39,8 @@ public class CryptoChangeSetDtoSplitter {
 	private static final Logger logger = LoggerFactory.getLogger(CryptoChangeSetDtoSplitter.class);
 
 	public static final String CONFIG_KEY_MAX_CRYPTO_CHANGE_SET_DTO_SIZE = "maxCryptoChangeSetDtoSize";
-	public static final int DEFAULT_MAX_CRYPTO_CHANGE_SET_DTO_SIZE = 1000;
-//	public static final int DEFAULT_MAX_CRYPTO_CHANGE_SET_DTO_SIZE = 1; // TODO debug test value! use default above instead!
+//	public static final int DEFAULT_MAX_CRYPTO_CHANGE_SET_DTO_SIZE = 1000;
+	public static final int DEFAULT_MAX_CRYPTO_CHANGE_SET_DTO_SIZE = 1; // TODO debug test value! use default above instead!
 
 	private final int maxCryptoChangeSetDtoSize;
 
@@ -95,7 +95,7 @@ public class CryptoChangeSetDtoSplitter {
 		addOutPermissionSetDtos();
 		addOutPermissionDtos();
 		addOutPermissionSetInheritanceDtos();
-		addOutUserRepoKeyPublicKeyReplacementRequestDtos();
+//		addOutUserRepoKeyPublicKeyReplacementRequestDtos(); // *must* be *last*
 		addOutUserIdentityDtos();
 		addOutUserIdentityLinkDtos();
 		addOutRootCryptoRepoFileDto();
@@ -141,7 +141,11 @@ public class CryptoChangeSetDtoSplitter {
 		addOutCollisionDtos();
 		addOutDeletedCollisionDtos();
 		addOutCryptoConfigPropSetDtos();
+
+		// *BEGIN* *ESSENTIALS* which *must* be last
+		addOutUserRepoKeyPublicKeyReplacementRequestDtos();
 		addOutUserRepoKeyPublicKeyReplacementRequestDeletionDtos();
+		// *END* *ESSENTIALS* which *must* be last
 
 		deleteEmptyOutCryptoChangeSetDto();
 
