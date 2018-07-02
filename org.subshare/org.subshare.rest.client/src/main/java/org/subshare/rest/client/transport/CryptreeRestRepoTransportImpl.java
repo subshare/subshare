@@ -40,6 +40,8 @@ import org.subshare.core.dto.SsNormalFileDto;
 import org.subshare.core.dto.SsRepoFileDto;
 import org.subshare.core.dto.SsRequestRepoConnectionRepositoryDto;
 import org.subshare.core.dto.SsSymlinkDto;
+import org.subshare.core.dto.split.CryptoChangeSetDtoSplitFileManager;
+import org.subshare.core.dto.split.CryptoChangeSetDtoTooLargeException;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.repo.local.SsLocalRepoMetaData;
 import org.subshare.core.repo.transport.CryptreeRestRepoTransport;
@@ -59,6 +61,7 @@ import org.subshare.core.user.UserRepoKeyRingLookupContext;
 import org.subshare.rest.client.transport.request.CreateRepository;
 import org.subshare.rest.client.transport.request.EndGetCryptoChangeSetDto;
 import org.subshare.rest.client.transport.request.GetCryptoChangeSetDto;
+import org.subshare.rest.client.transport.request.GetCryptoChangeSetDtoFileData;
 import org.subshare.rest.client.transport.request.GetHistoFileData;
 import org.subshare.rest.client.transport.request.GetLastCryptoKeySyncFromRemoteRepoRemoteRepositoryRevisionSynced;
 import org.subshare.rest.client.transport.request.PutCryptoChangeSetDto;
@@ -93,6 +96,7 @@ import co.codewizards.cloudstore.core.repo.local.LocalRepoTransactionPostCloseAd
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransactionPostCloseEvent;
 import co.codewizards.cloudstore.core.repo.transport.AbstractRepoTransport;
 import co.codewizards.cloudstore.core.repo.transport.CollisionException;
+import co.codewizards.cloudstore.core.util.ExceptionUtil;
 import co.codewizards.cloudstore.core.util.IOUtil;
 import co.codewizards.cloudstore.rest.client.CloudStoreRestClient;
 import co.codewizards.cloudstore.rest.client.request.RequestRepoConnection;
@@ -231,7 +235,8 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 					cryptree.getLastCryptoKeySyncFromRemoteRepoRemoteRepositoryRevisionSynced(); // naming perspective from this (local) side
 		}
 
-		CryptoChangeSetDto cryptoChangeSetDto;
+		CryptoChangeSetDtoTooLargeException cryptoChangeSetDtoTooLargeException = null;
+		CryptoChangeSetDto cryptoChangeSetDto = null;
 		final long beginTimestamp = System.currentTimeMillis();
 		while (true) {
 			try {
@@ -242,11 +247,75 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 					throw new TimeoutException(String.format("Could not get crypto-change-set within %s milliseconds!", cryptoChangeSetTimeout), x);
 
 				logger.info("syncCryptoKeysFromRemoteRepo: Got DeferredCompletionException; will retry.");
+			} catch (final Exception x) {
+				cryptoChangeSetDtoTooLargeException = ExceptionUtil.getCause(x, CryptoChangeSetDtoTooLargeException.class);
+				if (cryptoChangeSetDtoTooLargeException == null)
+					throw x;
+
+				break;
 			}
 		}
 
+		if (cryptoChangeSetDto != null)
+			syncCryptoKeysFromRemoteRepo_putCryptoChangeSetDto(cryptoChangeSetDto);
+		else {
+			if (cryptoChangeSetDtoTooLargeException == null)
+				throw new IllegalStateException("cryptoChangeSetDto and cryptoChangeSetTooLargeException are both null!");
+
+			try {
+				syncMultiPartCryptoChangeSetDtosFromRemoteRepo(cryptoChangeSetDtoTooLargeException);
+			} catch (IOException x) {
+				throw new RuntimeException(x);
+			}
+		}
+
+		// In case of successful commit, we notify the server in order to not receive the same changes again.
+		getClient().execute(new EndGetCryptoChangeSetDto(getRepositoryId().toString()));
+		try {
+			CryptoChangeSetDtoSplitFileManager.createInstance(getLocalRepoManager(), getRepositoryId()).deleteAll();
+		} catch (IOException x) {
+			throw new RuntimeException(x);
+		}
+	}
+
+	protected void syncMultiPartCryptoChangeSetDtosFromRemoteRepo(CryptoChangeSetDtoTooLargeException cryptoChangeSetDtoTooLargeException) throws IOException {
+		assertNotNull(cryptoChangeSetDtoTooLargeException, "cryptoChangeSetTooLargeException");
+		final String exMsg = cryptoChangeSetDtoTooLargeException.getMessage();
+		final int multiPartCount;
+		try {
+			multiPartCount = Integer.parseInt(exMsg);
+		} catch (Exception x) {
+			throw new IllegalArgumentException("CryptoChangeSetDtoTooLargeException.message '" + exMsg + "' could not be parsed as integer!", x);
+		}
+
+		final CryptoChangeSetDtoSplitFileManager cryptoChangeSetDtoSplitFileManager = CryptoChangeSetDtoSplitFileManager.createInstance(getLocalRepoManager(), getRepositoryId());
+//		cryptoChangeSetDtoSplitFileManager.setCryptoChangeSetDtoTmpDirRandom(false);
+
+		for (int multiPartIndex = 0; multiPartIndex < multiPartCount; ++multiPartIndex) {
+			if (cryptoChangeSetDtoSplitFileManager.existsCryptoChangeSetDtoFile(multiPartIndex))
+				continue;
+
+			final byte[] fileData = getClient().execute(new GetCryptoChangeSetDtoFileData(getRepositoryId().toString(), multiPartIndex));
+			cryptoChangeSetDtoSplitFileManager.writeCryptoChangeSetDtoFile(multiPartIndex, fileData);
+		}
+
+		if (cryptoChangeSetDtoSplitFileManager.getFinalFileCount() != multiPartCount)
+			throw new IllegalStateException("cryptoChangeSetDtoSplitFileManager.getFinalFileCount() != multiPartCount :: " + cryptoChangeSetDtoSplitFileManager.getFinalFileCount() + " != " + multiPartCount);
+
+		for (int multiPartIndex = 0; multiPartIndex < multiPartCount; ++multiPartIndex) {
+			if (cryptoChangeSetDtoSplitFileManager.isCryptoChangeSetDtoImported(multiPartIndex))
+				continue;
+
+			CryptoChangeSetDto cryptoChangeSetDto = cryptoChangeSetDtoSplitFileManager.readCryptoChangeSetDto(multiPartIndex);
+			syncCryptoKeysFromRemoteRepo_putCryptoChangeSetDto(cryptoChangeSetDto);
+
+			cryptoChangeSetDtoSplitFileManager.markCryptoChangeSetDtoImported(multiPartIndex);
+		}
+	}
+
+	protected void syncCryptoKeysFromRemoteRepo_putCryptoChangeSetDto(final CryptoChangeSetDto cryptoChangeSetDto) {
 		if (logger.isInfoEnabled()) {
-			logger.info("syncCryptoKeysFromRemoteRepo: clientRepositoryId={} serverRepositoryId={}: "
+			logger.info("syncCryptoKeysFromRemoteRepo_putCryptoChangeSetDto: clientRepositoryId={} serverRepositoryId={}: "
 					+ "cryptoRepoFileDtos.size={}, cryptoKeyDtos.size={}, cryptoLinkDtos.size={}, "
 					+ "currentHistoCryptoRepoFileDtos.size={}, histoCryptoRepoFileDtos.size={}, "
 					+ "histoFrameDtos.size={}, permissionDtos.size={}, permissionSetDtos.size={}, "
@@ -287,8 +356,6 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 
 			transaction.commit();
 		}
-		// In case of successful commit, we notify the server in order to not receive the same changes again.
-		getClient().execute(new EndGetCryptoChangeSetDto(getRepositoryId().toString()));
 	}
 
 	private ChangeSetDto decryptChangeSetDto(final ChangeSetDto changeSetDto) {

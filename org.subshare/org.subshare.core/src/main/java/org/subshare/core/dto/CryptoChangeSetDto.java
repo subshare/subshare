@@ -45,9 +45,9 @@ public class CryptoChangeSetDto {
 
 	private List<CollisionDto> collisionDtos;
 
-	private List<CryptoConfigPropSetDto> cryptoConfigPropSetDtos;
-
 	private List<DeletedCollisionDto> deletedCollisionDtos;
+
+	private List<CryptoConfigPropSetDto> cryptoConfigPropSetDtos;
 
 	public CryptoChangeSetDto() { }
 
@@ -261,8 +261,8 @@ public class CryptoChangeSetDto {
 				+ ", histoCryptoRepoFileDtos=" + histoCryptoRepoFileDtos
 				+ ", currentHistoCryptoRepoFileDtos=" + currentHistoCryptoRepoFileDtos
 				+ ", collisionDtos=" + collisionDtos
-				+ ", cryptoConfigPropSetDtos=" + cryptoConfigPropSetDtos
 				+ ", deletedCollisionDtos=" + deletedCollisionDtos
+				+ ", cryptoConfigPropSetDtos=" + cryptoConfigPropSetDtos
 				+ ", empty=" + isEmpty() + "]";
 	}
 
@@ -321,11 +321,11 @@ public class CryptoChangeSetDto {
 		if (! isEmpty(collisionDtos))
 			size += collisionDtos.size();
 
-		if (! isEmpty(cryptoConfigPropSetDtos))
-			size += cryptoConfigPropSetDtos.size();
-
 		if (! isEmpty(deletedCollisionDtos))
 			size += deletedCollisionDtos.size();
+
+		if (! isEmpty(cryptoConfigPropSetDtos))
+			size += cryptoConfigPropSetDtos.size();
 
 		return size;
 	}

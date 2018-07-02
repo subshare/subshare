@@ -2,6 +2,7 @@ package org.subshare.rest.server.service;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 
@@ -10,6 +11,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
@@ -20,6 +22,9 @@ import org.subshare.core.Cryptree;
 import org.subshare.core.CryptreeFactory;
 import org.subshare.core.CryptreeFactoryRegistry;
 import org.subshare.core.dto.CryptoChangeSetDto;
+import org.subshare.core.dto.split.CryptoChangeSetDtoSplitFileManager;
+import org.subshare.core.dto.split.CryptoChangeSetDtoSplitter;
+import org.subshare.core.dto.split.CryptoChangeSetDtoTooLargeException;
 
 import co.codewizards.cloudstore.core.concurrent.CallableProvider;
 import co.codewizards.cloudstore.core.concurrent.DeferrableExecutor;
@@ -67,9 +72,16 @@ public class CryptoChangeSetDtoService extends AbstractServiceWithRepoToRepoAuth
 		}
 	}
 
-	protected CryptoChangeSetDto getCryptoChangeSetDto(final RepoTransport repoTransport, final Long lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced) {
+	protected CryptoChangeSetDto getCryptoChangeSetDto(final RepoTransport repoTransport, final Long lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced) throws Exception {
 		final UUID clientRepositoryId = assertNotNull(repoTransport.getClientRepositoryId(), "clientRepositoryId");
 		final LocalRepoManager localRepoManager = ((ContextWithLocalRepoManager) repoTransport).getLocalRepoManager();
+		final CryptoChangeSetDtoSplitFileManager cryptoChangeSetDtoSplitFileManager = CryptoChangeSetDtoSplitFileManager.createInstance(localRepoManager, clientRepositoryId);
+//		cryptoChangeSetDtoSplitFileManager.setCryptoChangeSetDtoTmpDirRandom(true);
+
+		int cryptoChangeSetDtoFinalFileCount = cryptoChangeSetDtoSplitFileManager.getFinalFileCount();
+		if (cryptoChangeSetDtoFinalFileCount > 0)
+			throw new CryptoChangeSetDtoTooLargeException(cryptoChangeSetDtoFinalFileCount);
+
 		// We *write* LastCryptoKeySyncToRemoteRepo in this *short* tx.
 		try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction()) {
 			final CryptreeFactory cryptreeFactory = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail();
@@ -92,22 +104,43 @@ public class CryptoChangeSetDtoService extends AbstractServiceWithRepoToRepoAuth
 			transaction.commit();
 		}
 
-//		final List<CryptoChangeSetDto> outCryptoChangeSetDtos = CryptoChangeSetDtoSplitter
-//				.createInstance(cryptoChangeSetDto)
-//				.setDestroyInput(true)
-//				.split()
-//				.getOutCryptoChangeSetDtos();
-		// TODO check, if splitting is needed
-		// TODO if yes, create files and throw exception
-		// TODO provide API to retrieve files.
+		final CryptoChangeSetDtoSplitter cryptoChangeSetDtoSplitter = CryptoChangeSetDtoSplitter.createInstance(cryptoChangeSetDto);
+		final int maxCryptoChangeSetDtoSize = cryptoChangeSetDtoSplitter.getMaxCryptoChangeSetDtoSize();
+		if (maxCryptoChangeSetDtoSize > 0 && cryptoChangeSetDto.size() > maxCryptoChangeSetDtoSize) {
+			final List<CryptoChangeSetDto> splitCryptoChangeSetDtos = cryptoChangeSetDtoSplitter
+					.setDestroyInput(true)
+					.split()
+					.getOutCryptoChangeSetDtos();
 
+			cryptoChangeSetDtoSplitFileManager.writeCryptoChangeSetDtos(splitCryptoChangeSetDtos);
+
+			cryptoChangeSetDtoFinalFileCount = cryptoChangeSetDtoSplitFileManager.getFinalFileCount();
+			if (cryptoChangeSetDtoFinalFileCount < 1)
+				throw new IllegalStateException("cryptoChangeSetDtoSplitFileManager.getFinalFileCount() < 1");
+
+			throw new CryptoChangeSetDtoTooLargeException(cryptoChangeSetDtoFinalFileCount);
+		}
 		return cryptoChangeSetDto;
+	}
+
+	@GET
+	@Path("file/{multiPartIndex}")
+	@Produces(MediaType.APPLICATION_OCTET_STREAM)
+	public byte[] getCryptoChangeSetDtoFileData(@PathParam("multiPartIndex") int multiPartIndex) throws Exception
+	{
+		try (final RepoTransport repoTransport = authenticateAndCreateLocalRepoTransport()) {
+			final UUID clientRepositoryId = assertNotNull(repoTransport.getClientRepositoryId(), "clientRepositoryId");
+			final LocalRepoManager localRepoManager = ((ContextWithLocalRepoManager) repoTransport).getLocalRepoManager();
+			final CryptoChangeSetDtoSplitFileManager cryptoChangeSetDtoSplitFileManager = CryptoChangeSetDtoSplitFileManager.createInstance(localRepoManager, clientRepositoryId);
+			final byte[] result = cryptoChangeSetDtoSplitFileManager.readCryptoChangeSetDtoFile(multiPartIndex);
+			return result;
+		}
 	}
 
 	@POST
 	@Path("endGet")
-	public void endGetCryptoChangeSetDto() {
-		try (final RepoTransport repoTransport = authenticateAndCreateLocalRepoTransport();) {
+	public void endGetCryptoChangeSetDto() throws Exception {
+		try (final RepoTransport repoTransport = authenticateAndCreateLocalRepoTransport()) {
 			final UUID clientRepositoryId = assertNotNull(repoTransport.getClientRepositoryId(), "clientRepositoryId");
 			final LocalRepoManager localRepoManager = ((ContextWithLocalRepoManager) repoTransport).getLocalRepoManager();
 			try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction()) {
@@ -117,13 +150,14 @@ public class CryptoChangeSetDtoService extends AbstractServiceWithRepoToRepoAuth
 
 				transaction.commit();
 			}
+			CryptoChangeSetDtoSplitFileManager.createInstance(localRepoManager, clientRepositoryId).deleteAll();
 		}
 	}
 
 	@PUT
 	public void putCryptoChangeSetDto(final CryptoChangeSetDto cryptoChangeSetDto) {
 		assertNotNull(cryptoChangeSetDto, "cryptoChangeSetDto");
-		try (final RepoTransport repoTransport = authenticateAndCreateLocalRepoTransport();) {
+		try (final RepoTransport repoTransport = authenticateAndCreateLocalRepoTransport()) {
 			final UUID clientRepositoryId = assertNotNull(repoTransport.getClientRepositoryId(), "clientRepositoryId");
 			final LocalRepoManager localRepoManager = ((ContextWithLocalRepoManager) repoTransport).getLocalRepoManager();
 			try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction()) {
