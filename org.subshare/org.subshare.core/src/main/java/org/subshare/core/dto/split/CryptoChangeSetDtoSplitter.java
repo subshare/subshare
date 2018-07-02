@@ -116,7 +116,7 @@ public class CryptoChangeSetDtoSplitter {
 		rootCurrentHistoCryptoRepoFileDtos = null;
 		rootHistoCryptoRepoFileDtos = null;
 
-		// Due to the way collisions are resolved, the [Current]HistoCryptoRepoFiles involved *must* be present
+		// The current put-algorithm requires that the [Current]HistoCryptoRepoFiles involved *must* be present
 		// together with the CryptoRepoFiles. Hence, we start with them (they pull the CryptoRepoFiles as dependencies).
 		addOutCurrentHistoCryptoRepoFileDtos(); // should only be used in DOWN-syncs!
 		addOutHistoCryptoRepoFileDtos(); // should only be used in DOWN-syncs!
