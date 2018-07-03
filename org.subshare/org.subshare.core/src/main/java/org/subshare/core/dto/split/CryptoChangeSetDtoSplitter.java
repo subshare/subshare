@@ -39,8 +39,26 @@ public class CryptoChangeSetDtoSplitter {
 	private static final Logger logger = LoggerFactory.getLogger(CryptoChangeSetDtoSplitter.class);
 
 	public static final String CONFIG_KEY_MAX_CRYPTO_CHANGE_SET_DTO_SIZE = "maxCryptoChangeSetDtoSize";
-//	public static final int DEFAULT_MAX_CRYPTO_CHANGE_SET_DTO_SIZE = 1000;
-	public static final int DEFAULT_MAX_CRYPTO_CHANGE_SET_DTO_SIZE = 1; // TODO debug test value! use default above instead!
+
+	/**
+	 * Soft limit of how many entity-DTOs should be at maximum in a {@link CryptoChangeSetDto}.
+	 * <p>
+	 * {@link CryptoChangeSetDto#size()} is limited <i>closely</i> to this value, but not exactly.
+	 * The size may (and often does) exceed the limit, because its dependencies are also added,
+	 * if an element is added.
+	 * <p>
+	 * For example, if the current size is 999 and the limit is 1000, of course,
+	 * yet one more {@link CryptoRepoFileDto} is going to be added. But this {@link CryptoRepoFileDto} may
+	 * require a parent and a {@link CryptoKeyDto} -- thus leading to 3 elements instead of just 1 to be
+	 * added, so that the total size would be 1002 despite the limit of 1000.
+	 * <p>
+	 * Additionally, there are a few objects that need to be added together into the very first part of
+	 * a split multi-part-{@code CryptoChangeSetDto}.
+	 * <p>
+	 * <b>Important:</b> All tests must be run from time to time with this being set to 1.
+	 * Only, if the tests succeed despite the low limit (i.e. maximum separation), the code is OK.
+	 */
+	public static final int DEFAULT_MAX_CRYPTO_CHANGE_SET_DTO_SIZE = 1000;
 
 	private final int maxCryptoChangeSetDtoSize;
 
