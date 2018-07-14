@@ -14,9 +14,9 @@ public class FilePaddingLengthRandom {
 	private final Config config;
 
 	private static final int[] defaultLengthProbability = {
-		600, // ‰ 100K
-		310, // ‰   1M
-		 90, // ‰  10M
+		700, // ‰ 100K
+		250, // ‰   1M
+		 50, // ‰  10M
 		  0, // ‰ 100M
 		  0, // ‰   1G
 		  0  // ‰  10G
@@ -93,6 +93,9 @@ public class FilePaddingLengthRandom {
 	}
 
 	public long nextPaddingLength() {
+		if (lengthProbabilitySum < 1)
+			return 0;
+
 		LengthCategory lengthCategory = nextLengthCategory();
 		long length = Math.abs(random.nextLong());
 		length = length % (lengthCategory.getMaxLength() - lengthCategory.getMinLength());
