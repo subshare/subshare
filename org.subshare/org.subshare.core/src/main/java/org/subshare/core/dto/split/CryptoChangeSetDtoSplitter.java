@@ -59,8 +59,7 @@ public class CryptoChangeSetDtoSplitter {
 	 * <b>Important:</b> All tests must be run from time to time with this being set to 1.
 	 * Only, if the tests succeed despite the low limit (i.e. maximum separation), the code is OK.
 	 */
-//	public static final int DEFAULT_MAX_CRYPTO_CHANGE_SET_DTO_SIZE = 1000;
-	public static final int DEFAULT_MAX_CRYPTO_CHANGE_SET_DTO_SIZE = 1;
+	public static final int DEFAULT_MAX_CRYPTO_CHANGE_SET_DTO_SIZE = 1000;
 
 	private final int maxCryptoChangeSetDtoSize;
 
