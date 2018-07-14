@@ -276,6 +276,9 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 		} catch (IOException x) {
 			throw new RuntimeException(x);
 		}
+
+		if (cryptoChangeSetDtoTooLargeException != null)
+			syncCryptoKeysFromRemoteRepo(); // in case of a multi-part-response, we repeat the sync immediately, because the result we just processed might be stale (old files).
 	}
 
 	protected void syncMultiPartCryptoChangeSetDtosFromRemoteRepo(CryptoChangeSetDtoTooLargeException cryptoChangeSetDtoTooLargeException) throws IOException {

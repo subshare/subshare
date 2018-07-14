@@ -11,7 +11,7 @@
 		<artifactId>org.subshare.parent</artifactId>
 		<version>0.10.5-SNAPSHOT</version>
 <!--
-		<version>0.10.4</version>
+		<version>0.10.5</version>
 -->
 		<relativePath>org.subshare.parent</relativePath>
 	</parent>

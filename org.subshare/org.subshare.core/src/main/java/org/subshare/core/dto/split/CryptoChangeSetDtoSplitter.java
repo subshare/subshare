@@ -59,7 +59,8 @@ public class CryptoChangeSetDtoSplitter {
 	 * <b>Important:</b> All tests must be run from time to time with this being set to 1.
 	 * Only, if the tests succeed despite the low limit (i.e. maximum separation), the code is OK.
 	 */
-	public static final int DEFAULT_MAX_CRYPTO_CHANGE_SET_DTO_SIZE = 1000;
+//	public static final int DEFAULT_MAX_CRYPTO_CHANGE_SET_DTO_SIZE = 1000;
+	public static final int DEFAULT_MAX_CRYPTO_CHANGE_SET_DTO_SIZE = 1;
 
 	private final int maxCryptoChangeSetDtoSize;
 
@@ -73,10 +74,10 @@ public class CryptoChangeSetDtoSplitter {
 	private Set<Uid> cryptoRepoFileIdsProcessed;
 	private Set<Uid> cryptoKeyIdsProcessed;
 	private Set<Uid> cryptoLinkIdsProcessed;
+	private Set<Uid> currentHistoCryptoRepoFileIdsProcessed;
 
 	private CryptoRepoFileDto rootCryptoRepoFileDto;
-	private List<CurrentHistoCryptoRepoFileDto> rootCurrentHistoCryptoRepoFileDtos;
-	private List<HistoCryptoRepoFileDto> rootHistoCryptoRepoFileDtos;
+	private Map<Uid, CurrentHistoCryptoRepoFileDto> cryptoRepoFileId2CurrentHistoCryptoRepoFileDto;
 
 	private Map<Uid, CryptoRepoFileDto> cryptoRepoFileId2CryptoRepoFileDto;
 	private Map<Uid, CryptoKeyDto> cryptoKeyId2CryptoKeyDto;
@@ -104,15 +105,10 @@ public class CryptoChangeSetDtoSplitter {
 		cryptoRepoFileIdsProcessed = new HashSet<>();
 		cryptoKeyIdsProcessed = new HashSet<>();
 		cryptoLinkIdsProcessed = new HashSet<>();
-		histoFrameIdsProcessed = new HashSet<>();
-		histoCryptoRepoFileIdsProcessed = new HashSet<>();
 
 		buildCryptoRepoFileId2CryptoRepoFileDto();
 		buildCryptoKeyId2CryptoKeyDto();
 		buildToCryptoKeyId2CryptoLinkDtos();
-		buildHistoFrameId2HistoFrameDto();
-		buildHistoCryptoRepoFileId2HistoCryptoRepoFileDto();
-		buildRootCurrentHistoCryptoRepoFileDtos();
 
 		// *BEGIN* *ESSENTIALS* never being split
 		// Because it is very hard to test and thus very error-prone, and because we likely *never*
@@ -135,14 +131,6 @@ public class CryptoChangeSetDtoSplitter {
 			outCryptoChangeSetDto = null; // force the essentials to be separated, if there are any.
 
 		rootCryptoRepoFileDto = null; // not used, anymore
-		rootCurrentHistoCryptoRepoFileDtos = null;
-		rootHistoCryptoRepoFileDtos = null;
-
-		// The current put-algorithm requires that the [Current]HistoCryptoRepoFiles involved *must* be present
-		// together with the CryptoRepoFiles. Hence, we start with them (they pull the CryptoRepoFiles as dependencies).
-		addOutCurrentHistoCryptoRepoFileDtos(); // should only be used in DOWN-syncs!
-		addOutHistoCryptoRepoFileDtos(); // should only be used in DOWN-syncs!
-		addOutHistoFrameDtos();
 
 		// The CryptoRepoFiles, CryptoKeys and CryptoLinks are *partially* essential. Those that are,
 		// are already resolved as dependencies before.
@@ -150,18 +138,36 @@ public class CryptoChangeSetDtoSplitter {
 		addOutCryptoLinkDtos();
 		addOutCryptoKeyDtos();
 
-		// in the above methods, we processed *all* CryptoRepoFileDtos, CryptoLinkDtos and CryptoRepoKeyDtos => not needed anymore.
+		// in the above methods, we processed *all* CryptoRepoFileDtos, CryptoLinkDtos and CryptoRepoKeyDtos => not needed anymore => GC
 		cryptoRepoFileIdsProcessed = null;
 		cryptoKeyIdsProcessed = null;
 		cryptoLinkIdsProcessed = null;
-		histoFrameIdsProcessed = null;
-		histoCryptoRepoFileIdsProcessed = null;
 
 		cryptoRepoFileId2CryptoRepoFileDto = null;
 		cryptoKeyId2CryptoKeyDto = null;
 		toCryptoKeyId2CryptoLinkDtos = null;
+
+		// now we process the histo-stuff.
+		histoFrameIdsProcessed = new HashSet<>();
+		histoCryptoRepoFileIdsProcessed = new HashSet<>();
+		currentHistoCryptoRepoFileIdsProcessed = new HashSet<>();
+
+		buildHistoFrameId2HistoFrameDto();
+		buildHistoCryptoRepoFileId2HistoCryptoRepoFileDto();
+		buildCryptoRepoFileId2CurrentHistoCryptoRepoFileDto();
+
+		addOutHistoFrameDtos();
+		addOutCurrentHistoCryptoRepoFileDtos(); // should only be used in DOWN-syncs!
+		addOutHistoCryptoRepoFileDtos(); // should only be used in DOWN-syncs!
+
+		// histo-stuff done => not needed anymore => GC!
+		histoFrameIdsProcessed = null;
+		histoCryptoRepoFileIdsProcessed = null;
+		currentHistoCryptoRepoFileIdsProcessed = null;
+
 		histoFrameId2HistoFrameDto = null;
 		histoCryptoRepoFileId2HistoCryptoRepoFileDto = null;
+		cryptoRepoFileId2CurrentHistoCryptoRepoFileDto = null;
 
 		addOutCollisionDtos();
 		addOutDeletedCollisionDtos();
@@ -184,14 +190,6 @@ public class CryptoChangeSetDtoSplitter {
 		if (rootCryptoRepoFileDto != null) {
 			prepareOutCryptoChangeSetDto(); // *never* start a new one for it -- make sure *essentials* are always in the first one.
 			addOutCryptoRepoFileDto(rootCryptoRepoFileDto);
-		}
-		for (final HistoCryptoRepoFileDto dto : rootHistoCryptoRepoFileDtos) {
-			prepareOutCryptoChangeSetDto(); // *never* start a new one for it -- make sure *essentials* are always in the first one.
-			addOutHistoCryptoRepoFileDto(dto);
-		}
-		for (final CurrentHistoCryptoRepoFileDto dto : rootCurrentHistoCryptoRepoFileDtos) {
-			prepareOutCryptoChangeSetDto(); // *never* start a new one for it -- make sure *essentials* are always in the first one.
-			addOutCurrentHistoCryptoRepoFileDto(dto);
 		}
 	}
 
@@ -544,25 +542,32 @@ public class CryptoChangeSetDtoSplitter {
 		if (! histoCryptoRepoFileIdsProcessed.add(histoCryptoRepoFileId))
 			return;
 
+		final Uid cryptoRepoFileId = assertNotNull(dto.getCryptoRepoFileId(), "histoCryptoRepoFileDto.cryptoRepoFileId");
+
 		// *first* add dependencies as needed
 
-		// dependency: cryptoRepoFileId => CryptoRepoFileDto
-		final Uid cryptoRepoFileId = assertNotNull(dto.getCryptoRepoFileId(), "histoCryptoRepoFileDto.cryptoRepoFileId");
-		final CryptoRepoFileDto cryptoRepoFileDto = cryptoRepoFileId2CryptoRepoFileDto.get(cryptoRepoFileId);
-		if (cryptoRepoFileDto != null)
-			addOutCryptoRepoFileDto(cryptoRepoFileDto);
-
-		// dependency: cryptoKeyId => CryptoKeyDto
-		final Uid cryptoKeyId = assertNotNull(dto.getCryptoKeyId(), "histoCryptoRepoFileDto.cryptoKeyId");
-		final CryptoKeyDto cryptoKeyDto = cryptoKeyId2CryptoKeyDto.get(cryptoKeyId);
-		if (cryptoKeyDto != null)
-			addOutCryptoKeyDto(cryptoKeyDto);
+// *** all CryptoRepoFileDto and CryptoKeyDto instances are already processed when we come here! ***
+//		// dependency: cryptoRepoFileId => CryptoRepoFileDto
+//		final CryptoRepoFileDto cryptoRepoFileDto = cryptoRepoFileId2CryptoRepoFileDto.get(cryptoRepoFileId);
+//		if (cryptoRepoFileDto != null)
+//			addOutCryptoRepoFileDto(cryptoRepoFileDto);
+//
+//		// dependency: cryptoKeyId => CryptoKeyDto
+//		final Uid cryptoKeyId = assertNotNull(dto.getCryptoKeyId(), "histoCryptoRepoFileDto.cryptoKeyId");
+//		final CryptoKeyDto cryptoKeyDto = cryptoKeyId2CryptoKeyDto.get(cryptoKeyId);
+//		if (cryptoKeyDto != null)
+//			addOutCryptoKeyDto(cryptoKeyDto);
 
 		// dependency: histoFrameId => HistoFrameDto
 		final Uid histoFrameId = assertNotNull(dto.getHistoFrameId(), "histoCryptoRepoFileDto.histoFrameId");
 		final HistoFrameDto histoFrameDto = histoFrameId2HistoFrameDto.get(histoFrameId);
 		if (histoFrameDto != null)
 			addOutHistoFrameDto(histoFrameDto);
+
+		// dependency: CurrentHistoCryptoRepoFileDto -- see: https://github.com/subshare/subshare/issues/68
+		final CurrentHistoCryptoRepoFileDto currentHistoCryptoRepoFileDto = cryptoRepoFileId2CurrentHistoCryptoRepoFileDto.get(cryptoRepoFileId);
+		if (currentHistoCryptoRepoFileDto != null)
+			addOutCurrentHistoCryptoRepoFileDto(currentHistoCryptoRepoFileDto);
 
 		// dependency: previousHistoCryptoRepoFileId => HistoCryptoRepoFileDto
 		final Uid previousHistoCryptoRepoFileId = dto.getPreviousHistoCryptoRepoFileId();
@@ -580,14 +585,17 @@ public class CryptoChangeSetDtoSplitter {
 
 	private void addOutCurrentHistoCryptoRepoFileDto(final CurrentHistoCryptoRepoFileDto dto) {
 		assertNotNull(dto, "dto");
+		final Uid cryptoRepoFileId = assertNotNull(dto.getCryptoRepoFileId(), "currentHistoCryptoRepoFileDto.cryptoRepoFileId");
+		if (! currentHistoCryptoRepoFileIdsProcessed.add(cryptoRepoFileId))
+			return;
 
 		// *first* add dependencies as needed
 
-		// dependency: cryptoRepoFileId => CryptoRepoFileDto
-		final Uid cryptoRepoFileId = assertNotNull(dto.getCryptoRepoFileId(), "currentHistoCryptoRepoFileDto.cryptoRepoFileId");
-		final CryptoRepoFileDto cryptoRepoFileDto = cryptoRepoFileId2CryptoRepoFileDto.get(cryptoRepoFileId);
-		if (cryptoRepoFileDto != null)
-			addOutCryptoRepoFileDto(cryptoRepoFileDto);
+// *** all CryptoRepoFileDto instances are already processed when we come here! ***
+//		// dependency: cryptoRepoFileId => CryptoRepoFileDto
+//		final CryptoRepoFileDto cryptoRepoFileDto = cryptoRepoFileId2CryptoRepoFileDto.get(cryptoRepoFileId);
+//		if (cryptoRepoFileDto != null)
+//			addOutCryptoRepoFileDto(cryptoRepoFileDto);
 
 		// dependency: histoCryptoRepoFileId => HistoCryptoRepoFileDto
 		// note: dto.histoCryptoRepoFileId may be null, but it never is in the crypto-change-set we're splitting here!
@@ -691,15 +699,15 @@ public class CryptoChangeSetDtoSplitter {
 	}
 
 	private void buildHistoCryptoRepoFileId2HistoCryptoRepoFileDto() {
-		rootHistoCryptoRepoFileDtos = new ArrayList<>();
+//		rootHistoCryptoRepoFileDtos = new ArrayList<>();
 		histoCryptoRepoFileId2HistoCryptoRepoFileDto = null;
 		final Map<Uid, HistoCryptoRepoFileDto> map = new HashMap<>();
-		final Uid rootCryptoRepoFileId = rootCryptoRepoFileDto == null ? null : rootCryptoRepoFileDto.getCryptoRepoFileId();
+//		final Uid rootCryptoRepoFileId = rootCryptoRepoFileDto == null ? null : rootCryptoRepoFileDto.getCryptoRepoFileId();
 
-		for (HistoCryptoRepoFileDto dto : inCryptoChangeSetDto.getHistoCryptoRepoFileDtos()) {
+		for (final HistoCryptoRepoFileDto dto : inCryptoChangeSetDto.getHistoCryptoRepoFileDtos()) {
 			map.put(dto.getHistoCryptoRepoFileId(), dto);
-			if (rootCryptoRepoFileId != null && rootCryptoRepoFileId.equals(dto.getCryptoRepoFileId()))
-				rootHistoCryptoRepoFileDtos.add(dto);
+//			if (rootCryptoRepoFileId != null && rootCryptoRepoFileId.equals(dto.getCryptoRepoFileId()))
+//				rootHistoCryptoRepoFileDtos.add(dto);
 		}
 
 		histoCryptoRepoFileId2HistoCryptoRepoFileDto = map;
@@ -708,15 +716,30 @@ public class CryptoChangeSetDtoSplitter {
 		logMemoryStats(logger);
 	}
 
-	private void buildRootCurrentHistoCryptoRepoFileDtos() {
-		rootCurrentHistoCryptoRepoFileDtos = new ArrayList<>();
-		final Uid rootCryptoRepoFileId = rootCryptoRepoFileDto == null ? null : rootCryptoRepoFileDto.getCryptoRepoFileId();
-
-		for (CurrentHistoCryptoRepoFileDto dto : inCryptoChangeSetDto.getCurrentHistoCryptoRepoFileDtos()) {
-			if (rootCryptoRepoFileId != null && rootCryptoRepoFileId.equals(dto.getCryptoRepoFileId()))
-				rootCurrentHistoCryptoRepoFileDtos.add(dto);
+	private void buildCryptoRepoFileId2CurrentHistoCryptoRepoFileDto() {
+		cryptoRepoFileId2CurrentHistoCryptoRepoFileDto = null;
+		final Map<Uid, CurrentHistoCryptoRepoFileDto> map = new HashMap<>();
+		for (final CurrentHistoCryptoRepoFileDto dto : inCryptoChangeSetDto.getCurrentHistoCryptoRepoFileDtos()) {
+			final Uid cryptoRepoFileId = assertNotNull(dto.getCryptoRepoFileId(), "currentHistoCryptoRepoFileDto.cryptoRepoFileId");
+			final CurrentHistoCryptoRepoFileDto old = map.put(cryptoRepoFileId, dto);
+			if (old != null)
+				throw new IllegalStateException("Multiple CurrentHistoCryptoRepoFileDto for cryptoRepoFileId=" + cryptoRepoFileId);
 		}
+		cryptoRepoFileId2CurrentHistoCryptoRepoFileDto = map;
+
+		logger.info("buildCryptoRepoFileId2CurrentHistoCryptoRepoFileDto: after indexing {} DTOs:", map.size());
+		logMemoryStats(logger);
 	}
+
+//	private void buildRootCurrentHistoCryptoRepoFileDtos() {
+//		rootCurrentHistoCryptoRepoFileDtos = new ArrayList<>();
+//		final Uid rootCryptoRepoFileId = rootCryptoRepoFileDto == null ? null : rootCryptoRepoFileDto.getCryptoRepoFileId();
+//
+//		for (CurrentHistoCryptoRepoFileDto dto : inCryptoChangeSetDto.getCurrentHistoCryptoRepoFileDtos()) {
+//			if (rootCryptoRepoFileId != null && rootCryptoRepoFileId.equals(dto.getCryptoRepoFileId()))
+//				rootCurrentHistoCryptoRepoFileDtos.add(dto);
+//		}
+//	}
 
 	public int getMaxCryptoChangeSetDtoSize() {
 		return maxCryptoChangeSetDtoSize;
