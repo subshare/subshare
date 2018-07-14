@@ -17,6 +17,7 @@ import org.subshare.core.dto.CollisionDto;
 import org.subshare.core.dto.CryptoChangeSetDto;
 import org.subshare.core.dto.CryptoConfigPropSetDto;
 import org.subshare.core.dto.CryptoKeyDto;
+import org.subshare.core.dto.CryptoKeyRole;
 import org.subshare.core.dto.CryptoLinkDto;
 import org.subshare.core.dto.CryptoRepoFileDto;
 import org.subshare.core.dto.CurrentHistoCryptoRepoFileDto;
@@ -129,6 +130,9 @@ public class CryptoChangeSetDtoSplitter {
 
 		if (outCryptoChangeSetDtos.size() > 1)
 			throw new IllegalStateException("More than one out-CryptoChangeSetDto for the essentials!");
+
+		if (outCryptoChangeSetDto != null && ! outCryptoChangeSetDto.isEmpty())
+			outCryptoChangeSetDto = null; // force the essentials to be separated, if there are any.
 
 		rootCryptoRepoFileDto = null; // not used, anymore
 		rootCurrentHistoCryptoRepoFileDtos = null;
@@ -457,12 +461,50 @@ public class CryptoChangeSetDtoSplitter {
 		// dependency: those CryptoLinkDtos that are needed to decrypt the current key
 		final List<CryptoLinkDto> cryptoLinkDtos = toCryptoKeyId2CryptoLinkDtos.get(cryptoKeyId);
 		if (cryptoLinkDtos != null) {
-			for (CryptoLinkDto cryptoLinkDto : cryptoLinkDtos) // getDependentInCryptoLinkDtos(cryptoKeyId))
+			for (final CryptoLinkDto cryptoLinkDto : cryptoLinkDtos) {
+				if (isFromChildCryptoRepoFile(cryptoRepoFileId, cryptoLinkDto))
+					continue; // skip those from the sub-folders and files.
+
 				addOutCryptoLinkDto(cryptoLinkDto);
+			}
 		}
 
 		// *then* add actual DTO
 		outCryptoChangeSetDto.getCryptoKeyDtos().add(dto);
+	}
+
+	private boolean isFromChildCryptoRepoFile(final Uid cryptoRepoFileId, final CryptoLinkDto cryptoLinkDto) {
+		assertNotNull(cryptoRepoFileId, "cryptoRepoFileId");
+		assertNotNull(cryptoLinkDto, "cryptoLinkDto");
+
+		final Uid fromCryptoKeyId = cryptoLinkDto.getFromCryptoKeyId();
+		if (fromCryptoKeyId == null)
+			return false; // public key or encrypted with user-repo-key.
+
+		final CryptoKeyDto fromCryptoKeyDto = cryptoKeyId2CryptoKeyDto.get(fromCryptoKeyId);
+		if (fromCryptoKeyDto == null)
+			return false; // we don't know, but at least it's not in the current change-set, i.e. not further bloating dependencies.
+
+		final Uid fromCryptoRepoFileId = assertNotNull(fromCryptoKeyDto.getCryptoRepoFileId(), "fromCryptoKeyDto.cryptoRepoFileId");
+//		final CryptoRepoFileDto fromCryptoRepoFileDto = cryptoRepoFileId2CryptoRepoFileDto.get(fromCryptoRepoFileId);
+////		if (fromCryptoRepoFileDto == null)
+////			return false; // we can't determine.
+////
+////		if (cryptoRepoFileId.equals(fromCryptoRepoFileDto.getParentCryptoRepoFileId()))
+////			return true;
+//
+//		// sanity-check for backlinkKey-based logic (better, because it does not require the fromCryptoRepoFileDto)
+//		if (fromCryptoRepoFileDto != null && cryptoRepoFileId.equals(fromCryptoRepoFileDto.getParentCryptoRepoFileId())) {
+//			if (CryptoKeyRole.backlinkKey != assertNotNull(fromCryptoKeyDto.getCryptoKeyRole(), "fromCryptoKeyDto.cryptoKeyRole"))
+//				throw new IllegalStateException("WTF?!");
+//		}
+
+		// checking via backlinkKey-based logic (better, because it does not require the fromCryptoRepoFileDto)
+		final CryptoKeyRole fromCryptoKeyRole = assertNotNull(fromCryptoKeyDto.getCryptoKeyRole(), "fromCryptoKeyDto.cryptoKeyRole");
+		if (CryptoKeyRole.backlinkKey == fromCryptoKeyRole && ! cryptoRepoFileId.equals(fromCryptoRepoFileId))
+			return true;
+
+		return false;
 	}
 
 	private void addOutCryptoLinkDto(final CryptoLinkDto dto) {
@@ -586,18 +628,6 @@ public class CryptoChangeSetDtoSplitter {
 		assertNotNull(dto, "dto");
 		outCryptoChangeSetDto.getUserRepoKeyPublicKeyReplacementRequestDeletionDtos().add(dto);
 	}
-
-//	private List<CryptoLinkDto> getDependentInCryptoLinkDtos(final Uid cryptoKeyId) {
-//		final List<CryptoLinkDto> result = new ArrayList<>();
-//		// Iterating all of them instead of using an index, because the index would be
-//		// *far* *too* *large* (too much memory). Hmmm... maybe try it later...
-//		for (final CryptoLinkDto cryptoLinkDto : inCryptoChangeSetDto.getCryptoLinkDtos()) {
-//			final Uid toCryptoKeyId = assertNotNull(cryptoLinkDto.getToCryptoKeyId(), "cryptoLinkDto.getToCryptoKeyId");
-//			if (cryptoKeyId.equals(toCryptoKeyId))
-//				result.add(cryptoLinkDto);
-//		}
-//		return result;
-//	}
 
 	private void buildCryptoRepoFileId2CryptoRepoFileDto() {
 		cryptoRepoFileId2CryptoRepoFileDto = null;

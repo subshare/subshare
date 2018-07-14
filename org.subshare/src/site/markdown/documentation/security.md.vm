@@ -57,8 +57,8 @@ of course uses the same approach to join the encryption operations needed to enc
 entire file system with many nested directories containing other directories and files.
 
 When we started working on subshare, we stumbled over the paper
-##[Cryptree: A Folder Tree Structure for Cryptographic File Systems](http://subshare.org/resource/Cryptree-srds06.pdf)
-[Cryptree: A Folder Tree Structure for Cryptographic File Systems](http://www.dcg.ethz.ch/publications/srds06.pdf)
+[Cryptree: A Folder Tree Structure for Cryptographic File Systems](../Cryptree-srds06.pdf)
+([original link](http://www.dcg.ethz.ch/publications/srds06.pdf) broken)
 which described pretty much exactly what we needed. This saved us quite some
 work as we didn't need to start planning the crypto-link-structure from scratch.
 
