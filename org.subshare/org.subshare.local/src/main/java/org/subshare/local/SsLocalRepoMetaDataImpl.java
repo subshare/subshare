@@ -3,6 +3,7 @@ package org.subshare.local;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -34,6 +35,7 @@ import org.subshare.core.dto.HistoFrameDto;
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.dto.PlainHistoCryptoRepoFileDto;
 import org.subshare.core.dto.UserIdentityPayloadDto;
+import org.subshare.core.dto.split.CryptoChangeSetDtoSplitFileManager;
 import org.subshare.core.repo.local.CollisionFilter;
 import org.subshare.core.repo.local.CollisionPrivateFilter;
 import org.subshare.core.repo.local.HistoFrameFilter;
@@ -558,6 +560,13 @@ public class SsLocalRepoMetaDataImpl extends LocalRepoMetaDataImpl implements Ss
 				// We set it to 0 and not to -1, because -1 would not be sent to the server (it is treated as null)
 				// and because we can very safely assume that revision 0 was always properly synced.
 				lastCryptoKeySyncFromRemoteRepo.setRemoteRepositoryRevisionSynced(0);
+				try {
+					CryptoChangeSetDtoSplitFileManager
+					.createInstance(getLocalRepoManagerOrFail(), lastCryptoKeySyncFromRemoteRepo.getRemoteRepository().getRepositoryId())
+					.deleteAll();
+				} catch (IOException x) {
+					throw new RuntimeException(x);
+				}
 			}
 			tx.commit();
 		}

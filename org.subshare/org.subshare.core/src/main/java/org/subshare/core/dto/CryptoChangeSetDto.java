@@ -6,6 +6,8 @@ import java.util.List;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
+import co.codewizards.cloudstore.core.Uid;
+
 @XmlRootElement
 public class CryptoChangeSetDto {
 
@@ -14,6 +16,8 @@ public class CryptoChangeSetDto {
 	private int multiPartIndex = -1;
 
 	private int multiPartCount = -1;
+
+	private Uid multiPartId;
 
 	private List<CryptoRepoFileDto> cryptoRepoFileDtos;
 
@@ -72,6 +76,13 @@ public class CryptoChangeSetDto {
 	}
 	public void setMultiPartCount(int multiPartCount) {
 		this.multiPartCount = multiPartCount;
+	}
+
+	public Uid getMultiPartId() {
+		return multiPartId;
+	}
+	public void setMultiPartId(Uid multiPartId) {
+		this.multiPartId = multiPartId;
 	}
 
 	public List<CryptoRepoFileDto> getCryptoRepoFileDtos() {

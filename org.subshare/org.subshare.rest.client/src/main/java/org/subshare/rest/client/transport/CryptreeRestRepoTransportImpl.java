@@ -305,11 +305,22 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 		if (cryptoChangeSetDtoSplitFileManager.getFinalFileCount() != multiPartCount)
 			throw new IllegalStateException("cryptoChangeSetDtoSplitFileManager.getFinalFileCount() != multiPartCount :: " + cryptoChangeSetDtoSplitFileManager.getFinalFileCount() + " != " + multiPartCount);
 
+		final Uid multiPartId;
+		if (multiPartCount > 0) { // should *always* be > 0, but we better check ;-)
+			final CryptoChangeSetDto cryptoChangeSetDto = cryptoChangeSetDtoSplitFileManager.readCryptoChangeSetDto(0);
+			multiPartId = cryptoChangeSetDto.getMultiPartId();
+		} else
+			multiPartId = null;
+
 		for (int multiPartIndex = 0; multiPartIndex < multiPartCount; ++multiPartIndex) {
 			if (cryptoChangeSetDtoSplitFileManager.isCryptoChangeSetDtoImported(multiPartIndex))
 				continue;
 
 			final CryptoChangeSetDto cryptoChangeSetDto = cryptoChangeSetDtoSplitFileManager.readCryptoChangeSetDto(multiPartIndex);
+
+			// The multiPartId should never be null, but it was introduced later, hence we add a null-check for backward-compatibility.
+			if (multiPartId != null && ! multiPartId.equals(cryptoChangeSetDto.getMultiPartId()))
+				throw new IllegalStateException("cryptoChangeSetDto.getMultiPartId() != multiPartId :: " + cryptoChangeSetDto.getMultiPartId() + " != " + multiPartId);
 
 			if (cryptoChangeSetDto.getMultiPartCount() != multiPartCount)
 				throw new IllegalStateException("cryptoChangeSetDto.getMultiPartCount() != multiPartCount :: " + cryptoChangeSetDto.getMultiPartCount() + " != " + multiPartCount);

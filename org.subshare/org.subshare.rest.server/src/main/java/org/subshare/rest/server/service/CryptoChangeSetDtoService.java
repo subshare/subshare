@@ -3,6 +3,7 @@ package org.subshare.rest.server.service;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 
@@ -78,6 +79,9 @@ public class CryptoChangeSetDtoService extends AbstractServiceWithRepoToRepoAuth
 		final CryptoChangeSetDtoSplitFileManager cryptoChangeSetDtoSplitFileManager = CryptoChangeSetDtoSplitFileManager.createInstance(localRepoManager, clientRepositoryId);
 //		cryptoChangeSetDtoSplitFileManager.setCryptoChangeSetDtoTmpDirRandom(true);
 
+		if (! Objects.equals(lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced, cryptoChangeSetDtoSplitFileManager.readLastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced()))
+			cryptoChangeSetDtoSplitFileManager.deleteAll();
+
 		int cryptoChangeSetDtoFinalFileCount = cryptoChangeSetDtoSplitFileManager.getFinalFileCount();
 		if (cryptoChangeSetDtoFinalFileCount > 0)
 			throw new CryptoChangeSetDtoTooLargeException(cryptoChangeSetDtoFinalFileCount);
@@ -112,7 +116,7 @@ public class CryptoChangeSetDtoService extends AbstractServiceWithRepoToRepoAuth
 					.split()
 					.getOutCryptoChangeSetDtos();
 
-			cryptoChangeSetDtoSplitFileManager.writeCryptoChangeSetDtos(splitCryptoChangeSetDtos);
+			cryptoChangeSetDtoSplitFileManager.writeCryptoChangeSetDtos(splitCryptoChangeSetDtos, lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced);
 
 			cryptoChangeSetDtoFinalFileCount = cryptoChangeSetDtoSplitFileManager.getFinalFileCount();
 			if (cryptoChangeSetDtoFinalFileCount < 1)

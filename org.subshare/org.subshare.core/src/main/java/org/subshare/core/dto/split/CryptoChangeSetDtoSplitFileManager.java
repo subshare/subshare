@@ -7,6 +7,7 @@ import static co.codewizards.cloudstore.core.util.IOUtil.*;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Properties;
 import java.util.UUID;
 
 import org.subshare.core.dto.CryptoChangeSetDto;
@@ -27,6 +28,8 @@ public class CryptoChangeSetDtoSplitFileManager {
 	protected static final String CRYPTO_CHANGE_SET_DTO_FILE_SUFFIX = ".xml.gz";
 	protected static final String CRYPTO_CHANGE_SET_DTO_FILE_IMPORTED_SUFFIX = ".imported";
 	protected static final String REPO_TEMP_DIR_NAME = "tmp";
+
+	protected static final String PROP_KEY_LAST_CRYPTO_KEY_SYNC_TO_REMOTE_REPO_LOCAL_REPOSITORY_REVISION_SYNCED = "lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced";
 
 	private final LocalRepoManager localRepoManager;
 	private final UUID remoteRepositoryId;
@@ -109,7 +112,7 @@ public class CryptoChangeSetDtoSplitFileManager {
 		return cryptoChangeSetDtoTmpDir;
 	}
 
-	public void writeCryptoChangeSetDtos(final List<CryptoChangeSetDto> cryptoChangeSetDtos) throws IOException {
+	public void writeCryptoChangeSetDtos(final List<CryptoChangeSetDto> cryptoChangeSetDtos, final Long lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced) throws IOException {
 		assertNotNull(cryptoChangeSetDtos, "cryptoChangeSetDtos");
 
 		if (cryptoChangeSetDtos.isEmpty())
@@ -123,7 +126,7 @@ public class CryptoChangeSetDtoSplitFileManager {
 
 		final CryptoChangeSetDtoIo dtoIo = new CryptoChangeSetDtoIo();
 		int expectedMultiPartIndex = -1;
-		for (CryptoChangeSetDto cryptoChangeSetDto : cryptoChangeSetDtos) {
+		for (final CryptoChangeSetDto cryptoChangeSetDto : cryptoChangeSetDtos) {
 			final int multiPartIndex = cryptoChangeSetDto.getMultiPartIndex();
 			if (++expectedMultiPartIndex != multiPartIndex)
 				throw new IllegalArgumentException(String.format("Wrong multiPartIndex! expectedMultiPartIndex=%s, multiPartIndex=%s", expectedMultiPartIndex, multiPartIndex));
@@ -135,8 +138,40 @@ public class CryptoChangeSetDtoSplitFileManager {
 			dtoIo.serializeWithGz(cryptoChangeSetDto, file);
 		}
 
+		final Properties properties = new Properties();
+		properties.setProperty(PROP_KEY_LAST_CRYPTO_KEY_SYNC_TO_REMOTE_REPO_LOCAL_REPOSITORY_REVISION_SYNCED,
+				lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced == null ? "" : lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced.toString());
+		try (final IOutputStream out = getCryptoChangeSetDtoPropertiesFile(tmpDir).createOutputStream()) {
+			properties.store(castStream(out), null);
+		}
+
 		if (! tmpDir.renameTo(finalDir))
 			throw new IOException(String.format("Renaming '%s' to '%s' failed!", tmpDir.getAbsolutePath(), finalDir.getAbsolutePath()));
+	}
+
+	public Long readLastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced() throws IOException {
+		final File finalDir = getCryptoChangeSetDtoFinalDir();
+		if (! finalDir.exists())
+			return null;
+
+		final File propertiesFile = getCryptoChangeSetDtoPropertiesFile(finalDir);
+		if (! propertiesFile.exists())
+			return null;
+
+		final Properties properties = new Properties();
+		try (final IInputStream in = propertiesFile.createInputStream()) {
+			properties.load(castStream(in));
+		}
+		final String s = properties.getProperty(PROP_KEY_LAST_CRYPTO_KEY_SYNC_TO_REMOTE_REPO_LOCAL_REPOSITORY_REVISION_SYNCED);
+		if (s == null || s.isEmpty())
+			return null;
+
+		final long result = Long.parseLong(s.trim());
+		return result;
+	}
+
+	protected File getCryptoChangeSetDtoPropertiesFile(final File dir) {
+		return dir.createFile(CRYPTO_CHANGE_SET_DTO_FILE_PREFIX + ".properties");
 	}
 
 	protected String getCryptoChangeSetDtoFileName(int multiPartIndex) {
@@ -282,4 +317,5 @@ public class CryptoChangeSetDtoSplitFileManager {
 			}
 		}
 	}
+
 }

@@ -778,8 +778,11 @@ public class CryptoChangeSetDtoSplitter {
 	}
 
 	private void updateMultiPartCount() {
-		for (final CryptoChangeSetDto cryptoChangeSetDto : outCryptoChangeSetDtos)
+		final Uid multiPartId = new Uid();
+		for (final CryptoChangeSetDto cryptoChangeSetDto : outCryptoChangeSetDtos) {
 			cryptoChangeSetDto.setMultiPartCount(outCryptoChangeSetDtos.size());
+			cryptoChangeSetDto.setMultiPartId(multiPartId);
+		}
 	}
 
 	public List<CryptoChangeSetDto> getOutCryptoChangeSetDtos() {
