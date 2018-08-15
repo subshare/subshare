@@ -452,14 +452,14 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 				PGPSignature signature = (PGPSignature) it.next();
 				newPublicKey = mergeKeySignature(newPublicKey, signature);
 			}
-			for (@SuppressWarnings("unchecked") Iterator<?> uit = nullToEmpty(publicKey.getUserIDs()); uit.hasNext(); ) {
+			for (Iterator<?> uit = nullToEmpty(publicKey.getUserIDs()); uit.hasNext(); ) {
 				final String userId = (String) uit.next();
-				for (@SuppressWarnings("unchecked") final Iterator<?> it = nullToEmpty(publicKey.getSignaturesForID(userId)); it.hasNext(); ) {
+				for (final Iterator<?> it = nullToEmpty(publicKey.getSignaturesForID(userId)); it.hasNext(); ) {
 					PGPSignature signature = (PGPSignature) it.next();
 					newPublicKey = mergeUserIdSignature(newPublicKey, userId, signature);
 				}
 			}
-			for (@SuppressWarnings("unchecked") Iterator<?> uit = nullToEmpty(publicKey.getUserAttributes()); uit.hasNext(); ) {
+			for (Iterator<?> uit = nullToEmpty(publicKey.getUserAttributes()); uit.hasNext(); ) {
 				final PGPUserAttributeSubpacketVector userAttribute = (PGPUserAttributeSubpacketVector) uit.next();
 				for (@SuppressWarnings("unchecked") final Iterator<?> it = nullToEmpty(publicKey.getSignaturesForUserAttribute(userAttribute)); it.hasNext(); ) {
 					PGPSignature signature = (PGPSignature) it.next();
@@ -468,13 +468,38 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 			}
 
 			if (newPublicKey != oldPublicKey) {
+				// *1* must *first* remove sub-keys.
+				final List<PGPPublicKey> subKeys = new ArrayList<>();
+				if (publicKey.isMasterKey()) {
+					boolean followingSubKeys = false;
+					for (Iterator<PGPPublicKey> pkIt = publicKeyRing.getPublicKeys(); pkIt.hasNext(); ) {
+						PGPPublicKey pk = pkIt.next();
+						if (followingSubKeys) {
+							if (pk.isMasterKey()) {
+								break;
+							}
+							subKeys.add(pk);
+							publicKeyRing = PGPPublicKeyRing.removePublicKey(publicKeyRing, pk);
+						} else if (oldPublicKey.getKeyID() == pk.getKeyID()) {
+							followingSubKeys = true;
+						}
+					}
+				}
+
+				// *2* remove the master-key.
 				publicKeyRing = PGPPublicKeyRing.removePublicKey(publicKeyRing, oldPublicKey);
 
 				final PGPPublicKey pk = publicKeyRing.getPublicKey(publicKey.getKeyID());
 				if (pk != null)
 				    throw new IllegalStateException("PGPPublicKeyRing.removePublicKey(...) had no effect!");
 
+				// *3* insert the new key (*maybe* a master-key)
 				publicKeyRing = PGPPublicKeyRing.insertPublicKey(publicKeyRing, newPublicKey);
+
+				// *4* re-insert the sub-keys immediately afterwards
+				for (PGPPublicKey subKey : subKeys) {
+					publicKeyRing = PGPPublicKeyRing.insertPublicKey(publicKeyRing, subKey);
+				}
 			}
 		}
 		return publicKeyRing;
