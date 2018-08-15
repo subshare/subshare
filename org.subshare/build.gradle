@@ -59,7 +59,8 @@ allprojects {
 
 	project.ext.subshareVersion = version
 
-	project.ext.bouncycastleVersion = '1.60'
+//	project.ext.bouncycastleVersion = '1.60' // Need newer version because of: https://github.com/subshare/subshare/issues/61
+	project.ext.bouncycastleVersion = '161b03'
 	project.ext.bouncycastleWotVersion = bouncycastleVersion + '.0';
 
 	project.ext.cloudstoreVersion = '0.10.5-SNAPSHOT'
