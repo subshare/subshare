@@ -513,15 +513,23 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 		assertNotNull(removePublicKeysResult, "removePublicKeysResult");
 		assertNotNull(publicKey, "publicKey");
 
-		if (publicKey.isMasterKey())
+		boolean inserted = false;
+		if (publicKey.isMasterKey()) {
 			publicKeyRing = PGPPublicKeyRing.insertPublicKey(publicKeyRing, publicKey);
+			inserted = true;
+		}
 
 		for (final PGPPublicKey pk : removePublicKeysResult.keyId2PublicKey.values()) {
-			if (pk.getKeyID() != publicKey.getKeyID())
+			if (pk.getKeyID() == publicKey.getKeyID()) {
+				if (! inserted) {
+					publicKeyRing = PGPPublicKeyRing.insertPublicKey(publicKeyRing, publicKey);
+					inserted = true;
+				}
+			} else
 				publicKeyRing = PGPPublicKeyRing.insertPublicKey(publicKeyRing, pk);
 		}
 
-		if (! publicKey.isMasterKey())
+		if (! inserted)
 			publicKeyRing = PGPPublicKeyRing.insertPublicKey(publicKeyRing, publicKey);
 
 		return publicKeyRing;
@@ -758,15 +766,23 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 		assertNotNull(removeSecretKeysResult, "removeSecretKeysResult");
 		assertNotNull(secretKey, "secretKey");
 
-		if (secretKey.isMasterKey())
+		boolean inserted = false;
+		if (secretKey.isMasterKey()) {
 			secretKeyRing = PGPSecretKeyRing.insertSecretKey(secretKeyRing, secretKey);
+			inserted = true;
+		}
 
 		for (final PGPSecretKey sk : removeSecretKeysResult.keyId2SecretKey.values()) {
-			if (sk.getKeyID() != secretKey.getKeyID())
+			if (sk.getKeyID() == secretKey.getKeyID()) {
+				if (! inserted) {
+					secretKeyRing = PGPSecretKeyRing.insertSecretKey(secretKeyRing, secretKey);
+					inserted = true;
+				}
+			} else
 				secretKeyRing = PGPSecretKeyRing.insertSecretKey(secretKeyRing, sk);
 		}
 
-		if (! secretKey.isMasterKey())
+		if (! inserted)
 			secretKeyRing = PGPSecretKeyRing.insertSecretKey(secretKeyRing, secretKey);
 
 		return secretKeyRing;
