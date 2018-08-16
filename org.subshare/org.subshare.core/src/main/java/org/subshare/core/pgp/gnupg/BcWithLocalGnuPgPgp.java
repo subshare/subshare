@@ -24,7 +24,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -421,9 +423,13 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 			publicKeyRingCollection = PGPPublicKeyRingCollection.addPublicKeyRing(publicKeyRingCollection, publicKeyRing);
 		else {
 			PGPPublicKeyRing newPublicKeyRing = oldPublicKeyRing;
+			PGPPublicKey masterKey = null;
 			for (final Iterator<?> it = publicKeyRing.getPublicKeys(); it.hasNext(); ) {
 				PGPPublicKey publicKey = (PGPPublicKey) it.next();
-				newPublicKeyRing = mergePublicKey(newPublicKeyRing, publicKey);
+				if (publicKey.isMasterKey())
+					masterKey = publicKey;
+
+				newPublicKeyRing = mergePublicKey(newPublicKeyRing, masterKey, publicKey);
 			}
 
 			if (newPublicKeyRing != oldPublicKeyRing) {
@@ -439,13 +445,17 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 		return publicKeyRingCollection;
 	}
 
-	private PGPPublicKeyRing mergePublicKey(PGPPublicKeyRing publicKeyRing, final PGPPublicKey publicKey) {
+	private PGPPublicKeyRing mergePublicKey(PGPPublicKeyRing publicKeyRing, final PGPPublicKey masterKey, final PGPPublicKey publicKey) {
 		assertNotNull(publicKeyRing, "publicKeyRing");
+		assertNotNull(masterKey, "masterKey");
 		assertNotNull(publicKey, "publicKey");
 
 		PGPPublicKey oldPublicKey = publicKeyRing.getPublicKey(publicKey.getKeyID());
-		if (oldPublicKey == null)
-			publicKeyRing = PGPPublicKeyRing.insertPublicKey(publicKeyRing, publicKey);
+		if (oldPublicKey == null) {
+			final RemovePublicKeysResult removePublicKeysResult = removePublicKeys(publicKeyRing, masterKey.getKeyID());
+			publicKeyRing = removePublicKeysResult.publicKeyRing;
+			publicKeyRing = insertPublicKeys(publicKeyRing, removePublicKeysResult, publicKey);
+		}
 		else {
 			PGPPublicKey newPublicKey = oldPublicKey;
 			for (@SuppressWarnings("unchecked") final Iterator<?> it = nullToEmpty(publicKey.getKeySignatures()); it.hasNext(); ) {
@@ -468,41 +478,94 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 			}
 
 			if (newPublicKey != oldPublicKey) {
-				// *1* must *first* remove sub-keys.
-				final List<PGPPublicKey> subKeys = new ArrayList<>();
-				if (publicKey.isMasterKey()) {
-					boolean followingSubKeys = false;
-					for (Iterator<PGPPublicKey> pkIt = publicKeyRing.getPublicKeys(); pkIt.hasNext(); ) {
-						PGPPublicKey pk = pkIt.next();
-						if (followingSubKeys) {
-							if (pk.isMasterKey()) {
-								break;
-							}
-							subKeys.add(pk);
-							publicKeyRing = PGPPublicKeyRing.removePublicKey(publicKeyRing, pk);
-						} else if (oldPublicKey.getKeyID() == pk.getKeyID()) {
-							followingSubKeys = true;
-						}
-					}
-				}
+				if (publicKey.getKeyID() != oldPublicKey.getKeyID()) // sanity check: ID must never change!
+					throw new IllegalStateException("publicKey.getKeyID() != oldPublicKey.getKeyID()");
 
-				// *2* remove the master-key.
-				publicKeyRing = PGPPublicKeyRing.removePublicKey(publicKeyRing, oldPublicKey);
+				if (publicKey.getKeyID() != newPublicKey.getKeyID()) // sanity check: ID must never change!
+					throw new IllegalStateException("publicKey.getKeyID() != newPublicKey.getKeyID()");
 
-				final PGPPublicKey pk = publicKeyRing.getPublicKey(publicKey.getKeyID());
-				if (pk != null)
+				final RemovePublicKeysResult removePublicKeysResult = removePublicKeys(publicKeyRing, masterKey.getKeyID());
+				publicKeyRing = removePublicKeysResult.publicKeyRing;
+
+				if (! removePublicKeysResult.keyId2PublicKey.containsKey(publicKey.getKeyID())) // sanity check: key may be a sub-key, but must have been removed together with master-key.
+					throw new IllegalStateException("oldPublicKey not found in removePublicKeysResult!");
+
+				final PGPPublicKey oldPk = publicKeyRing.getPublicKey(publicKey.getKeyID());
+				if (oldPk != null) // sanity check: key was really removed.
 				    throw new IllegalStateException("PGPPublicKeyRing.removePublicKey(...) had no effect!");
 
-				// *3* insert the new key (*maybe* a master-key)
-				publicKeyRing = PGPPublicKeyRing.insertPublicKey(publicKeyRing, newPublicKey);
-
-				// *4* re-insert the sub-keys immediately afterwards
-				for (PGPPublicKey subKey : subKeys) {
-					publicKeyRing = PGPPublicKeyRing.insertPublicKey(publicKeyRing, subKey);
-				}
+				publicKeyRing = insertPublicKeys(publicKeyRing, removePublicKeysResult, newPublicKey);
 			}
 		}
 		return publicKeyRing;
+	}
+
+	private PGPPublicKeyRing insertPublicKeys(PGPPublicKeyRing publicKeyRing, final RemovePublicKeysResult removePublicKeysResult, final PGPPublicKey publicKey) {
+		assertNotNull(publicKeyRing, "publicKeyRing");
+		assertNotNull(removePublicKeysResult, "removePublicKeysResult");
+		assertNotNull(publicKey, "publicKey");
+
+		if (publicKey.isMasterKey())
+			publicKeyRing = PGPPublicKeyRing.insertPublicKey(publicKeyRing, publicKey);
+
+		for (final PGPPublicKey pk : removePublicKeysResult.keyId2PublicKey.values()) {
+			if (pk.getKeyID() != publicKey.getKeyID())
+				publicKeyRing = PGPPublicKeyRing.insertPublicKey(publicKeyRing, pk);
+		}
+
+		if (! publicKey.isMasterKey())
+			publicKeyRing = PGPPublicKeyRing.insertPublicKey(publicKeyRing, publicKey);
+
+		return publicKeyRing;
+	}
+
+	private static class RemovePublicKeysResult {
+		public final PGPPublicKeyRing publicKeyRing;
+
+		/**
+		 * Master-key is first entry! Hence it's linked.
+		 */
+		public final LinkedHashMap<Long, PGPPublicKey> keyId2PublicKey;
+
+		public RemovePublicKeysResult(final PGPPublicKeyRing publicKeyRing, final LinkedHashMap<Long, PGPPublicKey> keyId2PublicKey) {
+			this.publicKeyRing = assertNotNull(publicKeyRing, "publicKeyRing");
+			this.keyId2PublicKey = assertNotNull(keyId2PublicKey, "keyId2PublicKey");
+		}
+	}
+
+	private RemovePublicKeysResult removePublicKeys(final PGPPublicKeyRing publicKeyRing, long masterKeyId) {
+		assertNotNull(publicKeyRing, "publicKeyRing");
+		final LinkedHashMap<Long, PGPPublicKey> resultKeyId2PublicKey = new LinkedHashMap<>();
+		PGPPublicKeyRing resultPublicKeyRing = publicKeyRing;
+		final LinkedList<PGPPublicKey> keysToRemove = new LinkedList<>();
+		for (final Iterator<PGPPublicKey> pkIt = publicKeyRing.getPublicKeys(); pkIt.hasNext(); ) {
+			final PGPPublicKey pk = pkIt.next();
+			if (resultKeyId2PublicKey.isEmpty()) { // search for master-key
+				if (pk.getKeyID() == masterKeyId) {
+					resultKeyId2PublicKey.put(pk.getKeyID(), pk);
+					keysToRemove.addFirst(pk);
+				}
+			} else {
+				if (pk.isMasterKey())
+					break;
+
+				resultKeyId2PublicKey.put(pk.getKeyID(), pk);
+				keysToRemove.addFirst(pk);
+			}
+		}
+
+		for (PGPPublicKey pk : keysToRemove)
+			resultPublicKeyRing = PGPPublicKeyRing.removePublicKey(resultPublicKeyRing, pk);
+
+		// remove duplicates, if there are some
+		if (! resultKeyId2PublicKey.isEmpty()) {
+			for (final Iterator<PGPPublicKey> pkIt = resultPublicKeyRing.getPublicKeys(); pkIt.hasNext(); ) {
+				final PGPPublicKey pk = pkIt.next();
+				if (resultKeyId2PublicKey.containsKey(pk.getKeyID()))
+					resultPublicKeyRing = PGPPublicKeyRing.removePublicKey(resultPublicKeyRing, pk);
+			}
+		}
+		return new RemovePublicKeysResult(resultPublicKeyRing, resultKeyId2PublicKey);
 	}
 
 	private PGPPublicKey mergeKeySignature(PGPPublicKey publicKey, final PGPSignature signature) {
@@ -648,9 +711,13 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 			secretKeyRingCollection = PGPSecretKeyRingCollection.addSecretKeyRing(secretKeyRingCollection, secretKeyRing);
 		else {
 			PGPSecretKeyRing newSecretKeyRing = oldSecretKeyRing;
+			PGPSecretKey masterKey = null;
 			for (final Iterator<?> it = secretKeyRing.getSecretKeys(); it.hasNext(); ) {
 				PGPSecretKey secretKey = (PGPSecretKey) it.next();
-				newSecretKeyRing = mergeSecretKey(newSecretKeyRing, secretKey);
+				if (secretKey.isMasterKey())
+					masterKey = secretKey;
+
+				newSecretKeyRing = mergeSecretKey(newSecretKeyRing, masterKey, secretKey);
 			}
 
 			if (newSecretKeyRing != oldSecretKeyRing) {
@@ -661,16 +728,89 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 		return secretKeyRingCollection;
 	}
 
-	private PGPSecretKeyRing mergeSecretKey(PGPSecretKeyRing secretKeyRing, final PGPSecretKey secretKey) {
+	private PGPSecretKeyRing mergeSecretKey(PGPSecretKeyRing secretKeyRing, final PGPSecretKey masterKey, final PGPSecretKey secretKey) {
 		assertNotNull(secretKeyRing, "secretKeyRing");
+		assertNotNull(masterKey, "masterKey");
 		assertNotNull(secretKey, "secretKey");
 
 		PGPSecretKey oldSecretKey = secretKeyRing.getSecretKey(secretKey.getKeyID());
-		if (oldSecretKey == null)
-			secretKeyRing = PGPSecretKeyRing.insertSecretKey(secretKeyRing, secretKey);
+		if (oldSecretKey == null) {
+//			secretKeyRing = PGPSecretKeyRing.insertSecretKey(secretKeyRing, secretKey);
+			final RemoveSecretKeysResult removeSecretKeysResult = removeSecretKeys(secretKeyRing, masterKey.getKeyID());
+			secretKeyRing = removeSecretKeysResult.secretKeyRing;
+			secretKeyRing = insertSecretKeys(secretKeyRing, removeSecretKeysResult, secretKey);
+		}
 		// else: there is nothing to merge - a secret key is immutable. btw. it contains a public key - but without signatures.
 
 		return secretKeyRing;
+	}
+
+	private PGPSecretKeyRing insertSecretKeys(PGPSecretKeyRing secretKeyRing, final RemoveSecretKeysResult removeSecretKeysResult, final PGPSecretKey secretKey) {
+		assertNotNull(secretKeyRing, "secretKeyRing");
+		assertNotNull(removeSecretKeysResult, "removeSecretKeysResult");
+		assertNotNull(secretKey, "secretKey");
+
+		if (secretKey.isMasterKey())
+			secretKeyRing = PGPSecretKeyRing.insertSecretKey(secretKeyRing, secretKey);
+
+		for (final PGPSecretKey sk : removeSecretKeysResult.keyId2SecretKey.values()) {
+			if (sk.getKeyID() != secretKey.getKeyID())
+				secretKeyRing = PGPSecretKeyRing.insertSecretKey(secretKeyRing, sk);
+		}
+
+		if (! secretKey.isMasterKey())
+			secretKeyRing = PGPSecretKeyRing.insertSecretKey(secretKeyRing, secretKey);
+
+		return secretKeyRing;
+	}
+
+	private static class RemoveSecretKeysResult {
+		public final PGPSecretKeyRing secretKeyRing;
+
+		/**
+		 * Master-key is first entry! Hence it's linked.
+		 */
+		public final LinkedHashMap<Long, PGPSecretKey> keyId2SecretKey;
+
+		public RemoveSecretKeysResult(final PGPSecretKeyRing secretKeyRing, final LinkedHashMap<Long, PGPSecretKey> keyId2SecretKey) {
+			this.secretKeyRing = assertNotNull(secretKeyRing, "secretKeyRing");
+			this.keyId2SecretKey = assertNotNull(keyId2SecretKey, "keyId2SecretKey");
+		}
+	}
+
+	private RemoveSecretKeysResult removeSecretKeys(final PGPSecretKeyRing secretKeyRing, long masterKeyId) {
+		assertNotNull(secretKeyRing, "secretKeyRing");
+		final LinkedHashMap<Long, PGPSecretKey> resultKeyId2SecretKey = new LinkedHashMap<>();
+		PGPSecretKeyRing resultSecretKeyRing = secretKeyRing;
+		final LinkedList<PGPSecretKey> keysToRemove = new LinkedList<>();
+		for (final Iterator<PGPSecretKey> skIt = secretKeyRing.getSecretKeys(); skIt.hasNext(); ) {
+			final PGPSecretKey sk = skIt.next();
+			if (resultKeyId2SecretKey.isEmpty()) { // search for master-key
+				if (sk.getKeyID() == masterKeyId) {
+					resultKeyId2SecretKey.put(sk.getKeyID(), sk);
+					keysToRemove.addFirst(sk);
+				}
+			} else {
+				if (sk.isMasterKey())
+					break;
+
+				resultKeyId2SecretKey.put(sk.getKeyID(), sk);
+				keysToRemove.addFirst(sk);
+			}
+		}
+
+		for (PGPSecretKey sk : keysToRemove)
+			resultSecretKeyRing = PGPSecretKeyRing.removeSecretKey(resultSecretKeyRing, sk);
+
+		// remove duplicates, if there are some
+		if (! resultKeyId2SecretKey.isEmpty()) {
+			for (final Iterator<PGPSecretKey> skIt = resultSecretKeyRing.getSecretKeys(); skIt.hasNext(); ) {
+				final PGPSecretKey sk = skIt.next();
+				if (resultKeyId2SecretKey.containsKey(sk.getKeyID()))
+					resultSecretKeyRing = PGPSecretKeyRing.removeSecretKey(resultSecretKeyRing, sk);
+			}
+		}
+		return new RemoveSecretKeysResult(resultSecretKeyRing, resultKeyId2SecretKey);
 	}
 
 	public BcPgpKey getBcPgpKeyOrFail(final PgpKey pgpKey) {
