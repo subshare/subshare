@@ -487,8 +487,16 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 				final RemovePublicKeysResult removePublicKeysResult = removePublicKeys(publicKeyRing, masterKey.getKeyID());
 				publicKeyRing = removePublicKeysResult.publicKeyRing;
 
-				if (! removePublicKeysResult.keyId2PublicKey.containsKey(publicKey.getKeyID())) // sanity check: key may be a sub-key, but must have been removed together with master-key.
-					throw new IllegalStateException("oldPublicKey not found in removePublicKeysResult!");
+				if (! removePublicKeysResult.keyId2PublicKey.containsKey(publicKey.getKeyID())) {
+					// sanity check: key may be a sub-key, but must have been removed together with master-key.
+					// This might have happened in the past due to the bug https://github.com/subshare/subshare/issues/70
+					// Hence, we only log a warning and make sure that we delete the old key.
+					Exception x = new IllegalStateException(String.format(
+							"oldPublicKey %s not found in removePublicKeysResult!",
+							new PgpKeyId(publicKey.getKeyID()).toHumanString()));
+					logger.warn(x.toString(), x);
+					publicKeyRing = PGPPublicKeyRing.removePublicKey(publicKeyRing, oldPublicKey);
+				}
 
 				final PGPPublicKey oldPk = publicKeyRing.getPublicKey(publicKey.getKeyID());
 				if (oldPk != null) // sanity check: key was really removed.
