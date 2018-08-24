@@ -351,8 +351,15 @@ public class CryptreeImpl extends AbstractCryptree {
 		if (lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced != null) {
 			resyncMode = lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced.longValue() != lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced();
 			if (resyncMode) {
-				logger.warn("getCryptoChangeSetDtoWithCryptoRepoFiles: Enabling resyncMode! lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced={} overwrites lastCryptoKeySyncToRemoteRepo.localRepositoryRevisionSynced={}",
+				lastCryptoKeySyncToRemoteRepo.setResyncMode(true);
+				logger.warn("prepareGetCryptoChangeSetDtoWithCryptoRepoFiles: Enabling resyncMode! lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced={} overwrites lastCryptoKeySyncToRemoteRepo.localRepositoryRevisionSynced={}",
 						lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced, lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced());
+			} else {
+				if (lastCryptoKeySyncToRemoteRepo.isResyncMode()) {
+					resyncMode = true;
+					logger.warn("prepareGetCryptoChangeSetDtoWithCryptoRepoFiles: resyncMode still active! lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced={}",
+							lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced);
+				}
 			}
 			lastCryptoKeySyncToRemoteRepo.setLocalRepositoryRevisionSynced(lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced);
 		}
@@ -393,6 +400,7 @@ public class CryptreeImpl extends AbstractCryptree {
 
 		lastCryptoKeySyncToRemoteRepo.setLocalRepositoryRevisionSynced(localRepositoryRevisionInProgress);
 		lastCryptoKeySyncToRemoteRepo.setLocalRepositoryRevisionInProgress(-1);
+		lastCryptoKeySyncToRemoteRepo.setResyncMode(false);
 	}
 
 	@Override

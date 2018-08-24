@@ -27,6 +27,7 @@ public class LastCryptoKeySyncToRemoteRepo extends Entity {
 	private RemoteRepository remoteRepository;
 	private long localRepositoryRevisionSynced = -1;
 	private long localRepositoryRevisionInProgress = -1;
+	private boolean resyncMode;
 
 	public RemoteRepository getRemoteRepository() {
 		return remoteRepository;
@@ -68,5 +69,12 @@ public class LastCryptoKeySyncToRemoteRepo extends Entity {
 					this.localRepositoryRevisionInProgress, revision);
 			this.localRepositoryRevisionInProgress = revision;
 		}
+	}
+
+	public boolean isResyncMode() {
+		return resyncMode;
+	}
+	public void setResyncMode(boolean resyncMode) {
+		this.resyncMode = resyncMode;
 	}
 }
