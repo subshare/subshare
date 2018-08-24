@@ -338,8 +338,6 @@ public class CryptreeImpl extends AbstractCryptree {
 		return serverRepositoryId;
 	}
 
-	private boolean resyncMode;
-
 	@Override
 	public void prepareGetCryptoChangeSetDtoWithCryptoRepoFiles(Long lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced) {
 		claimRepositoryOwnershipIfUnowned();
@@ -349,14 +347,13 @@ public class CryptreeImpl extends AbstractCryptree {
 		final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo = getLastCryptoKeySyncToRemoteRepo();
 
 		if (lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced != null) {
-			resyncMode = lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced.longValue() != lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced();
+			boolean resyncMode = lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced.longValue() != lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced();
 			if (resyncMode) {
 				lastCryptoKeySyncToRemoteRepo.setResyncMode(true);
 				logger.warn("prepareGetCryptoChangeSetDtoWithCryptoRepoFiles: Enabling resyncMode! lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced={} overwrites lastCryptoKeySyncToRemoteRepo.localRepositoryRevisionSynced={}",
 						lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced, lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced());
 			} else {
 				if (lastCryptoKeySyncToRemoteRepo.isResyncMode()) {
-					resyncMode = true;
 					logger.warn("prepareGetCryptoChangeSetDtoWithCryptoRepoFiles: resyncMode still active! lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced={}",
 							lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced);
 				}
@@ -1890,7 +1887,7 @@ public class CryptreeImpl extends AbstractCryptree {
 		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.CRYPTO_CONFIG_PROP_SET_DTO);
 		final Collection<CryptoConfigPropSet> entities = dao.getCryptoConfigPropSetsChangedAfterExclLastSyncFromRepositoryId(
 				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced(),
-				resyncMode ? NULL_UUID : getRemoteRepositoryIdOrFail());
+				lastCryptoKeySyncToRemoteRepo.isResyncMode() ? NULL_UUID : getRemoteRepositoryIdOrFail());
 
 		// minimize unnecessary JOINs in potential queries for lazy-loading of not-yet-resolved relations. Should not be necessary, but is :-(
 		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.SIGNATURE);
@@ -1942,7 +1939,7 @@ public class CryptreeImpl extends AbstractCryptree {
 		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.HISTO_FRAME_DTO);
 		final Collection<HistoFrame> entities = dao.getHistoFramesChangedAfterExclLastSyncFromRepositoryId(
 				lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced(),
-				resyncMode ? NULL_UUID : getRemoteRepositoryIdOrFail());
+				lastCryptoKeySyncToRemoteRepo.isResyncMode() ? NULL_UUID : getRemoteRepositoryIdOrFail());
 
 		// minimize unnecessary JOINs in potential queries for lazy-loading of not-yet-resolved relations. Should not be necessary, but is :-(
 		pm().getFetchPlan().setGroups(FetchPlan.DEFAULT, FetchGroupConst.SIGNATURE);
@@ -1953,7 +1950,7 @@ public class CryptreeImpl extends AbstractCryptree {
 	}
 
 	private void populateChangedHistoCryptoRepoFileDtos(final CryptoChangeSetDto cryptoChangeSetDto, final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {
-		if (! isOnServer() && ! resyncMode)
+		if (! isOnServer() && ! lastCryptoKeySyncToRemoteRepo.isResyncMode())
 			return; // We *up*load them exclusively individually. The CryptoChangeSet is only used for *down*load.
 
 		final long beginTimestamp = System.currentTimeMillis();
@@ -1973,14 +1970,14 @@ public class CryptreeImpl extends AbstractCryptree {
 		cryptoChangeSetDto.setHistoCryptoRepoFileDtos(
 				dao.getHistoCryptoRepoFileDtosChangedAfterExclLastSyncFromRepositoryId(
 						lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced(),
-						resyncMode ? NULL_UUID : getRemoteRepositoryIdOrFail()));
+						lastCryptoKeySyncToRemoteRepo.isResyncMode() ? NULL_UUID : getRemoteRepositoryIdOrFail()));
 
 		logger.debug("populateChangedHistoCryptoRepoFileDtos: Took {} ms for {} entities.", System.currentTimeMillis() - beginTimestamp,
 				cryptoChangeSetDto.getHistoCryptoRepoFileDtos().size());
 	}
 
 	private void populateChangedCurrentHistoCryptoRepoFileDtos(final CryptoChangeSetDto cryptoChangeSetDto, final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo) {
-		if (! isOnServer() && ! resyncMode)
+		if (! isOnServer() && ! lastCryptoKeySyncToRemoteRepo.isResyncMode())
 			return; // We *up*load them exclusively individually. The CryptoChangeSet is only used for *down*load.
 
 		final long beginTimestamp = System.currentTimeMillis();
@@ -2000,7 +1997,7 @@ public class CryptreeImpl extends AbstractCryptree {
 		cryptoChangeSetDto.setCurrentHistoCryptoRepoFileDtos(
 				dao.getCurrentHistoCryptoRepoFileDtosChangedAfterExclLastSyncFromRepositoryId(
 						lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced(),
-						resyncMode ? NULL_UUID : getRemoteRepositoryIdOrFail()));
+						lastCryptoKeySyncToRemoteRepo.isResyncMode() ? NULL_UUID : getRemoteRepositoryIdOrFail()));
 
 		logger.debug("populateChangedCurrentHistoCryptoRepoFileDtos: Took {} ms for {} entities.", System.currentTimeMillis() - beginTimestamp,
 				cryptoChangeSetDto.getCurrentHistoCryptoRepoFileDtos().size());
@@ -2041,7 +2038,7 @@ public class CryptreeImpl extends AbstractCryptree {
 		cryptoChangeSetDto.setCryptoRepoFileDtos(
 				cryptoRepoFileDao.getCryptoRepoFileDtosChangedAfterExclLastSyncFromRepositoryId(
 						lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced(),
-						resyncMode ? NULL_UUID : getRemoteRepositoryIdOrFail()));
+						lastCryptoKeySyncToRemoteRepo.isResyncMode() ? NULL_UUID : getRemoteRepositoryIdOrFail()));
 
 		logger.debug("populateChangedCryptoRepoFileDtos: Took {} ms for {} entities.", System.currentTimeMillis() - beginTimestamp,
 				cryptoChangeSetDto.getCryptoRepoFileDtos().size());
@@ -2064,7 +2061,7 @@ public class CryptreeImpl extends AbstractCryptree {
 		cryptoChangeSetDto.setCryptoLinkDtos(
 				cryptoLinkDao.getCryptoLinkDtosChangedAfterExclLastSyncFromRepositoryId(
 						lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced(),
-						resyncMode ? NULL_UUID : getRemoteRepositoryIdOrFail()));
+						lastCryptoKeySyncToRemoteRepo.isResyncMode() ? NULL_UUID : getRemoteRepositoryIdOrFail()));
 
 		logger.debug("populateChangedCryptoLinkDtos: Took {} ms for {} entities.", System.currentTimeMillis() - beginTimestamp,
 				cryptoChangeSetDto.getCryptoLinkDtos().size());
@@ -2087,7 +2084,7 @@ public class CryptreeImpl extends AbstractCryptree {
 		cryptoChangeSetDto.setCryptoKeyDtos(
 				cryptoKeyDao.getCryptoKeyDtosChangedAfterExclLastSyncFromRepositoryId(
 						lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced(),
-						resyncMode ? NULL_UUID : getRemoteRepositoryIdOrFail()));
+						lastCryptoKeySyncToRemoteRepo.isResyncMode() ? NULL_UUID : getRemoteRepositoryIdOrFail()));
 
 		logger.debug("populateChangedCryptoKeyDtos: Took {} ms for {} entities.", System.currentTimeMillis() - beginTimestamp,
 				cryptoChangeSetDto.getCryptoKeyDtos().size());
