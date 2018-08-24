@@ -2,6 +2,7 @@ package org.subshare.local.persistence;
 
 import static co.codewizards.cloudstore.core.util.Util.*;
 
+import javax.jdo.annotations.Column;
 import javax.jdo.annotations.NullValue;
 import javax.jdo.annotations.PersistenceCapable;
 import javax.jdo.annotations.Persistent;
@@ -17,16 +18,18 @@ import co.codewizards.cloudstore.local.persistence.LocalRepository;
 import co.codewizards.cloudstore.local.persistence.RemoteRepository;
 
 @PersistenceCapable
-@Unique(name="LastCryptoKeySyncToRemoteRepo_remoteRepository", members="remoteRepository")
-@Query(name="getLastCryptoKeySyncToRemoteRepo_remoteRepository", value="SELECT UNIQUE WHERE this.remoteRepository == :remoteRepository")
+@Unique(name = "LastCryptoKeySyncToRemoteRepo_remoteRepository", members = "remoteRepository")
+@Query(name = "getLastCryptoKeySyncToRemoteRepo_remoteRepository", value = "SELECT UNIQUE WHERE this.remoteRepository == :remoteRepository")
 public class LastCryptoKeySyncToRemoteRepo extends Entity {
 
 	private static final Logger logger = LoggerFactory.getLogger(LastCryptoKeySyncToRemoteRepo.class);
 
-	@Persistent(nullValue=NullValue.EXCEPTION)
+	@Persistent(nullValue = NullValue.EXCEPTION)
 	private RemoteRepository remoteRepository;
 	private long localRepositoryRevisionSynced = -1;
 	private long localRepositoryRevisionInProgress = -1;
+
+	@Column(defaultValue = "N")
 	private boolean resyncMode;
 
 	public RemoteRepository getRemoteRepository() {
