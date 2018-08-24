@@ -2972,7 +2972,7 @@ public class CryptreeImpl extends AbstractCryptree {
 			return null;
 
 		final long result = lcksfrr.getRemoteRepositoryRevisionSynced();
-		return result < 0 ? null : result;
+		return result == Long.MIN_VALUE ? null : result;
 	}
 
 	protected void setLastCryptoKeySyncFromRemoteRepoRemoteRepositoryRevisionSynced(long revision) {

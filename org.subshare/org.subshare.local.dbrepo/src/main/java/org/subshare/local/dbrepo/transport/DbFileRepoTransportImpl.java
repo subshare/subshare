@@ -600,7 +600,7 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 
 			final long result = lcksfrr.getRemoteRepositoryRevisionSynced();
 			tx.commit();
-			return result < 0 ? null : result;
+			return result == Long.MIN_VALUE ? null : result;
 		}
 	}
 

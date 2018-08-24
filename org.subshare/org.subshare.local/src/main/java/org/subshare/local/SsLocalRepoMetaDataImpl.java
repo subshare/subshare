@@ -557,9 +557,8 @@ public class SsLocalRepoMetaDataImpl extends LocalRepoMetaDataImpl implements Ss
 		try (final LocalRepoTransaction tx = getLocalRepoManagerOrFail().beginWriteTransaction();) {
 			final LastCryptoKeySyncFromRemoteRepoDao dao = tx.getDao(LastCryptoKeySyncFromRemoteRepoDao.class);
 			for (LastCryptoKeySyncFromRemoteRepo lastCryptoKeySyncFromRemoteRepo : dao.getObjects()) {
-				// We set it to 0 and not to -1, because -1 would not be sent to the server (it is treated as null)
-				// and because we can very safely assume that revision 0 was always properly synced.
-				lastCryptoKeySyncFromRemoteRepo.setRemoteRepositoryRevisionSynced(0);
+				// We set it to -1, because the 1st revision is 0.
+				lastCryptoKeySyncFromRemoteRepo.setRemoteRepositoryRevisionSynced(-1);
 				try {
 					CryptoChangeSetDtoSplitFileManager
 					.createInstance(getLocalRepoManagerOrFail(), lastCryptoKeySyncFromRemoteRepo.getRemoteRepository().getRepositoryId())

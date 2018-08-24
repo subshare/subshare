@@ -25,7 +25,7 @@ public class LastCryptoKeySyncFromRemoteRepo extends Entity {
 
 	@Persistent(nullValue=NullValue.EXCEPTION)
 	private RemoteRepository remoteRepository;
-	private long remoteRepositoryRevisionSynced = -1;
+	private long remoteRepositoryRevisionSynced = Long.MIN_VALUE;
 
 	public RemoteRepository getRemoteRepository() {
 		return remoteRepository;

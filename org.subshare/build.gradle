@@ -63,8 +63,8 @@ allprojects {
 	project.ext.bouncycastleVersion = '161b03'
 	project.ext.bouncycastleWotVersion = bouncycastleVersion + '.0';
 
-//	project.ext.cloudstoreVersion = '0.10.6-SNAPSHOT'
-	project.ext.cloudstoreVersion = '0.10.5'
+	project.ext.cloudstoreVersion = '0.10.6-SNAPSHOT'
+//	project.ext.cloudstoreVersion = '0.10.6'
 	project.ext.slf4jVersion = '1.7.7'
 	project.ext.logbackVersion = '1.0.13'
 
