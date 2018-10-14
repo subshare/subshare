@@ -2599,9 +2599,12 @@ public class CryptreeImpl extends AbstractCryptree {
 		if (collisions.isEmpty())
 			return;
 
+		logger.info("repairDeleteCollisionsIfNeeded: Deleting {} collisions.", collisions.size());
+
 		final UserRepoKey userRepoKey = getUserRepoKeyOrFail(null, PermissionType.write);
 
 		for (final Collision collision : collisions) {
+			logger.info("repairDeleteCollisionsIfNeeded: Deleting: {}", collision);
 			final Uid collisionId = collision.getCollisionId();
 			DeletedCollision deletedCollision = dcDao.getDeletedCollision(collisionId);
 			if (deletedCollision == null) // should always be the case -- but better be fault-tolerant!

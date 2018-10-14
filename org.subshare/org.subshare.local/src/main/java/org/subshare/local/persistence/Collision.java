@@ -344,4 +344,15 @@ public class Collision extends Entity implements WriteProtected, AutoTrackLocalR
 	public PermissionType getPermissionTypeRequiredForWrite() {
 		return PermissionType.write;
 	}
+
+	@Override
+	protected String toString_getProperties() {
+		final Uid histoCryptoRepoFileId1 = histoCryptoRepoFile1 == null ? null : histoCryptoRepoFile1.getHistoCryptoRepoFileId();
+		final Uid histoCryptoRepoFileId2 = histoCryptoRepoFile2 == null ? null : histoCryptoRepoFile2.getHistoCryptoRepoFileId();
+
+		return super.toString_getProperties() + ", collisionId=" + collisionId
+				+ ", histoCryptoRepoFileId1=" + histoCryptoRepoFileId1
+				+ ", histoCryptoRepoFileId2=" + histoCryptoRepoFileId2
+				+ ", duplicateCryptoRepoFileId=" + duplicateCryptoRepoFileId;
+	}
 }
