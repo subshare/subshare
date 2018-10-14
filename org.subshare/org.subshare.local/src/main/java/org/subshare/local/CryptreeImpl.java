@@ -2585,11 +2585,12 @@ public class CryptreeImpl extends AbstractCryptree {
 	}
 
 	protected void repairDeleteCollisionsIfNeeded() {
-		final Date[] deleteCollisionsFromInclToExclRange = RepairDeleteCollisionConfig.getDeleteCollisionsFromInclToExclRange();
+		final LocalRepoTransaction tx = getTransactionOrFail();
+		final File localRoot = tx.getLocalRepoManager().getLocalRoot();
+		final Date[] deleteCollisionsFromInclToExclRange = RepairDeleteCollisionConfig.getInstance(localRoot).getDeleteCollisionsFromInclToExclRange();
 		if (deleteCollisionsFromInclToExclRange == null)
 			return;
 
-		final LocalRepoTransaction tx = getTransactionOrFail();
 		final CollisionDao cDao = tx.getDao(CollisionDao.class);
 		final DeletedCollisionDao dcDao = tx.getDao(DeletedCollisionDao.class);
 
@@ -2638,12 +2639,13 @@ public class CryptreeImpl extends AbstractCryptree {
 
 	private void convertPreliminaryCollisions() {
 		final LocalRepoTransaction tx = getTransactionOrFail();
+		final File localRoot = tx.getLocalRepoManager().getLocalRoot();
 		final PreliminaryCollisionDao pcDao = tx.getDao(PreliminaryCollisionDao.class);
 		final RepoFileDao rfDao = tx.getDao(RepoFileDao.class);
 		final CryptoRepoFileDao crfDao = tx.getDao(CryptoRepoFileDao.class);
 
 		final Collection<PreliminaryCollision> preliminaryCollisions = pcDao.getObjects();
-		if (RepairDeleteCollisionConfig.isCreateCollisionSuppressed()) {
+		if (RepairDeleteCollisionConfig.getInstance(localRoot).isCreateCollisionSuppressed()) {
 			logger.warn("convertPreliminaryCollisions: SKIPPED (createCollisionSuppressed=true): Deleting preliminaryCollisions={}", preliminaryCollisions);
 			pcDao.deletePersistentAll(preliminaryCollisions);
 			return;

@@ -1,5 +1,7 @@
 package org.subshare.core.repair;
 
+import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+
 import java.util.Date;
 
 import org.slf4j.Logger;
@@ -7,6 +9,8 @@ import org.slf4j.LoggerFactory;
 
 import co.codewizards.cloudstore.core.config.Config;
 import co.codewizards.cloudstore.core.config.ConfigImpl;
+import co.codewizards.cloudstore.core.oio.File;
+import co.codewizards.cloudstore.core.util.ISO8601;
 
 public class RepairDeleteCollisionConfig {
 
@@ -25,13 +29,15 @@ public class RepairDeleteCollisionConfig {
 	 */
 	public static final String CONFIG_KEY_DELETE_COLLISIONS_TO = "repair.deleteCollisions.to";
 
-//	private static final class DeleteCollisionConfigHolder {
-//		public static final RepairDeleteCollisionConfig instance = new RepairDeleteCollisionConfig();
-//	}
-//
-//	public static RepairDeleteCollisionConfig getInstance() {
-//
-//	}
+	protected final File localRoot;
+
+	protected RepairDeleteCollisionConfig(final File localRoot) {
+		this.localRoot = assertNotNull(localRoot, "localRoot");
+	}
+
+	public static RepairDeleteCollisionConfig getInstance(final File localRoot) {
+		return new RepairDeleteCollisionConfig(assertNotNull(localRoot, "localRoot"));
+	}
 
 	/**
 	 * Gets the time (including) from which on collisions are deleted.
@@ -41,9 +47,13 @@ public class RepairDeleteCollisionConfig {
 	 * other non-<code>null</code>, a warning is logged -- and nothing done.
 	 * @return the time (including) from which on this collisions are deleted. May be <code>null</code>.
 	 */
-	public static Date getDeleteCollisionsFrom() {
-		Config config = ConfigImpl.getInstance();
-		return config.getPropertyAsDate(CONFIG_KEY_DELETE_COLLISIONS_FROM, null);
+	public Date getDeleteCollisionsFrom() {
+		final Config config = ConfigImpl.getInstanceForDirectory(localRoot);
+		final String configKey = CONFIG_KEY_DELETE_COLLISIONS_FROM;
+		final Date result = config.getPropertyAsDate(configKey, null);
+		logger.info("getDeleteCollisionsFrom: localRoot='{}' configKey='{}' result={}",
+				localRoot, configKey, (result == null ? null : ISO8601.formatDate(result)));
+		return result;
 	}
 
 	/**
@@ -54,12 +64,16 @@ public class RepairDeleteCollisionConfig {
 	 * other non-<code>null</code>, a warning is logged -- and nothing done.
 	 * @return the time (excluding) until which collisions are deleted. May be <code>null</code>.
 	 */
-	public static Date getDeleteCollisionsTo() {
-		Config config = ConfigImpl.getInstance();
-		return config.getPropertyAsDate(CONFIG_KEY_DELETE_COLLISIONS_TO, null);
+	public Date getDeleteCollisionsTo() {
+		final Config config = ConfigImpl.getInstanceForDirectory(localRoot);
+		final String configKey = CONFIG_KEY_DELETE_COLLISIONS_TO;
+		final Date result = config.getPropertyAsDate(configKey, null);
+		logger.info("getDeleteCollisionsTo: localRoot='{}' configKey='{}' result={}",
+				localRoot, configKey, (result == null ? null : ISO8601.formatDate(result)));
+		return result;
 	}
 
-	public static final boolean isCreateCollisionSuppressed() {
+	public boolean isCreateCollisionSuppressed() {
 		final Date deleteCollisionsFrom = getDeleteCollisionsFrom();
 		final Date deleteCollisionsTo = getDeleteCollisionsTo();
 		if (deleteCollisionsFrom == null && deleteCollisionsTo == null)
@@ -90,7 +104,7 @@ public class RepairDeleteCollisionConfig {
 	 * The returned array always contains 2 non-<code>null</code> elements. If one of the two dates
 	 * is <code>null</code>, this method returns <code>null</code>, i.e. no array at all.
 	 */
-	public static Date[] getDeleteCollisionsFromInclToExclRange() {
+	public Date[] getDeleteCollisionsFromInclToExclRange() {
 		final Date deleteCollisionsFrom = getDeleteCollisionsFrom();
 		final Date deleteCollisionsTo = getDeleteCollisionsTo();
 		if (deleteCollisionsFrom == null && deleteCollisionsTo == null)

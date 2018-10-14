@@ -267,7 +267,8 @@ public class CryptreeFileRepoTransportImpl extends FileRepoTransport implements 
 		if (localPath == null)
 			assertNotNull(file, "localPath/file");
 
-		if (RepairDeleteCollisionConfig.isCreateCollisionSuppressed()) {
+		final File localRoot = localRepoManager.getLocalRoot();
+		if (RepairDeleteCollisionConfig.getInstance(localRoot).isCreateCollisionSuppressed()) {
 			logger.warn("createAndPersistPreliminaryCollision: SKIPPED (createCollisionSuppressed=true): localRoot='{}' localRepositoryId={} file='{}' localPath='{}' cryptoRepoFileId={}",
 					localRepoManager.getLocalRoot(), getRepositoryId(), (file == null ? "" : file.getAbsolutePath()),
 					(localPath == null ? "" : localPath), cryptoRepoFileId);
