@@ -343,6 +343,7 @@ public class CryptreeImpl extends AbstractCryptree {
 		claimRepositoryOwnershipIfUnowned();
 		processUserRepoKeyPublicKeyReplacementRequests();
 		createMissingUserIdentities();
+		repairDeleteCollisionsIfNeeded();
 		final LocalRepository localRepository = getTransactionOrFail().getDao(LocalRepositoryDao.class).getLocalRepositoryOrFail();
 		final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo = getLastCryptoKeySyncToRemoteRepo();
 
