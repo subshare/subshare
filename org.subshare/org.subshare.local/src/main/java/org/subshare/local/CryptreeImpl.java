@@ -2586,6 +2586,9 @@ public class CryptreeImpl extends AbstractCryptree {
 	}
 
 	protected void repairDeleteCollisionsIfNeeded() {
+		if (isOnServer())
+			return;
+
 		final LocalRepoTransaction tx = getTransactionOrFail();
 		final File localRoot = tx.getLocalRepoManager().getLocalRoot();
 		final Date[] deleteCollisionsFromInclToExclRange = RepairDeleteCollisionConfig.getInstance(localRoot).getDeleteCollisionsFromInclToExclRange();

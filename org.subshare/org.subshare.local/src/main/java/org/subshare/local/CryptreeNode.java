@@ -149,6 +149,7 @@ public class CryptreeNode {
 		this.parent = parent;
 		this.context = context != null ? context
 				: (parent != null ? parent.getContext() : child.getContext());
+		assertNotNull(this.context, "this.context");
 
 		this.repoFile = repoFile != null ? repoFile : cryptoRepoFile.getRepoFile();
 		this.cryptoRepoFile = cryptoRepoFile;
@@ -394,7 +395,7 @@ public class CryptreeNode {
 				// ... if https://github.com/subshare/subshare/issues/45 is fixed, now, then it can't be so wrong ;-)
 			}
 		}
-		
+
 		if (histoCryptoRepoFile == null) {
 			histoCryptoRepoFile = new HistoCryptoRepoFile();
 			histoCryptoRepoFile.setCryptoRepoFile(cryptoRepoFile);
@@ -403,27 +404,27 @@ public class CryptreeNode {
 			final Date deleted = cryptoRepoFile.getDeleted();
 			histoCryptoRepoFile.setDeleted(deleted);
 			histoCryptoRepoFile.setDeletedByIgnoreRule(cryptoRepoFile.isDeletedByIgnoreRule());
-	
+
 			final PlainCryptoKey plainCryptoKey = getActivePlainCryptoKeyOrCreate(CryptoKeyRole.dataKey, CipherOperationMode.ENCRYPT);
 			final CryptoKey cryptoKey = assertNotNull(plainCryptoKey, "plainCryptoKey").getCryptoKey();
 			histoCryptoRepoFile.setCryptoKey(assertNotNull(cryptoKey, "plainCryptoKey.cryptoKey"));
-	
+
 			if (! cryptoKey.equals(cryptoRepoFile.getCryptoKey())) // sanity check: the key should not have changed inbetween! otherwise we might need a new CryptoChangeSet-upload to the server!!!
 				throw new IllegalStateException(String.format("cryptoKey != cryptoRepoFile.cryptoKey :: %s != %s",
 						cryptoKey, cryptoRepoFile.getCryptoKey()));
-	
+
 			final byte[] repoFileDtoData;
 			if (deleted != null)
 	//			repoFileDtoData = getRepoFileDtoDataForDeletedCryptoRepoFile(previousHistoCryptoRepoFile);
 				repoFileDtoData = context.repoFileDtoIo.serializeWithGz(assertNotNull(getRepoFileDto(), "getRepoFileDto()"));
 			else
 				repoFileDtoData = createRepoFileDtoDataForCryptoRepoFile(true);
-	
+
 			histoCryptoRepoFile.setRepoFileDtoData(assertNotNull(encrypt(repoFileDtoData, plainCryptoKey), "encrypt(...)"));
 			histoCryptoRepoFile.setLastSyncFromRepositoryId(null);
-	
+
 			sign(histoCryptoRepoFile);
-	
+
 			histoCryptoRepoFile = hcrfDao.makePersistent(histoCryptoRepoFile);
 		}
 
