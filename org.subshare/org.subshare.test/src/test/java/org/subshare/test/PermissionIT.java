@@ -38,7 +38,7 @@ import mockit.MockUp;
 public class PermissionIT extends AbstractRepoToRepoSyncIT {
 	private static final Logger logger = LoggerFactory.getLogger(PermissionIT.class);
 
-	private static final long BACKDATING_MAX_PERMISSION_VALID_TO_AGE = 30000; // was 15 sec, originally, but our build server is too slow - needed to increase :-(
+	private static final long BACKDATING_MAX_PERMISSION_VALID_TO_AGE = 60000; // was 15 sec, originally, but our build server is too slow - needed to increase :-(
 
 	@Override
 	public void before() throws Exception {

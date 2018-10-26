@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import org.subshare.core.AbstractCryptree;
 import org.subshare.core.AccessDeniedException;
 import org.subshare.core.DataKey;
+import org.subshare.core.FileDeletedException;
 import org.subshare.core.GrantAccessDeniedException;
 import org.subshare.core.LocalRepoStorage;
 import org.subshare.core.LocalRepoStorageFactory;
@@ -549,7 +550,7 @@ public class CryptreeImpl extends AbstractCryptree {
 					final RepoFileDto decryptedRepoFileDto;
 					try {
 						decryptedRepoFileDto = getDecryptedRepoFileOnServerDtoOrFail(histoCryptoRepoFile.getCryptoRepoFile().getCryptoRepoFileId());
-					} catch (final AccessDeniedException x) {
+					} catch (final AccessDeniedException | FileDeletedException x) {
 						continue;
 					}
 					cryptoRepoFile2DecryptedRepoFileDto.put(histoCryptoRepoFile.getCryptoRepoFile(), decryptedRepoFileDto);
@@ -1282,7 +1283,7 @@ public class CryptreeImpl extends AbstractCryptree {
 	}
 
 	@Override
-	public RepoFileDto getDecryptedRepoFileOnServerDtoOrFail(Uid cryptoRepoFileId) throws AccessDeniedException {
+	public RepoFileDto getDecryptedRepoFileOnServerDtoOrFail(Uid cryptoRepoFileId) throws AccessDeniedException, FileDeletedException {
 		assertNotNull(cryptoRepoFileId, "cryptoRepoFileId");
 		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(cryptoRepoFileId);
 		final RepoFileDto repoFileDto = cryptreeNode.getRepoFileDtoOnServer();
@@ -1294,7 +1295,12 @@ public class CryptreeImpl extends AbstractCryptree {
 	public RepoFileDto getDecryptedRepoFileOnServerDto(final String localPath) {
 		assertNotNull(localPath, "localPath");
 		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(localPath);
-		return cryptreeNode.getRepoFileDtoOnServer();
+		try {
+			return cryptreeNode.getRepoFileDtoOnServer();
+		} catch (FileDeletedException x) { // the current HistoCryptoRepoFile has its deleted property set!
+			logger.warn("getDecryptedRepoFileOnServerDto: localPath='{}': " + x, localPath);
+			return null;
+		}
 	}
 
 	@Override

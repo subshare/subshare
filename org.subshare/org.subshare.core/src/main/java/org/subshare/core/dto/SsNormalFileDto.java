@@ -90,4 +90,12 @@ public class SsNormalFileDto extends NormalFileDto implements SsRepoFileDto {
 	public void setLengthWithPadding(long paddingLength) {
 		this.lengthWithPadding = paddingLength;
 	}
+
+	@Override
+	protected String toString_getProperties() {
+		return super.toString_getProperties()
+				+ ", lengthWithPadding=" + lengthWithPadding
+				+ ", parentName=" + parentName
+				+ ", signatureDto=" + signatureDto;
+	}
 }

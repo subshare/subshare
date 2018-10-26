@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.subshare.core.AccessDeniedException;
 import org.subshare.core.DataKey;
+import org.subshare.core.FileDeletedException;
 import org.subshare.core.GrantAccessDeniedException;
 import org.subshare.core.ReadAccessDeniedException;
 import org.subshare.core.ReadUserIdentityAccessDeniedException;
@@ -87,6 +88,7 @@ import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.core.auth.SignatureException;
 import co.codewizards.cloudstore.core.config.Config;
 import co.codewizards.cloudstore.core.dto.ConfigPropSetDto;
+import co.codewizards.cloudstore.core.dto.NormalFileDto;
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
 import co.codewizards.cloudstore.core.dto.jaxb.ConfigPropSetDtoIo;
 import co.codewizards.cloudstore.core.oio.File;
@@ -212,7 +214,7 @@ public class CryptreeNode {
 		return repoFileDto;
 	}
 
-	public RepoFileDto getRepoFileDtoOnServer() throws AccessDeniedException {
+	public RepoFileDto getRepoFileDtoOnServer() throws AccessDeniedException, FileDeletedException {
 		final CurrentHistoCryptoRepoFile currentHistoCryptoRepoFile = getCurrentHistoCryptoRepoFile();
 		if (currentHistoCryptoRepoFile == null)
 			return null;
@@ -227,6 +229,10 @@ public class CryptreeNode {
 
 		final byte[] plainRepoFileDtoData = assertNotNull(decrypt(histoCryptoRepoFile.getRepoFileDtoData(), plainCryptoKey), "decrypt(...)");
 		final RepoFileDto repoFileDto = context.repoFileDtoIo.deserializeWithGz(plainRepoFileDtoData);
+
+		if (histoCryptoRepoFile.getDeleted() != null)
+			throw new FileDeletedException(String.format("File was deleted: %s %s", repoFileDto, histoCryptoRepoFile));
+
 		return repoFileDto;
 	}
 
@@ -784,6 +790,11 @@ public class CryptreeNode {
 		// Erase information like last-modified, hash and length, if not used in HistoCryptoRepoFile!
 		repoFileDtoConverter.setExcludeMutableData(! forHisto);
 		final RepoFileDto repoFileDto = repoFileDtoConverter.toRepoFileDto(repoFile, forHisto ? Integer.MAX_VALUE : 0);
+		if (forHisto && (repoFileDto instanceof NormalFileDto)) {
+			final NormalFileDto dto = (NormalFileDto) repoFileDto;
+			if (dto.getLength() < 0)
+				throw new IllegalStateException(String.format("NormalFileDto.length < 0! %s", dto));
+		}
 
 		((SsRepoFileDto) repoFileDto).setParentName(null); // only needed for uploading to the server.
 		if (((SsRepoFileDto) repoFileDto).getSignature() != null) // must be null on the client - and this method is never called on the server.

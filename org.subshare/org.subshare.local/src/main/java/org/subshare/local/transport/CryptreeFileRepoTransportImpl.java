@@ -330,7 +330,12 @@ public class CryptreeFileRepoTransportImpl extends FileRepoTransport implements 
 	@Override
 	public void endPutFile(String path, SsNormalFileDto fromNormalFileDto) {
 		putPaddingMetaData(path, fromNormalFileDto);
-		super.endPutFile(path, fromNormalFileDto.getLastModified(), fromNormalFileDto.getLength(), fromNormalFileDto.getSha1());
+		long length = fromNormalFileDto.getLength();
+		if (length < 0) {
+			logger.error("endPutFile: fromNormalFileDto.length < 0! {}", fromNormalFileDto);
+			length = 0;
+		}
+		super.endPutFile(path, fromNormalFileDto.getLastModified(), length, fromNormalFileDto.getSha1());
 	}
 
 	private void putPaddingMetaData(String path, SsNormalFileDto fromNormalFileDto) {

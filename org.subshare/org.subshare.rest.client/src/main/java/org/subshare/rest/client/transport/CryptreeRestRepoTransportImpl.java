@@ -23,6 +23,7 @@ import org.subshare.core.Cryptree;
 import org.subshare.core.CryptreeFactory;
 import org.subshare.core.CryptreeFactoryRegistry;
 import org.subshare.core.DataKey;
+import org.subshare.core.FileDeletedException;
 import org.subshare.core.LocalRepoStorage;
 import org.subshare.core.LocalRepoStorageFactoryRegistry;
 import org.subshare.core.WriteAccessDeniedException;
@@ -408,7 +409,7 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 			int processedTreeNodeCount = 0;
 			long lastLogTimestamp = System.currentTimeMillis();
 
-			final Set<Long> nonDecryptableRepoFileIds = new HashSet<Long>();
+			final Set<Long> nonDecryptableRepoFileIds = new HashSet<Long>(); // non-decryptable or deleted. can deleted files really end up here? I think so, but not sure.
 
 			final RepoFileDtoTreeNode tree = RepoFileDtoTreeNode.createTree(changeSetDto.getRepoFileDtos());
 			Set<RepoFileDtoTreeNode> deletedDuplicateCryptoRepoFileNodes = new HashSet<>();
@@ -439,7 +440,7 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 					final RepoFileDto decryptedRepoFileDto = decryptRepoFileDtoOnServer(cryptree, repoFileDto);
 					// TODO we should remove the superfluous data to make sure the result looks exactly as it would do in a normal CloudStore sync!
 
-					// if it's null, it could not be decrypted (missing access rights?!) and should be ignored.
+					// if it's null, it could not be decrypted (missing access rights?!) and should be ignored. or maybe it was deleted... not sure, if this happens.
 					if (decryptedRepoFileDto == null)
 						nonDecryptableRepoFileIds.add(repoFileDto.getId());
 					else
@@ -633,7 +634,7 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 		final RepoFileDto decryptedRepoFileDto;
 		try {
 			decryptedRepoFileDto = cryptree.getDecryptedRepoFileOnServerDtoOrFail(cryptoRepoFileId);
-		} catch (final AccessDeniedException x) {
+		} catch (final AccessDeniedException | FileDeletedException x) {
 			return null;
 		}
 		decryptedRepoFileDto.setId(repoFileDto.getId());
