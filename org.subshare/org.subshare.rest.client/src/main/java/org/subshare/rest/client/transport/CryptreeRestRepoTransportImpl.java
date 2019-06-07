@@ -177,8 +177,8 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 		final ChangeSetDto changeSetDto = getRestRepoTransport().getChangeSetDto(localSync, lastSyncToRemoteRepoLocalRepositoryRevisionSynced);
 
 		if (logger.isInfoEnabled()) {
-			logger.info("getChangeSetDto: clientRepositoryId={} serverRepositoryId={}: repoFileDtos.size={}",
-					getClientRepositoryId(), getRepositoryId(), changeSetDto.getRepoFileDtos().size());
+			logger.info("getChangeSetDto: clientRepositoryId={} serverRepositoryId={}: lastSyncToRemoteRepoLocalRepositoryRevisionSynced={} repoFileDtos.size={}",
+					getClientRepositoryId(), getRepositoryId(), lastSyncToRemoteRepoLocalRepositoryRevisionSynced, changeSetDto.getRepoFileDtos().size());
 
 			logMemoryStats(logger);
 

@@ -98,8 +98,12 @@ public interface SsLocalRepoMetaData extends LocalRepoMetaData {
 	void resetLastCryptoKeySyncFromRemoteRepoRemoteRepositoryRevisionSynced();
 
 	/**
-	 * @deprecated So far not (yet) needed. May be removed again.
+	 * Resets locally the payload-sync-revision specifying the last server version downloaded.
+	 * <p>
+	 * This causes all the payload (files and directories) to be *down*loaded again (when the next sync is run).
+	 * <p>
+	 * Important: If there are any local modifications that are not yet uploaded to the server, they
+	 * are going to be marked as collisions!
 	 */
-	@Deprecated
 	void resetLastSyncFromRemoteRepoRemoteRepositoryRevisionSynced();
 }

@@ -571,15 +571,13 @@ public class SsLocalRepoMetaDataImpl extends LocalRepoMetaDataImpl implements Ss
 		}
 	}
 
-	@Deprecated
 	@Override
 	public void resetLastSyncFromRemoteRepoRemoteRepositoryRevisionSynced() {
 		try (final LocalRepoTransaction tx = getLocalRepoManagerOrFail().beginWriteTransaction();) {
 			final RemoteRepositoryDao dao = tx.getDao(RemoteRepositoryDao.class);
 			for (RemoteRepository remoteRepo : dao.getObjects()) {
-				// We set it to 0 and not to -1, because -1 would not be sent to the server (it is treated as null)
-				// and because we can very safely assume that revision 0 was always properly synced.
-				remoteRepo.setRevision(0);
+				// We set it to -1, because the 1st revision is 0.
+				remoteRepo.setRevision(-1);
 			}
 			tx.commit();
 		}

@@ -416,10 +416,6 @@ public class LocalRepoPane extends VBox implements HistoryPaneContainer {
 		repoSyncDaemon.startSync(localRepo.getLocalRoot());
 	}
 
-	/**
-	 * @deprecated Currently not needed -- maybe soon removed again.
-	 */
-	@Deprecated
 	@FXML
 	private void redownPayloadButtonClicked(final ActionEvent event) {
 		try (final LocalRepoManager localRepoManager = createLocalRepoManager()) {

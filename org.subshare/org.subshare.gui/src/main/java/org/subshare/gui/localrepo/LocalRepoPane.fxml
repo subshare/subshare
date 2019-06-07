@@ -93,6 +93,11 @@
 							<Tooltip text="Reset the last synced revision number (to 0) of the crypto-meta-data and download it all again."/> 
 						</tooltip>
 					</Button>
+					<Button fx:id="redownPayloadButton" text="Re-download payload-data" onAction="#redownPayloadButtonClicked" GridPane.columnIndex="0" GridPane.rowIndex="8" GridPane.columnSpan="4"> 
+						<tooltip>
+							<Tooltip text="Reset the last synced revision number (to 0) of the payload-data and download it all again."/> 
+						</tooltip>
+					</Button>
 					<padding>
 						<Insets left="8" top="8" right="8" bottom="8"/> 
 					</padding>
