@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -380,6 +381,15 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 		}
 	}
 
+	/**
+	 * Decrypt the given {@code changeSetDto}.
+	 * <p>
+	 * <b>Important:</b> This method modifies the input! The given {@code changeSetDto} is
+	 * <b>destroyed</b> in order to save memory! It is not needed, anymore, as the code continues
+	 * working with the result.
+	 * @param changeSetDto the encrypted change-set to be decrypted. Never {@code null}.
+	 * @return the decrypted change-set. Never {@code null}.
+	 */
 	private ChangeSetDto decryptChangeSetDto(final ChangeSetDto changeSetDto) {
 		assertNotNull(changeSetDto, "changeSetDto");
 		final ChangeSetDto decryptedChangeSetDto = new ChangeSetDto();
@@ -405,6 +415,7 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 				if (decryptedModificationDto != null) // if it's null, it could not be decrypted (missing access rights?!) and should be ignored.
 					decryptedChangeSetDto.getModificationDtos().add(decryptedModificationDto);
 			}
+			changeSetDto.setModificationDtos(null); // DESTROY to save memory!
 
 			int processedTreeNodeCount = 0;
 			long lastLogTimestamp = System.currentTimeMillis();
@@ -412,9 +423,12 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 			final Set<Long> nonDecryptableRepoFileIds = new HashSet<Long>(); // non-decryptable or deleted. can deleted files really end up here? I think so, but not sure.
 
 			final RepoFileDtoTreeNode tree = RepoFileDtoTreeNode.createTree(changeSetDto.getRepoFileDtos());
+			changeSetDto.setRepoFileDtos(null); // DESTROY to save memory!
 			Set<RepoFileDtoTreeNode> deletedDuplicateCryptoRepoFileNodes = new HashSet<>();
 			if (tree != null) {
-				for (final RepoFileDtoTreeNode node : tree) {
+				for (final Iterator<RepoFileDtoTreeNode> it = tree.iterator(); it.hasNext(); ) {
+					final RepoFileDtoTreeNode node = it.next();
+					it.remove(); // DESTROY to save memory!
 					if (deletedDuplicateCryptoRepoFileNodes.contains(node))
 						continue;
 
@@ -438,7 +452,11 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 					}
 
 					final RepoFileDto decryptedRepoFileDto = decryptRepoFileDtoOnServer(cryptree, repoFileDto);
-					// TODO we should remove the superfluous data to make sure the result looks exactly as it would do in a normal CloudStore sync!
+					// We should remove the superfluous data to make sure the result looks exactly as it would do in
+					// a normal CloudStore sync.
+					// We're maybe not yet completely there, but very close. At least the large fileChunkDtos and the signatures
+					// are removed to save memory in order to solve the OutOfMemoryErrors -- without a fundamental refactoring.
+					decryptChangeSetDto_removeUnnecessaryData(decryptedRepoFileDto);
 
 					// if it's null, it could not be decrypted (missing access rights?!) and should be ignored. or maybe it was deleted... not sure, if this happens.
 					if (decryptedRepoFileDto == null)
@@ -477,6 +495,27 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 				getClientRepositoryId(), getRepositoryId(), decryptedChangeSetDto);
 
 		return decryptedChangeSetDto;
+	}
+
+	/**
+	 * Removes all unnecessary data from the {@code decryptedRepoFileDto}.
+	 * @param decryptedRepoFileDto the {@code RepoFileDto} to be stripped of all unnecessary data. Must not be {@code null}.
+	 */
+	private void decryptChangeSetDto_removeUnnecessaryData(RepoFileDto decryptedRepoFileDto) {
+		if (decryptedRepoFileDto instanceof SsNormalFileDto) {
+			SsNormalFileDto normalFileDto = (SsNormalFileDto) decryptedRepoFileDto;
+			normalFileDto.setFileChunkDtos(null);
+			normalFileDto.setParentName(null);
+			normalFileDto.setSignature(null);
+		} else if (decryptedRepoFileDto instanceof SsDirectoryDto) {
+			SsDirectoryDto directoryDto = (SsDirectoryDto) decryptedRepoFileDto;
+			directoryDto.setParentName(null);
+			directoryDto.setSignature(null);
+		} else if (decryptedRepoFileDto instanceof SsSymlinkDto) {
+			SsSymlinkDto symlinkDto = (SsSymlinkDto) decryptedRepoFileDto;
+			symlinkDto.setParentName(null);
+			symlinkDto.setSignature(null);
+		}
 	}
 
 	private void verifySignatureAndPermission(final Cryptree cryptree, final SignableVerifier signableVerifier, final ModificationDto modificationDto) {
