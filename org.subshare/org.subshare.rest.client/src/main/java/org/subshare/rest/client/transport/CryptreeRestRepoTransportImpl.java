@@ -436,7 +436,7 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 		assertNotNull(changeSetDto, "changeSetDto");
 		final ChangeSetDto decryptedChangeSetDto = new ChangeSetDto();
 
-		final boolean debug = true;// logger.isDebugEnabled(); // TODO not always enabled!
+		final boolean debug = logger.isDebugEnabled();
 		if (logger.isInfoEnabled()) {
 			logger.info("decryptChangeSetDto: entered.");
 			logMemoryStats(logger);
@@ -509,8 +509,8 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 					if (debug) {
 						++processedTreeNodeCount;
 						if (System.currentTimeMillis() - lastLogTimestamp > 10000L) {
-							logger.info("decryptChangeSetDto: processedTreeNodeCount={}", processedTreeNodeCount); // TODO debug(..)! not info(...)!
-							logMemoryStats(logger);
+							logger.debug("decryptChangeSetDto: processedTreeNodeCount={}", processedTreeNodeCount);
+							logMemoryStats(logger); // TODO debug(..)! not info(...)!
 							lastLogTimestamp = System.currentTimeMillis();
 						}
 					}
