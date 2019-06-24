@@ -203,7 +203,7 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 			logger.error("getChangeSetDto: Reading decrypted ChangeSetDto-cache-file failed: " + x, x);
 		}
 
-		final ChangeSetDto changeSetDto = getRestRepoTransport().getChangeSetDto(localSync, lastSyncToRemoteRepoLocalRepositoryRevisionSynced);
+		ChangeSetDto changeSetDto = getRestRepoTransport().getChangeSetDto(localSync, lastSyncToRemoteRepoLocalRepositoryRevisionSynced);
 
 		if (logger.isInfoEnabled()) {
 			logger.info("getChangeSetDto: clientRepositoryId={} serverRepositoryId={}: lastSyncToRemoteRepoLocalRepositoryRevisionSynced={} repoFileDtos.size={}",
@@ -217,6 +217,7 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 		syncCryptoKeysFromRemoteRepo();
 
 		result = decryptChangeSetDto(changeSetDto);
+		changeSetDto = null; // allow for gc! it was destroyed (modified) by the above method, already and should not be used anymore!
 
 		if (decryptedChangeSetDtoCacheFile != null) {
 			File tmpFile = decryptedChangeSetDtoCacheFile.getParentFile().createFile(decryptedChangeSetDtoCacheFile.getName() + TMP_FILE_NAME_SUFFIX);
