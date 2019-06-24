@@ -1,5 +1,6 @@
 package org.subshare.rest.client.transport;
 
+import static co.codewizards.cloudstore.core.objectfactory.ObjectFactoryUtil.*;
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.DebugUtil.*;
@@ -9,6 +10,8 @@ import static org.subshare.core.crypto.CryptoConfigUtil.*;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -85,10 +88,12 @@ import co.codewizards.cloudstore.core.dto.RepoFileDto;
 import co.codewizards.cloudstore.core.dto.RepoFileDtoTreeNode;
 import co.codewizards.cloudstore.core.dto.RepositoryDto;
 import co.codewizards.cloudstore.core.dto.VersionInfoDto;
+import co.codewizards.cloudstore.core.dto.jaxb.ChangeSetDtoIo;
 import co.codewizards.cloudstore.core.io.ByteArrayInputStream;
 import co.codewizards.cloudstore.core.io.ByteArrayOutputStream;
 import co.codewizards.cloudstore.core.io.TimeoutException;
 import co.codewizards.cloudstore.core.oio.File;
+import co.codewizards.cloudstore.core.oio.FileFilter;
 import co.codewizards.cloudstore.core.repo.local.ContextWithLocalRepoManager;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManagerFactory;
@@ -111,6 +116,10 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 
 	private final long cryptoChangeSetTimeout = ConfigImpl.getInstance().getPropertyAsPositiveOrZeroLong(
 			CONFIG_KEY_GET_CRYPTO_CHANGE_SET_DTO_TIMEOUT, CONFIG_DEFAULT_VALUE_GET_CRYPTO_CHANGE_SET_DTO_TIMEOUT);
+
+	public static final String DECRYPTED_CHANGE_SET_DTO_CACHE_FILE_NAME_PREFIX = "DecryptedChangeSetDto.";
+	public static final String DECRYPTED_CHANGE_SET_DTO_CACHE_FILE_NAME_SUFFIX = RestRepoTransport.CHANGE_SET_DTO_CACHE_FILE_NAME_SUFFIX;
+	public static final String TMP_FILE_NAME_SUFFIX = RestRepoTransport.TMP_FILE_NAME_SUFFIX;
 
 	private CryptreeFactory cryptreeFactory;
 	private RestRepoTransport restRepoTransport;
@@ -175,6 +184,25 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 
 	@Override
 	public ChangeSetDto getChangeSetDto(final boolean localSync, final Long lastSyncToRemoteRepoLocalRepositoryRevisionSynced) {
+
+		File decryptedChangeSetDtoCacheFile = null;
+		ChangeSetDto result = null;
+
+		try {
+			decryptedChangeSetDtoCacheFile = getDecryptedChangeSetDtoCacheFile(lastSyncToRemoteRepoLocalRepositoryRevisionSynced);
+			if (decryptedChangeSetDtoCacheFile.isFile() && decryptedChangeSetDtoCacheFile.length() > 0) {
+				ChangeSetDtoIo changeSetDtoIo = createObject(ChangeSetDtoIo.class);
+				result = changeSetDtoIo.deserializeWithGz(decryptedChangeSetDtoCacheFile);
+				logger.info("getChangeSetDto: Read decrypted ChangeSetDto-cache-file: {}", decryptedChangeSetDtoCacheFile.getAbsolutePath());
+				return result;
+			} else {
+				logger.info("getChangeSetDto: Decrypted ChangeSetDto-cache-file NOT found: {}", decryptedChangeSetDtoCacheFile.getAbsolutePath());
+			}
+		} catch (Exception x) {
+			result = null;
+			logger.error("getChangeSetDto: Reading decrypted ChangeSetDto-cache-file failed: " + x, x);
+		}
+
 		final ChangeSetDto changeSetDto = getRestRepoTransport().getChangeSetDto(localSync, lastSyncToRemoteRepoLocalRepositoryRevisionSynced);
 
 		if (logger.isInfoEnabled()) {
@@ -187,7 +215,20 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 		}
 
 		syncCryptoKeysFromRemoteRepo();
-		return decryptChangeSetDto(changeSetDto);
+
+		result = decryptChangeSetDto(changeSetDto);
+
+		if (decryptedChangeSetDtoCacheFile != null) {
+			File tmpFile = decryptedChangeSetDtoCacheFile.getParentFile().createFile(decryptedChangeSetDtoCacheFile.getName() + TMP_FILE_NAME_SUFFIX);
+			ChangeSetDtoIo changeSetDtoIo = createObject(ChangeSetDtoIo.class);
+			changeSetDtoIo.serializeWithGz(result, tmpFile);
+			if (! tmpFile.renameTo(decryptedChangeSetDtoCacheFile)) {
+				logger.error("getChangeSetDto: Could not rename temporary file to active decrypted ChangeSetDto-cache-file: {}", decryptedChangeSetDtoCacheFile.getAbsolutePath());
+			} else {
+				logger.info("getChangeSetDto: Wrote decrypted ChangeSetDto-cache-file: {}", decryptedChangeSetDtoCacheFile.getAbsolutePath());
+			}
+		}
+		return result;
 	}
 
 	@Override
@@ -1194,6 +1235,9 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 
 	@Override
 	public void endSyncFromRepository() {
+		for (final File file : getDecryptedChangeSetDtoCacheFiles(true)) {
+			file.delete();
+		}
 		getRestRepoTransport().endSyncFromRepository();
 
 		final LocalRepoManager localRepoManager = getLocalRepoManager();
@@ -1258,7 +1302,7 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 	public LocalRepoManager getLocalRepoManager() {
 		if (localRepoManager == null) {
 			logger.debug("getLocalRepoManager: Creating a new LocalRepoManager.");
-			final File localRoot = LocalRepoRegistryImpl.getInstance().getLocalRoot(getClientRepositoryIdOrFail());
+			final File localRoot = LocalRepoRegistryImpl.getInstance().getLocalRootOrFail(getClientRepositoryIdOrFail());
 			localRepoManager = LocalRepoManagerFactory.Helper.getInstance().createLocalRepoManagerForExistingRepository(localRoot);
 		}
 		return localRepoManager;
@@ -1308,5 +1352,36 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 		throw new UnsupportedOperationException(
 				"It is not supported to connect a server-repository to a client-repository's sub-directory! "
 				+ "Only the other way around is supported. This method should thus never be invoked.");
+	}
+
+	protected File getLocalRepoTmpDir() {
+		return getRestRepoTransport().getLocalRepoTmpDir();
+	}
+
+	protected File getDecryptedChangeSetDtoCacheFile(final Long lastSyncToRemoteRepoLocalRepositoryRevisionSynced) {
+		String fileName = DECRYPTED_CHANGE_SET_DTO_CACHE_FILE_NAME_PREFIX
+				+ getRepositoryId() + "."
+				+ lastSyncToRemoteRepoLocalRepositoryRevisionSynced
+				+ DECRYPTED_CHANGE_SET_DTO_CACHE_FILE_NAME_SUFFIX;
+		return getLocalRepoTmpDir().createFile(fileName);
+	}
+
+	protected List<File> getDecryptedChangeSetDtoCacheFiles(final boolean includeTmpFiles) {
+		File[] fileArray = getLocalRepoTmpDir().listFiles(new FileFilter() {
+			@Override
+			public boolean accept(File file) {
+				if (! file.getName().startsWith(DECRYPTED_CHANGE_SET_DTO_CACHE_FILE_NAME_PREFIX))
+					return false;
+
+				if (file.getName().endsWith(DECRYPTED_CHANGE_SET_DTO_CACHE_FILE_NAME_SUFFIX))
+					return true;
+
+				if (includeTmpFiles && file.getName().endsWith(DECRYPTED_CHANGE_SET_DTO_CACHE_FILE_NAME_SUFFIX + TMP_FILE_NAME_SUFFIX))
+					return true;
+				else
+					return false;
+			}
+		});
+		return fileArray == null ? Collections.<File>emptyList() : Arrays.asList(fileArray);
 	}
 }

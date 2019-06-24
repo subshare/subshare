@@ -27,7 +27,6 @@ public class CryptoChangeSetDtoSplitFileManager {
 	protected static final String CRYPTO_CHANGE_SET_DTO_FILE_PREFIX = "CryptoChangeSetDto.";
 	protected static final String CRYPTO_CHANGE_SET_DTO_FILE_SUFFIX = ".xml.gz";
 	protected static final String CRYPTO_CHANGE_SET_DTO_FILE_IMPORTED_SUFFIX = ".imported";
-	protected static final String REPO_TEMP_DIR_NAME = "tmp";
 
 	protected static final String PROP_KEY_LAST_CRYPTO_KEY_SYNC_TO_REMOTE_REPO_LOCAL_REPOSITORY_REVISION_SYNCED = "lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced";
 
@@ -70,7 +69,7 @@ public class CryptoChangeSetDtoSplitFileManager {
 					throw new IOException(String.format("Directory '%s' does not exist!", metaDir.getAbsolutePath()));
 			}
 
-			final File baseDir = metaDir.createFile(REPO_TEMP_DIR_NAME);
+			final File baseDir = metaDir.createFile(LocalRepoManager.REPO_TEMP_DIR_NAME);
 			if (! baseDir.isDirectory()) {
 				baseDir.mkdir();
 
