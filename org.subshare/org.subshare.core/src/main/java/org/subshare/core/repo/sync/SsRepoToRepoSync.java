@@ -27,7 +27,9 @@ import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.progress.ProgressMonitor;
 import co.codewizards.cloudstore.core.progress.SubProgressMonitor;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
+import co.codewizards.cloudstore.core.repo.sync.LocalRepoTransportRef;
 import co.codewizards.cloudstore.core.repo.sync.RepoToRepoSync;
+import co.codewizards.cloudstore.core.repo.sync.RepoTransportRef;
 import co.codewizards.cloudstore.core.repo.transport.CollisionException;
 import co.codewizards.cloudstore.core.repo.transport.RepoTransport;
 
@@ -38,6 +40,16 @@ public class SsRepoToRepoSync extends RepoToRepoSync {
 
 	protected SsRepoToRepoSync(final File localRoot, final URL remoteRoot) {
 		super(localRoot, remoteRoot);
+	}
+
+	@Override
+	protected LocalRepoTransportRef createLocalRepoTransportRef() {
+		return new CryptreeClientFileRepoTransportRef();
+	}
+
+	@Override
+	protected RepoTransportRef createRemoteRepoTransportRef() {
+		return new CryptreeRestRepoTransportRef();
 	}
 
 	@Override
