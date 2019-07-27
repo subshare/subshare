@@ -1,13 +1,13 @@
 package org.subshare.rest.client.pgp.transport;
 
 import static co.codewizards.cloudstore.rest.client.transport.RestRepoTransportFactory.*;
+import static java.util.Objects.*;
 
 import java.net.URL;
 
 import org.subshare.core.pgp.transport.AbstractPgpTransportFactory;
 import org.subshare.core.pgp.transport.PgpTransport;
 
-import co.codewizards.cloudstore.core.util.AssertUtil;
 import co.codewizards.cloudstore.rest.client.ssl.DynamicX509TrustManagerCallback;
 
 public class RestPgpTransportFactory extends AbstractPgpTransportFactory {
@@ -33,7 +33,7 @@ public class RestPgpTransportFactory extends AbstractPgpTransportFactory {
 
 	@Override
 	public boolean isSupported(final URL url) {
-		return PROTOCOL_HTTP.equals(AssertUtil.assertNotNull(url, "url").getProtocol())
+		return PROTOCOL_HTTP.equals(requireNonNull(url, "url").getProtocol())
 				|| PROTOCOL_HTTPS.equals(url.getProtocol());
 	}
 

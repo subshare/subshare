@@ -1,6 +1,6 @@
 package org.subshare.core.pgp.man;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -28,9 +28,9 @@ public class PgpPrivateKeyPassphraseStoreImpl implements PgpPrivateKeyPassphrase
 	private final PgpAuthenticationCallback pgpAuthenticationCallback = new PgpAuthenticationCallback() {
 		@Override
 		public char[] getPassphrase(final PgpKey pgpKey) {
-			final PgpKey masterKey = assertNotNull(pgpKey, "pgpKey").getMasterKey();
+			final PgpKey masterKey = requireNonNull(pgpKey, "pgpKey").getMasterKey();
 			final PgpKeyId pgpKeyId = masterKey.getPgpKeyId();
-			assertNotNull(pgpKeyId, "pgpKey.pgpKeyId");
+			requireNonNull(pgpKeyId, "pgpKey.pgpKeyId");
 			return PgpPrivateKeyPassphraseStoreImpl.this.getPassphrase(pgpKeyId);
 		}
 	};
@@ -52,7 +52,7 @@ public class PgpPrivateKeyPassphraseStoreImpl implements PgpPrivateKeyPassphrase
 	}
 
 	protected synchronized char[] getPassphrase(final PgpKeyId pgpKeyId) {
-		assertNotNull(pgpKeyId, "pgpKeyId");
+		requireNonNull(pgpKeyId, "pgpKeyId");
 		final char[] passphrase = pgpKeyId2Passphrase.get(pgpKeyId);
 		return passphrase;
 	}
@@ -64,8 +64,8 @@ public class PgpPrivateKeyPassphraseStoreImpl implements PgpPrivateKeyPassphrase
 
 	@Override
 	public void putPassphrase(final PgpKeyId pgpKeyId, final char[] passphrase) throws SecurityException {
-		assertNotNull(pgpKeyId, "pgpKeyId");
-		assertNotNull(passphrase, "passphrase");
+		requireNonNull(pgpKeyId, "pgpKeyId");
+		requireNonNull(passphrase, "passphrase");
 
 		assertPassphraseValid(pgpKeyId, passphrase);
 
@@ -75,11 +75,11 @@ public class PgpPrivateKeyPassphraseStoreImpl implements PgpPrivateKeyPassphrase
 	}
 
 	private void assertPassphraseValid(final PgpKeyId pgpKeyId, final char[] passphrase) throws SecurityException {
-		assertNotNull(pgpKeyId, "pgpKeyId");
-		assertNotNull(passphrase, "passphrase"); // empty for no passphrase! never null!
+		requireNonNull(pgpKeyId, "pgpKeyId");
+		requireNonNull(passphrase, "passphrase"); // empty for no passphrase! never null!
 		final Pgp pgp = PgpRegistry.getInstance().getPgpOrFail();
 		final PgpKey pgpKey = pgp.getPgpKey(pgpKeyId);
-		assertNotNull(pgpKey, "pgp.getPgpKey(" + pgpKeyId + ")");
+		requireNonNull(pgpKey, "pgp.getPgpKey(" + pgpKeyId + ")");
 		if (! pgp.testPassphrase(pgpKey, passphrase))
 			throw new SecurityException("Wrong passphrase!");
 	}

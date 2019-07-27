@@ -1,7 +1,7 @@
 package org.subshare.gui.maintree;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
+import static java.util.Objects.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -62,13 +62,13 @@ public class UserListMainTreeItem extends MainTreeItem<String> {
 	}
 
 	private void addTreeItemsViewCallback(final Collection<User> users) {
-		assertNotNull(users, "users");
+		requireNonNull(users, "users");
 		for (final User user : users)
 			getChildren().add(new UserMainTreeItem(editUserManager, user));
 	}
 
 	private void selectUser(final User user) {
-		assertNotNull(user, "user");
+		requireNonNull(user, "user");
 
 		if (! isExpanded())
 			setExpanded(true);
@@ -88,7 +88,7 @@ public class UserListMainTreeItem extends MainTreeItem<String> {
 	}
 
 	private void removeTreeItemsViewCallback(final Collection<User> users) {
-		assertNotNull(users, "users");
+		requireNonNull(users, "users");
 		final Set<User> userSet = users instanceof Set<?> ? cast(users) : new HashSet<User>(users);
 		final List<UserMainTreeItem> itemsToRemove = new ArrayList<>(users.size());
 		for (final TreeItem<String> child : getChildren()) {

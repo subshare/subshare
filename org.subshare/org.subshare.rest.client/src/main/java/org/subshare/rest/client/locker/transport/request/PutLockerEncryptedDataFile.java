@@ -1,8 +1,7 @@
 package org.subshare.rest.client.locker.transport.request;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
-import co.codewizards.cloudstore.core.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import javax.ws.rs.client.Entity;
@@ -11,6 +10,7 @@ import javax.ws.rs.core.Response;
 
 import org.subshare.core.locker.LockerEncryptedDataFile;
 
+import co.codewizards.cloudstore.core.io.ByteArrayOutputStream;
 import co.codewizards.cloudstore.rest.client.request.VoidRequest;
 
 public class PutLockerEncryptedDataFile extends VoidRequest {
@@ -18,7 +18,7 @@ public class PutLockerEncryptedDataFile extends VoidRequest {
 	private final LockerEncryptedDataFile lockerEncryptedDataFile;
 
 	public PutLockerEncryptedDataFile(final LockerEncryptedDataFile lockerEncryptedDataFile) {
-		this.lockerEncryptedDataFile = assertNotNull(lockerEncryptedDataFile, "lockerEncryptedDataFile");
+		this.lockerEncryptedDataFile = requireNonNull(lockerEncryptedDataFile, "lockerEncryptedDataFile");
 	}
 
 	@Override

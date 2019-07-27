@@ -1,6 +1,6 @@
 package org.subshare.gui.pgp.createkey.advanced;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import org.subshare.core.pgp.CreatePgpKeyParam;
 import org.subshare.gui.wizard.WizardPage;
@@ -15,7 +15,7 @@ public class AdvancedWizardPage extends WizardPage {
 
 	public AdvancedWizardPage(final CreatePgpKeyParam createPgpKeyParam) {
 		super("Advanced");
-		this.createPgpKeyParam = assertNotNull(createPgpKeyParam, "createPgpKeyParam");
+		this.createPgpKeyParam = requireNonNull(createPgpKeyParam, "createPgpKeyParam");
 	}
 
 	@Override

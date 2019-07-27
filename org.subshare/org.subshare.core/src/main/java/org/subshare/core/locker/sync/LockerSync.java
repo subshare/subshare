@@ -2,8 +2,8 @@ package org.subshare.core.locker.sync;
 
 import static co.codewizards.cloudstore.core.io.StreamUtil.*;
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
+import static java.util.Objects.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -59,9 +59,9 @@ public class LockerSync implements Sync {
 	private LockerContent lockerContent;
 
 	public LockerSync(final Server server) {
-		this.server = assertNotNull(server, "server"); //$NON-NLS-1$
-		this.serverId = assertNotNull(this.server.getServerId(), "server.serverId"); //$NON-NLS-1$
-		this.serverUrl = assertNotNull(this.server.getUrl(), "server.url"); //$NON-NLS-1$
+		this.server = requireNonNull(server, "server"); //$NON-NLS-1$
+		this.serverId = requireNonNull(this.server.getServerId(), "server.serverId"); //$NON-NLS-1$
+		this.serverUrl = requireNonNull(this.server.getUrl(), "server.url"); //$NON-NLS-1$
 	}
 
 	public Server getServer() {
@@ -146,14 +146,14 @@ public class LockerSync implements Sync {
 	}
 
 	public String getLastSyncServerVersionsPropertyKey() {
-		final PgpKeyId pgpKeyId = assertNotNull(pgpKey, "pgpKey").getPgpKeyId(); //$NON-NLS-1$
-		final String lockerContentName = assertNotNull(lockerContent, "lockerContent").getName(); //$NON-NLS-1$
+		final PgpKeyId pgpKeyId = requireNonNull(pgpKey, "pgpKey").getPgpKeyId(); //$NON-NLS-1$
+		final String lockerContentName = requireNonNull(lockerContent, "lockerContent").getName(); //$NON-NLS-1$
 		return String.format("server[%s].pgpKey[%s].lockerContent[%s].lastSyncServerVersions", serverId, pgpKeyId, lockerContentName); //$NON-NLS-1$
 	}
 
 	public String getLastSyncLocalVersionPropertyKey() {
-		final PgpKeyId pgpKeyId = assertNotNull(pgpKey, "pgpKey").getPgpKeyId(); //$NON-NLS-1$
-		final String lockerContentName = assertNotNull(lockerContent, "lockerContent").getName(); //$NON-NLS-1$
+		final PgpKeyId pgpKeyId = requireNonNull(pgpKey, "pgpKey").getPgpKeyId(); //$NON-NLS-1$
+		final String lockerContentName = requireNonNull(lockerContent, "lockerContent").getName(); //$NON-NLS-1$
 		return String.format("server[%s].pgpKey[%s].lockerContent[%s].lastSyncLocalVersion", serverId, pgpKeyId, lockerContentName); //$NON-NLS-1$
 	}
 
@@ -195,7 +195,7 @@ public class LockerSync implements Sync {
 	}
 
 	private void setLastSyncServerVersions(final List<Uid> serverVersions) {
-		assertNotNull(serverVersions, "serverVersions"); //$NON-NLS-1$
+		requireNonNull(serverVersions, "serverVersions"); //$NON-NLS-1$
 		StringBuilder sb = new StringBuilder();
 		for (Uid serverVersion : serverVersions) {
 			if (sb.length() > 0)
@@ -234,7 +234,7 @@ public class LockerSync implements Sync {
 		final List<Uid> serverVersions = new ArrayList<Uid>(encryptedDataFiles.size());
 		for (final LockerEncryptedDataFile encryptedDataFile : encryptedDataFiles) {
 			final Uid serverVersion = encryptedDataFile.getContentVersion();
-			assertNotNull(serverVersion, "encryptedDataFile.contentVersion"); //$NON-NLS-1$
+			requireNonNull(serverVersion, "encryptedDataFile.contentVersion"); //$NON-NLS-1$
 			serverVersions.add(serverVersion);
 
 			toLockerTransport.putEncryptedDataFile(encryptedDataFile);

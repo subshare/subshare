@@ -1,7 +1,7 @@
 package org.subshare.gui.pgp.assignownertrust.selectownertrust;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
+import static java.util.Objects.*;
 import static org.subshare.gui.util.FxmlUtil.*;
 
 import java.util.HashMap;
@@ -41,7 +41,7 @@ public class SelectOwnerTrustPane extends WizardPageContentGridPane {
 	private Text selectedOwnerTrustDescriptionText;
 
 	public SelectOwnerTrustPane(final AssignOwnerTrustData assignOwnerTrustData) {
-		this.assignOwnerTrustData = assertNotNull(assignOwnerTrustData, "assignOwnerTrustData");
+		this.assignOwnerTrustData = requireNonNull(assignOwnerTrustData, "assignOwnerTrustData");
 		loadDynamicComponentFxml(SelectOwnerTrustPane.class, this);
 		populateUserTextField();
 		populateRadioButtonBox();
@@ -116,7 +116,7 @@ public class SelectOwnerTrustPane extends WizardPageContentGridPane {
 	}
 
 	private static PgpOwnerTrust getOwnerTrust(final RadioButton radioButton) {
-		assertNotNull(radioButton, "radioButton");
-		return (PgpOwnerTrust) assertNotNull(radioButton.getUserData(), "radioButton.userData");
+		requireNonNull(radioButton, "radioButton");
+		return (PgpOwnerTrust) requireNonNull(radioButton.getUserData(), "radioButton.userData");
 	}
 }

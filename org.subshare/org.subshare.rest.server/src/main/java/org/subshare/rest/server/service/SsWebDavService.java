@@ -1,8 +1,7 @@
 package org.subshare.rest.server.service;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
-import co.codewizards.cloudstore.core.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Date;
 import java.util.UUID;
@@ -21,6 +20,7 @@ import org.subshare.core.sign.VerifierInputStream;
 import org.subshare.core.user.UserRepoKey;
 
 import co.codewizards.cloudstore.core.Uid;
+import co.codewizards.cloudstore.core.io.ByteArrayInputStream;
 import co.codewizards.cloudstore.core.repo.local.ContextWithLocalRepoManager;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoTransaction;
@@ -32,11 +32,11 @@ public class SsWebDavService extends WebDavService {
 
 	@Override
 	public void putFileData(final String path, final long offset, final byte[] fileData) {
-		assertNotNull(path, "path");
-		assertNotNull(fileData, "fileData");
+		requireNonNull(path, "path");
+		requireNonNull(fileData, "fileData");
 
 		try (final RepoTransport repoTransport = authenticateAndCreateLocalRepoTransport();) {
-			final UUID clientRepositoryId = assertNotNull(repoTransport.getClientRepositoryId(), "clientRepositoryId");
+			final UUID clientRepositoryId = requireNonNull(repoTransport.getClientRepositoryId(), "clientRepositoryId");
 			final LocalRepoManager localRepoManager = ((ContextWithLocalRepoManager) repoTransport).getLocalRepoManager();
 			final LocalRepoTransaction transaction = localRepoManager.beginReadTransaction();
 			try {

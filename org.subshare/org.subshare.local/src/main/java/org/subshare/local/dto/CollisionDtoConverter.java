@@ -1,7 +1,7 @@
 package org.subshare.local.dto;
 
 import static co.codewizards.cloudstore.core.objectfactory.ObjectFactoryUtil.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,25 +26,25 @@ public class CollisionDtoConverter {
 	}
 
 	protected CollisionDtoConverter(final LocalRepoTransaction transaction) {
-		this.transaction = assertNotNull(transaction, "transaction");
+		this.transaction = requireNonNull(transaction, "transaction");
 	}
 
 	public CollisionDto toCollisionDto(final Collision collision) {
-		assertNotNull(collision, "collision");
+		requireNonNull(collision, "collision");
 		CollisionDto result = new CollisionDto();
 		result.setCollisionId(collision.getCollisionId());
 		result.setHistoCryptoRepoFileId1(collision.getHistoCryptoRepoFile1().getHistoCryptoRepoFileId());
 		result.setHistoCryptoRepoFileId2(
 				collision.getHistoCryptoRepoFile2() == null ? null : collision.getHistoCryptoRepoFile2().getHistoCryptoRepoFileId());
 		result.setDuplicateCryptoRepoFileId(collision.getDuplicateCryptoRepoFileId());
-		result.setCryptoKeyId(assertNotNull(collision.getCryptoKey(), "collision.cryptoKey").getCryptoKeyId());
+		result.setCryptoKeyId(requireNonNull(collision.getCryptoKey(), "collision.cryptoKey").getCryptoKeyId());
 		result.setCollisionPrivateDtoData(collision.getCollisionPrivateDtoData());
 		result.setSignature(collision.getSignature());
 		return result;
 	}
 
 	public Collision putCollisionDto(final CollisionDto collisionDto) {
-		assertNotNull(collisionDto, "collisionDto");
+		requireNonNull(collisionDto, "collisionDto");
 
 		final CollisionDao cDao = transaction.getDao(CollisionDao.class);
 		final HistoCryptoRepoFileDao hcrfDao = transaction.getDao(HistoCryptoRepoFileDao.class);

@@ -1,6 +1,6 @@
 package org.subshare.gui.histo.exp.destination;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import org.subshare.gui.histo.exp.ExportFromHistoryData;
 import org.subshare.gui.wizard.WizardPage;
@@ -15,7 +15,7 @@ public class ExportFromHistoryDestinationWizardPage extends WizardPage {
 
 	public ExportFromHistoryDestinationWizardPage(ExportFromHistoryData exportFromHistoryData) {
 		super("Export from history");
-		this.exportFromHistoryData = assertNotNull(exportFromHistoryData, "exportFromHistoryData");
+		this.exportFromHistoryData = requireNonNull(exportFromHistoryData, "exportFromHistoryData");
 		shownRequired.set(true);
 		setMinSize(550, 550);
 //		setPrefSize(600, 600);

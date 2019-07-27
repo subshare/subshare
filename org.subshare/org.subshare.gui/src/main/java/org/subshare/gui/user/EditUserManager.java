@@ -1,6 +1,6 @@
 package org.subshare.gui.user;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -30,7 +30,7 @@ public class EditUserManager {
 	}
 
 	public void edit(final Collection<? extends User> users) {
-		assertNotNull(users, "users");
+		requireNonNull(users, "users");
 		editedUsers.addAll(users);
 		final EditUserEvent event = new EditUserEvent(this, users);
 		for (final EditUserListener listener : editUserListeners)
@@ -38,12 +38,12 @@ public class EditUserManager {
 	}
 
 	public void endEditing(final Collection<? extends User> users) {
-		assertNotNull(users, "users");
+		requireNonNull(users, "users");
 		editedUsers.removeAll(users);
 	}
 
 	public void addEditUserListener(final EditUserListener listener) {
-		assertNotNull(listener, "listener");
+		requireNonNull(listener, "listener");
 		editUserListeners.add(listener);
 	}
 	public void removeEditUserListener(final EditUserListener listener) {

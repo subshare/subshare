@@ -1,6 +1,6 @@
 package org.subshare.gui.resolvecollision.collision;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import org.subshare.gui.wizard.WizardPage;
 
@@ -12,7 +12,7 @@ public class CollisionWizardPage extends WizardPage {
 
 	public CollisionWizardPage(final CollisionData collisionData) {
 		super("Collision");
-		this.collisionData = assertNotNull(collisionData, "collisionData");
+		this.collisionData = requireNonNull(collisionData, "collisionData");
 	}
 
 	@Override

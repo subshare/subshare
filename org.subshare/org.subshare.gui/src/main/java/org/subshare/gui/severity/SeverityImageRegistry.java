@@ -1,6 +1,6 @@
 package org.subshare.gui.severity;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,8 +28,8 @@ public class SeverityImageRegistry {
 	}
 
 	public synchronized Image getImage(final Severity severity, final IconSize iconSize) {
-		assertNotNull(severity, "severity");
-		assertNotNull(iconSize, "iconSize");
+		requireNonNull(severity, "severity");
+		requireNonNull(iconSize, "iconSize");
 
 		Map<IconSize, Image> iconSize2Image = severity2IconSize2Image.get(severity);
 		if (iconSize2Image == null) {

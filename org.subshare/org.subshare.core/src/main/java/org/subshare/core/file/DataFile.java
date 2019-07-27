@@ -1,6 +1,6 @@
 package org.subshare.core.file;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 import static org.subshare.core.file.FileConst.*;
 
 import java.io.IOException;
@@ -44,11 +44,11 @@ public abstract class DataFile {
 	private final Map<String, byte[]> name2ByteArray = new HashMap<>();
 
 	public DataFile(final byte[] in) throws IOException {
-		this(new ByteArrayInputStream(assertNotNull(in, "in")));
+		this(new ByteArrayInputStream(requireNonNull(in, "in")));
 	}
 
 	public DataFile(final InputStream in) throws IOException {
-		assertNotNull(in, "in");
+		requireNonNull(in, "in");
 		read(in);
 	}
 
@@ -65,8 +65,8 @@ public abstract class DataFile {
 	}
 
 	public void putData(final String name, final byte[] data) {
-		assertNotNull(name, "name");
-		assertNotNull(data, "data");
+		requireNonNull(name, "name");
+		requireNonNull(data, "data");
 		name2ByteArray.put(name, data);
 	}
 
@@ -75,15 +75,15 @@ public abstract class DataFile {
 	}
 
 	public byte[] getData(final String name) {
-		assertNotNull(name, "name");
+		requireNonNull(name, "name");
 		return name2ByteArray.get(name);
 	}
 
 	protected void read(final InputStream in) throws IOException {
-		final ZipInputStream zin = new ZipInputStream(new NoCloseInputStream(assertNotNull(in, "in")));
+		final ZipInputStream zin = new ZipInputStream(new NoCloseInputStream(requireNonNull(in, "in")));
 
 		final Map.Entry<Date, Properties> me = readManifest(zin);
-		manifestTimestamp = me == null ? null : assertNotNull(me.getKey(), "me.key");
+		manifestTimestamp = me == null ? null : requireNonNull(me.getKey(), "me.key");
 		manifestProperties = me == null ? null : me.getValue();
 		if (manifestProperties == null) { // be fault-tolerant on *empty* input.
 			initManifestProperties();
@@ -106,7 +106,7 @@ public abstract class DataFile {
 	protected abstract String getContentTypeValue();
 
 	protected Map.Entry<Date, Properties> readManifest(final ZipInputStream zin) throws IOException {
-		assertNotNull(zin, "zin");
+		requireNonNull(zin, "zin");
 
 		final ZipEntry ze = zin.getNextEntry();
 		if (ze == null)
@@ -146,7 +146,7 @@ public abstract class DataFile {
 	}
 
 	public void write(final OutputStream out) throws IOException {
-		assertNotNull(out, "out");
+		requireNonNull(out, "out");
 
 		final byte[] manifestData = createManifestData();
 
@@ -177,8 +177,8 @@ public abstract class DataFile {
 	}
 
 	protected void signManifestData(final PgpKey signPgpKey, final byte[] manifestData) throws IOException {
-		assertNotNull(signPgpKey, "signPgpKey");
-		assertNotNull(manifestData, "manifestData");
+		requireNonNull(signPgpKey, "signPgpKey");
+		requireNonNull(manifestData, "manifestData");
 
 		final Pgp pgp = PgpRegistry.getInstance().getPgpOrFail();
 		final PgpEncoder encoder = pgp.createEncoder(new ByteArrayInputStream(manifestData), new NullOutputStream());
@@ -192,8 +192,8 @@ public abstract class DataFile {
 	}
 
 	private boolean isSignatureValid(final byte[] signedData, final byte[] detachedSignatureData) {
-		assertNotNull(signedData, "signedData");
-		assertNotNull(detachedSignatureData, "detachedSignatureData");
+		requireNonNull(signedData, "signedData");
+		requireNonNull(detachedSignatureData, "detachedSignatureData");
 		try {
 			assertSignatureValid(signedData, detachedSignatureData);
 			return true;
@@ -203,8 +203,8 @@ public abstract class DataFile {
 	}
 
 	private PgpSignature assertSignatureValid(final byte[] signedData, final byte[] detachedSignatureData) throws SignatureException, IOException {
-		assertNotNull(signedData, "signedData");
-		assertNotNull(detachedSignatureData, "detachedSignatureData");
+		requireNonNull(signedData, "signedData");
+		requireNonNull(detachedSignatureData, "detachedSignatureData");
 		final Pgp pgp = PgpRegistry.getInstance().getPgpOrFail();
 		final PgpDecoder decoder = pgp.createDecoder(new ByteArrayInputStream(signedData), new NullOutputStream());
 		decoder.setSignInputStream(new ByteArrayInputStream(detachedSignatureData));
@@ -230,11 +230,11 @@ public abstract class DataFile {
 		final SortedMap<String,String> sortedManifestProperties = createSortedManifestProperties();
 
 		final String contentType = sortedManifestProperties.remove(MANIFEST_PROPERTY_CONTENT_TYPE);
-		assertNotNull(contentType, MANIFEST_PROPERTY_CONTENT_TYPE);
+		requireNonNull(contentType, MANIFEST_PROPERTY_CONTENT_TYPE);
 		writeManifestEntry(w, MANIFEST_PROPERTY_CONTENT_TYPE, contentType);
 
 		final String version = sortedManifestProperties.remove(MANIFEST_PROPERTY_CONTENT_TYPE_VERSION);
-		assertNotNull(version, MANIFEST_PROPERTY_CONTENT_TYPE_VERSION);
+		requireNonNull(version, MANIFEST_PROPERTY_CONTENT_TYPE_VERSION);
 		try {
 			Integer.parseInt(version);
 		} catch (NumberFormatException x) {
@@ -281,9 +281,9 @@ public abstract class DataFile {
 	}
 
 	private void writeManifestEntry(final Writer w, final String key, final String value) throws IOException {
-		assertNotNull(w, "w");
-		assertNotNull(key, "key");
-		assertNotNull(value, "value");
+		requireNonNull(w, "w");
+		requireNonNull(key, "key");
+		requireNonNull(value, "value");
 
 		w.write(key);
 		w.write('=');

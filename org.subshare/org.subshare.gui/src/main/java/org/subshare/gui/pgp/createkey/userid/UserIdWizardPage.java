@@ -1,6 +1,6 @@
 package org.subshare.gui.pgp.createkey.userid;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import org.subshare.core.pgp.CreatePgpKeyParam;
 import org.subshare.gui.pgp.createkey.validity.ValidityWizardPage;
@@ -14,7 +14,7 @@ public class UserIdWizardPage extends WizardPage {
 
 	public UserIdWizardPage(final CreatePgpKeyParam createPgpKeyParam) {
 		super("Identities");
-		this.createPgpKeyParam = assertNotNull(createPgpKeyParam, "createPgpKeyParam");
+		this.createPgpKeyParam = requireNonNull(createPgpKeyParam, "createPgpKeyParam");
 		setNextPage(new ValidityWizardPage(createPgpKeyParam));
 	}
 

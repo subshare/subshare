@@ -1,7 +1,7 @@
 package org.subshare.core.pgp;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
+import static java.util.Objects.*;
 import static org.subshare.core.pgp.PgpKeyFlag.*;
 
 import java.io.Serializable;
@@ -78,18 +78,18 @@ public class PgpKey implements Serializable {
 			final Set<PgpKeyFlag> pgpKeyFlags,
 			final boolean revoked,
 			final boolean disabled) {
-		this.pgpKeyId = assertNotNull(pgpKeyId, "pgpKeyId");
-		this.fingerprint = assertNotNull(fingerprint, "fingerprint");
+		this.pgpKeyId = requireNonNull(pgpKeyId, "pgpKeyId");
+		this.fingerprint = requireNonNull(fingerprint, "fingerprint");
 		this.masterKey = masterKey == null ? this : masterKey;
-		this.created = assertNotNull(created, "created");
+		this.created = requireNonNull(created, "created");
 		this.validTo = validTo; // may be null - null means, it does *not* expire.
-		this.algorithm = assertNotNull(algorithm, "algorithm");
+		this.algorithm = requireNonNull(algorithm, "algorithm");
 		this.strength = strength;
 		this.secretKeyAvailable = secretKeyAvailable;
-		this.userIds = Collections.unmodifiableList(new ArrayList<String>(assertNotNull(userIds, "userIds")));
+		this.userIds = Collections.unmodifiableList(new ArrayList<String>(requireNonNull(userIds, "userIds")));
 
 		final Set<PgpKeyFlag> tmpPgpKeyFlags = EnumSet.noneOf(PgpKeyFlag.class);
-		tmpPgpKeyFlags.addAll(assertNotNull(pgpKeyFlags, "pgpKeyFlags"));
+		tmpPgpKeyFlags.addAll(requireNonNull(pgpKeyFlags, "pgpKeyFlags"));
 		this.pgpKeyFlags = Collections.unmodifiableSet(tmpPgpKeyFlags);
 
 		this.revoked = revoked;
@@ -189,7 +189,7 @@ public class PgpKey implements Serializable {
 	 * @return the master-key of this key or <code>this</code>, if this is already the master-key.
 	 */
 	public PgpKey getMasterKey() {
-		return assertNotNull(masterKey, "masterKey");
+		return requireNonNull(masterKey, "masterKey");
 	}
 
 	public void setSubKeys(List<PgpKey> subKeys) {
@@ -199,7 +199,7 @@ public class PgpKey implements Serializable {
 		if (subKeys == null)
 		    this.subKeys = NULL_SUB_KEYS;
 		else
-		    this.subKeys = Collections.unmodifiableList(new ArrayList<PgpKey>(assertNotNull(subKeys, "subKeys")));
+		    this.subKeys = Collections.unmodifiableList(new ArrayList<PgpKey>(requireNonNull(subKeys, "subKeys")));
 	}
 
 	/**

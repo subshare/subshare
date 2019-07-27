@@ -1,6 +1,7 @@
 package org.subshare.gui.histo;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 import static org.subshare.gui.util.PlatformUtil.*;
 
 import java.lang.ref.WeakReference;
@@ -51,12 +52,12 @@ public class HistoryPaneSupport {
 
 	public HistoryPaneSupport(final HistoryPaneContainer container) {
 		assertFxApplicationThread();
-		this.container = assertNotNull(container, "container");
-		this.localRepo = assertNotNull(this.container.getLocalRepo(), "container.localRepo");
-		this.tabPane = assertNotNull(this.container.getTabPane(), "container.tabPane");
-		this.historyTab = assertNotNull(this.container.getHistoryTab(), "container.historyTab");
-		this.resolveCollisionInHistoryButton = assertNotNull(this.container.getResolveCollisionInHistoryButton(), "container.resolveCollisionInHistoryButton");
-		this.exportFromHistoryButton = assertNotNull(this.container.getExportFromHistoryButton(), "container.exportFromHistoryButton");
+		this.container = requireNonNull(container, "container");
+		this.localRepo = requireNonNull(this.container.getLocalRepo(), "container.localRepo");
+		this.tabPane = requireNonNull(this.container.getTabPane(), "container.tabPane");
+		this.historyTab = requireNonNull(this.container.getHistoryTab(), "container.historyTab");
+		this.resolveCollisionInHistoryButton = requireNonNull(this.container.getResolveCollisionInHistoryButton(), "container.resolveCollisionInHistoryButton");
+		this.exportFromHistoryButton = requireNonNull(this.container.getExportFromHistoryButton(), "container.exportFromHistoryButton");
 
 		tabPane.getSelectionModel().selectedItemProperty().addListener((InvalidationListener) observable -> createOrForgetHistoryPane());
 		selectedHistoCryptoRepoFileIds.addListener((InvalidationListener) observable -> selectedHistoCryptoRepoFileIdsChanged());

@@ -1,6 +1,6 @@
 package org.subshare.rest.server.service;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
@@ -23,8 +23,8 @@ public class SsBeginPutFileService extends BeginPutFileService {
 	@PUT
 	@Path("{path:.*}")
 	public void beginPutFile(@PathParam("path") String path, final SsNormalFileDto normalFileDto) {
-		assertNotNull(path, "path");
-		assertNotNull(normalFileDto, "normalFileDto");
+		requireNonNull(path, "path");
+		requireNonNull(normalFileDto, "normalFileDto");
 
 //		RepoFileContext.setContext(new RepoFileContext(path, normalFileDto, null));
 //		try {

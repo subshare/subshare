@@ -1,6 +1,6 @@
 package org.subshare.core;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.UUID;
 
@@ -26,7 +26,7 @@ public abstract class AbstractLocalRepoStorage implements LocalRepoStorage {
 	}
 
 	protected LocalRepoStorageFactory getLocalRepoStorageFactoryOrFail() {
-		return assertNotNull(getLocalRepoStorageFactoryOrFail(), "getLocalRepoStorageFactoryOrFail()");
+		return requireNonNull(getLocalRepoStorageFactoryOrFail(), "getLocalRepoStorageFactoryOrFail()");
 	}
 
 	@Override
@@ -41,7 +41,7 @@ public abstract class AbstractLocalRepoStorage implements LocalRepoStorage {
 		this.transaction = transaction;
 	}
 	protected LocalRepoTransaction getTransactionOrFail() {
-		return assertNotNull(getTransaction(), "getTransaction()");
+		return requireNonNull(getTransaction(), "getTransaction()");
 	}
 
 	@Override
@@ -56,7 +56,7 @@ public abstract class AbstractLocalRepoStorage implements LocalRepoStorage {
 		this.remoteRepositoryId = serverRepositoryId;
 	}
 	protected UUID getRemoteRepositoryIdOrFail() {
-		return assertNotNull(getRemoteRepositoryId(), "getRemoteRepositoryId()");
+		return requireNonNull(getRemoteRepositoryId(), "getRemoteRepositoryId()");
 	}
 
 	@Override
@@ -71,6 +71,6 @@ public abstract class AbstractLocalRepoStorage implements LocalRepoStorage {
 		this.remotePathPrefix = remotePathPrefix;
 	}
 	protected String getRemotePathPrefixOrFail() {
-		return assertNotNull(getRemotePathPrefix(), "getRemotePathPrefix()");
+		return requireNonNull(getRemotePathPrefix(), "getRemotePathPrefix()");
 	}
 }

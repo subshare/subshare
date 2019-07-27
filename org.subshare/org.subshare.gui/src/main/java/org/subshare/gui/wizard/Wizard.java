@@ -1,6 +1,6 @@
 package org.subshare.gui.wizard;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.Deque;
 import java.util.IdentityHashMap;
@@ -115,7 +115,7 @@ public abstract class Wizard extends StackPane {
 	}
 
 	public void registerWizardPage(final WizardPage wizardPage) {
-		assertNotNull(wizardPage, "wizardPage");
+		requireNonNull(wizardPage, "wizardPage");
 
 		if (wizardPage.getWizard() != null)
 			wizardPage.setWizard(this);
@@ -206,7 +206,7 @@ public abstract class Wizard extends StackPane {
 	}
 
 	protected void navTo(final WizardPage wizardPage, boolean addToHistory) {
-		assertNotNull(wizardPage, "wizardPage");
+		requireNonNull(wizardPage, "wizardPage");
 		PlatformUtil.assertFxApplicationThread();
 
 		{
@@ -450,7 +450,7 @@ public abstract class Wizard extends StackPane {
 //	}
 //
 //	public WizardPage getNextPageFromPages(final WizardPage wizardPage) {
-//		assertNotNull("wizardPage", wizardPage);
+//		requireNonNull("wizardPage", wizardPage);
 //		int index = pages.indexOf(wizardPage);
 //		if (index < 0)
 //			return null;
@@ -471,7 +471,7 @@ public abstract class Wizard extends StackPane {
 //	}
 //
 //	public <P extends WizardPage> P getPage(final Class<P> type) {
-//		assertNotNull("type", type);
+//		requireNonNull("type", type);
 //
 //		for (WizardPage wizardPage : pages) {
 //			if (type.isInstance(wizardPage))
@@ -489,7 +489,7 @@ public abstract class Wizard extends StackPane {
 //	}
 //
 //	public WizardPage getPage(final String id) {
-//		assertNotNull("id", id);
+//		requireNonNull("id", id);
 //
 //		for (WizardPage wizardPage : pages) {
 //			if (id.equals(wizardPage.getId()))
@@ -502,7 +502,7 @@ public abstract class Wizard extends StackPane {
 		return finishingPage;
 	}
 	public void setFinishingPage(final Parent finishingPage) {
-		assertNotNull(finishingPage, "finishingPage");
+		requireNonNull(finishingPage, "finishingPage");
 		PlatformUtil.assertFxApplicationThread();
 
 		if (! (finishingPage instanceof FinishingPage))

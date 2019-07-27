@@ -1,7 +1,7 @@
 package org.subshare.gui.localrepo.userrepokeylist;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
+import static java.util.Objects.*;
 import static javafx.application.Platform.*;
 import static org.subshare.gui.util.FxmlUtil.*;
 import static org.subshare.gui.util.PlatformUtil.*;
@@ -133,12 +133,12 @@ public class UserRepoKeyListPane extends GridPane {
 	}
 
 	private LocalRepoManager createLocalRepoManager() {
-		final LocalRepo localRepo = assertNotNull(getLocalRepo(), "localRepo");
+		final LocalRepo localRepo = requireNonNull(getLocalRepo(), "localRepo");
 		return LocalRepoManagerFactoryLs.getLocalRepoManagerFactory().createLocalRepoManagerForExistingRepository(localRepo.getLocalRoot());
 	}
 
 	private void addOrRemoveTableItemsViewCallback(final Collection<DebugUserRepoKeyDto> dtos) {
-		assertNotNull(dtos, "dtos");
+		requireNonNull(dtos, "dtos");
 		final Map<DebugUserRepoKeyDto, UserRepoKeyListItem> viewDto2ListItem = new HashMap<>();
 		for (final UserRepoKeyListItem li : tableView.getItems())
 			viewDto2ListItem.put(li.getDebugUserRepoKeyDto(), li);

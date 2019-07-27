@@ -1,6 +1,6 @@
 package org.subshare.rest.client.transport.request;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
@@ -16,7 +16,7 @@ public class SsBeginPutFile extends BeginPutFile {
 
 	public SsBeginPutFile(final String repositoryName, final String path, final SsNormalFileDto normalFileDto) {
 		super(repositoryName, path);
-		this.normalFileDto = assertNotNull(normalFileDto, "normalFileDto");
+		this.normalFileDto = requireNonNull(normalFileDto, "normalFileDto");
 	}
 
 	@Override

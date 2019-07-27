@@ -1,6 +1,6 @@
 package org.subshare.rest.client.transport.request;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
@@ -14,7 +14,7 @@ public class EndGetCryptoChangeSetDto extends VoidRequest {
 	private final String repositoryName;
 
 	public EndGetCryptoChangeSetDto(final String repositoryName) {
-		this.repositoryName = assertNotNull(repositoryName, "repositoryName");
+		this.repositoryName = requireNonNull(repositoryName, "repositoryName");
 	}
 
 	@Override

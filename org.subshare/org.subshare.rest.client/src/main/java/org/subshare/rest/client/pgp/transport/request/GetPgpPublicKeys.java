@@ -1,6 +1,6 @@
 package org.subshare.rest.client.pgp.transport.request;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.io.InputStream;
 import java.util.Collection;
@@ -19,7 +19,7 @@ public class GetPgpPublicKeys extends AbstractRequest<InputStream> {
 	private final long changedAfterLocalRevision;
 
 	public GetPgpPublicKeys(final Collection<PgpKeyId> pgpKeyIds, final long changedAfterLocalRevision) {
-		assertNotNull(pgpKeyIds, "pgpKeyIds");
+		requireNonNull(pgpKeyIds, "pgpKeyIds");
 		if (pgpKeyIds instanceof PgpKeyIdList)
 			this.pgpKeyIdList = (PgpKeyIdList) pgpKeyIds;
 		else

@@ -1,6 +1,6 @@
 package org.subshare.core.repair;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.Date;
 
@@ -32,11 +32,11 @@ public class RepairDeleteCollisionConfig {
 	protected final File localRoot;
 
 	protected RepairDeleteCollisionConfig(final File localRoot) {
-		this.localRoot = assertNotNull(localRoot, "localRoot");
+		this.localRoot = requireNonNull(localRoot, "localRoot");
 	}
 
 	public static RepairDeleteCollisionConfig getInstance(final File localRoot) {
-		return new RepairDeleteCollisionConfig(assertNotNull(localRoot, "localRoot"));
+		return new RepairDeleteCollisionConfig(requireNonNull(localRoot, "localRoot"));
 	}
 
 	/**

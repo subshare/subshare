@@ -1,6 +1,6 @@
 package org.subshare.rest.client.transport.request;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
@@ -15,7 +15,7 @@ public class GetCryptoChangeSetDtoFileData extends AbstractRequest<byte[]> {
 	private final int multiPartIndex;
 
 	public GetCryptoChangeSetDtoFileData(final String repositoryName, final int multiPartIndex) {
-		this.repositoryName = assertNotNull(repositoryName, "repositoryName");
+		this.repositoryName = requireNonNull(repositoryName, "repositoryName");
 		this.multiPartIndex = multiPartIndex;
 	}
 

@@ -1,6 +1,6 @@
 package org.subshare.core.user;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import org.subshare.core.dto.InvitationUserRepoKeyPublicKeyDto;
 import org.subshare.core.dto.UserRepoKeyPublicKeyDto;
@@ -20,7 +20,7 @@ public class UserRepoKeyPublicKeyDtoWithSignatureConverter {
 //	}
 
 	public UserRepoKeyPublicKeyDto toUserRepoKeyPublicKeyDto(final UserRepoKey.PublicKeyWithSignature publicKey) {
-		assertNotNull(publicKey, "publicKey");
+		requireNonNull(publicKey, "publicKey");
 
 		final InvitationUserRepoKeyPublicKeyDto invitationUserRepoKeyPublicKeyDto = publicKey.isInvitation() ? new InvitationUserRepoKeyPublicKeyDto() : null;
 
@@ -40,7 +40,7 @@ public class UserRepoKeyPublicKeyDtoWithSignatureConverter {
 	}
 
 //	public UserRepoKey.PublicKey fromUserRepoKeyPublicKeyDtoNoSig(final UserRepoKeyPublicKeyDto publicKeyDto) {
-//		assertNotNull("publicKeyDto", publicKeyDto);
+//		requireNonNull("publicKeyDto", publicKeyDto);
 //
 //		CryptoRegistry.
 //
@@ -55,8 +55,8 @@ public class UserRepoKeyPublicKeyDtoWithSignatureConverter {
 //	}
 
 	public UserRepoKey.PublicKeyWithSignature fromUserRepoKeyPublicKeyDto(final UserRepoKeyPublicKeyDto publicKeyDto) {
-		assertNotNull(publicKeyDto, "publicKeyDto");
-		assertNotNull(publicKeyDto.getSignedPublicKeyData(), "publicKeyDto.signedPublicKeyData");
+		requireNonNull(publicKeyDto, "publicKeyDto");
+		requireNonNull(publicKeyDto.getSignedPublicKeyData(), "publicKeyDto.signedPublicKeyData");
 
 		InvitationUserRepoKeyPublicKeyDto invPublicKeyDto = (InvitationUserRepoKeyPublicKeyDto)
 				(publicKeyDto instanceof InvitationUserRepoKeyPublicKeyDto ? publicKeyDto : null);

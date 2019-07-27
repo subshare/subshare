@@ -1,7 +1,7 @@
 package org.subshare.local.dto;
 
 import static co.codewizards.cloudstore.core.objectfactory.ObjectFactoryUtil.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import org.subshare.core.dto.CryptoConfigPropSetDto;
 import org.subshare.local.persistence.CryptoConfigPropSet;
@@ -22,21 +22,21 @@ public class CryptoConfigPropSetDtoConverter {
 	}
 
 	protected CryptoConfigPropSetDtoConverter(LocalRepoTransaction transaction) {
-		this.transaction = assertNotNull(transaction, "transaction");
+		this.transaction = requireNonNull(transaction, "transaction");
 	}
 
 	public CryptoConfigPropSetDto toCryptoConfigPropSetDto(final CryptoConfigPropSet cryptoConfigPropSet) {
-		assertNotNull(cryptoConfigPropSet, "cryptoConfigPropSet");
+		requireNonNull(cryptoConfigPropSet, "cryptoConfigPropSet");
 		CryptoConfigPropSetDto result = new CryptoConfigPropSetDto();
 		result.setCryptoRepoFileId(cryptoConfigPropSet.getCryptoRepoFileId());
-		result.setCryptoKeyId(assertNotNull(cryptoConfigPropSet.getCryptoKey(), "cryptoConfigPropSet.cryptoKey").getCryptoKeyId());
+		result.setCryptoKeyId(requireNonNull(cryptoConfigPropSet.getCryptoKey(), "cryptoConfigPropSet.cryptoKey").getCryptoKeyId());
 		result.setConfigPropSetDtoData(cryptoConfigPropSet.getConfigPropSetDtoData());
 		result.setSignature(cryptoConfigPropSet.getSignature());
 		return result;
 	}
 
 	public CryptoConfigPropSet putCryptoConfigPropSetDto(final CryptoConfigPropSetDto cryptoConfigPropSetDto) {
-		assertNotNull(cryptoConfigPropSetDto, "cryptoConfigPropSetDto");
+		requireNonNull(cryptoConfigPropSetDto, "cryptoConfigPropSetDto");
 
 		final CryptoRepoFileDao crfDao = transaction.getDao(CryptoRepoFileDao.class);
 		final CryptoKeyDao ckDao = transaction.getDao(CryptoKeyDao.class);

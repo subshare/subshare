@@ -1,11 +1,11 @@
 package org.subshare.gui.user;
 
-import static javafx.application.Platform.*;
 import static co.codewizards.cloudstore.core.bean.PropertyChangeListenerUtil.*;
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
+import static java.util.Objects.*;
+import static javafx.application.Platform.*;
 import static org.subshare.gui.util.FxmlUtil.*;
 
 import java.beans.PropertyChangeListener;
@@ -121,8 +121,8 @@ public class UserPane extends GridPane {
 	private final InvalidationListener emailWrapperInvalidationListener = observable -> updateEmails();
 
 	public UserPane(final EditUserManager editUserManager, final User user) {
-		this.editUserManager = assertNotNull(editUserManager, "editUserManager");
-		this.user = assertNotNull(user, "user");
+		this.editUserManager = requireNonNull(editUserManager, "editUserManager");
+		this.user = requireNonNull(user, "user");
 		loadDynamicComponentFxml(UserPane.class, this);
 
 		try {
@@ -174,7 +174,7 @@ public class UserPane extends GridPane {
 
 			final PgpKeyTreeItem<?> pgpKeyTreeItem = treeItem.getValue();
 			final PgpKeyPgpKeyTreeItem pgpKeyPgpKeyTreeItem = pgpKeyTreeItem.getThisOrParentPgpKeyTreeItemOfType(PgpKeyPgpKeyTreeItem.class);
-			assertNotNull(pgpKeyPgpKeyTreeItem, "pgpKeyPgpKeyTreeItem");
+			requireNonNull(pgpKeyPgpKeyTreeItem, "pgpKeyPgpKeyTreeItem");
 			final PgpKey pgpKey = pgpKeyPgpKeyTreeItem.getPgpKey();
 			result.add(pgpKey);
 		}

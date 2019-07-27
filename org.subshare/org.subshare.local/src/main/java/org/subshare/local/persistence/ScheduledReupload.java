@@ -1,6 +1,6 @@
 package org.subshare.local.persistence;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import javax.jdo.annotations.Index;
 import javax.jdo.annotations.Inheritance;
@@ -31,6 +31,6 @@ public class ScheduledReupload extends Entity {
 		return repoFile;
 	}
 	public void setRepoFile(RepoFile repoFile) {
-		this.repoFile = assertNotNull(repoFile, "repoFile");
+		this.repoFile = requireNonNull(repoFile, "repoFile");
 	}
 }

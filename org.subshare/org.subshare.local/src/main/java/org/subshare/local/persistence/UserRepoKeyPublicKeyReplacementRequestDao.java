@@ -1,6 +1,6 @@
 package org.subshare.local.persistence;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.Collection;
 
@@ -25,7 +25,7 @@ public class UserRepoKeyPublicKeyReplacementRequestDao extends Dao<UserRepoKeyPu
 	}
 
 	public UserRepoKeyPublicKeyReplacementRequest getUserRepoKeyPublicKeyReplacementRequest(final Uid requestId) {
-		assertNotNull(requestId, "requestId");
+		requireNonNull(requestId, "requestId");
 		final Query query = pm().newNamedQuery(getEntityClass(), "getUserRepoKeyPublicKeyReplacementRequest_requestId");
 		try {
 			final UserRepoKeyPublicKeyReplacementRequest request = (UserRepoKeyPublicKeyReplacementRequest) query.execute(requestId.toString());
@@ -76,7 +76,7 @@ public class UserRepoKeyPublicKeyReplacementRequestDao extends Dao<UserRepoKeyPu
 	 * @return the replacement-requests found matching the given criteria - never <code>null</code>, but maybe empty.
 	 */
 	public Collection<UserRepoKeyPublicKeyReplacementRequest> getUserRepoKeyPublicKeyReplacementRequestsForOldKey(InvitationUserRepoKeyPublicKey oldKey) {
-		assertNotNull(oldKey, "oldKey");
+		requireNonNull(oldKey, "oldKey");
 		final Query query = pm().newNamedQuery(getEntityClass(), "getUserRepoKeyPublicKeyReplacementRequests_oldKey");
 		try {
 			long startTimestamp = System.currentTimeMillis();
@@ -95,7 +95,7 @@ public class UserRepoKeyPublicKeyReplacementRequestDao extends Dao<UserRepoKeyPu
 	}
 
 //	public Collection<UserRepoKeyPublicKeyReplacementRequest> getUserRepoKeyPublicKeyReplacementRequestsForNewKey(UserRepoKeyPublicKey newKey) {
-//		assertNotNull("newKey", newKey);
+//		requireNonNull("newKey", newKey);
 //		final Query query = pm().newNamedQuery(getEntityClass(), "getUserRepoKeyPublicKeyReplacementRequests_newKey");
 //		try {
 //			long startTimestamp = System.currentTimeMillis();

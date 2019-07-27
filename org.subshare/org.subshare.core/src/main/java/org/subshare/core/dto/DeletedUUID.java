@@ -1,6 +1,6 @@
 package org.subshare.core.dto;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.Date;
 import java.util.UUID;
@@ -23,7 +23,7 @@ public class DeletedUUID {
 	public DeletedUUID() { }
 
 	public DeletedUUID(UUID uuid) {
-		this.uuid = assertNotNull(uuid, "uuid");
+		this.uuid = requireNonNull(uuid, "uuid");
 		this.deleted = new Date();
 	}
 

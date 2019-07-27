@@ -1,6 +1,6 @@
 package org.subshare.core.server;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.net.URL;
 import java.util.Date;
@@ -57,7 +57,7 @@ public class ServerImpl extends AbstractBean<Server.Property> implements Cloneab
 	}
 	@Override
 	public void setChanged(final Date changed) {
-		assertNotNull(changed, "changed");
+		requireNonNull(changed, "changed");
 		setPropertyValue(PropertyEnum.changed, changed);
 	}
 

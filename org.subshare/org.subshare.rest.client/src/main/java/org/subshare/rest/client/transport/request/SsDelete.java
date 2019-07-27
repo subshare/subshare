@@ -1,6 +1,6 @@
 package org.subshare.rest.client.transport.request;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
@@ -14,7 +14,7 @@ public class SsDelete extends co.codewizards.cloudstore.rest.client.request.Dele
 
 	public SsDelete(final String repositoryName, final SsDeleteModificationDto deleteModificationDto) {
 		super(repositoryName, null);
-		this.deleteModificationDto = assertNotNull(deleteModificationDto, "deleteModificationDto");
+		this.deleteModificationDto = requireNonNull(deleteModificationDto, "deleteModificationDto");
 	}
 
 	@Override

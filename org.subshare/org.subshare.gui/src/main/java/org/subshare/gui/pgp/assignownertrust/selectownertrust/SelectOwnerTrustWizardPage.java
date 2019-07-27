@@ -1,6 +1,6 @@
 package org.subshare.gui.pgp.assignownertrust.selectownertrust;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import org.subshare.gui.pgp.assignownertrust.AssignOwnerTrustData;
 import org.subshare.gui.pgp.assignownertrust.selectkey.SelectKeyWizardPage;
@@ -14,7 +14,7 @@ public class SelectOwnerTrustWizardPage extends WizardPage {
 
 	public SelectOwnerTrustWizardPage(final AssignOwnerTrustData assignOwnerTrustData) {
 		super("How much is the owner trusted?");
-		this.assignOwnerTrustData = assertNotNull(assignOwnerTrustData, "assignOwnerTrustData");
+		this.assignOwnerTrustData = requireNonNull(assignOwnerTrustData, "assignOwnerTrustData");
 	}
 
 	@Override

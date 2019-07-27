@@ -1,6 +1,6 @@
 package org.subshare.gui.pgp.assignownertrust;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -22,9 +22,9 @@ public class AssignOwnerTrustWizard extends Wizard {
 
 	public AssignOwnerTrustWizard(final AssignOwnerTrustData assignOwnerTrustData) {
 		super(new SelectOwnerTrustWizardPage(assignOwnerTrustData));
-		this.assignOwnerTrustData = assertNotNull(assignOwnerTrustData, "assignOwnerTrustData"); //$NON-NLS-1$
+		this.assignOwnerTrustData = requireNonNull(assignOwnerTrustData, "assignOwnerTrustData"); //$NON-NLS-1$
 		final User user = assignOwnerTrustData.getUser();
-		assertNotNull(user, "assignOwnerTrustData.user"); //$NON-NLS-1$
+		requireNonNull(user, "assignOwnerTrustData.user"); //$NON-NLS-1$
 		this.pgp = PgpLs.getPgpOrFail();
 
 		final Set<PgpKey> userPgpKeys = user.getPgpKeys();

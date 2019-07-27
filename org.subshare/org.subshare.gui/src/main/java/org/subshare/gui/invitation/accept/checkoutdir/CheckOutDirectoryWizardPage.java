@@ -1,6 +1,6 @@
 package org.subshare.gui.invitation.accept.checkoutdir;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import org.subshare.gui.invitation.accept.AcceptInvitationData;
 import org.subshare.gui.wizard.WizardPage;
@@ -14,7 +14,7 @@ public class CheckOutDirectoryWizardPage extends WizardPage {
 
 	public CheckOutDirectoryWizardPage(final AcceptInvitationData acceptInvitationData) {
 		super("Check-out directory");
-		this.acceptInvitationData = assertNotNull(acceptInvitationData, "acceptInvitationData");
+		this.acceptInvitationData = requireNonNull(acceptInvitationData, "acceptInvitationData");
 		shownRequired.set(true);
 	}
 

@@ -1,6 +1,6 @@
 package org.subshare.gui.welcome;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import org.subshare.gui.util.PlatformUtil;
 import org.subshare.gui.wizard.WizardDialog;
@@ -22,7 +22,7 @@ public class Welcome {
 	private volatile boolean serverWizardCompleted;
 
 	public Welcome(Window owner) {
-		this.owner = assertNotNull(owner, "owner");
+		this.owner = requireNonNull(owner, "owner");
 	}
 
 	private void init() {

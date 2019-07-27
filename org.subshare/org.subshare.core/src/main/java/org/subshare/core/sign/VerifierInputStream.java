@@ -1,7 +1,7 @@
 package org.subshare.core.sign;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.IOUtil.*;
+import static java.util.Objects.*;
 
 import java.io.BufferedInputStream;
 import java.io.FilterInputStream;
@@ -49,7 +49,7 @@ public class VerifierInputStream extends FilterInputStream {
 
 	public VerifierInputStream(final InputStream in, final UserRepoKeyPublicKeyLookup lookup) throws IOException {
 		super(new BufferedInputStream(in));
-		assertNotNull(lookup, "lookup");
+		requireNonNull(lookup, "lookup");
 		header = readHeader();
 
 		try {
@@ -75,9 +75,9 @@ public class VerifierInputStream extends FilterInputStream {
 		public final Date signatureCreated;
 		public Header(final int version, final SignerTransformation signerTransformation, final Uid signingUserRepoKeyId, final Date signatureCreated) {
 			this.version = version;
-			this.signerTransformation = assertNotNull(signerTransformation, "signerTransformation");
-			this.signingUserRepoKeyId = assertNotNull(signingUserRepoKeyId, "signingUserRepoKeyId");
-			this.signatureCreated = assertNotNull(signatureCreated, "signatureCreated");
+			this.signerTransformation = requireNonNull(signerTransformation, "signerTransformation");
+			this.signingUserRepoKeyId = requireNonNull(signingUserRepoKeyId, "signingUserRepoKeyId");
+			this.signatureCreated = requireNonNull(signatureCreated, "signatureCreated");
 		}
 	}
 
@@ -87,7 +87,7 @@ public class VerifierInputStream extends FilterInputStream {
 
 		public Footer(final long signatureBytesOffset, final byte[] signatureBytes) {
 			this.signatureBytesOffset = signatureBytesOffset;
-			this.signatureBytes = assertNotNull(signatureBytes, "signatureBytes");
+			this.signatureBytes = requireNonNull(signatureBytes, "signatureBytes");
 		}
 	}
 

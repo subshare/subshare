@@ -1,7 +1,7 @@
 package org.subshare.local.dto;
 
 import static co.codewizards.cloudstore.core.objectfactory.ObjectFactoryUtil.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import org.subshare.core.dto.HistoFrameDto;
 import org.subshare.local.persistence.HistoFrame;
@@ -18,11 +18,11 @@ public class HistoFrameDtoConverter {
 	}
 
 	protected HistoFrameDtoConverter(final LocalRepoTransaction transaction) {
-		this.transaction = assertNotNull(transaction, "transaction");
+		this.transaction = requireNonNull(transaction, "transaction");
 	}
 
 	public HistoFrameDto toHistoFrameDto(final HistoFrame histoFrame) {
-		assertNotNull(histoFrame, "histoFrame");
+		requireNonNull(histoFrame, "histoFrame");
 		HistoFrameDto result = new HistoFrameDto();
 		result.setHistoFrameId(histoFrame.getHistoFrameId());
 		result.setFromRepositoryId(histoFrame.getFromRepositoryId());
@@ -34,7 +34,7 @@ public class HistoFrameDtoConverter {
 	}
 
 	public HistoFrame putHistoFrameDto(final HistoFrameDto histoFrameDto) {
-		assertNotNull(histoFrameDto, "histoFrameDto");
+		requireNonNull(histoFrameDto, "histoFrameDto");
 
 		final HistoFrameDao dao = transaction.getDao(HistoFrameDao.class);
 		HistoFrame result = dao.getHistoFrame(histoFrameDto.getHistoFrameId());

@@ -1,6 +1,6 @@
 package org.subshare.gui.pgp.creatingkey;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import org.subshare.core.pgp.CreatePgpKeyParam;
 import org.subshare.core.pgp.PgpUserId;
@@ -17,8 +17,8 @@ public class CreatingPgpKeyDialog extends Stage {
 	private final CreatingPgpKeyPane creatingPgpKeyPane;
 
 	public CreatingPgpKeyDialog(final Window owner, final CreatePgpKeyParam createPgpKeyParam) {
-		assertNotNull(owner, "owner");
-		assertNotNull(createPgpKeyParam, "createPgpKeyParam");
+		requireNonNull(owner, "owner");
+		requireNonNull(createPgpKeyParam, "createPgpKeyParam");
 
 		PgpUserId pgpUserId = createPgpKeyParam.getUserIds().get(0);
 

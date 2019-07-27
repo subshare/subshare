@@ -1,11 +1,10 @@
 package org.subshare.core.sign;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.IOUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
+import static java.util.Objects.*;
 import static org.subshare.core.crypto.CryptoConfigUtil.*;
 
-import co.codewizards.cloudstore.core.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -18,6 +17,8 @@ import org.subshare.core.dto.SignatureDto;
 import org.subshare.core.user.UserRepoKey;
 import org.subshare.crypto.CryptoRegistry;
 
+import co.codewizards.cloudstore.core.io.ByteArrayOutputStream;
+
 public class SignableSigner {
 
 	private static final int BUFFER_SIZE = 32 * 1024;
@@ -28,7 +29,7 @@ public class SignableSigner {
 	private final Signer signer;
 
 	public SignableSigner(final UserRepoKey userRepoKey) {
-		this.userRepoKey = assertNotNull(userRepoKey, "userRepoKey");
+		this.userRepoKey = requireNonNull(userRepoKey, "userRepoKey");
 		this.signerTransformation = getSignerTransformation();
 
 		try {
@@ -40,7 +41,7 @@ public class SignableSigner {
 	}
 
 	public void sign(final Signable signable) {
-		assertNotNull(signable, "signable");
+		requireNonNull(signable, "signable");
 
 		final Date signatureCreated = new Date();
 		final SignatureDto signatureDto = new SignatureDto();

@@ -1,7 +1,7 @@
 package org.subshare.gui.pgp.createkey.passphrase;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
+import static java.util.Objects.*;
 import static org.subshare.gui.util.FxmlUtil.*;
 
 import java.util.Arrays;
@@ -73,7 +73,7 @@ public abstract class PassphrasePane extends GridPane {
 	private char[] backupPassphrase;
 
 	public PassphrasePane(final CreatePgpKeyParam createPgpKeyParam) {
-		this.createPgpKeyParam = assertNotNull(createPgpKeyParam, "createPgpKeyParam"); //$NON-NLS-1$
+		this.createPgpKeyParam = requireNonNull(createPgpKeyParam, "createPgpKeyParam"); //$NON-NLS-1$
 		loadDynamicComponentFxml(PassphrasePane.class, this);
 
 		passphrase1 = createPassphraseProperty();

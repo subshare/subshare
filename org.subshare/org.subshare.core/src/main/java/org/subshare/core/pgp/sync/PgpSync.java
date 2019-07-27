@@ -2,9 +2,9 @@ package org.subshare.core.pgp.sync;
 
 import static co.codewizards.cloudstore.core.io.StreamUtil.*;
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.CollectionUtil.*;
 import static co.codewizards.cloudstore.core.util.PropertiesUtil.*;
+import static java.util.Objects.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -60,9 +60,9 @@ public class PgpSync implements Sync {
 	}
 
 	public PgpSync(final Server server) {
-		this.server = assertNotNull(server, "server"); //$NON-NLS-1$
-		this.serverId = assertNotNull(this.server.getServerId(), "server.serverId"); //$NON-NLS-1$
-		this.serverUrl = assertNotNull(this.server.getUrl(), "server.url"); //$NON-NLS-1$
+		this.server = requireNonNull(server, "server"); //$NON-NLS-1$
+		this.serverId = requireNonNull(this.server.getServerId(), "server.serverId"); //$NON-NLS-1$
+		this.serverUrl = requireNonNull(this.server.getUrl(), "server.url"); //$NON-NLS-1$
 
 		lastSyncLocalLocalRevisionPropertyKey = String.format("lastSync[serverId=%s].local.localRevision", serverId); //$NON-NLS-1$
 		lastSyncServerLocalRevisionPropertyKey = String.format("lastSync[serverId=%s].server.localRevision", serverId); //$NON-NLS-1$

@@ -1,7 +1,7 @@
 package org.subshare.core.sign;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
+import static java.util.Objects.*;
 import static org.subshare.core.sign.SignableSigner.*;
 
 import java.io.IOException;
@@ -29,12 +29,12 @@ public class PgpSignableSigner {
 	}
 
 	public PgpSignableSigner(final Pgp pgp, final PgpKey pgpKey) {
-		this.pgp = assertNotNull(pgp, "pgp");
-		this.pgpKey = assertNotNull(pgpKey, "pgpKey");
+		this.pgp = requireNonNull(pgp, "pgp");
+		this.pgpKey = requireNonNull(pgpKey, "pgpKey");
 	}
 
 	public void sign(final PgpSignable pgpSignable) {
-		assertNotNull(pgpSignable, "pgpSignable");
+		requireNonNull(pgpSignable, "pgpSignable");
 
 		final String signedDataType = pgpSignable.getSignedDataType();
 		if (isEmpty(signedDataType))

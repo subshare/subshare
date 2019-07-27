@@ -1,9 +1,9 @@
 package org.subshare.gui.backup;
 
 import static co.codewizards.cloudstore.core.io.StreamUtil.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.HashUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
+import static java.util.Objects.*;
 import static org.subshare.gui.backup.BackupDataFile.*;
 
 import java.io.IOException;
@@ -30,7 +30,7 @@ public class BackupExporter extends AbstractBackupImExporter {
 	}
 
 	public void exportBackup(final File backupFile) throws IOException {
-		assertNotNull(backupFile, "backupFile");
+		requireNonNull(backupFile, "backupFile");
 		final Date now = new Date(); // we want the same timestamp everywhere in the export => freeze it now.
 		backupFile.getParentFile().mkdirs();
 		final BackupDataFile backupDataFile = new BackupDataFile();

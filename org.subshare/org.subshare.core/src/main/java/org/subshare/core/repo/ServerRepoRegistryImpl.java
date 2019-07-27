@@ -1,7 +1,7 @@
 package org.subshare.core.repo;
 
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 import static org.subshare.core.file.FileConst.*;
 
 import java.beans.PropertyChangeEvent;
@@ -216,7 +216,7 @@ public class ServerRepoRegistryImpl extends FileBasedObjectRegistry implements S
 
 	@Override
 	public List<ServerRepo> getServerReposOfServer(final Uid serverId) {
-		assertNotNull(serverId, "serverId");
+		requireNonNull(serverId, "serverId");
 		final List<ServerRepo> result = new ArrayList<>();
 		for (final ServerRepo serverRepo : getServerRepos()) {
 			if (serverId.equals(serverRepo.getServerId()))
@@ -232,7 +232,7 @@ public class ServerRepoRegistryImpl extends FileBasedObjectRegistry implements S
 
 	@Override
 	public ServerRepo getServerRepo(final UUID repositoryId) {
-		assertNotNull(repositoryId, "repositoryId");
+		requireNonNull(repositoryId, "repositoryId");
 		for (ServerRepo serverRepo : getServerRepos()) {
 			if (repositoryId.equals(serverRepo.getRepositoryId()))
 				return serverRepo;
@@ -303,7 +303,7 @@ public class ServerRepoRegistryImpl extends FileBasedObjectRegistry implements S
 	}
 
 	protected synchronized void mergeFrom(final ServerRepoRegistryDto serverRepoRegistryDto) {
-		assertNotNull(serverRepoRegistryDto, "serverRepoRegistryDto");
+		requireNonNull(serverRepoRegistryDto, "serverRepoRegistryDto");
 
 		final Set<UUID> deletedServerRepoIdSet = new HashSet<>(this.deletedServerRepoIds.size());
 		for (DeletedUUID deletedUuid : this.deletedServerRepoIds)
@@ -311,7 +311,7 @@ public class ServerRepoRegistryImpl extends FileBasedObjectRegistry implements S
 
 		final List<ServerRepoDto> newServerRepoDtos = new ArrayList<>(serverRepoRegistryDto.getServerRepoDtos().size());
 		for (final ServerRepoDto serverRepoDto : serverRepoRegistryDto.getServerRepoDtos()) {
-			final UUID repositoryId = assertNotNull(serverRepoDto.getRepositoryId(), "serverRepoDto.repositoryId");
+			final UUID repositoryId = requireNonNull(serverRepoDto.getRepositoryId(), "serverRepoDto.repositoryId");
 			if (deletedServerRepoIdSet.contains(repositoryId))
 				continue;
 
@@ -351,8 +351,8 @@ public class ServerRepoRegistryImpl extends FileBasedObjectRegistry implements S
 	}
 
 	private void merge(final ServerRepo toServerRepo, final ServerRepoDto fromServerRepoDto) {
-		assertNotNull(toServerRepo, "toServerRepo");
-		assertNotNull(fromServerRepoDto, "fromServerRepoDto");
+		requireNonNull(toServerRepo, "toServerRepo");
+		requireNonNull(fromServerRepoDto, "fromServerRepoDto");
 		if (toServerRepo.getChanged().before(fromServerRepoDto.getChanged())) {
 			toServerRepo.setName(fromServerRepoDto.getName());
 			toServerRepo.setServerId(fromServerRepoDto.getServerId());

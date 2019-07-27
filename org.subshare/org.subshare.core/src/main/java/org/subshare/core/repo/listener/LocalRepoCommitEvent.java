@@ -1,6 +1,6 @@
 package org.subshare.core.repo.listener;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -19,9 +19,9 @@ public class LocalRepoCommitEvent extends EventObject {
 	private final List<EntityModification> modifications;
 
 	protected LocalRepoCommitEvent(final LocalRepoCommitEventManagerImpl source, final LocalRepoManager localRepoManager, final List<EntityModification> modifications) {
-		super(assertNotNull(source, "source"));
-		assertNotNull(modifications, "modifications");
-		this.localRepoManager = assertNotNull(localRepoManager, "localRepoManager");
+		super(requireNonNull(source, "source"));
+		requireNonNull(modifications, "modifications");
+		this.localRepoManager = requireNonNull(localRepoManager, "localRepoManager");
 		this.localRepositoryId = localRepoManager.getRepositoryId();
 		this.modifications = Collections.unmodifiableList(new ArrayList<EntityModification>(modifications));
 	}

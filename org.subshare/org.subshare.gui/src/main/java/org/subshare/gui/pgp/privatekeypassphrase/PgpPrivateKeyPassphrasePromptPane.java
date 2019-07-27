@@ -1,6 +1,6 @@
 package org.subshare.gui.pgp.privatekeypassphrase;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 import static org.subshare.gui.util.FxmlUtil.*;
 
 import org.subshare.core.pgp.PgpKey;
@@ -46,7 +46,7 @@ public abstract class PgpPrivateKeyPassphrasePromptPane extends GridPane {
 
 	public PgpPrivateKeyPassphrasePromptPane(final PgpKey pgpKey, final String errorMessage) {
 		loadDynamicComponentFxml(PgpPrivateKeyPassphrasePromptPane.class, this);
-		this.pgpKey = assertNotNull(pgpKey, "pgpKey");
+		this.pgpKey = requireNonNull(pgpKey, "pgpKey");
 		userIdsComboBox.setItems(FXCollections.observableArrayList(this.pgpKey.getUserIds()));
 		userIdsComboBox.getSelectionModel().select(0);
 		keyIdTextField.setText(this.pgpKey.getPgpKeyId().toHumanString());

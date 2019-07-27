@@ -1,7 +1,7 @@
 package org.subshare.core.repo.sync;
 
 import static co.codewizards.cloudstore.core.bean.PropertyChangeListenerUtil.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -102,7 +102,7 @@ public class RepoSyncTimerImpl implements RepoSyncTimer {
 	}
 
 	private long calculateNextSyncTimestamp(final LocalRepo localRepo) {
-		assertNotNull(localRepo, "localRepo");
+		requireNonNull(localRepo, "localRepo");
 		final long now = System.currentTimeMillis();
 
 		final long lastSyncTimestamp;
@@ -118,7 +118,7 @@ public class RepoSyncTimerImpl implements RepoSyncTimer {
 	}
 
 	private long getLastSyncTimestamp(final LocalRepo localRepo) {
-		final UUID localRepositoryId = assertNotNull(localRepo, "localRepo").getRepositoryId();
+		final UUID localRepositoryId = requireNonNull(localRepo, "localRepo").getRepositoryId();
 		final List<RepoSyncState> states = getRepoSyncDaemon().getStates(localRepositoryId);
 
 		long result = 0L;
@@ -131,7 +131,7 @@ public class RepoSyncTimerImpl implements RepoSyncTimer {
 	}
 
 	private boolean isSyncQueuedOrInProgress(final LocalRepo localRepo) {
-		final UUID localRepositoryId = assertNotNull(localRepo, "localRepo").getRepositoryId();
+		final UUID localRepositoryId = requireNonNull(localRepo, "localRepo").getRepositoryId();
 
 		final Set<RepoSyncActivity> activities = getRepoSyncDaemon().getActivities(localRepositoryId);
 		for (final RepoSyncActivity activity : activities) {
@@ -150,24 +150,24 @@ public class RepoSyncTimerImpl implements RepoSyncTimer {
 
 	@Override
 	public synchronized long getNextSyncTimestamp(final UUID localRepositoryId) {
-		assertNotNull(localRepositoryId, "localRepositoryId");
+		requireNonNull(localRepositoryId, "localRepositoryId");
 		final Long result = localRepositoryId2NextSyncTimestamp.get(localRepositoryId);
 		return result == null ? 0L : result;
 	}
 
 	protected void setNextSyncTimestamp(final LocalRepo localRepo, long lastSyncTimestamp) {
-		final UUID localRepositoryId = assertNotNull(localRepo, "localRepo").getRepositoryId();
+		final UUID localRepositoryId = requireNonNull(localRepo, "localRepo").getRepositoryId();
 		setNextSyncTimestamp(localRepositoryId, lastSyncTimestamp);
 	}
 
 	protected synchronized void setNextSyncTimestamp(final UUID localRepositoryId, long lastSyncTimestamp) {
-		assertNotNull(localRepositoryId, "localRepositoryId");
+		requireNonNull(localRepositoryId, "localRepositoryId");
 		localRepositoryId2NextSyncTimestamp.put(localRepositoryId, lastSyncTimestamp);
 		firePropertyChange(PropertyEnum.nextSyncTimestamps, null, null);
 	}
 
 	private long getSyncPeriod(final LocalRepo localRepo) {
-		final Config config = ConfigImpl.getInstanceForDirectory(assertNotNull(localRepo, "localRepo").getLocalRoot());
+		final Config config = ConfigImpl.getInstanceForDirectory(requireNonNull(localRepo, "localRepo").getLocalRoot());
 		final long syncPeriod = config.getPropertyAsPositiveOrZeroLong(CONFIG_KEY_SYNC_PERIOD, DEFAULT_SYNC_PERIOD);
 		return syncPeriod;
 	}

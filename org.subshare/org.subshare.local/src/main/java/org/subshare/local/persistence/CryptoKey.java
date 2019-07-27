@@ -1,7 +1,7 @@
 package org.subshare.local.persistence;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
+import static java.util.Objects.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -291,7 +291,7 @@ public class CryptoKey extends Entity implements WriteProtected, AutoTrackLocalR
 
 	@Override
 	public Uid getCryptoRepoFileIdControllingPermissions() {
-		return assertNotNull(assertNotNull(cryptoRepoFile, "cryptoRepoFile").getCryptoRepoFileId(),
+		return requireNonNull(requireNonNull(cryptoRepoFile, "cryptoRepoFile").getCryptoRepoFileId(),
 				"cryptoRepoFile.cryptoRepoFileId");
 
 //		switch (cryptoKeyRole) {

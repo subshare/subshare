@@ -1,7 +1,7 @@
 package org.subshare.core.dto.split;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.DebugUtil.*;
+import static java.util.Objects.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -89,7 +89,7 @@ public class CryptoChangeSetDtoSplitter {
 	private Map<Uid, HistoCryptoRepoFileDto> histoCryptoRepoFileId2HistoCryptoRepoFileDto;
 
 	protected CryptoChangeSetDtoSplitter(final CryptoChangeSetDto inCryptoChangeSetDto) {
-		this.inCryptoChangeSetDto = assertNotNull(inCryptoChangeSetDto, "inCryptoChangeSetDto");
+		this.inCryptoChangeSetDto = requireNonNull(inCryptoChangeSetDto, "inCryptoChangeSetDto");
 		this.maxCryptoChangeSetDtoSize = ConfigImpl.getInstance()
 				.getPropertyAsInt(CONFIG_KEY_MAX_CRYPTO_CHANGE_SET_DTO_SIZE, DEFAULT_MAX_CRYPTO_CHANGE_SET_DTO_SIZE);
 	}
@@ -355,8 +355,8 @@ public class CryptoChangeSetDtoSplitter {
 	}
 
 	private void addOutPermissionSetDto(final PermissionSetDto dto) {
-		assertNotNull(dto, "dto");
-		final Uid cryptoRepoFileId = assertNotNull(dto.getCryptoRepoFileId(), "permissionSetDto.cryptoRepoFileId");
+		requireNonNull(dto, "dto");
+		final Uid cryptoRepoFileId = requireNonNull(dto.getCryptoRepoFileId(), "permissionSetDto.cryptoRepoFileId");
 
 		// *first* add dependencies as needed
 
@@ -370,8 +370,8 @@ public class CryptoChangeSetDtoSplitter {
 	}
 
 	private void addOutPermissionDto(final PermissionDto dto) {
-		assertNotNull(dto, "dto");
-		final Uid cryptoRepoFileId = assertNotNull(dto.getCryptoRepoFileId(), "permissionDto.cryptoRepoFileId");
+		requireNonNull(dto, "dto");
+		final Uid cryptoRepoFileId = requireNonNull(dto.getCryptoRepoFileId(), "permissionDto.cryptoRepoFileId");
 
 		// *first* add dependencies as needed
 
@@ -385,8 +385,8 @@ public class CryptoChangeSetDtoSplitter {
 	}
 
 	private void addOutPermissionSetInheritanceDto(final PermissionSetInheritanceDto dto) {
-		assertNotNull(dto, "dto");
-		final Uid cryptoRepoFileId = assertNotNull(dto.getCryptoRepoFileId(), "permissionSetInheritanceDto.cryptoRepoFileId");
+		requireNonNull(dto, "dto");
+		final Uid cryptoRepoFileId = requireNonNull(dto.getCryptoRepoFileId(), "permissionSetInheritanceDto.cryptoRepoFileId");
 
 		// *first* add dependencies as needed
 
@@ -400,30 +400,30 @@ public class CryptoChangeSetDtoSplitter {
 	}
 
 	private void addOutUserRepoKeyPublicKeyReplacementRequestDto(final UserRepoKeyPublicKeyReplacementRequestDto dto) {
-		assertNotNull(dto, "dto");
+		requireNonNull(dto, "dto");
 		outCryptoChangeSetDto.getUserRepoKeyPublicKeyReplacementRequestDtos().add(dto);
 	}
 
 	private void addOutUserIdentityDto(UserIdentityDto dto) {
-		assertNotNull(dto, "dto");
+		requireNonNull(dto, "dto");
 		outCryptoChangeSetDto.getUserIdentityDtos().add(dto);
 	}
 
 	private void addOutUserIdentityLinkDto(UserIdentityLinkDto dto) {
-		assertNotNull(dto, "dto");
+		requireNonNull(dto, "dto");
 		outCryptoChangeSetDto.getUserIdentityLinkDtos().add(dto);
 	}
 
 	private void addOutCryptoRepoFileDto(final CryptoRepoFileDto dto) {
-		assertNotNull(dto, "dto");
-		final Uid cryptoRepoFileId = assertNotNull(dto.getCryptoRepoFileId(), "cryptoRepoFileDto.cryptoRepoFileId");
+		requireNonNull(dto, "dto");
+		final Uid cryptoRepoFileId = requireNonNull(dto.getCryptoRepoFileId(), "cryptoRepoFileDto.cryptoRepoFileId");
 		if (! cryptoRepoFileIdsProcessed.add(cryptoRepoFileId))
 			return;
 
 		// *first* add dependencies as needed
 
 		// dependency: cryptoKeyId => CryptoKeyDto
-		final Uid cryptoKeyId = assertNotNull(dto.getCryptoKeyId(), "cryptoRepoFileDto.cryptoKeyId"); // though temporarily null during inserts, it must never be null at the end of a tx! CryptoRepoFileDtoConverter already enforces it => do the same here.
+		final Uid cryptoKeyId = requireNonNull(dto.getCryptoKeyId(), "cryptoRepoFileDto.cryptoKeyId"); // though temporarily null during inserts, it must never be null at the end of a tx! CryptoRepoFileDtoConverter already enforces it => do the same here.
 		final CryptoKeyDto cryptoKeyDto = cryptoKeyId2CryptoKeyDto.get(cryptoKeyId);
 		if (cryptoKeyDto != null)
 			addOutCryptoKeyDto(cryptoKeyDto);
@@ -442,15 +442,15 @@ public class CryptoChangeSetDtoSplitter {
 	}
 
 	private void addOutCryptoKeyDto(final CryptoKeyDto dto) {
-		assertNotNull(dto, "dto");
-		final Uid cryptoKeyId = assertNotNull(dto.getCryptoKeyId(), "cryptoKeyDto.cryptoKeyId");
+		requireNonNull(dto, "dto");
+		final Uid cryptoKeyId = requireNonNull(dto.getCryptoKeyId(), "cryptoKeyDto.cryptoKeyId");
 		if (! cryptoKeyIdsProcessed.add(cryptoKeyId))
 			return;
 
 		// *first* add dependencies as needed
 
 		// dependency: cryptoRepoFileId => CryptoRepoFileDto
-		final Uid cryptoRepoFileId = assertNotNull(dto.getCryptoRepoFileId(), "cryptoKeyDto.cryptoRepoFileId");
+		final Uid cryptoRepoFileId = requireNonNull(dto.getCryptoRepoFileId(), "cryptoKeyDto.cryptoRepoFileId");
 		final CryptoRepoFileDto cryptoRepoFileDto = cryptoRepoFileId2CryptoRepoFileDto.get(cryptoRepoFileId);
 		if (cryptoRepoFileDto != null)
 			addOutCryptoRepoFileDto(cryptoRepoFileDto);
@@ -471,8 +471,8 @@ public class CryptoChangeSetDtoSplitter {
 	}
 
 	private boolean isFromChildCryptoRepoFile(final Uid cryptoRepoFileId, final CryptoLinkDto cryptoLinkDto) {
-		assertNotNull(cryptoRepoFileId, "cryptoRepoFileId");
-		assertNotNull(cryptoLinkDto, "cryptoLinkDto");
+		requireNonNull(cryptoRepoFileId, "cryptoRepoFileId");
+		requireNonNull(cryptoLinkDto, "cryptoLinkDto");
 
 		final Uid fromCryptoKeyId = cryptoLinkDto.getFromCryptoKeyId();
 		if (fromCryptoKeyId == null)
@@ -482,7 +482,7 @@ public class CryptoChangeSetDtoSplitter {
 		if (fromCryptoKeyDto == null)
 			return false; // we don't know, but at least it's not in the current change-set, i.e. not further bloating dependencies.
 
-		final Uid fromCryptoRepoFileId = assertNotNull(fromCryptoKeyDto.getCryptoRepoFileId(), "fromCryptoKeyDto.cryptoRepoFileId");
+		final Uid fromCryptoRepoFileId = requireNonNull(fromCryptoKeyDto.getCryptoRepoFileId(), "fromCryptoKeyDto.cryptoRepoFileId");
 //		final CryptoRepoFileDto fromCryptoRepoFileDto = cryptoRepoFileId2CryptoRepoFileDto.get(fromCryptoRepoFileId);
 ////		if (fromCryptoRepoFileDto == null)
 ////			return false; // we can't determine.
@@ -492,12 +492,12 @@ public class CryptoChangeSetDtoSplitter {
 //
 //		// sanity-check for backlinkKey-based logic (better, because it does not require the fromCryptoRepoFileDto)
 //		if (fromCryptoRepoFileDto != null && cryptoRepoFileId.equals(fromCryptoRepoFileDto.getParentCryptoRepoFileId())) {
-//			if (CryptoKeyRole.backlinkKey != assertNotNull(fromCryptoKeyDto.getCryptoKeyRole(), "fromCryptoKeyDto.cryptoKeyRole"))
+//			if (CryptoKeyRole.backlinkKey != requireNonNull(fromCryptoKeyDto.getCryptoKeyRole(), "fromCryptoKeyDto.cryptoKeyRole"))
 //				throw new IllegalStateException("WTF?!");
 //		}
 
 		// checking via backlinkKey-based logic (better, because it does not require the fromCryptoRepoFileDto)
-		final CryptoKeyRole fromCryptoKeyRole = assertNotNull(fromCryptoKeyDto.getCryptoKeyRole(), "fromCryptoKeyDto.cryptoKeyRole");
+		final CryptoKeyRole fromCryptoKeyRole = requireNonNull(fromCryptoKeyDto.getCryptoKeyRole(), "fromCryptoKeyDto.cryptoKeyRole");
 		if (CryptoKeyRole.backlinkKey == fromCryptoKeyRole && ! cryptoRepoFileId.equals(fromCryptoRepoFileId))
 			return true;
 
@@ -505,8 +505,8 @@ public class CryptoChangeSetDtoSplitter {
 	}
 
 	private void addOutCryptoLinkDto(final CryptoLinkDto dto) {
-		assertNotNull(dto, "dto");
-		final Uid cryptoLinkId = assertNotNull(dto.getCryptoLinkId(), "cryptoLinkDto.cryptoLinkId");
+		requireNonNull(dto, "dto");
+		final Uid cryptoLinkId = requireNonNull(dto.getCryptoLinkId(), "cryptoLinkDto.cryptoLinkId");
 		if (! cryptoLinkIdsProcessed.add(cryptoLinkId))
 			return;
 
@@ -526,7 +526,7 @@ public class CryptoChangeSetDtoSplitter {
 		}
 
 		// dependency: toCryptoKeyId => CryptoKeyDto
-		final Uid toCryptoKeyId = assertNotNull(dto.getToCryptoKeyId(), "cryptoLinkDto.toCryptoKeyId");
+		final Uid toCryptoKeyId = requireNonNull(dto.getToCryptoKeyId(), "cryptoLinkDto.toCryptoKeyId");
 		final CryptoKeyDto toCryptoKeyDto = cryptoKeyId2CryptoKeyDto.get(toCryptoKeyId);
 		if (toCryptoKeyDto != null) // the to...-side should *always* be populated, already. but we write robust code!
 			addOutCryptoKeyDto(toCryptoKeyDto);
@@ -536,12 +536,12 @@ public class CryptoChangeSetDtoSplitter {
 	}
 
 	private void addOutHistoCryptoRepoFileDto(final HistoCryptoRepoFileDto dto) {
-		assertNotNull(dto, "dto");
-		final Uid histoCryptoRepoFileId = assertNotNull(dto.getHistoCryptoRepoFileId(), "histoCryptoRepoFileDto.histoCryptoRepoFileId");
+		requireNonNull(dto, "dto");
+		final Uid histoCryptoRepoFileId = requireNonNull(dto.getHistoCryptoRepoFileId(), "histoCryptoRepoFileDto.histoCryptoRepoFileId");
 		if (! histoCryptoRepoFileIdsProcessed.add(histoCryptoRepoFileId))
 			return;
 
-		final Uid cryptoRepoFileId = assertNotNull(dto.getCryptoRepoFileId(), "histoCryptoRepoFileDto.cryptoRepoFileId");
+		final Uid cryptoRepoFileId = requireNonNull(dto.getCryptoRepoFileId(), "histoCryptoRepoFileDto.cryptoRepoFileId");
 
 		// *first* add dependencies as needed
 
@@ -552,13 +552,13 @@ public class CryptoChangeSetDtoSplitter {
 //			addOutCryptoRepoFileDto(cryptoRepoFileDto);
 //
 //		// dependency: cryptoKeyId => CryptoKeyDto
-//		final Uid cryptoKeyId = assertNotNull(dto.getCryptoKeyId(), "histoCryptoRepoFileDto.cryptoKeyId");
+//		final Uid cryptoKeyId = requireNonNull(dto.getCryptoKeyId(), "histoCryptoRepoFileDto.cryptoKeyId");
 //		final CryptoKeyDto cryptoKeyDto = cryptoKeyId2CryptoKeyDto.get(cryptoKeyId);
 //		if (cryptoKeyDto != null)
 //			addOutCryptoKeyDto(cryptoKeyDto);
 
 		// dependency: histoFrameId => HistoFrameDto
-		final Uid histoFrameId = assertNotNull(dto.getHistoFrameId(), "histoCryptoRepoFileDto.histoFrameId");
+		final Uid histoFrameId = requireNonNull(dto.getHistoFrameId(), "histoCryptoRepoFileDto.histoFrameId");
 		final HistoFrameDto histoFrameDto = histoFrameId2HistoFrameDto.get(histoFrameId);
 		if (histoFrameDto != null)
 			addOutHistoFrameDto(histoFrameDto);
@@ -583,8 +583,8 @@ public class CryptoChangeSetDtoSplitter {
 	}
 
 	private void addOutCurrentHistoCryptoRepoFileDto(final CurrentHistoCryptoRepoFileDto dto) {
-		assertNotNull(dto, "dto");
-		final Uid cryptoRepoFileId = assertNotNull(dto.getCryptoRepoFileId(), "currentHistoCryptoRepoFileDto.cryptoRepoFileId");
+		requireNonNull(dto, "dto");
+		final Uid cryptoRepoFileId = requireNonNull(dto.getCryptoRepoFileId(), "currentHistoCryptoRepoFileDto.cryptoRepoFileId");
 		if (! currentHistoCryptoRepoFileIdsProcessed.add(cryptoRepoFileId))
 			return;
 
@@ -598,7 +598,7 @@ public class CryptoChangeSetDtoSplitter {
 
 		// dependency: histoCryptoRepoFileId => HistoCryptoRepoFileDto
 		// note: dto.histoCryptoRepoFileId may be null, but it never is in the crypto-change-set we're splitting here!
-		final Uid histoCryptoRepoFileId = assertNotNull(dto.getHistoCryptoRepoFileId(), "currentHistoCryptoRepoFileDto.histoCryptoRepoFileId");
+		final Uid histoCryptoRepoFileId = requireNonNull(dto.getHistoCryptoRepoFileId(), "currentHistoCryptoRepoFileDto.histoCryptoRepoFileId");
 		final HistoCryptoRepoFileDto histoCryptoRepoFileDto = histoCryptoRepoFileId2HistoCryptoRepoFileDto.get(histoCryptoRepoFileId);
 		if (histoCryptoRepoFileDto != null)
 			addOutHistoCryptoRepoFileDto(histoCryptoRepoFileDto);
@@ -608,8 +608,8 @@ public class CryptoChangeSetDtoSplitter {
 	}
 
 	private void addOutHistoFrameDto(final HistoFrameDto dto) {
-		assertNotNull(dto, "dto");
-		final Uid histoFrameId = assertNotNull(dto.getHistoFrameId(), "histoFrameDto.histoFrameId");
+		requireNonNull(dto, "dto");
+		final Uid histoFrameId = requireNonNull(dto.getHistoFrameId(), "histoFrameDto.histoFrameId");
 		if (! histoFrameIdsProcessed.add(histoFrameId))
 			return;
 
@@ -617,22 +617,22 @@ public class CryptoChangeSetDtoSplitter {
 	}
 
 	private void addOutCollisionDto(final CollisionDto dto) {
-		assertNotNull(dto, "dto");
+		requireNonNull(dto, "dto");
 		outCryptoChangeSetDto.getCollisionDtos().add(dto);
 	}
 
 	private void addOutDeletedCollisionDto(final DeletedCollisionDto dto) {
-		assertNotNull(dto, "dto");
+		requireNonNull(dto, "dto");
 		outCryptoChangeSetDto.getDeletedCollisionDtos().add(dto);
 	}
 
 	private void addOutCryptoConfigPropSetDto(final CryptoConfigPropSetDto dto) {
-		assertNotNull(dto, "dto");
+		requireNonNull(dto, "dto");
 		outCryptoChangeSetDto.getCryptoConfigPropSetDtos().add(dto);
 	}
 
 	private void addOutUserRepoKeyPublicKeyReplacementRequestDeletionDto(final UserRepoKeyPublicKeyReplacementRequestDeletionDto dto) {
-		assertNotNull(dto, "dto");
+		requireNonNull(dto, "dto");
 		outCryptoChangeSetDto.getUserRepoKeyPublicKeyReplacementRequestDeletionDtos().add(dto);
 	}
 
@@ -640,7 +640,7 @@ public class CryptoChangeSetDtoSplitter {
 		cryptoRepoFileId2CryptoRepoFileDto = null;
 		final Map<Uid, CryptoRepoFileDto> map = new HashMap<>(inCryptoChangeSetDto.getCryptoRepoFileDtos().size());
 		for (final CryptoRepoFileDto dto : inCryptoChangeSetDto.getCryptoRepoFileDtos()) {
-			map.put(assertNotNull(dto.getCryptoRepoFileId(), "cryptoRepoFileDto.cryptoRepoFileId"), dto);
+			map.put(requireNonNull(dto.getCryptoRepoFileId(), "cryptoRepoFileDto.cryptoRepoFileId"), dto);
 			if (dto.getParentCryptoRepoFileId() == null) {
 				if (rootCryptoRepoFileDto != null)
 					throw new IllegalStateException("Multiple rootCryptoRepoFileDto?!!!");
@@ -659,7 +659,7 @@ public class CryptoChangeSetDtoSplitter {
 		cryptoKeyId2CryptoKeyDto = null;
 		final Map<Uid, CryptoKeyDto> map = new HashMap<>(inCryptoChangeSetDto.getCryptoKeyDtos().size());
 		for (final CryptoKeyDto dto : inCryptoChangeSetDto.getCryptoKeyDtos())
-			map.put(assertNotNull(dto.getCryptoKeyId(), "cryptoKeyDto.cryptoKeyId"), dto);
+			map.put(requireNonNull(dto.getCryptoKeyId(), "cryptoKeyDto.cryptoKeyId"), dto);
 
 		cryptoKeyId2CryptoKeyDto = map;
 
@@ -671,7 +671,7 @@ public class CryptoChangeSetDtoSplitter {
 		toCryptoKeyId2CryptoLinkDtos = null;
 		final Map<Uid, List<CryptoLinkDto>> map = new HashMap<>();
 		for (CryptoLinkDto dto : inCryptoChangeSetDto.getCryptoLinkDtos()) {
-			final Uid toCryptoKeyId = assertNotNull(dto.getToCryptoKeyId(), "cryptoLinkDto.toCryptoKeyId");
+			final Uid toCryptoKeyId = requireNonNull(dto.getToCryptoKeyId(), "cryptoLinkDto.toCryptoKeyId");
 			List<CryptoLinkDto> list = map.get(toCryptoKeyId);
 			if (list == null) {
 				list = new LinkedList<>();
@@ -689,7 +689,7 @@ public class CryptoChangeSetDtoSplitter {
 		histoFrameId2HistoFrameDto = null;
 		final Map<Uid, HistoFrameDto> map = new HashMap<>();
 		for (HistoFrameDto dto : inCryptoChangeSetDto.getHistoFrameDtos())
-			map.put(assertNotNull(dto.getHistoFrameId(), "histoFrameDto.histoFrameId"), dto);
+			map.put(requireNonNull(dto.getHistoFrameId(), "histoFrameDto.histoFrameId"), dto);
 
 		histoFrameId2HistoFrameDto = map;
 
@@ -719,7 +719,7 @@ public class CryptoChangeSetDtoSplitter {
 		cryptoRepoFileId2CurrentHistoCryptoRepoFileDto = null;
 		final Map<Uid, CurrentHistoCryptoRepoFileDto> map = new HashMap<>();
 		for (final CurrentHistoCryptoRepoFileDto dto : inCryptoChangeSetDto.getCurrentHistoCryptoRepoFileDtos()) {
-			final Uid cryptoRepoFileId = assertNotNull(dto.getCryptoRepoFileId(), "currentHistoCryptoRepoFileDto.cryptoRepoFileId");
+			final Uid cryptoRepoFileId = requireNonNull(dto.getCryptoRepoFileId(), "currentHistoCryptoRepoFileDto.cryptoRepoFileId");
 			final CurrentHistoCryptoRepoFileDto old = map.put(cryptoRepoFileId, dto);
 			if (old != null)
 				throw new IllegalStateException("Multiple CurrentHistoCryptoRepoFileDto for cryptoRepoFileId=" + cryptoRepoFileId);
@@ -756,7 +756,7 @@ public class CryptoChangeSetDtoSplitter {
 	}
 
 	protected void prepareOutCryptoChangeSetDto() {
-		assertNotNull(outCryptoChangeSetDtos, "outCryptoChangeSetDtos");
+		requireNonNull(outCryptoChangeSetDtos, "outCryptoChangeSetDtos");
 		if (outCryptoChangeSetDto == null) {
 			outCryptoChangeSetDto = new CryptoChangeSetDto();
 			outCryptoChangeSetDto.setRevision(inCryptoChangeSetDto.getRevision());
@@ -766,7 +766,7 @@ public class CryptoChangeSetDtoSplitter {
 	}
 
 	private void deleteEmptyOutCryptoChangeSetDto() {
-		assertNotNull(outCryptoChangeSetDtos, "outCryptoChangeSetDtos");
+		requireNonNull(outCryptoChangeSetDtos, "outCryptoChangeSetDtos");
 		while (outCryptoChangeSetDto != null && outCryptoChangeSetDto.isEmpty()) {
 			CryptoChangeSetDto removed = outCryptoChangeSetDtos.remove(outCryptoChangeSetDtos.size() - 1);
 			if (outCryptoChangeSetDto != removed)

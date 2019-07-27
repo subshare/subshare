@@ -1,6 +1,6 @@
 package org.subshare.core.user;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.io.Serializable;
 
@@ -12,7 +12,7 @@ public class UserRepoInvitationToken implements Serializable {
 	private final byte[] signedEncryptedUserRepoInvitationData;
 
 	public UserRepoInvitationToken(byte[] signedEncryptedUserRepoInvitationData) {
-		this.signedEncryptedUserRepoInvitationData = assertNotNull(signedEncryptedUserRepoInvitationData, "signedEncryptedUserRepoInvitationData");
+		this.signedEncryptedUserRepoInvitationData = requireNonNull(signedEncryptedUserRepoInvitationData, "signedEncryptedUserRepoInvitationData");
 	}
 
 	public byte[] getSignedEncryptedUserRepoInvitationData() {

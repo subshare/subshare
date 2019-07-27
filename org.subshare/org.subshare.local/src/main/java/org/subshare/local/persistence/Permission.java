@@ -1,7 +1,7 @@
 package org.subshare.local.persistence;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
+import static java.util.Objects.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -296,8 +296,8 @@ public class Permission extends Entity implements WriteProtected, AutoTrackLocal
 
 	@Override
 	public Uid getCryptoRepoFileIdControllingPermissions() {
-		assertNotNull(permissionSet, "permissionSet");
-		return assertNotNull(assertNotNull(permissionSet.getCryptoRepoFile(), "permissionSet.cryptoRepoFile").getCryptoRepoFileId(),
+		requireNonNull(permissionSet, "permissionSet");
+		return requireNonNull(requireNonNull(permissionSet.getCryptoRepoFile(), "permissionSet.cryptoRepoFile").getCryptoRepoFileId(),
 				"permissionSet.cryptoRepoFile.cryptoRepoFileId");
 	}
 

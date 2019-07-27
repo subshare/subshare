@@ -1,6 +1,6 @@
 package org.subshare.local.persistence;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -27,7 +27,7 @@ public class UserIdentityDao extends Dao<UserIdentity, UserIdentityDao> {
 	}
 
 	public UserIdentity getUserIdentity(final Uid userIdentityId) {
-		assertNotNull(userIdentityId, "userIdentityId");
+		requireNonNull(userIdentityId, "userIdentityId");
 		final Query query = pm().newNamedQuery(getEntityClass(), "getUserIdentity_userIdentityId");
 		try {
 			final UserIdentity userIdentity = (UserIdentity) query.execute(userIdentityId.toString());
@@ -38,7 +38,7 @@ public class UserIdentityDao extends Dao<UserIdentity, UserIdentityDao> {
 	}
 
 	public Collection<UserIdentity> getUserIdentitiesOf(final UserRepoKeyPublicKey ofUserRepoKeyPublicKey) {
-		assertNotNull(ofUserRepoKeyPublicKey, "ofUserRepoKeyPublicKey");
+		requireNonNull(ofUserRepoKeyPublicKey, "ofUserRepoKeyPublicKey");
 
 		final Query query = pm().newNamedQuery(getEntityClass(), "getUserIdentities_ofUserRepoKeyPublicKey");
 		try {
@@ -95,7 +95,7 @@ public class UserIdentityDao extends Dao<UserIdentity, UserIdentityDao> {
 	}
 
 	protected void deleteDependentObjects(final UserIdentity userIdentity) {
-		assertNotNull(userIdentity, "userIdentity");
+		requireNonNull(userIdentity, "userIdentity");
 
 		final UserIdentityLinkDao userIdentityLinkDao = getDao(UserIdentityLinkDao.class);
 		userIdentityLinkDao.deletePersistentAll(userIdentityLinkDao.getUserIdentityLinksOf(userIdentity));

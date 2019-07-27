@@ -1,7 +1,7 @@
 package org.subshare.gui.maintree;
 
 import static co.codewizards.cloudstore.core.bean.PropertyChangeListenerUtil.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -151,7 +151,7 @@ public class MainTreeItem<T> extends TreeItem<String> {
 
 	protected TreeView<String> getTreeView() {
 		final MainTreeItem<?> parent = (MainTreeItem<?>) getParent();
-		assertNotNull(parent, "parent");
+		requireNonNull(parent, "parent");
 		return parent.getTreeView();
 	}
 

@@ -1,6 +1,6 @@
 package org.subshare.core.dto;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -39,7 +39,7 @@ public class CreateRepositoryRequestDto implements PgpSignable {
 
 	@Override
 	public InputStream getSignedData(int signedDataVersion) {
-		assertNotNull(serverRepositoryId, "serverRepositoryId");
+		requireNonNull(serverRepositoryId, "serverRepositoryId");
 		try {
 			return new MultiInputStream(
 					InputStreamSource.Helper.createInputStreamSource(serverRepositoryId)

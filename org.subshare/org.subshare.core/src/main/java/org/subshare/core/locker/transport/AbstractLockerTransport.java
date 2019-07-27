@@ -1,6 +1,6 @@
 package org.subshare.core.locker.transport;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.net.URL;
 
@@ -11,7 +11,6 @@ import org.subshare.core.pgp.Pgp;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpRegistry;
 
-import co.codewizards.cloudstore.core.util.AssertUtil;
 import co.codewizards.cloudstore.core.util.UrlUtil;
 
 public abstract class AbstractLockerTransport implements LockerTransport {
@@ -35,7 +34,7 @@ public abstract class AbstractLockerTransport implements LockerTransport {
 
 	@Override
 	public void setLockerTransportFactory(final LockerTransportFactory lockerTransportFactory) {
-		this.lockerTransportFactory = AssertUtil.assertNotNull(lockerTransportFactory, "lockerTransportFactory");
+		this.lockerTransportFactory = requireNonNull(lockerTransportFactory, "lockerTransportFactory");
 	}
 
 	@Override
@@ -58,7 +57,7 @@ public abstract class AbstractLockerTransport implements LockerTransport {
 	}
 	protected LockerContent getLockerContentOrFail() {
 		final LockerContent lockerContent = getLockerContent();
-		assertNotNull(lockerContent, "lockerContent");
+		requireNonNull(lockerContent, "lockerContent");
 		return lockerContent;
 	}
 	@Override
@@ -77,7 +76,7 @@ public abstract class AbstractLockerTransport implements LockerTransport {
 	}
 	protected PgpKey getPgpKeyOrFail() {
 		final PgpKey pgpKey = getPgpKey();
-		assertNotNull(pgpKey, "pgpKey");
+		requireNonNull(pgpKey, "pgpKey");
 		return pgpKey;
 	}
 	@Override

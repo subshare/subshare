@@ -1,7 +1,7 @@
 package org.subshare.test;
 
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 import static mockit.Deencapsulation.*;
 import static org.assertj.core.api.Assertions.*;
 
@@ -182,9 +182,9 @@ public class BrokenSignatureIT extends AbstractRepoToRepoSyncIT {
 	}
 
 	private static boolean containsStackTraceElement(final Throwable throwable, final String className, final String methodName) {
-		Throwable t = assertNotNull(throwable, "throwable");
-		assertNotNull(className, "className");
-		assertNotNull(methodName, "methodName");
+		Throwable t = requireNonNull(throwable, "throwable");
+		requireNonNull(className, "className");
+		requireNonNull(methodName, "methodName");
 		while (t != null) {
 			for (StackTraceElement ste : t.getStackTrace()) {
 				if (className.equals(ste.getClassName()) && methodName.equals(ste.getMethodName()))
@@ -356,7 +356,7 @@ public class BrokenSignatureIT extends AbstractRepoToRepoSyncIT {
 		try {
 			final CryptoRepoFileDao cryptoRepoFileDao = new CryptoRepoFileDao().persistenceManager(pm);
 			final CryptoRepoFile cryptoRepoFile = cryptoRepoFileDao.getCryptoRepoFileOrFail(cryptoRepoFileId);
-			final RepoFile repoFile = assertNotNull(cryptoRepoFile.getRepoFile(), "cryptoRepoFile.repoFile");
+			final RepoFile repoFile = requireNonNull(cryptoRepoFile.getRepoFile(), "cryptoRepoFile.repoFile");
 
 			repoFile.setLocalRevision(Long.MAX_VALUE);
 			repoFile.setLastSyncFromRepositoryId(null);

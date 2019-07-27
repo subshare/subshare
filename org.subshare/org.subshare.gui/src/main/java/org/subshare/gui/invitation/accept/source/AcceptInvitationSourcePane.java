@@ -1,8 +1,8 @@
 package org.subshare.gui.invitation.accept.source;
 
 import static co.codewizards.cloudstore.core.io.StreamUtil.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
+import static java.util.Objects.*;
 import static org.subshare.core.file.FileConst.*;
 import static org.subshare.gui.util.FxmlUtil.*;
 import static org.subshare.gui.util.PlatformUtil.*;
@@ -126,7 +126,7 @@ public class AcceptInvitationSourcePane extends WizardPageContentGridPane {
 //	};
 
 	public AcceptInvitationSourcePane(final AcceptInvitationData acceptInvitationData) {
-		this.acceptInvitationData = assertNotNull(acceptInvitationData, "acceptInvitationData");
+		this.acceptInvitationData = requireNonNull(acceptInvitationData, "acceptInvitationData");
 		loadDynamicComponentFxml(AcceptInvitationSourcePane.class, this);
 		fileTreePane.fileFilterProperty().set(new DataFileFilter().setAcceptContentType(EncryptedDataFile.CONTENT_TYPE_VALUE));
 		fileTreePane.getSelectedFiles().addListener((InvalidationListener) observable -> onSelectedFilesChanged());
@@ -289,8 +289,8 @@ public class AcceptInvitationSourcePane extends WizardPageContentGridPane {
 			readManifest(zin);
 
 			if (decoder.getPgpSignature() != null) {
-				final PgpKeyId pgpKeyId = assertNotNull(decoder.getPgpSignature().getPgpKeyId(), "pgpSignature.pgpKeyId");
-				final PgpKey pgpKey = assertNotNull(pgp.getPgpKey(pgpKeyId), "pgp.getPgpKey(" + pgpKeyId + ")");
+				final PgpKeyId pgpKeyId = requireNonNull(decoder.getPgpSignature().getPgpKeyId(), "pgpSignature.pgpKeyId");
+				final PgpKey pgpKey = requireNonNull(pgp.getPgpKey(pgpKeyId), "pgp.getPgpKey(" + pgpKeyId + ")");
 				final String primaryUserId = pgpKey.getUserIds().isEmpty() ? "<<unknown>>" : pgpKey.getUserIds().get(0);
 
 				final PgpKeyValidity keyValidity = pgp.getKeyValidity(pgpKey);
@@ -349,7 +349,7 @@ public class AcceptInvitationSourcePane extends WizardPageContentGridPane {
 	}
 
 	private Properties readManifest(final ZipInputStream zin) throws IOException {
-		assertNotNull(zin, "zin");
+		requireNonNull(zin, "zin");
 
 		final ZipEntry ze = zin.getNextEntry();
 		if (ze == null)
@@ -376,8 +376,8 @@ public class AcceptInvitationSourcePane extends WizardPageContentGridPane {
 
 	@FXML
 	private void solveProblemButtonClicked(final ActionEvent event) {
-		assertNotNull(problemSolver, "problemSolver");
-		problemSolver.setWindow(assertNotNull(getScene().getWindow(), "scene.window"));
+		requireNonNull(problemSolver, "problemSolver");
+		problemSolver.setWindow(requireNonNull(getScene().getWindow(), "scene.window"));
 		problemSolver.solveProblem();
 		onSelectedFilesChanged();
 	}

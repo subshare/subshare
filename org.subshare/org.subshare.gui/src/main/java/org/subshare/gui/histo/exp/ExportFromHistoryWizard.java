@@ -1,6 +1,6 @@
 package org.subshare.gui.histo.exp;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import org.subshare.core.repo.LocalRepo;
 import org.subshare.core.repo.histo.ExportFileParam;
@@ -18,7 +18,7 @@ public class ExportFromHistoryWizard extends Wizard {
 	private final ExportFromHistoryData exportFromHistoryData;
 
 	public ExportFromHistoryWizard(final ExportFromHistoryData exportFromHistoryData) {
-		this.exportFromHistoryData = assertNotNull(exportFromHistoryData, "exportFromHistoryData");
+		this.exportFromHistoryData = requireNonNull(exportFromHistoryData, "exportFromHistoryData");
 		setFirstPage(new ExportFromHistoryDestinationWizardPage(exportFromHistoryData));
 	}
 
@@ -29,7 +29,7 @@ public class ExportFromHistoryWizard extends Wizard {
 
 	@Override
 	protected void finish(final ProgressMonitor monitor) throws Exception {
-		final File exportDirectory = assertNotNull(exportFromHistoryData.getExportDirectory(), "exportFromHistoryData.exportDirectory");
+		final File exportDirectory = requireNonNull(exportFromHistoryData.getExportDirectory(), "exportFromHistoryData.exportDirectory");
 
 		final LocalRepo localRepo = exportFromHistoryData.getLocalRepo();
 		try (final HistoExporter histoExporter = HistoExporterLs.createHistoExporter(localRepo.getLocalRoot())) {

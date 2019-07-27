@@ -1,6 +1,6 @@
 package org.subshare.gui.createrepo;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.List;
 
@@ -22,7 +22,7 @@ public class CreateRepoWizard extends Wizard {
 	private final CreateRepoData createRepoData;
 
 	public CreateRepoWizard(final CreateRepoData createRepoData) {
-		this.createRepoData = assertNotNull(createRepoData, "createRepoData");
+		this.createRepoData = requireNonNull(createRepoData, "createRepoData");
 
 		if (createRepoData.getServer() == null) {
 			List<Server> servers = ServerRegistryLs.getServerRegistry().getServers();

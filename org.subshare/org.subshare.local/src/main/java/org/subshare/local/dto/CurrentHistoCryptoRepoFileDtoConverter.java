@@ -1,7 +1,7 @@
 package org.subshare.local.dto;
 
 import static co.codewizards.cloudstore.core.objectfactory.ObjectFactoryUtil.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import org.subshare.core.dto.CurrentHistoCryptoRepoFileDto;
 import org.subshare.core.dto.HistoCryptoRepoFileDto;
@@ -23,15 +23,15 @@ public class CurrentHistoCryptoRepoFileDtoConverter {
 	}
 
 	protected CurrentHistoCryptoRepoFileDtoConverter(final LocalRepoTransaction transaction) {
-		this.transaction = assertNotNull(transaction, "transaction");
+		this.transaction = requireNonNull(transaction, "transaction");
 	}
 
 	public CurrentHistoCryptoRepoFileDto toCurrentHistoCryptoRepoFileDto(final CurrentHistoCryptoRepoFile currentHistoCryptoRepoFile, boolean withHistoCryptoRepoFileDto) {
-		assertNotNull(currentHistoCryptoRepoFile, "currentHistoCryptoRepoFile");
+		requireNonNull(currentHistoCryptoRepoFile, "currentHistoCryptoRepoFile");
 		final CurrentHistoCryptoRepoFileDto result = new CurrentHistoCryptoRepoFileDto();
 
-		final HistoCryptoRepoFile histoCryptoRepoFile = assertNotNull(currentHistoCryptoRepoFile.getHistoCryptoRepoFile(), "currentHistoCryptoRepoFile.histoCryptoRepoFile");
-		final CryptoRepoFile cryptoRepoFile = assertNotNull(currentHistoCryptoRepoFile.getCryptoRepoFile(), "currentHistoCryptoRepoFile.cryptoRepoFile");
+		final HistoCryptoRepoFile histoCryptoRepoFile = requireNonNull(currentHistoCryptoRepoFile.getHistoCryptoRepoFile(), "currentHistoCryptoRepoFile.histoCryptoRepoFile");
+		final CryptoRepoFile cryptoRepoFile = requireNonNull(currentHistoCryptoRepoFile.getCryptoRepoFile(), "currentHistoCryptoRepoFile.cryptoRepoFile");
 
 		if (withHistoCryptoRepoFileDto) {
 			final HistoCryptoRepoFileDto histoCryptoRepoFileDto = HistoCryptoRepoFileDtoConverter.create(transaction).toHistoCryptoRepoFileDto(histoCryptoRepoFile);
@@ -48,7 +48,7 @@ public class CurrentHistoCryptoRepoFileDtoConverter {
 	}
 
 	public CurrentHistoCryptoRepoFile putCurrentHistoCryptoRepoFile(final CurrentHistoCryptoRepoFileDto currentHistoCryptoRepoFileDto) {
-		assertNotNull(currentHistoCryptoRepoFileDto, "cryptoRepoFileOnServerDto");
+		requireNonNull(currentHistoCryptoRepoFileDto, "cryptoRepoFileOnServerDto");
 		final CurrentHistoCryptoRepoFileDao currentHistoCryptoRepoFileDao = transaction.getDao(CurrentHistoCryptoRepoFileDao.class);
 		final HistoCryptoRepoFileDao histoCryptoRepoFileDao = transaction.getDao(HistoCryptoRepoFileDao.class);
 		final CryptoRepoFileDao cryptoRepoFileDao = transaction.getDao(CryptoRepoFileDao.class);
@@ -59,7 +59,7 @@ public class CurrentHistoCryptoRepoFileDtoConverter {
 		final HistoCryptoRepoFile histoCryptoRepoFile;
 		if (histoCryptoRepoFileDto != null) {
 			histoCryptoRepoFile = HistoCryptoRepoFileDtoConverter.create(transaction).putHistoCryptoRepoFile(histoCryptoRepoFileDto);
-			cryptoRepoFile = assertNotNull(histoCryptoRepoFile.getCryptoRepoFile(),
+			cryptoRepoFile = requireNonNull(histoCryptoRepoFile.getCryptoRepoFile(),
 					"histoCryptoRepoFile[" + histoCryptoRepoFile.getHistoCryptoRepoFileId() + "].cryptoRepoFile");
 		}
 		else {

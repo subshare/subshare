@@ -1,7 +1,7 @@
 package org.subshare.test;
 
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 import static org.assertj.core.api.Assertions.*;
 
 import java.util.Collection;
@@ -397,7 +397,7 @@ public class CollisionOnServerRepoToRepoSyncIT extends CollisionRepoToRepoSyncIT
 		private final RepoToRepoSyncCoordinator coordinator;
 
 		public SyncFromLocalSrcToRemoteThread(RepoToRepoSyncCoordinator coordinator) {
-			this.coordinator = assertNotNull(coordinator, "coordinator");
+			this.coordinator = requireNonNull(coordinator, "coordinator");
 		}
 
 		@Override
@@ -418,7 +418,7 @@ public class CollisionOnServerRepoToRepoSyncIT extends CollisionRepoToRepoSyncIT
 		private final RepoToRepoSyncCoordinator coordinator;
 
 		public SyncFromRemoteToLocalDestThread(RepoToRepoSyncCoordinator coordinator) {
-			this.coordinator = assertNotNull(coordinator, "coordinator");
+			this.coordinator = requireNonNull(coordinator, "coordinator");
 		}
 
 		@Override

@@ -1,6 +1,6 @@
 package org.subshare.rest.client.pgp.transport.request;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.io.InputStream;
 
@@ -14,7 +14,7 @@ public class GetPgpPublicKeysMatchingQuery extends AbstractRequest<InputStream> 
 	private final String queryString;
 
 	public GetPgpPublicKeysMatchingQuery(String queryString) {
-		this.queryString = assertNotNull(queryString, "queryString");
+		this.queryString = requireNonNull(queryString, "queryString");
 	}
 
 	@Override

@@ -1,6 +1,6 @@
 package org.subshare.local.persistence;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.Collection;
 
@@ -16,7 +16,7 @@ public class HistoFileChunkDao extends Dao<HistoFileChunk, HistoFileChunkDao> {
 	private static final Logger logger = LoggerFactory.getLogger(HistoFileChunkDao.class);
 
 	public Collection<HistoFileChunk> getHistoFileChunks(final FileChunkPayload fileChunkPayload) {
-		assertNotNull(fileChunkPayload, "fileChunkPayload");
+		requireNonNull(fileChunkPayload, "fileChunkPayload");
 		final Query query = pm().newNamedQuery(getEntityClass(), "getHistoFileChunks_fileChunkPayload");
 		try {
 			long startTimestamp = System.currentTimeMillis();
@@ -35,7 +35,7 @@ public class HistoFileChunkDao extends Dao<HistoFileChunk, HistoFileChunkDao> {
 	}
 
 	public Collection<HistoFileChunk> getHistoFileChunks(final HistoCryptoRepoFile histoCryptoRepoFile) {
-		assertNotNull(histoCryptoRepoFile, "histoCryptoRepoFile");
+		requireNonNull(histoCryptoRepoFile, "histoCryptoRepoFile");
 		final Query query = pm().newNamedQuery(getEntityClass(), "getHistoFileChunks_histoCryptoRepoFile");
 		try {
 			long startTimestamp = System.currentTimeMillis();
@@ -54,7 +54,7 @@ public class HistoFileChunkDao extends Dao<HistoFileChunk, HistoFileChunkDao> {
 	}
 
 	public long getHistoFileChunkCount(final FileChunkPayload fileChunkPayload) {
-		assertNotNull(fileChunkPayload, "fileChunkPayload");
+		requireNonNull(fileChunkPayload, "fileChunkPayload");
 		final Query query = pm().newNamedQuery(getEntityClass(), "getHistoFileChunkCount_fileChunkPayload");
 		try {
 			long startTimestamp = System.currentTimeMillis();

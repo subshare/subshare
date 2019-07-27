@@ -1,7 +1,7 @@
 package org.subshare.gui.invitation.issue.selectuser;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
+import static java.util.Objects.*;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -43,7 +43,7 @@ public class SelectUserWizardPage extends WizardPage {
 
 	public SelectUserWizardPage(final IssueInvitationData issueInvitationData) {
 		super(Messages.getString("SelectUserWizardPage.title")); //$NON-NLS-1$
-		this.issueInvitationData = assertNotNull(issueInvitationData, "issueInvitationData"); //$NON-NLS-1$
+		this.issueInvitationData = requireNonNull(issueInvitationData, "issueInvitationData"); //$NON-NLS-1$
 	}
 
 	@Override

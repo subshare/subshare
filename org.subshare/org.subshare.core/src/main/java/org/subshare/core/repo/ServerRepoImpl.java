@@ -1,7 +1,7 @@
 package org.subshare.core.repo;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
+import static java.util.Objects.*;
 
 import java.util.Date;
 import java.util.UUID;
@@ -18,7 +18,7 @@ public class ServerRepoImpl extends AbstractBean<ServerRepo.Property> implements
 	private Date changed = new Date();
 
 	public ServerRepoImpl(final UUID repositoryId) {
-		this.repositoryId = assertNotNull(repositoryId, "repositoryId)");
+		this.repositoryId = requireNonNull(repositoryId, "repositoryId)");
 	}
 
 	@Override
@@ -72,7 +72,7 @@ public class ServerRepoImpl extends AbstractBean<ServerRepo.Property> implements
 	}
 	@Override
 	public void setChanged(final Date changed) {
-		assertNotNull(changed, "changed");
+		requireNonNull(changed, "changed");
 		setPropertyValue(PropertyEnum.changed, changed);
 	}
 

@@ -1,6 +1,6 @@
 package org.subshare.gui.maintree;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import javafx.scene.control.TreeView;
 
@@ -29,7 +29,7 @@ public class RootMainTreeItem extends MainTreeItem<String> {
 //	};
 
 	public RootMainTreeItem(final TreeView<String> mainTree) {
-		this.mainTree = assertNotNull(mainTree, "mainTree");
+		this.mainTree = requireNonNull(mainTree, "mainTree");
 //		this.mainTree.getSelectionModel().getSelectedItems().addListener(mainTreeSelectionListener);
 	}
 

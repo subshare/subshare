@@ -1,6 +1,6 @@
 package org.subshare.gui.util;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 import static org.subshare.gui.util.ResourceBundleUtil.*;
 
 import java.io.IOException;
@@ -12,7 +12,7 @@ public final class FxmlUtil {
 	private FxmlUtil() { }
 
 	private static FXMLLoader createFxmlLoader(final Class<?> componentClass) {
-		assertNotNull(componentClass, "componentClass");
+		requireNonNull(componentClass, "componentClass");
 		final FXMLLoader fxmlLoader = new FXMLLoader(
 				componentClass.getResource(componentClass.getSimpleName() + ".fxml"),
 				getMessages(componentClass));
@@ -25,8 +25,8 @@ public final class FxmlUtil {
 	 * @param component
 	 */
 	public static <T> void loadDynamicComponentFxml(final Class<? super T> componentClass, final T component) {
-		assertNotNull(componentClass, "componentClass");
-		assertNotNull(component, "component");
+		requireNonNull(componentClass, "componentClass");
+		requireNonNull(component, "component");
 		final FXMLLoader fxmlLoader = createFxmlLoader(componentClass);
 
 		fxmlLoader.setRoot(component);

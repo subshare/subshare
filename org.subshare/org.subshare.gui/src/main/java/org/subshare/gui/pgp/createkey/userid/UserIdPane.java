@@ -1,7 +1,7 @@
 package org.subshare.gui.pgp.createkey.userid;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
+import static java.util.Objects.*;
 import static javafx.application.Platform.*;
 import static org.subshare.gui.util.FxmlUtil.*;
 
@@ -39,7 +39,7 @@ public class UserIdPane extends WizardPageContentGridPane {
 	};
 
 	public UserIdPane(final CreatePgpKeyParam createPgpKeyParam) {
-		this.createPgpKeyParam = assertNotNull(createPgpKeyParam, "createPgpKeyParam");
+		this.createPgpKeyParam = requireNonNull(createPgpKeyParam, "createPgpKeyParam");
 		loadDynamicComponentFxml(UserIdPane.class, this);
 
 		for (PgpUserId pgpUserId : createPgpKeyParam.getUserIds())

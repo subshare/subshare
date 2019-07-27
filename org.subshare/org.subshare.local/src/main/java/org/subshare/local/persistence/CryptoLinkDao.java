@@ -1,7 +1,7 @@
 package org.subshare.local.persistence;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
+import static java.util.Objects.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -33,7 +33,7 @@ public class CryptoLinkDao extends Dao<CryptoLink, CryptoLinkDao> {
 	}
 
 	public CryptoLink getCryptoLink(final Uid cryptoLinkId) {
-		assertNotNull(cryptoLinkId, "cryptoLinkId");
+		requireNonNull(cryptoLinkId, "cryptoLinkId");
 		final Query query = pm().newNamedQuery(getEntityClass(), "getCryptoLink_cryptoLinkId");
 		try {
 			final CryptoLink cryptoLink = (CryptoLink) query.execute(cryptoLinkId.toString());
@@ -58,7 +58,7 @@ public class CryptoLinkDao extends Dao<CryptoLink, CryptoLinkDao> {
 	 */
 	public Collection<CryptoLink> getCryptoLinksChangedAfterExclLastSyncFromRepositoryId(
 			final long localRevision, final UUID exclLastSyncFromRepositoryId) {
-		assertNotNull(exclLastSyncFromRepositoryId, "exclLastSyncFromRepositoryId");
+		requireNonNull(exclLastSyncFromRepositoryId, "exclLastSyncFromRepositoryId");
 
 		final PersistenceManager pm = pm();
 		final FetchPlanBackup fetchPlanBackup = FetchPlanBackup.createFrom(pm);
@@ -84,7 +84,7 @@ public class CryptoLinkDao extends Dao<CryptoLink, CryptoLinkDao> {
 
 	public List<CryptoLinkDto> getCryptoLinkDtosChangedAfterExclLastSyncFromRepositoryId(
 			final long localRevision, final UUID exclLastSyncFromRepositoryId) {
-		assertNotNull(exclLastSyncFromRepositoryId, "exclLastSyncFromRepositoryId");
+		requireNonNull(exclLastSyncFromRepositoryId, "exclLastSyncFromRepositoryId");
 
 		final PersistenceManager pm = pm();
 		final FetchPlanBackup fetchPlanBackup = FetchPlanBackup.createFrom(pm);
@@ -142,7 +142,7 @@ public class CryptoLinkDao extends Dao<CryptoLink, CryptoLinkDao> {
 	}
 
 	public Collection<CryptoLink> getCryptoLinks(final UserRepoKeyPublicKey fromUserRepoKeyPublicKey) {
-		assertNotNull(fromUserRepoKeyPublicKey, "fromUserRepoKeyPublicKey");
+		requireNonNull(fromUserRepoKeyPublicKey, "fromUserRepoKeyPublicKey");
 		final Query query = pm().newNamedQuery(getEntityClass(), "getCryptoLinks_fromUserRepoKeyPublicKey");
 		try {
 			long startTimestamp = System.currentTimeMillis();
@@ -161,7 +161,7 @@ public class CryptoLinkDao extends Dao<CryptoLink, CryptoLinkDao> {
 	}
 
 	public Collection<CryptoLink> getCryptoLinksFrom(final CryptoKey fromCryptoKey) {
-		assertNotNull(fromCryptoKey, "fromCryptoKey");
+		requireNonNull(fromCryptoKey, "fromCryptoKey");
 		final Query query = pm().newNamedQuery(getEntityClass(), "getCryptoLinksFrom_fromCryptoKey");
 		try {
 			long startTimestamp = System.currentTimeMillis();
@@ -180,7 +180,7 @@ public class CryptoLinkDao extends Dao<CryptoLink, CryptoLinkDao> {
 	}
 
 	public Collection<CryptoLink> getCryptoLinksTo(final CryptoKey toCryptoKey) {
-		assertNotNull(toCryptoKey, "toCryptoKey");
+		requireNonNull(toCryptoKey, "toCryptoKey");
 		final Query query = pm().newNamedQuery(getEntityClass(), "getCryptoLinksTo_toCryptoKey");
 		try {
 			long startTimestamp = System.currentTimeMillis();
@@ -199,7 +199,7 @@ public class CryptoLinkDao extends Dao<CryptoLink, CryptoLinkDao> {
 	}
 
 	public Collection<CryptoLink> getCryptoLinksSignedBy(final Uid signingUserRepoKeyId) {
-		assertNotNull(signingUserRepoKeyId, "signingUserRepoKeyId");
+		requireNonNull(signingUserRepoKeyId, "signingUserRepoKeyId");
 		final Query query = pm().newNamedQuery(getEntityClass(), "getCryptoLinks_signingUserRepoKeyId");
 		try {
 			long startTimestamp = System.currentTimeMillis();

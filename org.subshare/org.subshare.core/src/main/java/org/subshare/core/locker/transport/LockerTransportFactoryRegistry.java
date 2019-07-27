@@ -1,5 +1,7 @@
 package org.subshare.core.locker.transport;
 
+import static java.util.Objects.*;
+
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -7,8 +9,6 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ServiceLoader;
-
-import co.codewizards.cloudstore.core.util.AssertUtil;
 
 public class LockerTransportFactoryRegistry {
 
@@ -101,7 +101,7 @@ public class LockerTransportFactoryRegistry {
 	}
 
 	public <F extends LockerTransportFactory> F getLockerTransportFactory(Class<F> factoryClass) {
-		AssertUtil.assertNotNull(factoryClass, "factoryClass");
+		requireNonNull(factoryClass, "factoryClass");
 		List<LockerTransportFactory> lockerTransportFactories = getLockerTransportFactories();
 		for (LockerTransportFactory lockerTransportFactory : lockerTransportFactories) {
 			if (factoryClass.isInstance(lockerTransportFactory)) {

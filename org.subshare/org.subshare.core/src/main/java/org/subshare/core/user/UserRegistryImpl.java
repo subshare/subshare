@@ -1,8 +1,8 @@
 package org.subshare.core.user;
 
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
+import static java.util.Objects.*;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -141,7 +141,7 @@ public class UserRegistryImpl extends FileBasedObjectRegistry implements UserReg
 	}
 
 	public Uid getVersion() {
-		return assertNotNull(version, "version");
+		return requireNonNull(version, "version");
 	}
 
 
@@ -227,7 +227,7 @@ public class UserRegistryImpl extends FileBasedObjectRegistry implements UserReg
 			// them for the sake of deterministic behaviour.
 			final PgpKeyId pgpKeyId = new TreeSet<>(user.getPgpKeyIds()).iterator().next();
 			final PgpKey pgpKey = pgpKeyId2PgpKey.get(pgpKeyId);
-			assertNotNull(pgpKey, "pgpKey");
+			requireNonNull(pgpKey, "pgpKey");
 			final Uid userId = new Uid(getLast16(pgpKey.getFingerprint().getBytes()));
 			user.setUserId(userId);
 			addUser(user);
@@ -238,7 +238,7 @@ public class UserRegistryImpl extends FileBasedObjectRegistry implements UserReg
 		for (PgpKey pgpKey : pgpKeys) {
 			final PgpKeyId pgpKeyId = pgpKey.getPgpKeyId();
 			final List<User> users = pgpKeyId2Users.get(pgpKeyId);
-			assertNotNull(users, "users");
+			requireNonNull(users, "users");
 			for (final User user : users) {
 				final boolean _new = newUserIds.contains(user.getUserId());
 				final boolean modified = modifiedUserIds.contains(user.getUserId());
@@ -285,9 +285,9 @@ public class UserRegistryImpl extends FileBasedObjectRegistry implements UserReg
 	}
 
 	private static boolean populateUserFromPgpUserId(final User user, final String pgpUserIdStr) {
-		assertNotNull(user, "user");
+		requireNonNull(user, "user");
 		boolean modified = false;
-		final PgpUserId pgpUserId = new PgpUserId(assertNotNull(pgpUserIdStr, "pgpUserIdStr"));
+		final PgpUserId pgpUserId = new PgpUserId(requireNonNull(pgpUserIdStr, "pgpUserIdStr"));
 		if (! isEmpty(pgpUserId.getEmail()) && ! user.getEmails().contains(pgpUserId.getEmail())) {
 			user.getEmails().add(pgpUserId.getEmail());
 			modified = true;
@@ -311,7 +311,7 @@ public class UserRegistryImpl extends FileBasedObjectRegistry implements UserReg
 	}
 
 	private static String[] extractFirstAndLastNameFromFullName(String fullName) {
-		fullName = assertNotNull(fullName, "fullName").trim();
+		fullName = requireNonNull(fullName, "fullName").trim();
 
 		if (fullName.endsWith(")")) {
 			final int lastOpenBracket = fullName.lastIndexOf('(');
@@ -351,7 +351,7 @@ public class UserRegistryImpl extends FileBasedObjectRegistry implements UserReg
 
 	@Override
 	public synchronized Collection<User> getUsersByEmail(final String email) {
-		assertNotNull(email, "email");
+		requireNonNull(email, "email");
 		if (cache_email2Users == null) {
 			final Map<String, Set<User>> cache_email2Users = new HashMap<String, Set<User>>();
 			for (final User user : getUsers()) {
@@ -378,8 +378,8 @@ public class UserRegistryImpl extends FileBasedObjectRegistry implements UserReg
 
 	@Override
 	public synchronized void addUser(final User user) {
-		assertNotNull(user, "user");
-		assertNotNull(user.getUserId(), "user.userId");
+		requireNonNull(user, "user");
+		requireNonNull(user.getUserId(), "user.userId");
 		userId2User.put(user.getUserId(), user);
 		// TODO we either need to hook listeners into user and get notified about all changes to update this registry!
 		// OR we need to provide a public write/save/store (or similarly named) method.
@@ -402,7 +402,7 @@ public class UserRegistryImpl extends FileBasedObjectRegistry implements UserReg
 	}
 
 	protected synchronized void _removeUser(final User user) {
-		assertNotNull(user, "user");
+		requireNonNull(user, "user");
 		userId2User.remove(user.getUserId());
 
 //		for (final PgpKeyId pgpKeyId : user.getPgpKeyIds())
@@ -427,7 +427,7 @@ public class UserRegistryImpl extends FileBasedObjectRegistry implements UserReg
 
 	@Override
 	public synchronized User getUserByUserId(final Uid userId) {
-		assertNotNull(userId, "userId");
+		requireNonNull(userId, "userId");
 //		if (cache_userId2User == null) {
 //			final Map<Uid, User> m = new HashMap<>();
 //
@@ -451,7 +451,7 @@ public class UserRegistryImpl extends FileBasedObjectRegistry implements UserReg
 
 	@Override
 	public synchronized User getUserByUserRepoKeyId(final Uid userRepoKeyId) {
-		assertNotNull(userRepoKeyId, "userRepoKeyId");
+		requireNonNull(userRepoKeyId, "userRepoKeyId");
 		if (cache_userRepoKeyId2User == null) {
 			final Map<Uid, User> m = new HashMap<>();
 
@@ -493,7 +493,7 @@ public class UserRegistryImpl extends FileBasedObjectRegistry implements UserReg
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
 			final User user = (User) evt.getSource();
-			assertNotNull(user, "user");
+			requireNonNull(user, "user");
 
 			markDirty();
 			cleanCache();
@@ -529,7 +529,7 @@ public class UserRegistryImpl extends FileBasedObjectRegistry implements UserReg
 	}
 
 	protected synchronized void mergeFrom(final UserRegistryDto userRegistryDto) {
-		assertNotNull(userRegistryDto, "userRegistryDto");
+		requireNonNull(userRegistryDto, "userRegistryDto");
 
 		final Set<PgpKeyId> pgpKeyIds = new HashSet<>();
 		for (UserDto userDto : userRegistryDto.getUserDtos()) {
@@ -557,7 +557,7 @@ public class UserRegistryImpl extends FileBasedObjectRegistry implements UserReg
 
 		final List<UserDto> newUserDtos = new ArrayList<>(userRegistryDto.getUserDtos().size());
 		for (final UserDto userDto : userRegistryDto.getUserDtos()) {
-			final Uid userId = assertNotNull(userDto.getUserId(), "userDto.userId");
+			final Uid userId = requireNonNull(userDto.getUserId(), "userDto.userId");
 			if (deletedUserIdSet.contains(userId))
 				continue;
 
@@ -635,8 +635,8 @@ public class UserRegistryImpl extends FileBasedObjectRegistry implements UserReg
 	}
 
 	private void merge(final User toUser, final UserDto fromUserDto, final Set<Uid> deletedUserRepoKeyIdSet) {
-		assertNotNull(toUser, "toUser");
-		assertNotNull(fromUserDto, "fromUserDto");
+		requireNonNull(toUser, "toUser");
+		requireNonNull(fromUserDto, "fromUserDto");
 		UserRepoKeyDtoConverter userRepoKeyDtoConverter = null;
 		UserRepoKeyPublicKeyDtoWithSignatureConverter userRepoKeyPublicKeyDtoWithSignatureConverter = null;
 
@@ -662,7 +662,7 @@ public class UserRegistryImpl extends FileBasedObjectRegistry implements UserReg
 		// We merge the UserRepoKeys outside of the changed-timestamp-controlled area to make sure we never loose any!
 		if (fromUserDto.getUserRepoKeyRingDto() != null) {
 			for (final UserRepoKeyDto userRepoKeyDto : fromUserDto.getUserRepoKeyRingDto().getUserRepoKeyDtos()) {
-				final Uid userRepoKeyId = assertNotNull(userRepoKeyDto.getUserRepoKeyId(), "userRepoKeyDto.userRepoKeyId");
+				final Uid userRepoKeyId = requireNonNull(userRepoKeyDto.getUserRepoKeyId(), "userRepoKeyDto.userRepoKeyId");
 				if (deletedUserRepoKeyIdSet.contains(userRepoKeyId))
 					continue;
 
@@ -672,13 +672,13 @@ public class UserRegistryImpl extends FileBasedObjectRegistry implements UserReg
 						userRepoKeyDtoConverter = new UserRepoKeyDtoConverter();
 
 					userRepoKey = userRepoKeyDtoConverter.fromUserRepoKeyDto(userRepoKeyDto);
-					toUser.getUserRepoKeyRingOrCreate().addUserRepoKey(assertNotNull(userRepoKey, "userRepoKey"));
+					toUser.getUserRepoKeyRingOrCreate().addUserRepoKey(requireNonNull(userRepoKey, "userRepoKey"));
 				}
 			}
 		}
 		else {
 			for (final UserRepoKeyPublicKeyDto userRepoKeyPublicKeyDto : fromUserDto.getUserRepoKeyPublicKeyDtos()) {
-				final Uid userRepoKeyId = assertNotNull(userRepoKeyPublicKeyDto.getUserRepoKeyId(), "userRepoKeyPublicKeyDto.userRepoKeyId");
+				final Uid userRepoKeyId = requireNonNull(userRepoKeyPublicKeyDto.getUserRepoKeyId(), "userRepoKeyPublicKeyDto.userRepoKeyId");
 				if (deletedUserRepoKeyIdSet.contains(userRepoKeyId))
 					continue;
 
@@ -687,7 +687,7 @@ public class UserRegistryImpl extends FileBasedObjectRegistry implements UserReg
 						userRepoKeyPublicKeyDtoWithSignatureConverter = new UserRepoKeyPublicKeyDtoWithSignatureConverter();
 
 					final PublicKeyWithSignature publicKeyWithSignature = userRepoKeyPublicKeyDtoWithSignatureConverter.fromUserRepoKeyPublicKeyDto(userRepoKeyPublicKeyDto);
-					toUser.getUserRepoKeyPublicKeys().add(assertNotNull(publicKeyWithSignature, "publicKeyWithSignature"));
+					toUser.getUserRepoKeyPublicKeys().add(requireNonNull(publicKeyWithSignature, "publicKeyWithSignature"));
 				}
 			}
 		}

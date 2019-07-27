@@ -1,6 +1,6 @@
 package org.subshare.gui.backup.imp.source;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 import static org.subshare.gui.backup.BackupConst.*;
 import static org.subshare.gui.util.FxmlUtil.*;
 
@@ -24,7 +24,7 @@ public class ImportBackupSourcePane extends WizardPageContentGridPane {
 
 	public ImportBackupSourcePane(final ImportBackupData importBackupData) {
 		loadDynamicComponentFxml(ImportBackupSourcePane.class, this);
-		this.importBackupData = assertNotNull(importBackupData, "importBackupData");
+		this.importBackupData = requireNonNull(importBackupData, "importBackupData");
 		fileTreePane.fileFilterProperty().set(new DataFileFilter().setAcceptContentType(BACKUP_FILE_CONTENT_TYPE_VALUE));
 		fileTreePane.getSelectedFiles().addListener((InvalidationListener) observable -> onSelectedFilesChanged());
 		onSelectedFilesChanged();

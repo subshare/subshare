@@ -1,8 +1,8 @@
 package org.subshare.gui.histo;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
+import static java.util.Objects.*;
 import static javafx.application.Platform.*;
 import static org.subshare.gui.util.FxmlUtil.*;
 import static org.subshare.gui.util.PlatformUtil.*;
@@ -245,7 +245,7 @@ public class HistoFrameListPane extends VBox {
 	}
 
 	private String getUserNameByUserRepoKeyId(final Uid userRepoKeyId) {
-		assertNotNull(userRepoKeyId, "userRepoKeyId");
+		requireNonNull(userRepoKeyId, "userRepoKeyId");
 
 		String userName = userRepoKey2UserName.get(userRepoKeyId);
 		if (userName == null) {
@@ -262,7 +262,7 @@ public class HistoFrameListPane extends VBox {
 	}
 
 	private String getUserName(final User user) { // TODO should I move this into User? Or instead replace it by 3 separate columns?!
-		assertNotNull(user, "user");
+		requireNonNull(user, "user");
 		StringBuilder sb = new StringBuilder();
 
 		final String firstName = trim(user.getFirstName());
@@ -329,11 +329,11 @@ public class HistoFrameListPane extends VBox {
 
 	private void sortHistoFrameDtosBySignatureCreatedNewestFirst(final List<HistoFrameDto> histoFrameDtos) {
 		Collections.sort(histoFrameDtos, (o1, o2) -> {
-			final Date signatureCreated1 = assertNotNull(o1.getSignature(), "o1.signature").getSignatureCreated();
-			assertNotNull(signatureCreated1, "o1.signature.signatureCreated");
+			final Date signatureCreated1 = requireNonNull(o1.getSignature(), "o1.signature").getSignatureCreated();
+			requireNonNull(signatureCreated1, "o1.signature.signatureCreated");
 
-			final Date signatureCreated2 = assertNotNull(o2.getSignature(), "o2.signature").getSignatureCreated();
-			assertNotNull(signatureCreated2, "o2.signature.signatureCreated");
+			final Date signatureCreated2 = requireNonNull(o2.getSignature(), "o2.signature").getSignatureCreated();
+			requireNonNull(signatureCreated2, "o2.signature.signatureCreated");
 
 			return -1 * signatureCreated1.compareTo(signatureCreated2);
 		});
@@ -352,7 +352,7 @@ public class HistoFrameListPane extends VBox {
 	}
 
 	private LocalRepoManager createLocalRepoManager() {
-		final LocalRepo localRepo = assertNotNull(getLocalRepo(), "localRepo");
+		final LocalRepo localRepo = requireNonNull(getLocalRepo(), "localRepo");
 		return LocalRepoManagerFactoryLs.getLocalRepoManagerFactory().createLocalRepoManagerForExistingRepository(localRepo.getLocalRoot());
 	}
 }

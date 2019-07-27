@@ -1,6 +1,6 @@
 package org.subshare.core.io;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,15 +32,15 @@ public class MultiInputStream extends InputStream implements IInputStream {
 	private InputStream inputStream;
 
 	public MultiInputStream(final InputStreamSource ... inputStreamSources) throws IOException {
-		this(Arrays.asList(assertNotNull(inputStreamSources, "inputStreamSources")));
+		this(Arrays.asList(requireNonNull(inputStreamSources, "inputStreamSources")));
 	}
 
 	public MultiInputStream(final Collection<? extends InputStreamSource> inputStreamSources) throws IOException {
-		this(assertNotNull(inputStreamSources, "inputStreamSources").iterator());
+		this(requireNonNull(inputStreamSources, "inputStreamSources").iterator());
 	}
 
 	public MultiInputStream(final Iterator<? extends InputStreamSource> inputStreamSourcesIterator) throws IOException {
-		this.inputStreamSourcesIterator = assertNotNull(inputStreamSourcesIterator, "inputStreamSourcesIterator");
+		this.inputStreamSourcesIterator = requireNonNull(inputStreamSourcesIterator, "inputStreamSourcesIterator");
 		nextInputStream();
 	}
 

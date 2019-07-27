@@ -1,9 +1,8 @@
 package org.subshare.core.crypto;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 import static org.subshare.core.crypto.EncrypterDecrypterStreamUtil.*;
 
-import co.codewizards.cloudstore.core.io.ByteArrayOutputStream;
 import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -11,6 +10,8 @@ import java.io.OutputStream;
 import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.subshare.core.dto.CryptoKeyType;
+
+import co.codewizards.cloudstore.core.io.ByteArrayOutputStream;
 
 /**
  * {@code AsymCombiEncrypterOutputStream} combines asymmetric and symmetric cryptography to encrypt a given plain-text.
@@ -95,18 +96,18 @@ public class AsymCombiEncrypterOutputStream extends FilterOutputStream {
 			final KeyParameterFactory keyParameterFactory,
 			final IvFactory ivFactory) throws IOException
 	{
-		super(assertNotNull(out, "out"));
-		this.asymmetricCipherTransformation = assertNotNull(asymmetricCipherTransformation, "asymmetricCipherTransformation");
+		super(requireNonNull(out, "out"));
+		this.asymmetricCipherTransformation = requireNonNull(asymmetricCipherTransformation, "asymmetricCipherTransformation");
 		if (CryptoKeyType.asymmetric != asymmetricCipherTransformation.getType())
 			throw new IllegalArgumentException("asymmetric != asymmetricCipherTransformation.type");
 
-		this.publicKey = assertNotNull(publicKey, "publicKey");
+		this.publicKey = requireNonNull(publicKey, "publicKey");
 
-		assertNotNull(symmetricCipherTransformation, "symmetricCipherTransformation");
+		requireNonNull(symmetricCipherTransformation, "symmetricCipherTransformation");
 		if (CryptoKeyType.symmetric != symmetricCipherTransformation.getType())
 			throw new IllegalArgumentException("symmetric != symmetricCipherTransformation.type");
 
-		assertNotNull(keyParameterFactory, "keyParameterFactory").setCipherTransformation(symmetricCipherTransformation);
+		requireNonNull(keyParameterFactory, "keyParameterFactory").setCipherTransformation(symmetricCipherTransformation);
 		this.symmetricKey = keyParameterFactory.createKeyParameter();
 		keyParameterFactory.setCipherTransformation(null);
 

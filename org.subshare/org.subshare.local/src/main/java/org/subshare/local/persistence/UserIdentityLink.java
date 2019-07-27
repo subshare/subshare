@@ -1,7 +1,7 @@
 package org.subshare.local.persistence;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
+import static java.util.Objects.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -190,7 +190,7 @@ public class UserIdentityLink extends Entity implements WriteProtected, AutoTrac
 
 		// It may be signed by either the owner of this identity, i.e. ofUserRepoKeyPublicKey, or
 		// by any user having 'readUserIdentity' access. Maybe we introduce a 'writeUserIdentity' later, though.
-		if (signature == null || !signature.getSigningUserRepoKeyId().equals(assertNotNull(assertNotNull(userIdentity, "userIdentity").getOfUserRepoKeyPublicKey(), "userIdentity.ofUserRepoKeyPublicKey").getUserRepoKeyId()))
+		if (signature == null || !signature.getSigningUserRepoKeyId().equals(requireNonNull(requireNonNull(userIdentity, "userIdentity").getOfUserRepoKeyPublicKey(), "userIdentity.ofUserRepoKeyPublicKey").getUserRepoKeyId()))
 			return PermissionType.readUserIdentity;
 		else
 			return null; // no permission needed at all, if it's self-signed (everyone can and must give information about himself)

@@ -1,6 +1,6 @@
 package org.subshare.gui.server;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import org.subshare.core.repo.ServerRepo;
 
@@ -13,7 +13,7 @@ public class ServerRepoListItem {
 	private final StringProperty nameProperty;
 
 	public ServerRepoListItem(final ServerRepo serverRepo) {
-		this.serverRepo = assertNotNull(serverRepo, "serverRepo");
+		this.serverRepo = requireNonNull(serverRepo, "serverRepo");
 		try {
 			nameProperty = JavaBeanStringPropertyBuilder.create()
 					.bean(serverRepo)
@@ -33,9 +33,9 @@ public class ServerRepoListItem {
 	}
 
 //	public String getName() {
-//		return assertNotNull("serverRepo", serverRepo).getName();
+//		return requireNonNull("serverRepo", serverRepo).getName();
 //	}
 //	public void setName(String name) {
-//		assertNotNull("serverRepo", serverRepo).setName(name);
+//		requireNonNull("serverRepo", serverRepo).setName(name);
 //	}
 }

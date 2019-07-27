@@ -1,6 +1,6 @@
 package org.subshare.local.persistence;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -32,7 +32,7 @@ public class CryptoKeyDao extends Dao<CryptoKey, CryptoKeyDao> {
 	}
 
 	public CryptoKey getCryptoKey(final Uid cryptoKeyId) {
-		assertNotNull(cryptoKeyId, "cryptoKeyId");
+		requireNonNull(cryptoKeyId, "cryptoKeyId");
 		final Query query = pm().newNamedQuery(getEntityClass(), "getCryptoKey_cryptoKeyId");
 		try {
 			final CryptoKey cryptoKey = (CryptoKey) query.execute(cryptoKeyId.toString());
@@ -43,8 +43,8 @@ public class CryptoKeyDao extends Dao<CryptoKey, CryptoKeyDao> {
 	}
 
 	public Collection<CryptoKey> getActiveCryptoKeys(final CryptoRepoFile cryptoRepoFile, final CryptoKeyRole cryptoKeyRole) {
-		assertNotNull(cryptoRepoFile, "cryptoRepoFile");
-		assertNotNull(cryptoKeyRole, "cryptoKeyRole");
+		requireNonNull(cryptoRepoFile, "cryptoRepoFile");
+		requireNonNull(cryptoKeyRole, "cryptoKeyRole");
 		final Query query = pm().newNamedQuery(getEntityClass(), "getActiveCryptoKeys_cryptoRepoFile_cryptoKeyRole");
 		try {
 			long startTimestamp = System.currentTimeMillis();
@@ -77,7 +77,7 @@ public class CryptoKeyDao extends Dao<CryptoKey, CryptoKeyDao> {
 	 */
 	public Collection<CryptoKey> getCryptoKeysChangedAfterExclLastSyncFromRepositoryId(
 			final long localRevision, final UUID exclLastSyncFromRepositoryId) {
-		assertNotNull(exclLastSyncFromRepositoryId, "exclLastSyncFromRepositoryId");
+		requireNonNull(exclLastSyncFromRepositoryId, "exclLastSyncFromRepositoryId");
 
 		final PersistenceManager pm = pm();
 		final FetchPlanBackup fetchPlanBackup = FetchPlanBackup.createFrom(pm);
@@ -103,7 +103,7 @@ public class CryptoKeyDao extends Dao<CryptoKey, CryptoKeyDao> {
 
 	public List<CryptoKeyDto> getCryptoKeyDtosChangedAfterExclLastSyncFromRepositoryId(
 			final long localRevision, final UUID exclLastSyncFromRepositoryId) {
-		assertNotNull(exclLastSyncFromRepositoryId, "exclLastSyncFromRepositoryId");
+		requireNonNull(exclLastSyncFromRepositoryId, "exclLastSyncFromRepositoryId");
 
 		final PersistenceManager pm = pm();
 		final FetchPlanBackup fetchPlanBackup = FetchPlanBackup.createFrom(pm);
@@ -135,7 +135,7 @@ public class CryptoKeyDao extends Dao<CryptoKey, CryptoKeyDao> {
 	}
 
 	public Collection<CryptoKey> getCryptoKeys(final CryptoRepoFile cryptoRepoFile) {
-		assertNotNull(cryptoRepoFile, "cryptoRepoFile");
+		requireNonNull(cryptoRepoFile, "cryptoRepoFile");
 		final Query query = pm().newNamedQuery(getEntityClass(), "getCryptoKeys_cryptoRepoFile");
 		try {
 			long startTimestamp = System.currentTimeMillis();
@@ -170,7 +170,7 @@ public class CryptoKeyDao extends Dao<CryptoKey, CryptoKeyDao> {
 	}
 
 	protected void deleteDependentObjects(final CryptoKey cryptoKey) {
-		assertNotNull(cryptoKey, "cryptoKey");
+		requireNonNull(cryptoKey, "cryptoKey");
 		final CryptoLinkDao cryptoLinkDao = getDao(CryptoLinkDao.class);
 
 		final Collection<CryptoLink> cryptoLinksFrom = cryptoLinkDao.getCryptoLinksFrom(cryptoKey);

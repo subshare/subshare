@@ -1,6 +1,6 @@
 package org.subshare.gui.localrepo.directory;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import org.subshare.core.dto.PermissionType;
 
@@ -14,14 +14,14 @@ public class PermissionTypeItem {
 	private final String text;
 
 	public PermissionTypeItem(final PermissionType permissionType) {
-		this.permissionType = assertNotNull(permissionType, "permissionType");
+		this.permissionType = requireNonNull(permissionType, "permissionType");
 		this.id = permissionType.name();
 		this.text = getText();
 	}
 
 	public PermissionTypeItem(final String id) {
 		this.permissionType = null;
-		this.id = assertNotNull(id, "id");
+		this.id = requireNonNull(id, "id");
 		this.text = getText();
 	}
 

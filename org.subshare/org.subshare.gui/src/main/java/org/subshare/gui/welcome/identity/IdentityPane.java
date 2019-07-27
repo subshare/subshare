@@ -1,6 +1,6 @@
 package org.subshare.gui.welcome.identity;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 import static org.subshare.gui.util.FxmlUtil.*;
 
 import org.subshare.gui.welcome.IdentityData;
@@ -41,7 +41,7 @@ public class IdentityPane extends GridPane {
 	protected CheckBox importBackupCheckBox;
 
 	public IdentityPane(final IdentityData identityData) {
-		this.identityData = assertNotNull(identityData, "identityData");
+		this.identityData = requireNonNull(identityData, "identityData");
 		loadDynamicComponentFxml(IdentityPane.class, this);
 
 		firstNameTextField.textProperty().bindBidirectional(identityData.firstNameProperty());

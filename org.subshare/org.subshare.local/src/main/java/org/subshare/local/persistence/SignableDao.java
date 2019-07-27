@@ -1,6 +1,6 @@
 package org.subshare.local.persistence;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.Collection;
 import java.util.Date;
@@ -16,8 +16,8 @@ import co.codewizards.cloudstore.local.persistence.Entity;
 public class SignableDao extends Dao<Entity, SignableDao> { // since Signable is an interface implemented by many Entity-classes, we cannot type this correctly ;-)
 
 	public boolean isEntitiesSignedByAndAfter(final Uid signingUserRepoKeyId, final Date signatureCreatedAfter) {
-		assertNotNull(signingUserRepoKeyId, "signingUserRepoKeyId");
-		assertNotNull(signatureCreatedAfter, "signatureCreatedAfter");
+		requireNonNull(signingUserRepoKeyId, "signingUserRepoKeyId");
+		requireNonNull(signatureCreatedAfter, "signatureCreatedAfter");
 		// TODO this does not contain file chunks! We need to add them, too!
 
 		@SuppressWarnings("rawtypes")

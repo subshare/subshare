@@ -1,6 +1,6 @@
 package org.subshare.gui.invitation.issue.destination;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import org.subshare.gui.invitation.issue.IssueInvitationData;
 import org.subshare.gui.wizard.WizardPage;
@@ -14,7 +14,7 @@ public class IssueInvitationDestWizardPage extends WizardPage {
 
 	public IssueInvitationDestWizardPage(final IssueInvitationData issueInvitationData) {
 		super("Destination directory");
-		this.issueInvitationData = assertNotNull(issueInvitationData, "issueInvitationData");
+		this.issueInvitationData = requireNonNull(issueInvitationData, "issueInvitationData");
 		shownRequired.set(true);
 	}
 

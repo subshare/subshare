@@ -1,7 +1,7 @@
 package org.subshare.local.persistence;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
+import static java.util.Objects.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -77,7 +77,7 @@ public class CryptoConfigPropSet extends Entity implements WriteProtected, AutoT
 	}
 
 	public CryptoConfigPropSet(CryptoRepoFile cryptoRepoFile) {
-		this.cryptoRepoFile = assertNotNull(cryptoRepoFile, "cryptoRepoFile");
+		this.cryptoRepoFile = requireNonNull(cryptoRepoFile, "cryptoRepoFile");
 	}
 
 	public Uid getCryptoRepoFileId() {
@@ -124,7 +124,7 @@ public class CryptoConfigPropSet extends Entity implements WriteProtected, AutoT
 	public void setCryptoKey(final CryptoKey cryptoKey) {
 		if (! equal(this.cryptoKey, cryptoKey)) {
 			if (cryptoKey != null) {
-				final CryptoKeyRole cryptoKeyRole = assertNotNull(cryptoKey.getCryptoKeyRole(), "cryptoKey.cryptoKeyRole");
+				final CryptoKeyRole cryptoKeyRole = requireNonNull(cryptoKey.getCryptoKeyRole(), "cryptoKey.cryptoKeyRole");
 				if (CryptoKeyRole.dataKey != cryptoKeyRole)
 					throw new IllegalArgumentException("cryptoKey.cryptoKeyRole != dataKey");
 			}
@@ -165,7 +165,7 @@ public class CryptoConfigPropSet extends Entity implements WriteProtected, AutoT
 					InputStreamSource.Helper.createInputStreamSource(getCryptoRepoFileId()),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
-					InputStreamSource.Helper.createInputStreamSource(assertNotNull(cryptoKey, "cryptoKey").getCryptoKeyId()),
+					InputStreamSource.Helper.createInputStreamSource(requireNonNull(cryptoKey, "cryptoKey").getCryptoKeyId()),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(configPropSetDtoData)
@@ -177,7 +177,7 @@ public class CryptoConfigPropSet extends Entity implements WriteProtected, AutoT
 
 	@Override
 	public Uid getCryptoRepoFileIdControllingPermissions() {
-		return assertNotNull(this.getCryptoRepoFileId(), "cryptoRepoFileId");
+		return requireNonNull(this.getCryptoRepoFileId(), "cryptoRepoFileId");
 	}
 
 	@Override

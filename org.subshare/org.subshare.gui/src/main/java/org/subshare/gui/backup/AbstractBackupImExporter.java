@@ -2,9 +2,9 @@ package org.subshare.gui.backup;
 
 import static co.codewizards.cloudstore.core.io.StreamUtil.*;
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.HashUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
+import static java.util.Objects.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -67,7 +67,7 @@ public class AbstractBackupImExporter {
 	}
 
 	protected void registerPgpKeyRelatedBackupProperties(final Date backupTimestamp) {
-		assertNotNull(backupTimestamp, "backupTimestamp");
+		requireNonNull(backupTimestamp, "backupTimestamp");
 		for (final PgpKey masterKey : new HashSet<>(pgp.getMasterKeysWithSecretKey())) {
 			final SortedSet<String> userIds = new TreeSet<String>();
 			for (final PgpKey pgpKey : masterKey.getMasterKeyAndSubKeys()) {
@@ -82,7 +82,7 @@ public class AbstractBackupImExporter {
 	}
 
 	protected void registerServerRegistryRelatedBackupProperties(final Date backupTimestamp) {
-		assertNotNull(backupTimestamp, "backupTimestamp");
+		requireNonNull(backupTimestamp, "backupTimestamp");
 		final SortedSet<String> serverIdAndUrlPairs = new TreeSet<String>();
 		for (final Server server : serverRegistry.getServers())
 			serverIdAndUrlPairs.add(getServerIdAndUrlPair(server));
@@ -90,7 +90,7 @@ public class AbstractBackupImExporter {
 		final String serverIdAndUrlPairsString = serverIdAndUrlPairs.toString();
 		final String serverIdAndUrlPairsSha1 = sha1(serverIdAndUrlPairsString);
 		setServerRegistryLastBackupSha1(serverIdAndUrlPairsSha1);
-		setServerRegistryLastBackupTimestamp(assertNotNull(backupTimestamp, "now"));
+		setServerRegistryLastBackupTimestamp(requireNonNull(backupTimestamp, "now"));
 	}
 
 	protected static String getServerIdAndUrlPair(final Server server) {
@@ -98,12 +98,12 @@ public class AbstractBackupImExporter {
 	}
 
 	protected String getPgpKeyLastBackupTimestampPropertyKey(final PgpKeyId pgpKeyId) {
-		assertNotNull(pgpKeyId, "pgpKeyId");
+		requireNonNull(pgpKeyId, "pgpKeyId");
 		return String.format("pgpKey[%s].lastBackup.timestamp", pgpKeyId);
 	}
 
 	protected String getPgpKeyLastBackupUserIdsSha1PropertyKey(final PgpKeyId pgpKeyId) {
-		assertNotNull(pgpKeyId, "pgpKeyId");
+		requireNonNull(pgpKeyId, "pgpKeyId");
 		return String.format("pgpKey[%s].lastBackup.userIdsSha1", pgpKeyId);
 	}
 
@@ -118,7 +118,7 @@ public class AbstractBackupImExporter {
 	}
 
 	protected void setPgpKeyLastBackupTimestamp(final PgpKeyId pgpKeyId, final Date date) {
-		assertNotNull(date, "date");
+		requireNonNull(date, "date");
 		final String propertyKey = getPgpKeyLastBackupTimestampPropertyKey(pgpKeyId);
 		final String value = date == null ? null : ISO8601.formatDate(date);
 		backupProperties.setProperty(propertyKey, value);
@@ -131,7 +131,7 @@ public class AbstractBackupImExporter {
 	}
 
 	protected void setPgpKeyLastBackupUserIdsSha1(final PgpKeyId pgpKeyId, final String userIdsSha1) {
-		assertNotNull(userIdsSha1, "userIdsSha1");
+		requireNonNull(userIdsSha1, "userIdsSha1");
 		final String propertyKey = getPgpKeyLastBackupUserIdsSha1PropertyKey(pgpKeyId);
 		backupProperties.setProperty(propertyKey, userIdsSha1);
 	}
@@ -146,7 +146,7 @@ public class AbstractBackupImExporter {
 	}
 
 	protected void setServerRegistryLastBackupTimestamp(final Date date) {
-		assertNotNull(date, "date");
+		requireNonNull(date, "date");
 		final String value = date == null ? null : ISO8601.formatDate(date);
 		backupProperties.setProperty("serverRegistry.lastBackup.timestamp", value);
 	}
@@ -157,7 +157,7 @@ public class AbstractBackupImExporter {
 	}
 
 	protected void setServerRegistryLastBackupSha1(final String sha1) {
-		assertNotNull(sha1, "sha1");
+		requireNonNull(sha1, "sha1");
 		backupProperties.setProperty("serverRegistry.lastBackup.serverIdsAndUrlsSha1", sha1);
 	}
 }

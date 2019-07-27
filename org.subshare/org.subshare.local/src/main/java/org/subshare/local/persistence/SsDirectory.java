@@ -1,7 +1,7 @@
 package org.subshare.local.persistence;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
+import static java.util.Objects.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -78,7 +78,7 @@ public class SsDirectory extends Directory implements SsRepoFile {
 
 	@Override
 	public Uid getCryptoRepoFileIdControllingPermissions() {
-		final PersistenceManager pm = assertNotNull(JDOHelper.getPersistenceManager(this), "JDOHelper.getPersistenceManager(this)");
+		final PersistenceManager pm = requireNonNull(JDOHelper.getPersistenceManager(this), "JDOHelper.getPersistenceManager(this)");
 		return new CryptoRepoFileDao().persistenceManager(pm).getCryptoRepoFileOrFail(this).getCryptoRepoFileId();
 	}
 

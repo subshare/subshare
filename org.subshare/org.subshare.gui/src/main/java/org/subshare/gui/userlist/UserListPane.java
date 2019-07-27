@@ -2,7 +2,7 @@ package org.subshare.gui.userlist;
 
 import static co.codewizards.cloudstore.core.bean.PropertyChangeListenerUtil.*;
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 import static javafx.application.Platform.*;
 import static org.subshare.gui.util.FxmlUtil.*;
 
@@ -126,7 +126,7 @@ public class UserListPane extends GridPane {
 	}
 
 	public UserListPane(final EditUserManager editUserManager) {
-		this.editUserManager = assertNotNull(editUserManager, "");
+		this.editUserManager = requireNonNull(editUserManager, "");
 		loadDynamicComponentFxml(UserListPane.class, this);
 		tableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 		tableView.getSelectionModel().getSelectedItems().addListener(selectionListener);
@@ -177,7 +177,7 @@ public class UserListPane extends GridPane {
 	}
 
 	private void addOrRemoveItemTablesViewCallback(final Set<User> users) {
-		assertNotNull(users, "users");
+		requireNonNull(users, "users");
 		final Map<User, UserListItem> viewUser2UserListItem = new HashMap<>();
 		for (final UserListItem uli : tableView.getItems())
 			viewUser2UserListItem.put(uli.getUser(), uli);
@@ -319,7 +319,7 @@ public class UserListPane extends GridPane {
 	}
 
 	private void importUsersFromPgpKeys(final ImportKeysResult importKeysResult) {
-		assertNotNull(importKeysResult, "importKeysResult");
+		requireNonNull(importKeysResult, "importKeysResult");
 
 		final Pgp pgp = getPgp();
 		final Map<PgpKeyId, PgpKey> pgpKeyId2PgpKey = new HashMap<>();
@@ -327,7 +327,7 @@ public class UserListPane extends GridPane {
 		for (ImportedMasterKey importedMasterKey : importKeysResult.getPgpKeyId2ImportedMasterKey().values()) {
 			final PgpKeyId pgpKeyId = importedMasterKey.getPgpKeyId();
 			final PgpKey pgpKey = pgp.getPgpKey(pgpKeyId);
-			assertNotNull(pgpKey, "pgp.getPgpKey(" + pgpKeyId + ")");
+			requireNonNull(pgpKey, "pgp.getPgpKey(" + pgpKeyId + ")");
 			pgpKeyId2PgpKey.put(pgpKeyId, pgpKey);
 		}
 
@@ -336,7 +336,7 @@ public class UserListPane extends GridPane {
 	}
 
 	private void editImportedUsers(final ImportUsersFromPgpKeysResult importUsersFromPgpKeysResult) {
-		assertNotNull(importUsersFromPgpKeysResult, "importUsersFromPgpKeysResult");
+		requireNonNull(importUsersFromPgpKeysResult, "importUsersFromPgpKeysResult");
 
 		final List<User> users = new ArrayList<User>();
 		for (List<ImportedUser> importedUsers : importUsersFromPgpKeysResult.getPgpKeyId2ImportedUsers().values()) {

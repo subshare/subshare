@@ -1,7 +1,7 @@
 package org.subshare.local.persistence;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
+import static java.util.Objects.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -88,23 +88,23 @@ public class CryptoKeyDeactivation extends Entity implements WriteProtected {
 
 	@Override
 	public Uid getCryptoRepoFileIdControllingPermissions() {
-		final CryptoKey ck = assertNotNull(cryptoKey, "cryptoKey");
-		final CryptoKeyRole cryptoKeyRole = assertNotNull(ck.getCryptoKeyRole(), "cryptoKey.cryptoKeyRole");
-		final CryptoRepoFile cryptoRepoFile = assertNotNull(ck.getCryptoRepoFile(), "cryptoKey.cryptoRepoFile");
+		final CryptoKey ck = requireNonNull(cryptoKey, "cryptoKey");
+		final CryptoKeyRole cryptoKeyRole = requireNonNull(ck.getCryptoKeyRole(), "cryptoKey.cryptoKeyRole");
+		final CryptoRepoFile cryptoRepoFile = requireNonNull(ck.getCryptoRepoFile(), "cryptoKey.cryptoRepoFile");
 
 		switch (cryptoKeyRole) {
 			case backlinkKey:
 			case dataKey:
 				return null;
 			default:
-				return assertNotNull(cryptoRepoFile.getCryptoRepoFileId(), "cryptoRepoFile.cryptoRepoFileId");
+				return requireNonNull(cryptoRepoFile.getCryptoRepoFileId(), "cryptoRepoFile.cryptoRepoFileId");
 		}
 	}
 
 	@Override
 	public PermissionType getPermissionTypeRequiredForWrite() {
-//		final CryptoKey ck = assertNotNull("cryptoKey", cryptoKey);
-//		final CryptoKeyRole cryptoKeyRole = assertNotNull("cryptoKey.cryptoKeyRole", ck.getCryptoKeyRole());
+//		final CryptoKey ck = requireNonNull("cryptoKey", cryptoKey);
+//		final CryptoKeyRole cryptoKeyRole = requireNonNull("cryptoKey.cryptoKeyRole", ck.getCryptoKeyRole());
 //
 //		return cryptoKeyRole == CryptoKeyRole.clearanceKey ? PermissionType.grant : PermissionType.write;
 		return PermissionType.grant;

@@ -1,6 +1,6 @@
 package org.subshare.core;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.UUID;
 
@@ -17,8 +17,8 @@ public abstract class AbstractCryptreeFactory implements CryptreeFactory {
 
 	@Override
 	public Cryptree getCryptreeOrCreate(final LocalRepoTransaction transaction, final UUID remoteRepositoryId) {
-		assertNotNull(transaction, "transaction");
-		assertNotNull(remoteRepositoryId, "remoteRepositoryId");
+		requireNonNull(transaction, "transaction");
+		requireNonNull(remoteRepositoryId, "remoteRepositoryId");
 		Cryptree cryptree = transaction.getContextObject(Cryptree.class);
 		if (cryptree == null) {
 			cryptree = _createCryptree();
@@ -42,10 +42,10 @@ public abstract class AbstractCryptreeFactory implements CryptreeFactory {
 
 	@Override
 	public Cryptree getCryptreeOrCreate(final LocalRepoTransaction transaction, final UUID remoteRepositoryId, final String remotePathPrefix, final UserRepoKeyRing userRepoKeyRing) {
-		assertNotNull(transaction, "transaction");
-		assertNotNull(remoteRepositoryId, "remoteRepositoryId");
-		assertNotNull(remotePathPrefix, "remotePathPrefix");
-		assertNotNull(userRepoKeyRing, "userRepoKeyRing");
+		requireNonNull(transaction, "transaction");
+		requireNonNull(remoteRepositoryId, "remoteRepositoryId");
+		requireNonNull(remotePathPrefix, "remotePathPrefix");
+		requireNonNull(userRepoKeyRing, "userRepoKeyRing");
 		Cryptree cryptree = transaction.getContextObject(Cryptree.class);
 		if (cryptree == null) {
 			cryptree = _createCryptree();

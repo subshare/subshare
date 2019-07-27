@@ -1,6 +1,6 @@
 package org.subshare.gui.invitation.accept.source;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import org.subshare.gui.invitation.accept.AcceptInvitationData;
 import org.subshare.gui.invitation.accept.checkoutdir.CheckOutDirectoryWizardPage;
@@ -15,7 +15,7 @@ public class AcceptInvitationSourceWizardPage extends WizardPage {
 
 	public AcceptInvitationSourceWizardPage(final AcceptInvitationData acceptInvitationData) {
 		super("Which invitation?");
-		this.acceptInvitationData = assertNotNull(acceptInvitationData, "acceptInvitationData");
+		this.acceptInvitationData = requireNonNull(acceptInvitationData, "acceptInvitationData");
 	}
 
 	@Override

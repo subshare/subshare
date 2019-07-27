@@ -1,6 +1,6 @@
 package org.subshare.gui.pgp.certify;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import org.subshare.core.pgp.Pgp;
 import org.subshare.core.pgp.PgpKey;
@@ -21,7 +21,7 @@ public class CertifyPgpKeyData {
 	private ObjectProperty<PgpSignatureType> certificationLevel = new SimpleObjectProperty<PgpSignatureType>(this, "certificationLevel") {
 		@Override
 		public void set(PgpSignatureType newValue) {
-			super.set(assertNotNull(newValue, "newValue"));
+			super.set(requireNonNull(newValue, "newValue"));
 		}
 	};
 	{
@@ -54,7 +54,7 @@ public class CertifyPgpKeyData {
 	}
 	public void setPgpKey(final PgpKey pgpKey) {
 		if (pgpKey != null)
-			setPgpKeyId(assertNotNull(pgpKey.getPgpKeyId(), "pgpKey.pgpKeyId"));
+			setPgpKeyId(requireNonNull(pgpKey.getPgpKeyId(), "pgpKey.pgpKeyId"));
 
 		this.pgpKey = pgpKey;
 	}

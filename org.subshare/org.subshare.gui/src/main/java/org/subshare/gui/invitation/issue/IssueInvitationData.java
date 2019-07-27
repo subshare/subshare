@@ -1,6 +1,6 @@
 package org.subshare.gui.invitation.issue;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -75,7 +75,7 @@ public class IssueInvitationData {
 		return permissionType;
 	}
 	public void setPermissionType(final PermissionType permissionType) {
-		this.permissionType = assertNotNull(permissionType, "permissionType");
+		this.permissionType = requireNonNull(permissionType, "permissionType");
 	}
 	public long getValidityDurationMillis() {
 		return validityDurationMillis;

@@ -1,8 +1,8 @@
 package org.subshare.gui.pgp.selectkey;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
+import static java.util.Objects.*;
 import static org.subshare.gui.util.FxmlUtil.*;
 
 import java.util.ArrayList;
@@ -67,9 +67,9 @@ public abstract class SelectPgpKeyPane extends GridPane {
 	private Button cancelButton;
 
 	public SelectPgpKeyPane(final List<PgpKey> pgpKeys, final Collection<PgpKey> selectedPgpKeys, final SelectionMode selectionMode, final String headerText) {
-		assertNotNull(pgpKeys, "pgpKeys");
+		requireNonNull(pgpKeys, "pgpKeys");
 		// selectedPgpKeys may be null
-		assertNotNull(selectionMode, "selectionMode");
+		requireNonNull(selectionMode, "selectionMode");
 		loadDynamicComponentFxml(SelectPgpKeyPane.class, this);
 
 		this.headerText.setText(headerText);

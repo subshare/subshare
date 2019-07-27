@@ -1,7 +1,7 @@
 package org.subshare.gui.pgp.keytree;
 
 import static co.codewizards.cloudstore.core.bean.PropertyChangeListenerUtil.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 import static javafx.application.Platform.*;
 import static org.subshare.gui.util.PlatformUtil.*;
 
@@ -44,8 +44,8 @@ public class CertificationsPgpKeyTreeItem extends PgpKeyTreeItem<PgpKey> {
 	}
 
 	public CertificationsPgpKeyTreeItem(final PgpKey pgpKey, final String userId) {
-		super(assertNotNull(pgpKey, "pgpKey"));
-		this.userId = assertNotNull(userId, "userId");
+		super(requireNonNull(pgpKey, "pgpKey"));
+		this.userId = requireNonNull(userId, "userId");
 	}
 
 	@Override
@@ -87,7 +87,7 @@ public class CertificationsPgpKeyTreeItem extends PgpKeyTreeItem<PgpKey> {
 	protected void hookPgpPropertyChangeListener() {
 		assertFxApplicationThread();
 		if (pgpWeakPropertyChangeListener == null) {
-			final Pgp pgp = assertNotNull(getPgp(), "pgp");
+			final Pgp pgp = requireNonNull(getPgp(), "pgp");
 			pgpWeakPropertyChangeListener = addWeakPropertyChangeListener(pgp, Pgp.PropertyEnum.localRevision, pgpPropertyChangeListener);
 		}
 	}

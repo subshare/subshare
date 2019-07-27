@@ -1,13 +1,13 @@
 package org.subshare.core.repo;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import org.subshare.core.dto.ServerRepoDto;
 
 public class ServerRepoDtoConverter {
 
 	public ServerRepoDto toServerRepoDto(final ServerRepo serverRepo) {
-		assertNotNull(serverRepo, "serverRepo");
+		requireNonNull(serverRepo, "serverRepo");
 		final ServerRepoDto serverRepoDto = new ServerRepoDto();
 		serverRepoDto.setRepositoryId(serverRepo.getRepositoryId());
 		serverRepoDto.setName(serverRepo.getName());
@@ -19,7 +19,7 @@ public class ServerRepoDtoConverter {
 	}
 
 	public ServerRepo fromServerRepoDto(final ServerRepoDto serverRepoDto) {
-		assertNotNull(serverRepoDto, "serverRepoDto");
+		requireNonNull(serverRepoDto, "serverRepoDto");
 		final ServerRepo serverRepo = new ServerRepoImpl(serverRepoDto.getRepositoryId());
 		serverRepo.setName(serverRepoDto.getName());
 		serverRepo.setServerId(serverRepoDto.getServerId());

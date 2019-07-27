@@ -1,7 +1,7 @@
 package org.subshare.local.persistence;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.HashUtil.*;
+import static java.util.Objects.*;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Inheritance;
@@ -37,7 +37,7 @@ public class PreliminaryCollision extends Entity {
 	}
 
 	public void setPath(final String path) {
-		this.path = assertNotNull(path, "path");
+		this.path = requireNonNull(path, "path");
 		this.pathSha1 = sha1(path);
 	}
 

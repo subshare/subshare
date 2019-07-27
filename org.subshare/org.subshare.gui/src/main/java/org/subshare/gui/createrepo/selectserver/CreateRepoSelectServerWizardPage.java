@@ -1,6 +1,6 @@
 package org.subshare.gui.createrepo.selectserver;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import org.subshare.gui.createrepo.CreateRepoData;
 import org.subshare.gui.createrepo.selectlocaldir.CreateRepoSelectLocalDirWizardPage;
@@ -14,7 +14,7 @@ public class CreateRepoSelectServerWizardPage extends WizardPage {
 
 	public CreateRepoSelectServerWizardPage(final CreateRepoData createRepoData) {
 		super("Server for new repository");
-		this.createRepoData = assertNotNull(createRepoData, "createRepoData");
+		this.createRepoData = requireNonNull(createRepoData, "createRepoData");
 	}
 
 	@Override

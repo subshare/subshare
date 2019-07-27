@@ -1,8 +1,8 @@
 package org.subshare.core.sign;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.IOUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
+import static java.util.Objects.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,11 +29,11 @@ public class PgpSignableVerifier {
 	}
 
 	public PgpSignableVerifier(final Pgp pgp) {
-		this.pgp = assertNotNull(pgp, "pgp");
+		this.pgp = requireNonNull(pgp, "pgp");
 	}
 
 	public PgpSignature verify(final PgpSignable pgpSignable) throws SignatureException {
-		final byte[] pgpSignatureData = assertNotNull(pgpSignable, "pgpSignable").getPgpSignatureData();
+		final byte[] pgpSignatureData = requireNonNull(pgpSignable, "pgpSignable").getPgpSignatureData();
 		if (pgpSignatureData == null)
 			throw new SignatureException("There is no signature! pgpSignable.pgpSignatureData == null");
 

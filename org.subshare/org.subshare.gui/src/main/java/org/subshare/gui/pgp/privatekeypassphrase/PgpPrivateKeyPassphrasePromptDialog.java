@@ -1,6 +1,6 @@
 package org.subshare.gui.pgp.privatekeypassphrase;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import org.subshare.core.pgp.PgpKey;
 
@@ -18,8 +18,8 @@ public class PgpPrivateKeyPassphrasePromptDialog extends Stage {
 	private char[] passphrase;
 
 	public PgpPrivateKeyPassphrasePromptDialog(final Window owner, final PgpKey pgpKey, final String errorMessage) {
-		assertNotNull(owner, "owner");
-		assertNotNull(pgpKey, "pgpKey");
+		requireNonNull(owner, "owner");
+		requireNonNull(pgpKey, "pgpKey");
 
 		setTitle("Unlock PGP private key");
 		setResizable(false);

@@ -1,7 +1,7 @@
 package org.subshare.local.dto;
 
 import static co.codewizards.cloudstore.core.objectfactory.ObjectFactoryUtil.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,11 +21,11 @@ public class DeletedCollisionDtoConverter {
 	}
 
 	protected DeletedCollisionDtoConverter(final LocalRepoTransaction transaction) {
-		this.transaction = assertNotNull(transaction, "transaction");
+		this.transaction = requireNonNull(transaction, "transaction");
 	}
 
 	public DeletedCollisionDto toDeletedCollisionDto(final DeletedCollision deletedCollision) {
-		assertNotNull(deletedCollision, "deletedCollision");
+		requireNonNull(deletedCollision, "deletedCollision");
 		DeletedCollisionDto result = new DeletedCollisionDto();
 		result.setCollisionId(deletedCollision.getCollisionId());
 		result.setSignature(deletedCollision.getSignature());
@@ -33,7 +33,7 @@ public class DeletedCollisionDtoConverter {
 	}
 
 	public DeletedCollision putDeletedCollisionDto(final DeletedCollisionDto dto) {
-		assertNotNull(dto, "dto");
+		requireNonNull(dto, "dto");
 
 		final DeletedCollisionDao dcDao = transaction.getDao(DeletedCollisionDao.class);
 		DeletedCollision result = dcDao.getDeletedCollision(dto.getCollisionId());

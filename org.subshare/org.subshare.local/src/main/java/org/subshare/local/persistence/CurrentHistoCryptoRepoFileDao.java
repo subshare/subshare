@@ -1,6 +1,6 @@
 package org.subshare.local.persistence;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.Collection;
 import java.util.List;
@@ -22,7 +22,7 @@ public class CurrentHistoCryptoRepoFileDao extends Dao<CurrentHistoCryptoRepoFil
 
 	public Collection<CurrentHistoCryptoRepoFile> getCurrentHistoCryptoRepoFilesChangedAfterExclLastSyncFromRepositoryId(
 			final long localRevision, final UUID exclLastSyncFromRepositoryId) {
-		assertNotNull(exclLastSyncFromRepositoryId, "exclLastSyncFromRepositoryId");
+		requireNonNull(exclLastSyncFromRepositoryId, "exclLastSyncFromRepositoryId");
 
 		final PersistenceManager pm = pm();
 		final FetchPlanBackup fetchPlanBackup = FetchPlanBackup.createFrom(pm);
@@ -48,7 +48,7 @@ public class CurrentHistoCryptoRepoFileDao extends Dao<CurrentHistoCryptoRepoFil
 
 	public List<CurrentHistoCryptoRepoFileDto> getCurrentHistoCryptoRepoFileDtosChangedAfterExclLastSyncFromRepositoryId(
 			final long localRevision, final UUID exclLastSyncFromRepositoryId) {
-		assertNotNull(exclLastSyncFromRepositoryId, "exclLastSyncFromRepositoryId");
+		requireNonNull(exclLastSyncFromRepositoryId, "exclLastSyncFromRepositoryId");
 
 		final PersistenceManager pm = pm();
 		final FetchPlanBackup fetchPlanBackup = FetchPlanBackup.createFrom(pm);
@@ -78,7 +78,7 @@ public class CurrentHistoCryptoRepoFileDao extends Dao<CurrentHistoCryptoRepoFil
 	}
 
 	public CurrentHistoCryptoRepoFile getCurrentHistoCryptoRepoFile(final CryptoRepoFile cryptoRepoFile) {
-		assertNotNull(cryptoRepoFile, "cryptoRepoFile");
+		requireNonNull(cryptoRepoFile, "cryptoRepoFile");
 		final Query query = pm().newNamedQuery(getEntityClass(), "getCurrentHistoCryptoRepoFile_cryptoRepoFile");
 		try {
 			final CurrentHistoCryptoRepoFile result = (CurrentHistoCryptoRepoFile) query.execute(cryptoRepoFile);

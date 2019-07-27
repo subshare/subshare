@@ -1,6 +1,6 @@
 package org.subshare.core.pgp;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -27,7 +27,7 @@ public class ImportKeysResult implements Serializable {
 		private final PgpKeyId pgpKeyId;
 
 		public ImportedKey(final PgpKeyId pgpKeyId) {
-			this.pgpKeyId = assertNotNull(pgpKeyId, "pgpKeyId");
+			this.pgpKeyId = requireNonNull(pgpKeyId, "pgpKeyId");
 		}
 
 		public PgpKeyId getPgpKeyId() {
@@ -57,7 +57,7 @@ public class ImportKeysResult implements Serializable {
 
 		public ImportedSubKey(PgpKeyId pgpKeyId, ImportedMasterKey importedMasterKey) {
 			super(pgpKeyId);
-			this.importedMasterKey = assertNotNull(importedMasterKey, "importedMasterKey");
+			this.importedMasterKey = requireNonNull(importedMasterKey, "importedMasterKey");
 		}
 
 		public ImportedMasterKey getImportedMasterKey() {

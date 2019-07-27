@@ -1,6 +1,6 @@
 package org.subshare.core.user;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
@@ -42,7 +42,7 @@ public class UserRepoKeyRingImpl implements UserRepoKeyRing {
 	}
 
 	protected synchronized List<UserRepoKey> getUserRepoKeyList(final Map<UUID, List<UserRepoKey>> repositoryId2UserRepoKeyList, final UUID serverRepositoryId) {
-		assertNotNull(serverRepositoryId, "repositoryId");
+		requireNonNull(serverRepositoryId, "repositoryId");
 		List<UserRepoKey> userRepoKeyList = repositoryId2UserRepoKeyList.get(serverRepositoryId);
 
 		if (userRepoKeyList == null) {
@@ -108,7 +108,7 @@ public class UserRepoKeyRingImpl implements UserRepoKeyRing {
 
 	@Override
 	public synchronized void addUserRepoKey(final UserRepoKey userRepoKey) {
-		assertNotNull(userRepoKey, "userRepoKey");
+		requireNonNull(userRepoKey, "userRepoKey");
 		userRepoKeyId2UserRepoKey.put(userRepoKey.getUserRepoKeyId(), userRepoKey);
 		clearCache(userRepoKey.getServerRepositoryId());
 		firePropertyChange(PropertyEnum.userRepoKeys, null, getUserRepoKeys());
@@ -116,12 +116,12 @@ public class UserRepoKeyRingImpl implements UserRepoKeyRing {
 
 	@Override
 	public void removeUserRepoKey(final UserRepoKey userRepoKey) {
-		removeUserRepoKey(assertNotNull(userRepoKey, "userRepoKey").getUserRepoKeyId());
+		removeUserRepoKey(requireNonNull(userRepoKey, "userRepoKey").getUserRepoKeyId());
 	}
 
 	@Override
 	public synchronized void removeUserRepoKey(final Uid userRepoKeyId) {
-		final UserRepoKey userRepoKey = userRepoKeyId2UserRepoKey.remove(assertNotNull(userRepoKeyId, "userRepoKeyId"));
+		final UserRepoKey userRepoKey = userRepoKeyId2UserRepoKey.remove(requireNonNull(userRepoKeyId, "userRepoKeyId"));
 		if (userRepoKey != null) {
 			clearCache(userRepoKey.getServerRepositoryId());
 			firePropertyChange(PropertyEnum.userRepoKeys, null, getUserRepoKeys());
@@ -129,7 +129,7 @@ public class UserRepoKeyRingImpl implements UserRepoKeyRing {
 	}
 
 	private void clearCache(final UUID serverRepositoryId) {
-		assertNotNull(serverRepositoryId, "serverRepositoryId");
+		requireNonNull(serverRepositoryId, "serverRepositoryId");
 		userRepoKeysCache = null;
 		repositoryId2PermanentUserRepoKeyList.remove(serverRepositoryId);
 		repositoryId2InvitationUserRepoKeyList.remove(serverRepositoryId);
@@ -137,7 +137,7 @@ public class UserRepoKeyRingImpl implements UserRepoKeyRing {
 
 	@Override
 	public synchronized UserRepoKey getUserRepoKey(final Uid userRepoKeyId) {
-		return userRepoKeyId2UserRepoKey.get(assertNotNull(userRepoKeyId, "userRepoKeyId"));
+		return userRepoKeyId2UserRepoKey.get(requireNonNull(userRepoKeyId, "userRepoKeyId"));
 	}
 
 	@Override

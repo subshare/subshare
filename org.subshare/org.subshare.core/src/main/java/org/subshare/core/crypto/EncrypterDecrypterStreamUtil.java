@@ -1,6 +1,6 @@
 package org.subshare.core.crypto;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import org.bouncycastle.crypto.CipherParameters;
 import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
@@ -12,8 +12,8 @@ class EncrypterDecrypterStreamUtil {
 	static final int MAX_UNSIGNED_2_BYTE_VALUE = 0xffff;
 
 	static CipherParameters assertValidKey(final CipherTransformation cipherTransformation, final CipherParameters key) {
-		assertNotNull(cipherTransformation, "cipherTransformation");
-		assertNotNull(key, "key");
+		requireNonNull(cipherTransformation, "cipherTransformation");
+		requireNonNull(key, "key");
 		if (key instanceof KeyParameter)
 			// symmetric encryption
 			if (CryptoKeyType.symmetric != cipherTransformation.getType())

@@ -1,6 +1,6 @@
 package org.subshare.core.user;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -63,7 +63,7 @@ public class UserImpl extends AbstractBean<User.Property> implements User {
 		private final Property property;
 
 		public PostModificationListener(Property property) {
-			this.property = assertNotNull(property, "property");
+			this.property = requireNonNull(property, "property");
 		}
 
 		@Override
@@ -199,7 +199,7 @@ public class UserImpl extends AbstractBean<User.Property> implements User {
 
 	@Override
 	public UserRepoKey createUserRepoKey(final UUID serverRepositoryId) {
-		assertNotNull(serverRepositoryId, "serverRepositoryId");
+		requireNonNull(serverRepositoryId, "serverRepositoryId");
 
 		final PgpKey pgpKey = getPgpKeyContainingSecretKeyOrFail();
 
@@ -214,8 +214,8 @@ public class UserImpl extends AbstractBean<User.Property> implements User {
 
 	@Override
 	public UserRepoKey createInvitationUserRepoKey(final User invitedUser, final UUID serverRepositoryId, final long validityDurationMillis) {
-		assertNotNull(invitedUser, "invitedUser");
-		assertNotNull(serverRepositoryId, "serverRepositoryId");
+		requireNonNull(invitedUser, "invitedUser");
+		requireNonNull(serverRepositoryId, "serverRepositoryId");
 
 		final PgpKey ownPgpKey = getPgpKeyContainingSecretKeyOrFail();
 
@@ -318,7 +318,7 @@ public class UserImpl extends AbstractBean<User.Property> implements User {
 	}
 	@Override
 	public void setChanged(final Date changed) {
-		assertNotNull(changed, "changed");
+		requireNonNull(changed, "changed");
 		setPropertyValue(PropertyEnum.changed, changed);
 	}
 

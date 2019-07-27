@@ -1,7 +1,7 @@
 package org.subshare.rest.server.service;
 
 import static co.codewizards.cloudstore.core.io.StreamUtil.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -44,7 +44,7 @@ public class PgpPublicKeyService {
 	@Path("_search/{queryString}")
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
 	public Response searchPgpPublicKeys(@PathParam("queryString") final String queryString) {
-		assertNotNull(queryString, "queryString");
+		requireNonNull(queryString, "queryString");
 
 		final StreamingOutput result = new StreamingOutput() {
 			@Override
@@ -71,7 +71,7 @@ public class PgpPublicKeyService {
 	public Response getPgpPublicKeys(
 			@PathParam("pgpKeyIdList") final PgpKeyIdList pgpKeyIdList,
 			@QueryParam("changedAfterLocalRevision") @DefaultValue("-1") final long changedAfterLocalRevision) {
-		assertNotNull(pgpKeyIdList, "pgpKeyIdList");
+		requireNonNull(pgpKeyIdList, "pgpKeyIdList");
 
 		final StreamingOutput result = new StreamingOutput() {
 			@Override
@@ -88,7 +88,7 @@ public class PgpPublicKeyService {
 	@PUT
 	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
 	public void putPgpPublicKeys(final InputStream in) {
-		assertNotNull(in, "in");
+		requireNonNull(in, "in");
 		try (final PgpTransport localPgpTransport = createLocalPgpTransport();) {
 			localPgpTransport.importKeys(castStream(in));
 		}

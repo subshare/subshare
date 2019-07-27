@@ -1,6 +1,6 @@
 package org.subshare.gui.filetree;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.net.URL;
 import java.util.HashMap;
@@ -41,8 +41,8 @@ public class FileIconRegistry {
 	 * @return the icon. Never <code>null</code>.
 	 */
 	public Image getIcon(final File file, final IconSize iconSize) {
-		assertNotNull(file, "file");
-		assertNotNull(iconSize, "iconSize");
+		requireNonNull(file, "file");
+		requireNonNull(iconSize, "iconSize");
 
 		final String iconId = getIconId(file);
 		return getIcon(iconId, iconSize);
@@ -57,8 +57,8 @@ public class FileIconRegistry {
 	 * @throws IllegalArgumentException if there is no icon for the given
 	 */
 	public Image getIcon(final String iconId, final IconSize iconSize) {
-		assertNotNull(iconId, "iconId");
-		assertNotNull(iconSize, "iconSize");
+		requireNonNull(iconId, "iconId");
+		requireNonNull(iconSize, "iconSize");
 
 		Map<IconSize, Image> iconSize2Image;
 		synchronized (this) {
@@ -84,13 +84,13 @@ public class FileIconRegistry {
 	}
 
 	private String getFileName(final String iconId, final IconSize iconSize) {
-		assertNotNull(iconId, "iconId");
-		assertNotNull(iconSize, "iconSize");
+		requireNonNull(iconId, "iconId");
+		requireNonNull(iconSize, "iconSize");
 		return iconId + iconSize.name() + ".png";
 	}
 
 	private String getIconId(final File file) {
-		assertNotNull(file, "file");
+		requireNonNull(file, "file");
 		if (file.isDirectory()) {
 			if (IOUtil.getUserHome().equals(file))
 				return ICON_ID_HOME;

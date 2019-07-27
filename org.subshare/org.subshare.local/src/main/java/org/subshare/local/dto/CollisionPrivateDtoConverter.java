@@ -1,7 +1,7 @@
 package org.subshare.local.dto;
 
 import static co.codewizards.cloudstore.core.objectfactory.ObjectFactoryUtil.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import org.subshare.core.dto.CollisionPrivateDto;
 import org.subshare.local.persistence.Collision;
@@ -20,11 +20,11 @@ public class CollisionPrivateDtoConverter {
 	}
 
 	protected CollisionPrivateDtoConverter(final LocalRepoTransaction transaction) {
-		this.transaction = assertNotNull(transaction, "transaction");
+		this.transaction = requireNonNull(transaction, "transaction");
 	}
 
 	public CollisionPrivateDto toCollisionPrivateDto(final CollisionPrivate collisionPrivate) {
-		assertNotNull(collisionPrivate, "collisionPrivate");
+		requireNonNull(collisionPrivate, "collisionPrivate");
 		CollisionPrivateDto result = new CollisionPrivateDto();
 		result.setCollisionId(collisionPrivate.getCollision().getCollisionId());
 		result.setComment(collisionPrivate.getComment());
@@ -33,15 +33,15 @@ public class CollisionPrivateDtoConverter {
 	}
 
 	public CollisionPrivate putCollisionPrivateDto(final CollisionPrivateDto collisionPrivateDto) {
-		assertNotNull(collisionPrivateDto, "collisionPrivateDto");
+		requireNonNull(collisionPrivateDto, "collisionPrivateDto");
 		final CollisionDao cDao = transaction.getDao(CollisionDao.class);
 		final Collision collision = cDao.getCollisionOrFail(collisionPrivateDto.getCollisionId());
 		return putCollisionPrivateDto(collision, collisionPrivateDto);
 	}
 
 	public CollisionPrivate putCollisionPrivateDto(final Collision collision, final CollisionPrivateDto collisionPrivateDto) {
-		assertNotNull(collision, "collision");
-		assertNotNull(collisionPrivateDto, "collisionPrivateDto");
+		requireNonNull(collision, "collision");
+		requireNonNull(collisionPrivateDto, "collisionPrivateDto");
 
 		final CollisionPrivateDao cpDao = transaction.getDao(CollisionPrivateDao.class);
 

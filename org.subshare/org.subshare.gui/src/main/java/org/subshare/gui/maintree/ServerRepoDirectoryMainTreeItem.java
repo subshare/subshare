@@ -1,7 +1,7 @@
 package org.subshare.gui.maintree;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
+import static java.util.Objects.*;
 import static javafx.application.Platform.*;
 
 import java.util.ArrayList;
@@ -47,7 +47,7 @@ public class ServerRepoDirectoryMainTreeItem extends MainTreeItem<ServerRepoFile
 	private TimerTask deferredGetChildrenTimerTask;
 
 	public ServerRepoDirectoryMainTreeItem(final ServerRepoFile serverRepoFile) {
-		super(assertNotNull(serverRepoFile, "serverRepoFile"));
+		super(requireNonNull(serverRepoFile, "serverRepoFile"));
 		setGraphic(new ImageView(icon));
 		final UUID localRepositoryId = serverRepoFile.getLocalRepositoryId();
 

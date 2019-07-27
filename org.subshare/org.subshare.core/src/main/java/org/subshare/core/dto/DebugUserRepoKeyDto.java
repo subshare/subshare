@@ -1,6 +1,6 @@
 package org.subshare.core.dto;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.io.Serializable;
 import java.util.UUID;
@@ -89,7 +89,7 @@ public class DebugUserRepoKeyDto implements Serializable {
 		return keyRingType;
 	}
 	public void setKeyRingType(KeyRingType keyRingType) {
-		this.keyRingType = assertNotNull(keyRingType, "keyRingType");
+		this.keyRingType = requireNonNull(keyRingType, "keyRingType");
 	}
 
 	public int getUserIdentityCount() {

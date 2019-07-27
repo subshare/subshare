@@ -1,7 +1,7 @@
 package org.subshare.gui.pgp.createkey.advanced;
 
+import static java.util.Objects.*;
 import static javafx.application.Platform.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static org.subshare.gui.util.FxmlUtil.*;
 
 import java.beans.PropertyChangeListener;
@@ -11,7 +11,6 @@ import org.subshare.core.pgp.CreatePgpKeyParam;
 import org.subshare.core.pgp.CreatePgpKeyParam.Algorithm;
 import org.subshare.gui.wizard.WizardPageContentGridPane;
 
-import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.property.adapter.JavaBeanObjectProperty;
 import javafx.beans.property.adapter.JavaBeanObjectPropertyBuilder;
@@ -46,7 +45,7 @@ public class AdvancedPane extends WizardPageContentGridPane {
 	};
 
 	public AdvancedPane(final CreatePgpKeyParam createPgpKeyParam) {
-		this.createPgpKeyParam = assertNotNull(createPgpKeyParam, "createPgpKeyParam");
+		this.createPgpKeyParam = requireNonNull(createPgpKeyParam, "createPgpKeyParam");
 		loadDynamicComponentFxml(AdvancedPane.class, this);
 
 		algorithm = createAlgorithmProperty();

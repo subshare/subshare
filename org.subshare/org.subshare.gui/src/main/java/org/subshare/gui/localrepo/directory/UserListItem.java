@@ -1,6 +1,6 @@
 package org.subshare.gui.localrepo.directory;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -61,7 +61,7 @@ public class UserListItem extends org.subshare.gui.userlist.UserListItem {
 	}
 
 	private static String getPermissionString(final Set<PermissionType> permissionTypes) {
-		assertNotNull(permissionTypes, "permissionTypes"); //$NON-NLS-1$
+		requireNonNull(permissionTypes, "permissionTypes"); //$NON-NLS-1$
 		final StringBuilder sb = new StringBuilder();
 
 		final LinkedHashSet<PermissionType> allPermissionTypes = new LinkedHashSet<PermissionType>(

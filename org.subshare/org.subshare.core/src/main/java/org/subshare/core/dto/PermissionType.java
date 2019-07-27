@@ -1,6 +1,6 @@
 package org.subshare.core.dto;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.EnumSet;
 import java.util.Set;
@@ -67,13 +67,13 @@ public enum PermissionType {
 	private Set<PermissionType> includedPermissionTypes;
 
 	private PermissionType(final String... includedPermissionTypeNames) {
-		this.includedPermissionTypeNames = assertNotNull(includedPermissionTypeNames, "includedPermissionTypeNames");
+		this.includedPermissionTypeNames = requireNonNull(includedPermissionTypeNames, "includedPermissionTypeNames");
 	}
 
 	public synchronized Set<PermissionType> getIncludedPermissionTypes() {
 		if (includedPermissionTypes == null) {
 			EnumSet<PermissionType> pts = EnumSet.of(this);
-			for (String n : assertNotNull(includedPermissionTypeNames, "includedPermissionTypeNames"))
+			for (String n : requireNonNull(includedPermissionTypeNames, "includedPermissionTypeNames"))
 				pts.add(PermissionType.valueOf(n));
 
 			includedPermissionTypes = pts;

@@ -1,6 +1,6 @@
 package org.subshare.gui.user;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.Collection;
 import java.util.EventObject;
@@ -16,7 +16,7 @@ public class EditUserEvent extends EventObject {
 
 	public EditUserEvent(final EditUserManager source, final Collection<? extends User> users) {
 		super(source);
-		this.users = new LinkedHashSet<>(assertNotNull(users, "users"));
+		this.users = new LinkedHashSet<>(requireNonNull(users, "users"));
 	}
 
 	public Set<? extends User> getUsers() {

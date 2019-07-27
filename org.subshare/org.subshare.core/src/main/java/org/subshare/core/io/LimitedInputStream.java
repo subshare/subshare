@@ -1,7 +1,7 @@
 package org.subshare.core.io;
 
 import static co.codewizards.cloudstore.core.io.StreamUtil.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.io.FilterInputStream;
 import java.io.IOException;
@@ -49,7 +49,7 @@ public class LimitedInputStream extends FilterInputStream implements IInputStrea
 	 */
 	public LimitedInputStream(final InputStream in, final int minLimit, final int maxLimit)
 	{
-		super(assertNotNull(in, "in"));
+		super(requireNonNull(in, "in"));
 		this.minLimit = minLimit;
 		this.maxLimit = maxLimit;
 	}

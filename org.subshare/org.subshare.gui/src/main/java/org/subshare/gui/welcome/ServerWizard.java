@@ -1,7 +1,7 @@
 package org.subshare.gui.welcome;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
+import static java.util.Objects.*;
 
 import org.subshare.core.server.Server;
 import org.subshare.core.server.ServerRegistry;
@@ -95,7 +95,7 @@ public class ServerWizard extends Wizard {
 	}
 
 	protected void finish_registerServer(ProgressMonitor monitor) throws Exception {
-		final Server server = assertNotNull(serverData.getServer(), "serverData.server");
+		final Server server = requireNonNull(serverData.getServer(), "serverData.server");
 		if (syncLocker) {
 			// We must first sync the PGP keys, because the server doesn't accept a locker that's signed
 			// by an unknown key.

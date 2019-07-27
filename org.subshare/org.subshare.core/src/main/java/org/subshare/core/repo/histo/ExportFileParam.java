@@ -1,6 +1,6 @@
 package org.subshare.core.repo.histo;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.io.Serializable;
 
@@ -18,8 +18,8 @@ public class ExportFileParam implements Serializable {
 	}
 
 	public ExportFileParam(Uid histoCryptoRepoFileId, File exportDirectory) {
-		this.histoCryptoRepoFileId = assertNotNull(histoCryptoRepoFileId, "histoCryptoRepoFileId");
-		this.exportDirectory = assertNotNull(exportDirectory, "exportDirectory");
+		this.histoCryptoRepoFileId = requireNonNull(histoCryptoRepoFileId, "histoCryptoRepoFileId");
+		this.exportDirectory = requireNonNull(exportDirectory, "exportDirectory");
 	}
 
 	/**

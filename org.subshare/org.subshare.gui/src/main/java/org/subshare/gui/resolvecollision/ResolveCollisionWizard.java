@@ -1,6 +1,6 @@
 package org.subshare.gui.resolvecollision;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -34,7 +34,7 @@ public class ResolveCollisionWizard extends Wizard {
 
 	public ResolveCollisionWizard(final ResolveCollisionData resolveCollisionData) {
 		super(new LoadingWizardPage());
-		this.resolveCollisionData = assertNotNull(resolveCollisionData, "resolveCollisionData");
+		this.resolveCollisionData = requireNonNull(resolveCollisionData, "resolveCollisionData");
 	}
 
 	@Override
@@ -80,7 +80,7 @@ public class ResolveCollisionWizard extends Wizard {
 								for (CollisionPrivateDto cpDto : plainHistoCryptoRepoFileDto.getCollisionPrivateDtos()) {
 									final Uid collisionId = cpDto.getCollisionId();
 									final CollisionDtoWithPlainHistoCryptoRepoFileDto dto = collisionId2Dto.get(collisionId);
-									assertNotNull(dto, "collisionId2Dto[" + collisionId + "]");
+									requireNonNull(dto, "collisionId2Dto[" + collisionId + "]");
 									dto.setCollisionPrivateDto(cpDto);
 								}
 							}
@@ -89,9 +89,9 @@ public class ResolveCollisionWizard extends Wizard {
 									collisionId2Dto.values());
 
 							for (final CollisionDtoWithPlainHistoCryptoRepoFileDto dto : collisionDtoWithPlainHistoCryptoRepoFileDtos) {
-								assertNotNull(dto.getCollisionDto(), "dto.collisionDto");
-								assertNotNull(dto.getCollisionPrivateDto(), "dto.collisionPrivateDto");
-								assertNotNull(dto.getPlainHistoCryptoRepoFileDto1(), "dto.plainHistoCryptoRepoFileDto1");
+								requireNonNull(dto.getCollisionDto(), "dto.collisionDto");
+								requireNonNull(dto.getCollisionPrivateDto(), "dto.collisionPrivateDto");
+								requireNonNull(dto.getPlainHistoCryptoRepoFileDto1(), "dto.plainHistoCryptoRepoFileDto1");
 							}
 							return collisionDtoWithPlainHistoCryptoRepoFileDtos;
 						}
@@ -147,7 +147,7 @@ public class ResolveCollisionWizard extends Wizard {
 	}
 
 	private LocalRepoManager createLocalRepoManager() {
-		final LocalRepo localRepo = assertNotNull(resolveCollisionData.getLocalRepo(), "resolveCollisionData.localRepo");
+		final LocalRepo localRepo = requireNonNull(resolveCollisionData.getLocalRepo(), "resolveCollisionData.localRepo");
 		return LocalRepoManagerFactoryLs.getLocalRepoManagerFactory().createLocalRepoManagerForExistingRepository(localRepo.getLocalRoot());
 	}
 }

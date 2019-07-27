@@ -1,9 +1,9 @@
 package org.subshare.core.fbor;
 
 import static co.codewizards.cloudstore.core.io.StreamUtil.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.IOUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
+import static java.util.Objects.*;
 import static org.subshare.core.file.FileConst.*;
 
 import java.io.IOException;
@@ -84,7 +84,7 @@ public abstract class FileBasedObjectRegistry {
 	}
 
 	protected void read(final InputStream in) throws IOException {
-		final ZipInputStream zin = new ZipInputStream(new NoCloseInputStream(assertNotNull(in, "in")));
+		final ZipInputStream zin = new ZipInputStream(new NoCloseInputStream(requireNonNull(in, "in")));
 
 		manifestProperties = readManifest(zin);
 		if (manifestProperties == null) { // be fault-tolerant on *empty* input.
@@ -173,7 +173,7 @@ public abstract class FileBasedObjectRegistry {
 	}
 
 	protected Properties readManifest(final ZipInputStream zin) throws IOException {
-		assertNotNull(zin, "zin");
+		requireNonNull(zin, "zin");
 
 		final ZipEntry ze = zin.getNextEntry();
 		if (ze == null)
@@ -202,7 +202,7 @@ public abstract class FileBasedObjectRegistry {
 	}
 
 	protected void readPayload(final ZipInputStream zin) throws IOException {
-		assertNotNull(zin, "zin");
+		requireNonNull(zin, "zin");
 
 		ZipEntry zipEntry;
 		while (null != (zipEntry = zin.getNextEntry()))
@@ -230,7 +230,7 @@ public abstract class FileBasedObjectRegistry {
 
 
 	protected void write(final OutputStream out) throws IOException {
-		assertNotNull(out, "out");
+		requireNonNull(out, "out");
 
 		final byte[] manifestData = createManifestData();
 
@@ -280,11 +280,11 @@ public abstract class FileBasedObjectRegistry {
 		final SortedMap<String,String> sortedManifestProperties = createSortedManifestProperties();
 
 		final String contentType = sortedManifestProperties.remove(MANIFEST_PROPERTY_CONTENT_TYPE);
-		assertNotNull(contentType, MANIFEST_PROPERTY_CONTENT_TYPE);
+		requireNonNull(contentType, MANIFEST_PROPERTY_CONTENT_TYPE);
 		writeManifestEntry(w, MANIFEST_PROPERTY_CONTENT_TYPE, contentType);
 
 		final String version = sortedManifestProperties.remove(MANIFEST_PROPERTY_CONTENT_TYPE_VERSION);
-		assertNotNull(version, MANIFEST_PROPERTY_CONTENT_TYPE_VERSION);
+		requireNonNull(version, MANIFEST_PROPERTY_CONTENT_TYPE_VERSION);
 		try {
 			Integer.parseInt(version);
 		} catch (NumberFormatException x) {
@@ -300,7 +300,7 @@ public abstract class FileBasedObjectRegistry {
 	}
 
 	public void mergeFrom(final byte[] data) {
-		assertNotNull(data, "data");
+		requireNonNull(data, "data");
 		if (data.length == 0)
 			return;
 
@@ -331,9 +331,9 @@ public abstract class FileBasedObjectRegistry {
 	}
 
 	private void writeManifestEntry(final Writer w, final String key, final String value) throws IOException {
-		assertNotNull(w, "w");
-		assertNotNull(key, "key");
-		assertNotNull(value, "value");
+		requireNonNull(w, "w");
+		requireNonNull(key, "key");
+		requireNonNull(value, "value");
 
 		w.write(key);
 		w.write('=');
@@ -342,7 +342,7 @@ public abstract class FileBasedObjectRegistry {
 	}
 
 	private void backup(final LockFile lockFile) throws IOException {
-		final File origFile = assertNotNull(lockFile, "lockFile").getFile();
+		final File origFile = requireNonNull(lockFile, "lockFile").getFile();
 		if (origFile.length() == 0)
 			return;
 
@@ -371,8 +371,8 @@ public abstract class FileBasedObjectRegistry {
 	}
 
 	private void deleteOldBackupFiles(final File backupDir, final String fileNameWithoutExtension, final String fileExtension) {
-		assertNotNull(backupDir, "backupDir");
-		assertNotNull(fileNameWithoutExtension, "fileNameWithoutExtension");
+		requireNonNull(backupDir, "backupDir");
+		requireNonNull(fileNameWithoutExtension, "fileNameWithoutExtension");
 
 		List<File> backupFiles = getBackupFiles(backupDir, fileNameWithoutExtension, fileExtension);
 		SortedMap<Long, File> backupTimestamp2File = new TreeMap<>();
@@ -381,7 +381,7 @@ public abstract class FileBasedObjectRegistry {
 			try {
 				final String name = backupFile.getName();
 				final String fnwe = getFileNameWithoutExtension(name);
-				final String backupTimestampString = assertNotNull(getFileExtension(fnwe), "getFileExtension('" + fnwe + "')");
+				final String backupTimestampString = requireNonNull(getFileExtension(fnwe), "getFileExtension('" + fnwe + "')");
 				final long backupTimestamp = Long.parseLong(backupTimestampString, 36);
 				backupTimestamp2File.put(backupTimestamp, backupFile);
 			} catch (Exception x) {
@@ -423,8 +423,8 @@ public abstract class FileBasedObjectRegistry {
 	 * @return the matching backup-files. Never <code>null</code>.
 	 */
 	private List<File> getBackupFiles(final File backupDir, final String fileNameWithoutExtension, final String fileExtension) {
-		assertNotNull(backupDir, "backupDir");
-		assertNotNull(fileNameWithoutExtension, "fileNameWithoutExtension");
+		requireNonNull(backupDir, "backupDir");
+		requireNonNull(fileNameWithoutExtension, "fileNameWithoutExtension");
 		final String fileNameWithoutExtensionWithDot = fileNameWithoutExtension + '.';
 
 		File[] files = backupDir.listFiles(new FileFilter() {

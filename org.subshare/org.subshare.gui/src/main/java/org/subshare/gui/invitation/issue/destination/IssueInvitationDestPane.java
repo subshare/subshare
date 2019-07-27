@@ -1,6 +1,6 @@
 package org.subshare.gui.invitation.issue.destination;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 import static org.subshare.gui.util.FxmlUtil.*;
 
 import org.subshare.gui.filetree.FileTreePane;
@@ -20,7 +20,7 @@ public class IssueInvitationDestPane extends WizardPageContentGridPane {
 	private FileTreePane fileTreePane;
 
 	public IssueInvitationDestPane(final IssueInvitationData issueInvitationData) {
-		this.issueInvitationData = assertNotNull(issueInvitationData, "issueInvitationData");
+		this.issueInvitationData = requireNonNull(issueInvitationData, "issueInvitationData");
 		loadDynamicComponentFxml(IssueInvitationDestPane.class, this);
 		fileTreePane.fileFilterProperty().set(file -> file.isDirectory());
 		fileTreePane.getSelectedFiles().addListener((InvalidationListener) observable -> onSelectedFilesChanged());

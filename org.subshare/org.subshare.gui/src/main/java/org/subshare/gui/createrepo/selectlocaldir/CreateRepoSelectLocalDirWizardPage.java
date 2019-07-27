@@ -1,6 +1,6 @@
 package org.subshare.gui.createrepo.selectlocaldir;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import org.subshare.gui.createrepo.CreateRepoData;
 import org.subshare.gui.createrepo.selectowner.SelectOwnerWizardPage;
@@ -15,7 +15,7 @@ public class CreateRepoSelectLocalDirWizardPage extends WizardPage {
 
 	public CreateRepoSelectLocalDirWizardPage(final CreateRepoData createRepoData) {
 		super("Local directory to be uploaded and shared");
-		this.createRepoData = assertNotNull(createRepoData, "createRepoData");
+		this.createRepoData = requireNonNull(createRepoData, "createRepoData");
 		shownRequired.set(true);
 	}
 

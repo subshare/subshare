@@ -1,10 +1,11 @@
 package org.subshare.core.file;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
-import co.codewizards.cloudstore.core.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+
+import co.codewizards.cloudstore.core.io.ByteArrayInputStream;
 
 public class EncryptedDataFile extends DataFile {
 	public static final String CONTENT_TYPE_VALUE = "application/vnd.subshare.encrypted";
@@ -12,7 +13,7 @@ public class EncryptedDataFile extends DataFile {
 	public static final String ENTRY_NAME_SIGNING_KEY_DATA = "signingKey.gpg";
 
 	public EncryptedDataFile(final byte[] in) throws IOException {
-		this(new ByteArrayInputStream(assertNotNull(in, "in")));
+		this(new ByteArrayInputStream(requireNonNull(in, "in")));
 	}
 
 	public EncryptedDataFile(final InputStream in) throws IOException {

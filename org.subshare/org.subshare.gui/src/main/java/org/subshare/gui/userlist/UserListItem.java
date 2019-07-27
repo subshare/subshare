@@ -1,7 +1,7 @@
 package org.subshare.gui.userlist;
 
 import static co.codewizards.cloudstore.core.bean.PropertyChangeListenerUtil.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 import static javafx.application.Platform.*;
 
 import java.beans.PropertyChangeEvent;
@@ -39,7 +39,7 @@ public class UserListItem {
 	private volatile String ownerTrust;
 
 	public UserListItem(final User user) {
-		this.user = assertNotNull(user, "user");
+		this.user = requireNonNull(user, "user");
 		addWeakPropertyChangeListener(user, userPropertyChangeListener);
 
 		// We do *not* use JavaBeanStringProperty, but SimpleStringProperty instead, because our User bean is a proxy.
@@ -132,7 +132,7 @@ public class UserListItem {
 	public List<String> getEmails() {
 		List<String> emails = this.emails;
 		if (emails == null)
-			this.emails = emails = new ArrayList<>(assertNotNull(user, "user").getEmails());
+			this.emails = emails = new ArrayList<>(requireNonNull(user, "user").getEmails());
 
 		return emails;
 	}

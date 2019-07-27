@@ -1,9 +1,9 @@
 package org.subshare.gui.histo;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.CollectionUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
+import static java.util.Objects.*;
 import static org.subshare.gui.util.FxmlUtil.*;
 import static org.subshare.gui.util.PlatformUtil.*;
 
@@ -222,7 +222,7 @@ public class HistoFramePane extends BorderPane {
 	}
 
 	private HistoCryptoRepoFileTreeItem.Root buildTree(final Collection<PlainHistoCryptoRepoFileDto> plainHistoCryptoRepoFileDtos) {
-		assertNotNull(plainHistoCryptoRepoFileDtos, "plainHistoCryptoRepoFileDtos");
+		requireNonNull(plainHistoCryptoRepoFileDtos, "plainHistoCryptoRepoFileDtos");
 
 		final HistoCryptoRepoFileTreeItem.Root root = new HistoCryptoRepoFileTreeItem.Root();
 
@@ -260,12 +260,12 @@ public class HistoFramePane extends BorderPane {
 	}
 
 	private LocalRepoManager createLocalRepoManager() {
-		final LocalRepo localRepo = assertNotNull(getLocalRepo(), "localRepo");
+		final LocalRepo localRepo = requireNonNull(getLocalRepo(), "localRepo");
 		return LocalRepoManagerFactoryLs.getLocalRepoManagerFactory().createLocalRepoManagerForExistingRepository(localRepo.getLocalRoot());
 	}
 
 	private Image getCollisionIcon(final HistoCryptoRepoFileTreeItem treeItem) {
-		assertNotNull(treeItem, "treeItem");
+		requireNonNull(treeItem, "treeItem");
 		if (! treeItem.hasCollision())
 			return null;
 
@@ -276,7 +276,7 @@ public class HistoFramePane extends BorderPane {
 	}
 
 	private Image getFileIcon(final HistoCryptoRepoFileTreeItem treeItem) {
-		assertNotNull(treeItem, "treeItem");
+		requireNonNull(treeItem, "treeItem");
 		final String iconId;
 		if (treeItem.getRepoFileDto() instanceof DirectoryDto)
 			iconId = FileIconRegistry.ICON_ID_DIRECTORY;

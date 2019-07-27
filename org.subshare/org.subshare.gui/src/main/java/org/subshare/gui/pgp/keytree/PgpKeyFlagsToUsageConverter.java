@@ -1,6 +1,6 @@
 package org.subshare.gui.pgp.keytree;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.Set;
 
@@ -16,7 +16,7 @@ public class PgpKeyFlagsToUsageConverter {
 	}
 
 	public String toUsage(final Set<PgpKeyFlag> pgpKeyFlags) {
-		assertNotNull(pgpKeyFlags, "pgpKeyFlags");
+		requireNonNull(pgpKeyFlags, "pgpKeyFlags");
 
 		final StringBuilder sb = new StringBuilder();
 		for (final PgpKeyFlag pgpKeyFlag : pgpKeyFlags) {

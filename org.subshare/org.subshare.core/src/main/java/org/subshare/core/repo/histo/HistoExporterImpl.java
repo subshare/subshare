@@ -1,7 +1,7 @@
 package org.subshare.core.repo.histo;
 
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 import static org.subshare.core.repo.sync.PaddingUtil.*;
 
 import java.io.IOException;
@@ -44,12 +44,12 @@ public class HistoExporterImpl implements HistoExporter {
 	protected final UUID remoteRepositoryId;
 
 	public static HistoExporter createHistoExporter(final File localRoot) {
-		assertNotNull(localRoot, "localRoot");
+		requireNonNull(localRoot, "localRoot");
 		return new HistoExporterImpl(localRoot);
 	}
 
 	protected HistoExporterImpl(final File localRoot) {
-		this.localRoot = assertNotNull(localRoot, "localRoot");
+		this.localRoot = requireNonNull(localRoot, "localRoot");
 		this.localRepoManager = LocalRepoManagerFactory.Helper.getInstance().createLocalRepoManagerForExistingRepository(localRoot);
 		this.localRepositoryId = localRepoManager.getRepositoryId();
 		if (localRepositoryId == null)
@@ -100,14 +100,14 @@ public class HistoExporterImpl implements HistoExporter {
 	@Override
 	public void exportFile(final ExportFileParam exportFileParam) throws IOException {
 		// TODO support directories and take options into account (e.g. entire dirs [complete snapshots])
-		assertNotNull(exportFileParam, "exportFileParam");
-		assertNotNull(exportFileParam.getHistoCryptoRepoFileId(), "exportFileParam.histoCryptoRepoFileId");
-		assertNotNull(exportFileParam.getExportDirectory(), "exportFileParam.exportDirectory");
+		requireNonNull(exportFileParam, "exportFileParam");
+		requireNonNull(exportFileParam.getHistoCryptoRepoFileId(), "exportFileParam.histoCryptoRepoFileId");
+		requireNonNull(exportFileParam.getExportDirectory(), "exportFileParam.exportDirectory");
 
 		try (final LocalRepoTransaction tx = localRepoManager.beginReadTransaction();) {
 			final PlainHistoCryptoRepoFileDto plainHistoCryptoRepoFileDto = getCryptree(tx).getPlainHistoCryptoRepoFileDto(exportFileParam.getHistoCryptoRepoFileId());
 			final RepoFileDto repoFileDto = plainHistoCryptoRepoFileDto.getRepoFileDto();
-			assertNotNull(repoFileDto, "plainHistoCryptoRepoFileDto.repoFileDto");
+			requireNonNull(repoFileDto, "plainHistoCryptoRepoFileDto.repoFileDto");
 
 			final File exportFile = createFile(exportFileParam.getExportDirectory(), repoFileDto.getName());
 

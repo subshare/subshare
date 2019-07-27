@@ -1,6 +1,6 @@
 package org.subshare.local.persistence;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.Collection;
 
@@ -18,12 +18,12 @@ public class DeletedCollisionDao extends Dao<DeletedCollision, DeletedCollisionD
 
 	public DeletedCollision getDeletedCollisionOrFail(final Uid collisionId) {
 		final DeletedCollision result = getDeletedCollision(collisionId);
-		assertNotNull(result, "getDeletedCollision(" + collisionId + ")");
+		requireNonNull(result, "getDeletedCollision(" + collisionId + ")");
 		return result;
 	}
 
 	public DeletedCollision getDeletedCollision(final Uid collisionId) {
-		assertNotNull(collisionId, "collisionId");
+		requireNonNull(collisionId, "collisionId");
 		final Query query = pm().newNamedQuery(getEntityClass(), "getDeletedCollision_collisionId");
 		try {
 			final DeletedCollision result = (DeletedCollision) query.execute(collisionId.toString());

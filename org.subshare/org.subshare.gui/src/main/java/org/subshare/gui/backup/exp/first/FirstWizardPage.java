@@ -1,6 +1,6 @@
 package org.subshare.gui.backup.exp.first;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import org.subshare.gui.backup.exp.ExportBackupData;
 import org.subshare.gui.backup.exp.destination.ExportBackupDestinationWizardPage;
@@ -12,7 +12,7 @@ public class FirstWizardPage extends WizardPage {
 
 	public FirstWizardPage(final ExportBackupData exportBackupData) {
 		super("Backup needed!");
-		assertNotNull(exportBackupData, "exportBackupData");
+		requireNonNull(exportBackupData, "exportBackupData");
 		setNextPage(new ExportBackupDestinationWizardPage(exportBackupData));
 	}
 

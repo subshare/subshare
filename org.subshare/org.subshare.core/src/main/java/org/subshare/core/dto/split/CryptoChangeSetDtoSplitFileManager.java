@@ -2,8 +2,8 @@ package org.subshare.core.dto.split;
 
 import static co.codewizards.cloudstore.core.io.StreamUtil.*;
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.IOUtil.*;
+import static java.util.Objects.*;
 
 import java.io.IOException;
 import java.util.List;
@@ -39,8 +39,8 @@ public class CryptoChangeSetDtoSplitFileManager {
 	private File cryptoChangeSetDtoFinalDir;
 
 	protected CryptoChangeSetDtoSplitFileManager(final LocalRepoManager localRepoManager, final UUID remoteRepositoryId) {
-		this.localRepoManager = assertNotNull(localRepoManager, "localRepoManager");
-		this.remoteRepositoryId = assertNotNull(remoteRepositoryId, "remoteRepositoryId");
+		this.localRepoManager = requireNonNull(localRepoManager, "localRepoManager");
+		this.remoteRepositoryId = requireNonNull(remoteRepositoryId, "remoteRepositoryId");
 	}
 
 	/**
@@ -112,7 +112,7 @@ public class CryptoChangeSetDtoSplitFileManager {
 	}
 
 	public void writeCryptoChangeSetDtos(final List<CryptoChangeSetDto> cryptoChangeSetDtos, final Long lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced) throws IOException {
-		assertNotNull(cryptoChangeSetDtos, "cryptoChangeSetDtos");
+		requireNonNull(cryptoChangeSetDtos, "cryptoChangeSetDtos");
 
 		if (cryptoChangeSetDtos.isEmpty())
 			throw new IllegalArgumentException("cryptoChangeSetDtos empty");

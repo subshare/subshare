@@ -1,7 +1,7 @@
 package org.subshare.local.dto;
 
 import static co.codewizards.cloudstore.core.objectfactory.ObjectFactoryUtil.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import org.subshare.core.dto.CryptoRepoFileDto;
 import org.subshare.local.persistence.CryptoKey;
@@ -17,7 +17,7 @@ public class CryptoRepoFileDtoConverter {
 	}
 
 	public CryptoRepoFileDto toCryptoRepoFileDto(final CryptoRepoFile cryptoRepoFile) {
-		assertNotNull(cryptoRepoFile, "cryptoRepoFile");
+		requireNonNull(cryptoRepoFile, "cryptoRepoFile");
 		final CryptoRepoFileDto cryptoRepoFileDto = new CryptoRepoFileDto();
 
 		cryptoRepoFileDto.setCryptoRepoFileId(cryptoRepoFile.getCryptoRepoFileId());
@@ -25,19 +25,19 @@ public class CryptoRepoFileDtoConverter {
 		final CryptoRepoFile parent = cryptoRepoFile.getParent();
 		cryptoRepoFileDto.setParentCryptoRepoFileId(parent == null ? null : parent.getCryptoRepoFileId());
 
-		final CryptoKey cryptoKey = assertNotNull(cryptoRepoFile.getCryptoKey(), "cryptoRepoFile.cryptoKey");
+		final CryptoKey cryptoKey = requireNonNull(cryptoRepoFile.getCryptoKey(), "cryptoRepoFile.cryptoKey");
 		cryptoRepoFileDto.setCryptoKeyId(cryptoKey.getCryptoKeyId());
 
 		cryptoRepoFileDto.setDirectory(cryptoRepoFile.isDirectory());
 
-		final byte[] repoFileDtoData = assertNotNull(cryptoRepoFile.getRepoFileDtoData(), "cryptoRepoFile.repoFileDtoData");
+		final byte[] repoFileDtoData = requireNonNull(cryptoRepoFile.getRepoFileDtoData(), "cryptoRepoFile.repoFileDtoData");
 		cryptoRepoFileDto.setRepoFileDtoData(repoFileDtoData);
 
 		cryptoRepoFileDto.setCryptoRepoFileCreated(cryptoRepoFile.getCryptoRepoFileCreated());
 		cryptoRepoFileDto.setDeleted(cryptoRepoFile.getDeleted());
 		cryptoRepoFileDto.setDeletedByIgnoreRule(cryptoRepoFile.isDeletedByIgnoreRule());
 
-		cryptoRepoFileDto.setSignature(assertNotNull(cryptoRepoFile.getSignature(), "cryptoRepoFile.signature"));
+		cryptoRepoFileDto.setSignature(requireNonNull(cryptoRepoFile.getSignature(), "cryptoRepoFile.signature"));
 
 		return cryptoRepoFileDto;
 	}

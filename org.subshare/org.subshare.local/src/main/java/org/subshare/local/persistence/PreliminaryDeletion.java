@@ -1,6 +1,6 @@
 package org.subshare.local.persistence;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Index;
@@ -35,7 +35,7 @@ public class PreliminaryDeletion extends Entity {
 	}
 
 	public void setCryptoRepoFile(CryptoRepoFile cryptoRepoFile) {
-		this.cryptoRepoFile = assertNotNull(cryptoRepoFile, "cryptoRepoFile");
+		this.cryptoRepoFile = requireNonNull(cryptoRepoFile, "cryptoRepoFile");
 	}
 
 	public boolean isDeletedByIgnoreRule() {

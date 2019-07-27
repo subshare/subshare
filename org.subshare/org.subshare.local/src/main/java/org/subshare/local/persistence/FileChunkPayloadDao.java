@@ -1,6 +1,6 @@
 package org.subshare.local.persistence;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -19,7 +19,7 @@ public class FileChunkPayloadDao extends Dao<FileChunkPayload, FileChunkPayloadD
 	private static final Logger logger = LoggerFactory.getLogger(FileChunkPayloadDao.class);
 
 	public FileChunkPayload getFileChunkPayload(TempFileChunk tempFileChunk) {
-		assertNotNull(tempFileChunk, "tempFileChunk");
+		requireNonNull(tempFileChunk, "tempFileChunk");
 
 		final Query query = pm().newNamedQuery(getEntityClass(), "getFileChunkPayload_tempFileChunk");
 		try {
@@ -36,7 +36,7 @@ public class FileChunkPayloadDao extends Dao<FileChunkPayload, FileChunkPayloadD
 	}
 
 	public FileChunkPayload getFileChunkPayload(FileChunk fileChunk) {
-		assertNotNull(fileChunk, "fileChunk");
+		requireNonNull(fileChunk, "fileChunk");
 
 		final Query query = pm().newNamedQuery(getEntityClass(), "getFileChunkPayload_fileChunk");
 		try {

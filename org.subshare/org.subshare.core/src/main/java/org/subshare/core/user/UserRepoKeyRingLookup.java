@@ -1,6 +1,6 @@
 package org.subshare.core.user;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 public interface UserRepoKeyRingLookup {
 
@@ -12,7 +12,7 @@ public interface UserRepoKeyRingLookup {
 		}
 
 		public static void setUserRepoKeyRingLookup(final UserRepoKeyRingLookup lookup) {
-			instance = assertNotNull(lookup, "lookup");
+			instance = requireNonNull(lookup, "lookup");
 		}
 	}
 

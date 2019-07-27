@@ -1,7 +1,7 @@
 package org.subshare.local.persistence;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
+import static java.util.Objects.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -124,9 +124,9 @@ public class CurrentHistoCryptoRepoFile extends Entity implements WriteProtected
 		logger.debug("jdoPreStore: {} {}",
 				cryptoRepoFile, histoCryptoRepoFile);
 
-		final Uid cryptoRepoFileId = assertNotNull(cryptoRepoFile, "cryptoRepoFile").getCryptoRepoFileId();
-		final CryptoRepoFile crf = assertNotNull(histoCryptoRepoFile, "histoCryptoRepoFile").getCryptoRepoFile();
-		assertNotNull(crf, "histoCryptoRepoFile.cryptoRepoFile");
+		final Uid cryptoRepoFileId = requireNonNull(cryptoRepoFile, "cryptoRepoFile").getCryptoRepoFileId();
+		final CryptoRepoFile crf = requireNonNull(histoCryptoRepoFile, "histoCryptoRepoFile").getCryptoRepoFile();
+		requireNonNull(crf, "histoCryptoRepoFile.cryptoRepoFile");
 
 		if (! cryptoRepoFileId.equals(crf.getCryptoRepoFileId()))
 			throw new IllegalStateException(String.format("cryptoRepoFile.cryptoRepoFileId != histoCryptoRepoFile.cryptoRepoFile.cryptoRepoFileId :: %s != %s",
@@ -151,11 +151,11 @@ public class CurrentHistoCryptoRepoFile extends Entity implements WriteProtected
 	@Override
 	public InputStream getSignedData(final int signedDataVersion) {
 		try {
-			final Uid cryptoRepoFileId = assertNotNull(cryptoRepoFile, "cryptoRepoFile").getCryptoRepoFileId();
-			final Uid histoCryptoRepoFileId = assertNotNull(histoCryptoRepoFile, "histoCryptoRepoFile").getHistoCryptoRepoFileId();
+			final Uid cryptoRepoFileId = requireNonNull(cryptoRepoFile, "cryptoRepoFile").getCryptoRepoFileId();
+			final Uid histoCryptoRepoFileId = requireNonNull(histoCryptoRepoFile, "histoCryptoRepoFile").getHistoCryptoRepoFileId();
 
-			assertNotNull(cryptoRepoFileId, "cryptoRepoFileId");
-			assertNotNull(histoCryptoRepoFileId, "histoCryptoRepoFileId");
+			requireNonNull(cryptoRepoFileId, "cryptoRepoFileId");
+			requireNonNull(histoCryptoRepoFileId, "histoCryptoRepoFileId");
 
 			byte separatorIndex = 0;
 			return new MultiInputStream(
@@ -189,7 +189,7 @@ public class CurrentHistoCryptoRepoFile extends Entity implements WriteProtected
 
 	@Override
 	public Uid getCryptoRepoFileIdControllingPermissions() {
-		return assertNotNull(assertNotNull(cryptoRepoFile, "cryptoRepoFile").getCryptoRepoFileId(), "cryptoRepoFileId");
+		return requireNonNull(requireNonNull(cryptoRepoFile, "cryptoRepoFile").getCryptoRepoFileId(), "cryptoRepoFileId");
 	}
 
 	@Override

@@ -1,6 +1,6 @@
 package org.subshare.core.crypto;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 import static org.subshare.core.crypto.EncrypterDecrypterStreamUtil.*;
 
 import java.io.FilterInputStream;
@@ -46,7 +46,7 @@ public class DecrypterInputStream extends FilterInputStream {
 	private boolean closeUnderlyingStream = true;
 
 	public DecrypterInputStream(final InputStream in, final CipherParameters key) throws IOException {
-		super(assertNotNull(in, "in"));
+		super(requireNonNull(in, "in"));
 		this.header = readHeader();
 		assertValidKey(header.cipherTransformation, key);
 		this.cipher = createCipher();
@@ -74,7 +74,7 @@ public class DecrypterInputStream extends FilterInputStream {
 		public final byte[] iv;
 		public Header(final int version, final CipherTransformation cipherTransformation, final byte[] iv) {
 			this.version = version;
-			this.cipherTransformation = assertNotNull(cipherTransformation, "cipherTransformation");
+			this.cipherTransformation = requireNonNull(cipherTransformation, "cipherTransformation");
 			this.iv = iv;
 		}
 	}

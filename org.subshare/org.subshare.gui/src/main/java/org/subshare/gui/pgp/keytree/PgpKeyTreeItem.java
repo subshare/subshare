@@ -1,7 +1,7 @@
 package org.subshare.gui.pgp.keytree;
 
 import static co.codewizards.cloudstore.core.bean.PropertyChangeListenerUtil.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 import static javafx.application.Platform.*;
 import static org.subshare.gui.util.PlatformUtil.*;
 
@@ -140,15 +140,15 @@ public class PgpKeyTreeItem<T> extends TreeItem<PgpKeyTreeItem<?>> {
 	protected PgpKeyTreePane getPgpKeyTreePane() {
 		if (pgpKeyTreePane == null) {
 			final PgpKeyTreeItem<?> parent = (PgpKeyTreeItem<?>) getParent();
-			assertNotNull(parent, "parent");
-			pgpKeyTreePane = assertNotNull(parent.getPgpKeyTreePane(), "parent.pgpKeyTreePane");
+			requireNonNull(parent, "parent");
+			pgpKeyTreePane = requireNonNull(parent.getPgpKeyTreePane(), "parent.pgpKeyTreePane");
 			pgpKeyTreePane.pgpProperty().addListener(new WeakInvalidationListener(pgpInvalidationListener));
 		}
 		return pgpKeyTreePane;
 	}
 
 	public <I extends PgpKeyTreeItem<?>> I getThisOrParentPgpKeyTreeItemOfType(final Class<I> type) {
-		assertNotNull(type, "type");
+		requireNonNull(type, "type");
 
 		if (type.isInstance(this))
 			return type.cast(this);
@@ -177,7 +177,7 @@ public class PgpKeyTreeItem<T> extends TreeItem<PgpKeyTreeItem<?>> {
 	protected void hookTrustDbPropertyChangeListener() {
 		assertFxApplicationThread();
 		if (trustDbWeakPropertyChangeListener == null) {
-			final Pgp pgp = assertNotNull(getPgp(), "pgp");
+			final Pgp pgp = requireNonNull(getPgp(), "pgp");
 			trustDbWeakPropertyChangeListener = addWeakPropertyChangeListener(pgp, Pgp.PropertyEnum.trustdb, trustDbPropertyChangeListener);
 		}
 	}

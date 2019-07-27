@@ -1,6 +1,6 @@
 package org.subshare.rest.client.locker.transport.request;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -24,9 +24,9 @@ public class GetLockerEncryptedDataFile extends AbstractRequest<LockerEncryptedD
 	private final Uid lockerContentVersion;
 
 	public GetLockerEncryptedDataFile(final PgpKeyId pgpKeyId, final String lockerContentName, final Uid lockerContentVersion) {
-		this.pgpKeyId = assertNotNull(pgpKeyId, "pgpKeyId");
-		this.lockerContentName = assertNotNull(lockerContentName, "lockerContentName");
-		this.lockerContentVersion = assertNotNull(lockerContentVersion, "lockerContentVersion");
+		this.pgpKeyId = requireNonNull(pgpKeyId, "pgpKeyId");
+		this.lockerContentName = requireNonNull(lockerContentName, "lockerContentName");
+		this.lockerContentVersion = requireNonNull(lockerContentVersion, "lockerContentVersion");
 	}
 
 	@Override

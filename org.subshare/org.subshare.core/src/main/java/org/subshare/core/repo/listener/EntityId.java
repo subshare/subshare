@@ -1,7 +1,7 @@
 package org.subshare.core.repo.listener;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
+import static java.util.Objects.*;
 
 import java.io.Serializable;
 
@@ -13,11 +13,11 @@ public class EntityId implements Serializable {
 	private final long id;
 
 	public EntityId(final Class<?> clazz, final long id) {
-		this(assertNotNull(clazz, "clazz").getName(), id);
+		this(requireNonNull(clazz, "clazz").getName(), id);
 	}
 
 	public EntityId(final String className, final long id) {
-		this.className = assertNotNull(className, "className");
+		this.className = requireNonNull(className, "className");
 		this.id = id;
 	}
 

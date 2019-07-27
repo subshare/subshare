@@ -1,6 +1,6 @@
 package org.subshare.core.user;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.ArrayList;
 
@@ -14,7 +14,7 @@ public class UserDtoConverter {
 	private final UserRepoKeyRingDtoConverter userRepoKeyRingDtoConverter = new UserRepoKeyRingDtoConverter();
 
 	public UserDto toUserDto(final User user) {
-		assertNotNull(user, "user");
+		requireNonNull(user, "user");
 
 		final UserDto userDto = new UserDto();
 		userDto.setUserId(user.getUserId());
@@ -36,7 +36,7 @@ public class UserDtoConverter {
 	}
 
 	public User fromUserDto(UserDto userDto) {
-		assertNotNull(userDto, "userDto");
+		requireNonNull(userDto, "userDto");
 
 		final User user = new UserImpl();
 		user.setUserId(userDto.getUserId());

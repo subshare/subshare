@@ -1,6 +1,6 @@
 package org.subshare.gui.pgp.createkey.validity;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import org.subshare.core.pgp.CreatePgpKeyParam;
 import org.subshare.gui.pgp.createkey.advanced.AdvancedWizardPage;
@@ -14,7 +14,7 @@ public class ValidityWizardPage extends WizardPage {
 
 	public ValidityWizardPage(CreatePgpKeyParam createPgpKeyParam) {
 		super("OpenPGP key validity");
-		this.createPgpKeyParam = assertNotNull(createPgpKeyParam, "createPgpKeyParam");
+		this.createPgpKeyParam = requireNonNull(createPgpKeyParam, "createPgpKeyParam");
 		setNextPage(new AdvancedWizardPage(createPgpKeyParam));
 	}
 

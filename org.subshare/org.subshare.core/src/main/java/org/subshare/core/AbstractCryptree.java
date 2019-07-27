@@ -1,7 +1,6 @@
 package org.subshare.core;
 
-
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.UUID;
 
@@ -29,7 +28,7 @@ public abstract class AbstractCryptree implements Cryptree {
 		this.cryptreeFactory = cryptreeFactory;
 	}
 	protected CryptreeFactory getCryptreeFactoryOrFail() {
-		return assertNotNull(getCryptreeFactory(), "getCryptreeFactory()");
+		return requireNonNull(getCryptreeFactory(), "getCryptreeFactory()");
 	}
 
 	@Override
@@ -44,7 +43,7 @@ public abstract class AbstractCryptree implements Cryptree {
 		this.transaction = transaction;
 	}
 	protected LocalRepoTransaction getTransactionOrFail() {
-		return assertNotNull(getTransaction(), "getTransaction()");
+		return requireNonNull(getTransaction(), "getTransaction()");
 	}
 
 	@Override
@@ -56,11 +55,11 @@ public abstract class AbstractCryptree implements Cryptree {
 		this.userRepoKeyRing = userRepoKeyRing;
 	}
 //	protected UserRepoKey getUserRepoKeyOrFail() {
-//		return assertNotNull("getUserRepoKey()", getUserRepoKeyRing());
+//		return requireNonNull("getUserRepoKey()", getUserRepoKeyRing());
 //	}
 
 	protected UserRepoKeyRing getUserRepoKeyRingOrFail() {
-		return assertNotNull(getUserRepoKeyRing(), "getUserRepoKeyRing()");
+		return requireNonNull(getUserRepoKeyRing(), "getUserRepoKeyRing()");
 	}
 
 	@Override
@@ -75,7 +74,7 @@ public abstract class AbstractCryptree implements Cryptree {
 		this.remoteRepositoryId = serverRepositoryId;
 	}
 	protected UUID getRemoteRepositoryIdOrFail() {
-		return assertNotNull(getRemoteRepositoryId(), "getRemoteRepositoryId()");
+		return requireNonNull(getRemoteRepositoryId(), "getRemoteRepositoryId()");
 	}
 
 	@Override
@@ -90,6 +89,6 @@ public abstract class AbstractCryptree implements Cryptree {
 		this.remotePathPrefix = remotePathPrefix;
 	}
 	protected String getRemotePathPrefixOrFail() {
-		return assertNotNull(getRemotePathPrefix(), "getRemotePathPrefix()");
+		return requireNonNull(getRemotePathPrefix(), "getRemotePathPrefix()");
 	}
 }

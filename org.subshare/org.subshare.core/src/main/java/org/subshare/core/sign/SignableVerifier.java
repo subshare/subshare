@@ -1,10 +1,9 @@
 package org.subshare.core.sign;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.IOUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
+import static java.util.Objects.*;
 
-import co.codewizards.cloudstore.core.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -20,6 +19,7 @@ import org.subshare.crypto.CryptoRegistry;
 
 import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.core.auth.SignatureException;
+import co.codewizards.cloudstore.core.io.ByteArrayInputStream;
 
 public class SignableVerifier {
 
@@ -28,11 +28,11 @@ public class SignableVerifier {
 	private final Map<SignerTransformation, Signer> signerTransformation2Signer = new HashMap<SignerTransformation, Signer>(2);
 
 	public SignableVerifier(final UserRepoKeyPublicKeyLookup lookup) {
-		this.lookup = assertNotNull(lookup, "lookup");
+		this.lookup = requireNonNull(lookup, "lookup");
 	}
 
 	public void verify(final Signable signable) throws SignatureException {
-		final Signature signature = assertNotNull(signable, "signable").getSignature();
+		final Signature signature = requireNonNull(signable, "signable").getSignature();
 		if (signature == null)
 			throw new SignatureException("There is no signature! signable.signature == null");
 
@@ -106,7 +106,7 @@ public class SignableVerifier {
 	}
 
 	private Signer getSigner(final SignerTransformation signerTransformation) {
-		assertNotNull(signerTransformation, "signerTransformation");
+		requireNonNull(signerTransformation, "signerTransformation");
 		Signer signer = signerTransformation2Signer.get(signerTransformation);
 		if (signer == null) {
 			try {

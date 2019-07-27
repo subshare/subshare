@@ -1,6 +1,6 @@
 package org.subshare.rest.client.transport.request;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
@@ -20,16 +20,16 @@ public class SsMakeDirectory extends MakeDirectory {
 
 	public SsMakeDirectory(final String repositoryName, final String path, final RepoFileDtoWithCurrentHistoCryptoRepoFileDto repoFileDtoWithCurrentHistoCryptoRepoFileDto) {
 		super(repositoryName, path, SsDirectoryDto.DUMMY_LAST_MODIFIED);
-		this.repoFileDtoWithCurrentHistoCryptoRepoFileDto = assertNotNull(repoFileDtoWithCurrentHistoCryptoRepoFileDto, "repoFileDtoWithCurrentHistoCryptoRepoFileDto");
+		this.repoFileDtoWithCurrentHistoCryptoRepoFileDto = requireNonNull(repoFileDtoWithCurrentHistoCryptoRepoFileDto, "repoFileDtoWithCurrentHistoCryptoRepoFileDto");
 
-		final CurrentHistoCryptoRepoFileDto currentHistoCryptoRepoFileDto = assertNotNull(
+		final CurrentHistoCryptoRepoFileDto currentHistoCryptoRepoFileDto = requireNonNull(
 				repoFileDtoWithCurrentHistoCryptoRepoFileDto.getCurrentHistoCryptoRepoFileDto(),
 				"repoFileDtoWithCurrentHistoCryptoRepoFileDto.currentHistoCryptoRepoFileDto");
 
-		assertNotNull(currentHistoCryptoRepoFileDto.getHistoCryptoRepoFileDto(),
+		requireNonNull(currentHistoCryptoRepoFileDto.getHistoCryptoRepoFileDto(),
 				"repoFileDtoWithCurrentHistoCryptoRepoFileDto.currentHistoCryptoRepoFileDto.histoCryptoRepoFileDto");
 
-		final RepoFileDto rfdto = assertNotNull(repoFileDtoWithCurrentHistoCryptoRepoFileDto.getRepoFileDto(),
+		final RepoFileDto rfdto = requireNonNull(repoFileDtoWithCurrentHistoCryptoRepoFileDto.getRepoFileDto(),
 				"repoFileDtoWithCurrentHistoCryptoRepoFileDto.repoFileDto");
 
 		if (! (rfdto instanceof SsDirectoryDto))

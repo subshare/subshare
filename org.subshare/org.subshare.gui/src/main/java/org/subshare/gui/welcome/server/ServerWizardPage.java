@@ -1,6 +1,6 @@
 package org.subshare.gui.welcome.server;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import org.subshare.gui.invitation.accept.source.AcceptInvitationSourceWizardPage;
 import org.subshare.gui.welcome.ServerData;
@@ -18,7 +18,7 @@ public class ServerWizardPage extends WizardPage {
 
 	public ServerWizardPage(final ServerData serverData) {
 		super("Server");
-		this.serverData = assertNotNull(serverData, "serverData");
+		this.serverData = requireNonNull(serverData, "serverData");
 		acceptInvitationSourceWizardPage = new AcceptInvitationSourceWizardPage(serverData.getAcceptInvitationData());
 		acceptInvitationInvalidationListener = observable -> {
 			nextPageProperty().set(serverData.acceptInvitationProperty().get() ? acceptInvitationSourceWizardPage : null);

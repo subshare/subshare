@@ -1,6 +1,6 @@
 package org.subshare.local.persistence;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -27,7 +27,7 @@ public class UserRepoKeyPublicKeyDao extends Dao<UserRepoKeyPublicKey, UserRepoK
 	}
 
 	public UserRepoKeyPublicKey getUserRepoKeyPublicKey(final Uid userRepoKeyId) {
-		assertNotNull(userRepoKeyId, "userRepoKeyId");
+		requireNonNull(userRepoKeyId, "userRepoKeyId");
 		final Query query = pm().newNamedQuery(getEntityClass(), "getUserRepoKeyPublicKey_userRepoKeyId");
 		try {
 			final UserRepoKeyPublicKey key = (UserRepoKeyPublicKey) query.execute(userRepoKeyId.toString());
@@ -89,7 +89,7 @@ public class UserRepoKeyPublicKeyDao extends Dao<UserRepoKeyPublicKey, UserRepoK
 	}
 
 	protected void deleteDependentObjects(final UserRepoKeyPublicKey userRepoKeyPublicKey) {
-		assertNotNull(userRepoKeyPublicKey, "userRepoKeyPublicKey");
+		requireNonNull(userRepoKeyPublicKey, "userRepoKeyPublicKey");
 
 		final UserIdentityLinkDao userIdentityLinkDao = getDao(UserIdentityLinkDao.class);
 
@@ -115,7 +115,7 @@ public class UserRepoKeyPublicKeyDao extends Dao<UserRepoKeyPublicKey, UserRepoK
 	}
 
 //	public UserRepoKeyPublicKey getUserRepoKeyPublicKeyOrCreate(final UserRepoKey.PublicKey publicKey) {
-//		assertNotNull("publicKey", publicKey);
+//		requireNonNull("publicKey", publicKey);
 //		UserRepoKeyPublicKey userRepoKeyPublicKey = getUserRepoKeyPublicKey(publicKey.getUserRepoKeyId());
 //		if (userRepoKeyPublicKey == null) {
 //			if (publicKey.isInvitation()) {

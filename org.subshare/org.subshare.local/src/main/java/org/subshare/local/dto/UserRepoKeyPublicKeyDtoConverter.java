@@ -1,6 +1,6 @@
 package org.subshare.local.dto;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import org.subshare.core.dto.InvitationUserRepoKeyPublicKeyDto;
 import org.subshare.core.dto.UserRepoKeyPublicKeyDto;
@@ -10,7 +10,7 @@ import org.subshare.local.persistence.UserRepoKeyPublicKey;
 public class UserRepoKeyPublicKeyDtoConverter {
 
 	public UserRepoKeyPublicKeyDto toUserRepoKeyPublicKeyDto(final UserRepoKeyPublicKey userRepoKeyPublicKey) {
-		assertNotNull(userRepoKeyPublicKey, "userRepoKeyPublicKey");
+		requireNonNull(userRepoKeyPublicKey, "userRepoKeyPublicKey");
 
 		final InvitationUserRepoKeyPublicKey invUserRepoKeyPublicKey = (InvitationUserRepoKeyPublicKey)
 				(userRepoKeyPublicKey instanceof InvitationUserRepoKeyPublicKey ? userRepoKeyPublicKey : null);

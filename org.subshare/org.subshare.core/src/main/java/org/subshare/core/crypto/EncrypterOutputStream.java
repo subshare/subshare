@@ -1,6 +1,6 @@
 package org.subshare.core.crypto;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 import static org.subshare.core.crypto.EncrypterDecrypterStreamUtil.*;
 
 import java.io.FilterOutputStream;
@@ -104,8 +104,8 @@ public class EncrypterOutputStream extends FilterOutputStream {
 			final CipherTransformation cipherTransformation,
 			final CipherParameters key,
 			final IvFactory ivFactory) throws IOException {
-		super(assertNotNull(out, "out"));
-		this.cipherTransformation = assertNotNull(cipherTransformation, "cipherTransformation");
+		super(requireNonNull(out, "out"));
+		this.cipherTransformation = requireNonNull(cipherTransformation, "cipherTransformation");
 		assertValidKey(cipherTransformation, key);
 		this.cipher = createCipher();
 

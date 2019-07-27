@@ -1,6 +1,6 @@
 package org.subshare.gui.selectuser;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 import static org.subshare.gui.util.FxmlUtil.*;
 
 import java.util.ArrayList;
@@ -54,9 +54,9 @@ public class SelectUserPane extends GridPane {
 	}
 
 	public SelectUserPane(final List<User> users, final Collection<User> selectedUsers, final SelectionMode selectionMode, final String headerText) {
-		assertNotNull(users, "users");
+		requireNonNull(users, "users");
 		// selectedUsers may be null
-		assertNotNull(selectionMode, "selectionMode");
+		requireNonNull(selectionMode, "selectionMode");
 		loadDynamicComponentFxml(SelectUserPane.class, this);
 
 		this.headerText.setText(headerText);

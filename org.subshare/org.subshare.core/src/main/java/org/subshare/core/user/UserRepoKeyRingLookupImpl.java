@@ -1,6 +1,6 @@
 package org.subshare.core.user;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.List;
 import java.util.UUID;
@@ -14,7 +14,7 @@ public class UserRepoKeyRingLookupImpl implements UserRepoKeyRingLookup {
 
 	@Override
 	public UserRepoKeyRing getUserRepoKeyRing(final UserRepoKeyRingLookupContext context) {
-		assertNotNull(context, "context");
+		requireNonNull(context, "context");
 
 		final UUID serverRepositoryId = context.getServerRepositoryId();
 
@@ -27,9 +27,9 @@ public class UserRepoKeyRingLookupImpl implements UserRepoKeyRingLookup {
 	}
 
 	private UserRepoKeyRing getUserRepoKeyRing(final ServerRepo serverRepo) {
-		assertNotNull(serverRepo, "serverRepo");
+		requireNonNull(serverRepo, "serverRepo");
 		final Uid userId = serverRepo.getUserId();
-		assertNotNull(userId, "serverRepo.userId");
+		requireNonNull(userId, "serverRepo.userId");
 
 		final User user = UserRegistryImpl.getInstance().getUserByUserIdOrFail(userId);
 		return user.getUserRepoKeyRingOrCreate();

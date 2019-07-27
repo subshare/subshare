@@ -1,7 +1,7 @@
 package org.subshare.gui.welcome.server;
 
 import static co.codewizards.cloudstore.core.bean.PropertyChangeListenerUtil.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 import static javafx.application.Platform.*;
 import static org.subshare.gui.util.FxmlUtil.*;
 
@@ -51,8 +51,8 @@ public class ServerPane extends WizardPageContentGridPane {
 
 	@SuppressWarnings("unchecked")
 	public ServerPane(final ServerData serverData) {
-		this.serverData = assertNotNull(serverData, "serverData");
-		this.server = assertNotNull(serverData.getServer(), "serverData.server");
+		this.serverData = requireNonNull(serverData, "serverData");
+		this.server = requireNonNull(serverData.getServer(), "serverData.server");
 		loadDynamicComponentFxml(ServerPane.class, this);
 
 		try {

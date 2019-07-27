@@ -1,7 +1,7 @@
 package org.subshare.local.persistence;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
+import static java.util.Objects.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -231,7 +231,7 @@ public class CryptoRepoFile extends Entity implements WriteProtected, AutoTrackL
 	public void setCryptoKey(final CryptoKey cryptoKey) {
 		if (! equal(this.cryptoKey, cryptoKey)) {
 			if (cryptoKey != null) {
-				final CryptoKeyRole cryptoKeyRole = assertNotNull(cryptoKey.getCryptoKeyRole(), "cryptoKey.cryptoKeyRole");
+				final CryptoKeyRole cryptoKeyRole = requireNonNull(cryptoKey.getCryptoKeyRole(), "cryptoKey.cryptoKeyRole");
 				if (CryptoKeyRole.dataKey != cryptoKeyRole)
 					throw new IllegalArgumentException("cryptoKey.cryptoKeyRole != dataKey");
 			}
@@ -290,7 +290,7 @@ public class CryptoRepoFile extends Entity implements WriteProtected, AutoTrackL
 			return;
 
 		final PersistenceManager pm = JDOHelper.getPersistenceManager(this);
-		assertNotNull(pm, "JDOHelper.getPersistenceManager(this)");
+		requireNonNull(pm, "JDOHelper.getPersistenceManager(this)");
 		final javax.jdo.Query q = pm.newNamedQuery(CryptoRepoFile.class, "getCryptoRepoFile_repoFile");
 		final CryptoRepoFile other = (CryptoRepoFile) q.execute(repoFile);
 		if (other != null && !this.equals(other))
@@ -350,7 +350,7 @@ public class CryptoRepoFile extends Entity implements WriteProtected, AutoTrackL
 			if (sb.length() == 0 || sb.charAt(sb.length() - 1) != '/')
 				sb.append('/');
 
-			sb.append(assertNotNull(crf.getLocalName(), "cryptoRepoFile.localName")); // if this is null, we are not on the client-side (or we have no access at all). if we are on the client and do have access, we should be able to decrypt all parents due to the backlink-keys!
+			sb.append(requireNonNull(crf.getLocalName(), "cryptoRepoFile.localName")); // if this is null, we are not on the client-side (or we have no access at all). if we are on the client and do have access, we should be able to decrypt all parents due to the backlink-keys!
 		}
 		return sb.toString();
 	}
@@ -452,7 +452,7 @@ public class CryptoRepoFile extends Entity implements WriteProtected, AutoTrackL
 
 	@Override
 	public Uid getCryptoRepoFileIdControllingPermissions() {
-		return assertNotNull(this.getCryptoRepoFileId(), "cryptoRepoFileId");
+		return requireNonNull(this.getCryptoRepoFileId(), "cryptoRepoFileId");
 	}
 
 	@Override

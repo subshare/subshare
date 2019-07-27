@@ -1,7 +1,7 @@
 package org.subshare.local.persistence;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
+import static java.util.Objects.*;
 
 import java.util.Arrays;
 import java.util.Date;
@@ -96,9 +96,9 @@ public class SignatureImpl implements Signature {
 		if (signature == null)
 			return null;
 
-		assertNotNull(signature.getSignatureCreated(), "signature.signatureCreated");
-		assertNotNull(signature.getSigningUserRepoKeyId(), "signature.signingUserRepoKeyId");
-		assertNotNull(signature.getSignatureData(), "signature.signatureData");
+		requireNonNull(signature.getSignatureCreated(), "signature.signatureCreated");
+		requireNonNull(signature.getSigningUserRepoKeyId(), "signature.signingUserRepoKeyId");
+		requireNonNull(signature.getSignatureData(), "signature.signatureData");
 
 		final SignatureImpl copy = new SignatureImpl();
 		copy.setSignatureCreated(signature.getSignatureCreated());

@@ -1,7 +1,7 @@
 package org.subshare.core.pgp.gnupg;
 
 import static co.codewizards.cloudstore.core.io.StreamUtil.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -51,7 +51,7 @@ public class BcPgpDecoder extends AbstractPgpDecoder {
 	private final BcWithLocalGnuPgPgp pgp;
 
 	public BcPgpDecoder(final BcWithLocalGnuPgPgp pgp) {
-		this.pgp = assertNotNull(pgp, "pgp");
+		this.pgp = requireNonNull(pgp, "pgp");
 	}
 
 	@Override
@@ -107,8 +107,8 @@ public class BcPgpDecoder extends AbstractPgpDecoder {
 	}
 
 	private void decodePlainWithDetachedSignature(final InputStream in, final InputStream signIn) throws SignatureException, IOException {
-		assertNotNull(in, "in");
-		assertNotNull(signIn, "signIn");
+		requireNonNull(in, "in");
+		requireNonNull(signIn, "signIn");
 
 		final PGPObjectFactory pgpF = new PGPObjectFactory(signIn, new BcKeyFingerprintCalculator());
 
@@ -215,7 +215,7 @@ public class BcPgpDecoder extends AbstractPgpDecoder {
 							sKey = secretKey.extractPrivateKey(
 									new BcPBESecretKeyDecryptorBuilder(new BcPGPDigestCalculatorProvider()).build(passphrase));
 
-							decryptPgpKey = assertNotNull(bcPgpKey.getPgpKey(), "bcPgpKey.pgpKey");
+							decryptPgpKey = requireNonNull(bcPgpKey.getPgpKey(), "bcPgpKey.pgpKey");
 						}
 					}
 				}
@@ -284,9 +284,9 @@ public class BcPgpDecoder extends AbstractPgpDecoder {
 	}
 
 	private void verifySignature(final PGPOnePassSignatureList onePassSignatureList, final PGPSignatureList signatureList, final InputStream signedDataIn, final OutputStream signedDataOut) throws SignatureException, IOException {
-		assertNotNull(onePassSignatureList, "onePassSignatureList");
-		assertNotNull(signatureList, "signatureList");
-		assertNotNull(signedDataIn, "signedDataIn");
+		requireNonNull(onePassSignatureList, "onePassSignatureList");
+		requireNonNull(signatureList, "signatureList");
+		requireNonNull(signedDataIn, "signedDataIn");
 
 		setSignPgpKey(null);
 		setPgpSignature(null);

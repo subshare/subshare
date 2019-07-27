@@ -1,6 +1,6 @@
 package org.subshare.core.server;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -10,7 +10,7 @@ import org.subshare.core.dto.ServerDto;
 public class ServerDtoConverter {
 
 	public ServerDto toServerDto(final Server server) {
-		assertNotNull(server, "server");
+		requireNonNull(server, "server");
 		final ServerDto serverDto = new ServerDto();
 		serverDto.setServerId(server.getServerId());
 		serverDto.setName(server.getName());
@@ -21,7 +21,7 @@ public class ServerDtoConverter {
 	}
 
 	public Server fromServerDto(final ServerDto serverDto) {
-		assertNotNull(serverDto, "serverDto");
+		requireNonNull(serverDto, "serverDto");
 		final Server server = new ServerImpl(serverDto.getServerId());
 		server.setName(serverDto.getName());
 		try {

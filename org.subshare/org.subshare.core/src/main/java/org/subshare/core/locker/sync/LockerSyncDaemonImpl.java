@@ -1,6 +1,6 @@
 package org.subshare.core.locker.sync;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import org.subshare.core.server.Server;
 import org.subshare.core.sync.Sync;
@@ -23,7 +23,7 @@ public class LockerSyncDaemonImpl extends SyncDaemonImpl implements LockerSyncDa
 
 	@Override
 	protected Sync createSync(final Server server) {
-		assertNotNull(server, "server");
+		requireNonNull(server, "server");
 		return new LockerSync(server);
 	}
 

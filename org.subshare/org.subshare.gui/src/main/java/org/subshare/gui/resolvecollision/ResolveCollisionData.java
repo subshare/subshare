@@ -1,6 +1,6 @@
 package org.subshare.gui.resolvecollision;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,8 +18,8 @@ public class ResolveCollisionData {
 	private List<CollisionData> collisionDatas;
 
 	public ResolveCollisionData(LocalRepo localRepo, Set<Uid> collisionIds) {
-		this.localRepo = assertNotNull(localRepo, "localRepo");
-		this.collisionIds = assertNotNull(collisionIds, "collisionIds");
+		this.localRepo = requireNonNull(localRepo, "localRepo");
+		this.collisionIds = requireNonNull(collisionIds, "collisionIds");
 	}
 
 	public LocalRepo getLocalRepo() {

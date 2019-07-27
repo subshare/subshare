@@ -1,6 +1,6 @@
 package org.subshare.gui.selectuser;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -24,8 +24,8 @@ public class SelectUserDialog extends Stage {
 	private List<User> selectedUsers;
 
 	public SelectUserDialog(final Window owner, final List<User> users, final Collection<User> selectedUsers, final SelectionMode selectionMode, final String headerText) {
-		assertNotNull(owner, "owner");
-		assertNotNull(users, "users");
+		requireNonNull(owner, "owner");
+		requireNonNull(users, "users");
 		// selectedUsers may be null
 
 		setResizable(false);

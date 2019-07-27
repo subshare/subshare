@@ -1,6 +1,6 @@
 package org.subshare.gui.filetree.repoaware;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 import static org.subshare.gui.util.PlatformUtil.*;
 
 import java.net.URL;
@@ -110,7 +110,7 @@ public class RepoAwareFileTreePane extends FileTreePane {
 	}
 
 	public CollisionPrivateDtoSet getCollisionDtoSet(final FileTreeItem<?> treeItem) {
-		assertNotNull(treeItem, "treeItem");
+		requireNonNull(treeItem, "treeItem");
 		assertFxApplicationThread();
 		return treeItem2CollisionDtoSet.get(treeItem);
 	}
@@ -140,7 +140,7 @@ public class RepoAwareFileTreePane extends FileTreePane {
 	}
 
 	private CollisionPrivateDtoSet _getCollisionDtoSet(final FileTreeItem<?> treeItem) {
-		assertNotNull(treeItem, "treeItem");
+		requireNonNull(treeItem, "treeItem");
 
 		if (! (treeItem instanceof FileFileTreeItem))
 			return null;
@@ -194,7 +194,7 @@ public class RepoAwareFileTreePane extends FileTreePane {
 	}
 
 	private LocalRepoManager createLocalRepoManager() {
-		final LocalRepo localRepo = assertNotNull(getLocalRepo(), "localRepo");
+		final LocalRepo localRepo = requireNonNull(getLocalRepo(), "localRepo");
 		return LocalRepoManagerFactoryLs.getLocalRepoManagerFactory().createLocalRepoManagerForExistingRepository(localRepo.getLocalRoot());
 	}
 

@@ -1,8 +1,8 @@
 package org.subshare.core.locker.transport;
 
-import java.net.URL;
+import static java.util.Objects.*;
 
-import co.codewizards.cloudstore.core.util.AssertUtil;
+import java.net.URL;
 
 public abstract class AbstractLockerTransportFactory implements LockerTransportFactory {
 
@@ -13,7 +13,7 @@ public abstract class AbstractLockerTransportFactory implements LockerTransportF
 
 	@Override
 	public LockerTransport createLockerTransport(URL remoteRoot) {
-		AssertUtil.assertNotNull(remoteRoot, "remoteRoot");
+		requireNonNull(remoteRoot, "remoteRoot");
 		final LockerTransport transport = _createLockerTransport();
 		if (transport == null)
 			throw new IllegalStateException(String.format("Implementation error in class %s: _createLockerTransport(...) returned null!", this.getClass().getName()));

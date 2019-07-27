@@ -1,7 +1,7 @@
 package org.subshare.gui.maintree;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
+import static java.util.Objects.*;
 
 import org.subshare.core.user.User;
 import org.subshare.gui.user.EditUserManager;
@@ -19,8 +19,8 @@ public class UserMainTreeItem extends MainTreeItem<User> {
 	public UserMainTreeItem(final EditUserManager editUserManager, final User user) {
 		super(user);
 		setGraphic(new ImageView(icon));
-		this.editUserManager = assertNotNull(editUserManager, "editUserManager");
-		assertNotNull(user, "user");
+		this.editUserManager = requireNonNull(editUserManager, "editUserManager");
+		requireNonNull(user, "user");
 	}
 
 	@Override

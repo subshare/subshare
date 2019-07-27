@@ -1,6 +1,6 @@
 package org.subshare.core.user;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.Iterator;
 import java.util.ServiceLoader;
@@ -16,8 +16,8 @@ public interface UserRepoInvitationManager {
 
 	static class Helper {
 		public static UserRepoInvitationManager getInstance(final UserRegistry userRegistry, final LocalRepoManager localRepoManager) {
-			assertNotNull(userRegistry, "userRegistry");
-			assertNotNull(localRepoManager, "localRepoManager");
+			requireNonNull(userRegistry, "userRegistry");
+			requireNonNull(localRepoManager, "localRepoManager");
 
 			final ServiceLoader<UserRepoInvitationManager> serviceLoader = ServiceLoader.load(UserRepoInvitationManager.class);
 			final Iterator<UserRepoInvitationManager> iterator = serviceLoader.iterator();

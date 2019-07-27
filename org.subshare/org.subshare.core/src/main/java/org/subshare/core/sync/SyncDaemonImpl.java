@@ -1,7 +1,7 @@
 package org.subshare.core.sync;
 
 import static co.codewizards.cloudstore.core.bean.PropertyChangeListenerUtil.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -260,7 +260,7 @@ public abstract class SyncDaemonImpl implements SyncDaemon {
 
 	@Override
 	public SyncState getState(final Server server) {
-		assertNotNull(server, "server");
+		requireNonNull(server, "server");
 		return server2State.get(server);
 	}
 

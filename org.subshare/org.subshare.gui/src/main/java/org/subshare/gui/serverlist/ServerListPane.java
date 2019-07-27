@@ -1,8 +1,8 @@
 package org.subshare.gui.serverlist;
 
 import static co.codewizards.cloudstore.core.bean.PropertyChangeListenerUtil.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
+import static java.util.Objects.*;
 import static javafx.application.Platform.*;
 import static org.subshare.gui.util.FxmlUtil.*;
 
@@ -222,7 +222,7 @@ public class ServerListPane extends GridPane {
 	}
 
 	private void addOrRemoveTableItemsViewCallback(final Collection<Server> servers) {
-		assertNotNull(servers, "servers");
+		requireNonNull(servers, "servers");
 		final Map<Server, ServerListItem> viewServer2ServerListItem = new HashMap<>();
 		for (final ServerListItem sli : tableView.getItems())
 			viewServer2ServerListItem.put(sli.getServer(), sli);
@@ -248,8 +248,8 @@ public class ServerListPane extends GridPane {
 	}
 
 	protected void updateSyncStates(final ServerListItem serverListItem) {
-		final Server server = assertNotNull(serverListItem, "serverListItem").getServer();
-		assertNotNull(server, "serverListItem.server");
+		final Server server = requireNonNull(serverListItem, "serverListItem").getServer();
+		requireNonNull(server, "serverListItem.server");
 
 		SyncState state = getPgpSyncDaemon().getState(serverListItem.getServer());
 		serverListItem.setPgpSyncState(state);
@@ -259,7 +259,7 @@ public class ServerListPane extends GridPane {
 	}
 
 //	private void addTableItemsViewCallback(final Collection<Server> servers) {
-//		assertNotNull("servers", servers);
+//		requireNonNull("servers", servers);
 //		for (final Server server : servers) {
 //			ServerListItem serverListItem = new ServerListItem(server);
 //			updateSyncStates(serverListItem);

@@ -1,6 +1,6 @@
 package org.subshare.core;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.UUID;
 
@@ -15,7 +15,7 @@ public abstract class AbstractLocalRepoStorageFactory implements LocalRepoStorag
 
 	@Override
 	public LocalRepoStorage getLocalRepoStorageOrCreate(final LocalRepoTransaction transaction) {
-		assertNotNull(transaction, "transaction");
+		requireNonNull(transaction, "transaction");
 		LocalRepoStorage lrs = transaction.getContextObject(LocalRepoStorage.class);
 		if (lrs == null) {
 			lrs = _createLocalRepoStorage();
@@ -35,9 +35,9 @@ public abstract class AbstractLocalRepoStorageFactory implements LocalRepoStorag
 
 	@Override
 	public LocalRepoStorage getLocalRepoStorageOrCreate(final LocalRepoTransaction transaction, final UUID remoteRepositoryId, final String remotePathPrefix) {
-		assertNotNull(transaction, "transaction");
-		assertNotNull(remoteRepositoryId, "remoteRepositoryId");
-		assertNotNull(remotePathPrefix, "remotePathPrefix");
+		requireNonNull(transaction, "transaction");
+		requireNonNull(remoteRepositoryId, "remoteRepositoryId");
+		requireNonNull(remotePathPrefix, "remotePathPrefix");
 		LocalRepoStorage cryptree = transaction.getContextObject(LocalRepoStorage.class);
 		if (cryptree == null) {
 			cryptree = _createLocalRepoStorage();

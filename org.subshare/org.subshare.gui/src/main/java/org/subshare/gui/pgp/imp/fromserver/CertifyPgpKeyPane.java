@@ -1,6 +1,6 @@
 package org.subshare.gui.pgp.imp.fromserver;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import org.subshare.core.pgp.PgpSignatureType;
 import org.subshare.gui.pgp.certify.CertifyPgpKeyData;
@@ -39,7 +39,7 @@ public class CertifyPgpKeyPane extends org.subshare.gui.pgp.certify.CertifyPgpKe
 		// Move all children down, first.
 		for (Node child : getChildren()) {
 			final Integer rowIndex = getRowIndex(child);
-			assertNotNull(rowIndex, "rowIndex[" + child + "]");
+			requireNonNull(rowIndex, "rowIndex[" + child + "]");
 			setRowIndex(child, rowIndex + 1);
 		}
 

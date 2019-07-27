@@ -1,6 +1,6 @@
 package org.subshare.local.persistence;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -36,7 +36,7 @@ public class CryptoRepoFileDao extends Dao<CryptoRepoFile, CryptoRepoFileDao> {
 	}
 
 	public CryptoRepoFile getCryptoRepoFile(final Uid cryptoRepoFileId) {
-		assertNotNull(cryptoRepoFileId, "cryptoRepoFileId");
+		requireNonNull(cryptoRepoFileId, "cryptoRepoFileId");
 		final Query query = pm().newNamedQuery(getEntityClass(), "getCryptoRepoFile_cryptoRepoFileId");
 		try {
 			final CryptoRepoFile cryptoRepoFile = (CryptoRepoFile) query.execute(cryptoRepoFileId.toString());
@@ -86,7 +86,7 @@ public class CryptoRepoFileDao extends Dao<CryptoRepoFile, CryptoRepoFileDao> {
 	public Collection<CryptoRepoFile> getCryptoRepoFilesChangedAfterExclLastSyncFromRepositoryId(
 			final long localRevision, final UUID exclLastSyncFromRepositoryId) {
 
-		assertNotNull(exclLastSyncFromRepositoryId, "exclLastSyncFromRepositoryId");
+		requireNonNull(exclLastSyncFromRepositoryId, "exclLastSyncFromRepositoryId");
 		final PersistenceManager pm = pm();
 		final FetchPlanBackup fetchPlanBackup = FetchPlanBackup.createFrom(pm);
 		final Query query = pm.newNamedQuery(getEntityClass(), "getCryptoRepoFilesChangedAfter_localRevision_exclLastSyncFromRepositoryId");
@@ -112,7 +112,7 @@ public class CryptoRepoFileDao extends Dao<CryptoRepoFile, CryptoRepoFileDao> {
 	public List<CryptoRepoFileDto> getCryptoRepoFileDtosChangedAfterExclLastSyncFromRepositoryId(
 			final long localRevision, final UUID exclLastSyncFromRepositoryId) {
 
-		assertNotNull(exclLastSyncFromRepositoryId, "exclLastSyncFromRepositoryId");
+		requireNonNull(exclLastSyncFromRepositoryId, "exclLastSyncFromRepositoryId");
 		final PersistenceManager pm = pm();
 		final FetchPlanBackup fetchPlanBackup = FetchPlanBackup.createFrom(pm);
 		final Query query = pm.newNamedQuery(getEntityClass(), "getCryptoRepoFilesChangedAfter_localRevision_exclLastSyncFromRepositoryId");
@@ -165,7 +165,7 @@ public class CryptoRepoFileDao extends Dao<CryptoRepoFile, CryptoRepoFileDao> {
 	@Deprecated
 	protected Collection<CryptoRepoFile> getChildCryptoRepoFiles(final CryptoRepoFile parent, final String localName) {
 		// parent may be null, if we look for the root -- very unlikely, but possible.
-		assertNotNull(localName, "localName");
+		requireNonNull(localName, "localName");
 		final Query query = pm().newNamedQuery(getEntityClass(), "getChildCryptoRepoFiles_parent_localName");
 		try {
 			long startTimestamp = System.currentTimeMillis();
@@ -185,7 +185,7 @@ public class CryptoRepoFileDao extends Dao<CryptoRepoFile, CryptoRepoFileDao> {
 
 	public CryptoRepoFile getChildCryptoRepoFile(final CryptoRepoFile parent, final String localName) {
 		// parent may be null, if we look for the root -- very unlikely, but possible.
-		assertNotNull(localName, "localName");
+		requireNonNull(localName, "localName");
 
 		Collection<CryptoRepoFile> childCryptoRepoFiles = getChildCryptoRepoFiles(parent, localName);
 
@@ -243,8 +243,8 @@ public class CryptoRepoFileDao extends Dao<CryptoRepoFile, CryptoRepoFileDao> {
 	}
 
 	public CryptoRepoFile getCryptoRepoFile(final RemoteRepository remoteRepository, final String localPath) {
-		assertNotNull(remoteRepository, "remoteRepository");
-		assertNotNull(localPath, "localPath");
+		requireNonNull(remoteRepository, "remoteRepository");
+		requireNonNull(localPath, "localPath");
 		final String localPathPrefix = remoteRepository.getLocalPathPrefix();
 		if ("/".equals(localPathPrefix))
 			throw new IllegalStateException("This should never be slash! For the root, it should be empty!");
@@ -273,7 +273,7 @@ public class CryptoRepoFileDao extends Dao<CryptoRepoFile, CryptoRepoFileDao> {
 	 * there is no such {@link CryptoRepoFile}.
 	 */
 	public CryptoRepoFile getCryptoRepoFile(final String localPath) {
-		return _getCryptoRepoFile(assertNotNull(localPath, "localPath"), localPath);
+		return _getCryptoRepoFile(requireNonNull(localPath, "localPath"), localPath);
 	}
 
 	private CryptoRepoFile _getCryptoRepoFile(final String localPath, final String originallySearchedLocalPath) {
@@ -293,7 +293,7 @@ public class CryptoRepoFileDao extends Dao<CryptoRepoFile, CryptoRepoFileDao> {
 		if ("/".equals(path) || path.isEmpty())
 			return "";
 
-		final int lastSlashIndex = assertNotNull(path, "path").lastIndexOf('/');
+		final int lastSlashIndex = requireNonNull(path, "path").lastIndexOf('/');
 		return path.substring(lastSlashIndex + 1);
 	}
 
@@ -301,7 +301,7 @@ public class CryptoRepoFileDao extends Dao<CryptoRepoFile, CryptoRepoFileDao> {
 		if ("/".equals(path) || path.isEmpty())
 			return null;
 
-		final int lastSlashIndex = assertNotNull(path, "path").lastIndexOf('/');
+		final int lastSlashIndex = requireNonNull(path, "path").lastIndexOf('/');
 		final String parentPath = path.substring(0, lastSlashIndex);
 		if (parentPath.isEmpty())
 			return "/";
@@ -348,7 +348,7 @@ public class CryptoRepoFileDao extends Dao<CryptoRepoFile, CryptoRepoFileDao> {
 	}
 
 	protected void deleteCurrentHistoCryptoRepoFile(final CryptoRepoFile cryptoRepoFile) {
-		assertNotNull(cryptoRepoFile, "cryptoRepoFile");
+		requireNonNull(cryptoRepoFile, "cryptoRepoFile");
 		final CurrentHistoCryptoRepoFileDao chcrfDao = getDao(CurrentHistoCryptoRepoFileDao.class);
 		final CurrentHistoCryptoRepoFile chcrf = chcrfDao.getCurrentHistoCryptoRepoFile(cryptoRepoFile);
 		if (chcrf != null)
@@ -356,14 +356,14 @@ public class CryptoRepoFileDao extends Dao<CryptoRepoFile, CryptoRepoFileDao> {
 	}
 
 	protected void deleteHistoCryptoRepoFiles(final CryptoRepoFile cryptoRepoFile) {
-		assertNotNull(cryptoRepoFile, "cryptoRepoFile");
+		requireNonNull(cryptoRepoFile, "cryptoRepoFile");
 		final HistoCryptoRepoFileDao hcrfDao = getDao(HistoCryptoRepoFileDao.class);
 		final Collection<HistoCryptoRepoFile> histoCryptoRepoFiles = hcrfDao.getHistoCryptoRepoFiles(cryptoRepoFile);
 		hcrfDao.deletePersistentAll(histoCryptoRepoFiles);
 	}
 
 	protected void deleteCryptoKeys(final CryptoRepoFile cryptoRepoFile) {
-		assertNotNull(cryptoRepoFile, "cryptoRepoFile");
+		requireNonNull(cryptoRepoFile, "cryptoRepoFile");
 		final CryptoKeyDao cryptoKeyDao = getDao(CryptoKeyDao.class);
 		cryptoKeyDao.deletePersistentAll(cryptoKeyDao.getCryptoKeys(cryptoRepoFile));
 	}
@@ -411,7 +411,7 @@ public class CryptoRepoFileDao extends Dao<CryptoRepoFile, CryptoRepoFileDao> {
 	}
 
 	public Set<Long> getChildCryptoRepoFileOidsRecursively(final CryptoRepoFile cryptoRepoFile) {
-		assertNotNull(cryptoRepoFile, "cryptoRepoFile");
+		requireNonNull(cryptoRepoFile, "cryptoRepoFile");
 		long startTimestamp = System.currentTimeMillis();
 
 		final Query query = pm().newQuery(CryptoRepoFile.class);

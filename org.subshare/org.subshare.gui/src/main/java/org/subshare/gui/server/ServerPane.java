@@ -1,8 +1,8 @@
 package org.subshare.gui.server;
 
 import static co.codewizards.cloudstore.core.bean.PropertyChangeListenerUtil.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
+import static java.util.Objects.*;
 import static javafx.application.Platform.*;
 import static org.subshare.gui.util.FxmlUtil.*;
 import static org.subshare.gui.util.PlatformUtil.*;
@@ -79,7 +79,7 @@ public class ServerPane extends GridPane {
 	};
 
 	public ServerPane(final Server server) {
-		this.server = assertNotNull(server, "server");
+		this.server = requireNonNull(server, "server");
 		loadDynamicComponentFxml(ServerPane.class, this);
 		tableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 		tableView.getSelectionModel().getSelectedItems().addListener(selectionListener);

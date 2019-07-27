@@ -1,6 +1,7 @@
 package org.subshare.core.dto;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -77,7 +78,7 @@ public enum CryptoKeyRole {
 	}
 
 	public CryptoKeyPart[] getCryptoKeyParts(final CipherOperationMode cipherOperationMode) {
-		assertNotNull(cipherOperationMode, "cipherOperationMode");
+		requireNonNull(cipherOperationMode, "cipherOperationMode");
 		return cipherOperationModeOrdinal2CryptoKeyParts[cipherOperationMode.ordinal()];
 	}
 }

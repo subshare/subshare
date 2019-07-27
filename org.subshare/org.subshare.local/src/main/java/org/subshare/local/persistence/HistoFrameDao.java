@@ -2,6 +2,7 @@ package org.subshare.local.persistence;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
+import static java.util.Objects.*;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -30,7 +31,7 @@ public class HistoFrameDao extends Dao<HistoFrame, HistoFrameDao> {
 
 	public Collection<HistoFrame> getHistoFramesChangedAfterExclLastSyncFromRepositoryId(
 			final long localRevision, final UUID exclLastSyncFromRepositoryId) {
-		assertNotNull(exclLastSyncFromRepositoryId, "exclLastSyncFromRepositoryId");
+		requireNonNull(exclLastSyncFromRepositoryId, "exclLastSyncFromRepositoryId");
 
 		final PersistenceManager pm = pm();
 		final FetchPlanBackup fetchPlanBackup = FetchPlanBackup.createFrom(pm);
@@ -63,7 +64,7 @@ public class HistoFrameDao extends Dao<HistoFrame, HistoFrameDao> {
 	}
 
 	public HistoFrame getHistoFrame(final Uid histoFrameId) {
-		assertNotNull(histoFrameId, "histoFrameId");
+		requireNonNull(histoFrameId, "histoFrameId");
 		final Query query = pm().newNamedQuery(getEntityClass(), "getHistoFrame_histoFrameId");
 		try {
 			final HistoFrame result = (HistoFrame) query.execute(histoFrameId.toString());
@@ -92,7 +93,7 @@ public class HistoFrameDao extends Dao<HistoFrame, HistoFrameDao> {
 	}
 
 	public HistoFrame getUnsealedHistoFrame(final UUID fromRepositoryId) {
-		assertNotNull(fromRepositoryId, "fromRepositoryId");
+		requireNonNull(fromRepositoryId, "fromRepositoryId");
 		final Query query = pm().newNamedQuery(getEntityClass(), "getHistoFrame_fromRepositoryId_sealed");
 		try {
 			final HistoFrame result = (HistoFrame) query.execute(fromRepositoryId.toString(), null);
@@ -103,7 +104,7 @@ public class HistoFrameDao extends Dao<HistoFrame, HistoFrameDao> {
 	}
 
 	public Collection<HistoFrame> getHistoFrames(final HistoFrameFilter filter) {
-		assertNotNull(filter, "filter");
+		requireNonNull(filter, "filter");
 
 		if ("/".equals(filter.getLocalPath())) // the root is normally simply "", but we are tolerant to "/".
 			filter.setLocalPath("");
@@ -131,8 +132,8 @@ public class HistoFrameDao extends Dao<HistoFrame, HistoFrameDao> {
 
 
 	private void populateHistoFrames(final Set<HistoFrame> result, final HistoFrameFilter filter, final Set<Long> childCryptoRepoFileOids) {
-		assertNotNull(result, "result");
-		assertNotNull(filter, "filter");
+		requireNonNull(result, "result");
+		requireNonNull(filter, "filter");
 //		childCryptoRepoFileOids may be null!
 
 		final Query query = pm().newQuery(getEntityClass());

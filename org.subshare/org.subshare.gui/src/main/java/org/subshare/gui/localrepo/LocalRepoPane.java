@@ -1,9 +1,9 @@
 package org.subshare.gui.localrepo;
 
 import static co.codewizards.cloudstore.core.bean.PropertyChangeListenerUtil.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
+import static java.util.Objects.*;
 import static javafx.application.Platform.*;
 import static org.subshare.gui.util.FxmlUtil.*;
 import static org.subshare.gui.util.PlatformUtil.*;
@@ -156,7 +156,7 @@ public class LocalRepoPane extends VBox implements HistoryPaneContainer {
 	private WeakReference<UserRepoKeyListPane> userRepoKeyListPaneRef;
 
 	public LocalRepoPane(final LocalRepo localRepo) {
-		this.localRepo = assertNotNull(localRepo, "localRepo");
+		this.localRepo = requireNonNull(localRepo, "localRepo");
 		this.repoSyncDaemon = RepoSyncDaemonLs.getRepoSyncDaemon();
 		this.repoSyncTimer = RepoSyncTimerLs.getRepoSyncTimer();
 		loadDynamicComponentFxml(LocalRepoPane.class, this);
@@ -345,7 +345,7 @@ public class LocalRepoPane extends VBox implements HistoryPaneContainer {
 	}
 
 	private void showSyncStateErrorDialog(final Error error) {
-		assertNotNull(error, "error");
+		requireNonNull(error, "error");
 		ErrorHandler.handleError("Last synchronisation failed!", null, error); // take 'contentText' from throwable
 	}
 

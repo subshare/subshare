@@ -1,6 +1,6 @@
 package org.subshare.gui.filetree.repoaware;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -19,8 +19,8 @@ public class CollisionPrivateDtoSet {
 	private Collection<CollisionPrivateDto> childCollisionPrivateDtos;
 
 	public CollisionPrivateDtoSet(final Collection<CollisionPrivateDto> allCollisionPrivateDtos, final Collection<CollisionPrivateDto> directCollisionPrivateDtos) {
-		this.allCollisionPrivateDtos = assertNotNull(allCollisionPrivateDtos, "allCollisionPrivateDtos");
-		this.directCollisionPrivateDtos = assertNotNull(directCollisionPrivateDtos, "directCollisionPrivateDtos");
+		this.allCollisionPrivateDtos = requireNonNull(allCollisionPrivateDtos, "allCollisionPrivateDtos");
+		this.directCollisionPrivateDtos = requireNonNull(directCollisionPrivateDtos, "directCollisionPrivateDtos");
 	}
 
 	public Collection<CollisionPrivateDto> getAllCollisionPrivateDtos() {
@@ -35,10 +35,10 @@ public class CollisionPrivateDtoSet {
 		if (childCollisionPrivateDtos == null) {
 			final Map<Uid, CollisionPrivateDto> collisionId2CollisionPrivateDto = new HashMap<>();
 			for (final CollisionPrivateDto collisionPrivateDto : allCollisionPrivateDtos)
-				collisionId2CollisionPrivateDto.put(assertNotNull(collisionPrivateDto.getCollisionId(), "collisionPrivateDto.collisionId"), collisionPrivateDto);
+				collisionId2CollisionPrivateDto.put(requireNonNull(collisionPrivateDto.getCollisionId(), "collisionPrivateDto.collisionId"), collisionPrivateDto);
 
 			for (final CollisionPrivateDto collisionPrivateDto : directCollisionPrivateDtos)
-				collisionId2CollisionPrivateDto.remove(assertNotNull(collisionPrivateDto.getCollisionId(), "collisionPrivateDto.collisionId"));
+				collisionId2CollisionPrivateDto.remove(requireNonNull(collisionPrivateDto.getCollisionId(), "collisionPrivateDto.collisionId"));
 
 			childCollisionPrivateDtos = Collections.unmodifiableList(new ArrayList<>(collisionId2CollisionPrivateDto.values()));
 		}

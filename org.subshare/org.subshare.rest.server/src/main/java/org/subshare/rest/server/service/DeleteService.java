@@ -1,6 +1,6 @@
 package org.subshare.rest.server.service;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.PUT;
@@ -25,7 +25,7 @@ public class DeleteService extends AbstractServiceWithRepoToRepoAuth {
 	@Deprecated
 	@PUT
 	public void delete(final SsDeleteModificationDto deleteModificationDto) {
-		assertNotNull(deleteModificationDto, "deleteModificationDto");
+		requireNonNull(deleteModificationDto, "deleteModificationDto");
 
 		try (final RepoTransport repoTransport = authenticateAndCreateLocalRepoTransport();) {
 			CryptreeServerFileRepoTransport csfrt = (CryptreeServerFileRepoTransport) repoTransport;

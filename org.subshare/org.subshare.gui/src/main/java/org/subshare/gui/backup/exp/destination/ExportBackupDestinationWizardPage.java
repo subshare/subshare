@@ -1,6 +1,6 @@
 package org.subshare.gui.backup.exp.destination;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import org.subshare.gui.backup.exp.ExportBackupData;
 import org.subshare.gui.wizard.WizardPage;
@@ -14,7 +14,7 @@ public class ExportBackupDestinationWizardPage extends WizardPage {
 
 	public ExportBackupDestinationWizardPage(ExportBackupData exportBackupData) {
 		super("Export backup");
-		this.exportBackupData = assertNotNull(exportBackupData, "exportBackupData");
+		this.exportBackupData = requireNonNull(exportBackupData, "exportBackupData");
 		shownRequired.set(true);
 		setMinSize(550, 550);
 //		setPrefSize(600, 600);

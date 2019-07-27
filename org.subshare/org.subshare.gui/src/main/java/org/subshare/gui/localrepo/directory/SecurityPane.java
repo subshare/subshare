@@ -1,6 +1,6 @@
 package org.subshare.gui.localrepo.directory;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 import static javafx.application.Platform.*;
 import static org.subshare.gui.util.FxmlUtil.*;
 
@@ -103,8 +103,8 @@ public abstract class SecurityPane extends GridPane {
 	private Window window;
 
 	public SecurityPane(final LocalRepo localRepo, final File file) {
-		this.localRepo = assertNotNull(localRepo, "localRepo");
-		this.file = assertNotNull(file, "file");
+		this.localRepo = requireNonNull(localRepo, "localRepo");
+		this.file = requireNonNull(file, "file");
 		this.localPath = localRepo.getLocalPath(this.file);
 		loadDynamicComponentFxml(SecurityPane.class, this);
 
@@ -163,7 +163,7 @@ public abstract class SecurityPane extends GridPane {
 
 	private void showStatusDialog() {
 		if (statusDialog == null) {
-			statusDialog = new StatusDialog(assertNotNull(window, "window"), Modality.APPLICATION_MODAL, null, null);
+			statusDialog = new StatusDialog(requireNonNull(window, "window"), Modality.APPLICATION_MODAL, null, null);
 			statusDialog.show();
 		}
 	}
@@ -239,7 +239,7 @@ public abstract class SecurityPane extends GridPane {
 	}
 
 	private Set<PermissionType> filterOutReadUserIdentity(final Set<PermissionType> permissionTypes) {
-		assertNotNull(permissionTypes, "permissionTypes");
+		requireNonNull(permissionTypes, "permissionTypes");
 		final EnumSet<PermissionType> result = permissionTypes.isEmpty() ? EnumSet.noneOf(PermissionType.class) : EnumSet.copyOf(permissionTypes);
 		result.remove(PermissionType.readUserIdentity);
 		return result;
@@ -270,7 +270,7 @@ public abstract class SecurityPane extends GridPane {
 	}
 
 	private List<UserListItem> filterOutOwner(final List<UserListItem> userListItems) {
-		assertNotNull(userListItems, "userListItems");
+		requireNonNull(userListItems, "userListItems");
 		final List<UserListItem> result = new ArrayList<>(userListItems.size());
 		for (final UserListItem userListItem : userListItems) {
 			if (! userListItem.isOwner())
@@ -363,7 +363,7 @@ public abstract class SecurityPane extends GridPane {
 			return;
 		}
 
-		final PermissionType permissionType = assertNotNull(permissionTypeItem.getPermissionType(), "permissionTypeItem.permissionType");
+		final PermissionType permissionType = requireNonNull(permissionTypeItem.getPermissionType(), "permissionTypeItem.permissionType");
 		final Set<PermissionType> includedPermissionTypes = filterOutReadUserIdentity(permissionType.getIncludedPermissionTypes());
 
 		final UUID serverRepositoryId = getServerRepositoryId(localRepoManager);
@@ -546,7 +546,7 @@ public abstract class SecurityPane extends GridPane {
 	}
 
 	protected void addOrUpdateUserListItems(final List<UserListItem> userListItems) {
-		assertNotNull(userListItems, "userListItems");
+		requireNonNull(userListItems, "userListItems");
 		final Map<User, UserListItem> user2UserListItemModel = new IdentityHashMap<>();
 		for (final UserListItem userListItem : userListItems)
 			user2UserListItemModel.put(userListItem.getUser(), userListItem);
@@ -601,7 +601,7 @@ public abstract class SecurityPane extends GridPane {
 	}
 
 	private UUID getServerRepositoryId(final LocalRepoManager localRepoManager) {
-		assertNotNull(localRepoManager, "localRepoManager");
+		requireNonNull(localRepoManager, "localRepoManager");
 		final Map<UUID, URL> remoteRepositoryId2RemoteRootMap = localRepoManager.getRemoteRepositoryId2RemoteRootMap();
 		final Iterator<UUID> iterator = remoteRepositoryId2RemoteRootMap.keySet().iterator();
 

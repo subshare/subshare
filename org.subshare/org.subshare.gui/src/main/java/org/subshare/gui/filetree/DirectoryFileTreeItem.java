@@ -1,7 +1,7 @@
 package org.subshare.gui.filetree;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.ReflectionUtil.*;
+import static java.util.Objects.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -181,7 +181,7 @@ public class DirectoryFileTreeItem extends FileFileTreeItem {
 	}
 
 	private boolean isTreeItemAfterFile(FileFileTreeItem treeItem, File file) {
-		assertNotNull(file, "file");
+		requireNonNull(file, "file");
 
 		// if we reached the end, i.e. the treeItem is null, then this is considered *after* the given file.
 		if (treeItem == null)
@@ -191,8 +191,8 @@ public class DirectoryFileTreeItem extends FileFileTreeItem {
 	}
 
 	private boolean isTreeItemBeforeFile(FileFileTreeItem treeItem, File file) {
-		assertNotNull(treeItem, "treeItem"); // we checked for null in isTreeItemAfterFile(...) => reject this now!
-		assertNotNull(file, "file");
+		requireNonNull(treeItem, "treeItem"); // we checked for null in isTreeItemAfterFile(...) => reject this now!
+		requireNonNull(file, "file");
 		return treeItem.getFile().getName().compareTo(file.getName()) < 0;
 	}
 
@@ -237,7 +237,7 @@ public class DirectoryFileTreeItem extends FileFileTreeItem {
 		private final List<FileFilter> fileFilters;
 
 		public AndFileFilter(List<FileFilter> fileFilters) {
-			this.fileFilters = assertNotNull(fileFilters, "fileFilters");
+			this.fileFilters = requireNonNull(fileFilters, "fileFilters");
 		}
 
 		@Override

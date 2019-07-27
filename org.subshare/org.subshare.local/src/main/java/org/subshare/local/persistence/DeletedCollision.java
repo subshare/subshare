@@ -1,7 +1,7 @@
 package org.subshare.local.persistence;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
+import static java.util.Objects.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -66,7 +66,7 @@ public class DeletedCollision extends Entity implements WriteProtected, AutoTrac
 	}
 
 	public DeletedCollision(final Uid collisionId) {
-		this.collisionId = assertNotNull(collisionId, "collisionId").toString();
+		this.collisionId = requireNonNull(collisionId, "collisionId").toString();
 	}
 
 	public Uid getCollisionId() {

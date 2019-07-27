@@ -1,6 +1,6 @@
 package org.subshare.core.crypto;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -54,8 +54,8 @@ public enum CipherTransformation {
 	private final String transformation;
 
 	private CipherTransformation(final CryptoKeyType type, final String transformation) {
-		this.type = assertNotNull(type, "type");
-		this.transformation = assertNotNull(transformation, "transformation");
+		this.type = requireNonNull(type, "type");
+		this.transformation = requireNonNull(transformation, "transformation");
 	}
 
 	public String getTransformation() {
@@ -67,7 +67,7 @@ public enum CipherTransformation {
 	}
 
 	public static CipherTransformation fromTransformation(final String transformation) {
-		assertNotNull(transformation, "transformation");
+		requireNonNull(transformation, "transformation");
 		final CipherTransformation ct = transformation2CipherTransformation.get(transformation);
 		if (ct == null)
 			throw new IllegalArgumentException("There is no CipherTransformation for this transformation: " + transformation);

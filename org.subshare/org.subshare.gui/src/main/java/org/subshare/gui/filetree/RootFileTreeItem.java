@@ -1,7 +1,7 @@
 package org.subshare.gui.filetree;
 
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -33,7 +33,7 @@ public class RootFileTreeItem extends FileTreeItem<String> {
 
 	public RootFileTreeItem(final FileTreePane fileTreePane) {
 		super(""); // invisible ;-)
-		this.fileTreePane = assertNotNull(fileTreePane, "fileTreePane");
+		this.fileTreePane = requireNonNull(fileTreePane, "fileTreePane");
 		getChildren(); // force loading of children NOW!
 	}
 

@@ -1,7 +1,7 @@
 package org.subshare.local.persistence;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
+import static java.util.Objects.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -76,7 +76,7 @@ public class UserRepoKeyPublicKey extends Entity implements AutoTrackLocalRevisi
 	}
 
 	public UserRepoKeyPublicKey(final UserRepoKey.PublicKey publicKey) {
-		assertNotNull(publicKey, "publicKey");
+		requireNonNull(publicKey, "publicKey");
 		this.publicKey = publicKey;
 		setUserRepoKeyId(publicKey.getUserRepoKeyId());
 		setServerRepositoryId(publicKey.getServerRepositoryId());

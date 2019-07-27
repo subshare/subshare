@@ -2,8 +2,8 @@ package org.subshare.rest.server.service;
 
 import static co.codewizards.cloudstore.core.io.StreamUtil.*;
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.IOUtil.*;
+import static java.util.Objects.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -62,8 +62,8 @@ public class LockerService {
 	@Path("{pgpKeyId}/{lockerContentName}")
 	@Produces(MediaType.APPLICATION_XML)
 	public UidList getLockerContentVersions() {
-		assertNotNull(pgpKeyId, "pgpKeyId");
-		assertNotNull(lockerContentName, "lockerContentName");
+		requireNonNull(pgpKeyId, "pgpKeyId");
+		requireNonNull(lockerContentName, "lockerContentName");
 
 		final UidList result = new UidList();
 		final File dir = createFile(lockerDir, pgpKeyId.toString(), lockerContentName);
@@ -90,17 +90,17 @@ public class LockerService {
 		PgpSignature pgpSignature = encryptedDataFile.assertManifestSignatureValid();
 
 		final PgpKeyId signaturePgpKeyId = pgpSignature.getPgpKeyId(); // likely a sub-key
-		assertNotNull(signaturePgpKeyId, "pgpSignature.pgpKeyId");
+		requireNonNull(signaturePgpKeyId, "pgpSignature.pgpKeyId");
 		final PgpKey signaturePgpKey = pgp.getPgpKey(signaturePgpKeyId);
-		assertNotNull(signaturePgpKey, "pgp.getPgpKey(signaturePgpKeyId=" + signaturePgpKeyId + ")");
+		requireNonNull(signaturePgpKey, "pgp.getPgpKey(signaturePgpKeyId=" + signaturePgpKeyId + ")");
 
 		pgpKeyId = signaturePgpKey.getMasterKey().getPgpKeyId();
 
 		lockerContentName = encryptedDataFile.getContentName();
-		assertNotNull(lockerContentName, "encryptedDataFile.contentName");
+		requireNonNull(lockerContentName, "encryptedDataFile.contentName");
 
 		final Uid lockerContentVersion = encryptedDataFile.getContentVersion();
-		assertNotNull(lockerContentVersion, "encryptedDataFile.contentVersion");
+		requireNonNull(lockerContentVersion, "encryptedDataFile.contentVersion");
 
 // We cannot verify the signatures of the signed+encrypted data, because OpenPGP first signs and then encrypts.
 // This verification is thus only possible on the client-side (it's done in
@@ -147,9 +147,9 @@ public class LockerService {
 	@Path("{pgpKeyId}/{lockerContentName}/{version}")
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
 	public Response getLockerEncryptedDataFile(@PathParam("version") final String version) {
-		assertNotNull(version, "version");
-		assertNotNull(pgpKeyId, "pgpKeyId");
-		assertNotNull(lockerContentName, "lockerContentName");
+		requireNonNull(version, "version");
+		requireNonNull(pgpKeyId, "pgpKeyId");
+		requireNonNull(lockerContentName, "lockerContentName");
 
 		final File file = createFile(lockerDir, pgpKeyId.toString(), lockerContentName, version.toString() + DATA_FILE_SUFFIX);
 		if (! file.exists())
@@ -179,7 +179,7 @@ public class LockerService {
 	}
 
 	private static byte[] safeRead(final InputStream inputStream) throws IOException {
-		assertNotNull(inputStream, "inputStream");
+		requireNonNull(inputStream, "inputStream");
 
 		// To protect this server, we throw an exception, if the client tries to upload more than this:
 		final int maxBytesLimit = 5 /* MiB */ * 1024 /* KiB */ * 1024 /* B */;

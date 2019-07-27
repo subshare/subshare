@@ -1,6 +1,6 @@
 package org.subshare.gui.pgp.selectkey;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -24,8 +24,8 @@ public class SelectPgpKeyDialog extends Stage {
 	private List<PgpKey> selectedPgpKeys;
 
 	public SelectPgpKeyDialog(final Window owner, final List<PgpKey> pgpKeys, final Collection<PgpKey> selectedPgpKeys, final SelectionMode selectionMode, final String headerText) {
-		assertNotNull(owner, "owner");
-		assertNotNull(pgpKeys, "pgpKeys");
+		requireNonNull(owner, "owner");
+		requireNonNull(pgpKeys, "pgpKeys");
 		// selectedPgpKeys may be null
 
 		setResizable(false);

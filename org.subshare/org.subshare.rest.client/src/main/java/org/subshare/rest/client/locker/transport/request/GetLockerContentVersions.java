@@ -1,6 +1,6 @@
 package org.subshare.rest.client.locker.transport.request;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.List;
 
@@ -19,8 +19,8 @@ public class GetLockerContentVersions extends AbstractRequest<List<Uid>> {
 	private final String lockerContentName;
 
 	public GetLockerContentVersions(final PgpKeyId pgpKeyId, final String lockerContentName) {
-		this.pgpKeyId = assertNotNull(pgpKeyId, "pgpKeyId");
-		this.lockerContentName = assertNotNull(lockerContentName, "lockerContentName");
+		this.pgpKeyId = requireNonNull(pgpKeyId, "pgpKeyId");
+		this.lockerContentName = requireNonNull(lockerContentName, "lockerContentName");
 	}
 
 	@Override

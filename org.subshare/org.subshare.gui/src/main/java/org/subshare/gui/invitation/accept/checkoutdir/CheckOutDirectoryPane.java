@@ -1,6 +1,6 @@
 package org.subshare.gui.invitation.accept.checkoutdir;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 import static org.subshare.gui.util.FxmlUtil.*;
 
 import java.util.Iterator;
@@ -20,7 +20,7 @@ public class CheckOutDirectoryPane extends WizardPageContentGridPane {
 	private FileTreePane fileTreePane;
 
 	public CheckOutDirectoryPane(final AcceptInvitationData acceptInvitationData) {
-		this.acceptInvitationData = assertNotNull(acceptInvitationData, "acceptInvitationData");
+		this.acceptInvitationData = requireNonNull(acceptInvitationData, "acceptInvitationData");
 		loadDynamicComponentFxml(CheckOutDirectoryPane.class, this);
 		fileTreePane.fileFilterProperty().set(file -> file.isDirectory());
 		fileTreePane.getSelectedFiles().addListener((InvalidationListener) observable -> onSelectedFilesChanged());

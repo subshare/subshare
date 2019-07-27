@@ -1,6 +1,6 @@
 package org.subshare.rest.client.locker.transport;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
@@ -35,7 +35,7 @@ public class RestLockerTransport extends AbstractLockerTransport {
 
 	@Override
 	public void addMergedVersions(List<Uid> serverVersions) {
-		assertNotNull(serverVersions, "serverVersions");
+		requireNonNull(serverVersions, "serverVersions");
 		throw new UnsupportedOperationException("Merging is only supported on the client side.");
 	}
 

@@ -1,7 +1,7 @@
 package org.subshare.local.persistence;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
+import static java.util.Objects.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -138,8 +138,8 @@ public class UserRepoKeyPublicKeyReplacementRequest extends Entity implements Si
 	 */
 	@Override
 	public InputStream getSignedData(int signedDataVersion) {
-		assertNotNull(oldKey, "oldKey");
-		assertNotNull(newKey, "newKey");
+		requireNonNull(oldKey, "oldKey");
+		requireNonNull(newKey, "newKey");
 
 		try {
 			byte separatorIndex = 0;

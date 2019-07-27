@@ -1,7 +1,7 @@
 package org.subshare.gui.checkout;
 
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import org.subshare.core.repo.ServerRepo;
 import org.subshare.core.repo.metaonly.ServerRepoFile;
@@ -21,8 +21,8 @@ public class CheckOutWizard { // TODO sub-class Wizard!!!
 	private final ServerRepoFile serverRepoFile;
 
 	public CheckOutWizard(final Server server, final ServerRepo serverRepo) {
-		this.server = assertNotNull(server, "server");
-		this.serverRepo = assertNotNull(serverRepo, "serverRepo");
+		this.server = requireNonNull(server, "server");
+		this.serverRepo = requireNonNull(serverRepo, "serverRepo");
 		this.serverRepoFile = null;
 	}
 

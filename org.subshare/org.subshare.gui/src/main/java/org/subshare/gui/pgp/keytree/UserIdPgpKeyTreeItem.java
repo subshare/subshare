@@ -1,6 +1,6 @@
 package org.subshare.gui.pgp.keytree;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpKeyValidity;
@@ -13,8 +13,8 @@ public class UserIdPgpKeyTreeItem extends PgpKeyTreeItem<String> {
 	private final PgpKey pgpKey;
 
 	public UserIdPgpKeyTreeItem(final PgpKey pgpKey, final String userId) {
-		super(assertNotNull(userId, "userId"));
-		this.pgpKey = assertNotNull(pgpKey, "pgpKey");
+		super(requireNonNull(userId, "userId"));
+		this.pgpKey = requireNonNull(pgpKey, "pgpKey");
 	}
 
 	@Override

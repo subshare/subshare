@@ -1,8 +1,8 @@
 package org.subshare.core.pgp;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.HashUtil.*;
 import static co.codewizards.cloudstore.core.util.IOUtil.*;
+import static java.util.Objects.*;
 
 import java.io.Serializable;
 import java.lang.ref.WeakReference;
@@ -24,7 +24,7 @@ public class PgpKeyId implements Comparable<PgpKeyId>, Serializable {
 	}
 
 	public PgpKeyId(final String pgpKeyIdString) {
-		this(bytesToLong(decodeHexStr(assertNotNull(pgpKeyIdString, "pgpKeyIdString"))));
+		this(bytesToLong(decodeHexStr(requireNonNull(pgpKeyIdString, "pgpKeyIdString"))));
 	}
 
 	@Override
@@ -59,7 +59,7 @@ public class PgpKeyId implements Comparable<PgpKeyId>, Serializable {
 
 	@Override
 	public int compareTo(PgpKeyId other) {
-		assertNotNull(other, "other");
+		requireNonNull(other, "other");
 		// Same semantics as for normal numbers.
 		return (this.pgpKeyId < other.pgpKeyId ? -1 :
 				(this.pgpKeyId > other.pgpKeyId ? 1 : 0));

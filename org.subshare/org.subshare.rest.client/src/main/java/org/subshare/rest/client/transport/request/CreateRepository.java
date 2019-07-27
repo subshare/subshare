@@ -1,6 +1,6 @@
 package org.subshare.rest.client.transport.request;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
@@ -15,7 +15,7 @@ public class CreateRepository extends VoidRequest {
 	private final CreateRepositoryRequestDto createRepositoryRequestDto;
 
 	public CreateRepository(final CreateRepositoryRequestDto createRepositoryRequestDto) {
-		this.createRepositoryRequestDto = assertNotNull(createRepositoryRequestDto, "createRepositoryRequestDto");
+		this.createRepositoryRequestDto = requireNonNull(createRepositoryRequestDto, "createRepositoryRequestDto");
 	}
 
 	@Override

@@ -1,6 +1,6 @@
 package org.subshare.gui.pgp.createkey.validity;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 import static org.subshare.gui.util.FxmlUtil.*;
 import static org.subshare.gui.util.PlatformUtil.*;
 
@@ -47,7 +47,7 @@ public class ValidityPane extends WizardPageContentGridPane {
 	};
 
 	public ValidityPane(final CreatePgpKeyParam createPgpKeyParam) {
-		this.createPgpKeyParam = assertNotNull(createPgpKeyParam, "createPgpKeyParam"); //$NON-NLS-1$
+		this.createPgpKeyParam = requireNonNull(createPgpKeyParam, "createPgpKeyParam"); //$NON-NLS-1$
 		loadDynamicComponentFxml(ValidityPane.class, this);
 
 		validityNumberSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, Integer.MAX_VALUE));

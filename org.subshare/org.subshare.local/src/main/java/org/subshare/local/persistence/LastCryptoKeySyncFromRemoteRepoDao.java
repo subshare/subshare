@@ -1,6 +1,6 @@
 package org.subshare.local.persistence;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import javax.jdo.Query;
 
@@ -10,7 +10,7 @@ import co.codewizards.cloudstore.local.persistence.RemoteRepository;
 public class LastCryptoKeySyncFromRemoteRepoDao extends Dao<LastCryptoKeySyncFromRemoteRepo, LastCryptoKeySyncFromRemoteRepoDao> {
 
 	public LastCryptoKeySyncFromRemoteRepo getLastCryptoKeySyncFromRemoteRepo(final RemoteRepository remoteRepository) {
-		assertNotNull(remoteRepository, "remoteRepository");
+		requireNonNull(remoteRepository, "remoteRepository");
 		final Query query = pm().newNamedQuery(getEntityClass(), "getLastCryptoKeySyncFromRemoteRepo_remoteRepository");
 		try {
 			final LastCryptoKeySyncFromRemoteRepo result = (LastCryptoKeySyncFromRemoteRepo) query.execute(remoteRepository);

@@ -1,6 +1,6 @@
 package org.subshare.gui.pgp.keytree;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 public class SimpleRootPgpKeyTreeItem extends PgpKeyTreeItem<String> {
 
@@ -8,7 +8,7 @@ public class SimpleRootPgpKeyTreeItem extends PgpKeyTreeItem<String> {
 
 	public SimpleRootPgpKeyTreeItem(final PgpKeyTreePane pgpKeyTreePane) {
 		super("");
-		this.pgpKeyTreePane = assertNotNull(pgpKeyTreePane, "pgpKeyTreePane");
+		this.pgpKeyTreePane = requireNonNull(pgpKeyTreePane, "pgpKeyTreePane");
 	}
 
 	@Override

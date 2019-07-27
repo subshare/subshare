@@ -1,6 +1,6 @@
 package org.subshare.gui.createrepo.selectserver;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 import static org.subshare.gui.util.FxmlUtil.*;
 
 import java.util.HashMap;
@@ -24,7 +24,7 @@ public class CreateRepoSelectServerPane extends WizardPageContentGridPane {
 	private TableView<ServerListItem> tableView;
 
 	public CreateRepoSelectServerPane(final CreateRepoData createRepoData) {
-		this.createRepoData = assertNotNull(createRepoData, "createRepoData");
+		this.createRepoData = requireNonNull(createRepoData, "createRepoData");
 		loadDynamicComponentFxml(CreateRepoSelectServerPane.class, this);
 		tableView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
 		tableView.getSelectionModel().selectedItemProperty().addListener((InvalidationListener) observable -> onSelectionChanged());

@@ -1,7 +1,7 @@
 package org.subshare.gui.backup.exp;
 
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 import static org.subshare.gui.backup.BackupConst.*;
 
 import java.util.Date;
@@ -68,7 +68,7 @@ public class ExportBackupWizard extends Wizard {
 
 	private File createBackupFile() {
 		final File directory = exportBackupData.getExportBackupDirectory();
-		assertNotNull(directory, "exportBackupData.exportBackupDirectory"); //$NON-NLS-1$
+		requireNonNull(directory, "exportBackupData.exportBackupDirectory"); //$NON-NLS-1$
 		final String dateString = String.format("%1$tY-%1$tm-%1$td_%1$tH-%1$tM-%1$tS", new Date()); //$NON-NLS-1$ // ISO-8601 => no need for externalisation.
 		final String fileName = String.format("%s%s%s", BACKUP_FILE_NAME_PREFIX, dateString, BACKUP_FILE_NAME_EXTENSION); //$NON-NLS-1$
 		final File backupFile = createFile(directory, fileName);

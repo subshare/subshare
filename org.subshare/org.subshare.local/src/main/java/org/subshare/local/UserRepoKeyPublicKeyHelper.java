@@ -1,6 +1,6 @@
 package org.subshare.local;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 import static org.subshare.local.CryptreeNodeUtil.*;
 
 import java.util.Collection;
@@ -47,7 +47,7 @@ public class UserRepoKeyPublicKeyHelper {
 	private final CryptreeContext context;
 
 	public UserRepoKeyPublicKeyHelper(final CryptreeContext context) {
-		this.context = assertNotNull(context, "context");
+		this.context = requireNonNull(context, "context");
 	}
 
 	public CryptreeContext getContext() {
@@ -55,7 +55,7 @@ public class UserRepoKeyPublicKeyHelper {
 	}
 
 	public UserRepoKeyPublicKey getUserRepoKeyPublicKeyOrCreate(final UserRepoKey.PublicKey publicKey) {
-		assertNotNull(publicKey, "publicKey");
+		requireNonNull(publicKey, "publicKey");
 		final UserRepoKeyPublicKeyDao urkpkDao = context.transaction.getDao(UserRepoKeyPublicKeyDao.class);
 
 		UserRepoKeyPublicKey userRepoKeyPublicKey = urkpkDao.getUserRepoKeyPublicKey(publicKey.getUserRepoKeyId());
@@ -66,7 +66,7 @@ public class UserRepoKeyPublicKeyHelper {
 	}
 
 	private UserRepoKeyPublicKey createUserRepoKeyPublicKey(final UserRepoKey.PublicKey publicKey) {
-		assertNotNull(publicKey, "publicKey");
+		requireNonNull(publicKey, "publicKey");
 		final UserRepoKeyPublicKeyDao urkpkDao = context.transaction.getDao(UserRepoKeyPublicKeyDao.class);
 
 		final UserRepoKeyPublicKey userRepoKeyPublicKey;
@@ -103,7 +103,7 @@ public class UserRepoKeyPublicKeyHelper {
 	}
 
 	private void createUserIdentities(final UserRepoKeyPublicKey userRepoKeyPublicKey) {
-		assertNotNull(userRepoKeyPublicKey, "userRepoKeyPublicKey");
+		requireNonNull(userRepoKeyPublicKey, "userRepoKeyPublicKey");
 
 		final Set<UserRepoKeyPublicKey> forUserRepoKeyPublicKeys = getForUserRepoKeyPublicKeysForUserIdentityLinkCreation(
 				userRepoKeyPublicKey);
@@ -142,8 +142,8 @@ public class UserRepoKeyPublicKeyHelper {
 	}
 
 	public UserIdentityLink getUserIdentityLinkOrCreate(final UserRepoKeyPublicKey ofUserRepoKeyPublicKey, final UserRepoKeyPublicKey forUserRepoKeyPublicKey) {
-		assertNotNull(ofUserRepoKeyPublicKey, "ofUserRepoKeyPublicKey");
-		assertNotNull(forUserRepoKeyPublicKey, "forUserRepoKeyPublicKey");
+		requireNonNull(ofUserRepoKeyPublicKey, "ofUserRepoKeyPublicKey");
+		requireNonNull(forUserRepoKeyPublicKey, "forUserRepoKeyPublicKey");
 		final UserIdentityLinkDao uilDao = context.transaction.getDao(UserIdentityLinkDao.class);
 
 		Collection<UserIdentityLink> userIdentityLinks = uilDao.getUserIdentityLinks(ofUserRepoKeyPublicKey, forUserRepoKeyPublicKey);
@@ -162,8 +162,8 @@ public class UserRepoKeyPublicKeyHelper {
 	}
 
 	private UserIdentityLink createUserIdentityLink(final PlainUserIdentity plainUserIdentity, final UserRepoKeyPublicKey forUserRepoKeyPublicKey) {
-		assertNotNull(plainUserIdentity, "plainUserIdentity");
-		assertNotNull(forUserRepoKeyPublicKey, "forUserRepoKeyPublicKey");
+		requireNonNull(plainUserIdentity, "plainUserIdentity");
+		requireNonNull(forUserRepoKeyPublicKey, "forUserRepoKeyPublicKey");
 		final UserIdentityLinkDao uilDao = context.transaction.getDao(UserIdentityLinkDao.class);
 
 		final byte[] encryptedUserIdentityKeyData = encrypt(plainUserIdentity.getSharedSecret().getKey(), forUserRepoKeyPublicKey.getPublicKey().getPublicKey());
@@ -182,7 +182,7 @@ public class UserRepoKeyPublicKeyHelper {
 	}
 
 	private PlainUserIdentity getPlainUserIdentityOrCreate(final UserRepoKeyPublicKey ofUserRepoKeyPublicKey) {
-		assertNotNull(ofUserRepoKeyPublicKey, "ofUserRepoKeyPublicKey");
+		requireNonNull(ofUserRepoKeyPublicKey, "ofUserRepoKeyPublicKey");
 		final UserIdentityDao uiDao = context.transaction.getDao(UserIdentityDao.class);
 
 		final Collection<UserIdentity> userIdentities = uiDao.getUserIdentitiesOf(ofUserRepoKeyPublicKey);
@@ -207,7 +207,7 @@ public class UserRepoKeyPublicKeyHelper {
 	}
 
 	private PlainUserIdentity createPlainUserIdentity(final UserRepoKeyPublicKey ofUserRepoKeyPublicKey) {
-		assertNotNull(ofUserRepoKeyPublicKey, "ofUserRepoKeyPublicKey");
+		requireNonNull(ofUserRepoKeyPublicKey, "ofUserRepoKeyPublicKey");
 		final byte[] userIdentityPayloadDtoData = createUserIdentityPayloadDtoData(ofUserRepoKeyPublicKey);
 		return createPlainUserIdentity(ofUserRepoKeyPublicKey, userIdentityPayloadDtoData);
 	}
@@ -246,7 +246,7 @@ public class UserRepoKeyPublicKeyHelper {
 	}
 
 	private boolean isOwner(final Uid userRepoKeyId) {
-		assertNotNull(userRepoKeyId, "userRepoKeyId");
+		requireNonNull(userRepoKeyId, "userRepoKeyId");
 		return userRepoKeyId.equals(context.getRepositoryOwnerOrFail().getUserRepoKeyPublicKey().getUserRepoKeyId());
 	}
 
@@ -271,7 +271,7 @@ public class UserRepoKeyPublicKeyHelper {
 	}
 
 	private byte[] getUserIdentityPayloadDtoData(final UserRepoKeyPublicKey ofUserRepoKeyPublicKey) {
-		assertNotNull(ofUserRepoKeyPublicKey, "ofUserRepoKeyPublicKey");
+		requireNonNull(ofUserRepoKeyPublicKey, "ofUserRepoKeyPublicKey");
 		final UserRepoKeyPublicKeyDao userRepoKeyPublicKeyDao = context.transaction.getDao(UserRepoKeyPublicKeyDao.class);
 		final UserIdentityLinkDao userIdentityLinkDao = context.transaction.getDao(UserIdentityLinkDao.class);
 
@@ -364,7 +364,7 @@ public class UserRepoKeyPublicKeyHelper {
 	}
 
 	private void deleteUserIdentityLinksOf(final UserRepoKeyPublicKey ofUserRepoKeyPublicKey) {
-		assertNotNull(ofUserRepoKeyPublicKey, "ofUserRepoKeyPublicKey");
+		requireNonNull(ofUserRepoKeyPublicKey, "ofUserRepoKeyPublicKey");
 
 		final UserIdentityLinkDao uilDao = getContext().transaction.getDao(UserIdentityLinkDao.class);
 		final Collection<UserIdentityLink> userIdentityLinks = uilDao.getUserIdentityLinksOf(ofUserRepoKeyPublicKey);

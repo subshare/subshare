@@ -1,7 +1,7 @@
 package org.subshare.gui.maintree;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
+import static java.util.Objects.*;
 import static javafx.application.Platform.*;
 import static org.subshare.gui.util.PlatformUtil.*;
 
@@ -35,7 +35,7 @@ public class ServerRepoMainTreeItem extends MainTreeItem<ServerRepo> {
 	private WeakLocalRepoCommitEventListener weakLocalRepoCommitEventListener;
 
 	public ServerRepoMainTreeItem(final ServerRepo serverRepo) {
-		super(assertNotNull(serverRepo, "serverRepo"));
+		super(requireNonNull(serverRepo, "serverRepo"));
 		setGraphic(new ImageView(icon));
 	}
 

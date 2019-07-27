@@ -1,6 +1,6 @@
 package org.subshare.rest.client.transport.request;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.Date;
 
@@ -22,18 +22,18 @@ public class SsEndPutFile extends EndPutFile {
 
 	public SsEndPutFile(final String repositoryName, final String path, final RepoFileDtoWithCurrentHistoCryptoRepoFileDto repoFileDtoWithCurrentHistoCryptoRepoFileDto) {
 		super(repositoryName, path, new DateTime(new Date(0)), 0, null);
-//		this.normalFileDto = assertNotNull("normalFileDto", normalFileDto);
+//		this.normalFileDto = requireNonNull("normalFileDto", normalFileDto);
 
-		this.repoFileDtoWithCurrentHistoCryptoRepoFileDto = assertNotNull(repoFileDtoWithCurrentHistoCryptoRepoFileDto, "repoFileDtoWithCurrentHistoCryptoRepoFileDto");
+		this.repoFileDtoWithCurrentHistoCryptoRepoFileDto = requireNonNull(repoFileDtoWithCurrentHistoCryptoRepoFileDto, "repoFileDtoWithCurrentHistoCryptoRepoFileDto");
 
-		final CurrentHistoCryptoRepoFileDto currentHistoCryptoRepoFileDto = assertNotNull(
+		final CurrentHistoCryptoRepoFileDto currentHistoCryptoRepoFileDto = requireNonNull(
 				repoFileDtoWithCurrentHistoCryptoRepoFileDto.getCurrentHistoCryptoRepoFileDto(),
 				"repoFileDtoWithCurrentHistoCryptoRepoFileDto.currentHistoCryptoRepoFileDto");
 
-		assertNotNull(currentHistoCryptoRepoFileDto.getHistoCryptoRepoFileDto(),
+		requireNonNull(currentHistoCryptoRepoFileDto.getHistoCryptoRepoFileDto(),
 				"repoFileDtoWithCurrentHistoCryptoRepoFileDto.currentHistoCryptoRepoFileDto.histoCryptoRepoFileDto");
 
-		final RepoFileDto rfdto = assertNotNull(repoFileDtoWithCurrentHistoCryptoRepoFileDto.getRepoFileDto(),
+		final RepoFileDto rfdto = requireNonNull(repoFileDtoWithCurrentHistoCryptoRepoFileDto.getRepoFileDto(),
 				"repoFileDtoWithCurrentHistoCryptoRepoFileDto.repoFileDto");
 
 		if (! (rfdto instanceof SsNormalFileDto))

@@ -1,6 +1,6 @@
 package org.subshare.core.user;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import org.subshare.core.dto.UserRepoKeyDto;
 import org.subshare.core.sign.Signature;
@@ -8,7 +8,7 @@ import org.subshare.core.sign.Signature;
 public class UserRepoKeyDtoConverter {
 
 	public UserRepoKeyDto toUserRepoKeyDto(final UserRepoKey userRepoKey) {
-		assertNotNull(userRepoKey, "userRepoKey");
+		requireNonNull(userRepoKey, "userRepoKey");
 
 		final UserRepoKeyDto userRepoKeyDto = new UserRepoKeyDto();
 		userRepoKeyDto.setUserRepoKeyId(userRepoKey.getUserRepoKeyId());
@@ -22,7 +22,7 @@ public class UserRepoKeyDtoConverter {
 	}
 
 	public UserRepoKey fromUserRepoKeyDto(final UserRepoKeyDto userRepoKeyDto) {
-		assertNotNull(userRepoKeyDto, "userRepoKeyDto");
+		requireNonNull(userRepoKeyDto, "userRepoKeyDto");
 
 		final UserRepoKey userRepoKey = new UserRepoKeyImpl(
 				userRepoKeyDto.getUserRepoKeyId(),

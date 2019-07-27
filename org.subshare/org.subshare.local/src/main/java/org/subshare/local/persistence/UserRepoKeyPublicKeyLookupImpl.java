@@ -1,6 +1,6 @@
 package org.subshare.local.persistence;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import org.subshare.core.user.UserRepoKey.PublicKey;
 import org.subshare.core.user.UserRepoKeyPublicKeyLookup;
@@ -13,7 +13,7 @@ public class UserRepoKeyPublicKeyLookupImpl implements UserRepoKeyPublicKeyLooku
 	private final LocalRepoTransaction transaction;
 
 	public UserRepoKeyPublicKeyLookupImpl(final LocalRepoTransaction transaction) {
-		this.transaction = assertNotNull(transaction, "");
+		this.transaction = requireNonNull(transaction, "");
 	}
 
 	@Override

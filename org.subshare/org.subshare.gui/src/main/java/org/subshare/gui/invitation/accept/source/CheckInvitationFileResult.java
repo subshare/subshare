@@ -1,6 +1,6 @@
 package org.subshare.gui.invitation.accept.source;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import co.codewizards.cloudstore.core.Severity;
 
@@ -31,8 +31,8 @@ public class CheckInvitationFileResult {
 	}
 
 	public CheckInvitationFileResult(final Type type, final Severity severity, final String message, final String longText) {
-		this.type = assertNotNull(type, "type");
-		this.severity = assertNotNull(severity, "severity");
+		this.type = requireNonNull(type, "type");
+		this.severity = requireNonNull(severity, "severity");
 		this.message = message; // may be null!
 		this.longText = longText; // may be null!
 	}

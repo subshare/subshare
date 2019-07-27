@@ -39,7 +39,7 @@
 //			setFieldValue(entity, "signatureCreated", signature == null ? null : signature.getSignatureCreated());
 //			final Uid signingUserRepoKeyId = signature == null ? null : signature.getSigningUserRepoKeyId();
 //			setFieldValue(entity, "signingUserRepoKeyId", signingUserRepoKeyId == null ? null : signingUserRepoKeyId.toString());
-//			setFieldValue(entity, "signatureData", signature == null ? null : assertNotNull("signature.signatureData", signature.getSignatureData()));
+//			setFieldValue(entity, "signatureData", signature == null ? null : requireNonNull("signature.signatureData", signature.getSignatureData()));
 //		}
 //	}
 //

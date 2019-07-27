@@ -1,6 +1,6 @@
 package org.subshare.core.repo.metaonly;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.net.URL;
 import java.util.List;
@@ -45,11 +45,11 @@ public class ServerRepoFileImpl implements ServerRepoFile {
 
 	public ServerRepoFileImpl(final Server server, final ServerRepo serverRepo, final UUID localRepositoryId, final CryptoRepoFileDto cryptoRepoFileDto, final RepoFileDto repoFileDto) {
 		parent = null;
-		this.server = assertNotNull(server, "server");
-		this.serverRepo = assertNotNull(serverRepo, "serverRepo");
-		this.localRepositoryId = assertNotNull(localRepositoryId, "localRepositoryId");
-		this.cryptoRepoFileDto = assertNotNull(cryptoRepoFileDto, "cryptoRepoFileDto");
-		this.repoFileDto = assertNotNull(repoFileDto, "repoFileDto");
+		this.server = requireNonNull(server, "server");
+		this.serverRepo = requireNonNull(serverRepo, "serverRepo");
+		this.localRepositoryId = requireNonNull(localRepositoryId, "localRepositoryId");
+		this.cryptoRepoFileDto = requireNonNull(cryptoRepoFileDto, "cryptoRepoFileDto");
+		this.repoFileDto = requireNonNull(repoFileDto, "repoFileDto");
 		this.repoFileId = repoFileDto.getId();
 
 		weakLocalRepoCommitEventListener = new WeakLocalRepoCommitEventListener(
@@ -58,12 +58,12 @@ public class ServerRepoFileImpl implements ServerRepoFile {
 	}
 
 	public ServerRepoFileImpl(final ServerRepoFileImpl parent, final CryptoRepoFileDto cryptoRepoFileDto, final RepoFileDto repoFileDto) {
-		this.parent = assertNotNull(parent, "parent");
+		this.parent = requireNonNull(parent, "parent");
 		this.server = parent.getServer();
 		this.serverRepo = parent.getServerRepo();
 		this.localRepositoryId = parent.getLocalRepositoryId();
-		this.cryptoRepoFileDto = assertNotNull(cryptoRepoFileDto, "cryptoRepoFileDto");
-		this.repoFileDto = assertNotNull(repoFileDto, "repoFileDto");
+		this.cryptoRepoFileDto = requireNonNull(cryptoRepoFileDto, "cryptoRepoFileDto");
+		this.repoFileDto = requireNonNull(repoFileDto, "repoFileDto");
 		this.repoFileId = repoFileDto.getId();
 
 		weakLocalRepoCommitEventListener = new WeakLocalRepoCommitEventListener(
@@ -104,7 +104,7 @@ public class ServerRepoFileImpl implements ServerRepoFile {
 		if (repoFileDto instanceof SymlinkDto)
 			return ServerRepoFileType.SYMLINK;
 
-		assertNotNull(repoFileDto, "repoFileDto"); // should really never happen, because we checked already in the constructor - but maybe we'll allow null later.
+		requireNonNull(repoFileDto, "repoFileDto"); // should really never happen, because we checked already in the constructor - but maybe we'll allow null later.
 		throw new IllegalStateException("Unknown RepoFileDto sub-class: " + repoFileDto.getClass().getName());
 	}
 
@@ -158,7 +158,7 @@ public class ServerRepoFileImpl implements ServerRepoFile {
 	public synchronized CryptoRepoFileDto getCryptoRepoFileDto() {
 		if (cryptoRepoFileDto == null) {
 			getRepoFileDto();
-			assertNotNull(cryptoRepoFileDto, "cryptoRepoFileDto");
+			requireNonNull(cryptoRepoFileDto, "cryptoRepoFileDto");
 		}
 		return cryptoRepoFileDto;
 	}
@@ -166,13 +166,13 @@ public class ServerRepoFileImpl implements ServerRepoFile {
 	public synchronized RepoFileDto getRepoFileDto() {
 		if (repoFileDto == null) {
 			final ServerRepoFileImpl serverRepoFile = (ServerRepoFileImpl) getReadOnlyMetaRepoManager().getServerRepoFile(serverRepo, repoFileId);
-			copyFrom(assertNotNull(serverRepoFile, "serverRepoFile"));
+			copyFrom(requireNonNull(serverRepoFile, "serverRepoFile"));
 		}
 		return repoFileDto;
 	}
 
 	protected void copyFrom(final ServerRepoFileImpl serverRepoFile) {
-		assertNotNull(serverRepoFile, "serverRepoFile");
+		requireNonNull(serverRepoFile, "serverRepoFile");
 		repoFileDto = serverRepoFile.getRepoFileDto();
 		cryptoRepoFileDto = serverRepoFile.getCryptoRepoFileDto();
 	}

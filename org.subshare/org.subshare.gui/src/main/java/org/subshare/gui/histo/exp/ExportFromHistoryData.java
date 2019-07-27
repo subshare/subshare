@@ -1,6 +1,6 @@
 package org.subshare.gui.histo.exp;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -18,7 +18,7 @@ public class ExportFromHistoryData {
 	private final Set<Uid> histoCryptoRepoFileIds = new HashSet<>();
 
 	public ExportFromHistoryData(final LocalRepo localRepo) {
-		this.localRepo = assertNotNull(localRepo, "localRepo");
+		this.localRepo = requireNonNull(localRepo, "localRepo");
 	}
 
 	public LocalRepo getLocalRepo() {

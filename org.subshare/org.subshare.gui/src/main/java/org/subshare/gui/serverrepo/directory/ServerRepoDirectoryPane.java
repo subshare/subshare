@@ -1,6 +1,6 @@
 package org.subshare.gui.serverrepo.directory;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 import static org.subshare.gui.util.FxmlUtil.*;
 
 import org.subshare.core.repo.metaonly.ServerRepoFile;
@@ -21,7 +21,7 @@ public class ServerRepoDirectoryPane extends GridPane {
 	private TextField serverUrlTextField;
 
 	public ServerRepoDirectoryPane(final ServerRepoFile serverRepoFile) {
-		this.serverRepoFile = assertNotNull(serverRepoFile, "serverRepoFile");
+		this.serverRepoFile = requireNonNull(serverRepoFile, "serverRepoFile");
 		loadDynamicComponentFxml(ServerRepoDirectoryPane.class, this);
 		localPathTextField.setText(serverRepoFile.getLocalPath());
 		serverUrlTextField.setText(serverRepoFile.getServerUrl().toExternalForm());

@@ -1,6 +1,6 @@
 package org.subshare.gui.pgp.imp.fromserver;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,7 +27,7 @@ public class SearchResultWizardPage extends WizardPage {
 
 	public SearchResultWizardPage(final ImportPgpKeyFromServerData importPgpKeyFromServerData) {
 		super("Search result");
-		this.importPgpKeyFromServerData = assertNotNull(importPgpKeyFromServerData, "importPgpKeyFromServerData");
+		this.importPgpKeyFromServerData = requireNonNull(importPgpKeyFromServerData, "importPgpKeyFromServerData");
 		this.pgpKeyId2CertifyPgpKeyData = importPgpKeyFromServerData.getPgpKeyId2CertifyPgpKeyData();
 
 		// This wizard-page must be shown - even though the selection is done automatically!
@@ -66,7 +66,7 @@ public class SearchResultWizardPage extends WizardPage {
 		final List<CertifyPgpKeyWizardPage> certifyPgpKeyWizardPages = new ArrayList<>();
 		for (final PgpKeyId pgpKeyId : importPgpKeyFromServerData.getSelectedPgpKeyIds()) {
 			final PgpKey pgpKey = tempPgp.getPgpKey(pgpKeyId);
-			assertNotNull(pgpKey, "tempPgp.getPgpKey(" + pgpKeyId + ")");
+			requireNonNull(pgpKey, "tempPgp.getPgpKey(" + pgpKeyId + ")");
 
 			CertifyPgpKeyData certifyPgpKeyData = pgpKeyId2CertifyPgpKeyData.get(pgpKeyId);
 			if (certifyPgpKeyData == null) {

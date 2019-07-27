@@ -1,7 +1,7 @@
 package org.subshare.rest.client.pgp.transport;
 
 import static co.codewizards.cloudstore.core.io.StreamUtil.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -31,7 +31,7 @@ public class RestPgpTransport extends AbstractPgpTransport {
 	//	private final URL serverUrl;
 	//
 	//	public RestPgpTransport(final URL serverUrl) {
-	//		this.serverUrl = assertNotNull("serverUrl", serverUrl);
+	//		this.serverUrl = requireNonNull("serverUrl", serverUrl);
 	//	}
 
 	private CloudStoreRestClient client;
@@ -86,7 +86,7 @@ public class RestPgpTransport extends AbstractPgpTransport {
 	@Override
 	public long getLocalRevision() {
 		final Long localRevision = getClient().execute(new GetLocalRevisionRequest());
-		return assertNotNull(localRevision, "localRevision");
+		return requireNonNull(localRevision, "localRevision");
 	}
 
 	@Override

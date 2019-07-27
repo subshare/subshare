@@ -1,6 +1,6 @@
 package org.subshare.gui.pgp.certify;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import org.subshare.gui.wizard.WizardPage;
 
@@ -12,7 +12,7 @@ public class CertifyPgpKeyWizardPage extends WizardPage {
 
 	public CertifyPgpKeyWizardPage(final CertifyPgpKeyData certifyPgpKeyData) {
 		super(Messages.getString("CertifyPgpKeyWizardPage.title")); //$NON-NLS-1$
-		this.certifyPgpKeyData = assertNotNull(certifyPgpKeyData, "certifyPgpKeyData"); //$NON-NLS-1$
+		this.certifyPgpKeyData = requireNonNull(certifyPgpKeyData, "certifyPgpKeyData"); //$NON-NLS-1$
 	}
 
 //	@Override

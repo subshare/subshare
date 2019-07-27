@@ -1,7 +1,7 @@
 package org.subshare.core.repo.sync;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.HashUtil.*;
+import static java.util.Objects.*;
 import static org.subshare.core.repo.sync.PaddingUtil.*;
 
 import java.net.URL;
@@ -95,7 +95,7 @@ public class SsRepoToRepoSync extends RepoToRepoSync {
 	@Override
 	public void sync(final ProgressMonitor monitor) {
 		firstSyncUp = true;
-		assertNotNull(monitor, "monitor");
+		requireNonNull(monitor, "monitor");
 		monitor.beginTask("Synchronising...", 251);
 		try {
 			super.sync(new SubProgressMonitor(monitor, 201));

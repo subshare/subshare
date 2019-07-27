@@ -1,6 +1,6 @@
 package org.subshare.core.pgp;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.io.Serializable;
 
@@ -11,8 +11,8 @@ public class TempImportKeysResult implements Serializable {
 	private final ImportKeysResult importKeysResult;
 
 	public TempImportKeysResult(Pgp tempPgp, ImportKeysResult importKeysResult) {
-		this.tempPgp = assertNotNull(tempPgp, "tempPgp");
-		this.importKeysResult = assertNotNull(importKeysResult, "importKeysResult");
+		this.tempPgp = requireNonNull(tempPgp, "tempPgp");
+		this.importKeysResult = requireNonNull(importKeysResult, "importKeysResult");
 	}
 
 	public Pgp getTempPgp() {

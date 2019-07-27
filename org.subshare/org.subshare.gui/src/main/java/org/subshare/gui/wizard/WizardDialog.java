@@ -1,7 +1,7 @@
 package org.subshare.gui.wizard;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
+import static java.util.Objects.*;
 
 import javafx.beans.InvalidationListener;
 import javafx.scene.Scene;
@@ -14,8 +14,8 @@ public class WizardDialog extends Stage {
 	private final Wizard wizard;
 
 	public WizardDialog(final Window owner, final Wizard wizard) {
-		assertNotNull(owner, "owner");
-		this.wizard = assertNotNull(wizard, "wizard");
+		requireNonNull(owner, "owner");
+		this.wizard = requireNonNull(wizard, "wizard");
 
 		setResizable(true);
 		initStyle(StageStyle.UTILITY);

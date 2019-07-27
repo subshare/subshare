@@ -17,6 +17,8 @@
  */
 package org.subshare.crypto;
 
+import static java.util.Objects.*;
+
 import java.security.SecureRandom;
 import java.util.Arrays;
 
@@ -48,7 +50,7 @@ public class MACTest
 			logger.debug("------------------------------------------------------------------------");
 			logger.debug("testAllSupportedMACs: macAlgorithmName={}", macAlgorithmName);
 			final MACCalculator macCalculator1 = CryptoRegistry.getInstance().createMACCalculator(macAlgorithmName, true);
-			Assert.assertNotNull("CryptoRegistry.createMACCalculator(...) returned null for macAlgorithmName=" + macAlgorithmName, macCalculator1);
+			requireNonNull(macCalculator1, "CryptoRegistry.createMACCalculator(...) returned null for macAlgorithmName=" + macAlgorithmName);
 			final byte[] mac1 = new byte[macCalculator1.getMacSize()];
 			macCalculator1.update(orig, 0, orig.length);
 			macCalculator1.doFinal(mac1, 0);

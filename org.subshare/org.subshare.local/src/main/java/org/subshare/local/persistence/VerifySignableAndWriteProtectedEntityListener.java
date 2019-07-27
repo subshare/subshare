@@ -1,6 +1,6 @@
 package org.subshare.local.persistence;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.HashSet;
 import java.util.Iterator;
@@ -69,7 +69,7 @@ public class VerifySignableAndWriteProtectedEntityListener extends AbstractLocal
 	 * @param signable the entity that was written in the current transaction, but should <b>not</b> be verified.
 	 */
 	public void removeSignable(Signable signable) {
-		assertNotNull(signable, "signable");
+		requireNonNull(signable, "signable");
 		signables.remove(signable);
 	}
 

@@ -1,8 +1,8 @@
 package org.subshare.core.server;
 
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.UrlUtil.*;
+import static java.util.Objects.*;
 import static org.subshare.core.file.FileConst.*;
 
 import java.beans.PropertyChangeEvent;
@@ -214,7 +214,7 @@ public class ServerRegistryImpl extends FileBasedObjectRegistry implements Serve
 //	}
 //
 //	private URL removeLastPathSegment(URL url) {
-//		assertNotNull("url", url);
+//		requireNonNull("url", url);
 //		String urlStr = url.toExternalForm();
 //		if (urlStr.contains("?"))
 //			throw new IllegalArgumentException("url should not contain a query part!");
@@ -240,7 +240,7 @@ public class ServerRegistryImpl extends FileBasedObjectRegistry implements Serve
 
 	@Override
 	public Server getServerForRemoteRoot(final URL remoteRoot) {
-		assertNotNull(remoteRoot, "remoteRoot");
+		requireNonNull(remoteRoot, "remoteRoot");
 
 		for (Server server : servers) {
 			if (server.getUrl() != null && isSubUrl(server.getUrl(), remoteRoot))
@@ -251,7 +251,7 @@ public class ServerRegistryImpl extends FileBasedObjectRegistry implements Serve
 
 	@Override
 	public Server getServer(final Uid serverId) {
-		assertNotNull(serverId, "serverId");
+		requireNonNull(serverId, "serverId");
 
 		for (Server server : servers) {
 			if (serverId.equals(server.getServerId()))
@@ -261,7 +261,7 @@ public class ServerRegistryImpl extends FileBasedObjectRegistry implements Serve
 	}
 
 	private boolean isSubUrl(URL baseUrl, URL subUrl) {
-		assertNotNull(subUrl, "baseUrl");
+		requireNonNull(subUrl, "baseUrl");
 		String baseUrlStr = canonicalizeURL(baseUrl).toExternalForm();
 
 		// IMHO we should check, if the baseUrlStr ends on a '/', because http://host/aaa should maybe not be considered a super-URL of http://host/aaaxxx, while it definitely is a super-URL of http://host/aaa/xxx
@@ -348,7 +348,7 @@ public class ServerRegistryImpl extends FileBasedObjectRegistry implements Serve
 	}
 
 	protected synchronized void mergeFrom(final ServerRegistryDto serverRegistryDto) {
-		assertNotNull(serverRegistryDto, "serverRegistryDto");
+		requireNonNull(serverRegistryDto, "serverRegistryDto");
 
 		final Set<Uid> deletedServerIdSet = new HashSet<>(this.deletedServerIds.size());
 		for (DeletedUid deletedUid : this.deletedServerIds)
@@ -356,7 +356,7 @@ public class ServerRegistryImpl extends FileBasedObjectRegistry implements Serve
 
 		final List<ServerDto> newServerDtos = new ArrayList<>(serverRegistryDto.getServerDtos().size());
 		for (final ServerDto serverDto : serverRegistryDto.getServerDtos()) {
-			final Uid serverId = assertNotNull(serverDto.getServerId(), "serverDto.serverId");
+			final Uid serverId = requireNonNull(serverDto.getServerId(), "serverDto.serverId");
 			if (deletedServerIdSet.contains(serverId))
 				continue;
 
@@ -396,8 +396,8 @@ public class ServerRegistryImpl extends FileBasedObjectRegistry implements Serve
 	}
 
 	private void merge(final Server toServer, final ServerDto fromServerDto) {
-		assertNotNull(toServer, "toServer");
-		assertNotNull(fromServerDto, "fromServerDto");
+		requireNonNull(toServer, "toServer");
+		requireNonNull(fromServerDto, "fromServerDto");
 		if (toServer.getChanged().before(fromServerDto.getChanged())) {
 			toServer.setName(fromServerDto.getName());
 			try {
@@ -413,7 +413,7 @@ public class ServerRegistryImpl extends FileBasedObjectRegistry implements Serve
 	}
 
 	protected Server getServerByServerId(final Uid serverId) {
-		assertNotNull(serverId, "serverId");
+		requireNonNull(serverId, "serverId");
 		for (final Server server : getServers()) {
 			if (serverId.equals(server.getServerId()))
 				return server;

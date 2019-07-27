@@ -1,6 +1,6 @@
 package org.subshare.rest.client.transport.request;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
@@ -14,8 +14,8 @@ public class GetHistoFileData extends AbstractRequest<byte[]> {
 	private final long offset;
 
 	public GetHistoFileData(final String repositoryName, Uid histoCryptoRepoFileId, final long offset) {
-		this.repositoryName = assertNotNull(repositoryName, "repositoryName");
-		this.histoCryptoRepoFileId = assertNotNull(histoCryptoRepoFileId, "histoCryptoRepoFileId");
+		this.repositoryName = requireNonNull(repositoryName, "repositoryName");
+		this.histoCryptoRepoFileId = requireNonNull(histoCryptoRepoFileId, "histoCryptoRepoFileId");
 		this.offset = offset;
 	}
 

@@ -1,6 +1,6 @@
 package org.subshare.gui.filetree;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -77,7 +77,7 @@ public class FileTreeItem<T> extends TreeItem<FileTreeItem<?>> {
 			return fileTreePane;
 
 		final FileTreeItem<?> parent = (FileTreeItem<?>) getParent();
-		assertNotNull(parent, "parent");
+		requireNonNull(parent, "parent");
 		return parent.getFileTreePane();
 	}
 
@@ -123,7 +123,7 @@ public class FileTreeItem<T> extends TreeItem<FileTreeItem<?>> {
 	}
 
 	public FileTreeItem<?> findFirst(final File file) {
-		assertNotNull(file, "file");
+		requireNonNull(file, "file");
 
 		if (! file.isAbsolute())
 			throw new IllegalArgumentException("file not absolute!");
@@ -140,7 +140,7 @@ public class FileTreeItem<T> extends TreeItem<FileTreeItem<?>> {
 	}
 
 	public List<FileTreeItem<?>> findAll(final File file) {
-		assertNotNull(file, "file");
+		requireNonNull(file, "file");
 
 		if (! file.isAbsolute())
 			throw new IllegalArgumentException("file not absolute!");
@@ -148,7 +148,7 @@ public class FileTreeItem<T> extends TreeItem<FileTreeItem<?>> {
 		final List<FileTreeItem<?>> result = new ArrayList<FileTreeItem<?>>();
 		for (final TreeItem<FileTreeItem<?>> child : getChildren()) {
 			final List<FileTreeItem<?>> childFound = child.getValue().findAll(file);
-			result.addAll(assertNotNull(childFound, "FileTreeItem.findAll(...)"));
+			result.addAll(requireNonNull(childFound, "FileTreeItem.findAll(...)"));
 		}
 		return result;
 	}

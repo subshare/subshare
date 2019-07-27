@@ -1,6 +1,6 @@
 package org.subshare.local;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import org.bouncycastle.crypto.CipherParameters;
 import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
@@ -18,9 +18,9 @@ public class PlainCryptoKey {
 	private final CipherParameters cipherParameters;
 
 	public PlainCryptoKey(final CryptoKey cryptoKey, final CryptoKeyPart cryptoKeyPart, final CipherParameters cipherParameters) {
-		this.cryptoKey = assertNotNull(cryptoKey, "cryptoKey");
-		this.cryptoKeyPart = assertNotNull(cryptoKeyPart, "cryptoKeyPart");
-		this.cipherParameters = assertNotNull(cipherParameters, "cipherParameters");
+		this.cryptoKey = requireNonNull(cryptoKey, "cryptoKey");
+		this.cryptoKeyPart = requireNonNull(cryptoKeyPart, "cryptoKeyPart");
+		this.cipherParameters = requireNonNull(cipherParameters, "cipherParameters");
 
 		switch (cryptoKeyPart) {
 			case privateKey:

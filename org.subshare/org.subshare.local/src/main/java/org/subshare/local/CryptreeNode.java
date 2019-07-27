@@ -2,6 +2,7 @@ package org.subshare.local;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
+import static java.util.Objects.*;
 import static org.subshare.local.CryptreeNodeUtil.*;
 
 import java.io.IOException;
@@ -151,7 +152,7 @@ public class CryptreeNode {
 		this.parent = parent;
 		this.context = context != null ? context
 				: (parent != null ? parent.getContext() : child.getContext());
-		assertNotNull(this.context, "this.context");
+		requireNonNull(this.context, "this.context");
 
 		this.repoFile = repoFile != null ? repoFile : cryptoRepoFile.getRepoFile();
 		this.cryptoRepoFile = cryptoRepoFile;
@@ -196,20 +197,20 @@ public class CryptreeNode {
 			throw new ReadAccessDeniedException(String.format("The CryptoRepoFile with cryptoRepoFileId=%s could not be decrypted! Access rights missing?!",
 					cryptoRepoFile.getCryptoRepoFileId()));
 
-		final byte[] plainRepoFileDtoData = assertNotNull(decrypt(cryptoRepoFile.getRepoFileDtoData(), plainCryptoKey), "decrypt(...)");
+		final byte[] plainRepoFileDtoData = requireNonNull(decrypt(cryptoRepoFile.getRepoFileDtoData(), plainCryptoKey), "decrypt(...)");
 		final RepoFileDto repoFileDto = context.repoFileDtoIo.deserializeWithGz(plainRepoFileDtoData);
 		return repoFileDto;
 	}
 
 	public RepoFileDto getHistoCryptoRepoFileRepoFileDto(final HistoCryptoRepoFile histoCryptoRepoFile) throws AccessDeniedException {
-		assertNotNull(histoCryptoRepoFile, "histoCryptoRepoFile");
+		requireNonNull(histoCryptoRepoFile, "histoCryptoRepoFile");
 
 		final PlainCryptoKey plainCryptoKey = getPlainCryptoKeyForDecrypting(histoCryptoRepoFile.getCryptoKey());
 		if (plainCryptoKey == null)
 			throw new ReadAccessDeniedException(String.format("The HistoCryptoRepoFile with histoCryptoRepoFileId=%s could not be decrypted! Access rights missing?!",
 					histoCryptoRepoFile.getHistoCryptoRepoFileId()));
 
-		final byte[] plainRepoFileDtoData = assertNotNull(decrypt(histoCryptoRepoFile.getRepoFileDtoData(), plainCryptoKey), "decrypt(...)");
+		final byte[] plainRepoFileDtoData = requireNonNull(decrypt(histoCryptoRepoFile.getRepoFileDtoData(), plainCryptoKey), "decrypt(...)");
 		final RepoFileDto repoFileDto = context.repoFileDtoIo.deserializeWithGz(plainRepoFileDtoData);
 		return repoFileDto;
 	}
@@ -220,14 +221,14 @@ public class CryptreeNode {
 			return null;
 
 		final HistoCryptoRepoFile histoCryptoRepoFile = currentHistoCryptoRepoFile.getHistoCryptoRepoFile();
-		assertNotNull(histoCryptoRepoFile, "currentHistoCryptoRepoFile.histoCryptoRepoFile");
+		requireNonNull(histoCryptoRepoFile, "currentHistoCryptoRepoFile.histoCryptoRepoFile");
 
 		final PlainCryptoKey plainCryptoKey = getPlainCryptoKeyForDecrypting(histoCryptoRepoFile.getCryptoKey());
 		if (plainCryptoKey == null)
 			throw new ReadAccessDeniedException(String.format("The HistoCryptoRepoFile with cryptoRepoFileId=%s could not be decrypted! Access rights missing?!",
 					histoCryptoRepoFile.getCryptoRepoFile().getCryptoRepoFileId()));
 
-		final byte[] plainRepoFileDtoData = assertNotNull(decrypt(histoCryptoRepoFile.getRepoFileDtoData(), plainCryptoKey), "decrypt(...)");
+		final byte[] plainRepoFileDtoData = requireNonNull(decrypt(histoCryptoRepoFile.getRepoFileDtoData(), plainCryptoKey), "decrypt(...)");
 		final RepoFileDto repoFileDto = context.repoFileDtoIo.deserializeWithGz(plainRepoFileDtoData);
 
 		if (histoCryptoRepoFile.getDeleted() != null)
@@ -274,7 +275,7 @@ public class CryptreeNode {
 				deletePreliminaryDeletions();
 			}
 
-			cryptoRepoFile.setRepoFile(assertNotNull(repoFile, "repoFile")); // repoFile is guaranteed to be *not* null, because of getCryptoRepoFile() above.
+			cryptoRepoFile.setRepoFile(requireNonNull(repoFile, "repoFile")); // repoFile is guaranteed to be *not* null, because of getCryptoRepoFile() above.
 			cryptoRepoFile.setDirectory(repoFile instanceof Directory);
 
 			// getPlainCryptoKeyOrCreate(...) causes this method to be called again. We thus must prevent
@@ -284,14 +285,14 @@ public class CryptreeNode {
 			this.cryptoRepoFile = cryptoRepoFile = cryptoRepoFileDao.makePersistent(cryptoRepoFile);
 
 			final PlainCryptoKey plainCryptoKey = getActivePlainCryptoKeyOrCreate(CryptoKeyRole.dataKey, CipherOperationMode.ENCRYPT);
-			final CryptoKey cryptoKey = assertNotNull(plainCryptoKey, "plainCryptoKey").getCryptoKey();
-			cryptoRepoFile.setCryptoKey(assertNotNull(cryptoKey, "plainCryptoKey.cryptoKey"));
+			final CryptoKey cryptoKey = requireNonNull(plainCryptoKey, "plainCryptoKey").getCryptoKey();
+			cryptoRepoFile.setCryptoKey(requireNonNull(cryptoKey, "plainCryptoKey.cryptoKey"));
 
 			final CryptreeNode parent = getParent();
 			cryptoRepoFile.setParent(parent == null ? null : parent.getCryptoRepoFile());
 
 			final byte[] repoFileDtoData = createRepoFileDtoDataForCryptoRepoFile(false);
-			cryptoRepoFile.setRepoFileDtoData(assertNotNull(encrypt(repoFileDtoData, plainCryptoKey), "encrypt(...)"));
+			cryptoRepoFile.setRepoFileDtoData(requireNonNull(encrypt(repoFileDtoData, plainCryptoKey), "encrypt(...)"));
 			cryptoRepoFile.setLastSyncFromRepositoryId(null);
 
 			sign(cryptoRepoFile);
@@ -303,13 +304,13 @@ public class CryptreeNode {
 	}
 
 	public CryptoConfigPropSet updateCryptoConfigPropSetIfConfigFile() {
-		final CryptoRepoFile cryptoRepoFile = assertNotNull(getCryptoRepoFile(), "cryptoRepoFile");
+		final CryptoRepoFile cryptoRepoFile = requireNonNull(getCryptoRepoFile(), "cryptoRepoFile");
 		final String localName = cryptoRepoFile.getLocalName();
 		if (! Config.PROPERTIES_FILE_NAME_FOR_DIRECTORY.equals(localName)) {
 			return null;
 		}
 
-		final CryptreeNode parent = assertNotNull(getParent(), "parent");
+		final CryptreeNode parent = requireNonNull(getParent(), "parent");
 		final CryptoRepoFile parentCrf = parent.getCryptoRepoFileOrCreate(false);
 
 		final CryptoConfigPropSetDao ccpsDao = context.transaction.getDao(CryptoConfigPropSetDao.class);
@@ -318,8 +319,8 @@ public class CryptreeNode {
 			cryptoConfigPropSet = new CryptoConfigPropSet(parentCrf);
 
 		final PlainCryptoKey plainCryptoKey = parent.getActivePlainCryptoKeyOrCreate(CryptoKeyRole.dataKey, CipherOperationMode.ENCRYPT);
-		final CryptoKey cryptoKey = assertNotNull(plainCryptoKey, "plainCryptoKey").getCryptoKey();
-		cryptoConfigPropSet.setCryptoKey(assertNotNull(cryptoKey, "plainCryptoKey.cryptoKey"));
+		final CryptoKey cryptoKey = requireNonNull(plainCryptoKey, "plainCryptoKey").getCryptoKey();
+		cryptoConfigPropSet.setCryptoKey(requireNonNull(cryptoKey, "plainCryptoKey.cryptoKey"));
 
 		final byte[] plainData = createConfigPropSetDtoDataFromFile();
 		cryptoConfigPropSet.setConfigPropSetDtoData(plainData == null ? null : encrypt(plainData, plainCryptoKey));
@@ -345,7 +346,7 @@ public class CryptreeNode {
 		if (getCryptoRepoFile().getDeleted() != null)
 			return null;
 
-		final RepoFile repoFile = assertNotNull(getRepoFile(), "repoFile");
+		final RepoFile repoFile = requireNonNull(getRepoFile(), "repoFile");
 		final File configFile = repoFile.getFile(context.transaction.getLocalRepoManager().getLocalRoot());
 		if (! configFile.isFile()) {
 			logger.warn("createConfigPropSetDtoFromFile: configFile not existing (deleted after local-sync?!): {}", configFile);
@@ -376,7 +377,7 @@ public class CryptreeNode {
 	 */
 	public HistoCryptoRepoFile createHistoCryptoRepoFileIfNeeded() {
 		final CryptoRepoFile cryptoRepoFile = getCryptoRepoFileOrCreate(false);
-		assertNotNull(cryptoRepoFile, "cryptoRepoFile");
+		requireNonNull(cryptoRepoFile, "cryptoRepoFile");
 
 		final CurrentHistoCryptoRepoFileDao chcrfDao = context.transaction.getDao(CurrentHistoCryptoRepoFileDao.class);
 		final HistoCryptoRepoFileDao hcrfDao = context.transaction.getDao(HistoCryptoRepoFileDao.class);
@@ -412,8 +413,8 @@ public class CryptreeNode {
 			histoCryptoRepoFile.setDeletedByIgnoreRule(cryptoRepoFile.isDeletedByIgnoreRule());
 
 			final PlainCryptoKey plainCryptoKey = getActivePlainCryptoKeyOrCreate(CryptoKeyRole.dataKey, CipherOperationMode.ENCRYPT);
-			final CryptoKey cryptoKey = assertNotNull(plainCryptoKey, "plainCryptoKey").getCryptoKey();
-			histoCryptoRepoFile.setCryptoKey(assertNotNull(cryptoKey, "plainCryptoKey.cryptoKey"));
+			final CryptoKey cryptoKey = requireNonNull(plainCryptoKey, "plainCryptoKey").getCryptoKey();
+			histoCryptoRepoFile.setCryptoKey(requireNonNull(cryptoKey, "plainCryptoKey.cryptoKey"));
 
 			if (! cryptoKey.equals(cryptoRepoFile.getCryptoKey())) // sanity check: the key should not have changed inbetween! otherwise we might need a new CryptoChangeSet-upload to the server!!!
 				throw new IllegalStateException(String.format("cryptoKey != cryptoRepoFile.cryptoKey :: %s != %s",
@@ -422,11 +423,11 @@ public class CryptreeNode {
 			final byte[] repoFileDtoData;
 			if (deleted != null)
 	//			repoFileDtoData = getRepoFileDtoDataForDeletedCryptoRepoFile(previousHistoCryptoRepoFile);
-				repoFileDtoData = context.repoFileDtoIo.serializeWithGz(assertNotNull(getRepoFileDto(), "getRepoFileDto()"));
+				repoFileDtoData = context.repoFileDtoIo.serializeWithGz(requireNonNull(getRepoFileDto(), "getRepoFileDto()"));
 			else
 				repoFileDtoData = createRepoFileDtoDataForCryptoRepoFile(true);
 
-			histoCryptoRepoFile.setRepoFileDtoData(assertNotNull(encrypt(repoFileDtoData, plainCryptoKey), "encrypt(...)"));
+			histoCryptoRepoFile.setRepoFileDtoData(requireNonNull(encrypt(repoFileDtoData, plainCryptoKey), "encrypt(...)"));
 			histoCryptoRepoFile.setLastSyncFromRepositoryId(null);
 
 			sign(histoCryptoRepoFile);
@@ -508,7 +509,7 @@ public class CryptreeNode {
 				throw new IllegalStateException("duplicateCryptoRepoFile matches histoCryptoRepoFile1!\nduplicateCryptoRepoFile=" + duplicateCryptoRepoFile + "\nhistoCryptoRepoFile1=" + histoCryptoRepoFile1 + "\nhistoCryptoRepoFile2=" + histoCryptoRepoFile2);
 		}
 		else {
-//			assertNotNull(histoCryptoRepoFile2, "histoCryptoRepoFile2");
+//			requireNonNull(histoCryptoRepoFile2, "histoCryptoRepoFile2");
 			if (histoCryptoRepoFile2 == null) {
 				IllegalStateException x = new IllegalStateException(String.format("duplicateCryptoRepoFile and histoCryptoRepoFile2 are both null!!! cryptoRepoFile=%s localPath=%s localHistoCryptoRepoFile=%s remoteHistoCryptoRepoFile=%s",
 						cryptoRepoFile, localPath, localHistoCryptoRepoFile, remoteHistoCryptoRepoFile));
@@ -517,7 +518,7 @@ public class CryptreeNode {
 			}
 		}
 
-		assertNotNull(histoCryptoRepoFile1, "histoCryptoRepoFile1");
+		requireNonNull(histoCryptoRepoFile1, "histoCryptoRepoFile1");
 
 		final Uid duplicateCryptoRepoFileId = duplicateCryptoRepoFile == null ? null : duplicateCryptoRepoFile.getCryptoRepoFileId();
 		Collision collision = cDao.getCollision(histoCryptoRepoFile1, histoCryptoRepoFile2, duplicateCryptoRepoFileId);
@@ -539,8 +540,8 @@ public class CryptreeNode {
 	}
 
 	public void putCollisionPrivateDto(final Collision collision, final CollisionPrivateDto collisionPrivateDto) {
-		assertNotNull(collision, "collision");
-		assertNotNull(collisionPrivateDto, "collisionPrivateDto");
+		requireNonNull(collision, "collision");
+		requireNonNull(collisionPrivateDto, "collisionPrivateDto");
 
 		if (collisionPrivateDto.getCollisionId() == null)
 			collisionPrivateDto.setCollisionId(collision.getCollisionId());
@@ -548,26 +549,26 @@ public class CryptreeNode {
 			throw new IllegalArgumentException("collisionPrivateDto.collisionId != collision.collisionId");
 
 		final PlainCryptoKey plainCryptoKey = getActivePlainCryptoKeyOrCreate(CryptoKeyRole.dataKey, CipherOperationMode.ENCRYPT);
-		final CryptoKey cryptoKey = assertNotNull(plainCryptoKey, "plainCryptoKey").getCryptoKey();
-		collision.setCryptoKey(assertNotNull(cryptoKey, "plainCryptoKey.cryptoKey"));
+		final CryptoKey cryptoKey = requireNonNull(plainCryptoKey, "plainCryptoKey").getCryptoKey();
+		collision.setCryptoKey(requireNonNull(cryptoKey, "plainCryptoKey.cryptoKey"));
 
 		final byte[] data = context.collisionPrivateDtoIo.serializeWithGz(collisionPrivateDto);
 
-		collision.setCollisionPrivateDtoData(assertNotNull(encrypt(data, plainCryptoKey), "encrypt(...)"));
+		collision.setCollisionPrivateDtoData(requireNonNull(encrypt(data, plainCryptoKey), "encrypt(...)"));
 		sign(collision);
 
 		updateCollisionPrivate(collision);
 	}
 
 	public CollisionPrivateDto getCollisionPrivateDto(final Collision collision) {
-		assertNotNull(collision, "collision");
+		requireNonNull(collision, "collision");
 
 		final PlainCryptoKey plainCryptoKey = getPlainCryptoKeyForDecrypting(collision.getCryptoKey());
 		if (plainCryptoKey == null)
 			throw new ReadAccessDeniedException(String.format("The Collision with collisionId=%s could not be decrypted! Access rights missing?!",
 					collision.getCollisionId()));
 
-		final byte[] plainDtoData = assertNotNull(decrypt(collision.getCollisionPrivateDtoData(), plainCryptoKey), "decrypt(...)");
+		final byte[] plainDtoData = requireNonNull(decrypt(collision.getCollisionPrivateDtoData(), plainCryptoKey), "decrypt(...)");
 		CollisionPrivateDto collisionPrivateDto = context.collisionPrivateDtoIo.deserializeWithGz(plainDtoData);
 		return collisionPrivateDto;
 	}
@@ -581,7 +582,7 @@ public class CryptreeNode {
 
 	// TODO replace this method by a specific, optimized query!
 	private HistoCryptoRepoFile getLastHistoCryptoRepoFile(final Collection<HistoCryptoRepoFile> histoCryptoRepoFiles, boolean remote) {
-		assertNotNull(histoCryptoRepoFiles, "histoCryptoRepoFiles");
+		requireNonNull(histoCryptoRepoFiles, "histoCryptoRepoFiles");
 		final UUID localRepositoryId = context.transaction.getLocalRepoManager().getRepositoryId();
 		HistoCryptoRepoFile result = null;
 		for (HistoCryptoRepoFile histoCryptoRepoFile : histoCryptoRepoFiles) {
@@ -605,7 +606,7 @@ public class CryptreeNode {
 	}
 
 	public CollisionPrivate updateCollisionPrivate(final Collision collision) {
-		assertNotNull(collision, "collision");
+		requireNonNull(collision, "collision");
 
 		if (! getCryptoRepoFile().equals(collision.getHistoCryptoRepoFile1().getCryptoRepoFile()))
 			throw new IllegalArgumentException("this.cryptoRepoFile != collision.histoCryptoRepoFile1.cryptoRepoFile");
@@ -632,7 +633,7 @@ public class CryptreeNode {
 	}
 
 	public PlainHistoCryptoRepoFile updatePlainHistoCryptoRepoFile(final HistoCryptoRepoFile histoCryptoRepoFile) {
-		assertNotNull(histoCryptoRepoFile, "histoCryptoRepoFile");
+		requireNonNull(histoCryptoRepoFile, "histoCryptoRepoFile");
 		final PlainHistoCryptoRepoFileDao phcrfDao = getContext().transaction.getDao(PlainHistoCryptoRepoFileDao.class);
 		PlainHistoCryptoRepoFile phcrf = phcrfDao.getPlainHistoCryptoRepoFile(histoCryptoRepoFile);
 		if (phcrf == null) {
@@ -651,7 +652,7 @@ public class CryptreeNode {
 	 * @return the {@link PlainHistoCryptoRepoFileDto} - never <code>null</code>.
 	 */
 	private PlainHistoCryptoRepoFileDto createPlainHistoCryptoRepoFileDto(final HistoCryptoRepoFile histoCryptoRepoFile) {
-		assertNotNull(histoCryptoRepoFile, "histoCryptoRepoFile");
+		requireNonNull(histoCryptoRepoFile, "histoCryptoRepoFile");
 
 		final HistoCryptoRepoFileDtoConverter converter = HistoCryptoRepoFileDtoConverter.create(getContext().transaction);
 
@@ -684,7 +685,7 @@ public class CryptreeNode {
 	}
 
 	private void populateCollisionDtos(final PlainHistoCryptoRepoFileDto plainHistoCryptoRepoFileDto, final HistoCryptoRepoFile histoCryptoRepoFile) {
-		assertNotNull(histoCryptoRepoFile, "histoCryptoRepoFile");
+		requireNonNull(histoCryptoRepoFile, "histoCryptoRepoFile");
 		final CollisionDao cDao = getContext().transaction.getDao(CollisionDao.class);
 		final CollisionPrivateDao cpDao = getContext().transaction.getDao(CollisionPrivateDao.class);
 		final CollisionDtoConverter collisionDtoConverter = CollisionDtoConverter.create(getContext().transaction);
@@ -704,7 +705,7 @@ public class CryptreeNode {
 	}
 
 	private RepoFileDto tryDecryptHistoCryptoRepoFile(final HistoCryptoRepoFile histoCryptoRepoFile) {
-		assertNotNull(histoCryptoRepoFile, "histoCryptoRepoFile");
+		requireNonNull(histoCryptoRepoFile, "histoCryptoRepoFile");
 
 		RepoFileDto repoFileDto = null;
 		try {
@@ -719,7 +720,7 @@ public class CryptreeNode {
 	}
 
 	private CollisionPrivateDto tryDecryptCollisionPrivateDto(final Collision collision) {
-		assertNotNull(collision, "collision");
+		requireNonNull(collision, "collision");
 
 		CollisionPrivateDto collisionPrivateDto = null;
 		try {
@@ -753,7 +754,7 @@ public class CryptreeNode {
 //	}
 
 	private void grantReadPermission(final UserRepoKey.PublicKey publicKey) {
-		assertNotNull(publicKey, "publicKey");
+		requireNonNull(publicKey, "publicKey");
 
 		// TODO Make sure previously invisible sub-directories & files pop up in the client repositories!
 		// If we grant access to a sub-directory later (either by (re)enabling the inheritance here or by
@@ -811,7 +812,7 @@ public class CryptreeNode {
 	}
 
 	private void revokeReadPermission(final Set<Uid> userRepoKeyIds) {
-		assertNotNull(userRepoKeyIds, "userRepoKeyIds");
+		requireNonNull(userRepoKeyIds, "userRepoKeyIds");
 		if (userRepoKeyIds.isEmpty())
 			return;
 
@@ -915,8 +916,8 @@ public class CryptreeNode {
 //	}
 
 	private boolean containsFromUserRepoKeyId(final Collection<CryptoLink> cryptoLinks, final Set<Uid> fromUserRepoKeyIds) {
-		assertNotNull(cryptoLinks, "cryptoLinks");
-		assertNotNull(fromUserRepoKeyIds, "fromUserRepoKeyIds");
+		requireNonNull(cryptoLinks, "cryptoLinks");
+		requireNonNull(fromUserRepoKeyIds, "fromUserRepoKeyIds");
 		for (final CryptoLink cryptoLink : cryptoLinks) {
 			final UserRepoKeyPublicKey fromUserRepoKeyPublicKey = cryptoLink.getFromUserRepoKeyPublicKey();
 			final Uid fromUserRepoKeyId = fromUserRepoKeyPublicKey == null ? null : fromUserRepoKeyPublicKey.getUserRepoKeyId();
@@ -956,8 +957,8 @@ public class CryptreeNode {
 	}
 
 	protected PlainCryptoKey getActivePlainCryptoKey(final CryptoKeyRole toCryptoKeyRole, final CipherOperationMode cipherOperationMode) {
-		assertNotNull(toCryptoKeyRole, "toCryptoKeyRole");
-		assertNotNull(cipherOperationMode, "cipherOperationMode");
+		requireNonNull(toCryptoKeyRole, "toCryptoKeyRole");
+		requireNonNull(cipherOperationMode, "cipherOperationMode");
 		logger.debug("getActivePlainCryptoKey: cryptoRepoFile={} repoFile={} toCryptoKeyRole={} cipherOperationMode={}",
 				cryptoRepoFile, repoFile, toCryptoKeyRole, cipherOperationMode);
 		final CryptoLinkDao cryptoLinkDao = context.transaction.getDao(CryptoLinkDao.class);
@@ -974,7 +975,7 @@ public class CryptreeNode {
 	}
 
 	public PlainCryptoKey getPlainCryptoKeyForDecrypting(final CryptoKey cryptoKey) {
-		assertNotNull(cryptoKey, "cryptoKey");
+		requireNonNull(cryptoKey, "cryptoKey");
 		logger.debug("getPlainCryptoKeyForDecrypting: cryptoRepoFile={} repoFile={} cryptoKey={}",
 				cryptoRepoFile, repoFile, cryptoKey);
 		final PlainCryptoKey plainCryptoKey = getPlainCryptoKey(cryptoKey.getInCryptoLinks(), getCryptoKeyPartForDecrypting(cryptoKey));
@@ -982,8 +983,8 @@ public class CryptreeNode {
 	}
 
 	private PlainCryptoKey getPlainCryptoKey(final Collection<CryptoLink> cryptoLinks, final CryptoKeyPart toCryptoKeyPart) {
-		assertNotNull(cryptoLinks, "cryptoLinks");
-		assertNotNull(toCryptoKeyPart, "toCryptoKeyPart");
+		requireNonNull(cryptoLinks, "cryptoLinks");
+		requireNonNull(toCryptoKeyPart, "toCryptoKeyPart");
 		for (final CryptoLink cryptoLink : cryptoLinks) {
 			if (toCryptoKeyPart != cryptoLink.getToCryptoKeyPart())
 				continue;
@@ -1050,12 +1051,12 @@ public class CryptreeNode {
 	}
 
 	protected PlainCryptoKey getActivePlainCryptoKeyOrCreate(final CryptoKeyRole toCryptoKeyRole, final CipherOperationMode cipherOperationMode) {
-		assertNotNull(toCryptoKeyRole, "toCryptoKeyRole");
-		assertNotNull(cipherOperationMode, "cipherOperationMode");
+		requireNonNull(toCryptoKeyRole, "toCryptoKeyRole");
+		requireNonNull(cipherOperationMode, "cipherOperationMode");
 		PlainCryptoKey plainCryptoKey = getActivePlainCryptoKey(toCryptoKeyRole, cipherOperationMode);
 		if (plainCryptoKey == null) {
 			final Class<? extends PlainCryptoKeyFactory> clazz = cryptoKeyRole2PlainCryptoKeyFactory.get(toCryptoKeyRole);
-			assertNotNull(clazz, String.format("cryptoKeyRole2PlainCryptoKeyFactory[%s]", toCryptoKeyRole));
+			requireNonNull(clazz, String.format("cryptoKeyRole2PlainCryptoKeyFactory[%s]", toCryptoKeyRole));
 
 			final PlainCryptoKeyFactory factory;
 			try {
@@ -1067,7 +1068,7 @@ public class CryptreeNode {
 			factory.setCryptreeNode(this);
 			factory.setCipherOperationMode(cipherOperationMode);
 			plainCryptoKey = factory.createPlainCryptoKey();
-			assertNotNull(plainCryptoKey, clazz.getName() + ".createPlainCryptoKey()");
+			requireNonNull(plainCryptoKey, clazz.getName() + ".createPlainCryptoKey()");
 
 			if (plainCryptoKey.getCryptoKey().getCryptoKeyRole() != toCryptoKeyRole)
 				throw new IllegalStateException(String.format("plainCryptoKey.cryptoKey.cryptoKeyRole != toCryptoKeyRole :: %s != %s", plainCryptoKey.getCryptoKey().getCryptoKeyRole(), toCryptoKeyRole));
@@ -1085,7 +1086,7 @@ public class CryptreeNode {
 	 */
 	public DataKey getDataKeyOrFail() {
 		final CryptoRepoFile cryptoRepoFile = getCryptoRepoFile();
-		assertNotNull(cryptoRepoFile, "cryptoRepoFile");
+		requireNonNull(cryptoRepoFile, "cryptoRepoFile");
 		return getDataKeyOrFail(cryptoRepoFile.getCryptoKey());
 	}
 
@@ -1095,14 +1096,14 @@ public class CryptreeNode {
 	 * @return the data key. Never <code>null</code>.
 	 */
 	public DataKey getDataKeyOrFail(final Uid cryptoKeyId) {
-		assertNotNull(cryptoKeyId, "cryptoKeyId");
+		requireNonNull(cryptoKeyId, "cryptoKeyId");
 		final CryptoKeyDao cryptoKeyDao = context.transaction.getDao(CryptoKeyDao.class);
 		final CryptoKey cryptoKey = cryptoKeyDao.getCryptoKeyOrFail(cryptoKeyId);
 		return getDataKeyOrFail(cryptoKey);
 	}
 
 	protected DataKey getDataKeyOrFail(final CryptoKey cryptoKey) {
-		assertNotNull(cryptoKey, "cryptoKey");
+		requireNonNull(cryptoKey, "cryptoKey");
 
 		// We can use the following method, because it's *symmetric* - thus it works for both decrypting and encrypting!
 		final PlainCryptoKey plainCryptoKey = getPlainCryptoKeyForDecrypting(cryptoKey);
@@ -1110,7 +1111,7 @@ public class CryptreeNode {
 			throw new ReadAccessDeniedException(String.format("Cannot decrypt dataKey for cryptoKeyID=%s (cryptoRepoFileId=%s)!",
 					cryptoKey.getCryptoKeyId(), cryptoKey.getCryptoRepoFile().getCryptoRepoFileId()));
 
-		assertNotNull(plainCryptoKey.getCryptoKey(), "plainCryptoKey.cryptoKey");
+		requireNonNull(plainCryptoKey.getCryptoKey(), "plainCryptoKey.cryptoKey");
 
 		if (CryptoKeyRole.dataKey != plainCryptoKey.getCryptoKey().getCryptoKeyRole())
 			throw new IllegalStateException("CryptoKeyRole.dataKey != plainCryptoKey.getCryptoKey().getCryptoKeyRole()");
@@ -1125,7 +1126,7 @@ public class CryptreeNode {
 		if (parent == null) {
 			if (repoFile != null && JDOHelper.isDeleted(repoFile)) {
 				getCryptoRepoFile();
-				assertNotNull(cryptoRepoFile, "cryptoRepoFile");
+				requireNonNull(cryptoRepoFile, "cryptoRepoFile");
 			}
 
 			final RepoFile parentRepoFile = repoFile == null || JDOHelper.isDeleted(repoFile) ? null : repoFile.getParent();
@@ -1138,12 +1139,12 @@ public class CryptreeNode {
 	}
 
 	public UserRepoKeyPublicKey getUserRepoKeyPublicKeyOrCreate(final UserRepoKey userRepoKey) {
-		assertNotNull(userRepoKey, "userRepoKey");
+		requireNonNull(userRepoKey, "userRepoKey");
 		return getUserRepoKeyPublicKeyOrCreate(userRepoKey.getPublicKey());
 	}
 
 	public UserRepoKeyPublicKey getUserRepoKeyPublicKeyOrCreate(final UserRepoKey.PublicKey publicKey) {
-		assertNotNull(publicKey, "publicKey");
+		requireNonNull(publicKey, "publicKey");
 		return new UserRepoKeyPublicKeyHelper(getContext()).getUserRepoKeyPublicKeyOrCreate(publicKey);
 	}
 
@@ -1162,8 +1163,8 @@ public class CryptreeNode {
 	 * @see #revokePermission(PermissionType, Set)
 	 */
 	public void grantPermission(final PermissionType permissionType, final UserRepoKey.PublicKey publicKey) {
-		assertNotNull(permissionType, "permissionType");
-		assertNotNull(publicKey, "publicKey");
+		requireNonNull(permissionType, "permissionType");
+		requireNonNull(publicKey, "publicKey");
 
 		if (isOwner(publicKey.getUserRepoKeyId()))
 			return; // the owner always has all permissions - no need to grant anything!
@@ -1320,8 +1321,8 @@ public class CryptreeNode {
 	 * @see #grantPermission(PermissionType, PublicKey)
 	 */
 	public void revokePermission(final PermissionType permissionType, final Set<Uid> userRepoKeyIds) {
-		assertNotNull(permissionType, "permissionType");
-		assertNotNull(userRepoKeyIds, "userRepoKeyIds");
+		requireNonNull(permissionType, "permissionType");
+		requireNonNull(userRepoKeyIds, "userRepoKeyIds");
 
 		if (PermissionType.readUserIdentity == permissionType) {
 			final CryptreeNode parent = getParent();
@@ -1387,7 +1388,7 @@ public class CryptreeNode {
 	 * @see #assertHasPermission(boolean, Uid, PermissionType, Date)
 	 */
 	public Set<PermissionType> getGrantedPermissionTypes(final Uid userRepoKeyId) {
-		assertNotNull(userRepoKeyId, "userRepoKeyId");
+		requireNonNull(userRepoKeyId, "userRepoKeyId");
 		final Set<PermissionType> result = EnumSet.noneOf(PermissionType.class);
 
 		if (isOwner(userRepoKeyId)) // the owner has *all* permissions - always!
@@ -1447,7 +1448,7 @@ public class CryptreeNode {
 	}
 
 	private boolean existsAtLeastOneUserIdentityLinkFor(final Set<Uid> userRepoKeyIds) {
-		assertNotNull(userRepoKeyIds, "userRepoKeyIds");
+		requireNonNull(userRepoKeyIds, "userRepoKeyIds");
 
 		final UserRepoKeyPublicKeyDao urkpkDao = getContext().transaction.getDao(UserRepoKeyPublicKeyDao.class);
 		final UserIdentityLinkDao uilDao = getContext().transaction.getDao(UserIdentityLinkDao.class);
@@ -1463,7 +1464,7 @@ public class CryptreeNode {
 	}
 
 	private void revokeGrantPermissionOfAllCryptoRepoFiles(final Set<Uid> userRepoKeyIds) {
-		assertNotNull(userRepoKeyIds, "userRepoKeyIds");
+		requireNonNull(userRepoKeyIds, "userRepoKeyIds");
 		final PermissionDao dao = context.transaction.getDao(PermissionDao.class);
 
 		final Set<CryptoRepoFile> cryptoRepoFiles = new HashSet<>();
@@ -1488,9 +1489,9 @@ public class CryptreeNode {
 			final PermissionType permissionType, final Date timestamp
 			) throws AccessDeniedException
 	{
-		assertNotNull(userRepoKeyId, "userRepoKeyId");
-		assertNotNull(permissionType, "permissionType");
-		assertNotNull(timestamp, "timestamp");
+		requireNonNull(userRepoKeyId, "userRepoKeyId");
+		requireNonNull(permissionType, "permissionType");
+		requireNonNull(timestamp, "timestamp");
 
 		if (isOwner(userRepoKeyId))
 			return; // The owner always has all permissions.
@@ -1564,7 +1565,7 @@ public class CryptreeNode {
 	}
 
 	private boolean isOwner(final Uid userRepoKeyId) {
-		assertNotNull(userRepoKeyId, "userRepoKeyId");
+		requireNonNull(userRepoKeyId, "userRepoKeyId");
 		return userRepoKeyId.equals(context.getRepositoryOwnerOrFail().getUserRepoKeyPublicKey().getUserRepoKeyId());
 	}
 
@@ -1578,9 +1579,9 @@ public class CryptreeNode {
 	 * @return
 	 */
 	private void collectPermissions(final Set<Permission> permissions, boolean anyCryptoRepoFile, final PermissionType permissionType, final Uid userRepoKeyId, final Date timestamp) {
-		assertNotNull(permissionType, "permissionType");
-		assertNotNull(userRepoKeyId, "userRepoKeyId");
-		assertNotNull(timestamp, "timestamp");
+		requireNonNull(permissionType, "permissionType");
+		requireNonNull(userRepoKeyId, "userRepoKeyId");
+		requireNonNull(timestamp, "timestamp");
 
 		// There is no Permission object with *read* permission. Hence, if we ever need to check this
 		// here, we have to check it differently (=> tracing back the cryptree's crypto-links)!
@@ -1658,7 +1659,7 @@ public class CryptreeNode {
 	}
 
 	private void assertPermissionOk(final Permission permission) throws SignatureException, AccessDeniedException {
-		assertNotNull(permission, "permission");
+		requireNonNull(permission, "permission");
 
 		if (permissionsAlreadyCheckedOk.contains(permission))
 			return;
@@ -1674,7 +1675,7 @@ public class CryptreeNode {
 	}
 
 	public void assertSignatureOk(final WriteProtected entity) throws SignatureException, AccessDeniedException {
-		assertNotNull(entity, "entity");
+		requireNonNull(entity, "entity");
 		final Uid crfIdControllingPermissions = entity.getCryptoRepoFileIdControllingPermissions();
 		if (crfIdControllingPermissions == null)
 			this.assertSignatureOk(entity, true, entity.getPermissionTypeRequiredForWrite());
@@ -1691,7 +1692,7 @@ public class CryptreeNode {
 			final PermissionType requiredPermissionType
 			) throws SignatureException, AccessDeniedException
 	{
-		assertNotNull(signable, "signable");
+		requireNonNull(signable, "signable");
 		// requiredPermissionType may be null, because a write-protected entity may not require any permission-type, but only behave like an ordinary Signable.
 
 		// *always* verify signature!
@@ -1718,7 +1719,7 @@ public class CryptreeNode {
 		PermissionSet permissionSet = getPermissionSet();
 		if (permissionSet == null) {
 			permissionSet = new PermissionSet();
-			permissionSet.setCryptoRepoFile(assertNotNull(getCryptoRepoFile(), "getCryptoRepoFile()"));
+			permissionSet.setCryptoRepoFile(requireNonNull(getCryptoRepoFile(), "getCryptoRepoFile()"));
 			sign(permissionSet);
 
 			final PermissionSetDao dao = context.transaction.getDao(PermissionSetDao.class);
@@ -1730,7 +1731,7 @@ public class CryptreeNode {
 	}
 
 	public void sign(final WriteProtected writeProtected) throws AccessDeniedException {
-		assertNotNull(writeProtected, "writeProtectedEntity");
+		requireNonNull(writeProtected, "writeProtectedEntity");
 		final Uid crfIdControllingPermissions = writeProtected.getCryptoRepoFileIdControllingPermissions();
 		final UserRepoKey userRepoKey;
 		if (crfIdControllingPermissions == null)
@@ -1752,7 +1753,7 @@ public class CryptreeNode {
 	 * @return
 	 */
 	public UserRepoKey getUserRepoKey(final boolean anyCryptoRepoFile, final PermissionType permissionType) {
-		assertNotNull(permissionType, "permissionType");
+		requireNonNull(permissionType, "permissionType");
 
 		// There is no Permission object with *read* permission. Hence, if we ever need to check this
 		// here, we have to check it differently (=> tracing back the cryptree's crypto-links)!
@@ -1802,7 +1803,7 @@ public class CryptreeNode {
 
 	public void clearCryptoRepoFileDeleted() {
 		final CryptoRepoFile cryptoRepoFile = getCryptoRepoFile();
-		assertNotNull(cryptoRepoFile, "cryptoRepoFile");
+		requireNonNull(cryptoRepoFile, "cryptoRepoFile");
 
 		deletePreliminaryDeletions();
 
@@ -1817,7 +1818,7 @@ public class CryptreeNode {
 
 	protected void deletePreliminaryDeletions() {
 		final CryptoRepoFile cryptoRepoFile = getCryptoRepoFile();
-		assertNotNull(cryptoRepoFile, "cryptoRepoFile");
+		requireNonNull(cryptoRepoFile, "cryptoRepoFile");
 
 		PreliminaryDeletionDao pdDao = getContext().transaction.getDao(PreliminaryDeletionDao.class);
 		PreliminaryDeletion preliminaryDeletion = pdDao.getPreliminaryDeletion(cryptoRepoFile);
@@ -1852,7 +1853,7 @@ public class CryptreeNode {
 	}
 
 	private ConfigPropSetDto getConfigPropSetDto(CryptoConfigPropSet cryptoConfigPropSet) {
-		assertNotNull(cryptoConfigPropSet, "cryptoConfigPropSet");
+		requireNonNull(cryptoConfigPropSet, "cryptoConfigPropSet");
 
 		final PlainCryptoKey plainCryptoKey = getPlainCryptoKeyForDecrypting(cryptoConfigPropSet.getCryptoKey());
 		if (plainCryptoKey == null)
@@ -1868,7 +1869,7 @@ public class CryptreeNode {
 	}
 
 	private boolean isCryptoConfigPropSetModifiedAfterLastSync(final List<CryptoConfigPropSet> cryptoConfigPropSets) {
-		assertNotNull(cryptoConfigPropSets, "cryptoConfigPropSets");
+		requireNonNull(cryptoConfigPropSets, "cryptoConfigPropSets");
 
 		final RemoteRepository remoteRepository =
 				context.transaction.getDao(RemoteRepositoryDao.class).getRemoteRepositoryOrFail(context.remoteRepositoryId);
@@ -1883,7 +1884,7 @@ public class CryptreeNode {
 	private List<CryptoConfigPropSet> getCryptoConfigPropSetsAbove() {
 		final CryptoConfigPropSetDao ccpsDao = context.transaction.getDao(CryptoConfigPropSetDao.class);
 		final List<CryptoConfigPropSet> result = new ArrayList<>();
-		CryptoRepoFile cryptoRepoFile = assertNotNull(getCryptoRepoFile(), "cryptoRepoFile");
+		CryptoRepoFile cryptoRepoFile = requireNonNull(getCryptoRepoFile(), "cryptoRepoFile");
 		while (true) {
 			cryptoRepoFile = cryptoRepoFile.getParent();
 			if (cryptoRepoFile == null)

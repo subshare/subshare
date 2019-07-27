@@ -1,6 +1,6 @@
 package org.subshare.local;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.subshare.local.persistence.UserIdentity;
@@ -12,8 +12,8 @@ public class PlainUserIdentity {
 	private final KeyParameter sharedSecret;
 
 	public PlainUserIdentity(final UserIdentity userIdentity, final KeyParameter sharedSecret) {
-		this.userIdentity = assertNotNull(userIdentity, "userIdentity");
-		this.sharedSecret = assertNotNull(sharedSecret, "sharedSecret");
+		this.userIdentity = requireNonNull(userIdentity, "userIdentity");
+		this.sharedSecret = requireNonNull(sharedSecret, "sharedSecret");
 	}
 
 	public UserIdentity getUserIdentity() {

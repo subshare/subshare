@@ -1,6 +1,6 @@
 package org.subshare.rest.server.service;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.UUID;
 
@@ -34,9 +34,9 @@ public class HistoFrameDtoService extends AbstractServiceWithRepoToRepoAuth {
 
 	@PUT
 	public void putHistoFrameDto(final HistoFrameDto histoFrameDto) {
-		assertNotNull(histoFrameDto, "histoFrameDto");
+		requireNonNull(histoFrameDto, "histoFrameDto");
 		try (final RepoTransport repoTransport = authenticateAndCreateLocalRepoTransport();) {
-			final UUID clientRepositoryId = assertNotNull(repoTransport.getClientRepositoryId(), "clientRepositoryId");
+			final UUID clientRepositoryId = requireNonNull(repoTransport.getClientRepositoryId(), "clientRepositoryId");
 			final LocalRepoManager localRepoManager = ((ContextWithLocalRepoManager) repoTransport).getLocalRepoManager();
 			transaction = localRepoManager.beginWriteTransaction();
 			try {

@@ -1,6 +1,6 @@
 package org.subshare.rest.server.service;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -23,7 +23,7 @@ public class GetHistoFileDataService extends AbstractServiceWithRepoToRepoAuth {
 			@PathParam("histoCryptoRepoFileId") Uid histoCryptoRepoFileId,
 			@PathParam("offset") final long offset)
 	{
-		assertNotNull(histoCryptoRepoFileId, "histoCryptoRepoFileId");
+		requireNonNull(histoCryptoRepoFileId, "histoCryptoRepoFileId");
 
 		try (final CryptreeServerFileRepoTransport repoTransport = (CryptreeServerFileRepoTransport) authenticateAndCreateLocalRepoTransport()) {
 			return repoTransport.getHistoFileData(histoCryptoRepoFileId, offset);

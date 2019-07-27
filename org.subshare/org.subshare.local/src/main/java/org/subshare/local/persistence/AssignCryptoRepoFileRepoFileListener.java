@@ -1,6 +1,6 @@
 package org.subshare.local.persistence;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -47,10 +47,10 @@ public class AssignCryptoRepoFileRepoFileListener extends AbstractLocalRepoTrans
 		if (disabled || forced) // on the client, when it is forced, we do it anyway and don't need to enlist stuff.
 			return;
 
-		final Object persistable = assertNotNull(event.getPersistentInstance(), "event.persistentInstance");
+		final Object persistable = requireNonNull(event.getPersistentInstance(), "event.persistentInstance");
 		if (persistable instanceof RepoFile) {
 			final RepoFile repoFile = (RepoFile) persistable;
-			repoFileName2RepoFile.put(assertNotNull(repoFile.getName(), "repoFile.name"), repoFile);
+			repoFileName2RepoFile.put(requireNonNull(repoFile.getName(), "repoFile.name"), repoFile);
 		}
 		else if (persistable instanceof CryptoRepoFile)
 			cryptoRepoFilePersisted = true;
@@ -95,7 +95,7 @@ public class AssignCryptoRepoFileRepoFileListener extends AbstractLocalRepoTrans
 	 * @return the {@link RepoFile} associated with the given {@code cryptoRepoFile}. May be <code>null</code>.
 	 */
 	private RepoFile associateRepoFileViaCryptoRepoFileLocalName(final CryptoRepoFile cryptoRepoFile) {
-		assertNotNull(cryptoRepoFile, "cryptoRepoFile");
+		requireNonNull(cryptoRepoFile, "cryptoRepoFile");
 
 //		if (cryptoRepoFile.getDeleted() != null) { // Yes we MUST associate, because we otherwise don't have a unique parent-child-localName-relation anymore! See CryptreeNode.getCryptoRepoFile() and CryptoRepoFileDao.getChildCryptoRepoFile(CryptoRepoFile parent, String localName)
 //			logger.info("associateRepoFileViaCryptoRepoFileLocalName: NOT associating deleted cryptoRepoFile! {}", cryptoRepoFile);
@@ -113,7 +113,7 @@ public class AssignCryptoRepoFileRepoFileListener extends AbstractLocalRepoTrans
 				final String localName = cryptoRepoFile.getLocalName();
 				if (localName != null) {
 					final RepoFile parentRepoFile = associateRepoFileViaCryptoRepoFileLocalName(parentCryptoRepoFile);
-//					assertNotNull("parentRepoFile", parentRepoFile); // IMHO, parents should always be readable + available, if the child is readable. TODO check why this is not the case. my test just failed because of this :-(
+//					requireNonNull("parentRepoFile", parentRepoFile); // IMHO, parents should always be readable + available, if the child is readable. TODO check why this is not the case. my test just failed because of this :-(
 					if (parentRepoFile == null)
 						return null;
 
@@ -129,8 +129,8 @@ public class AssignCryptoRepoFileRepoFileListener extends AbstractLocalRepoTrans
 	}
 
 //	private void associateCryptoRepoFileWithRepoFile(final RepoFile repoFile, CryptoRepoFile cryptoRepoFile) {
-//		assertNotNull("repoFile", repoFile);
-//		assertNotNull("cryptoRepoFile", cryptoRepoFile);
+//		requireNonNull("repoFile", repoFile);
+//		requireNonNull("cryptoRepoFile", cryptoRepoFile);
 //
 //		final LocalRepoTransaction tx = getTransactionOrFail();
 //		final CryptoRepoFile cryptoRepoFile2 = tx.getDao(CryptoRepoFileDao.class).getCryptoRepoFile(repoFile);
@@ -159,7 +159,7 @@ public class AssignCryptoRepoFileRepoFileListener extends AbstractLocalRepoTrans
 //			final UUID remoteRepositoryId = remoteRepositoryId2RemoteRootMap.keySet().iterator().next();
 //			final SsRemoteRepository remoteRepository = (SsRemoteRepository) remoteRepositoryDao.getRemoteRepositoryOrFail(remoteRepositoryId);
 //			final String remotePathPrefix = remoteRepository.getRemotePathPrefix();
-//			assertNotNull("remoteRepository.remotePathPrefix", remotePathPrefix);
+//			requireNonNull("remoteRepository.remotePathPrefix", remotePathPrefix);
 //
 //			final UserRepoKeyRing userRepoKeyRing = UserRepoKeyRingLookup.Helper.getUserRepoKeyRingLookup().getUserRepoKeyRing(
 //					new UserRepoKeyRingLookupContext(localRepositoryId, remoteRepositoryId));

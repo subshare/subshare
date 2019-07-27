@@ -1,6 +1,6 @@
 package org.subshare.local.persistence;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.Collection;
 
@@ -46,7 +46,7 @@ public class PermissionSetInheritanceDao extends Dao<PermissionSetInheritance, P
 	}
 
 	public PermissionSetInheritance getPermissionSetInheritance(final Uid permissionSetInheritanceId) {
-		assertNotNull(permissionSetInheritanceId, "permissionSetInheritanceId");
+		requireNonNull(permissionSetInheritanceId, "permissionSetInheritanceId");
 		final Query query = pm().newNamedQuery(getEntityClass(), "getPermissionSetInheritance_permissionSetInheritanceId");
 		try {
 			final PermissionSetInheritance result = (PermissionSetInheritance) query.execute(permissionSetInheritanceId.toString());

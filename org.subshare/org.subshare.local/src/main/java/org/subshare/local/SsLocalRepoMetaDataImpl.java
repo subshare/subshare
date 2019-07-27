@@ -1,7 +1,7 @@
 package org.subshare.local;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
+import static java.util.Objects.*;
 
 import java.io.IOException;
 import java.net.URL;
@@ -88,7 +88,7 @@ public class SsLocalRepoMetaDataImpl extends LocalRepoMetaDataImpl implements Ss
 
 //	@Override
 //	public CryptoRepoFileDto getCryptoRepoFileDto(final String localPath) {
-//		assertNotNull("path", localPath);
+//		requireNonNull("path", localPath);
 //
 //		final CryptoRepoFileDto result;
 //		try (final LocalRepoTransaction tx = beginReadTransaction();) {
@@ -120,14 +120,14 @@ public class SsLocalRepoMetaDataImpl extends LocalRepoMetaDataImpl implements Ss
 
 	@Override
 	public Map<Long, CryptoRepoFileDto> getCryptoRepoFileDtos(final Collection<Long> repoFileIds) {
-		assertNotNull(repoFileIds, "repoFileIds");
+		requireNonNull(repoFileIds, "repoFileIds");
 		final Map<Long, CryptoRepoFileDto> result = new LinkedHashMap<>();
 		try (final LocalRepoTransaction tx = beginReadTransaction();) {
 			final RepoFileDao repoFileDao = tx.getDao(RepoFileDao.class);
 			final CryptoRepoFileDao cryptoRepoFileDao = tx.getDao(CryptoRepoFileDao.class);
 			final CryptoRepoFileDtoConverter converter = CryptoRepoFileDtoConverter.create();
 			for (final Long repoFileId : repoFileIds) {
-				assertNotNull(repoFileId, "repoFileId");
+				requireNonNull(repoFileId, "repoFileId");
 				final RepoFile repoFile = repoFileDao.getObjectByIdOrNull(repoFileId);
 				if (repoFile == null)
 					continue;
@@ -262,9 +262,9 @@ public class SsLocalRepoMetaDataImpl extends LocalRepoMetaDataImpl implements Ss
 
 //	@Override
 //	public boolean hasPermission(final String localPath, final Uid userRepoKeyId, final PermissionType permissionType) {
-//		assertNotNull("localPath", localPath);
-//		assertNotNull("userRepoKeyId", userRepoKeyId);
-//		assertNotNull("permissionType", permissionType);
+//		requireNonNull("localPath", localPath);
+//		requireNonNull("userRepoKeyId", userRepoKeyId);
+//		requireNonNull("permissionType", permissionType);
 //		try (final LocalRepoTransaction tx = beginReadTransaction();) { // *not* committing, because it's a read-only-operation, anyway.
 //			final Cryptree cryptree = getCryptree(tx);
 //			try {
@@ -291,7 +291,7 @@ public class SsLocalRepoMetaDataImpl extends LocalRepoMetaDataImpl implements Ss
 	}
 
 	protected UUID getRemoteRepositoryId(final LocalRepoTransaction tx) {
-		assertNotNull(tx, "tx");
+		requireNonNull(tx, "tx");
 		UUID result = remoteRepositoryId;
 		if (result == null) {
 			final RemoteRepositoryDao remoteRepositoryDao = tx.getDao(RemoteRepositoryDao.class);
@@ -313,7 +313,7 @@ public class SsLocalRepoMetaDataImpl extends LocalRepoMetaDataImpl implements Ss
 	}
 
 	protected URL getRemoteRoot(final LocalRepoTransaction tx) {
-		assertNotNull(tx, "tx");
+		requireNonNull(tx, "tx");
 		URL result = remoteRoot;
 		if (result == null) {
 			getRemoteRepositoryId(tx);
@@ -376,7 +376,7 @@ public class SsLocalRepoMetaDataImpl extends LocalRepoMetaDataImpl implements Ss
 
 	@Override
 	public Collection<HistoFrameDto> getHistoFrameDtos(final HistoFrameFilter filter) {
-		assertNotNull(filter, "filter");
+		requireNonNull(filter, "filter");
 		final LocalRepoManager localRepoManager = getLocalRepoManagerOrFail();
 		try (final LocalRepoTransaction tx = localRepoManager.beginReadTransaction();) {
 			final HistoFrameDao hfDao = tx.getDao(HistoFrameDao.class);
@@ -393,7 +393,7 @@ public class SsLocalRepoMetaDataImpl extends LocalRepoMetaDataImpl implements Ss
 
 	@Override
 	public Collection<PlainHistoCryptoRepoFileDto> getPlainHistoCryptoRepoFileDtos(PlainHistoCryptoRepoFileFilter filter) {
-		assertNotNull(filter, "filter");
+		requireNonNull(filter, "filter");
 		final Collection<PlainHistoCryptoRepoFileDto> result;
 		final UpdatePlainHistoCryptoRepoFilesMarker updatePlainHistoCryptoRepoFilesMarker;
 		try (final LocalRepoTransaction tx = getLocalRepoManagerOrFail().beginReadTransaction();) {
@@ -417,7 +417,7 @@ public class SsLocalRepoMetaDataImpl extends LocalRepoMetaDataImpl implements Ss
 
 	@Override
 	public Collection<CollisionPrivateDto> getCollisionPrivateDtos(CollisionPrivateFilter filter) {
-		assertNotNull(filter, "filter");
+		requireNonNull(filter, "filter");
 		try (final LocalRepoTransaction tx = getLocalRepoManagerOrFail().beginReadTransaction();) {
 			final CollisionPrivateDao cDao = tx.getDao(CollisionPrivateDao.class);
 			final Collection<CollisionPrivate> pcps = cDao.getCollisionPrivates(filter);
@@ -432,7 +432,7 @@ public class SsLocalRepoMetaDataImpl extends LocalRepoMetaDataImpl implements Ss
 
 	@Override
 	public Collection<CollisionDto> getCollisionDtos(CollisionFilter filter) {
-		assertNotNull(filter, "filter");
+		requireNonNull(filter, "filter");
 		try (final LocalRepoTransaction tx = getLocalRepoManagerOrFail().beginReadTransaction();) {
 			final CollisionDao cDao = tx.getDao(CollisionDao.class);
 			final Collection<Collision> collisions = cDao.getCollisions(filter);
@@ -448,7 +448,7 @@ public class SsLocalRepoMetaDataImpl extends LocalRepoMetaDataImpl implements Ss
 
 	@Override
 	public void putCollisionPrivateDto(final CollisionPrivateDto collisionPrivateDto) {
-		assertNotNull(collisionPrivateDto, "collisionPrivateDto");
+		requireNonNull(collisionPrivateDto, "collisionPrivateDto");
 		try (final LocalRepoTransaction tx = getLocalRepoManagerOrFail().beginWriteTransaction();) {
 			final Cryptree cryptree = getCryptree(tx);
 			cryptree.putCollisionPrivateDto(collisionPrivateDto);

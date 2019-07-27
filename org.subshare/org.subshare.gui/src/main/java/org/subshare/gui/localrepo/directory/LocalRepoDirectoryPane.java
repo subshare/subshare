@@ -1,6 +1,6 @@
 package org.subshare.gui.localrepo.directory;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 import static org.subshare.gui.util.FxmlUtil.*;
 import static org.subshare.gui.util.PlatformUtil.*;
 
@@ -83,8 +83,8 @@ public class LocalRepoDirectoryPane extends VBox implements HistoryPaneContainer
 	private final HistoryPaneSupport historyPaneSupport;
 
 	public LocalRepoDirectoryPane(final LocalRepo localRepo, final File file) {
-		this.localRepo = assertNotNull(localRepo, "localRepo");
-		this.file = assertNotNull(file, "file");
+		this.localRepo = requireNonNull(localRepo, "localRepo");
+		this.file = requireNonNull(file, "file");
 		loadDynamicComponentFxml(LocalRepoDirectoryPane.class, this);
 
 		final String path = file.getAbsolutePath();
@@ -200,7 +200,7 @@ public class LocalRepoDirectoryPane extends VBox implements HistoryPaneContainer
 
 		public RootDirectoryFileTreeItem(FileTreePane fileTreePane, File file) {
 			super(file); // file is null-checked by super-constructor.
-			this.fileTreePane = assertNotNull(fileTreePane, "fileTreePane");
+			this.fileTreePane = requireNonNull(fileTreePane, "fileTreePane");
 			hookUpdateInvalidationListener(fileTreePane);
 		}
 

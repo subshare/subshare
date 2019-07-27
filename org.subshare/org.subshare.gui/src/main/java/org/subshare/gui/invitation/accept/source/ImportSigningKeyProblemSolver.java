@@ -1,7 +1,7 @@
 package org.subshare.gui.invitation.accept.source;
 
 import static co.codewizards.cloudstore.core.io.StreamUtil.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -104,7 +104,7 @@ public class ImportSigningKeyProblemSolver extends AbstractProblemSolver {
 		for (ImportedMasterKey importedMasterKey : importKeysResult.getPgpKeyId2ImportedMasterKey().values()) {
 			final PgpKeyId pgpKeyId = importedMasterKey.getPgpKeyId();
 			final PgpKey pgpKey = pgp.getPgpKey(pgpKeyId);
-			assertNotNull(pgpKey, "pgp.getPgpKey(" + pgpKeyId + ")");
+			requireNonNull(pgpKey, "pgp.getPgpKey(" + pgpKeyId + ")");
 			pgpKeyId2PgpKey.put(pgpKeyId, pgpKey);
 		}
 		userRegistry.importUsersFromPgpKeys(pgpKeyId2PgpKey.values());
@@ -124,7 +124,7 @@ public class ImportSigningKeyProblemSolver extends AbstractProblemSolver {
 				throw new RuntimeException(e);
 			}
 			final byte[] signingKeyData = lsc.invoke(bout,"toByteArray"); // only encrypted - not signed! thus not checking signature!
-			assertNotNull(signingKeyData, "signingKeyData");
+			requireNonNull(signingKeyData, "signingKeyData");
 			return signingKeyData;
 		}
 	}

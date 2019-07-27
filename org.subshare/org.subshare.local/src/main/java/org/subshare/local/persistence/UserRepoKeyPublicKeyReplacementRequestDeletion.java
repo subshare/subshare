@@ -1,7 +1,7 @@
 package org.subshare.local.persistence;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
+import static java.util.Objects.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -62,17 +62,17 @@ public class UserRepoKeyPublicKeyReplacementRequestDeletion extends Entity imple
 	}
 
 	public UserRepoKeyPublicKeyReplacementRequestDeletion(final UserRepoKeyPublicKeyReplacementRequest request) {
-		this(assertNotNull(request, "request").getRequestId(),
-				assertNotNull(assertNotNull(request, "request").getOldKey(), "request.oldKey").getUserRepoKeyId());
+		this(requireNonNull(request, "request").getRequestId(),
+				requireNonNull(requireNonNull(request, "request").getOldKey(), "request.oldKey").getUserRepoKeyId());
 	}
 
 	public UserRepoKeyPublicKeyReplacementRequestDeletion(final Uid requestId, final Uid oldUserRepoKeyId) {
-		this.requestId = assertNotNull(requestId, "requestId").toString();
+		this.requestId = requireNonNull(requestId, "requestId").toString();
 		this.oldUserRepoKeyId = oldUserRepoKeyId == null ? null : oldUserRepoKeyId.toString(); // allow null because of legacy data.
 	}
 
 	public Uid getRequestId() {
-		return new Uid(assertNotNull(requestId, "requestId"));
+		return new Uid(requireNonNull(requestId, "requestId"));
 	}
 
 	public Uid getOldUserRepoKeyId() {

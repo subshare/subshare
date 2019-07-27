@@ -1,6 +1,6 @@
 package org.subshare.core.sign;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -37,7 +37,7 @@ public enum SignerTransformation {
 	private final String transformation;
 
 	private SignerTransformation(final String transformation) {
-		this.transformation = assertNotNull(transformation, "transformation");
+		this.transformation = requireNonNull(transformation, "transformation");
 	}
 
 	public String getTransformation() {
@@ -45,7 +45,7 @@ public enum SignerTransformation {
 	}
 
 	public static SignerTransformation fromTransformation(final String transformation) {
-		assertNotNull(transformation, "transformation");
+		requireNonNull(transformation, "transformation");
 		final SignerTransformation st = transformation2SignerTransformation.get(transformation);
 		if (st == null)
 			throw new IllegalArgumentException("There is no SignerTransformation for this transformation: " + transformation);

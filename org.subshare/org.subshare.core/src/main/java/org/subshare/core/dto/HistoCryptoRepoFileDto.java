@@ -1,6 +1,6 @@
 package org.subshare.core.dto;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -166,19 +166,19 @@ public class HistoCryptoRepoFileDto implements Signable, Serializable {
 			byte separatorIndex = 0;
 
 			final List<InputStreamSource> inputStreamSources = new LinkedList<InputStreamSource>(Arrays.asList(
-					InputStreamSource.Helper.createInputStreamSource(assertNotNull(histoCryptoRepoFileId, "histoCryptoRepoFileId")),
+					InputStreamSource.Helper.createInputStreamSource(requireNonNull(histoCryptoRepoFileId, "histoCryptoRepoFileId")),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(previousHistoCryptoRepoFileId),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
-					InputStreamSource.Helper.createInputStreamSource(assertNotNull(cryptoRepoFileId, "cryptoRepoFileId")),
+					InputStreamSource.Helper.createInputStreamSource(requireNonNull(cryptoRepoFileId, "cryptoRepoFileId")),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
-					InputStreamSource.Helper.createInputStreamSource(assertNotNull(histoFrameId, "histoFrameId")),
+					InputStreamSource.Helper.createInputStreamSource(requireNonNull(histoFrameId, "histoFrameId")),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
-					InputStreamSource.Helper.createInputStreamSource(assertNotNull(cryptoKeyId, "cryptoKeyId")),
+					InputStreamSource.Helper.createInputStreamSource(requireNonNull(cryptoKeyId, "cryptoKeyId")),
 
 					InputStreamSource.Helper.createInputStreamSource(++separatorIndex),
 					InputStreamSource.Helper.createInputStreamSource(repoFileDtoData),

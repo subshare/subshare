@@ -1,6 +1,6 @@
 package org.subshare.rest.client.pgp.transport.request;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.io.InputStream;
 
@@ -15,7 +15,7 @@ public class PutPgpPublicKeys extends VoidRequest {
 	private final InputStream inputStream;
 
 	public PutPgpPublicKeys(final InputStream inputStream) {
-		this.inputStream = assertNotNull(inputStream, "inputStream");
+		this.inputStream = requireNonNull(inputStream, "inputStream");
 	}
 
 	@Override

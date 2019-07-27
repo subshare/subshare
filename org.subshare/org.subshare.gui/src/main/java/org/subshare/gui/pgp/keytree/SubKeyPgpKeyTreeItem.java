@@ -1,6 +1,6 @@
 package org.subshare.gui.pgp.keytree;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.text.DateFormat;
 import java.util.Date;
@@ -10,7 +10,7 @@ import org.subshare.core.pgp.PgpKey;
 public class SubKeyPgpKeyTreeItem extends PgpKeyTreeItem<PgpKey> {
 
 	public SubKeyPgpKeyTreeItem(final PgpKey subKey) {
-		super(assertNotNull(subKey, "subKey")); //$NON-NLS-1$
+		super(requireNonNull(subKey, "subKey")); //$NON-NLS-1$
 	}
 
 	@Override

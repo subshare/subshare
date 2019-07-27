@@ -1,6 +1,6 @@
 package org.subshare.gui.createrepo.selectlocaldir;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 import static org.subshare.gui.util.FxmlUtil.*;
 
 import org.subshare.gui.createrepo.CreateRepoData;
@@ -21,7 +21,7 @@ public class CreateRepoSelectLocalDirPane extends WizardPageContentGridPane {
 	private FileTreePane fileTreePane;
 
 	public CreateRepoSelectLocalDirPane(final CreateRepoData createRepoData) {
-		this.createRepoData = assertNotNull(createRepoData, "createRepoData");
+		this.createRepoData = requireNonNull(createRepoData, "createRepoData");
 		loadDynamicComponentFxml(CreateRepoSelectLocalDirPane.class, this);
 		fileTreePane.fileFilterProperty().set(file -> file.isDirectory());
 		fileTreePane.getSelectedFiles().addListener((InvalidationListener) observable -> onSelectedFilesChanged());

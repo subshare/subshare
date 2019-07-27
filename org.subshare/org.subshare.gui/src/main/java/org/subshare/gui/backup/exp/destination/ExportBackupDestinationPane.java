@@ -1,6 +1,6 @@
 package org.subshare.gui.backup.exp.destination;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 import static org.subshare.gui.util.FxmlUtil.*;
 
 import java.util.Iterator;
@@ -22,7 +22,7 @@ public class ExportBackupDestinationPane extends WizardPageContentGridPane {
 
 	public ExportBackupDestinationPane(final ExportBackupData exportBackupData) {
 		loadDynamicComponentFxml(ExportBackupDestinationPane.class, this);
-		this.exportBackupData = assertNotNull(exportBackupData, "exportBackupData");
+		this.exportBackupData = requireNonNull(exportBackupData, "exportBackupData");
 		fileTreePane.fileFilterProperty().set(file -> file.isDirectory());
 		fileTreePane.getSelectedFiles().addListener((InvalidationListener) observable -> onSelectedFilesChanged());
 		onSelectedFilesChanged();

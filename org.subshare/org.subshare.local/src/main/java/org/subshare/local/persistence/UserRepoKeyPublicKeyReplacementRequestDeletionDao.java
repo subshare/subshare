@@ -1,6 +1,6 @@
 package org.subshare.local.persistence;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.Collection;
 
@@ -25,7 +25,7 @@ public class UserRepoKeyPublicKeyReplacementRequestDeletionDao extends Dao<UserR
 	}
 
 	public UserRepoKeyPublicKeyReplacementRequestDeletion getUserRepoKeyPublicKeyReplacementRequestDeletion(final Uid requestId) {
-		assertNotNull(requestId, "requestId");
+		requireNonNull(requestId, "requestId");
 		final Query query = pm().newNamedQuery(getEntityClass(), "getUserRepoKeyPublicKeyReplacementRequestDeletion_requestId");
 		try {
 			final UserRepoKeyPublicKeyReplacementRequestDeletion requestDeletion = (UserRepoKeyPublicKeyReplacementRequestDeletion) query.execute(requestId.toString());

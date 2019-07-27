@@ -1,13 +1,13 @@
 package org.subshare.rest.client.locker.transport;
 
 import static co.codewizards.cloudstore.rest.client.transport.RestRepoTransportFactory.*;
+import static java.util.Objects.*;
 
 import java.net.URL;
 
 import org.subshare.core.locker.transport.AbstractLockerTransportFactory;
 import org.subshare.core.locker.transport.LockerTransport;
 
-import co.codewizards.cloudstore.core.util.AssertUtil;
 import co.codewizards.cloudstore.rest.client.ssl.DynamicX509TrustManagerCallback;
 
 public class RestLockerTransportFactory extends AbstractLockerTransportFactory {
@@ -33,7 +33,7 @@ public class RestLockerTransportFactory extends AbstractLockerTransportFactory {
 
 	@Override
 	public boolean isSupported(final URL url) {
-		return PROTOCOL_HTTP.equals(AssertUtil.assertNotNull(url, "url").getProtocol())
+		return PROTOCOL_HTTP.equals(requireNonNull(url, "url").getProtocol())
 				|| PROTOCOL_HTTPS.equals(url.getProtocol());
 	}
 

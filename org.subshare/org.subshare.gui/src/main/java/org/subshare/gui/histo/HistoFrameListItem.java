@@ -1,6 +1,6 @@
 package org.subshare.gui.histo;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.Date;
 
@@ -15,9 +15,9 @@ public class HistoFrameListItem {
 
 	public HistoFrameListItem(final HistoFrameDto histoFrameDto, final String signingUserName) {
 		// TODO pass resolved user for signingUserRepoKeyId! Or resolve+assign it afterwards!
-		this.histoFrameDto = assertNotNull(histoFrameDto, "histoFrameDto");
-		assertNotNull(histoFrameDto.getSignature(), "histoFrameDto.signature");
-		this.signingUserName = assertNotNull(signingUserName, "signingUserName");
+		this.histoFrameDto = requireNonNull(histoFrameDto, "histoFrameDto");
+		requireNonNull(histoFrameDto.getSignature(), "histoFrameDto.signature");
+		this.signingUserName = requireNonNull(signingUserName, "signingUserName");
 	}
 
 	public HistoFrameDto getHistoFrameDto() {

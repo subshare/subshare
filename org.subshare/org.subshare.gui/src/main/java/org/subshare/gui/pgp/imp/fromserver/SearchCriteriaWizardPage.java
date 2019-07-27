@@ -1,6 +1,6 @@
 package org.subshare.gui.pgp.imp.fromserver;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import org.subshare.gui.wizard.WizardPage;
 
@@ -12,7 +12,7 @@ public class SearchCriteriaWizardPage extends WizardPage {
 
 	public SearchCriteriaWizardPage(final ImportPgpKeyFromServerData importPgpKeyFromServerData) {
 		super("Search criteria");
-		this.importPgpKeyFromServerData = assertNotNull(importPgpKeyFromServerData, "importPgpKeyFromServerData");
+		this.importPgpKeyFromServerData = requireNonNull(importPgpKeyFromServerData, "importPgpKeyFromServerData");
 		setNextPage(new SearchResultWizardPage(importPgpKeyFromServerData));
 	}
 

@@ -1,7 +1,7 @@
 package org.subshare.gui.maintree;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
+import static java.util.Objects.*;
 
 import org.subshare.core.repo.LocalRepo;
 import org.subshare.gui.localrepo.LocalRepoPane;
@@ -15,7 +15,7 @@ public class LocalRepoMainTreeItem extends MainTreeItem<LocalRepo> {
 	private static final Image icon = new Image(ServerListMainTreeItem.class.getResource("local-repo_16x16.png").toExternalForm());
 
 	public LocalRepoMainTreeItem(final LocalRepo localRepo) {
-		super(assertNotNull(localRepo, "localRepo"));
+		super(requireNonNull(localRepo, "localRepo"));
 		setGraphic(new ImageView(icon));
 
 		getChildren().add(new LocalRepoDirectoryMainTreeItem(localRepo.getLocalRoot()));

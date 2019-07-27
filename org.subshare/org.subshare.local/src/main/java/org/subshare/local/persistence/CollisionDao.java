@@ -1,6 +1,6 @@
 package org.subshare.local.persistence;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.Collection;
 import java.util.Date;
@@ -25,12 +25,12 @@ public class CollisionDao extends Dao<Collision, CollisionDao> {
 
 	public Collision getCollisionOrFail(final Uid collisionId) {
 		final Collision collision = getCollision(collisionId);
-		assertNotNull(collision, "getCollision(" + collisionId + ")");
+		requireNonNull(collision, "getCollision(" + collisionId + ")");
 		return collision;
 	}
 
 	public Collision getCollision(final Uid collisionId) {
-		assertNotNull(collisionId, "collisionId");
+		requireNonNull(collisionId, "collisionId");
 		final Query query = pm().newNamedQuery(getEntityClass(), "getCollision_collisionId");
 		try {
 			final Collision result = (Collision) query.execute(collisionId.toString());
@@ -41,8 +41,8 @@ public class CollisionDao extends Dao<Collision, CollisionDao> {
 	}
 
 	public Collection<Collision> getCollisionsSignedBetween(final Date fromIncl, final Date toExcl) {
-		assertNotNull(fromIncl, "fromIncl");
-		assertNotNull(toExcl, "toExcl");
+		requireNonNull(fromIncl, "fromIncl");
+		requireNonNull(toExcl, "toExcl");
 		final Query query = pm().newNamedQuery(getEntityClass(), "getCollisionsSignedBetween_fromIncl_toExcl");
 		try {
 			long startTimestamp = System.currentTimeMillis();
@@ -82,11 +82,11 @@ public class CollisionDao extends Dao<Collision, CollisionDao> {
 	 * @return the {@code Collision} between the two {@code HistoCryptoRepoFile} instances or <code>null</code>, if there is none.
 	 */
 	public Collision getCollision(final HistoCryptoRepoFile histoCryptoRepoFile1, final HistoCryptoRepoFile histoCryptoRepoFile2) {
-		assertNotNull(histoCryptoRepoFile1, "histoCryptoRepoFile1");
-		assertNotNull(histoCryptoRepoFile2, "histoCryptoRepoFile2");
+		requireNonNull(histoCryptoRepoFile1, "histoCryptoRepoFile1");
+		requireNonNull(histoCryptoRepoFile2, "histoCryptoRepoFile2");
 		final Map<String, Object> params = new HashMap<>();
-		params.put("histoCryptoRepoFile1", assertNotNull(histoCryptoRepoFile1, "histoCryptoRepoFile1"));
-		params.put("histoCryptoRepoFile2", assertNotNull(histoCryptoRepoFile2, "histoCryptoRepoFile2"));
+		params.put("histoCryptoRepoFile1", requireNonNull(histoCryptoRepoFile1, "histoCryptoRepoFile1"));
+		params.put("histoCryptoRepoFile2", requireNonNull(histoCryptoRepoFile2, "histoCryptoRepoFile2"));
 		final Query query = pm().newNamedQuery(getEntityClass(), "getCollision_histoCryptoRepoFile1_histoCryptoRepoFile2");
 		try {
 			final Collision result = (Collision) query.executeWithMap(params);
@@ -97,11 +97,11 @@ public class CollisionDao extends Dao<Collision, CollisionDao> {
 	}
 
 	public Collision getCollisionWithDuplicateCryptoRepoFileId(HistoCryptoRepoFile histoCryptoRepoFile1, Uid duplicateCryptoRepoFileId) {
-		assertNotNull(histoCryptoRepoFile1, "histoCryptoRepoFile1");
-		assertNotNull(duplicateCryptoRepoFileId, "duplicateCryptoRepoFileId");
+		requireNonNull(histoCryptoRepoFile1, "histoCryptoRepoFile1");
+		requireNonNull(duplicateCryptoRepoFileId, "duplicateCryptoRepoFileId");
 		final Map<String, Object> params = new HashMap<>();
-		params.put("histoCryptoRepoFile1", assertNotNull(histoCryptoRepoFile1, "histoCryptoRepoFile1"));
-		params.put("duplicateCryptoRepoFileId", assertNotNull(duplicateCryptoRepoFileId, "duplicateCryptoRepoFileId").toString());
+		params.put("histoCryptoRepoFile1", requireNonNull(histoCryptoRepoFile1, "histoCryptoRepoFile1"));
+		params.put("duplicateCryptoRepoFileId", requireNonNull(duplicateCryptoRepoFileId, "duplicateCryptoRepoFileId").toString());
 		final Query query = pm().newNamedQuery(getEntityClass(), "getCollision_histoCryptoRepoFile1_duplicateCryptoRepoFileId");
 		try {
 			final Collision result = (Collision) query.executeWithMap(params);
@@ -112,7 +112,7 @@ public class CollisionDao extends Dao<Collision, CollisionDao> {
 	}
 
 	public Collection<Collision> getCollisionsWithDuplicateCryptoRepoFileId(Uid cryptoRepoFileId) {
-		assertNotNull(cryptoRepoFileId, "cryptoRepoFileId");
+		requireNonNull(cryptoRepoFileId, "cryptoRepoFileId");
 		final Query query = pm().newNamedQuery(getEntityClass(), "getCollisions_duplicateCryptoRepoFileId");
 		try {
 			long startTimestamp = System.currentTimeMillis();
@@ -131,7 +131,7 @@ public class CollisionDao extends Dao<Collision, CollisionDao> {
 	}
 
 	public Collision getCollision(final HistoCryptoRepoFile histoCryptoRepoFile1, final HistoCryptoRepoFile histoCryptoRepoFile2, final Uid duplicateCryptoRepoFileId) {
-		assertNotNull(histoCryptoRepoFile1, "histoCryptoRepoFile1");
+		requireNonNull(histoCryptoRepoFile1, "histoCryptoRepoFile1");
 
 		if (duplicateCryptoRepoFileId != null)
 			return getCollisionWithDuplicateCryptoRepoFileId(histoCryptoRepoFile1, duplicateCryptoRepoFileId);
@@ -158,7 +158,7 @@ public class CollisionDao extends Dao<Collision, CollisionDao> {
 	}
 
 	public Collection<Collision> getCollisions(CollisionFilter filter) {
-		assertNotNull(filter, "filter");
+		requireNonNull(filter, "filter");
 
 		filter = prepareFilter(filter);
 		if (filter == null)
@@ -208,7 +208,7 @@ public class CollisionDao extends Dao<Collision, CollisionDao> {
 	}
 
 	private CollisionFilter prepareFilter(CollisionFilter filter) {
-		assertNotNull(filter, "filter");
+		requireNonNull(filter, "filter");
 
 		if (filter.getLocalPath() != null && filter.getCryptoRepoFileId() != null)
 			throw new IllegalArgumentException("filter.localPath and filter.cryptoRepoFileId must not both be set! Exactly one of them!");
@@ -229,8 +229,8 @@ public class CollisionDao extends Dao<Collision, CollisionDao> {
 	}
 
 	private static void appendToQueryFilter_collisionIds(final StringBuilder qf, final Map<String, Object> qp, final Map<String, Class<?>> qv, final Set<Uid> collisionIds) {
-		assertNotNull(qf, "qf");
-		assertNotNull(qp, "qp");
+		requireNonNull(qf, "qf");
+		requireNonNull(qp, "qp");
 		if (collisionIds == null)
 			return;
 
@@ -244,8 +244,8 @@ public class CollisionDao extends Dao<Collision, CollisionDao> {
 	}
 
 	private static void appendToQueryFilter_histoCryptoRepoFileId(final StringBuilder qf, final Map<String, Object> qp, final Map<String, Class<?>> qv, final Uid histoCryptoRepoFileId) {
-		assertNotNull(qf, "qf");
-		assertNotNull(qp, "qp");
+		requireNonNull(qf, "qf");
+		requireNonNull(qp, "qp");
 		if (histoCryptoRepoFileId == null)
 			return;
 
@@ -260,9 +260,9 @@ public class CollisionDao extends Dao<Collision, CollisionDao> {
 	}
 
 	private static void appendToQueryFilter_cryptoRepoFileId_nonRecursive(final StringBuilder qf, final Map<String, Object> qp, final Map<String, Class<?>> qv, final Uid cryptoRepoFileId) {
-		assertNotNull(qf, "qf");
-		assertNotNull(qp, "qp");
-		assertNotNull(qv, "qv");
+		requireNonNull(qf, "qf");
+		requireNonNull(qp, "qp");
+		requireNonNull(qv, "qv");
 		if (cryptoRepoFileId == null)
 			return;
 
@@ -277,9 +277,9 @@ public class CollisionDao extends Dao<Collision, CollisionDao> {
 	}
 
 	private static void appendToQueryFilter_cryptoRepoFileId_recursive(final StringBuilder qf, final Map<String, Object> qp, final Map<String, Class<?>> qv, final Uid cryptoRepoFileId) {
-		assertNotNull(qf, "qf");
-		assertNotNull(qp, "qp");
-		assertNotNull(qv, "qv");
+		requireNonNull(qf, "qf");
+		requireNonNull(qp, "qp");
+		requireNonNull(qv, "qv");
 		if (cryptoRepoFileId == null)
 			return;
 
@@ -302,15 +302,15 @@ public class CollisionDao extends Dao<Collision, CollisionDao> {
 		final CryptoRepoFile crf1 = getDao(CryptoRepoFileDao.class).getCryptoRepoFile(remoteRepository, localPath);
 		// crf1 might indeed be null, which is currently the case, if there is a symlink in the localPath.
 		// Additionally, it might be null, because there was nothing uploaded, yet.
-//		assertNotNull("cryptoRepoFile", crf1, "remoteRepository=%s filter.localPath='%s'", remoteRepository, localPath);
+//		requireNonNull("cryptoRepoFile", crf1, "remoteRepository=%s filter.localPath='%s'", remoteRepository, localPath);
 
 		return crf1;
 	}
 
 //	private void appendToQueryFilter_resolved(StringBuilder qf, Map<String, Object> qp, final Map<String, Class<?>> qv, Boolean resolved) {
-//		assertNotNull("qf", qf);
-//		assertNotNull("qp", qp);
-//		assertNotNull("qv", qv);
+//		requireNonNull("qf", qf);
+//		requireNonNull("qp", qp);
+//		requireNonNull("qv", qv);
 //		if (resolved == null)
 //			return;
 //
@@ -327,14 +327,14 @@ public class CollisionDao extends Dao<Collision, CollisionDao> {
 //	}
 
 	private static void appendAndIfNeeded(final StringBuilder qf) {
-		assertNotNull(qf, "qf");
+		requireNonNull(qf, "qf");
 		if (qf.length() > 0)
 			qf.append(" && ");
 	}
 
 	@Override
 	public void deletePersistent(Collision entity) {
-		assertNotNull(entity, "entity");
+		requireNonNull(entity, "entity");
 		final CollisionPrivateDao cpDao = getDao(CollisionPrivateDao.class);
 		final CollisionPrivate collisionPrivate = cpDao.getCollisionPrivate(entity);
 		if (collisionPrivate != null) {
@@ -346,7 +346,7 @@ public class CollisionDao extends Dao<Collision, CollisionDao> {
 
 	@Override
 	public void deletePersistentAll(Collection<? extends Collision> entities) {
-		assertNotNull(entities, "entities");
+		requireNonNull(entities, "entities");
 		final CollisionPrivateDao cpDao = getDao(CollisionPrivateDao.class);
 		for (Collision collision : entities) {
 			final CollisionPrivate collisionPrivate = cpDao.getCollisionPrivate(collision);

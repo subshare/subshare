@@ -1,8 +1,8 @@
 package org.subshare.gui;
 
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
+import static java.util.Objects.*;
 import static org.subshare.gui.util.ResourceBundleUtil.*;
 
 import java.io.IOException;
@@ -431,7 +431,7 @@ public class SubShareGui extends Application {
 	}
 
 	private void showUpdateStartingDialog(final CloudStoreUpdaterCore updaterCore) {
-		assertNotNull(updaterCore, "updaterCore");
+		requireNonNull(updaterCore, "updaterCore");
 		Alert alert = new Alert(AlertType.INFORMATION);
 		alert.setHeaderText("Update to a new Subshare version!");
 

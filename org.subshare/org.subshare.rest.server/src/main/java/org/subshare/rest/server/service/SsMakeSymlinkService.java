@@ -1,6 +1,6 @@
 package org.subshare.rest.server.service;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
@@ -32,17 +32,17 @@ public class SsMakeSymlinkService extends MakeSymlinkService {
 	@Path("{path:.*}")
 	public void makeSymlink(@PathParam("path") String path, final RepoFileDtoWithCurrentHistoCryptoRepoFileDto repoFileDtoWithCurrentHistoCryptoRepoFileDto)
 	{
-		assertNotNull(path, "path");
-		assertNotNull(repoFileDtoWithCurrentHistoCryptoRepoFileDto, "repoFileDtoWithCurrentHistoCryptoRepoFileDto");
+		requireNonNull(path, "path");
+		requireNonNull(repoFileDtoWithCurrentHistoCryptoRepoFileDto, "repoFileDtoWithCurrentHistoCryptoRepoFileDto");
 
-		final CurrentHistoCryptoRepoFileDto currentHistoCryptoRepoFileDto = assertNotNull(
+		final CurrentHistoCryptoRepoFileDto currentHistoCryptoRepoFileDto = requireNonNull(
 				repoFileDtoWithCurrentHistoCryptoRepoFileDto.getCurrentHistoCryptoRepoFileDto(),
 				"repoFileDtoWithCurrentHistoCryptoRepoFileDto.currentHistoCryptoRepoFileDto");
 
-		assertNotNull(currentHistoCryptoRepoFileDto.getHistoCryptoRepoFileDto(),
+		requireNonNull(currentHistoCryptoRepoFileDto.getHistoCryptoRepoFileDto(),
 				"repoFileDtoWithCurrentHistoCryptoRepoFileDto.currentHistoCryptoRepoFileDto.histoCryptoRepoFileDto");
 
-		final RepoFileDto rfdto = assertNotNull(repoFileDtoWithCurrentHistoCryptoRepoFileDto.getRepoFileDto(),
+		final RepoFileDto rfdto = requireNonNull(repoFileDtoWithCurrentHistoCryptoRepoFileDto.getRepoFileDto(),
 				"repoFileDtoWithCurrentHistoCryptoRepoFileDto.repoFileDto");
 
 		if (! (rfdto instanceof SsSymlinkDto))

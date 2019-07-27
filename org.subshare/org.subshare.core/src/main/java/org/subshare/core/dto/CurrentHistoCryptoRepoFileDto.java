@@ -1,6 +1,6 @@
 package org.subshare.core.dto;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -105,8 +105,8 @@ public class CurrentHistoCryptoRepoFileDto implements Signable {
 			final Uid histoCryptoRepoFileId = (histoCryptoRepoFileDto != null
 					? histoCryptoRepoFileDto.getHistoCryptoRepoFileId() : this.histoCryptoRepoFileId);
 
-			assertNotNull(cryptoRepoFileId, "cryptoRepoFileId");
-			assertNotNull(histoCryptoRepoFileId, "histoCryptoRepoFileId");
+			requireNonNull(cryptoRepoFileId, "cryptoRepoFileId");
+			requireNonNull(histoCryptoRepoFileId, "histoCryptoRepoFileId");
 
 			byte separatorIndex = 0;
 			return new MultiInputStream(

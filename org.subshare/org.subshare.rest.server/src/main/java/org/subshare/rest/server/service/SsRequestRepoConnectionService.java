@@ -1,6 +1,6 @@
 package org.subshare.rest.server.service;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.UUID;
 
@@ -34,9 +34,9 @@ public class SsRequestRepoConnectionService extends RequestRepoConnectionService
 	}
 
 	private void verifyRepositoryDto(final RepoTransport repoTransport, final RepositoryDto clientRepositoryDto) {
-		assertNotNull(repoTransport, "repoTransport");
-		assertNotNull(clientRepositoryDto, "clientRepositoryDto");
-		final UUID clientRepositoryId = assertNotNull(repoTransport.getClientRepositoryId(), "repoTransport.clientRepositoryId");
+		requireNonNull(repoTransport, "repoTransport");
+		requireNonNull(clientRepositoryDto, "clientRepositoryDto");
+		final UUID clientRepositoryId = requireNonNull(repoTransport.getClientRepositoryId(), "repoTransport.clientRepositoryId");
 
 		if (! clientRepositoryId.equals(clientRepositoryDto.getRepositoryId()))
 			throw new IllegalArgumentException("repoTransport.clientRepositoryId != clientRepositoryDto.clientRepositoryId");
@@ -61,9 +61,9 @@ public class SsRequestRepoConnectionService extends RequestRepoConnectionService
 	}
 
 	private void acceptConnection(final RepoTransport repoTransport, final String pathPrefix, final RepositoryDto clientRepositoryDto) {
-		assertNotNull(repoTransport, "repoTransport");
-		assertNotNull(clientRepositoryDto, "clientRepositoryDto");
-		final UUID clientRepositoryId = assertNotNull(repoTransport.getClientRepositoryId(), "clientRepositoryId");
+		requireNonNull(repoTransport, "repoTransport");
+		requireNonNull(clientRepositoryDto, "clientRepositoryDto");
+		final UUID clientRepositoryId = requireNonNull(repoTransport.getClientRepositoryId(), "clientRepositoryId");
 		final LocalRepoManager localRepoManager = ((ContextWithLocalRepoManager) repoTransport).getLocalRepoManager();
 		final byte[] remotePublicKey = clientRepositoryDto.getPublicKey();
 		final String localPathPrefix = pathPrefix;

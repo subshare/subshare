@@ -1,8 +1,7 @@
 package org.subshare.core.crypto;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
-import co.codewizards.cloudstore.core.io.ByteArrayOutputStream;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -11,6 +10,7 @@ import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.subshare.core.io.LimitedInputStream;
 
+import co.codewizards.cloudstore.core.io.ByteArrayOutputStream;
 import co.codewizards.cloudstore.core.util.IOUtil;
 
 /**
@@ -39,8 +39,8 @@ public class AsymCombiDecrypterInputStream extends FilterInputStream {
 	 * @throws IOException if reading the header from the underlying {@code InputStream} fails.
 	 */
 	public AsymCombiDecrypterInputStream(final InputStream in, final AsymmetricKeyParameter privateKey) throws IOException {
-		super(assertNotNull(in, "in"));
-		this.privateKey = assertNotNull(privateKey, "privateKey");
+		super(requireNonNull(in, "in"));
+		this.privateKey = requireNonNull(privateKey, "privateKey");
 		this.header = readHeader();
 		symIn = new DecrypterInputStream(in, header.symmetricKey);
 	}
@@ -74,7 +74,7 @@ public class AsymCombiDecrypterInputStream extends FilterInputStream {
 		public final KeyParameter symmetricKey;
 		public Header(final int version, final KeyParameter symmetricKey) {
 			this.version = version;
-			this.symmetricKey = assertNotNull(symmetricKey, "symmetricKey");
+			this.symmetricKey = requireNonNull(symmetricKey, "symmetricKey");
 		}
 	}
 

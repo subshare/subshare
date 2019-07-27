@@ -1,7 +1,7 @@
 package org.subshare.test;
 
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 import static org.assertj.core.api.Assertions.*;
 
 import java.io.IOException;
@@ -116,7 +116,7 @@ public abstract class AbstractRepoToRepoSyncIT extends AbstractIT {
 	}
 
 //	private File getRemoteRootWithPathPrefix1() {
-//		assertNotNull("remotePathPrefix1Encrypted", remotePathPrefix1Encrypted);
+//		requireNonNull("remotePathPrefix1Encrypted", remotePathPrefix1Encrypted);
 //		if (remotePathPrefix1Encrypted.isEmpty())
 //			return remoteRoot;
 //
@@ -125,7 +125,7 @@ public abstract class AbstractRepoToRepoSyncIT extends AbstractIT {
 //	}
 //
 //	private File getRemoteRootWithPathPrefix2() {
-//		assertNotNull("remotePathPrefix2Encrypted", remotePathPrefix2Encrypted);
+//		requireNonNull("remotePathPrefix2Encrypted", remotePathPrefix2Encrypted);
 //		if (remotePathPrefix2Encrypted.isEmpty())
 //			return remoteRoot;
 //
@@ -146,7 +146,7 @@ public abstract class AbstractRepoToRepoSyncIT extends AbstractIT {
 			}
 
 	protected UserRepoKeyRing createUserRepoKeyRing() {
-		assertNotNull(remoteRepositoryId, "remoteRepositoryId");
+		requireNonNull(remoteRepositoryId, "remoteRepositoryId");
 		return createUserRepoKeyRing(remoteRepositoryId);
 	}
 
@@ -352,7 +352,7 @@ public abstract class AbstractRepoToRepoSyncIT extends AbstractIT {
 		final String path = "/" + localRepoManager.getLocalRoot().relativize(file).replace('\\', '/');
 		SsLocalRepoMetaData localRepoMetaData = (SsLocalRepoMetaData) localSrcRepoManagerLocal.getLocalRepoMetaData();
 		List<PlainHistoCryptoRepoFileDto> result = new ArrayList<>();
-	
+
 		// TODO need to extend the filter with a path! Do this when extending the UI to show a history in every folder-detail-pane.
 		// The current implementation is very inefficient - but we have only small test data, anyway ;-)
 		Collection<HistoFrameDto> histoFrameDtos = localRepoMetaData.getHistoFrameDtos(new HistoFrameFilter());
@@ -367,7 +367,7 @@ public abstract class AbstractRepoToRepoSyncIT extends AbstractIT {
 					result.add(node.getPlainHistoCryptoRepoFileDto());
 			}
 		}
-	
+
 		Collections.sort(result, new Comparator<PlainHistoCryptoRepoFileDto>() {
 			@Override
 			public int compare(PlainHistoCryptoRepoFileDto o1, PlainHistoCryptoRepoFileDto o2) {
@@ -376,7 +376,7 @@ public abstract class AbstractRepoToRepoSyncIT extends AbstractIT {
 				return signatureCreated1.compareTo(signatureCreated2);
 			}
 		});
-	
+
 		return result;
 	}
 }

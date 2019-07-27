@@ -1,8 +1,8 @@
 package org.subshare.gui.localrepolist;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
+import static java.util.Objects.*;
 
 import java.text.DateFormat;
 import java.util.Date;
@@ -42,7 +42,7 @@ public class LocalRepoListItem {
 	private ObjectProperty<Set<RepoSyncActivity>> repoSyncActivities = new SimpleObjectProperty<>(this, "repoSyncActivities");
 
 	public LocalRepoListItem(final LocalRepo localRepo) {
-		this.localRepo = assertNotNull(localRepo, "localRepo");
+		this.localRepo = requireNonNull(localRepo, "localRepo");
 		bind();
 		updateNameShown();
 	}

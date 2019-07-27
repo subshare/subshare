@@ -1,6 +1,6 @@
 package org.subshare.gui.pgp.assignownertrust.selectkey;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 import static org.subshare.gui.util.FxmlUtil.*;
 
 import org.subshare.core.pgp.PgpOwnerTrust;
@@ -67,7 +67,7 @@ public class SelectKeyPane extends WizardPageContentGridPane {
 	};
 
 	public SelectKeyPane(final AssignOwnerTrustData assignOwnerTrustData) {
-		this.assignOwnerTrustData = assertNotNull(assignOwnerTrustData, "assignOwnerTrustData");
+		this.assignOwnerTrustData = requireNonNull(assignOwnerTrustData, "assignOwnerTrustData");
 		loadDynamicComponentFxml(SelectKeyPane.class, this);
 		assignOwnerTrustData.assignToAllPgpKeysProperty().addListener(assignToAllPgpKeysChangeListener);
 		toggleGroup.selectedToggleProperty().addListener(toggleGroupSelectedToggleListener);

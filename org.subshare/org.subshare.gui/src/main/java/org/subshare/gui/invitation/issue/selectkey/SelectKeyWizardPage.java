@@ -1,6 +1,6 @@
 package org.subshare.gui.invitation.issue.selectkey;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import org.subshare.gui.invitation.issue.IssueInvitationData;
 import org.subshare.gui.wizard.WizardPage;
@@ -12,7 +12,7 @@ public class SelectKeyWizardPage extends WizardPage {
 
 	public SelectKeyWizardPage(final IssueInvitationData issueInvitationData) {
 		super("Select PGP keys");
-		this.issueInvitationData = assertNotNull(issueInvitationData, "issueInvitationData");
+		this.issueInvitationData = requireNonNull(issueInvitationData, "issueInvitationData");
 	}
 
 	@Override

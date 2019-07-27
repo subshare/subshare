@@ -1,8 +1,8 @@
 package org.subshare.core.pgp.transport;
 
-import java.net.URL;
+import static java.util.Objects.*;
 
-import co.codewizards.cloudstore.core.util.AssertUtil;
+import java.net.URL;
 
 public abstract class AbstractPgpTransportFactory implements PgpTransportFactory {
 
@@ -13,7 +13,7 @@ public abstract class AbstractPgpTransportFactory implements PgpTransportFactory
 
 	@Override
 	public PgpTransport createPgpTransport(URL remoteRoot) {
-		AssertUtil.assertNotNull(remoteRoot, "remoteRoot");
+		requireNonNull(remoteRoot, "remoteRoot");
 		final PgpTransport pgpTransport = _createPgpTransport();
 		if (pgpTransport == null)
 			throw new IllegalStateException(String.format("Implementation error in class %s: _createPgpTransport(...) returned null!", this.getClass().getName()));

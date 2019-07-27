@@ -1,7 +1,7 @@
 package org.subshare.rest.server.service;
 
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.UUID;
 
@@ -33,8 +33,8 @@ public class CreateRepositoryService {
 
 	@PUT
 	public void createRepository(final CreateRepositoryRequestDto createRepositoryRequestDto) {
-		assertNotNull(createRepositoryRequestDto, "createRepositoryRequestDto");
-		final UUID serverRepositoryId = assertNotNull(createRepositoryRequestDto.getServerRepositoryId(), "createRepositoryRequestDto.serverRepositoryId");
+		requireNonNull(createRepositoryRequestDto, "createRepositoryRequestDto");
+		final UUID serverRepositoryId = requireNonNull(createRepositoryRequestDto.getServerRepositoryId(), "createRepositoryRequestDto.serverRepositoryId");
 
 		final PgpSignature pgpSignature = new PgpSignableVerifier().verify(createRepositoryRequestDto);
 		// TODO introduce sth. like a server-owner or a list of server-admins who are allowed to do this.

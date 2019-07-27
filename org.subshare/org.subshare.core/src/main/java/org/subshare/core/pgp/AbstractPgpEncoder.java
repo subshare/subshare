@@ -1,13 +1,12 @@
 package org.subshare.core.pgp;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.HashSet;
 import java.util.Set;
 
 import co.codewizards.cloudstore.core.io.IInputStream;
 import co.codewizards.cloudstore.core.io.IOutputStream;
-
 
 public abstract class AbstractPgpEncoder implements PgpEncoder {
 
@@ -80,7 +79,7 @@ public abstract class AbstractPgpEncoder implements PgpEncoder {
 	}
 	@Override
 	public void setSymmetricEncryptionAlgorithm(final SymmetricEncryptionAlgorithm symmetricEncryptionAlgorithm) {
-		this.symmetricEncryptionAlgorithm = assertNotNull(symmetricEncryptionAlgorithm, "symmetricEncryptionAlgorithm");
+		this.symmetricEncryptionAlgorithm = requireNonNull(symmetricEncryptionAlgorithm, "symmetricEncryptionAlgorithm");
 	}
 
 	@Override
@@ -89,7 +88,7 @@ public abstract class AbstractPgpEncoder implements PgpEncoder {
 	}
 	@Override
 	public void setCompressionAlgorithm(final CompressionAlgorithm compressionAlgorithm) {
-		this.compressionAlgorithm = assertNotNull(compressionAlgorithm, "compressionAlgorithm");
+		this.compressionAlgorithm = requireNonNull(compressionAlgorithm, "compressionAlgorithm");
 	}
 
 	@Override
@@ -98,7 +97,7 @@ public abstract class AbstractPgpEncoder implements PgpEncoder {
 	}
 	@Override
 	public void setHashAlgorithm(final HashAlgorithm hashAlgorithm) {
-		this.hashAlgorithm = assertNotNull(hashAlgorithm, "hashAlgorithm");
+		this.hashAlgorithm = requireNonNull(hashAlgorithm, "hashAlgorithm");
 	}
 
 	@Override
@@ -122,7 +121,7 @@ public abstract class AbstractPgpEncoder implements PgpEncoder {
 		return fileName;
 	}
 	public void setFileName(final String fileName) {
-		this.fileName = assertNotNull(fileName, "fileName");
+		this.fileName = requireNonNull(fileName, "fileName");
 	}
 
 	protected PgpAuthenticationCallback getPgpAuthenticationCallback() {

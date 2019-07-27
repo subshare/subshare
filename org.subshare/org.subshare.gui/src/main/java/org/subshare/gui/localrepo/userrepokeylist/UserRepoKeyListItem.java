@@ -1,7 +1,7 @@
 package org.subshare.gui.localrepo.userrepokeylist;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
+import static java.util.Objects.*;
 
 import java.util.UUID;
 
@@ -17,7 +17,7 @@ public class UserRepoKeyListItem {
 	private final String name;
 
 	public UserRepoKeyListItem(final DebugUserRepoKeyDto debugUserRepoKeyDto) {
-		this.debugUserRepoKeyDto = assertNotNull(debugUserRepoKeyDto, "debugUserRepoKeyDto");
+		this.debugUserRepoKeyDto = requireNonNull(debugUserRepoKeyDto, "debugUserRepoKeyDto");
 		this.name = _getName(debugUserRepoKeyDto.getUserIdentityPayloadDto());
 	}
 

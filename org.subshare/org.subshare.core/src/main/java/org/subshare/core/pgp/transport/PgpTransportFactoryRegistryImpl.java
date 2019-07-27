@@ -1,5 +1,7 @@
 package org.subshare.core.pgp.transport;
 
+import static java.util.Objects.*;
+
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -7,8 +9,6 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ServiceLoader;
-
-import co.codewizards.cloudstore.core.util.AssertUtil;
 
 public class PgpTransportFactoryRegistryImpl implements PgpTransportFactoryRegistry {
 
@@ -107,7 +107,7 @@ public class PgpTransportFactoryRegistryImpl implements PgpTransportFactoryRegis
 
 	@Override
 	public <F extends PgpTransportFactory> F getPgpTransportFactory(Class<F> factoryClass) {
-		AssertUtil.assertNotNull(factoryClass, "factoryClass");
+		requireNonNull(factoryClass, "factoryClass");
 		List<PgpTransportFactory> pgpTransportFactories = getPgpTransportFactories();
 		for (PgpTransportFactory pgpTransportFactory : pgpTransportFactories) {
 			if (factoryClass.isInstance(pgpTransportFactory)) {

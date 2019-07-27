@@ -1,7 +1,7 @@
 package org.subshare.local.persistence;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
+import static java.util.Objects.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -91,7 +91,7 @@ public class PermissionSet extends Entity implements WriteProtected, AutoTrackLo
 	}
 
 	public boolean isPermissionsInherited(final Date timestamp) {
-		assertNotNull(timestamp, "timestamp");
+		requireNonNull(timestamp, "timestamp");
 		for (final PermissionSetInheritance permissionSetInheritance : getPermissionSetInheritances()) {
 			if (permissionSetInheritance.getValidFrom().after(timestamp))
 				continue;
@@ -161,9 +161,9 @@ public class PermissionSet extends Entity implements WriteProtected, AutoTrackLo
 		// we interrupt the inheritance. Of course, this could be circumvented using the validTo time or using
 		// some other complicated algorithm, but choosing the parent-CryptoRepoFile as the one controlling permissions
 		// instead, is the easiest and most elegant solution.
-		final CryptoRepoFile cryptoRepoFile = assertNotNull(this.cryptoRepoFile, "this.cryptoRepoFile");
+		final CryptoRepoFile cryptoRepoFile = requireNonNull(this.cryptoRepoFile, "this.cryptoRepoFile");
 		final CryptoRepoFile parentCryptoRepoFile = cryptoRepoFile.getParent();
-		return assertNotNull(parentCryptoRepoFile == null ? cryptoRepoFile.getCryptoRepoFileId() : parentCryptoRepoFile.getCryptoRepoFileId(),
+		return requireNonNull(parentCryptoRepoFile == null ? cryptoRepoFile.getCryptoRepoFileId() : parentCryptoRepoFile.getCryptoRepoFileId(),
 				"cryptoRepoFileIdControllingPermissions");
 	}
 

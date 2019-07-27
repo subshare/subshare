@@ -1,8 +1,8 @@
 package org.subshare.core.file;
 
 import static co.codewizards.cloudstore.core.io.StreamUtil.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
+import static java.util.Objects.*;
 import static org.subshare.core.file.FileConst.*;
 
 import java.io.IOException;
@@ -61,7 +61,7 @@ public class DataFileFilter implements FileFilter {
 
 	@Override
 	public boolean accept(final File file) {
-		assertNotNull(file, "file");
+		requireNonNull(file, "file");
 		if (isAcceptDirectories() && file.isDirectory())
 			return true;
 
@@ -76,7 +76,7 @@ public class DataFileFilter implements FileFilter {
 	}
 
 	protected boolean acceptContentType(File file) {
-		assertNotNull(file, "file");
+		requireNonNull(file, "file");
 		try {
 			final DataFile dataFile;
 			try (final InputStream in = castStream(file.createInputStream())) {
@@ -104,7 +104,7 @@ public class DataFileFilter implements FileFilter {
 	}
 
 	protected boolean acceptContentType(final Properties manifestProperties) {
-		assertNotNull(manifestProperties, "manifestProperties");
+		requireNonNull(manifestProperties, "manifestProperties");
 		final String contentTypeValue = manifestProperties.getProperty(MANIFEST_PROPERTY_CONTENT_TYPE);
 		if (getAcceptContentType() == null)
 			return true;

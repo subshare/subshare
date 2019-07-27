@@ -1,6 +1,6 @@
 package org.subshare.gui.pgp.keytree;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.text.DateFormat;
 import java.util.Date;
@@ -20,7 +20,7 @@ import javafx.scene.control.TreeItem;
 public class PgpKeyPgpKeyTreeItem extends PgpKeyTreeItem<PgpKey> {
 
 	public PgpKeyPgpKeyTreeItem(final PgpKey pgpKey) {
-		super(assertNotNull(pgpKey, "pgpKey"));
+		super(requireNonNull(pgpKey, "pgpKey"));
 	}
 
 	public PgpKey getPgpKey() {

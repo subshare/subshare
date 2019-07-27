@@ -1,6 +1,6 @@
 package org.subshare.local;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.security.SecureRandom;
 
@@ -72,11 +72,11 @@ public class FilePaddingLengthRandom {
 	}
 
 	public FilePaddingLengthRandom(final File file) {
-		this(ConfigImpl.getInstanceForFile(assertNotNull(file, "file")));
+		this(ConfigImpl.getInstanceForFile(requireNonNull(file, "file")));
 	}
 
 	public FilePaddingLengthRandom(final Config config) {
-		this.config = assertNotNull(config, "config");
+		this.config = requireNonNull(config, "config");
 		populateLengthProbability();
 	}
 

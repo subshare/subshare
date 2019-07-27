@@ -1,6 +1,6 @@
 package org.subshare.gui.pgp.certify;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import org.subshare.core.pgp.CertifyPgpKeyParam;
 import org.subshare.core.pgp.Pgp;
@@ -15,8 +15,8 @@ public class CertifyPgpKeyWizard extends Wizard {
 	private CertifyPgpKeyParam certifyPgpKeyParam;
 
 	public CertifyPgpKeyWizard(final CertifyPgpKeyData certifyPgpKeyData) {
-		this.certifyPgpKeyData = assertNotNull(certifyPgpKeyData, "certifyPgpKeyData"); //$NON-NLS-1$
-		assertNotNull(certifyPgpKeyData.getPgpKey(), "certifyPgpKeyData.pgpKey"); //$NON-NLS-1$
+		this.certifyPgpKeyData = requireNonNull(certifyPgpKeyData, "certifyPgpKeyData"); //$NON-NLS-1$
+		requireNonNull(certifyPgpKeyData.getPgpKey(), "certifyPgpKeyData.pgpKey"); //$NON-NLS-1$
 		setFirstPage(new CertifyPgpKeyWizardPage(certifyPgpKeyData));
 	}
 

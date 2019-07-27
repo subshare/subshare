@@ -1,6 +1,6 @@
 package org.subshare.rest.server.service;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.List;
 import java.util.Objects;
@@ -74,7 +74,7 @@ public class CryptoChangeSetDtoService extends AbstractServiceWithRepoToRepoAuth
 	}
 
 	protected CryptoChangeSetDto getCryptoChangeSetDto(final RepoTransport repoTransport, final Long lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced) throws Exception {
-		final UUID clientRepositoryId = assertNotNull(repoTransport.getClientRepositoryId(), "clientRepositoryId");
+		final UUID clientRepositoryId = requireNonNull(repoTransport.getClientRepositoryId(), "clientRepositoryId");
 		final LocalRepoManager localRepoManager = ((ContextWithLocalRepoManager) repoTransport).getLocalRepoManager();
 		final CryptoChangeSetDtoSplitFileManager cryptoChangeSetDtoSplitFileManager = CryptoChangeSetDtoSplitFileManager.createInstance(localRepoManager, clientRepositoryId);
 //		cryptoChangeSetDtoSplitFileManager.setCryptoChangeSetDtoTmpDirRandom(true);
@@ -133,7 +133,7 @@ public class CryptoChangeSetDtoService extends AbstractServiceWithRepoToRepoAuth
 	public byte[] getCryptoChangeSetDtoFileData(@PathParam("multiPartIndex") int multiPartIndex) throws Exception
 	{
 		try (final RepoTransport repoTransport = authenticateAndCreateLocalRepoTransport()) {
-			final UUID clientRepositoryId = assertNotNull(repoTransport.getClientRepositoryId(), "clientRepositoryId");
+			final UUID clientRepositoryId = requireNonNull(repoTransport.getClientRepositoryId(), "clientRepositoryId");
 			final LocalRepoManager localRepoManager = ((ContextWithLocalRepoManager) repoTransport).getLocalRepoManager();
 			final CryptoChangeSetDtoSplitFileManager cryptoChangeSetDtoSplitFileManager = CryptoChangeSetDtoSplitFileManager.createInstance(localRepoManager, clientRepositoryId);
 			final byte[] result = cryptoChangeSetDtoSplitFileManager.readCryptoChangeSetDtoFile(multiPartIndex);
@@ -145,7 +145,7 @@ public class CryptoChangeSetDtoService extends AbstractServiceWithRepoToRepoAuth
 	@Path("endGet")
 	public void endGetCryptoChangeSetDto() throws Exception {
 		try (final RepoTransport repoTransport = authenticateAndCreateLocalRepoTransport()) {
-			final UUID clientRepositoryId = assertNotNull(repoTransport.getClientRepositoryId(), "clientRepositoryId");
+			final UUID clientRepositoryId = requireNonNull(repoTransport.getClientRepositoryId(), "clientRepositoryId");
 			final LocalRepoManager localRepoManager = ((ContextWithLocalRepoManager) repoTransport).getLocalRepoManager();
 			try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction()) {
 				final CryptreeFactory cryptreeFactory = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail();
@@ -160,9 +160,9 @@ public class CryptoChangeSetDtoService extends AbstractServiceWithRepoToRepoAuth
 
 	@PUT
 	public void putCryptoChangeSetDto(final CryptoChangeSetDto cryptoChangeSetDto) {
-		assertNotNull(cryptoChangeSetDto, "cryptoChangeSetDto");
+		requireNonNull(cryptoChangeSetDto, "cryptoChangeSetDto");
 		try (final RepoTransport repoTransport = authenticateAndCreateLocalRepoTransport()) {
-			final UUID clientRepositoryId = assertNotNull(repoTransport.getClientRepositoryId(), "clientRepositoryId");
+			final UUID clientRepositoryId = requireNonNull(repoTransport.getClientRepositoryId(), "clientRepositoryId");
 			final LocalRepoManager localRepoManager = ((ContextWithLocalRepoManager) repoTransport).getLocalRepoManager();
 			try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction()) {
 				final CryptreeFactory cryptreeFactory = CryptreeFactoryRegistry.getInstance().getCryptreeFactoryOrFail();

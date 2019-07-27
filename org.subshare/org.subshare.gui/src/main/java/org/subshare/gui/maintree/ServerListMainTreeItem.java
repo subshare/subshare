@@ -1,7 +1,7 @@
 package org.subshare.gui.maintree;
 
 import static co.codewizards.cloudstore.core.bean.PropertyChangeListenerUtil.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 import static javafx.application.Platform.*;
 
 import java.beans.PropertyChangeEvent;
@@ -81,7 +81,7 @@ public class ServerListMainTreeItem extends MainTreeItem<String> {
 	}
 
 	protected void addOrRemoveTreeItemsViewCallback(final Set<Server> servers) {
-		assertNotNull(servers, "servers");
+		requireNonNull(servers, "servers");
 		final Map<Server, ServerMainTreeItem> viewServer2ServerMainTreeItem = new HashMap<>();
 		for (final TreeItem<?> ti : getChildren()) {
 			final ServerMainTreeItem smti = (ServerMainTreeItem) ti;
@@ -106,7 +106,7 @@ public class ServerListMainTreeItem extends MainTreeItem<String> {
 	}
 
 	private void addTreeItemsViewCallback(final Collection<Server> servers) {
-		assertNotNull(servers, "servers");
+		requireNonNull(servers, "servers");
 		for (final Server server : servers)
 			getChildren().add(new ServerMainTreeItem(server));
 	}

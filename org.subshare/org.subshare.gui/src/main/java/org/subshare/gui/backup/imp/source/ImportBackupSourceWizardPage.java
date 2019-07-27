@@ -1,6 +1,6 @@
 package org.subshare.gui.backup.imp.source;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import org.subshare.gui.backup.imp.ImportBackupData;
 import org.subshare.gui.wizard.WizardPage;
@@ -14,7 +14,7 @@ public class ImportBackupSourceWizardPage extends WizardPage {
 
 	public ImportBackupSourceWizardPage(final ImportBackupData importBackupData) {
 		super("Import data from backup");
-		this.importBackupData = assertNotNull(importBackupData, "importBackupData");
+		this.importBackupData = requireNonNull(importBackupData, "importBackupData");
 	}
 
 	@Override

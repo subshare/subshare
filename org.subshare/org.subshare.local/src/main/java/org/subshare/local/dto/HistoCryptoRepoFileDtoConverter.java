@@ -1,7 +1,7 @@
 package org.subshare.local.dto;
 
 import static co.codewizards.cloudstore.core.objectfactory.ObjectFactoryUtil.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import org.subshare.core.dto.HistoCryptoRepoFileDto;
 import org.subshare.local.persistence.CryptoKey;
@@ -25,11 +25,11 @@ public class HistoCryptoRepoFileDtoConverter {
 	}
 
 	protected HistoCryptoRepoFileDtoConverter(final LocalRepoTransaction transaction) {
-		this.transaction = assertNotNull(transaction, "transaction");
+		this.transaction = requireNonNull(transaction, "transaction");
 	}
 
 	public HistoCryptoRepoFileDto toHistoCryptoRepoFileDto(final HistoCryptoRepoFile histoCryptoRepoFile) {
-		assertNotNull(histoCryptoRepoFile, "cryptoRepoFileOnServer");
+		requireNonNull(histoCryptoRepoFile, "cryptoRepoFileOnServer");
 		final HistoCryptoRepoFileDto result = new HistoCryptoRepoFileDto();
 
 		result.setHistoCryptoRepoFileId(histoCryptoRepoFile.getHistoCryptoRepoFileId());
@@ -39,20 +39,20 @@ public class HistoCryptoRepoFileDtoConverter {
 		final HistoCryptoRepoFile previousHistoCryptoRepoFile = histoCryptoRepoFile.getPreviousHistoCryptoRepoFile();
 		result.setPreviousHistoCryptoRepoFileId(previousHistoCryptoRepoFile == null ? null : previousHistoCryptoRepoFile.getHistoCryptoRepoFileId());
 
-		final CryptoKey cryptoKey = assertNotNull(histoCryptoRepoFile.getCryptoKey(), "cryptoRepoFileOnServer.cryptoKey");
+		final CryptoKey cryptoKey = requireNonNull(histoCryptoRepoFile.getCryptoKey(), "cryptoRepoFileOnServer.cryptoKey");
 		result.setCryptoKeyId(cryptoKey.getCryptoKeyId());
 
-		final byte[] repoFileDtoData = assertNotNull(histoCryptoRepoFile.getRepoFileDtoData(), "cryptoRepoFileOnServer.repoFileDtoData");
+		final byte[] repoFileDtoData = requireNonNull(histoCryptoRepoFile.getRepoFileDtoData(), "cryptoRepoFileOnServer.repoFileDtoData");
 		result.setRepoFileDtoData(repoFileDtoData);
 		result.setDeleted(histoCryptoRepoFile.getDeleted());
 		result.setDeletedByIgnoreRule(histoCryptoRepoFile.isDeletedByIgnoreRule());
-		result.setSignature(assertNotNull(histoCryptoRepoFile.getSignature(), "cryptoRepoFileOnServer.signature"));
+		result.setSignature(requireNonNull(histoCryptoRepoFile.getSignature(), "cryptoRepoFileOnServer.signature"));
 
 		return result;
 	}
 
 	public HistoCryptoRepoFile putHistoCryptoRepoFile(final HistoCryptoRepoFileDto histoCryptoRepoFileDto) {
-		assertNotNull(histoCryptoRepoFileDto, "cryptoRepoFileOnServerDto");
+		requireNonNull(histoCryptoRepoFileDto, "cryptoRepoFileOnServerDto");
 		final HistoFrameDao histoFrameDao = transaction.getDao(HistoFrameDao.class);
 		final HistoCryptoRepoFileDao histoCryptoRepoFileDao = transaction.getDao(HistoCryptoRepoFileDao.class);
 		final CryptoRepoFileDao cryptoRepoFileDao = transaction.getDao(CryptoRepoFileDao.class);
@@ -72,7 +72,7 @@ public class HistoCryptoRepoFileDtoConverter {
 			histoCryptoRepoFile.setPreviousHistoCryptoRepoFile(previous);
 		}
 
-		final Uid histoFrameId = assertNotNull(histoCryptoRepoFileDto.getHistoFrameId(), "histoCryptoRepoFileDto.histoFrameId");
+		final Uid histoFrameId = requireNonNull(histoCryptoRepoFileDto.getHistoFrameId(), "histoCryptoRepoFileDto.histoFrameId");
 		final HistoFrame histoFrame = histoFrameDao.getHistoFrameOrFail(histoFrameId);
 		histoCryptoRepoFile.setHistoFrame(histoFrame);
 

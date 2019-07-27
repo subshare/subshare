@@ -1,7 +1,7 @@
 package org.subshare.gui.localrepolist;
 
 import static co.codewizards.cloudstore.core.bean.PropertyChangeListenerUtil.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 import static javafx.application.Platform.*;
 import static org.subshare.gui.util.FxmlUtil.*;
 
@@ -253,7 +253,7 @@ public class LocalRepoListPane extends GridPane {
 	}
 
 	private void addOrRemoveTableItemsViewCallback(final Collection<LocalRepo> localRepos) {
-		assertNotNull(localRepos, "localRepos");
+		requireNonNull(localRepos, "localRepos");
 		final Map<LocalRepo, LocalRepoListItem> viewLocalRepo2LocalRepoListItem = new HashMap<>();
 		for (final LocalRepoListItem li : tableView.getItems())
 			viewLocalRepo2LocalRepoListItem.put(li.getLocalRepo(), li);

@@ -1,6 +1,6 @@
 package org.subshare.gui.resolvecollision.collision;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 import static org.subshare.gui.util.FxmlUtil.*;
 
 import java.util.Date;
@@ -26,7 +26,7 @@ public class CollisionPane extends WizardPageContentGridPane {
 
 	public CollisionPane(final CollisionData collisionData) {
 		loadDynamicComponentFxml(CollisionPane.class, this);
-		this.collisionData = assertNotNull(collisionData, "collisionData");
+		this.collisionData = requireNonNull(collisionData, "collisionData");
 
 		final CollisionDtoWithPlainHistoCryptoRepoFileDto collisionDtoWithPlainHistoCryptoRepoFileDto = collisionData.getCollisionDtoWithPlainHistoCryptoRepoFileDto();
 		final CollisionPrivateDto collisionPrivateDto = collisionDtoWithPlainHistoCryptoRepoFileDto.getCollisionPrivateDto();

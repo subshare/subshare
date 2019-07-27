@@ -1,6 +1,6 @@
 package org.subshare.gui.pgp.creatingkey;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 import static org.subshare.gui.util.FxmlUtil.*;
 
 import org.subshare.core.pgp.CreatePgpKeyParam;
@@ -17,7 +17,7 @@ public abstract class CreatingPgpKeyPane extends GridPane {
 	private Text messageText;
 
 	public CreatingPgpKeyPane(CreatePgpKeyParam createPgpKeyParam) {
-		assertNotNull(createPgpKeyParam, "createPgpKeyParam"); //$NON-NLS-1$
+		requireNonNull(createPgpKeyParam, "createPgpKeyParam"); //$NON-NLS-1$
 		loadDynamicComponentFxml(CreatingPgpKeyPane.class, this);
 
 		final PgpUserId pgpUserId = createPgpKeyParam.getUserIds().get(0);

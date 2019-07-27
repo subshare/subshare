@@ -1,6 +1,6 @@
 package org.subshare.core.sync;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.net.URL;
 import java.util.Date;
@@ -21,10 +21,10 @@ public class RepoSyncState extends co.codewizards.cloudstore.core.repo.sync.Repo
 //	private final File localRoot;
 
 	public RepoSyncState(UUID localRepositoryId, ServerRepo serverRepo, Server server, File localRoot, URL url, Severity severity, String message, Error error, Date syncStarted, Date syncFinished) {
-		super(localRepositoryId, assertNotNull(serverRepo, "serverRepo").getRepositoryId(), localRoot, url, severity, message, error, syncStarted, syncFinished);
+		super(localRepositoryId, requireNonNull(serverRepo, "serverRepo").getRepositoryId(), localRoot, url, severity, message, error, syncStarted, syncFinished);
 		this.serverRepo = serverRepo;
-		this.server = assertNotNull(server, "server");
-//		this.localRoot = assertNotNull("localRoot", localRoot);
+		this.server = requireNonNull(server, "server");
+//		this.localRoot = requireNonNull("localRoot", localRoot);
 	}
 
 	public Server getServer() {

@@ -1,6 +1,6 @@
 package org.subshare.local.persistence;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.Comparator;
 
@@ -21,8 +21,8 @@ public class CryptoRepoFilePathComparator implements Comparator<CryptoRepoFile> 
 	}
 
 	private boolean isParentOrEqual(final CryptoRepoFile parentCandidate, final CryptoRepoFile childCandidate) {
-		assertNotNull(parentCandidate, "parentCandidate");
-		assertNotNull(childCandidate, "childCandidate");
+		requireNonNull(parentCandidate, "parentCandidate");
+		requireNonNull(childCandidate, "childCandidate");
 
 		CryptoRepoFile crf = childCandidate;
 		while (crf != null) {

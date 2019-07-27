@@ -1,8 +1,8 @@
 package org.subshare.local.dbrepo.transport;
 
 import static co.codewizards.cloudstore.core.objectfactory.ObjectFactoryUtil.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
+import static java.util.Objects.*;
 
 import java.util.Collection;
 import java.util.Date;
@@ -70,11 +70,11 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 
 	@Override
 	public void delete(final SsDeleteModificationDto deleteModificationDto) {
-//		assertNotNull(deleteModificationDto, "deleteModificationDto");
+//		requireNonNull(deleteModificationDto, "deleteModificationDto");
 ////		if (! isOnServer())
 ////			throw new IllegalStateException("This method should only be invoked on the server!");
 //
-//		final UUID clientRepositoryId = assertNotNull(getClientRepositoryId(), "clientRepositoryId");
+//		final UUID clientRepositoryId = requireNonNull(getClientRepositoryId(), "clientRepositoryId");
 //
 //		final LocalRepoManager localRepoManager = getLocalRepoManager();
 //		try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
@@ -114,8 +114,8 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 	}
 
 //	private void createAndPersistDeleteModifications(final LocalRepoTransaction transaction, final SsDeleteModificationDto deleteModificationDto) {
-//		assertNotNull("transaction", transaction);
-//		assertNotNull("deleteModificationDto", deleteModificationDto);
+//		requireNonNull("transaction", transaction);
+//		requireNonNull("deleteModificationDto", deleteModificationDto);
 //		final RemoteRepositoryDao remoteRepositoryDao = transaction.getDao(RemoteRepositoryDao.class);
 //		final DeleteModificationDao deleteModificationDao = transaction.getDao(DeleteModificationDao.class);
 //
@@ -128,9 +128,9 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 //	}
 
 //	private SsDeleteModification toDeleteModification(final LocalRepoTransaction transaction, final SsDeleteModificationDto deleteModificationDto, final RemoteRepository remoteRepository) {
-//		assertNotNull("transaction", transaction);
-//		assertNotNull("deleteModificationDto", deleteModificationDto);
-//		assertNotNull("remoteRepository", remoteRepository);
+//		requireNonNull("transaction", transaction);
+//		requireNonNull("deleteModificationDto", deleteModificationDto);
+//		requireNonNull("remoteRepository", remoteRepository);
 //
 //		final SsDeleteModification deleteModification = new SsDeleteModification();
 //		deleteModification.setRemoteRepository(remoteRepository);
@@ -149,10 +149,10 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 
 	@Override
 	public void makeDirectory(String path, final SsDirectoryDto directoryDto, final CurrentHistoCryptoRepoFileDto currentHistoCryptoRepoFileDto) {
-		assertNotNull(path, "path");
-		assertNotNull(directoryDto, "directoryDto");
-		assertNotNull(currentHistoCryptoRepoFileDto, "currentHistoCryptoRepoFileDto");
-		assertNotNull(currentHistoCryptoRepoFileDto.getHistoCryptoRepoFileDto(), "currentHistoCryptoRepoFileDto.histoCryptoRepoFileDto");
+		requireNonNull(path, "path");
+		requireNonNull(directoryDto, "directoryDto");
+		requireNonNull(currentHistoCryptoRepoFileDto, "currentHistoCryptoRepoFileDto");
+		requireNonNull(currentHistoCryptoRepoFileDto.getHistoCryptoRepoFileDto(), "currentHistoCryptoRepoFileDto.histoCryptoRepoFileDto");
 
 		path = prefixPath(path);
 		final File file = getFile(path); // null-check already inside getFile(...) - no need for another check here
@@ -169,7 +169,7 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 
 			final RepoFile parentRepoFile = isRoot ? null : repoFileDao.getRepoFile(localRoot, parentFile);
 			if (! isRoot) {
-				assertNotNull(parentRepoFile, "parentRepoFile"); // TODO or is this a collision which requires a special exception?! Might be an attack, too: We sign only the direct parent - parents of parents (in path) are not signed. Hence, this might be a broken path!
+				requireNonNull(parentRepoFile, "parentRepoFile"); // TODO or is this a collision which requires a special exception?! Might be an attack, too: We sign only the direct parent - parents of parents (in path) are not signed. Hence, this might be a broken path!
 
 				if (! (parentRepoFile instanceof Directory))
 					throw new IllegalStateException("parentRepoFile is no Directory! " + parentRepoFile); // TODO collision?! special handling?!
@@ -234,10 +234,10 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 
 	@Override
 	public void makeSymlink(String path, SsSymlinkDto symlinkDto, CurrentHistoCryptoRepoFileDto currentHistoCryptoRepoFileDto) {
-		assertNotNull(path, "path");
-		assertNotNull(symlinkDto, "symlinkDto");
-		assertNotNull(currentHistoCryptoRepoFileDto, "currentHistoCryptoRepoFileDto");
-		assertNotNull(currentHistoCryptoRepoFileDto.getHistoCryptoRepoFileDto(), "currentHistoCryptoRepoFileDto.histoCryptoRepoFileDto");
+		requireNonNull(path, "path");
+		requireNonNull(symlinkDto, "symlinkDto");
+		requireNonNull(currentHistoCryptoRepoFileDto, "currentHistoCryptoRepoFileDto");
+		requireNonNull(currentHistoCryptoRepoFileDto.getHistoCryptoRepoFileDto(), "currentHistoCryptoRepoFileDto.histoCryptoRepoFileDto");
 
 		path = prefixPath(path);
 		final File file = getFile(path); // null-check already inside getFile(...) - no need for another check here
@@ -254,7 +254,7 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 
 			final RepoFile parentRepoFile = isRoot ? null : repoFileDao.getRepoFile(localRoot, parentFile);
 			if (! isRoot) {
-				assertNotNull(parentRepoFile, "parentRepoFile"); // TODO or is this a collision which requires a special exception?! Might be an attack, too: We sign only the direct parent - parents of parents (in path) are not signed. Hence, this might be a broken path!
+				requireNonNull(parentRepoFile, "parentRepoFile"); // TODO or is this a collision which requires a special exception?! Might be an attack, too: We sign only the direct parent - parents of parents (in path) are not signed. Hence, this might be a broken path!
 
 				if (! (parentRepoFile instanceof Directory))
 					throw new IllegalStateException("parentRepoFile is no Directory! " + parentRepoFile); // TODO collision?! special handling?!
@@ -295,7 +295,7 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 
 	@Override
 	public void beginPutFile(String path, final SsNormalFileDto normalFileDto) {
-		assertNotNull(normalFileDto, "normalFileDto");
+		requireNonNull(normalFileDto, "normalFileDto");
 
 		path = prefixPath(path);
 		final File file = getFile(path); // null-check already inside getFile(...) - no need for another check here
@@ -311,7 +311,7 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 
 			final RepoFileDao repoFileDao = transaction.getDao(RepoFileDao.class);
 			final RepoFile parentRepoFile = repoFileDao.getRepoFile(localRoot, parentFile);
-			assertNotNull(parentRepoFile, "parentRepoFile"); // TODO or is this a collision which requires a special exception?! Might be an attack, too: We sign only the direct parent - parents of parents (in path) are not signed. Hence, this might be a broken path!
+			requireNonNull(parentRepoFile, "parentRepoFile"); // TODO or is this a collision which requires a special exception?! Might be an attack, too: We sign only the direct parent - parents of parents (in path) are not signed. Hence, this might be a broken path!
 
 			if (! (parentRepoFile instanceof Directory))
 				throw new IllegalStateException("parentRepoFile is no Directory! " + parentRepoFile); // TODO collision?! special handling?!
@@ -364,7 +364,7 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 				final FileChunkPayloadDao fileChunkPayloadDao = transaction.getDao(FileChunkPayloadDao.class);
 
 				final RepoFile repoFile = repoFileDao.getRepoFile(localRoot, file);
-				assertNotNull(repoFile, "repoFile"); // TODO or is this a collision which requires a special exception?!
+				requireNonNull(repoFile, "repoFile"); // TODO or is this a collision which requires a special exception?!
 
 				final NormalFile normalFile = (NormalFile) repoFile; // TODO maybe another collision?!
 
@@ -411,7 +411,7 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 				final FileChunkPayloadDao fileChunkPayloadDao = transaction.getDao(FileChunkPayloadDao.class);
 
 				final RepoFile repoFile = repoFileDao.getRepoFile(localRoot, file);
-				assertNotNull(repoFile, "repoFile"); // TODO or is this a collision which requires a special exception?! or return null?!
+				requireNonNull(repoFile, "repoFile"); // TODO or is this a collision which requires a special exception?! or return null?!
 				final SsNormalFile normalFile = (SsNormalFile) repoFile;
 
 				final FileChunkPayload fileChunkPayload = fileChunkPayloadDao.getFileChunkPayloadOfFileChunk(normalFile, offset);
@@ -440,7 +440,7 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 	@Override
 	public void endPutFile(String path, Date lastModified, long length, String sha1) {
 //		final RepoFileContext context = RepoFileContext.getContext();
-//		assertNotNull("RepoFileContext.getContext()", context);
+//		requireNonNull("RepoFileContext.getContext()", context);
 //		final SsNormalFileDto normalFileDto = (SsNormalFileDto) context.getSsRepoFileDto();
 //		final HistoCryptoRepoFileDto cryptoRepoFileOnServerDto = context.getCryptoRepoFileOnServerDto();
 //		// length is ignored and is always 0!
@@ -451,10 +451,10 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 
 	@Override
 	public void endPutFile(String path, final SsNormalFileDto normalFileDto, final CurrentHistoCryptoRepoFileDto currentHistoCryptoRepoFileDto) {
-		assertNotNull(path, "path");
-		assertNotNull(normalFileDto, "normalFileDto");
-		assertNotNull(currentHistoCryptoRepoFileDto, "currentHistoCryptoRepoFileDto");
-		assertNotNull(currentHistoCryptoRepoFileDto.getHistoCryptoRepoFileDto(), "currentHistoCryptoRepoFileDto.histoCryptoRepoFileDto");
+		requireNonNull(path, "path");
+		requireNonNull(normalFileDto, "normalFileDto");
+		requireNonNull(currentHistoCryptoRepoFileDto, "currentHistoCryptoRepoFileDto");
+		requireNonNull(currentHistoCryptoRepoFileDto.getHistoCryptoRepoFileDto(), "currentHistoCryptoRepoFileDto.histoCryptoRepoFileDto");
 
 		path = prefixPath(path);
 		final File file = getFile(path);
@@ -468,7 +468,7 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 			final FileChunkPayloadDao fileChunkPayloadDao = transaction.getDao(FileChunkPayloadDao.class);
 
 			final RepoFile repoFile = repoFileDao.getRepoFile(localRoot, file);
-			assertNotNull(repoFile, "repoFile"); // TODO or is this a collision which requires a special exception?!
+			requireNonNull(repoFile, "repoFile"); // TODO or is this a collision which requires a special exception?!
 			final SsNormalFile normalFile = (SsNormalFile) repoFile;
 
 			final SortedMap<Long, FileChunk> offset2FileChunk = new TreeMap<>();
@@ -512,7 +512,7 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 
 			CurrentHistoCryptoRepoFile currentHistoCryptoRepoFile = CurrentHistoCryptoRepoFileDtoConverter.create(transaction).putCurrentHistoCryptoRepoFile(currentHistoCryptoRepoFileDto);
 			currentHistoCryptoRepoFile.setLastSyncFromRepositoryId(clientRepositoryId);
-			final HistoCryptoRepoFile histoCryptoRepoFile = assertNotNull(currentHistoCryptoRepoFile.getHistoCryptoRepoFile(),
+			final HistoCryptoRepoFile histoCryptoRepoFile = requireNonNull(currentHistoCryptoRepoFile.getHistoCryptoRepoFile(),
 					"currentHistoCryptoRepoFile[" + currentHistoCryptoRepoFileDto.getCryptoRepoFileId() + "].histoCryptoRepoFile");
 //			final HistoCryptoRepoFile histoCryptoRepoFile = HistoCryptoRepoFileDtoConverter.create(transaction).putHistoCryptoRepoFile(histoCryptoRepoFileDto);
 //
@@ -540,7 +540,7 @@ public class DbFileRepoTransportImpl extends FileRepoTransport implements Cryptr
 			for (final FileChunk fileChunk : normalFile.getFileChunks()) {
 				final FileChunkPayload fileChunkPayload = fileChunkPayloadDao.getFileChunkPayload(fileChunk);
 				final long offset = fileChunk.getOffset();
-				assertNotNull(fileChunkPayload,
+				requireNonNull(fileChunkPayload,
 						"fileChunkPayloadDao.getFileChunkPayload(fileChunk) :: fileChunk.normalFile.name='" + fileChunk.getNormalFile().getName() + "', fileChunk.offset=" + offset);
 
 				HistoFileChunk histoFileChunk = offset2HistoFileChunk.remove(offset);

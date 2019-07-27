@@ -1,7 +1,7 @@
 package org.subshare.gui.backup;
 
 import static co.codewizards.cloudstore.core.io.StreamUtil.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 import static org.subshare.gui.backup.BackupDataFile.*;
 
 import java.io.IOException;
@@ -20,7 +20,7 @@ public class BackupImporter extends AbstractBackupImExporter {
 	}
 
 	public void importBackup(final File backupFile) throws IOException {
-		assertNotNull(backupFile, "backupFile");
+		requireNonNull(backupFile, "backupFile");
 		backupFile.getParentFile().mkdirs();
 
 		final BackupDataFile backupDataFile;
@@ -31,12 +31,12 @@ public class BackupImporter extends AbstractBackupImExporter {
 		UserRegistryLs.getUserRegistry(); // instantiating it before loading the PGP-keys to prevent it from populating itself from PGP keys (during init).
 
 		final byte[] pgpKeyData = backupDataFile.getData(ENTRY_NAME_PGP_KEYS);
-		assertNotNull(pgpKeyData, "backupDataFile.getData(ENTRY_NAME_PGP_KEYS)");
+		requireNonNull(pgpKeyData, "backupDataFile.getData(ENTRY_NAME_PGP_KEYS)");
 		pgp.importKeys(ByteArrayInputStreamLs.create(pgpKeyData));
 
 		final LockerContent serverRegistryLockerContent = localServerClient.invokeConstructor(ServerRegistryLockerContent.class);
 		final byte[] serverRegistryData = backupDataFile.getData(ENTRY_NAME_SERVER_REGISTRY_FILE);
-		assertNotNull(serverRegistryData, "backupDataFile.getData(ENTRY_NAME_SERVER_REGISTRY_FILE)");
+		requireNonNull(serverRegistryData, "backupDataFile.getData(ENTRY_NAME_SERVER_REGISTRY_FILE)");
 		serverRegistryLockerContent.mergeFrom(serverRegistryData);
 
 		registerPgpKeyRelatedBackupProperties(backupDataFile.getManifestTimestamp());

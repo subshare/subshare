@@ -1,6 +1,6 @@
 package org.subshare.gui.pgp.createkey;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import org.subshare.core.pgp.CreatePgpKeyParam;
 import org.subshare.gui.pgp.createkey.passphrase.PassphraseWizardPage;
@@ -12,7 +12,7 @@ public abstract class CreatePgpKeyWizard extends Wizard {
 
 	public CreatePgpKeyWizard(final CreatePgpKeyParam createPgpKeyParam) {
 		super(new PassphraseWizardPage(createPgpKeyParam));
-		this.createPgpKeyParam = assertNotNull(createPgpKeyParam, "createPgpKeyParam"); //$NON-NLS-1$
+		this.createPgpKeyParam = requireNonNull(createPgpKeyParam, "createPgpKeyParam"); //$NON-NLS-1$
 	}
 
 	@Override

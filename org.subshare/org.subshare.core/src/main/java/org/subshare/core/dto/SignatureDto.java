@@ -1,7 +1,7 @@
 package org.subshare.core.dto;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
+import static java.util.Objects.*;
 
 import java.io.Serializable;
 import java.util.Arrays;
@@ -90,9 +90,9 @@ public class SignatureDto implements Signature, Serializable {
 		if (signature == null)
 			return null;
 
-		assertNotNull(signature.getSignatureCreated(), "signature.signatureCreated");
-		assertNotNull(signature.getSigningUserRepoKeyId(), "signature.signingUserRepoKeyId");
-		assertNotNull(signature.getSignatureData(), "signature.signatureData");
+		requireNonNull(signature.getSignatureCreated(), "signature.signatureCreated");
+		requireNonNull(signature.getSigningUserRepoKeyId(), "signature.signingUserRepoKeyId");
+		requireNonNull(signature.getSignatureData(), "signature.signatureData");
 
 		if (signature instanceof SignatureDto)
 			return (SignatureDto) signature;

@@ -1,6 +1,6 @@
 package org.subshare.local;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 import static org.subshare.local.CryptreeNodeUtil.*;
 
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
@@ -35,7 +35,7 @@ abstract class PlainCryptoKeyFactory {
 	}
 	public CryptreeNode getCryptreeNodeOrFail() {
 		final CryptreeNode cryptreeNode = getCryptreeNode();
-		return assertNotNull(cryptreeNode, "cryptreeNode");
+		return requireNonNull(cryptreeNode, "cryptreeNode");
 	}
 
 //	public CryptoKeyPart getCryptoKeyPart() {
@@ -46,7 +46,7 @@ abstract class PlainCryptoKeyFactory {
 //	}
 //	public CryptoKeyPart getCryptoKeyPartOrFail() {
 //		final CryptoKeyPart cryptoKeyPart = getCryptoKeyPart();
-//		return assertNotNull("cryptoKeyPart", cryptoKeyPart);
+//		return requireNonNull("cryptoKeyPart", cryptoKeyPart);
 //	}
 
 	public CipherOperationMode getCipherOperationMode() {
@@ -57,7 +57,7 @@ abstract class PlainCryptoKeyFactory {
 	}
 	public CipherOperationMode getCipherOperationModeOrFail() {
 		final CipherOperationMode cipherOperationMode = getCipherOperationMode();
-		return assertNotNull(cipherOperationMode, "cipherOperationMode");
+		return requireNonNull(cipherOperationMode, "cipherOperationMode");
 	}
 
 	public CryptreeContext getContext() {
@@ -66,15 +66,15 @@ abstract class PlainCryptoKeyFactory {
 
 	public CryptreeContext getContextOrFail() {
 		final CryptreeContext context = getContext();
-		return assertNotNull(context, "context");
+		return requireNonNull(context, "context");
 	}
 
 	public abstract PlainCryptoKey createPlainCryptoKey();
 
 
 	protected CryptoKey createCryptoKey(final CryptoKeyRole cryptoKeyRole, final CryptoKeyType cryptoKeyType) {
-		assertNotNull(cryptoKeyRole, "cryptoKeyRole");
-		assertNotNull(cryptoKeyType, "cryptoKeyType");
+		requireNonNull(cryptoKeyRole, "cryptoKeyRole");
+		requireNonNull(cryptoKeyType, "cryptoKeyType");
 		final CryptoKey cryptoKey = new CryptoKey();
 		cryptoKey.setCryptoRepoFile(getCryptreeNodeOrFail().getCryptoRepoFile());
 		cryptoKey.setCryptoKeyRole(cryptoKeyRole);
@@ -87,7 +87,7 @@ abstract class PlainCryptoKeyFactory {
 	}
 
 	protected PlainCryptoKey createSymmetricPlainCryptoKey(final CryptoKeyRole cryptoKeyRole) {
-		assertNotNull(cryptoKeyRole, "cryptoKeyRole");
+		requireNonNull(cryptoKeyRole, "cryptoKeyRole");
 
 //		if (CryptoKeyPart.sharedSecret != getCryptoKeyPartOrFail())
 //			throw new IllegalStateException("CryptoKeyPart.sharedSecret != getCryptoKeyPartOrFail()");
@@ -150,7 +150,7 @@ abstract class PlainCryptoKeyFactory {
 		}
 
 		private void createCryptoLinkToSubdirKey(final PlainCryptoKey fromPlainCryptoKey) {
-			assertNotNull(fromPlainCryptoKey, "fromPlainCryptoKey");
+			requireNonNull(fromPlainCryptoKey, "fromPlainCryptoKey");
 			final CryptreeNode cryptreeNode = getCryptreeNodeOrFail();
 
 			final PlainCryptoKey subdirKeyPlainCryptoKey = cryptreeNode.getActivePlainCryptoKey(CryptoKeyRole.subdirKey, CipherOperationMode.DECRYPT);
@@ -242,8 +242,8 @@ abstract class PlainCryptoKeyFactory {
 		}
 
 		private void createCryptoLinkToChildSubdirKey(final PlainCryptoKey fromPlainCryptoKey, final CryptreeNode toChild) {
-			assertNotNull(fromPlainCryptoKey, "fromPlainCryptoKey");
-			assertNotNull(toChild, "toChild");
+			requireNonNull(fromPlainCryptoKey, "fromPlainCryptoKey");
+			requireNonNull(toChild, "toChild");
 
 			if (! toChild.isDirectory())
 				return;
@@ -256,8 +256,8 @@ abstract class PlainCryptoKeyFactory {
 		}
 
 //		private void createCryptoLinkToChildDataKey(final PlainCryptoKey fromPlainCryptoKey, final CryptreeNode toChild) {
-//			assertNotNull("fromPlainCryptoKey", fromPlainCryptoKey);
-//			assertNotNull("toChild", toChild);
+//			requireNonNull("fromPlainCryptoKey", fromPlainCryptoKey);
+//			requireNonNull("toChild", toChild);
 //
 //			if (toChild.isDirectory())
 //				return;
@@ -270,7 +270,7 @@ abstract class PlainCryptoKeyFactory {
 //		}
 
 		private void createCryptoLinkToFileKey(final PlainCryptoKey fromPlainCryptoKey) {
-			assertNotNull(fromPlainCryptoKey, "fromPlainCryptoKey");
+			requireNonNull(fromPlainCryptoKey, "fromPlainCryptoKey");
 			final CryptreeNode cryptreeNode = getCryptreeNodeOrFail();
 
 			final PlainCryptoKey fileKeyPlainCryptoKey = cryptreeNode.getActivePlainCryptoKey(CryptoKeyRole.fileKey, CipherOperationMode.DECRYPT);
@@ -279,8 +279,8 @@ abstract class PlainCryptoKeyFactory {
 		}
 
 		private void createCryptoLinkToChildBacklinkKey(final PlainCryptoKey fromPlainCryptoKey, final CryptreeNode toChild) {
-			assertNotNull(fromPlainCryptoKey, "fromPlainCryptoKey");
-			assertNotNull(toChild, "toChild");
+			requireNonNull(fromPlainCryptoKey, "fromPlainCryptoKey");
+			requireNonNull(toChild, "toChild");
 
 			if (toChild.isDirectory())
 				return;
@@ -291,7 +291,7 @@ abstract class PlainCryptoKeyFactory {
 		}
 
 		private boolean createCryptoLinkFromParentSubdirKey(final PlainCryptoKey toPlainCryptoKey) {
-			assertNotNull(toPlainCryptoKey, "toPlainCryptoKey");
+			requireNonNull(toPlainCryptoKey, "toPlainCryptoKey");
 			final CryptreeNode cryptreeNode = getCryptreeNodeOrFail();
 			final CryptreeNode parent = cryptreeNode.getParent();
 			if (parent != null) {
@@ -306,7 +306,7 @@ abstract class PlainCryptoKeyFactory {
 		}
 
 		private boolean containsNonRevokedPermissionSetInheritance(final PermissionSet permissionSet) {
-			assertNotNull(permissionSet, "permissionSet");
+			requireNonNull(permissionSet, "permissionSet");
 			for (final PermissionSetInheritance permissionSetInheritance : permissionSet.getPermissionSetInheritances()) {
 				if (permissionSetInheritance.getRevoked() == null)
 					return true;
@@ -315,7 +315,7 @@ abstract class PlainCryptoKeyFactory {
 		}
 
 		private boolean createCryptoLinkFromClearanceKey(final PlainCryptoKey toPlainCryptoKey) {
-			assertNotNull(toPlainCryptoKey, "toPlainCryptoKey");
+			requireNonNull(toPlainCryptoKey, "toPlainCryptoKey");
 			final CryptreeNode cryptreeNode = getCryptreeNodeOrFail();
 
 			final PlainCryptoKey clearanceKeyPlainCryptoKey_public;
@@ -359,15 +359,15 @@ abstract class PlainCryptoKeyFactory {
 		}
 
 		private void createCryptoLinkFromSubdirKey(final PlainCryptoKey toPlainCryptoKey) {
-			assertNotNull(toPlainCryptoKey, "toPlainCryptoKey");
+			requireNonNull(toPlainCryptoKey, "toPlainCryptoKey");
 			final CryptreeNode cryptreeNode = getCryptreeNodeOrFail();
 			final PlainCryptoKey subdirKeyPlainCryptoKey = cryptreeNode.getActivePlainCryptoKeyOrCreate(CryptoKeyRole.subdirKey, CipherOperationMode.ENCRYPT);
 			createCryptoLink(cryptreeNode, subdirKeyPlainCryptoKey, toPlainCryptoKey);
 		}
 
 		private void createCryptoLinkToChildDataKey(final PlainCryptoKey fromPlainCryptoKey, final CryptreeNode toChild) {
-			assertNotNull(fromPlainCryptoKey, "fromPlainCryptoKey");
-			assertNotNull(toChild, "toChild");
+			requireNonNull(fromPlainCryptoKey, "fromPlainCryptoKey");
+			requireNonNull(toChild, "toChild");
 
 			// The key on the *to*-side of the CryptoLink *must* exist! But to easily avoid endless recursions
 			// (without further code), we don't create the key when following the link forward.
@@ -402,7 +402,7 @@ abstract class PlainCryptoKeyFactory {
 		}
 
 		private void createCryptoLinkToParentBacklinkKey(final PlainCryptoKey fromPlainCryptoKey) {
-			assertNotNull(fromPlainCryptoKey, "fromPlainCryptoKey");
+			requireNonNull(fromPlainCryptoKey, "fromPlainCryptoKey");
 			final CryptreeNode cryptreeNode = getCryptreeNodeOrFail();
 			final CryptreeNode parent = cryptreeNode.getParent();
 			if (parent != null) {
@@ -413,7 +413,7 @@ abstract class PlainCryptoKeyFactory {
 		}
 
 		private void createCryptoLinkFromSubdirKey(final PlainCryptoKey toPlainCryptoKey) {
-			assertNotNull(toPlainCryptoKey, "toPlainCryptoKey");
+			requireNonNull(toPlainCryptoKey, "toPlainCryptoKey");
 			final CryptreeNode cryptreeNode = getCryptreeNodeOrFail();
 
 			if (! cryptreeNode.isDirectory())
@@ -424,8 +424,8 @@ abstract class PlainCryptoKeyFactory {
 		}
 
 		private void createCryptoLinkFromChildBacklinkKey(final CryptreeNode fromChild, final PlainCryptoKey toPlainCryptoKey) {
-			assertNotNull(fromChild, "fromChild");
-			assertNotNull(toPlainCryptoKey, "toPlainCryptoKey");
+			requireNonNull(fromChild, "fromChild");
+			requireNonNull(toPlainCryptoKey, "toPlainCryptoKey");
 			final PlainCryptoKey childBacklinkKeyPlainCryptoKey = fromChild.getActivePlainCryptoKeyOrCreate(CryptoKeyRole.backlinkKey, CipherOperationMode.ENCRYPT);
 			createCryptoLink(getCryptreeNodeOrFail(), childBacklinkKeyPlainCryptoKey, toPlainCryptoKey);
 		}
@@ -459,7 +459,7 @@ abstract class PlainCryptoKeyFactory {
 		}
 
 		private void createCryptoLinkFromBacklinkKey(final PlainCryptoKey toPlainCryptoKey) {
-			assertNotNull(toPlainCryptoKey, "toPlainCryptoKey");
+			requireNonNull(toPlainCryptoKey, "toPlainCryptoKey");
 			final CryptreeNode cryptreeNode = getCryptreeNodeOrFail();
 
 			final PlainCryptoKey backlinkKeyPlainCryptoKey;
@@ -473,7 +473,7 @@ abstract class PlainCryptoKeyFactory {
 		}
 
 		private void createCryptoLinkFromParentFileKey(final PlainCryptoKey toPlainCryptoKey) {
-			assertNotNull(toPlainCryptoKey, "toPlainCryptoKey");
+			requireNonNull(toPlainCryptoKey, "toPlainCryptoKey");
 			final CryptreeNode cryptreeNode = getCryptreeNodeOrFail();
 
 			if (cryptreeNode.isDirectory())

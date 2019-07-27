@@ -1,6 +1,6 @@
 package org.subshare.local.persistence;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -25,7 +25,7 @@ public class HistoCryptoRepoFileDao extends Dao<HistoCryptoRepoFile, HistoCrypto
 
 	public Collection<HistoCryptoRepoFile> getHistoCryptoRepoFilesChangedAfterExclLastSyncFromRepositoryId(
 			final long localRevision, final UUID exclLastSyncFromRepositoryId) {
-		assertNotNull(exclLastSyncFromRepositoryId, "exclLastSyncFromRepositoryId");
+		requireNonNull(exclLastSyncFromRepositoryId, "exclLastSyncFromRepositoryId");
 
 		final PersistenceManager pm = pm();
 		final FetchPlanBackup fetchPlanBackup = FetchPlanBackup.createFrom(pm);
@@ -51,7 +51,7 @@ public class HistoCryptoRepoFileDao extends Dao<HistoCryptoRepoFile, HistoCrypto
 
 	public List<HistoCryptoRepoFileDto> getHistoCryptoRepoFileDtosChangedAfterExclLastSyncFromRepositoryId(
 			final long localRevision, final UUID exclLastSyncFromRepositoryId) {
-		assertNotNull(exclLastSyncFromRepositoryId, "exclLastSyncFromRepositoryId");
+		requireNonNull(exclLastSyncFromRepositoryId, "exclLastSyncFromRepositoryId");
 
 		final PersistenceManager pm = pm();
 		final FetchPlanBackup fetchPlanBackup = FetchPlanBackup.createFrom(pm);
@@ -83,7 +83,7 @@ public class HistoCryptoRepoFileDao extends Dao<HistoCryptoRepoFile, HistoCrypto
 	}
 
 	public Collection<HistoCryptoRepoFile> getHistoCryptoRepoFiles(final CryptoRepoFile cryptoRepoFile) {
-		assertNotNull(cryptoRepoFile, "cryptoRepoFile");
+		requireNonNull(cryptoRepoFile, "cryptoRepoFile");
 		final Query query = pm().newNamedQuery(getEntityClass(), "getHistoCryptoRepoFiles_cryptoRepoFile");
 		try {
 			long startTimestamp = System.currentTimeMillis();
@@ -102,7 +102,7 @@ public class HistoCryptoRepoFileDao extends Dao<HistoCryptoRepoFile, HistoCrypto
 	}
 
 	public Collection<HistoCryptoRepoFile> getHistoCryptoRepoFiles(HistoFrame histoFrame) {
-		assertNotNull(histoFrame, "histoFrame");
+		requireNonNull(histoFrame, "histoFrame");
 
 		final Query query = pm().newNamedQuery(getEntityClass(), "getHistoCryptoRepoFiles_histoFrame");
 		try {
@@ -123,12 +123,12 @@ public class HistoCryptoRepoFileDao extends Dao<HistoCryptoRepoFile, HistoCrypto
 
 	public HistoCryptoRepoFile getHistoCryptoRepoFileOrFail(final Uid histoCryptoRepoFileId) {
 		final HistoCryptoRepoFile histoCryptoRepoFile = getHistoCryptoRepoFile(histoCryptoRepoFileId);
-		assertNotNull(histoCryptoRepoFile, "getHistoCryptoRepoFile(" + histoCryptoRepoFileId + ")");
+		requireNonNull(histoCryptoRepoFile, "getHistoCryptoRepoFile(" + histoCryptoRepoFileId + ")");
 		return histoCryptoRepoFile;
 	}
 
 	public HistoCryptoRepoFile getHistoCryptoRepoFile(final Uid histoCryptoRepoFileId) {
-		assertNotNull(histoCryptoRepoFileId, "histoCryptoRepoFileId");
+		requireNonNull(histoCryptoRepoFileId, "histoCryptoRepoFileId");
 		final Query query = pm().newNamedQuery(getEntityClass(), "getHistoCryptoRepoFile_histoCryptoRepoFileId");
 		try {
 			final HistoCryptoRepoFile result = (HistoCryptoRepoFile) query.execute(histoCryptoRepoFileId.toString());
@@ -187,7 +187,7 @@ public class HistoCryptoRepoFileDao extends Dao<HistoCryptoRepoFile, HistoCrypto
 	}
 
 	public Collection<HistoCryptoRepoFile> getHistoCryptoRepoFilesByCollisions(final Set<Uid> collisionIds) {
-		assertNotNull(collisionIds, "collisionIds");
+		requireNonNull(collisionIds, "collisionIds");
 		final Set<String> collisionIdsAsString = new HashSet<>(collisionIds.size());
 		for (final Uid collisionId : collisionIds)
 			collisionIdsAsString.add(collisionId.toString());

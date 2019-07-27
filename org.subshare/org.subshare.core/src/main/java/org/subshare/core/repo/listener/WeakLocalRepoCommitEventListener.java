@@ -1,6 +1,6 @@
 package org.subshare.core.repo.listener;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
@@ -28,7 +28,7 @@ public class WeakLocalRepoCommitEventListener implements LocalRepoCommitEventLis
 	public WeakLocalRepoCommitEventListener(final LocalRepoCommitEventManager manager, final UUID localRepositoryId, final LocalRepoCommitEventListener listener) {
 		expunge();
 
-		this.manager = assertNotNull(manager, "manager");
+		this.manager = requireNonNull(manager, "manager");
 		this.localRepositoryId = localRepositoryId;
 
 		listenerRef = new WeakReference<LocalRepoCommitEventListener>(listener, listenerRefQueue);

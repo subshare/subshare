@@ -1,7 +1,7 @@
 package org.subshare.local;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.UrlUtil.*;
+import static java.util.Objects.*;
 import static org.subshare.core.file.FileConst.*;
 
 import java.io.IOException;
@@ -111,9 +111,9 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 
 	@Override
 	public UserRepoInvitationToken createUserRepoInvitationToken(final String localPath, final User user, Set<PgpKey> userPgpKeys, final PermissionType permissionType, final long validityDurationMillis) {
-		assertNotNull(localPath, "localPath");
-		assertNotNull(user, "user");
-		assertNotNull(permissionType, "permissionType");
+		requireNonNull(localPath, "localPath");
+		requireNonNull(user, "user");
+		requireNonNull(permissionType, "permissionType");
 
 		if (userPgpKeys == null) {
 			if (user.getPgpKeys().isEmpty())
@@ -135,7 +135,7 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 		}
 
 		final UserRepoInvitation userRepoInvitation = createUserRepoInvitation(localPath, user, permissionType, validityDurationMillis);
-		final User grantingUser = assertNotNull(this.grantingUser, "grantingUser");
+		final User grantingUser = requireNonNull(this.grantingUser, "grantingUser");
 
 		final byte[] userRepoInvitationData = toUserRepoInvitationData(userRepoInvitation);
 
@@ -191,7 +191,7 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 
 	@Override
 	public ServerRepo importUserRepoInvitationToken(final UserRepoInvitationToken userRepoInvitationToken) {
-		assertNotNull(userRepoInvitationToken, "userRepoInvitationToken");
+		requireNonNull(userRepoInvitationToken, "userRepoInvitationToken");
 
 		final EncryptedDataFile edf;
 		try {
@@ -222,7 +222,7 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 			for (ImportedMasterKey importedMasterKey : importKeysResult.getPgpKeyId2ImportedMasterKey().values()) {
 				final PgpKeyId pgpKeyId = importedMasterKey.getPgpKeyId();
 				final PgpKey pgpKey = pgp.getPgpKey(pgpKeyId);
-				assertNotNull(pgpKey, "pgp.getPgpKey(" + pgpKeyId + ")");
+				requireNonNull(pgpKey, "pgp.getPgpKey(" + pgpKeyId + ")");
 				pgpKeyId2PgpKey.put(pgpKeyId, pgpKey);
 			}
 			userRegistry.importUsersFromPgpKeys(pgpKeyId2PgpKey.values());
@@ -263,7 +263,7 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 //	}
 
 	private byte[] toUserRepoInvitationData(final UserRepoInvitation userRepoInvitation) {
-		assertNotNull(userRepoInvitation, "userRepoInvitation");
+		requireNonNull(userRepoInvitation, "userRepoInvitation");
 		try {
 			final Marshaller marshaller = CloudStoreJaxbContext.getJaxbContext().createMarshaller();
 
@@ -294,7 +294,7 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 	}
 
 	private UserRepoInvitation fromUserRepoInvitationData(byte[] userRepoInvitationData) {
-		assertNotNull(userRepoInvitationData, "userRepoInvitationData");
+		requireNonNull(userRepoInvitationData, "userRepoInvitationData");
 		try {
 
 			final ZipInputStream zin = new ZipInputStream(new ByteArrayInputStream(userRepoInvitationData));
@@ -334,7 +334,7 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 	}
 
 	private Properties readManifest(final ZipInputStream zin) throws IOException {
-		assertNotNull(zin, "zin");
+		requireNonNull(zin, "zin");
 
 		final ZipEntry ze = zin.getNextEntry();
 		if (ze == null)
@@ -394,9 +394,9 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 	}
 
 	protected UserRepoInvitation createUserRepoInvitation(final String localPath, final User user, PermissionType permissionType, final long validityDurationMillis) {
-		assertNotNull(localPath, "localPath");
-		assertNotNull(user, "user");
-		assertNotNull(permissionType, "permissionType");
+		requireNonNull(localPath, "localPath");
+		requireNonNull(user, "user");
+		requireNonNull(permissionType, "permissionType");
 
 		final UserRepoInvitation userRepoInvitation;
 		try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();)
@@ -415,7 +415,7 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 			if (remoteRoot == null)
 				throw new IllegalStateException("Could not determine the remoteRoot for the remoteRepositoryId " + cryptree.getRemoteRepositoryId());
 
-			String remotePathPrefix = assertNotNull(remoteRepository.getRemotePathPrefix(), "remoteRepository.remotePathPrefix");
+			String remotePathPrefix = requireNonNull(remoteRepository.getRemotePathPrefix(), "remoteRepository.remotePathPrefix");
 			URL serverUrl = removePathSuffix(remoteRoot, remotePathPrefix);
 			serverUrl = removePathSuffix(serverUrl, remoteRepository.getRepositoryId().toString());
 
@@ -441,8 +441,8 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 	}
 
 	private URL removePathSuffix(final URL url, String pathSuffix) {
-		assertNotNull(url, "url");
-		assertNotNull(pathSuffix, "suffix");
+		requireNonNull(url, "url");
+		requireNonNull(pathSuffix, "suffix");
 
 		String urlStr = url.toString();
 		while (urlStr.endsWith("/"))
@@ -467,8 +467,8 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 	}
 
 	private String getPathAfterPrefix(final URL completeUrl, final URL prefixUrl) {
-		assertNotNull(completeUrl, "completeUrl");
-		assertNotNull(prefixUrl, "prefixUrl");
+		requireNonNull(completeUrl, "completeUrl");
+		requireNonNull(prefixUrl, "prefixUrl");
 		final String completeUrlStr = completeUrl.toExternalForm();
 		final String prefixUrlStr = prefixUrl.toExternalForm();
 
@@ -515,7 +515,7 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 	}
 
 	protected ServerRepo importUserRepoInvitation(final UserRepoInvitation userRepoInvitation) {
-		assertNotNull(userRepoInvitation, "userRepoInvitation");
+		requireNonNull(userRepoInvitation, "userRepoInvitation");
 		logger.info("importUserRepoInvitation: serverUrl='{}' serverPath='{}' invitationUserRepoKey={}",
 				userRepoInvitation.getServerUrl(), userRepoInvitation.getServerPath(), userRepoInvitation.getInvitationUserRepoKey());
 
@@ -557,7 +557,7 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 					(InvitationUserRepoKeyPublicKey) userRepoKeyPublicKeyDao.getUserRepoKeyPublicKeyOrFail(userRepoInvitation.getInvitationUserRepoKey().getUserRepoKeyId());
 
 			final VerifySignableAndWriteProtectedEntityListener verifySignableAndWriteProtectedEntityListener = transaction.getContextObject(VerifySignableAndWriteProtectedEntityListener.class);
-			assertNotNull(verifySignableAndWriteProtectedEntityListener, "verifySignableAndWriteProtectedEntityListener");
+			requireNonNull(verifySignableAndWriteProtectedEntityListener, "verifySignableAndWriteProtectedEntityListener");
 			verifySignableAndWriteProtectedEntityListener.removeSignable(invitationUserRepoKeyPublicKey);
 
 			// UserIdentity[Link] objects are implicitly created. We don't want this (yet) and delete them. They're
@@ -647,7 +647,7 @@ public class UserRepoInvitationManagerImpl implements UserRepoInvitationManager 
 //	}
 
 	private User findUserWithPgpKeyOrFail(PgpKey pgpKey) {
-		final PgpKeyId pgpKeyId = assertNotNull(pgpKey, "pgpKey").getMasterKey().getPgpKeyId();
+		final PgpKeyId pgpKeyId = requireNonNull(pgpKey, "pgpKey").getMasterKey().getPgpKeyId();
 		for (final User user : userRegistry.getUsers()) {
 			if (user.getPgpKeyIds().contains(pgpKeyId))
 				return user;

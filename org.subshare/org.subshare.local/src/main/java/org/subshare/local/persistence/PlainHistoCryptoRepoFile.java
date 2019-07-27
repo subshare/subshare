@@ -1,7 +1,7 @@
 package org.subshare.local.persistence;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
+import static java.util.Objects.*;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Index;
@@ -64,7 +64,7 @@ public class PlainHistoCryptoRepoFile extends Entity implements StoreCallback {
 	}
 
 	public void setPlainHistoCryptoRepoFileDto(final PlainHistoCryptoRepoFileDto dto) {
-		assertNotNull(dto, "dto");
+		requireNonNull(dto, "dto");
 		plainHistoCryptoRepoFileDtoData = new PlainHistoCryptoRepoFileDtoIo().serializeWithGz(dto);
 	}
 

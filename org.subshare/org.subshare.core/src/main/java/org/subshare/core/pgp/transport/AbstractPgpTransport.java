@@ -1,11 +1,12 @@
 package org.subshare.core.pgp.transport;
 
+import static java.util.Objects.*;
+
 import java.net.URL;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import co.codewizards.cloudstore.core.util.AssertUtil;
 import co.codewizards.cloudstore.core.util.UrlUtil;
 
 public abstract class AbstractPgpTransport implements PgpTransport {
@@ -27,7 +28,7 @@ public abstract class AbstractPgpTransport implements PgpTransport {
 
 	@Override
 	public void setPgpTransportFactory(final PgpTransportFactory pgpTransportFactory) {
-		this.pgpTransportFactory = AssertUtil.assertNotNull(pgpTransportFactory, "pgpTransportFactory");
+		this.pgpTransportFactory = requireNonNull(pgpTransportFactory, "pgpTransportFactory");
 	}
 
 	@Override

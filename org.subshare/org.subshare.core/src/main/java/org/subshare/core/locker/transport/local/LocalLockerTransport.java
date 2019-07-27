@@ -2,8 +2,8 @@ package org.subshare.core.locker.transport.local;
 
 import static co.codewizards.cloudstore.core.io.StreamUtil.*;
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
+import static java.util.Objects.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -62,7 +62,7 @@ public class LocalLockerTransport extends AbstractLockerTransport {
 
 	@Override
 	public void addMergedVersions(final List<Uid> serverVersions) {
-		assertNotNull(serverVersions, "serverVersions");
+		requireNonNull(serverVersions, "serverVersions");
 		mergedVersions.addAll(serverVersions);
 	}
 
@@ -133,9 +133,9 @@ public class LocalLockerTransport extends AbstractLockerTransport {
 
 	@Override
 	public void putEncryptedDataFile(final LockerEncryptedDataFile encryptedDataFile) {
-		assertNotNull(encryptedDataFile, "encryptedDataFile");
+		requireNonNull(encryptedDataFile, "encryptedDataFile");
 		final Uid contentVersion = encryptedDataFile.getContentVersion();
-		assertNotNull(contentVersion, "encryptedDataFile.contentVersion");
+		requireNonNull(contentVersion, "encryptedDataFile.contentVersion");
 
 		final PgpSignature manifestSignature = encryptedDataFile.assertManifestSignatureValid();
 		final PgpKeyId pgpKeyId = getPgpKeyOrFail().getPgpKeyId();
@@ -154,7 +154,7 @@ public class LocalLockerTransport extends AbstractLockerTransport {
 
 		try {
 			final byte[] defaultData = encryptedDataFile.getDefaultData();
-			assertNotNull(defaultData, "encryptedDataFile.defaultData");
+			requireNonNull(defaultData, "encryptedDataFile.defaultData");
 
 			final ByteArrayOutputStream out = new ByteArrayOutputStream();
 			final PgpDecoder decoder = getPgp().createDecoder(new ByteArrayInputStream(defaultData), out);

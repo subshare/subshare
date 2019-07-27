@@ -1,7 +1,7 @@
 package org.subshare.local;
 
 import static co.codewizards.cloudstore.core.objectfactory.ObjectFactoryUtil.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.net.URL;
 import java.util.Collection;
@@ -38,12 +38,12 @@ public class DuplicateCryptoRepoFileHandler {
 	private CryptoRepoFile cryptoRepoFileDead;
 
 	public static DuplicateCryptoRepoFileHandler createInstance(final LocalRepoTransaction transaction) {
-		assertNotNull(transaction, "transaction");
+		requireNonNull(transaction, "transaction");
 		return createObject(DuplicateCryptoRepoFileHandler.class, transaction);
 	}
 
 	protected DuplicateCryptoRepoFileHandler(LocalRepoTransaction transaction) {
-		this.transaction = assertNotNull(transaction, "transaction");
+		this.transaction = requireNonNull(transaction, "transaction");
 		cryptree = _getCryptree();
 	}
 
@@ -52,8 +52,8 @@ public class DuplicateCryptoRepoFileHandler {
 	}
 
 	public void associateCryptoRepoFileWithRepoFile(final RepoFile repoFile, CryptoRepoFile cryptoRepoFile) {
-		assertNotNull(repoFile, "repoFile");
-		assertNotNull(cryptoRepoFile, "cryptoRepoFile");
+		requireNonNull(repoFile, "repoFile");
+		requireNonNull(cryptoRepoFile, "cryptoRepoFile");
 
 		final CryptoRepoFile cryptoRepoFile2 = transaction.getDao(CryptoRepoFileDao.class).getCryptoRepoFile(repoFile);
 		if (cryptoRepoFile2 != null && ! cryptoRepoFile2.equals(cryptoRepoFile)) {
@@ -78,8 +78,8 @@ public class DuplicateCryptoRepoFileHandler {
 	}
 
 	protected void assignCryptoRepoFiles(final CryptoRepoFile cryptoRepoFile1, final CryptoRepoFile cryptoRepoFile2) {
-		assertNotNull(cryptoRepoFile1, "cryptoRepoFile1");
-		assertNotNull(cryptoRepoFile2, "cryptoRepoFile2");
+		requireNonNull(cryptoRepoFile1, "cryptoRepoFile1");
+		requireNonNull(cryptoRepoFile2, "cryptoRepoFile2");
 
 		assignCryptoRepoFileCreatedIfNeeded(cryptoRepoFile1);
 		assignCryptoRepoFileCreatedIfNeeded(cryptoRepoFile2);
@@ -108,8 +108,8 @@ public class DuplicateCryptoRepoFileHandler {
 	}
 
 	protected CryptoRepoFile deduplicate() {
-		assertNotNull(cryptoRepoFileActive, "cryptoRepoFileActive");
-		assertNotNull(cryptoRepoFileDead, "cryptoRepoFileDead");
+		requireNonNull(cryptoRepoFileActive, "cryptoRepoFileActive");
+		requireNonNull(cryptoRepoFileDead, "cryptoRepoFileDead");
 
 		logger.debug("deduplicate: cryptoRepoFileActive={} cryptoRepoFileDead={}",
 				cryptoRepoFileActive, cryptoRepoFileDead);
@@ -127,7 +127,7 @@ public class DuplicateCryptoRepoFileHandler {
 			repoFile = cryptoRepoFileDead.getRepoFile();
 
 		// Touch repoFile to prevent it from being overwritten + to force additional collision when down-syncing.
-		assertNotNull(repoFile, "repoFile").setLocalRevision(transaction.getLocalRevision());
+		requireNonNull(repoFile, "repoFile").setLocalRevision(transaction.getLocalRevision());
 
 		cryptoRepoFileDead.setRepoFile(null);
 //		cryptoRepoFileDead.setDeleted(new Date()); // we really delete the instance (controlled by the collision) - no need for a deletion marker.
@@ -139,11 +139,11 @@ public class DuplicateCryptoRepoFileHandler {
 		deduplicateFromCollisionIfNeeded(collision);
 
 		transaction.flush(); // must flush here to make sure the association to the repoFile is nulled, before we re-associate, later (outside this method).
-		return assertNotNull(cryptoRepoFileActive, "cryptoRepoFileActive");
+		return requireNonNull(cryptoRepoFileActive, "cryptoRepoFileActive");
 	}
 
 	public void deduplicateFromCollisionIfNeeded(final Collision collision) { // this method is called on client *and* server!
-		assertNotNull(collision, "collision");
+		requireNonNull(collision, "collision");
 		if (collision.getDuplicateCryptoRepoFileId() == null)
 			return; // not a duplicate-CryptoRepoFile-collision => nothing to do
 
@@ -175,7 +175,7 @@ public class DuplicateCryptoRepoFileHandler {
 	}
 
 	private void assignCryptoRepoFileCreatedIfNeeded(final CryptoRepoFile cryptoRepoFile) {
-		assertNotNull(cryptoRepoFile, "cryptoRepoFile");
+		requireNonNull(cryptoRepoFile, "cryptoRepoFile");
 		if (cryptoRepoFile.getCryptoRepoFileCreated() != null)
 			return;
 
@@ -187,20 +187,20 @@ public class DuplicateCryptoRepoFileHandler {
 				cryptoRepoFileCreated = histoCryptoRepoFile.getSignature().getSignatureCreated();
 		}
 
-		assertNotNull(cryptoRepoFileCreated, "cryptoRepoFileCreated");
+		requireNonNull(cryptoRepoFileCreated, "cryptoRepoFileCreated");
 		cryptoRepoFile.setCryptoRepoFileCreated(cryptoRepoFileCreated);
 		_getCryptree().sign(cryptoRepoFile);
 	}
 
 	private static int compare(final CryptoRepoFile cryptoRepoFile1, final CryptoRepoFile cryptoRepoFile2) {
-		assertNotNull(cryptoRepoFile1, "cryptoRepoFile1");
-		assertNotNull(cryptoRepoFile2, "cryptoRepoFile2");
+		requireNonNull(cryptoRepoFile1, "cryptoRepoFile1");
+		requireNonNull(cryptoRepoFile2, "cryptoRepoFile2");
 
-		final Date cryptoRepoFileCreated1 = assertNotNull(
+		final Date cryptoRepoFileCreated1 = requireNonNull(
 				cryptoRepoFile1.getCryptoRepoFileCreated(),
 				"cryptoRepoFile1.cryptoRepoFileCreated [cryptoRepoFileId=" +cryptoRepoFile1.getCryptoRepoFileId()+ "]");
 
-		final Date cryptoRepoFileCreated2 = assertNotNull(
+		final Date cryptoRepoFileCreated2 = requireNonNull(
 				cryptoRepoFile2.getCryptoRepoFileCreated(),
 				"cryptoRepoFile2.cryptoRepoFileCreated [cryptoRepoFileId=" +cryptoRepoFile2.getCryptoRepoFileId()+ "]");
 
@@ -225,7 +225,7 @@ public class DuplicateCryptoRepoFileHandler {
 			final UUID remoteRepositoryId = remoteRepositoryId2RemoteRootMap.keySet().iterator().next();
 			final SsRemoteRepository remoteRepository = (SsRemoteRepository) remoteRepositoryDao.getRemoteRepositoryOrFail(remoteRepositoryId);
 			final String remotePathPrefix = remoteRepository.getRemotePathPrefix();
-			assertNotNull(remotePathPrefix, "remoteRepository.remotePathPrefix");
+			requireNonNull(remotePathPrefix, "remoteRepository.remotePathPrefix");
 
 			final UserRepoKeyRing userRepoKeyRing = UserRepoKeyRingLookup.Helper.getUserRepoKeyRingLookup().getUserRepoKeyRing(
 					new UserRepoKeyRingLookupContext(localRepositoryId, remoteRepositoryId));

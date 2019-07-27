@@ -63,7 +63,7 @@ public class RepositoryOwner extends Entity implements Signable, AutoTrackLocalR
 
 	@Override
 	public void jdoPreStore() {
-//		final PersistenceManager pm = assertNotNull("JDOHelper.getPersistenceManager(this)", JDOHelper.getPersistenceManager(this));
+//		final PersistenceManager pm = requireNonNull("JDOHelper.getPersistenceManager(this)", JDOHelper.getPersistenceManager(this));
 //		final RepositoryOwner persistentInstance = new RepositoryOwnerDao().persistenceManager(pm).getRepositoryOwner();
 //		if (persistentInstance != null && ! persistentInstance.equals(this))
 //			throw new IllegalStateException("Cannot persist a 2nd RepositoryOwner!");

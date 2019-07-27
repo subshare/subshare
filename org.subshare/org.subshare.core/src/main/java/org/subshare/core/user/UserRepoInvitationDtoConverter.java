@@ -1,6 +1,6 @@
 package org.subshare.core.user;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import org.subshare.core.dto.UserRepoInvitationDto;
 
@@ -9,7 +9,7 @@ public class UserRepoInvitationDtoConverter {
 	private final UserRepoKeyDtoConverter userRepoKeyDtoConverter = new UserRepoKeyDtoConverter();
 
 	public UserRepoInvitationDto toUserRepoInvitationDto(final UserRepoInvitation userRepoInvitation) {
-		assertNotNull(userRepoInvitation, "userRepoInvitation");
+		requireNonNull(userRepoInvitation, "userRepoInvitation");
 		final UserRepoInvitationDto result = new UserRepoInvitationDto();
 		result.setInvitationUserRepoKeyDto(userRepoKeyDtoConverter.toUserRepoKeyDto(userRepoInvitation.getInvitationUserRepoKey()));
 		result.setServerUrl(userRepoInvitation.getServerUrl());
@@ -18,7 +18,7 @@ public class UserRepoInvitationDtoConverter {
 	}
 
 	public UserRepoInvitation fromUserRepoInvitationDto(final UserRepoInvitationDto userRepoInvitationDto) {
-		assertNotNull(userRepoInvitationDto, "userRepoInvitationDto");
+		requireNonNull(userRepoInvitationDto, "userRepoInvitationDto");
 
 		final UserRepoKey invitationUserRepoKey = userRepoKeyDtoConverter.fromUserRepoKeyDto(
 				userRepoInvitationDto.getInvitationUserRepoKeyDto());

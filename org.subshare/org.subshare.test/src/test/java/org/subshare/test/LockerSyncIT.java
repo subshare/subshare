@@ -1,8 +1,8 @@
 package org.subshare.test;
 
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.ReflectionUtil.*;
+import static java.util.Objects.*;
 import static org.assertj.core.api.Assertions.*;
 
 import java.net.URL;
@@ -66,7 +66,7 @@ public class LockerSyncIT extends AbstractIT {
 	private Map<Location, ServerRegistry> location2ServerRegistry = new HashMap<>(Location.values().length);
 
 	protected void setLocation(Location location) {
-		this.location = assertNotNull(location, "location");
+		this.location = requireNonNull(location, "location");
 		System.setProperty(ConfigDir.SYSTEM_PROPERTY_CONFIG_DIR, jvmInstanceDir + '/' + location + "/.cloudstore");
 		System.setProperty(Config.SYSTEM_PROPERTY_PREFIX + GnuPgDir.CONFIG_KEY_GNU_PG_DIR, jvmInstanceDir + '/' + location + "/.gnupg");
 	}
@@ -541,13 +541,13 @@ public class LockerSyncIT extends AbstractIT {
 
 	protected UserRegistry getUserRegistry() {
 		UserRegistry userRegistry = location2UserRegistry.get(location);
-		assertNotNull(userRegistry, "userRegistry[" + location + "]");
+		requireNonNull(userRegistry, "userRegistry[" + location + "]");
 		return userRegistry;
 	}
 
 	protected ServerRegistry getServerRegistry() {
 		ServerRegistry serverRegistry = location2ServerRegistry.get(location);
-		assertNotNull(serverRegistry, "serverRegistry[" + location + "]");
+		requireNonNull(serverRegistry, "serverRegistry[" + location + "]");
 		return serverRegistry;
 	}
 

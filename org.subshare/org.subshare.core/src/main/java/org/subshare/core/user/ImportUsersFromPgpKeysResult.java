@@ -1,6 +1,6 @@
 package org.subshare.core.user;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -30,7 +30,7 @@ public class ImportUsersFromPgpKeysResult implements Serializable {
 		private final boolean modified;
 
 		public ImportedUser(final User user, boolean _new, final boolean modified) {
-			this.user = assertNotNull(user, "user");
+			this.user = requireNonNull(user, "user");
 			this._new = _new;
 			this.modified = modified;
 		}

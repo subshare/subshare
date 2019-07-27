@@ -1,5 +1,7 @@
 package org.subshare.core.dto;
 
+import static java.util.Objects.*;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -14,7 +16,6 @@ import java.util.TreeSet;
 
 import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
-import co.codewizards.cloudstore.core.util.AssertUtil;
 
 public class PlainHistoCryptoRepoFileDtoTreeNode implements Iterable<PlainHistoCryptoRepoFileDtoTreeNode> {
 
@@ -40,7 +41,7 @@ public class PlainHistoCryptoRepoFileDtoTreeNode implements Iterable<PlainHistoC
 	 * @throws IllegalArgumentException if the given {@code plainHistoCryptoRepoFileDtos} does not meet the criteria stated above.
 	 */
 	public static PlainHistoCryptoRepoFileDtoTreeNode createTree(final Collection<PlainHistoCryptoRepoFileDto> plainHistoCryptoRepoFileDtos) throws IllegalArgumentException {
-		AssertUtil.assertNotNull(plainHistoCryptoRepoFileDtos, "plainHistoCryptoRepoFileDtos");
+		requireNonNull(plainHistoCryptoRepoFileDtos, "plainHistoCryptoRepoFileDtos");
 		if (plainHistoCryptoRepoFileDtos.isEmpty())
 			return null;
 
@@ -88,7 +89,7 @@ public class PlainHistoCryptoRepoFileDtoTreeNode implements Iterable<PlainHistoC
 	private List<PlainHistoCryptoRepoFileDtoTreeNode> flattenedTreeList;
 
 	protected PlainHistoCryptoRepoFileDtoTreeNode(final PlainHistoCryptoRepoFileDto plainHistoCryptoRepoFileDto) {
-		this.plainHistoCryptoRepoFileDto = AssertUtil.assertNotNull(plainHistoCryptoRepoFileDto, "plainHistoCryptoRepoFileDto");
+		this.plainHistoCryptoRepoFileDto = requireNonNull(plainHistoCryptoRepoFileDto, "plainHistoCryptoRepoFileDto");
 	}
 
 	public PlainHistoCryptoRepoFileDto getPlainHistoCryptoRepoFileDto() {

@@ -1,6 +1,6 @@
 package org.subshare.gui.serverrepo;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 import static org.subshare.gui.util.FxmlUtil.*;
 
 import org.subshare.core.repo.ServerRepo;
@@ -30,8 +30,8 @@ public class ServerRepoPane extends GridPane {
 	private final StringProperty nameProperty;
 
 	public ServerRepoPane(final Server server, final ServerRepo serverRepo) {
-		this.server = assertNotNull(server, "server");
-		this.serverRepo = assertNotNull(serverRepo, "serverRepo");
+		this.server = requireNonNull(server, "server");
+		this.serverRepo = requireNonNull(serverRepo, "serverRepo");
 		loadDynamicComponentFxml(ServerRepoPane.class, this);
 
 		try {

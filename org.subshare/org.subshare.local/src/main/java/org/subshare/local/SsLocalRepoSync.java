@@ -1,7 +1,7 @@
 package org.subshare.local;
 
 import static co.codewizards.cloudstore.core.objectfactory.ObjectFactoryUtil.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -134,9 +134,9 @@ public class SsLocalRepoSync extends LocalRepoSync {
 
 	@Override
 	protected void sha(final NormalFile normalFile, final File file, final ProgressMonitor monitor) {
-		assertNotNull(normalFile, "normalFile");
-		assertNotNull(file, "file");
-		assertNotNull(monitor, "monitor");
+		requireNonNull(normalFile, "normalFile");
+		requireNonNull(file, "file");
+		requireNonNull(monitor, "monitor");
 
 		SsNormalFile nf = (SsNormalFile) normalFile;
 
@@ -167,7 +167,7 @@ public class SsLocalRepoSync extends LocalRepoSync {
 					lastNewFileChunk = (SsFileChunk) fileChunk;
 			}
 
-			assertNotNull(lastNewFileChunk, "lastNewFileChunk"); // every file has at least one chunk! even if it is empty!
+			requireNonNull(lastNewFileChunk, "lastNewFileChunk"); // every file has at least one chunk! even if it is empty!
 
 			long offset = lastNewFileChunk.getOffset();
 
@@ -209,7 +209,7 @@ public class SsLocalRepoSync extends LocalRepoSync {
 	}
 
 	private SsFileChunk createPaddingFileChunk(final SsNormalFile normalFile, final long offset, final int paddingLength) {
-		assertNotNull(normalFile, "normalFile");
+		requireNonNull(normalFile, "normalFile");
 		SsFileChunk fileChunk = (SsFileChunk) createObject(FileChunk.class);
 		fileChunk.setNormalFile(normalFile);
 		fileChunk.setOffset(offset);
@@ -244,7 +244,7 @@ public class SsLocalRepoSync extends LocalRepoSync {
 	}
 
 //	protected void applyRepoFileContextIfExists(final RepoFile repoFile) {
-//		assertNotNull("repoFile", repoFile);
+//		requireNonNull("repoFile", repoFile);
 //		repoFileContextWasApplied = true;
 //		final RepoFileContext repoFileContext = RepoFileContext.getContext();
 //		if (repoFileContext != null) {
@@ -322,7 +322,7 @@ public class SsLocalRepoSync extends LocalRepoSync {
 			if (userRepoKeyRing == null)
 				throw new IllegalStateException(String.format("UserRepoKeyRingLookup.getUserRepoKeyRing(context) returned null! lookup=%s context=%s", lookup, context));
 
-//			return assertNotNull("cryptreeRepoTransportFactory.userRepoKeyRing", getRepoTransportFactory().getUserRepoKeyRing());
+//			return requireNonNull("cryptreeRepoTransportFactory.userRepoKeyRing", getRepoTransportFactory().getUserRepoKeyRing());
 		}
 		return userRepoKeyRing;
 	}

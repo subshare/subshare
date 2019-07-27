@@ -2,7 +2,7 @@ package org.subshare.local.transport;
 
 import static co.codewizards.cloudstore.core.objectfactory.ObjectFactoryUtil.*;
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 
 import java.io.IOException;
 import java.util.Date;
@@ -129,8 +129,8 @@ public class CryptreeFileRepoTransportImpl extends FileRepoTransport implements 
 
 	@Override
 	protected RepoFile syncRepoFile(final LocalRepoTransaction transaction, final File file) {
-		assertNotNull(transaction, "transaction");
-		assertNotNull(file, "file");
+		requireNonNull(transaction, "transaction");
+		requireNonNull(file, "file");
 
 		final File localRoot = getLocalRepoManager().getLocalRoot();
 		final RepoFileDao rfDao = transaction.getDao(RepoFileDao.class);
@@ -263,9 +263,9 @@ public class CryptreeFileRepoTransportImpl extends FileRepoTransport implements 
 //	}
 
 	protected void createAndPersistPreliminaryCollision(final LocalRepoManager localRepoManager, final File file, String localPath, Uid cryptoRepoFileId) {
-		assertNotNull(localRepoManager, "localRepoManager");
+		requireNonNull(localRepoManager, "localRepoManager");
 		if (localPath == null)
-			assertNotNull(file, "localPath/file");
+			requireNonNull(file, "localPath/file");
 
 		final File localRoot = localRepoManager.getLocalRoot();
 		if (RepairDeleteCollisionConfig.getInstance(localRoot).isCreateCollisionSuppressed()) {
@@ -340,7 +340,7 @@ public class CryptreeFileRepoTransportImpl extends FileRepoTransport implements 
 
 	private void putPaddingMetaData(String path, SsNormalFileDto fromNormalFileDto) {
 		path = prefixPath(path); // does a null-check
-		assertNotNull(fromNormalFileDto, "fromNormalFileDto");
+		requireNonNull(fromNormalFileDto, "fromNormalFileDto");
 
 		final File file = getFile(path);
 		try ( final LocalRepoTransaction transaction = getLocalRepoManager().beginWriteTransaction(); ) {

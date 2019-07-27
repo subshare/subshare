@@ -1,7 +1,7 @@
 package org.subshare.gui.welcome.identity;
 
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
+import static java.util.Objects.*;
 
 import org.subshare.gui.backup.imp.source.ImportBackupSourceWizardPage;
 import org.subshare.gui.pgp.createkey.passphrase.PassphraseWizardPage;
@@ -25,7 +25,7 @@ public class IdentityWizardPage extends WizardPage {
 
 	public IdentityWizardPage(final IdentityData identityData) {
 		super("Identity");
-		this.identityData = assertNotNull(identityData, "identityData");
+		this.identityData = requireNonNull(identityData, "identityData");
 
 		importBackupSourceWizardPage = new ImportBackupSourceWizardPage(identityData.getImportBackupData());
 		passphraseWizardPage = new PassphraseWizardPage(identityData.getCreatePgpKeyParam());

@@ -1,7 +1,7 @@
 package org.subshare.gui.maintree;
 
 import static co.codewizards.cloudstore.core.bean.PropertyChangeListenerUtil.*;
-import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static java.util.Objects.*;
 import static javafx.application.Platform.*;
 
 import java.beans.PropertyChangeEvent;
@@ -33,7 +33,7 @@ public class ServerMainTreeItem extends MainTreeItem<Server> {
 	private boolean childrenLoaded;
 
 	public ServerMainTreeItem(final Server server) {
-		super(assertNotNull(server, "server"));
+		super(requireNonNull(server, "server"));
 		setGraphic(new ImageView(icon));
 	}
 
