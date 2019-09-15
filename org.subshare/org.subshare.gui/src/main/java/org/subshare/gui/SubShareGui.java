@@ -47,6 +47,7 @@ import co.codewizards.cloudstore.core.appid.AppIdRegistry;
 import co.codewizards.cloudstore.core.config.ConfigDir;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.updater.CloudStoreUpdaterCore;
+import co.codewizards.cloudstore.core.util.DebugUtil;
 import co.codewizards.cloudstore.core.util.DerbyUtil;
 import co.codewizards.cloudstore.core.util.MainArgsUtil;
 import co.codewizards.cloudstore.core.version.Version;
@@ -428,6 +429,7 @@ public class SubShareGui extends Application {
 			doNothing();
 		}
 		StatusPrinter.printInCaseOfErrorsOrWarnings(context);
+		DebugUtil.logSystemProperties();
 	}
 
 	private void showUpdateStartingDialog(final CloudStoreUpdaterCore updaterCore) {
