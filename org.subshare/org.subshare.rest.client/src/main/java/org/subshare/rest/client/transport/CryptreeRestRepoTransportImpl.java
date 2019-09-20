@@ -323,6 +323,32 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 
 		if (cryptoChangeSetDtoTooLargeException != null)
 			syncCryptoKeysFromRemoteRepo(); // in case of a multi-part-response, we repeat the sync immediately, because the result we just processed might be stale (old files).
+
+
+		// The down-sync of the crypto-data might have caused some local crypto-activity, e.g. a key-exchange (=> invitation).
+		// Since the down-sync of the actual payload data (all the files) may take weeks and our local changes
+		// thus might be outdated (=> outside of the allowed backdating), we *must* immediately upload any changes
+		// now, before we download the actual payload for a few weeks ;-)
+		try ( final LocalRepoTransaction tx = getLocalRepoManager().beginWriteTransaction(); ) {
+			Cryptree cryptree = getCryptree(tx);
+			cryptree.prepareGetCryptoChangeSetDtoWithCryptoRepoFiles(null);
+			tx.commit();
+		}
+		try ( final LocalRepoTransaction tx = getLocalRepoManager().beginReadTransaction(); ) {
+			Cryptree cryptree = getCryptree(tx);
+			cryptoChangeSetDto = cryptree.getCryptoChangeSetDtoWithCryptoRepoFiles(null);
+			tx.commit();
+		}
+
+		if (! cryptoChangeSetDto.isEmpty()) {
+			try (final LocalRepoTransaction transaction = localRepoManager.beginWriteTransaction();) {
+				final Cryptree cryptree = getCryptree(transaction);
+				putCryptoChangeSetDto(cryptoChangeSetDto);
+				cryptree.updateLastCryptoKeySyncToRemoteRepo();
+
+				transaction.commit();
+			}
+		}
 	}
 
 	protected void syncMultiPartCryptoChangeSetDtosFromRemoteRepo(CryptoChangeSetDtoTooLargeException cryptoChangeSetDtoTooLargeException) throws IOException {

@@ -34,10 +34,16 @@ import co.codewizards.cloudstore.core.repo.transport.RepoTransport;
 public class SsRepoToRepoSync extends RepoToRepoSync {
 
 	private Boolean metaOnly;
-	private boolean firstSyncUp;
 
 	protected SsRepoToRepoSync(final File localRoot, final URL remoteRoot) {
 		super(localRoot, remoteRoot);
+	}
+
+	@Override
+	protected void syncDown(boolean fromRepoLocalSync, ProgressMonitor monitor) {
+
+
+		super.syncDown(fromRepoLocalSync, monitor);
 	}
 
 	@Override
@@ -45,10 +51,6 @@ public class SsRepoToRepoSync extends RepoToRepoSync {
 		if (isMetaOnly())
 			return; // Currently, meta-only implies read-only, too. Hence we don't need to up-sync as it can never change locally.
 
-		if (firstSyncUp) {
-			updateLastCryptoKeySyncToRemoteRepo(monitor);
-			firstSyncUp = false;
-		}
 		super.syncUp(monitor);
 	}
 
@@ -56,8 +58,7 @@ public class SsRepoToRepoSync extends RepoToRepoSync {
 	 * Update the local {@code LastCryptoKeySyncToRemoteRepo.localRepositoryRevisionSynced}
 	 * with the value from the remote {@code LastCryptoKeySyncFromRemoteRepo.remoteRepositoryRevisionSynced},
 	 * because the server's repo might have been rolled back to an older version due to a backup+restore.
-	 * <p>
-	 * Invoked during {@link #syncUp(ProgressMonitor)}, only.
+	 *
 	 * @param monitor the progress-monitor.
 	 */
 	private void updateLastCryptoKeySyncToRemoteRepo(ProgressMonitor monitor) {
@@ -82,10 +83,11 @@ public class SsRepoToRepoSync extends RepoToRepoSync {
 
 	@Override
 	public void sync(final ProgressMonitor monitor) {
-		firstSyncUp = true;
 		requireNonNull(monitor, "monitor");
-		monitor.beginTask("Synchronising...", 251);
+		monitor.beginTask("Synchronising...", 261);
 		try {
+			updateLastCryptoKeySyncToRemoteRepo(new SubProgressMonitor(monitor, 10));
+
 			super.sync(new SubProgressMonitor(monitor, 201));
 
 			// We detect certain collisions on the client, only, even though they happen on the server.

@@ -348,6 +348,9 @@ public class CryptreeImpl extends AbstractCryptree {
 		final LocalRepository localRepository = getTransactionOrFail().getDao(LocalRepositoryDao.class).getLocalRepositoryOrFail();
 		final LastCryptoKeySyncToRemoteRepo lastCryptoKeySyncToRemoteRepo = getLastCryptoKeySyncToRemoteRepo();
 
+		if (getRootCryptoRepoFileId() == null && ! isOnServer())
+			createOrUpdateCryptoRepoFile("");
+
 		if (lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced != null) {
 			boolean resyncMode = lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced.longValue() != lastCryptoKeySyncToRemoteRepo.getLocalRepositoryRevisionSynced();
 			if (resyncMode) {
@@ -2454,8 +2457,10 @@ public class CryptreeImpl extends AbstractCryptree {
 	@Override
 	public void assertSignatureOk(final WriteProtected writeProtected) throws SignatureException, AccessDeniedException {
 		Uid crfIdControllingPermissions = writeProtected.getCryptoRepoFileIdControllingPermissions();
-		if (crfIdControllingPermissions == null)
-			crfIdControllingPermissions = getTransactionOrFail().getDao(CryptoRepoFileDao.class).getRootCryptoRepoFile().getCryptoRepoFileId();
+		if (crfIdControllingPermissions == null) {
+			CryptoRepoFileDao cryptoRepoFileDao = getTransactionOrFail().getDao(CryptoRepoFileDao.class);
+			crfIdControllingPermissions = cryptoRepoFileDao.getRootCryptoRepoFile().getCryptoRepoFileId();
+		}
 
 		final CryptreeNode cryptreeNode = getCryptreeContext().getCryptreeNodeOrCreate(crfIdControllingPermissions);
 		cryptreeNode.assertSignatureOk(writeProtected);
