@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.jdo.FetchPlan;
 import javax.jdo.PersistenceManager;
 import javax.jdo.listener.InstanceLifecycleEvent;
 import javax.jdo.listener.StoreLifecycleListener;
@@ -68,6 +69,9 @@ public class AssignCryptoRepoFileRepoFileListener extends AbstractLocalRepoTrans
 
 		final LocalRepoTransaction tx = getTransactionOrFail();
 		final CryptoRepoFileDao cryptoRepoFileDao = tx.getDao(CryptoRepoFileDao.class);
+		FetchPlan fetchPlan = cryptoRepoFileDao.getPersistenceManager().getFetchPlan();
+		fetchPlan.setGroups(FetchPlan.DEFAULT, FetchGroupConst.CRYPTO_REPO_FILE_PARENT_AND_REPO_FILE);
+		fetchPlan.setMaxFetchDepth(1);
 		final Collection<CryptoRepoFile> cryptoRepoFiles = cryptoRepoFileDao.getCryptoRepoFilesWithoutRepoFileAndNotDeleted();
 		for (final CryptoRepoFile cryptoRepoFile : cryptoRepoFiles) {
 			final RepoFile repoFile;

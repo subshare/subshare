@@ -7,7 +7,7 @@ public interface FetchGroupConst extends co.codewizards.cloudstore.local.persist
 	 */
 	@Deprecated
 	String CRYPTO_CHANGE_SET_DTO = "CryptoChangeSetDto";
-	
+
 	String SIGNATURE = "Signature";
 
 	String CRYPTO_REPO_FILE_DTO = "CryptoRepoFileDto";
@@ -37,6 +37,8 @@ public interface FetchGroupConst extends co.codewizards.cloudstore.local.persist
 	String REPOSITORY_OWNER_DTO = "RepositoryOwnerDto";
 
 	String PERMISSION_SET_INHERITANCE_DTO = "PermissionSetInheritanceDto";
+
+	String CRYPTO_REPO_FILE_PARENT_AND_REPO_FILE = "CryptoRepoFile.parent";
 
 
 }

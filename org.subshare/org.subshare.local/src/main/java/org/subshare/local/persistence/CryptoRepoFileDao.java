@@ -65,14 +65,18 @@ public class CryptoRepoFileDao extends Dao<CryptoRepoFile, CryptoRepoFileDao> {
 	}
 
 	public Collection<CryptoRepoFile> getCryptoRepoFilesWithoutRepoFileAndNotDeleted() {
-		final Query query = pm().newNamedQuery(getEntityClass(), "getCryptoRepoFilesWithoutRepoFileAndNotDeleted");
+		final PersistenceManager pm = pm();
+		final FetchPlanBackup fetchPlanBackup = FetchPlanBackup.createFrom(pm);
+		final Query query = pm.newNamedQuery(getEntityClass(), "getCryptoRepoFilesWithoutRepoFileAndNotDeleted");
 		try {
+			clearFetchGroups();
 			long startTimestamp = System.currentTimeMillis();
 
 			@SuppressWarnings("unchecked")
 			Collection<CryptoRepoFile> cryptoRepoFiles = (Collection<CryptoRepoFile>) query.execute();
 			logger.debug("getCryptoRepoFilesWithoutRepoFile: query.execute(...) took {} ms.", System.currentTimeMillis() - startTimestamp);
 
+			fetchPlanBackup.restore(pm);
 			startTimestamp = System.currentTimeMillis();
 			cryptoRepoFiles = load(cryptoRepoFiles);
 			logger.debug("getCryptoRepoFilesWithoutRepoFile: Loading result-set with {} elements took {} ms.", cryptoRepoFiles.size(), System.currentTimeMillis() - startTimestamp);
@@ -80,6 +84,7 @@ public class CryptoRepoFileDao extends Dao<CryptoRepoFile, CryptoRepoFileDao> {
 			return cryptoRepoFiles;
 		} finally {
 			query.closeAll();
+			fetchPlanBackup.restore(pm);
 		}
 	}
 

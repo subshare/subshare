@@ -86,6 +86,10 @@ import co.codewizards.cloudstore.local.persistence.RepoFile;
 	}),
 	@FetchGroup(name = FetchGroupConst.SIGNATURE, members = {
 			@Persistent(name = "signature")
+	}),
+	@FetchGroup(name = FetchGroupConst.CRYPTO_REPO_FILE_PARENT_AND_REPO_FILE, members = {
+			@Persistent(name = "parent"),
+			@Persistent(name = "repoFile")
 	})
 })
 public class CryptoRepoFile extends Entity implements WriteProtected, AutoTrackLocalRevision, StoreCallback {
