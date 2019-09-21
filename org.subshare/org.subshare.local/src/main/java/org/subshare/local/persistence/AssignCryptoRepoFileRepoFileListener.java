@@ -73,6 +73,7 @@ public class AssignCryptoRepoFileRepoFileListener extends AbstractLocalRepoTrans
 		fetchPlan.setGroups(FetchPlan.DEFAULT, FetchGroupConst.CRYPTO_REPO_FILE_PARENT_AND_REPO_FILE);
 		fetchPlan.setMaxFetchDepth(1);
 		final Collection<CryptoRepoFile> cryptoRepoFiles = cryptoRepoFileDao.getCryptoRepoFilesWithoutRepoFileAndNotDeleted();
+		fetchPlan.setGroup(FetchPlan.DEFAULT);
 		for (final CryptoRepoFile cryptoRepoFile : cryptoRepoFiles) {
 			final RepoFile repoFile;
 			if (cryptoRepoFile.getLocalName() != null) // on client-side!
