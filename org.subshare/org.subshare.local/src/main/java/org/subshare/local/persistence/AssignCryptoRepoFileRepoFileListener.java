@@ -72,17 +72,36 @@ public class AssignCryptoRepoFileRepoFileListener extends AbstractLocalRepoTrans
 		FetchPlan fetchPlan = cryptoRepoFileDao.getPersistenceManager().getFetchPlan();
 		fetchPlan.setGroups(FetchPlan.DEFAULT, FetchGroupConst.CRYPTO_REPO_FILE_PARENT_AND_REPO_FILE);
 		fetchPlan.setMaxFetchDepth(1);
-		final Collection<CryptoRepoFile> cryptoRepoFiles = cryptoRepoFileDao.getCryptoRepoFilesWithoutRepoFileAndNotDeleted();
-		fetchPlan.setGroup(FetchPlan.DEFAULT);
-		for (final CryptoRepoFile cryptoRepoFile : cryptoRepoFiles) {
-			final RepoFile repoFile;
-			if (cryptoRepoFile.getLocalName() != null) // on client-side!
-				repoFile = associateRepoFileViaCryptoRepoFileLocalName(cryptoRepoFile);
-			else { // on server-side
-				repoFile = repoFileName2RepoFile.get(cryptoRepoFile.getCryptoRepoFileId().toString());
-				if (repoFile != null) {
-					cryptoRepoFile.setRepoFile(repoFile);
-					tx.flush(); // we want an early failure!
+
+		boolean needFullAssociationAlgorithm = true;
+		if (! forced && ! cryptoRepoFilePersisted && ! histoCryptoRepoFilePersisted) {
+			// *ONLY* changes in repoFileName2RepoFile => faster algorithm, if possible
+			// Note: This algorithm works only on the client-side. But that's no problem as
+			// we fall back to the old "full" algorithm, if we fail to associate at least
+			// one RepoFile -- which is always the case on the server-side.
+			needFullAssociationAlgorithm = false;
+			for (RepoFile repoFile : repoFileName2RepoFile.values()) {
+				CryptoRepoFile cryptoRepoFile = associateRepoFileViaCryptoRepoFileLocalName(repoFile);
+				if (cryptoRepoFile == null) {
+					needFullAssociationAlgorithm = true;
+					break;
+				}
+			}
+		}
+
+		if (needFullAssociationAlgorithm) {
+			final Collection<CryptoRepoFile> cryptoRepoFiles = cryptoRepoFileDao.getCryptoRepoFilesWithoutRepoFileAndNotDeleted();
+			fetchPlan.setGroup(FetchPlan.DEFAULT);
+			for (final CryptoRepoFile cryptoRepoFile : cryptoRepoFiles) {
+				final RepoFile repoFile;
+				if (cryptoRepoFile.getLocalName() != null) // on client-side!
+					repoFile = associateRepoFileViaCryptoRepoFileLocalName(cryptoRepoFile);
+				else { // on server-side
+					repoFile = repoFileName2RepoFile.get(cryptoRepoFile.getCryptoRepoFileId().toString());
+					if (repoFile != null) {
+						cryptoRepoFile.setRepoFile(repoFile);
+						tx.flush(); // we want an early failure!
+					}
 				}
 			}
 		}
@@ -90,6 +109,37 @@ public class AssignCryptoRepoFileRepoFileListener extends AbstractLocalRepoTrans
 		repoFileName2RepoFile.clear();
 		cryptoRepoFilePersisted = false;
 		histoCryptoRepoFilePersisted = false;
+	}
+
+	private CryptoRepoFile associateRepoFileViaCryptoRepoFileLocalName(final RepoFile repoFile) {
+		requireNonNull(repoFile, "repoFile");
+		final LocalRepoTransaction tx = getTransactionOrFail();
+		final CryptoRepoFileDao cryptoRepoFileDao = tx.getDao(CryptoRepoFileDao.class);
+		CryptoRepoFile cryptoRepoFile = cryptoRepoFileDao.getCryptoRepoFile(repoFile);
+		if (cryptoRepoFile != null)
+			return cryptoRepoFile;
+
+		RepoFile parentRepoFile = repoFile.getParent();
+		if (parentRepoFile == null) { // happens during localSync
+			logger.trace("repoFile.parent == null, but no CryptoRepoFile associated! {}", repoFile);
+			return null;
+		}
+
+		CryptoRepoFile parentCryptoRepoFile = associateRepoFileViaCryptoRepoFileLocalName(parentRepoFile);
+		if (parentCryptoRepoFile == null) {
+			logger.trace("Could not associate CryptoRepoFile to parent! repoFile={} repoFile.parent={}", repoFile, parentRepoFile);
+			return null;
+		}
+
+		String localName = requireNonNull(repoFile.getName(), "repoFile.name");
+		cryptoRepoFile = cryptoRepoFileDao.getChildCryptoRepoFile(parentCryptoRepoFile, localName);
+		if (cryptoRepoFile == null) {
+			logger.trace("Could not associate CryptoRepoFile to repoFile! repoFile={} repoFile.parent={}", repoFile, parentRepoFile);
+			return null;
+		}
+		DuplicateCryptoRepoFileHandler.createInstance(tx).associateCryptoRepoFileWithRepoFile(repoFile, cryptoRepoFile);
+		tx.flush(); // we want an early failure!
+		return cryptoRepoFile;
 	}
 
 	/**
