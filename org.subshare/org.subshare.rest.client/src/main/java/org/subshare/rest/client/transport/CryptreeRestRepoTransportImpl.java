@@ -194,6 +194,7 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 				ChangeSetDtoIo changeSetDtoIo = createObject(ChangeSetDtoIo.class);
 				result = changeSetDtoIo.deserializeWithGz(decryptedChangeSetDtoCacheFile);
 				logger.info("getChangeSetDto: Read decrypted ChangeSetDto-cache-file: {}", decryptedChangeSetDtoCacheFile.getAbsolutePath());
+				syncCryptoKeysFromRemoteRepo(); // still sync crypto-keys, because the old files (in the old change-set) might be re-uploaded with a new key in the mean-time.
 				return result;
 			} else {
 				logger.info("getChangeSetDto: Decrypted ChangeSetDto-cache-file NOT found: {}", decryptedChangeSetDtoCacheFile.getAbsolutePath());
@@ -270,6 +271,7 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 	}
 
 	private void syncCryptoKeysFromRemoteRepo() {
+		logger.info("syncCryptoKeysFromRemoteRepo: entered.");
 		final LocalRepoManager localRepoManager = getLocalRepoManager();
 
 		Long lastCryptoKeySyncToRemoteRepoLocalRepositoryRevisionSynced = null; // naming perspective from remote side
@@ -349,10 +351,12 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 				transaction.commit();
 			}
 		}
+		logger.info("syncCryptoKeysFromRemoteRepo: exiting.");
 	}
 
 	protected void syncMultiPartCryptoChangeSetDtosFromRemoteRepo(CryptoChangeSetDtoTooLargeException cryptoChangeSetDtoTooLargeException) throws IOException {
 		requireNonNull(cryptoChangeSetDtoTooLargeException, "cryptoChangeSetTooLargeException");
+		logger.info("syncMultiPartCryptoChangeSetDtosFromRemoteRepo: entered.");
 		final String exMsg = cryptoChangeSetDtoTooLargeException.getMessage();
 		final int multiPartCount;
 		try {
@@ -402,6 +406,7 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 
 			cryptoChangeSetDtoSplitFileManager.markCryptoChangeSetDtoImported(multiPartIndex);
 		}
+		logger.info("syncMultiPartCryptoChangeSetDtosFromRemoteRepo: exiting.");
 	}
 
 	protected void syncCryptoKeysFromRemoteRepo_putCryptoChangeSetDto(final CryptoChangeSetDto cryptoChangeSetDto) {
