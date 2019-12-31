@@ -2,5 +2,5 @@ dependencies {
 	compile group: 'org.bouncycastle', name: 'bcprov-jdk15on', version: bouncycastleVersion
 
 	// TODO we must drag the util stuff out of this core - we don't need this entire big core thingy here.
-	testCompile group: 'co.codewizards.cloudstore', name: 'co.codewizards.cloudstore.core', version: cloudstoreVersion
+	testImplementation group: 'co.codewizards.cloudstore', name: 'co.codewizards.cloudstore.core', version: cloudstoreVersion
 }

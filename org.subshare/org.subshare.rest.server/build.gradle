@@ -2,4 +2,6 @@ dependencies {
 	compile group: 'co.codewizards.cloudstore', name: 'co.codewizards.cloudstore.rest.server', version: cloudstoreVersion
 	compile project(':org.subshare.rest.shared')
 //	compile project(':org.subshare.local.dbrepo') // we don't really access code, but we have a semantic dependency as the services don't work without the proper RepoTransport implementation!
+
+	compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: servletApiVersion
 }

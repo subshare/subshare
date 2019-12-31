@@ -1,22 +1,22 @@
 // BEGIN 'provided' support - part 1
 // There is no 'provided' dependency out of the box.
 // But: http://www.rqna.net/qna/utxsn-providedcompile-without-war-plugin.html
-configurations {
-	provided
-}
+//configurations {
+//	provided
+//}
 // END 'provided' support - part 1
 
 dependencies {
 	compile group: 'co.codewizards.cloudstore', name: 'co.codewizards.cloudstore.local', version: cloudstoreVersion
 	compile group: 'co.codewizards.cloudstore', name: 'co.codewizards.cloudstore.core', version: cloudstoreVersion
 	compile project(':org.subshare.core')
-//	provided group: 'org.slf4j', name: 'log4j-over-slf4j', version: slf4jVersion
+//	compileOnly group: 'org.slf4j', name: 'log4j-over-slf4j', version: slf4jVersion // provided => compileOnly
 }
 
 // BEGIN 'provided' support - part 2
-sourceSets.main.compileClasspath += configurations.provided
-sourceSets.test.compileClasspath += configurations.provided
-sourceSets.test.runtimeClasspath += configurations.provided
+//sourceSets.main.compileClasspath += configurations.provided
+//sourceSets.test.compileClasspath += configurations.provided
+//sourceSets.test.runtimeClasspath += configurations.provided
 // END 'provided' support - part 2
 
 compileJava.doLast {

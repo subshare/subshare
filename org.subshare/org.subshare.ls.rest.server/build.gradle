@@ -2,4 +2,6 @@ dependencies {
 	compile group: 'co.codewizards.cloudstore', name: 'co.codewizards.cloudstore.ls.rest.server', version: cloudstoreVersion
 	compile project(':org.subshare.ls.core')
 	compile project(':org.subshare.core')
+
+	compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: servletApiVersion
 }

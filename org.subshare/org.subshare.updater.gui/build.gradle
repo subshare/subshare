@@ -1,5 +1,24 @@
-sourceCompatibility = JavaVersion.VERSION_1_8
-targetCompatibility = JavaVersion.VERSION_1_8
+plugins {
+    id 'application'
+    id 'org.openjfx.javafxplugin' version '0.0.7'
+    id 'org.beryx.jlink' version '2.14.0'
+}
+
+javafx {
+    version = "11.0.2"
+    modules = [ 'javafx.controls', 'javafx.fxml']
+}
+
+jlink {
+    launcher {
+        name = 'hellofx'
+    }
+}
+
+mainClassName = 'org.subshare.updater.gui.SubShareUpdaterGui'
+
+sourceCompatibility = JavaVersion.VERSION_11
+targetCompatibility = JavaVersion.VERSION_11
 
 dependencies {
 	compile project(':org.subshare.updater')

@@ -1,7 +1,26 @@
-import org.apache.tools.ant.filters.*
+plugins {
+    id 'application'
+    id 'org.openjfx.javafxplugin' version '0.0.7'
+    id 'org.beryx.jlink' version '2.14.0'
+}
 
-sourceCompatibility = JavaVersion.VERSION_1_8
-targetCompatibility = JavaVersion.VERSION_1_8
+javafx {
+	version = "11.0.2"
+    modules = [ 'javafx.controls', 'javafx.fxml']
+}
+
+jlink {
+    launcher {
+        name = 'org.subshare.gui'
+    }
+}
+
+mainClassName = 'org.subshare.gui.SubShareGui'
+
+sourceCompatibility = JavaVersion.VERSION_11
+targetCompatibility = JavaVersion.VERSION_11
+
+import org.apache.tools.ant.filters.*
 
 //sourceSets {
 //	main {
@@ -41,8 +60,11 @@ dependencies {
 	// this later.
 	compile "co.codewizards.cloudstore:co.codewizards.cloudstore.core.oio.nio:$cloudstoreVersion"
 
-	compile "org.slf4j:log4j-over-slf4j:$slf4jVersion", "ch.qos.logback:logback-classic:$logbackVersion"
-	
+	compile "org.slf4j:log4j-over-slf4j:$slf4jVersion"
+	compile ("ch.qos.logback:logback-classic:$logbackVersion") {
+		exclude group: 'edu.washington.cs.types.checker', module: 'checker-framework'
+	}
+
 	// runtime-dependencies (needed when starting the app - not for compilation)
 	runtime project(':org.subshare.local')
 //	runtime project(':org.subshare.rest.client')

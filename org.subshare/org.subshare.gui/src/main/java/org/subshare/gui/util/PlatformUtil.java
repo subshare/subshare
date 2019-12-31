@@ -75,7 +75,7 @@ public final class PlatformUtil {
 	 * Notifies {@code PlatformUtil} about the application beginning to exit.
 	 * <p>
 	 * <b>Workaround:</b> This is an ugly workaround, because there seems to be no clean API available.
-	 * {@link com.sun.javafx.application.PlatformImpl#addListener(com.sun.javafx.application.PlatformImpl.FinishListener) PlatformImpl.addListener(FinishListener)}
+	 * {@code com.sun.javafx.application.PlatformImpl.addListener(com.sun.javafx.application.PlatformImpl.FinishListener)}
 	 * would be what we need, but unfortunately, this is {@code com.sun.javafx} and not public API :-(
 	 */
 	public static void notifyExiting() {

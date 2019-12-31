@@ -1,7 +1,19 @@
 apply plugin: 'build-dashboard'
 
+buildscript {
+  repositories {
+    maven {
+      url "https://plugins.gradle.org/m2/"
+    }
+  }
+  dependencies {
+    classpath "org.javamodularity:moduleplugin:1.6.0"
+  }
+}
+
 allprojects {
 	apply plugin: 'java'
+	apply plugin: "org.javamodularity.moduleplugin"
 	apply plugin: 'maven'
 	apply plugin: "jacoco"
 	apply plugin: 'eclipse'
@@ -16,8 +28,8 @@ allprojects {
 	version = '0.10.8-SNAPSHOT'
 //	version = '0.10.8'
 
-	sourceCompatibility = JavaVersion.VERSION_1_7
-	targetCompatibility = JavaVersion.VERSION_1_7
+	sourceCompatibility = JavaVersion.VERSION_1_9
+	targetCompatibility = JavaVersion.VERSION_1_9
 
 	[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
@@ -65,8 +77,9 @@ allprojects {
 
 	project.ext.cloudstoreVersion = '0.10.8-SNAPSHOT'
 //	project.ext.cloudstoreVersion = '0.10.8'
-	project.ext.slf4jVersion = '1.7.7'
-	project.ext.logbackVersion = '1.0.13'
+	project.ext.slf4jVersion = '2.0.0-alpha1'
+	project.ext.logbackVersion = '1.3.0-alpha5'
+	project.ext.servletApiVersion = '3.1.0'
 
 	sourceSets {
 		main {
