@@ -4,3 +4,22 @@ dependencies {
 	// TODO we must drag the util stuff out of this core - we don't need this entire big core thingy here.
 	testImplementation group: 'co.codewizards.cloudstore', name: 'co.codewizards.cloudstore.core', version: cloudstoreVersion
 }
+
+compileTestJava {
+	moduleOptions {
+        addModules = ['co.codewizards.cloudstore.core', 'org.assertj.core']
+		addReads = [
+			'org.subshare.crypto': 'co.codewizards.cloudstore.core,org.assertj.core'
+		]
+    }
+}
+
+test {
+	jvmArgs "-javaagent:${classpath.find { it.name.contains('jmockit') }.absolutePath}"
+	moduleOptions {
+        addModules = ['co.codewizards.cloudstore.core', 'org.assertj.core']
+		addReads = [
+			'org.subshare.crypto': 'co.codewizards.cloudstore.core,org.assertj.core'
+		]
+    }
+}

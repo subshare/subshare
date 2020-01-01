@@ -4,3 +4,22 @@ dependencies {
 	compile group: 'org.bouncycastle', name: 'org.bouncycastle.openpgp.wot' , version: bouncycastleWotVersion
 	compile project(':org.subshare.crypto')
 }
+
+compileTestJava {
+	moduleOptions {
+		addModules = ['org.assertj.core']
+		addReads = [
+			'org.subshare.core': 'org.assertj.core'
+		]
+	}
+}
+
+test {
+	jvmArgs "-javaagent:${classpath.find { it.name.contains('jmockit') }.absolutePath}"
+	moduleOptions {
+		addModules = ['org.assertj.core']
+		addReads = [
+			'org.subshare.core': 'org.assertj.core'
+		]
+	}
+}

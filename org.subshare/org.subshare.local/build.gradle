@@ -40,3 +40,22 @@ compileJava.doLast {
 	ant.echo("***********************************************");
 	ant.echo("***********************************************");
 }
+
+compileTestJava {
+	moduleOptions {
+		addModules = ['org.assertj.core']
+		addReads = [
+			'org.subshare.local': 'org.assertj.core'
+		]
+	}
+}
+
+test {
+	jvmArgs "-javaagent:${classpath.find { it.name.contains('jmockit') }.absolutePath}"
+	moduleOptions {
+		addModules = ['org.assertj.core']
+		addReads = [
+			'org.subshare.local': 'org.assertj.core'
+		]
+	}
+}

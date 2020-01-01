@@ -102,7 +102,7 @@ public class UserRepoKeyPublicKeyHelper {
 		}
 	}
 
-	private void createUserIdentities(final UserRepoKeyPublicKey userRepoKeyPublicKey) {
+	protected void createUserIdentities(final UserRepoKeyPublicKey userRepoKeyPublicKey) { // must be protected, because it's the fastest fix for: https://github.com/jmockit/jmockit1/issues/605
 		requireNonNull(userRepoKeyPublicKey, "userRepoKeyPublicKey");
 
 		final Set<UserRepoKeyPublicKey> forUserRepoKeyPublicKeys = getForUserRepoKeyPublicKeysForUserIdentityLinkCreation(

@@ -1,7 +1,5 @@
 plugins {
-    id 'application'
-    id 'org.openjfx.javafxplugin' version '0.0.7'
-    id 'org.beryx.jlink' version '2.14.0'
+    id 'org.openjfx.javafxplugin' version '0.0.8'
 }
 
 javafx {
@@ -9,13 +7,13 @@ javafx {
     modules = [ 'javafx.controls', 'javafx.fxml']
 }
 
-jlink {
-    launcher {
-        name = 'org.subshare.gui'
-    }
-}
-
-mainClassName = 'org.subshare.gui.SubShareGui'
+//jlink {
+//    launcher {
+//        name = 'org.subshare.gui'
+//    }
+//}
+//
+//mainClassName = 'org.subshare.gui.SubShareGui'
 
 sourceCompatibility = JavaVersion.VERSION_11
 targetCompatibility = JavaVersion.VERSION_11
