@@ -1,5 +1,6 @@
 package org.subshare.core.repo;
 
+import static co.codewizards.cloudstore.core.util.DateUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
 import static java.util.Objects.*;
 
@@ -15,7 +16,7 @@ public class ServerRepoImpl extends AbstractBean<ServerRepo.Property> implements
 	private String name;
 	private Uid serverId;
 	private Uid userId;
-	private Date changed = new Date();
+	private Date changed = now();
 
 	public ServerRepoImpl(final UUID repositoryId) {
 		this.repositoryId = requireNonNull(repositoryId, "repositoryId)");
@@ -77,7 +78,7 @@ public class ServerRepoImpl extends AbstractBean<ServerRepo.Property> implements
 	}
 
 	protected void updateChanged() {
-		setChanged(new Date());
+		setChanged(now());
 	}
 
 	@Override

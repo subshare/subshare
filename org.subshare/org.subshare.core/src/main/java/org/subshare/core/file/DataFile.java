@@ -1,5 +1,6 @@
 package org.subshare.core.file;
 
+import static co.codewizards.cloudstore.core.util.DateUtil.*;
 import static java.util.Objects.*;
 import static org.subshare.core.file.FileConst.*;
 
@@ -96,7 +97,7 @@ public abstract class DataFile {
 
 	private void initManifestProperties() {
 		if (manifestTimestamp == null)
-			manifestTimestamp = new Date();
+			manifestTimestamp = now();
 
 		manifestProperties = new Properties();
 		manifestProperties.setProperty(MANIFEST_PROPERTY_CONTENT_TYPE, getContentTypeValue());

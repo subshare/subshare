@@ -1,5 +1,6 @@
 package org.subshare.core.dto;
 
+import static co.codewizards.cloudstore.core.util.DateUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
 import static java.util.Objects.*;
 
@@ -36,7 +37,7 @@ public class SignatureDto implements Signature, Serializable {
 		if (this.signatureCreated != null && !this.signatureCreated.equals(signatureCreated))
 			throw new IllegalStateException("this.signatureCreated already assigned to a different value! Cannot modify!");
 
-		this.signatureCreated = signatureCreated;
+		this.signatureCreated = copyDate(signatureCreated);
 	}
 
 	@Override

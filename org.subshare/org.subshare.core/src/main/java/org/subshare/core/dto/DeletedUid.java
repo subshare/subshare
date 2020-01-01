@@ -1,5 +1,6 @@
 package org.subshare.core.dto;
 
+import static co.codewizards.cloudstore.core.util.DateUtil.*;
 import static java.util.Objects.*;
 
 import java.util.Date;
@@ -25,7 +26,7 @@ public class DeletedUid {
 
 	public DeletedUid(Uid uid) {
 		this.uid = requireNonNull(uid, "uid");
-		this.deleted = new Date();
+		this.deleted = now();
 	}
 
 	public Uid getUid() {
@@ -39,7 +40,7 @@ public class DeletedUid {
 		return deleted;
 	}
 	public void setDeleted(Date deleted) {
-		this.deleted = deleted;
+		this.deleted = copyDate(deleted);
 	}
 
 }

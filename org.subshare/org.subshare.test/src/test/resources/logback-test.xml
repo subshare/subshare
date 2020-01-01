@@ -9,6 +9,16 @@
 		</encoder>
 	</appender>
 
+	<timestamp key="now" datePattern="yyyy-MM-dd'T'HH-mm-ss.SSS"/>
+
+	<appender name="FILE" class="ch.qos.logback.core.FileAppender">
+		<file>build/subshare.test.${now}.log</file>
+		<encoder>
+			<!-- <pattern>%date [%thread] %level %logger{10} [%file:%line] %msg%n</pattern> -->
+			<pattern>%date [%thread] %level %logger{10} - %msg%n</pattern>
+		</encoder>
+	</appender>
+
 <!--
 	<logger name="com.lordofthejars.foo" level="INFO" additivity="false">
 		<appender-ref ref="STDOUT" />
@@ -29,9 +39,11 @@
 	<logger name="org.subshare.local.persistence.CurrentHistoCryptoRepoFile" level="DEBUG"/>
 -->
 
-<!--
 	<logger name="DataNucleus.Datastore.Native" level="ALL" />
--->
+
+	<logger name="co.codewizards.cloudstore.rest.client.CloudStoreRestClient" level="DEBUG"/>
+	<logger name="co.codewizards.cloudstore.test.CloudStoreServerTestSupport" level="DEBUG"/>
+	<logger name="co.codewizards.cloudstore.server.CloudStoreServer" level="DEBUG"/>
 
 	<logger name="org.subshare.core.pgp.gnupg.BcPgpDecoder" level="DEBUG"/>
 	<logger name="org.subshare.core.user.UserImpl" level="DEBUG"/>
@@ -41,5 +53,6 @@
 
 	<root level="INFO">
 		<appender-ref ref="STDOUT" />
+		<appender-ref ref="FILE"/>
 	</root>
 </configuration>

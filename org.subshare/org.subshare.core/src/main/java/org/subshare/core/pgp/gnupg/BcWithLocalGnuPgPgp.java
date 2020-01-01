@@ -3,6 +3,7 @@ package org.subshare.core.pgp.gnupg;
 import static co.codewizards.cloudstore.core.io.StreamUtil.*;
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static co.codewizards.cloudstore.core.util.CollectionUtil.nullToEmpty;
+import static co.codewizards.cloudstore.core.util.DateUtil.*;
 import static co.codewizards.cloudstore.core.util.HashUtil.*;
 import static co.codewizards.cloudstore.core.util.PropertiesUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
@@ -1627,7 +1628,7 @@ public class BcWithLocalGnuPgPgp extends AbstractPgp {
 		logger.info("createPGPSecretKeyRing: Creating PGP key: primaryUserId='{}' algorithm='{}' strength={}",
 				primaryUserId, createPgpKeyParam.getAlgorithm(), createPgpKeyParam.getStrength());
 
-		final Date now = new Date();
+		final Date now = now();
 
 		final int masterKeyAlgorithm = getMasterKeyAlgorithm(createPgpKeyParam);
 		final int subKey1Algorithm = getSubKey1Algorithm(createPgpKeyParam);

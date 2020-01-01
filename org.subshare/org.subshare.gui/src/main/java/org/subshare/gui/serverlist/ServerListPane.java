@@ -1,6 +1,7 @@
 package org.subshare.gui.serverlist;
 
 import static co.codewizards.cloudstore.core.bean.PropertyChangeListenerUtil.*;
+import static co.codewizards.cloudstore.core.util.DateUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
 import static java.util.Objects.*;
 import static javafx.application.Platform.*;
@@ -276,7 +277,7 @@ public class ServerListPane extends GridPane {
 	@FXML
 	private void addButtonClicked(final ActionEvent event) {
 		Server server = getServerRegistry().createServer();
-		server.setName("Server " + new DateTime(new Date()));
+		server.setName("Server " + new DateTime(now()));
 		try {
 			server.setUrl(new URL("https://host.domain.tld:1234"));
 		} catch (MalformedURLException e) {

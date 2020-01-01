@@ -1,6 +1,7 @@
 package org.subshare.gui;
 
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
+import static co.codewizards.cloudstore.core.util.DateUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
 import static java.util.Objects.*;
 import static org.subshare.gui.util.ResourceBundleUtil.*;
@@ -328,7 +329,7 @@ public class SubShareGui extends Application {
 	private void tryPgpKeysNoPassphrase() throws InterruptedException {
 		final Pgp pgp = PgpLs.getPgpOrFail();
 		final PgpPrivateKeyPassphraseStore pgpPrivateKeyPassphraseStore = PgpPrivateKeyPassphraseManagerLs.getPgpPrivateKeyPassphraseStore();
-		final Date now = new Date();
+		final Date now = now();
 
 		for (final PgpKey pgpKey : pgp.getMasterKeysWithSecretKey()) {
 			if (! pgpKey.isValid(now))
@@ -359,7 +360,7 @@ public class SubShareGui extends Application {
 
 		final Pgp pgp = PgpLs.getPgpOrFail();
 		final PgpPrivateKeyPassphraseStore pgpPrivateKeyPassphraseStore = PgpPrivateKeyPassphraseManagerLs.getPgpPrivateKeyPassphraseStore();
-		final Date now = new Date();
+		final Date now = now();
 
 		for (final PgpKey pgpKey : pgp.getMasterKeysWithSecretKey()) {
 			if (pgpKey.isRevoked() || !pgpKey.isValid(now))

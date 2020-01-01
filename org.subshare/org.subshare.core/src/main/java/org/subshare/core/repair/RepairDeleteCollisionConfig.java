@@ -1,5 +1,6 @@
 package org.subshare.core.repair;
 
+import static co.codewizards.cloudstore.core.util.DateUtil.*;
 import static java.util.Objects.*;
 
 import java.util.Date;
@@ -85,7 +86,7 @@ public class RepairDeleteCollisionConfig {
 			return false;
 		}
 
-		final Date now = new Date();
+		final Date now = now();
 		if (now.before(deleteCollisionsFrom))
 			return false; // now < from
 

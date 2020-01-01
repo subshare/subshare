@@ -1,5 +1,6 @@
 package org.subshare.core.user;
 
+import static co.codewizards.cloudstore.core.util.DateUtil.*;
 import static java.util.Objects.*;
 
 import java.beans.PropertyChangeEvent;
@@ -57,7 +58,7 @@ public class UserImpl extends AbstractBean<User.Property> implements User {
 
 	private final UserRepoKeyRingChangeListener userRepoKeyRingChangeListener = new UserRepoKeyRingChangeListener();
 
-	private Date changed = new Date();
+	private Date changed = now();
 
 	private class PostModificationListener implements StandardPostModificationListener {
 		private final Property property;
@@ -252,7 +253,7 @@ public class UserImpl extends AbstractBean<User.Property> implements User {
 	@Override
 	public Set<PgpKey> getValidPgpKeys() {
 		final Collection<? extends PgpKey> pgpKeys = getPgpKeys();
-		final Date now = new Date();
+		final Date now = now();
 		final Set<PgpKey> result = new HashSet<PgpKey>(pgpKeys.size());
 		for (PgpKey pgpKey : pgpKeys) {
 			if (pgpKey.isValid(now))
@@ -323,7 +324,7 @@ public class UserImpl extends AbstractBean<User.Property> implements User {
 	}
 
 	protected void updateChanged() {
-		setChanged(new Date());
+		setChanged(now());
 	}
 
 	@Override

@@ -130,7 +130,7 @@ public class DuplicateCryptoRepoFileHandler {
 		requireNonNull(repoFile, "repoFile").setLocalRevision(transaction.getLocalRevision());
 
 		cryptoRepoFileDead.setRepoFile(null);
-//		cryptoRepoFileDead.setDeleted(new Date()); // we really delete the instance (controlled by the collision) - no need for a deletion marker.
+//		cryptoRepoFileDead.setDeleted(now()); // we really delete the instance (controlled by the collision) - no need for a deletion marker.
 //		cryptree.sign(cryptoRepoFileDead); // commented out the signing, because this is not needed if we don't modify the 'deleted' property, anymore.
 
 		transaction.flush(); // must flush before creating collision, so that queries return newly associated HistoCryptoRepoFiles!

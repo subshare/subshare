@@ -143,7 +143,9 @@ subprojects {
 		// jmockit must be *before* junit.
 //		testCompile 'org.jmockit:jmockit:1.24', 'junit:junit:4.12', 'org.assertj:assertj-core:2.4.1' // assertj 3.4.1 requires Java 8 - using the newest one that works with Java 7.
 
-		testImplementation 'org.jmockit:jmockit:1.49'
+		testImplementation ('org.jmockit:jmockit:1.49') {
+			exclude group: 'com.google.code.findbugs', module: 'jsr305'
+		}
 		testImplementation 'junit:junit:4.13-rc-2'
 
 //		testImplementation 'org.junit.jupiter:junit-jupiter-api:5.3.1'
@@ -180,7 +182,9 @@ subprojects {
 		maxParallelForks = Runtime.runtime.availableProcessors();
 
 		// To use all CPUs seems to cause starvations or fail some tests sometimes for other reasons. Reduce by one, if possible.
-		if (maxParallelForks > 1)
+		if (maxParallelForks > 2)
+			maxParallelForks = maxParallelForks - 2;
+		else if (maxParallelForks > 1)
 			maxParallelForks = maxParallelForks - 1;
 	}
 }

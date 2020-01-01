@@ -61,8 +61,8 @@ public class LocalServerClientIT extends AbstractIT {
 		client.close();
 		localServer.stop();
 
-		if (pgpMockUp != null)
-			pgpMockUp.tearDown();
+//		if (pgpMockUp != null)
+//			pgpMockUp.tearDown();
 
 		pgpMockUp = null;
 	}

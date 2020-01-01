@@ -2,6 +2,7 @@ package org.subshare.core.pgp;
 
 import static co.codewizards.cloudstore.core.bean.PropertyChangeListenerUtil.*;
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
+import static co.codewizards.cloudstore.core.util.DateUtil.*;
 import static java.util.Objects.*;
 
 import java.beans.PropertyChangeEvent;
@@ -188,7 +189,7 @@ public class PgpKeyStateRegistryImpl extends FileBasedObjectRegistry implements 
 		requireNonNull(pgpKey, "pgpKey");
 		final PgpKeyStateDto pgpKeyStateDto = new PgpKeyStateDto();
 		pgpKeyStateDto.setPgpKeyId(pgpKey.getPgpKeyId());
-		pgpKeyStateDto.setCreated(new Date());
+		pgpKeyStateDto.setCreated(now());
 		updatePgpKeyStateDto(pgpKey, pgpKeyStateDto);
 		return pgpKeyStateDto;
 	}
@@ -196,7 +197,7 @@ public class PgpKeyStateRegistryImpl extends FileBasedObjectRegistry implements 
 	private void updatePgpKeyStateDto(final PgpKey pgpKey, final PgpKeyStateDto pgpKeyStateDto) {
 		requireNonNull(pgpKey, "pgpKey");
 		requireNonNull(pgpKeyStateDto, "pgpKeyStateDto");
-		pgpKeyStateDto.setChanged(new Date());
+		pgpKeyStateDto.setChanged(now());
 		pgpKeyStateDto.setDisabled(pgpKey.isDisabled());
 		pgpKeyStateDto.setOwnerTrust(pgp.getOwnerTrust(pgpKey));
 	}

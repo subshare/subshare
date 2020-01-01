@@ -51,9 +51,8 @@ import co.codewizards.cloudstore.rest.client.ssl.CheckServerTrustedCertificateEx
 import co.codewizards.cloudstore.rest.client.ssl.DynamicX509TrustManagerCallback;
 import mockit.Mock;
 import mockit.MockUp;
-import mockit.integration.junit4.JMockit;
 
-@RunWith(JMockit.class)
+//@RunWith(JMockit.class)
 public abstract class AbstractIT {
 
 	private static final Logger logger = LoggerFactory.getLogger(AbstractIT.class);
@@ -185,7 +184,7 @@ public abstract class AbstractIT {
 	@After
 	public void after() throws Exception {
 		if (userRegistryImplMockUp != null) {
-			userRegistryImplMockUp.tearDown(); // should be done automatically, but since we need to manage the reference, anyway, we do this explicitly here, too.
+//			userRegistryImplMockUp.tearDown(); // should be done automatically, but since we need to manage the reference, anyway, we do this explicitly here, too.
 			userRegistryImplMockUp = null;
 		}
 		after_pgpRegistry_clearCache();

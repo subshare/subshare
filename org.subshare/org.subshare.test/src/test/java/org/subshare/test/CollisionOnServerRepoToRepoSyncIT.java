@@ -8,7 +8,6 @@ import java.util.Collection;
 import java.util.List;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.subshare.core.dto.CollisionDto;
@@ -22,9 +21,8 @@ import org.subshare.core.repo.local.SsLocalRepoMetaData;
 import co.codewizards.cloudstore.core.io.TimeoutException;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.util.IOUtil;
-import mockit.integration.junit4.JMockit;
 
-@RunWith(JMockit.class)
+//@RunWith(JMockit.class)
 public class CollisionOnServerRepoToRepoSyncIT extends CollisionRepoToRepoSyncIT {
 	private static final Logger logger = LoggerFactory.getLogger(CollisionOnServerRepoToRepoSyncIT.class);
 

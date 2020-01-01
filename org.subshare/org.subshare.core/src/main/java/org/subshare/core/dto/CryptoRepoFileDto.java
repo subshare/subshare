@@ -1,5 +1,7 @@
 package org.subshare.core.dto;
 
+import static co.codewizards.cloudstore.core.util.DateUtil.*;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
@@ -67,8 +69,8 @@ public class CryptoRepoFileDto implements Signable {
 		this.cryptoKeyId = Uid.valueOf(cryptoKeyId);
 		this.directory = directory;
 		this.repoFileDtoData = repoFileDtoData;
-		this.cryptoRepoFileCreated = cryptoRepoFileCreated;
-		this.deleted = deleted;
+		this.cryptoRepoFileCreated = copyDate(cryptoRepoFileCreated);
+		this.deleted = copyDate(deleted);
 		this.deletedByIgnoreRule = deletedByIgnoreRule;
 		this.setSignature(signature);
 	}
@@ -112,14 +114,14 @@ public class CryptoRepoFileDto implements Signable {
 		return cryptoRepoFileCreated;
 	}
 	public void setCryptoRepoFileCreated(Date cryptoRepoFileCreated) {
-		this.cryptoRepoFileCreated = cryptoRepoFileCreated;
+		this.cryptoRepoFileCreated = copyDate(cryptoRepoFileCreated);
 	}
 
 	public Date getDeleted() {
 		return deleted;
 	}
 	public void setDeleted(Date deleted) {
-		this.deleted = deleted;
+		this.deleted = copyDate(deleted);
 	}
 
 	public boolean isDeletedByIgnoreRule() {

@@ -1,5 +1,6 @@
 package org.subshare.core.server;
 
+import static co.codewizards.cloudstore.core.util.DateUtil.*;
 import static java.util.Objects.*;
 
 import java.net.URL;
@@ -24,7 +25,7 @@ public class ServerImpl extends AbstractBean<Server.Property> implements Cloneab
 
 	private URL url;
 
-	private Date changed = new Date();
+	private Date changed = now();
 
 	@Override
 	public synchronized Uid getServerId() {
@@ -62,7 +63,7 @@ public class ServerImpl extends AbstractBean<Server.Property> implements Cloneab
 	}
 
 	protected void updateChanged() {
-		setChanged(new Date());
+		setChanged(now());
 	}
 
 	@Override

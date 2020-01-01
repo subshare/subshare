@@ -1,5 +1,6 @@
 package org.subshare.core.sign;
 
+import static co.codewizards.cloudstore.core.util.DateUtil.*;
 import static co.codewizards.cloudstore.core.util.IOUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
 import static java.util.Objects.*;
@@ -43,7 +44,7 @@ public class SignableSigner {
 	public void sign(final Signable signable) {
 		requireNonNull(signable, "signable");
 
-		final Date signatureCreated = new Date();
+		final Date signatureCreated = now();
 		final SignatureDto signatureDto = new SignatureDto();
 		signatureDto.setSignatureCreated(signatureCreated);
 		signatureDto.setSigningUserRepoKeyId(userRepoKey.getUserRepoKeyId());

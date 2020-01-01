@@ -19,7 +19,6 @@ import java.util.Set;
 import org.junit.BeforeClass;
 import org.junit.ComparisonFailure;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.subshare.core.pgp.Pgp;
 import org.subshare.core.pgp.PgpKey;
 import org.subshare.core.pgp.PgpKeyId;
@@ -38,9 +37,8 @@ import co.codewizards.cloudstore.core.util.IOUtil;
 import mockit.Invocation;
 import mockit.Mock;
 import mockit.MockUp;
-import mockit.integration.junit4.JMockit;
 
-@RunWith(JMockit.class)
+//@RunWith(JMockit.class)
 public class PgpSyncIT extends AbstractIT {
 
 	static File gnuPgDirFile;

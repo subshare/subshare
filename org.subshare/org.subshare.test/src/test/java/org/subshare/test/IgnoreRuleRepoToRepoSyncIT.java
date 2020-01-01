@@ -6,7 +6,6 @@ import static org.assertj.core.api.Assertions.*;
 import java.util.Properties;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.subshare.local.UserRepoKeyPublicKeyHelper;
 import org.subshare.local.persistence.UserRepoKeyPublicKey;
 
@@ -14,9 +13,8 @@ import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.util.PropertiesUtil;
 import mockit.Mock;
 import mockit.MockUp;
-import mockit.integration.junit4.JMockit;
 
-@RunWith(JMockit.class)
+//@RunWith(JMockit.class)
 public class IgnoreRuleRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 
 	@Override

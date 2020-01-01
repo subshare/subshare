@@ -1,5 +1,6 @@
 package org.subshare.local.persistence;
 
+import static co.codewizards.cloudstore.core.util.DateUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
 import static java.util.Objects.*;
 
@@ -126,7 +127,7 @@ public class Permission extends Entity implements WriteProtected, AutoTrackLocal
 	private PermissionType permissionType;
 
 	@Persistent(nullValue=NullValue.EXCEPTION)
-	private Date validFrom = new Date();
+	private Date validFrom = now();
 
 	private Date revoked;
 

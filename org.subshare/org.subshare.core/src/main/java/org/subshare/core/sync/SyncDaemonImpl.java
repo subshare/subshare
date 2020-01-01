@@ -1,6 +1,7 @@
 package org.subshare.core.sync;
 
 import static co.codewizards.cloudstore.core.bean.PropertyChangeListenerUtil.*;
+import static co.codewizards.cloudstore.core.util.DateUtil.*;
 import static java.util.Objects.*;
 
 import java.beans.PropertyChangeEvent;
@@ -157,7 +158,7 @@ public abstract class SyncDaemonImpl implements SyncDaemon {
 			for (final Server server : getServerRegistry().getServers()) {
 				oldServers.remove(server);
 				try (final Sync sync = createSync(server);) {
-					final Date syncStarted = new Date();
+					final Date syncStarted = now();
 					try {
 						final long startTimestamp = System.currentTimeMillis();
 						sync.sync();
@@ -166,12 +167,12 @@ public abstract class SyncDaemonImpl implements SyncDaemon {
 								sync.getName(), server.getName(), server.getUrl(), System.currentTimeMillis() - startTimestamp);
 
 						getStates().add(new SyncState(server, server.getUrl(), Severity.INFO, message, null,
-								syncStarted, new Date()));
+								syncStarted, now()));
 					} catch (Exception x) {
 						logger.error("_sync: " + x, x);
 						getStates().add(new SyncState(server, server.getUrl(), Severity.ERROR,
 								String.format("%s: %s", sync.getName(), x.getLocalizedMessage()), new Error(x),
-								syncStarted, new Date()));
+								syncStarted, now()));
 					}
 				}
 			}

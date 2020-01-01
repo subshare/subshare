@@ -1,5 +1,6 @@
 package org.subshare.gui.resolvecollision.collision;
 
+import static co.codewizards.cloudstore.core.util.DateUtil.*;
 import static java.util.Objects.*;
 import static org.subshare.gui.util.FxmlUtil.*;
 
@@ -44,7 +45,7 @@ public class CollisionPane extends WizardPageContentGridPane {
 
 		final boolean newResolved = resolvedCheckBox.selectedProperty().get();
 		if (newResolved)
-			collisionPrivateDto.setResolved(new Date());
+			collisionPrivateDto.setResolved(now());
 		else
 			collisionPrivateDto.setResolved(null);
 	}

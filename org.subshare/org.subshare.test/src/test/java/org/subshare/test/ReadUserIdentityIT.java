@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.*;
 import java.util.LinkedList;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.subshare.core.dto.CryptoChangeSetDto;
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.user.User;
@@ -16,9 +15,8 @@ import org.subshare.local.CryptreeImpl;
 import mockit.Invocation;
 import mockit.Mock;
 import mockit.MockUp;
-import mockit.integration.junit4.JMockit;
 
-@RunWith(JMockit.class)
+//@RunWith(JMockit.class)
 public class ReadUserIdentityIT extends AbstractUserRegistryIT {
 
 	@Test

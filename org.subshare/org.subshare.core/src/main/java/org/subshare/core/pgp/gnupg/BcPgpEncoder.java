@@ -1,6 +1,7 @@
 package org.subshare.core.pgp.gnupg;
 
 import static co.codewizards.cloudstore.core.io.StreamUtil.*;
+import static co.codewizards.cloudstore.core.util.DateUtil.*;
 import static java.util.Objects.*;
 
 import java.io.IOException;
@@ -80,7 +81,7 @@ public class BcPgpEncoder extends AbstractPgpEncoder {
 
 							final PGPLiteralDataGenerator ldGenerator = unmodifiedOutput ? null : new PGPLiteralDataGenerator();
 							try {
-								try (final OutputStream lOut = ldGenerator == null ? null : ldGenerator.open(out, PGPLiteralData.BINARY, getFileName(), new Date(), new byte[BUFFER_SIZE]);) {
+								try (final OutputStream lOut = ldGenerator == null ? null : ldGenerator.open(out, PGPLiteralData.BINARY, getFileName(), now(), new byte[BUFFER_SIZE]);) {
 									int bytesRead;
 									final byte[] buf = new byte[BUFFER_SIZE];
 									while ((bytesRead = in.read(buf, 0, buf.length)) >= 0) {

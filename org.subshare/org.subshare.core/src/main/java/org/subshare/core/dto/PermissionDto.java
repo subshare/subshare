@@ -1,5 +1,7 @@
 package org.subshare.core.dto;
 
+import static co.codewizards.cloudstore.core.util.DateUtil.*;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
@@ -73,7 +75,7 @@ public class PermissionDto implements Signable {
 	}
 
 	public void setValidFrom(final Date validFrom) {
-		this.validFrom = validFrom;
+		this.validFrom = copyDate(validFrom);
 	}
 
 	public Date getRevoked() {
@@ -81,7 +83,7 @@ public class PermissionDto implements Signable {
 	}
 
 	public void setRevoked(final Date revoked) {
-		this.revoked = revoked;
+		this.revoked = copyDate(revoked);
 	}
 
 	public Date getValidTo() {
@@ -89,7 +91,7 @@ public class PermissionDto implements Signable {
 	}
 
 	public void setValidTo(final Date validTo) {
-		this.validTo = validTo;
+		this.validTo = copyDate(validTo);
 	}
 
 	@Override

@@ -1,5 +1,6 @@
 package org.subshare.local.persistence;
 
+import static co.codewizards.cloudstore.core.util.DateUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
 import static java.util.Objects.*;
 
@@ -59,7 +60,7 @@ public class PermissionSetInheritance extends Entity implements WriteProtected, 
 	private long localRevision;
 
 	@Persistent(nullValue=NullValue.EXCEPTION)
-	private Date validFrom = new Date();
+	private Date validFrom = now();
 
 	private Date revoked;
 

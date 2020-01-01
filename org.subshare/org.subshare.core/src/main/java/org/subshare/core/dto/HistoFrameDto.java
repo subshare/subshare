@@ -1,5 +1,7 @@
 package org.subshare.core.dto;
 
+import static co.codewizards.cloudstore.core.util.DateUtil.*;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
@@ -47,7 +49,7 @@ public class HistoFrameDto implements Signable, Serializable {
 		return sealed;
 	}
 	public void setSealed(Date sealed) {
-		this.sealed = sealed;
+		this.sealed = copyDate(sealed);
 	}
 
 	@Override

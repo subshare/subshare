@@ -1,5 +1,6 @@
 package org.subshare.local;
 
+import static co.codewizards.cloudstore.core.util.DateUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
 import static java.util.Objects.*;
 
@@ -189,7 +190,7 @@ public class SsLocalRepoMetaDataImpl extends LocalRepoMetaDataImpl implements Ss
 			final Cryptree cryptree = getCryptree(tx);
 			for (PermissionType permissionType : PermissionType.values()) {
 				try {
-					cryptree.assertHasPermission(localPath, userRepoKeyId, permissionType, new Date());
+					cryptree.assertHasPermission(localPath, userRepoKeyId, permissionType, now());
 					result.add(permissionType);
 				} catch (AccessDeniedException x) { doNothing(); }
 			}
@@ -210,7 +211,7 @@ public class SsLocalRepoMetaDataImpl extends LocalRepoMetaDataImpl implements Ss
 
 			for (PermissionType permissionType : PermissionType.values()) {
 				try {
-					cryptree.assertHasPermission(parentCryptoRepoFileId, userRepoKeyId, permissionType, new Date());
+					cryptree.assertHasPermission(parentCryptoRepoFileId, userRepoKeyId, permissionType, now());
 					result.add(permissionType);
 				} catch (AccessDeniedException x) { doNothing(); }
 			}
@@ -268,7 +269,7 @@ public class SsLocalRepoMetaDataImpl extends LocalRepoMetaDataImpl implements Ss
 //		try (final LocalRepoTransaction tx = beginReadTransaction();) { // *not* committing, because it's a read-only-operation, anyway.
 //			final Cryptree cryptree = getCryptree(tx);
 //			try {
-//				cryptree.assertHasPermission(localPath, userRepoKeyId, permissionType, new Date());
+//				cryptree.assertHasPermission(localPath, userRepoKeyId, permissionType, now());
 //				return true;
 //			} catch (AccessDeniedException x) {
 //				return false;

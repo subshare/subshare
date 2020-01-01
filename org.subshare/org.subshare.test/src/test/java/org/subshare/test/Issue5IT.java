@@ -5,14 +5,10 @@ import static org.assertj.core.api.Assertions.*;
 import java.util.List;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.subshare.core.dto.PermissionType;
 import org.subshare.core.user.UserRepoInvitationToken;
 import org.subshare.core.user.UserRepoKey.PublicKeyWithSignature;
 
-import mockit.integration.junit4.JMockit;
-
-@RunWith(JMockit.class)
 public class Issue5IT extends AbstractUserRegistryIT {
 
 	@Test

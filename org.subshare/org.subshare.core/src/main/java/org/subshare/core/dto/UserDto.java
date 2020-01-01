@@ -1,5 +1,7 @@
 package org.subshare.core.dto;
 
+import static co.codewizards.cloudstore.core.util.DateUtil.*;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -91,6 +93,6 @@ public class UserDto {
 		return changed;
 	}
 	public void setChanged(Date changed) {
-		this.changed = changed;
+		this.changed = copyDate(changed);
 	}
 }

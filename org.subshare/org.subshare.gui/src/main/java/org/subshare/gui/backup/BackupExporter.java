@@ -1,6 +1,7 @@
 package org.subshare.gui.backup;
 
 import static co.codewizards.cloudstore.core.io.StreamUtil.*;
+import static co.codewizards.cloudstore.core.util.DateUtil.*;
 import static co.codewizards.cloudstore.core.util.HashUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
 import static java.util.Objects.*;
@@ -31,10 +32,10 @@ public class BackupExporter extends AbstractBackupImExporter {
 
 	public void exportBackup(final File backupFile) throws IOException {
 		requireNonNull(backupFile, "backupFile");
-		final Date now = new Date(); // we want the same timestamp everywhere in the export => freeze it now.
+		final Date now = now(); // we want the same timestamp everywhere in the export => freeze it now.
 		backupFile.getParentFile().mkdirs();
 		final BackupDataFile backupDataFile = new BackupDataFile();
-		backupDataFile.getManifestProperties().put(MANIFEST_PROPERTY_NAME_TIMESTAMP, ISO8601.formatDate(new Date()));
+		backupDataFile.getManifestProperties().put(MANIFEST_PROPERTY_NAME_TIMESTAMP, ISO8601.formatDate(now()));
 
 		registerPgpKeyRelatedBackupProperties(now);
 		IByteArrayOutputStream bout = ByteArrayOutputStreamLs.create();

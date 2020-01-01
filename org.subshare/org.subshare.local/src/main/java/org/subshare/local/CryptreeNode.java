@@ -1,6 +1,7 @@
 package org.subshare.local;
 
 import static co.codewizards.cloudstore.core.util.AssertUtil.*;
+import static co.codewizards.cloudstore.core.util.DateUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
 import static java.util.Objects.*;
 import static org.subshare.local.CryptreeNodeUtil.*;
@@ -1248,7 +1249,7 @@ public class CryptreeNode {
 
 			for (final PermissionSetInheritance permissionSetInheritance : permissionSet.getPermissionSetInheritances()) {
 				if (permissionSetInheritance.getRevoked() == null) {
-					permissionSetInheritance.setRevoked(new Date());
+					permissionSetInheritance.setRevoked(now());
 					sign(permissionSetInheritance);
 				}
 			}
@@ -1359,7 +1360,7 @@ public class CryptreeNode {
 
 		for (final Permission permission : permissions) {
 			permissionsAlreadyCheckedOk.remove(permission);
-			permission.setRevoked(new Date());
+			permission.setRevoked(now());
 			sign(permission);
 			assertPermissionOk(permission);
 		}
@@ -1766,7 +1767,7 @@ public class CryptreeNode {
 		}
 
 
-		final Date now = new Date();
+		final Date now = now();
 		for (final UserRepoKey userRepoKey : context.userRepoKeyRing.getPermanentUserRepoKeys(context.serverRepositoryId)) {
 			final boolean owner = isOwner(userRepoKey.getUserRepoKeyId());
 			final Set<Permission> permissions = new HashSet<Permission>();

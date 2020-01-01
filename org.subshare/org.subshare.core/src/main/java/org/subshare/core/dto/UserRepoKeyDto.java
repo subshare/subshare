@@ -1,5 +1,7 @@
 package org.subshare.core.dto;
 
+import static co.codewizards.cloudstore.core.util.DateUtil.*;
+
 import java.util.Date;
 import java.util.UUID;
 
@@ -44,7 +46,7 @@ public class UserRepoKeyDto {
 		return validTo;
 	}
 	public void setValidTo(Date validTo) {
-		this.validTo = validTo;
+		this.validTo = copyDate(validTo);
 	}
 
 	public boolean isInvitation() {

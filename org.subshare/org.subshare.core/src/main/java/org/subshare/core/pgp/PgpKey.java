@@ -1,5 +1,6 @@
 package org.subshare.core.pgp;
 
+import static co.codewizards.cloudstore.core.util.DateUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
 import static java.util.Objects.*;
 import static org.subshare.core.pgp.PgpKeyFlag.*;
@@ -23,7 +24,7 @@ public class PgpKey implements Serializable {
 			TEST_DUMMY_PGP_KEY_ID,
 			new PgpKeyFingerprint(new byte[0]),
 			null,
-			new Date(), // created
+			now(), // created
 			null, // validTo
 			PgpKeyAlgorithm.RSA,
 			4096,
@@ -133,7 +134,7 @@ public class PgpKey implements Serializable {
 			return false;
 
 		if (date == null)
-			date = new Date();
+			date = now();
 
 		if (date.before(created))
 			return false;
@@ -216,7 +217,7 @@ public class PgpKey implements Serializable {
 	}
 
 	public PgpKey getPgpKeyForEncryptionOrFail() {
-		final Date now = new Date();
+		final Date now = now();
 		// Reversing in order to favour a sub-key over the master-key! ...and probably even the last added (?) sub-key, which would be what we likely want.
 		final List<PgpKey> allKeys = new ReverseListView<>(getMasterKeyAndSubKeys());
 
@@ -252,7 +253,7 @@ public class PgpKey implements Serializable {
 	}
 
 	public PgpKey getPgpKeyForSignatureOrFail() {
-		final Date now = new Date();
+		final Date now = now();
 		// Reversing in order to favour a sub-key over the master-key! ...and probably even the last added (?) sub-key, which would be what we likely want.
 		final List<PgpKey> allKeys = new ReverseListView<>(getMasterKeyAndSubKeys());
 

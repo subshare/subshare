@@ -1,8 +1,8 @@
 package org.subshare.test;
 
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
+import static co.codewizards.cloudstore.core.util.DateUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
-import static mockit.Deencapsulation.*;
 import static org.assertj.core.api.Assertions.*;
 
 import java.util.Date;
@@ -31,6 +31,8 @@ import org.subshare.local.persistence.UserRepoKeyPublicKey;
 import co.codewizards.cloudstore.core.config.Config;
 import co.codewizards.cloudstore.core.io.IOutputStream;
 import co.codewizards.cloudstore.core.oio.File;
+import co.codewizards.cloudstore.core.util.DateUtil;
+import co.codewizards.cloudstore.core.util.ReflectionUtil;
 import mockit.Invocation;
 import mockit.Mock;
 import mockit.MockUp;
@@ -214,15 +216,25 @@ public class PermissionIT extends AbstractRepoToRepoSyncIT {
 
 	@Test // TODO we check currently only for backdating relative to Permission.validTo - not yet to PermissionSetInheritance.validTo
 	public void uploadBackdatedSignature() throws Exception {
-		new MockUp<Date>() {
+//		new MockUp<Date>() {
+//			@Mock
+//			public void $init(final Invocation invocation) {
+//				invocation.proceed();
+//				final Date date = invocation.getInvokedInstance();
+//				if (forceSignatureCreated != null && isInClient())
+//					ReflectionUtil.setFieldValue(date, "fastTime", forceSignatureCreated.getTime());
+//				else
+//					ReflectionUtil.setFieldValue(date, "fastTime", System.currentTimeMillis());
+//			}
+//		};
+		new MockUp<DateUtil>() {
 			@Mock
-			public void $init(final Invocation invocation) {
-				invocation.proceed();
-				final Date date = invocation.getInvokedInstance();
+			public Date now(final Invocation invocation) {
+//				invocation.proceed();
 				if (forceSignatureCreated != null && isInClient())
-					setField(date, "fastTime", forceSignatureCreated.getTime());
+					return copyDate(forceSignatureCreated);
 				else
-					setField(date, "fastTime", System.currentTimeMillis());
+					return new Date(System.currentTimeMillis());
 			}
 		};
 
@@ -251,7 +263,7 @@ public class PermissionIT extends AbstractRepoToRepoSyncIT {
 			UserRepoKeyRingLookup.Helper.setUserRepoKeyRingLookup(new StaticUserRepoKeyRingLookup(ownerUserRepoKeyRing));
 		}
 
-		final Date timestampBeforeRevokingWritePermission = new Date();
+		final Date timestampBeforeRevokingWritePermission = now();
 
 		revokePermission("/", PermissionType.write, publicKey1);
 		syncFromLocalSrcToRemote();

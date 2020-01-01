@@ -1,5 +1,7 @@
 package org.subshare.core.dto;
 
+import static co.codewizards.cloudstore.core.util.DateUtil.*;
+
 import java.util.Date;
 
 import javax.xml.bind.annotation.XmlElement;
@@ -20,7 +22,7 @@ public class InvitationUserRepoKeyPublicKeyDto extends UserRepoKeyPublicKeyDto {
 		return validTo;
 	}
 	public void setValidTo(Date validTo) {
-		this.validTo = validTo;
+		this.validTo = copyDate(validTo);
 	}
 
 	@XmlTransient

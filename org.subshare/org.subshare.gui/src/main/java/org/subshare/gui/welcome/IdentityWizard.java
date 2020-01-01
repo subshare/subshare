@@ -1,5 +1,6 @@
 package org.subshare.gui.welcome;
 
+import static co.codewizards.cloudstore.core.util.DateUtil.*;
 import static co.codewizards.cloudstore.core.util.StringUtil.*;
 
 import java.util.ArrayList;
@@ -41,7 +42,7 @@ public class IdentityWizard extends Wizard {
 
 		pgp = PgpLs.getPgpOrFail();
 		pgpPrivateKeyPassphraseStore = PgpPrivateKeyPassphraseManagerLs.getPgpPrivateKeyPassphraseStore();
-		final Date now = new Date();
+		final Date now = now();
 
 		List<PgpKey> usableMasterKeys = new ArrayList<>();
 		for (final PgpKey pgpKey : pgp.getMasterKeysWithSecretKey()) {

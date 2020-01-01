@@ -1,5 +1,6 @@
 package org.subshare.core.dto;
 
+import static co.codewizards.cloudstore.core.util.DateUtil.*;
 import static java.util.Objects.*;
 
 import java.io.IOException;
@@ -74,7 +75,7 @@ public class HistoCryptoRepoFileDto implements Signable, Serializable {
 		this.histoFrameId = Uid.valueOf(histoFrameId);
 		this.cryptoKeyId = Uid.valueOf(cryptoKeyId);
 		this.repoFileDtoData = repoFileDtoData;
-		this.deleted = deleted;
+		this.deleted = copyDate(deleted);
 		this.deletedByIgnoreRule = deletedByIgnoreRule;
 		this.setSignature(signature);
 	}
@@ -125,7 +126,7 @@ public class HistoCryptoRepoFileDto implements Signable, Serializable {
 		return deleted;
 	}
 	public void setDeleted(Date deleted) {
-		this.deleted = deleted;
+		this.deleted = copyDate(deleted);
 	}
 
 	public boolean isDeletedByIgnoreRule() {

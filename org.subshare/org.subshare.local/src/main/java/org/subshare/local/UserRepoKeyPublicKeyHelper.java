@@ -1,5 +1,6 @@
 package org.subshare.local;
 
+import static co.codewizards.cloudstore.core.util.DateUtil.*;
 import static java.util.Objects.*;
 import static org.subshare.local.CryptreeNodeUtil.*;
 
@@ -238,7 +239,7 @@ public class UserRepoKeyPublicKeyHelper {
 			if (owner)
 				return userRepoKey;
 
-			final Collection<Permission> permissions = dao.getValidPermissions(PermissionType.readUserIdentity, userRepoKey.getUserRepoKeyId(), new Date());
+			final Collection<Permission> permissions = dao.getValidPermissions(PermissionType.readUserIdentity, userRepoKey.getUserRepoKeyId(), now());
 			if (!permissions.isEmpty())
 				return userRepoKey;
 		}

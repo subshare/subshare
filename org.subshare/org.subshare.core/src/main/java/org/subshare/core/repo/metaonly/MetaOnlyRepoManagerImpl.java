@@ -1,6 +1,7 @@
 package org.subshare.core.repo.metaonly;
 
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
+import static co.codewizards.cloudstore.core.util.DateUtil.*;
 import static java.util.Objects.*;
 
 import java.io.IOException;
@@ -70,20 +71,20 @@ public class MetaOnlyRepoManagerImpl implements MetaOnlyRepoManager {
 			}
 			final File localRoot = getLocalRoot(serverRepo);
 			final URL remoteRoot = getRemoteRoot(server, serverRepo);
-			final Date syncStarted = new Date();
+			final Date syncStarted = now();
 			try {
 				sync(server, serverRepo);
 				final long durationMs = System.currentTimeMillis() - syncStarted.getTime();
 				repoSyncStates.add(new RepoSyncState(getLocalRepositoryId(localRoot, NULL_UUID),
 						serverRepo, server, localRoot, remoteRoot,
 						Severity.INFO, String.format("Sync took %s ms.", durationMs), null,
-						syncStarted, new Date()));
+						syncStarted, now()));
 			} catch (Exception x) {
 				logger.warn("sync: " + x, x);
 				repoSyncStates.add(new RepoSyncState(getLocalRepositoryId(localRoot, NULL_UUID),
 						serverRepo, server, localRoot, remoteRoot,
 						Severity.ERROR, x.getMessage(), new Error(x),
-						syncStarted, new Date()));
+						syncStarted, now()));
 			}
 		}
 		return repoSyncStates;

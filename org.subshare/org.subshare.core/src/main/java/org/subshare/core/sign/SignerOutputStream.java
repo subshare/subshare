@@ -1,5 +1,6 @@
 package org.subshare.core.sign;
 
+import static co.codewizards.cloudstore.core.util.DateUtil.*;
 import static co.codewizards.cloudstore.core.util.IOUtil.*;
 import static java.util.Objects.*;
 import static org.subshare.core.crypto.CryptoConfigUtil.*;
@@ -36,7 +37,7 @@ public class SignerOutputStream extends FilterOutputStream {
 	private final Date signatureCreated;
 
 	public SignerOutputStream(final OutputStream out, final UserRepoKey signingUserRepoKey) throws IOException {
-		this(out, signingUserRepoKey, new Date());
+		this(out, signingUserRepoKey, now());
 	}
 
 	public SignerOutputStream(final OutputStream out, final UserRepoKey signingUserRepoKey, final Date signatureCreated) throws IOException {

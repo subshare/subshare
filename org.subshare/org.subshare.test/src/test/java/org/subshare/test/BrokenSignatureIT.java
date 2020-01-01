@@ -1,9 +1,9 @@
 package org.subshare.test;
 
-import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
-import static java.util.Objects.*;
-import static mockit.Deencapsulation.*;
-import static org.assertj.core.api.Assertions.*;
+import static co.codewizards.cloudstore.core.oio.OioFileFactory.createFile;
+import static java.util.Objects.requireNonNull;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -15,7 +15,6 @@ import javax.jdo.JDOHelper;
 import javax.jdo.PersistenceManager;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.subshare.core.DataKey;
@@ -47,6 +46,7 @@ import co.codewizards.cloudstore.core.io.IOutputStream;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import co.codewizards.cloudstore.core.util.ExceptionUtil;
+import co.codewizards.cloudstore.core.util.ReflectionUtil;
 import co.codewizards.cloudstore.local.persistence.AutoTrackLocalRevision;
 import co.codewizards.cloudstore.local.persistence.Dao;
 import co.codewizards.cloudstore.local.persistence.DirectoryDao;
@@ -58,9 +58,8 @@ import co.codewizards.cloudstore.local.persistence.RepoFile;
 import mockit.Invocation;
 import mockit.Mock;
 import mockit.MockUp;
-import mockit.integration.junit4.JMockit;
 
-@RunWith(JMockit.class)
+//@RunWith(JMockit.class)
 public class BrokenSignatureIT extends AbstractRepoToRepoSyncIT {
 
 	private static final Logger logger = LoggerFactory.getLogger(BrokenSignatureIT.class);
@@ -91,13 +90,13 @@ public class BrokenSignatureIT extends AbstractRepoToRepoSyncIT {
 	public void after() throws Exception {
 		super.after();
 
-		for (final MockUp<?> mockUp : mockUps) {
-			try {
-				mockUp.tearDown();
-			} catch (Exception x) {
-				logger.warn("mockUp.tearDown() failed: " + x, x);
-			}
-		}
+//		for (final MockUp<?> mockUp : mockUps) {
+//			try {
+//				mockUp.tearDown();
+//			} catch (Exception x) {
+//				logger.warn("mockUp.tearDown() failed: " + x, x);
+//			}
+//		}
 
 		mockUps.clear();
 
@@ -343,7 +342,7 @@ public class BrokenSignatureIT extends AbstractRepoToRepoSyncIT {
 			final String sha1 = fileChunk.getSha1();
 
 			final String fieldName = "sha1";
-			setField(fileChunk, fieldName, modifySha1(sha1));
+			ReflectionUtil.setFieldValue(fileChunk, fieldName, modifySha1(sha1));
 			JDOHelper.makeDirty(fileChunk, fieldName);
 
 			pm.currentTransaction().commit();

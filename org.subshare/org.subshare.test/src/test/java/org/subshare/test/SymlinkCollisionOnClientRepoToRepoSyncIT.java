@@ -19,9 +19,8 @@ import org.subshare.core.repo.local.CollisionFilter;
 import org.subshare.core.repo.local.SsLocalRepoMetaData;
 
 import co.codewizards.cloudstore.core.oio.File;
-import mockit.integration.junit4.JMockit;
 
-@RunWith(JMockit.class)
+//@RunWith(JMockit.class)
 public class SymlinkCollisionOnClientRepoToRepoSyncIT extends CollisionRepoToRepoSyncIT {
 	private static final Logger logger = LoggerFactory.getLogger(SymlinkCollisionOnClientRepoToRepoSyncIT.class);
 

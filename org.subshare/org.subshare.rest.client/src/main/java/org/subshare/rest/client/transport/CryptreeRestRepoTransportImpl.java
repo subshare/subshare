@@ -2,6 +2,7 @@ package org.subshare.rest.client.transport;
 
 import static co.codewizards.cloudstore.core.objectfactory.ObjectFactoryUtil.*;
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
+import static co.codewizards.cloudstore.core.util.DateUtil.*;
 import static co.codewizards.cloudstore.core.util.DebugUtil.*;
 import static co.codewizards.cloudstore.core.util.HashUtil.*;
 import static co.codewizards.cloudstore.core.util.IOUtil.*;
@@ -942,7 +943,7 @@ public class CryptreeRestRepoTransportImpl extends AbstractRepoTransport impleme
 					nf.getFileChunkDtos().clear();
 					nf.setLength(0);
 					nf.setLengthWithPadding(0);
-					nf.setLastModified(new Date());
+					nf.setLastModified(now());
 					nf.setSha1(sha1(Long.toString(System.currentTimeMillis(), 36)));
 				}
 			}

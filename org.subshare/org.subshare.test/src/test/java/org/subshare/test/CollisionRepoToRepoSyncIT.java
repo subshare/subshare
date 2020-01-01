@@ -9,7 +9,6 @@ import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.util.Collection;
 
-import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.subshare.core.dto.CollisionDto;
@@ -20,9 +19,8 @@ import co.codewizards.cloudstore.core.io.IOutputStream;
 import co.codewizards.cloudstore.core.oio.File;
 import mockit.Mock;
 import mockit.MockUp;
-import mockit.integration.junit4.JMockit;
 
-@RunWith(JMockit.class)
+//@RunWith(JMockit.class)
 public abstract class CollisionRepoToRepoSyncIT extends AbstractRepoToRepoSyncIT {
 	private static final Logger logger = LoggerFactory.getLogger(CollisionRepoToRepoSyncIT.class);
 

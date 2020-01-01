@@ -300,7 +300,7 @@ public abstract class AbstractMultiUserIT extends AbstractIT {
 	public void after() throws Exception {
 		while (! mockUps.isEmpty()) {
 			MockUp<?> mockUp = mockUps.remove(mockUps.size() - 1);
-			mockUp.tearDown();
+//			mockUp.tearDown();
 		}
 		testUser2MetaOnlyRepoManager.clear();
 		testUser2PgpAuthenticationCallback.clear();

@@ -1,5 +1,6 @@
 package org.subshare.core.gpg;
 
+import static co.codewizards.cloudstore.core.util.DateUtil.*;
 import static co.codewizards.cloudstore.core.util.HashUtil.*;
 import static co.codewizards.cloudstore.core.util.IOUtil.*;
 import static org.assertj.core.api.Assertions.*;
@@ -234,7 +235,7 @@ public class GnuPgTest {
 	    sGen.generateOnePassVersion(false).encode(compressedData);
 
 	    final PGPLiteralDataGenerator lGen = new PGPLiteralDataGenerator();
-	    final OutputStream lOut = lGen.open(compressedData, PGPLiteralData.BINARY, fileName, new Date(), new byte[BUFFER_SIZE]);
+	    final OutputStream lOut = lGen.open(compressedData, PGPLiteralData.BINARY, fileName, now(), new byte[BUFFER_SIZE]);
 
 	    int ch;
 

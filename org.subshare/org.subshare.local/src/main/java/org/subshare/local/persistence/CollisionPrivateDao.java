@@ -1,6 +1,6 @@
 package org.subshare.local.persistence;
 
-import static java.util.Objects.*;
+import static java.util.Objects.requireNonNull;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import javax.jdo.JDOHelper;
 import javax.jdo.Query;
 
 import org.slf4j.Logger;
@@ -24,6 +25,29 @@ public class CollisionPrivateDao extends Dao<CollisionPrivate, CollisionPrivateD
 
 	public CollisionPrivate getCollisionPrivate(final Collision collision) {
 		requireNonNull(collision, "collision");
+// We *must* check before, whether it is already persisted, because we otherwise run into this exception since DN 5:
+//			java.lang.NumberFormatException: For input string: "AUTOINCREMENT: start 1 increment 1"
+//				at java.base/java.lang.NumberFormatException.forInputString(NumberFormatException.java:65)
+//				at java.base/java.lang.Long.parseLong(Long.java:692)
+//				at java.base/java.lang.Long.parseLong(Long.java:817)
+//				at org.datanucleus.store.rdbms.mapping.column.BigIntColumnMapping.setObject(BigIntColumnMapping.java:185)
+//				at org.datanucleus.store.rdbms.mapping.java.SingleFieldMapping.setObject(SingleFieldMapping.java:190)
+//				at org.datanucleus.store.rdbms.mapping.java.PersistableMapping.setObjectAsNull(PersistableMapping.java:391)
+//				at org.datanucleus.store.rdbms.mapping.java.PersistableMapping.setObject(PersistableMapping.java:362)
+//				at org.datanucleus.store.rdbms.mapping.java.PersistableMapping.setObject(PersistableMapping.java:345)
+//				at org.datanucleus.store.rdbms.sql.SQLStatementHelper.applyParametersToStatement(SQLStatementHelper.java:290)
+//				at org.datanucleus.store.rdbms.query.JDOQLQuery.performExecute(JDOQLQuery.java:630)
+//				at org.datanucleus.store.query.Query.executeQuery(Query.java:1973)
+//				at org.datanucleus.store.query.Query.executeWithArray(Query.java:1862)
+//				at org.datanucleus.api.jdo.JDOQuery.executeInternal(JDOQuery.java:433)
+//				at org.datanucleus.api.jdo.JDOQuery.execute(JDOQuery.java:276)
+//				at org.subshare.local.persistence.CollisionPrivateDao.getCollisionPrivate(CollisionPrivateDao.java:29)
+//				at org.subshare.local.CryptreeNode.updateCollisionPrivate(CryptreeNode.java:616)
+//				at org.subshare.local.CryptreeNode.putCollisionPrivateDto(CryptreeNode.java:560)
+//				at org.subshare.local.CryptreeNode.createCollisionIfNeeded(CryptreeNode.java:531)
+		if (collision.getId() == Long.MIN_VALUE) {
+			return null;
+		}
 		final Query query = pm().newNamedQuery(getEntityClass(), "getCollisionPrivate_collision");
 		try {
 			final CollisionPrivate result = (CollisionPrivate) query.execute(collision);

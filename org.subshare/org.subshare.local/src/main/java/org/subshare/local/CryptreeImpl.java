@@ -2,6 +2,7 @@ package org.subshare.local;
 
 import static co.codewizards.cloudstore.core.objectfactory.ObjectFactoryUtil.*;
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
+import static co.codewizards.cloudstore.core.util.DateUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
 import static java.util.Objects.*;
 import static org.subshare.local.CryptreeNodeUtil.*;
@@ -683,13 +684,13 @@ public class CryptreeImpl extends AbstractCryptree {
 //		// This is a quick'n'dirty data-fix for the broken data of issue 5: https://github.com/subshare/subshare/issues/5
 //		// There is currently no clean code to really remove expired InvitationUserRepoKeys!
 //		// TODO This method is going to be removed completely in a newer version!
-//		if (new Date().after(new Date(2017, 1, 1)))
+//		if (now().after(new Date(2017, 1, 1)))
 //			return;
 //
 //		final LocalRepoTransaction transaction = getTransactionOrFail();
 //		final UserRepoKeyPublicKeyDao urkpkDao = transaction.getDao(UserRepoKeyPublicKeyDao.class);
 //		final Date candidateInvitationThresholdDate = new Date(2016, 7, 31);
-//		final Date now = new Date();
+//		final Date now = now();
 //		final long deleteReserveMillis = 7L * 24L * 3600L * 1000L;
 //		final List<InvitationUserRepoKeyPublicKey> invitationKeysToDelete = new LinkedList<>();
 //		for (final UserRepoKeyPublicKey userRepoKeyPublicKey : urkpkDao.getObjects()) {
@@ -1577,7 +1578,7 @@ public class CryptreeImpl extends AbstractCryptree {
 //		// It is necessary to prevent a collision and ensure that the 'active' property cannot be reverted.
 //		if (cryptoKeyDto.isActive() && ! cryptoKey.isActive()) {
 //			logger.warn("putCryptoKeyDto: Rejecting to re-activate CryptoKey! Keeping (and re-publishing) previous state: {}", cryptoKey);
-//			cryptoKey.setChanged(new Date()); // only to make it dirty => force new localRevision => force sync.
+//			cryptoKey.setChanged(now()); // only to make it dirty => force new localRevision => force sync.
 //			if (cryptoKeyIsNew)
 //				throw new IllegalStateException("Cannot reject, because the CryptoKey is new! " + cryptoKey);
 //
@@ -2178,7 +2179,7 @@ public class CryptreeImpl extends AbstractCryptree {
 			//
 			// See: putPermissionDto(...)
 
-			permission.setValidTo(new Date());
+			permission.setValidTo(now());
 			try {
 				sign(permission);
 			} catch (final GrantAccessDeniedException x) {
@@ -2203,7 +2204,7 @@ public class CryptreeImpl extends AbstractCryptree {
 			//
 			// See: putPermissionDto(...)
 
-			psInheritance.setValidTo(new Date());
+			psInheritance.setValidTo(now());
 			try {
 				sign(psInheritance);
 			} catch (final GrantAccessDeniedException x) {
@@ -2706,7 +2707,7 @@ public class CryptreeImpl extends AbstractCryptree {
 		final UserRepoKey userRepoKey = rootCryptreeNode.getUserRepoKey(true, PermissionType.write);
 		final HistoFrame histoFrame = histoFrameDao.getUnsealedHistoFrame(getLocalRepositoryIdOrFail());
 		if (histoFrame != null) {
-			histoFrame.setSealed(new Date());
+			histoFrame.setSealed(now());
 			histoFrame.setLastSyncFromRepositoryId(null);
 			getCryptreeContext().getSignableSigner(userRepoKey).sign(histoFrame);
 		}
@@ -2754,7 +2755,7 @@ public class CryptreeImpl extends AbstractCryptree {
 			final CryptoRepoFile cryptoRepoFile = preliminaryDeletion.getCryptoRepoFile();
 			final CryptreeNode cryptreeNode = cryptreeContext.getCryptreeNodeOrCreate(cryptoRepoFile.getCryptoRepoFileId());
 			if (cryptoRepoFile != null && cryptoRepoFile.getDeleted() == null) {
-				cryptoRepoFile.setDeleted(new Date());
+				cryptoRepoFile.setDeleted(now());
 				cryptoRepoFile.setDeletedByIgnoreRule(preliminaryDeletion.isDeletedByIgnoreRule());
 				cryptoRepoFile.setLastSyncFromRepositoryId(null);
 				cryptreeNode.sign(cryptoRepoFile);

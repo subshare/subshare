@@ -1,11 +1,33 @@
 dependencies {
 	compile group: 'co.codewizards.cloudstore', name: 'co.codewizards.cloudstore.test', version: cloudstoreVersion
+	compile project(':org.subshare.ls.rest.client')
 	compile project(':org.subshare.rest.client')
 	compile project(':org.subshare.server')
 	testCompile project(':org.subshare.local')
 }
 
+//compileTestJava {
+//	moduleOptions {
+//		addModules = ['org.subshare.local', 'org.assertj.core', 'jmockit']
+//		addReads = [
+//			'org.subshare.test': 'org.subshare.local,org.assertj.core,jmockit'
+//		]
+//	}
+//}
+
 test {
+	jvmArgs "-javaagent:${classpath.find { it.name.contains('jmockit') }.absolutePath}"
+//	moduleOptions {
+//		addModules = ['org.subshare.local', 'org.assertj.core']
+//		addReads = [
+//			'org.subshare.test': 'org.subshare.local,org.assertj.core,jmockit'
+//		]
+
+// TOO MANY PROBLEMS!!! I need to finally get it running, again. So I fall back to running these tests
+// via the old-school classpath rather than the new module-stuff. After all, I introduced the module-stuff
+// only for JavaFX which isn't used by the tests, at all, anyway.
+//		runOnClasspath = true
+//	}
 	filter {
 		includeTestsMatching "*IT"
 	}

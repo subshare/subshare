@@ -156,23 +156,23 @@ public class LockerSyncIT extends AbstractIT {
 	@Override
 	@After
 	public void after() throws Exception {
-		if (serverRegistryImplMockUp != null)
-			serverRegistryImplMockUp.tearDown();
-
-		if (userRegistryImplMockUp != null)
-			userRegistryImplMockUp.tearDown();
-
-		if (configMockUp != null)
-			configMockUp.tearDown();
-
-		if (configDirMockUp != null)
-			configDirMockUp.tearDown();
-
-		if (pgpRegistryMockUp != null)
-			pgpRegistryMockUp.tearDown();
-
-		if (gnuPgDirMockUp != null)
-			gnuPgDirMockUp.tearDown();
+//		if (serverRegistryImplMockUp != null)
+//			serverRegistryImplMockUp.tearDown();
+//
+//		if (userRegistryImplMockUp != null)
+//			userRegistryImplMockUp.tearDown();
+//
+//		if (configMockUp != null)
+//			configMockUp.tearDown();
+//
+//		if (configDirMockUp != null)
+//			configDirMockUp.tearDown();
+//
+//		if (pgpRegistryMockUp != null)
+//			pgpRegistryMockUp.tearDown();
+//
+//		if (gnuPgDirMockUp != null)
+//			gnuPgDirMockUp.tearDown();
 	}
 
 	@Test

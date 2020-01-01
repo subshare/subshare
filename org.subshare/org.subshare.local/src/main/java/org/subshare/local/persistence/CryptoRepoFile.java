@@ -1,5 +1,6 @@
 package org.subshare.local.persistence;
 
+import static co.codewizards.cloudstore.core.util.DateUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
 import static java.util.Objects.*;
 
@@ -125,7 +126,7 @@ public class CryptoRepoFile extends Entity implements WriteProtected, AutoTrackL
 
 	private boolean directory;
 
-	private Date cryptoRepoFileCreated = new Date();
+	private Date cryptoRepoFileCreated = now();
 
 	private Date deleted;
 
@@ -290,7 +291,7 @@ public class CryptoRepoFile extends Entity implements WriteProtected, AutoTrackL
 	 * Thus we must move this consistency check one layer up - here.
 	 */
 	private void assertUniqueRepoFile() {
-		if (repoFile == null)
+		if (repoFile == null || repoFile.getId() == Long.MIN_VALUE)
 			return;
 
 		final PersistenceManager pm = JDOHelper.getPersistenceManager(this);

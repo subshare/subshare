@@ -102,7 +102,7 @@ public abstract class AbstractRepoToRepoSyncIT extends AbstractIT {
 			localDestRepoManagerLocal = null;
 		}
 		if (userRegistryImplMockUp != null) {
-			userRegistryImplMockUp.tearDown(); // should be done automatically, but since we need to manage the reference, anyway, we do this explicitly here, too.
+//			userRegistryImplMockUp.tearDown(); // should be done automatically, but since we need to manage the reference, anyway, we do this explicitly here, too.
 			userRegistryImplMockUp = null;
 		}
 		super.after();

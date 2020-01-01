@@ -1,6 +1,7 @@
 package org.subshare.test;
 
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
+import static co.codewizards.cloudstore.core.util.DateUtil.*;
 import static org.assertj.core.api.Assertions.*;
 
 import java.util.Collection;
@@ -8,7 +9,6 @@ import java.util.Date;
 import java.util.List;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.subshare.core.dto.CollisionDto;
@@ -24,9 +24,8 @@ import co.codewizards.cloudstore.core.config.Config;
 import co.codewizards.cloudstore.core.oio.File;
 import co.codewizards.cloudstore.core.util.IOUtil;
 import co.codewizards.cloudstore.core.util.ISO8601;
-import mockit.integration.junit4.JMockit;
 
-@RunWith(JMockit.class)
+//@RunWith(JMockit.class)
 public class CollisionOnClientRepoToRepoSyncIT extends CollisionRepoToRepoSyncIT {
 	private static final Logger logger = LoggerFactory.getLogger(CollisionOnClientRepoToRepoSyncIT.class);
 
@@ -139,7 +138,7 @@ public class CollisionOnClientRepoToRepoSyncIT extends CollisionRepoToRepoSyncIT
 				ISO8601.formatDate(new Date(0L)));
 
 		System.setProperty(Config.SYSTEM_PROPERTY_PREFIX + RepairDeleteCollisionConfig.CONFIG_KEY_DELETE_COLLISIONS_TO,
-				ISO8601.formatDate(new Date()));
+				ISO8601.formatDate(now()));
 
 		syncFromLocalSrcToRemote();
 

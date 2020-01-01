@@ -1,5 +1,7 @@
 package org.subshare.core.dto;
 
+import static co.codewizards.cloudstore.core.util.DateUtil.*;
+
 import java.util.Date;
 
 import org.subshare.core.pgp.PgpKeyId;
@@ -25,13 +27,13 @@ public class PgpKeyStateDto {
 		return created;
 	}
 	public void setCreated(Date created) {
-		this.created = created;
+		this.created = copyDate(created);
 	}
 	public Date getChanged() {
 		return changed;
 	}
 	public void setChanged(Date changed) {
-		this.changed = changed;
+		this.changed = copyDate(changed);
 	}
 
 	public boolean isDisabled() {
@@ -52,7 +54,7 @@ public class PgpKeyStateDto {
 //		return deleted;
 //	}
 //	public void setDeleted(Date deleted) {
-//		this.deleted = deleted;
+//		this.deleted = copyDate(deleted);
 //	}
 //	public Date getReadded() {
 //		return readded;

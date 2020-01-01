@@ -1,5 +1,7 @@
 package org.subshare.core.dto;
 
+import static co.codewizards.cloudstore.core.util.DateUtil.*;
+
 import java.io.Serializable;
 import java.util.Date;
 
@@ -29,7 +31,7 @@ public class CollisionPrivateDto implements Serializable  {
 	}
 
 	public void setResolved(Date resolved) {
-		this.resolved = resolved;
+		this.resolved = copyDate(resolved);
 	}
 
 	public String getComment() {

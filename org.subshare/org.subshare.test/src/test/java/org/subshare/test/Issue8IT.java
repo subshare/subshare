@@ -8,7 +8,6 @@ import java.util.Collections;
 import java.util.List;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.subshare.core.dto.DebugUserRepoKeyDto;
@@ -19,9 +18,8 @@ import org.subshare.core.user.UserRegistryImpl;
 import org.subshare.core.user.UserRepoInvitationToken;
 
 import co.codewizards.cloudstore.core.io.ByteArrayOutputStream;
-import mockit.integration.junit4.JMockit;
 
-@RunWith(JMockit.class)
+//@RunWith(JMockit.class)
 public class Issue8IT extends AbstractMultiUserIT {
 	private static final Logger logger = LoggerFactory.getLogger(Issue8IT.class);
 
