@@ -100,6 +100,19 @@ public abstract class AbstractIT {
 
 	@BeforeClass
 	public static void abstractIT_beforeClass() throws Exception {
+		for (File file : ConfigDir.getInstance().getFile().listFiles()) {
+			String fileName = file.getName();
+			if ("localServerRunning.lock".equals(fileName)
+					|| "localServer.properties".equals(fileName)
+					|| "ssl.client".equals(fileName)
+					|| "ssl.server".equals(fileName)) {
+				logger.info("abstractIT_beforeClass: NOT deleting: {}", file.getAbsolutePath());
+			} else {
+				logger.info("abstractIT_beforeClass: Deleting recursively: {}", file.getAbsolutePath());
+				file.deleteRecursively();
+			}
+		}
+
 		// In order to make sure our tests are not unnecessarily slowed down, we set everything above 10M to 0:
 		for (LengthCategory lengthCategory : FilePaddingLengthRandom.LengthCategory.values()) {
 			if (lengthCategory.ordinal() > FilePaddingLengthRandom.LengthCategory._10M.ordinal())
@@ -119,9 +132,9 @@ public abstract class AbstractIT {
 			restLockerTransportFactory.setDynamicX509TrustManagerCallbackClass(TestDynamicX509TrustManagerCallback.class);
 		}
 
-		for (File file : ConfigDir.getInstance().getFile().listFiles()) {
-			file.deleteRecursively();
-		}
+//		for (File file : ConfigDir.getInstance().getFile().listFiles()) {
+//			file.deleteRecursively();
+//		}
 	}
 
 	@AfterClass

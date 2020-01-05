@@ -14,8 +14,8 @@ javafx {
 //        name = 'hellofx'
 //    }
 //}
-//
-//mainClassName = 'org.subshare.updater.gui.SubShareUpdaterGui'
+
+mainClassName = 'org.subshare.updater.gui.SubShareUpdaterGui'
 
 sourceCompatibility = JavaVersion.VERSION_11
 targetCompatibility = JavaVersion.VERSION_11
