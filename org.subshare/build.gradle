@@ -182,9 +182,7 @@ subprojects {
 		maxParallelForks = Runtime.runtime.availableProcessors();
 
 		// To use all CPUs seems to cause starvations or fail some tests sometimes for other reasons. Reduce by one, if possible.
-		if (maxParallelForks > 2)
-			maxParallelForks = maxParallelForks - 2;
-		else if (maxParallelForks > 1)
+		if (maxParallelForks > 1)
 			maxParallelForks = maxParallelForks - 1;
 	}
 }
