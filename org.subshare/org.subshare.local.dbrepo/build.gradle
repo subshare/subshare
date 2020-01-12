@@ -1,21 +1,27 @@
-// BEGIN 'provided' support - part 1
-// There is no 'provided' dependency out of the box.
-// But: http://www.rqna.net/qna/utxsn-providedcompile-without-war-plugin.html
-configurations {
-	provided
-}
-// END 'provided' support - part 1
+//// BEGIN 'provided' support - part 1
+//// There is no 'provided' dependency out of the box.
+//// But: http://www.rqna.net/qna/utxsn-providedcompile-without-war-plugin.html
+//configurations {
+//	provided
+//}
+//// END 'provided' support - part 1
 
 dependencies {
 	compile project(':org.subshare.local')
 //	provided group: 'org.slf4j', name: 'log4j-over-slf4j', version: slf4jVersion
 }
 
-// BEGIN 'provided' support - part 2
-sourceSets.main.compileClasspath += configurations.provided
-sourceSets.test.compileClasspath += configurations.provided
-sourceSets.test.runtimeClasspath += configurations.provided
-// END 'provided' support - part 2
+//// BEGIN 'provided' support - part 2
+//sourceSets.main.compileClasspath += configurations.provided
+//sourceSets.test.compileClasspath += configurations.provided
+//sourceSets.test.runtimeClasspath += configurations.provided
+//// END 'provided' support - part 2
+
+compileJava.doFirst {
+	delete fileTree("${buildDir}") {
+        include '**/*.class'
+    }
+}
 
 compileJava.doLast {
 	ant.echo("***********************************************");
@@ -38,3 +44,10 @@ compileJava.doLast {
 	ant.echo("***********************************************");
 	ant.echo("***********************************************");
 }
+
+// TODO this should be in the root build.gradle in subprojects {...} or allprojects {...}, but it does not work :-(
+// I get errors like this:
+//   >> Could not get unknown property 'modularity' for project ':org.subshare.test' of type org.gradle.api.Project. <<
+// But it works fine, if I put it into the sub-projects individually. This sucks :-( but at least it works.
+// ...maybe this is because there are still some sub-projects not containing a module-info.java...
+//modularity.mixedJavaRelease 8 // sets "--release 8" for main code, and "--release 9" for "module-info.java"

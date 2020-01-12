@@ -21,3 +21,10 @@ test {
 		]
 	}
 }
+
+// TODO this should be in the root build.gradle in subprojects {...} or allprojects {...}, but it does not work :-(
+// I get errors like this:
+//   >> Could not get unknown property 'modularity' for project ':org.subshare.test' of type org.gradle.api.Project. <<
+// But it works fine, if I put it into the sub-projects individually. This sucks :-( but at least it works.
+// ...maybe this is because there are still some sub-projects not containing a module-info.java...
+//modularity.mixedJavaRelease 8 // sets "--release 8" for main code, and "--release 9" for "module-info.java"

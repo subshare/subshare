@@ -4,10 +4,12 @@ BIN_DIR=`dirname $0`
 INSTALLATION_DIR="$BIN_DIR/.."
 UPDATER_DIR="$INSTALLATION_DIR/updater"
 
-java -jar "$INSTALLATION_DIR/lib/@project.artifactId@-@project.version@.jar" "$@"
+#java -jar "$INSTALLATION_DIR/lib/@project.artifactId@-@project.version@.jar" "$@"
+java --module-path "$INSTALLATION_DIR/lib" --module "org.subshare.gui/org.subshare.gui.SubShareGui" "$@"
 
 if [ -d "$UPDATER_DIR" ]; then
 	echo "Updating Subshare..."
-	java -jar "$UPDATER_DIR/lib/org.subshare.updater.gui-@project.version@.jar" -installationDir "$INSTALLATION_DIR"
+#	java -jar "$UPDATER_DIR/lib/org.subshare.updater.gui-@project.version@.jar" -installationDir "$INSTALLATION_DIR"
+	java --module-path "$UPDATER_DIR/lib" --module "org.subshare.updater.gui/org.subshare.updater.gui.SubShareUpdaterGui" -installationDir "$INSTALLATION_DIR"
 	"$0" afterUpdateHook
 fi
