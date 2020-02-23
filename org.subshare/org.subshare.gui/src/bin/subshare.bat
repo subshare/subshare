@@ -1,6 +1,7 @@
 @echo off
 
-java -jar "%~dp0\..\lib\@project.artifactId@-@project.version@.jar" %*
+REM java -jar "%~dp0\..\lib\@project.artifactId@-@project.version@.jar" %*
+java --add-opens java.base/java.util=co.codewizards.cloudstore.core --module-path "%~dp0\..\lib" --module "org.subshare.gui/org.subshare.gui.SubShareGui" %*
 
 REM The command created the 'updater' directory, if it detected that an update must be done.
 
@@ -15,7 +16,8 @@ REM a batch file can be overwritten while it is being executed (fortunately, thi
 REM to the ordinary Windows file blocking bullshit).
 
 echo Updating Subshare...
-java -jar "%~dp0\..\updater\lib\org.subshare.updater.gui-@project.version@.jar" -installationDir "%~dp0\.."
+REM java -jar "%~dp0\..\updater\lib\org.subshare.updater.gui-@project.version@.jar" -installationDir "%~dp0\.."
+java --module-path "%~dp0\..\updater\lib" --module "org.subshare.updater.gui/org.subshare.updater.gui.SubShareUpdaterGui" -installationDir "%~dp0\.."
 "%0" afterUpdateHook
 
 :end

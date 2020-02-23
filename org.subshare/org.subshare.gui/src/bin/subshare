@@ -5,7 +5,7 @@ INSTALLATION_DIR="$BIN_DIR/.."
 UPDATER_DIR="$INSTALLATION_DIR/updater"
 
 #java -jar "$INSTALLATION_DIR/lib/@project.artifactId@-@project.version@.jar" "$@"
-java --module-path "$INSTALLATION_DIR/lib" --module "org.subshare.gui/org.subshare.gui.SubShareGui" "$@"
+java --add-opens java.base/java.util=co.codewizards.cloudstore.core --module-path "$INSTALLATION_DIR/lib" --module "org.subshare.gui/org.subshare.gui.SubShareGui" "$@"
 
 if [ -d "$UPDATER_DIR" ]; then
 	echo "Updating Subshare..."
