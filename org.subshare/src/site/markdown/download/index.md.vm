@@ -12,6 +12,17 @@ To download the source codes please follow the [Development](../documentation/de
 
 $H$H$H Binaries
 
+$H$H$H$H Java 11 vs. Java 8
+
+Since version 1.0.0, subshare supports Java 11 and all its JARs contain a <code>module-java.class</code>.
+
+Subshare 1.0.0 works with Java 11 (and newer) only! Java 8 is *not* supported, anymore. Because of this,
+we do not automatically update from subshare 0.x.
+
+If you want to use subshare with Java 8, please download the newest 0.x-version, which you find
+on the [releases](http://subshare.org/latest-stable/releases/) page.
+
+
 $H$H$H$H Client (GUI)
 
 * tar.gz (recommended)

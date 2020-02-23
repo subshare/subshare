@@ -12,6 +12,7 @@ In the following you find a list of all releases:
 
 * [Latest development snapshot](../../latest-dev/) (Not stable & not yet released!)
 * [Latest stable version](../../latest-stable/)
+* [1.0.0](../../1.0.0/) (released 2020-02-23)
 * [0.10.7](../../0.10.7/) (released 2019-10-06)
 * [0.10.6](../../0.10.6/) (released 2018-12-25)
 * [0.10.5](../../0.10.5/) (released 2018-08-16)
@@ -25,3 +26,13 @@ In the following you find a list of all releases:
 * [0.9.8](../../0.9.8/) (released 2016-10-24)
 
 Older releases (before 0.9.8) were internal tests and didn't have a web-site, yet.
+
+
+$H$H$H$H Java 11 vs. Java 8
+
+Since version 1.0.0, subshare supports Java 11 and all its JARs contain a <code>module-java.class</code>.
+
+Subshare 1.0.0 works with Java 11 (and newer) only! Java 8 is *not* supported, anymore. Because of this,
+we do not automatically update from subshare 0.x.
+
+If you want to use subshare with Java 8, please download the newest 0.x-version!
