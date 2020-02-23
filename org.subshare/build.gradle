@@ -73,7 +73,8 @@ allprojects {
 
 //	project.ext.bouncycastleVersion = '1.60' // Need newer version because of: https://github.com/subshare/subshare/issues/61
 	project.ext.bouncycastleVersion = '161b03'
-	project.ext.bouncycastleWotVersion = bouncycastleVersion + '.1-SNAPSHOT';
+	project.ext.bouncycastleWotVersion = bouncycastleVersion + '.1';
+//	project.ext.bouncycastleWotVersion = bouncycastleVersion + '.1-SNAPSHOT';
 
 	project.ext.cloudstoreVersion = '1.0.0-SNAPSHOT'
 //	project.ext.cloudstoreVersion = '1.0.0'
