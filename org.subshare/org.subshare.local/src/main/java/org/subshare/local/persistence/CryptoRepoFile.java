@@ -130,7 +130,7 @@ public class CryptoRepoFile extends Entity implements WriteProtected, AutoTrackL
 
 	private Date deleted;
 
-	@Column(defaultValue = "N")
+//	@Column(defaultValue = "N") // does not work with PostgreSQL!
 	private boolean deletedByIgnoreRule;
 
 	@Persistent(nullValue = NullValue.EXCEPTION)

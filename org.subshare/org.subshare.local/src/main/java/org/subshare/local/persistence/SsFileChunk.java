@@ -1,6 +1,5 @@
 package org.subshare.local.persistence;
 
-import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Discriminator;
 import javax.jdo.annotations.DiscriminatorStrategy;
 import javax.jdo.annotations.Inheritance;
@@ -14,7 +13,7 @@ import co.codewizards.cloudstore.local.persistence.FileChunk;
 @Discriminator(strategy = DiscriminatorStrategy.VALUE_MAP, value = "SsFileChunk")
 public class SsFileChunk extends FileChunk {
 
-	@Column(defaultValue = "-1")
+//	@Column(defaultValue = "-1") // does not work with PostgreSQL
 	private int lengthWithPadding = -1;
 
 	/**

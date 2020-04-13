@@ -29,7 +29,7 @@ public class LastCryptoKeySyncToRemoteRepo extends Entity {
 	private long localRepositoryRevisionSynced = -1;
 	private long localRepositoryRevisionInProgress = -1;
 
-	@Column(defaultValue = "N")
+//	@Column(defaultValue = "N") // does not work with PostgreSQL!
 	private boolean resyncMode;
 
 	public RemoteRepository getRemoteRepository() {

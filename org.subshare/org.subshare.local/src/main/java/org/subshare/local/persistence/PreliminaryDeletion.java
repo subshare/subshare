@@ -27,7 +27,7 @@ public class PreliminaryDeletion extends Entity {
 	@Persistent(nullValue = NullValue.EXCEPTION)
 	private CryptoRepoFile cryptoRepoFile;
 
-	@Column(defaultValue = "0")
+//	@Column(defaultValue = "0") // does not work with PostgreSQL
 	private boolean deletedByIgnoreRule;
 
 	public CryptoRepoFile getCryptoRepoFile() {

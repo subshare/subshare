@@ -8,7 +8,6 @@ import java.io.InputStream;
 
 import javax.jdo.JDOHelper;
 import javax.jdo.PersistenceManager;
-import javax.jdo.annotations.Column;
 import javax.jdo.annotations.Discriminator;
 import javax.jdo.annotations.DiscriminatorStrategy;
 import javax.jdo.annotations.Embedded;
@@ -34,7 +33,7 @@ public class SsNormalFile extends NormalFile implements SsRepoFile {
 	@Embedded(nullIndicatorColumn = "signatureCreated")
 	private SignatureImpl signature;
 
-	@Column(defaultValue = "-1")
+//	@Column(defaultValue = "-1") // does not work with PostgreSQL!
 	private long lengthWithPadding = -1;
 
 	@Override
