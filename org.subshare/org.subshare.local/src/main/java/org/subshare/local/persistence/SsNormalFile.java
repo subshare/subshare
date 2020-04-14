@@ -31,7 +31,7 @@ public class SsNormalFile extends NormalFile implements SsRepoFile {
 
 //	@Persistent(nullValue = NullValue.EXCEPTION)
 	@Embedded(nullIndicatorColumn = "signatureCreated")
-	private SignatureImpl signature;
+	private SignatureImpl signature = SignatureImpl.createNullMaskingWorkaround();
 
 //	@Column(defaultValue = "-1") // does not work with PostgreSQL!
 	private long lengthWithPadding = -1;
@@ -94,12 +94,12 @@ public class SsNormalFile extends NormalFile implements SsRepoFile {
 
 	@Override
 	public Signature getSignature() {
-		return signature;
+		return SignatureImpl.unmaskNullMaskingWorkaround(signature);
 	}
 	@Override
 	public void setSignature(final Signature signature) {
-		if (!equal(this.signature, signature))
-			this.signature = SignatureImpl.copy(signature);
+		if (!equal(this.getSignature(), signature))
+			this.signature = SignatureImpl.createNullMaskingWorkaround(SignatureImpl.copy(signature));
 	}
 
 	@Override

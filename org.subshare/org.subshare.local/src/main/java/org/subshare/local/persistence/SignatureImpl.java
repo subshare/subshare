@@ -8,7 +8,6 @@ import java.util.Date;
 
 import javax.jdo.annotations.Column;
 import javax.jdo.annotations.EmbeddedOnly;
-import javax.jdo.annotations.NullValue;
 import javax.jdo.annotations.PersistenceCapable;
 import javax.jdo.annotations.Persistent;
 
@@ -20,15 +19,15 @@ import co.codewizards.cloudstore.core.Uid;
 @EmbeddedOnly
 public class SignatureImpl implements Signature {
 
-	@Persistent(nullValue=NullValue.EXCEPTION)
+//	@Persistent(nullValue=NullValue.EXCEPTION) // NullValue.EXCEPTION does not work with newer DN, anymore. It makes the column NOT NULL!
 	@Column(name="signatureCreated")
 	private Date signatureCreated;
 
-	@Persistent(nullValue=NullValue.EXCEPTION)
+//	@Persistent(nullValue=NullValue.EXCEPTION) // NullValue.EXCEPTION does not work with newer DN, anymore. It makes the column NOT NULL!
 	@Column(name="signingUserRepoKeyId", length=22)
 	private String signingUserRepoKeyId;
 
-	@Persistent(nullValue=NullValue.EXCEPTION, defaultFetchGroup="true")
+	@Persistent(defaultFetchGroup="true") // NullValue.EXCEPTION does not work with newer DN, anymore. It makes the column NOT NULL!
 	@Column(name="signatureData", jdbcType="BLOB")
 	private byte[] signatureData;
 
@@ -105,5 +104,40 @@ public class SignatureImpl implements Signature {
 		copy.setSigningUserRepoKeyId(signature.getSigningUserRepoKeyId());
 		copy.setSignatureData(signature.getSignatureData());
 		return copy;
+	}
+
+	/**
+	 * @deprecated TODO temporary workaround for https://github.com/datanucleus/datanucleus-rdbms/issues/234 
+	 */
+	@Deprecated
+	public static SignatureImpl createNullMaskingWorkaround() {
+		SignatureImpl signature = new SignatureImpl();
+		signature.setSignatureData(new byte[0]);
+		return signature;
+	}
+	
+	/**
+	 * @deprecated TODO temporary workaround for https://github.com/datanucleus/datanucleus-rdbms/issues/234 
+	 */
+	@Deprecated
+	public static SignatureImpl createNullMaskingWorkaround(SignatureImpl signature) {
+		if (signature == null)
+			return createNullMaskingWorkaround();
+		else
+			return signature;
+	}
+
+	/**
+	 * @deprecated TODO temporary workaround for https://github.com/datanucleus/datanucleus-rdbms/issues/234 
+	 */
+	@Deprecated
+	public static SignatureImpl unmaskNullMaskingWorkaround(SignatureImpl signature) {
+		if (signature == null)
+			return null;
+
+		if (signature.getSignatureCreated() == null) 
+			return null;
+		else
+			return signature;
 	}
 }

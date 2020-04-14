@@ -3,6 +3,7 @@ package org.subshare.local.persistence;
 import static co.codewizards.cloudstore.core.util.DateUtil.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
 import static java.util.Objects.*;
+import static org.subshare.local.persistence.NullMaskingWorkaround.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -119,7 +120,7 @@ public class CryptoRepoFile extends Entity implements WriteProtected, AutoTrackL
 
 //	@Persistent(nullValue=NullValue.EXCEPTION) // is temporarily null
 	@Column(jdbcType="BLOB")
-	private byte[] repoFileDtoData;
+	private byte[] repoFileDtoData = nullMaskingWorkaround(null); // TODO temporary workaround for https://github.com/datanucleus/datanucleus-rdbms/issues/234
 
 //	@Column(jdbcType="CLOB")
 	private String localName;
@@ -257,7 +258,7 @@ public class CryptoRepoFile extends Entity implements WriteProtected, AutoTrackL
 	}
 	public void setRepoFileDtoData(final byte[] repoFileDtoData) {
 		if (! equal(this.repoFileDtoData, repoFileDtoData))
-			this.repoFileDtoData = repoFileDtoData;
+			this.repoFileDtoData = nullMaskingWorkaround(repoFileDtoData);
 	}
 
 	@Override
