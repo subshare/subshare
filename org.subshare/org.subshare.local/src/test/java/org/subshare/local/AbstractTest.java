@@ -2,6 +2,8 @@ package org.subshare.local;
 
 import static co.codewizards.cloudstore.core.oio.OioFileFactory.*;
 import static org.assertj.core.api.Assertions.*;
+import static co.codewizards.cloudstore.local.db.DatabaseAdapterFactory.*;
+import static co.codewizards.cloudstore.local.db.ExternalJdbcDatabaseAdapter.*;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -22,6 +24,8 @@ import org.subshare.core.user.UserRegistryImpl;
 import org.subshare.core.user.UserRepoKeyRing;
 import org.subshare.local.persistence.UserRepoKeyPublicKey;
 
+import co.codewizards.cloudstore.local.db.DatabaseAdapterFactoryRegistry;
+import co.codewizards.cloudstore.core.config.Config;
 import co.codewizards.cloudstore.core.DevMode;
 import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.core.config.ConfigDir;
@@ -159,11 +163,19 @@ public abstract class AbstractTest {
 	}
 
 	protected File createFileWithRandomContent(final File parent, final String name) throws IOException {
+		return createFileWithRandomContent(parent, name, 0);
+	}
+
+	protected File createFileWithRandomContent(final File parent, final String name, final long minLength) throws IOException {
 		final File file = createFile(parent, name);
-		return createFileWithRandomContent(file);
+		return createFileWithRandomContent(file, minLength);
 	}
 
 	protected File createFileWithRandomContent(final File file) throws IOException {
+		return createFileWithRandomContent(file, 0);
+	}
+
+	protected File createFileWithRandomContent(final File file, final long minLength) throws IOException {
 		assertThat(file.exists()).isFalse(); // prevent accidentally overwriting important data ;-)
 		final IOutputStream out = file.createOutputStream();
 		final byte[] buf = new byte[1 + random.nextInt(10241)];
@@ -171,6 +183,12 @@ public abstract class AbstractTest {
 		for (int i = 0; i < loops; ++i) {
 			random.nextBytes(buf);
 			out.write(buf);
+		}
+		out.flush();
+		while (file.length() < minLength) {
+			random.nextBytes(buf);
+			out.write(buf);
+			out.flush();
 		}
 		out.close();
 		assertThat(file.isFile()).isTrue();
@@ -183,5 +201,37 @@ public abstract class AbstractTest {
 			return path.substring(0, path.length() - 1);
 		else
 			return path;
+	}
+
+	protected static void enablePostgresql() {
+		System.setProperty(Config.SYSTEM_PROPERTY_PREFIX + CONFIG_KEY_DATABASE_ADAPTER_NAME, "postgresql");
+
+		System.setProperty(Config.SYSTEM_PROPERTY_PREFIX + CONFIG_KEY_JDBC_HOST_NAME, getEnvOrFail("TEST_PG_HOST_NAME"));
+		System.setProperty(Config.SYSTEM_PROPERTY_PREFIX + CONFIG_KEY_JDBC_USER_NAME, getEnvOrFail("TEST_PG_USER_NAME"));
+		System.setProperty(Config.SYSTEM_PROPERTY_PREFIX + CONFIG_KEY_JDBC_PASSWORD, getEnvOrFail("TEST_PG_PASSWORD"));
+
+		System.setProperty(Config.SYSTEM_PROPERTY_PREFIX + CONFIG_KEY_JDBC_DB_NAME_PREFIX, "TEST_");
+		System.setProperty(Config.SYSTEM_PROPERTY_PREFIX + CONFIG_KEY_JDBC_DB_NAME_SUFFIX, "_TEST");
+		DatabaseAdapterFactoryRegistry.getInstance().clearCache();
+	}
+
+	protected static void disablePostgresql() {
+		System.clearProperty(Config.SYSTEM_PROPERTY_PREFIX + CONFIG_KEY_DATABASE_ADAPTER_NAME);
+
+		System.clearProperty(Config.SYSTEM_PROPERTY_PREFIX + CONFIG_KEY_JDBC_HOST_NAME);
+		System.clearProperty(Config.SYSTEM_PROPERTY_PREFIX + CONFIG_KEY_JDBC_USER_NAME);
+		System.clearProperty(Config.SYSTEM_PROPERTY_PREFIX + CONFIG_KEY_JDBC_PASSWORD);
+
+		System.clearProperty(Config.SYSTEM_PROPERTY_PREFIX + CONFIG_KEY_JDBC_DB_NAME_PREFIX);
+		System.clearProperty(Config.SYSTEM_PROPERTY_PREFIX + CONFIG_KEY_JDBC_DB_NAME_SUFFIX);
+		DatabaseAdapterFactoryRegistry.getInstance().clearCache();
+	}
+
+	protected static String getEnvOrFail(String key) {
+		String value = System.getenv(key);
+		if (value == null)
+			throw new IllegalStateException("Environment-variable not set: " + key);
+
+		return value;
 	}
 }
