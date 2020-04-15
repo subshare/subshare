@@ -40,6 +40,7 @@
 			<item name="Wiki" href="../wiki" />
 			<item name="FAQ" href="./documentation/faq.html" />
 			<item name="OpenPGP" href="./documentation/openpgp.html" />
+			<item name="PostgreSQL" href="./documentation/postgresql.html" />
 			<item name="Security" href="./documentation/security.html" />
 			<item name="Development" href="./documentation/development.html" />
 <!-- TODO generate javadoc!
