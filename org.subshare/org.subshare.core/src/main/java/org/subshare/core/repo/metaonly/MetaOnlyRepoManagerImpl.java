@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,12 +39,14 @@ import co.codewizards.cloudstore.core.repo.local.LocalRepoManager;
 import co.codewizards.cloudstore.core.repo.local.LocalRepoManagerFactory;
 import co.codewizards.cloudstore.core.repo.sync.RepoToRepoSync;
 import co.codewizards.cloudstore.core.util.UrlUtil;
+import co.codewizards.cloudstore.core.util.ExceptionUtil;
 
 public class MetaOnlyRepoManagerImpl implements MetaOnlyRepoManager {
 
 	private static final Logger logger = LoggerFactory.getLogger(MetaOnlyRepoManagerImpl.class);
 	private static final UUID NULL_UUID = new UUID(0, 0);
 	private final Map<File, UUID> localRoot2LocalRepositoryId = Collections.synchronizedMap(new HashMap<File, UUID>());
+	private final Map<UUID, Boolean> serverRepositoryId2triggerRedownCryptoMetaDataDone = Collections.synchronizedMap(new HashMap<UUID, Boolean>());
 
 	private final static int REPO_FILE_DTO_DEPTH = 0;
 
@@ -85,9 +88,37 @@ public class MetaOnlyRepoManagerImpl implements MetaOnlyRepoManager {
 						serverRepo, server, localRoot, remoteRoot,
 						Severity.ERROR, x.getMessage(), new Error(x),
 						syncStarted, now()));
+
+				if (ExceptionUtil.getCause(x, IOException.class) == null)
+					triggerRedownCryptoMetaData(server, serverRepo);
 			}
 		}
 		return repoSyncStates;
+	}
+
+	private void triggerRedownCryptoMetaData(Server server, ServerRepo serverRepo) {
+		requireNonNull(server, "server");
+		requireNonNull(serverRepo, "serverRepo");
+		UUID serverRepositoryId = serverRepo.getRepositoryId();
+		
+		Boolean done;
+		synchronized (serverRepositoryId2triggerRedownCryptoMetaDataDone) {
+			done = serverRepositoryId2triggerRedownCryptoMetaDataDone.get(serverRepositoryId);
+			serverRepositoryId2triggerRedownCryptoMetaDataDone.put(serverRepositoryId, Boolean.TRUE);
+		}
+		if (Boolean.TRUE.equals(done)) {
+			logger.warn("triggerRedownCryptoMetaData: serverId='{}' serverName='{}' serverRepositoryId='{}' ALREADY DONE BEFORE => SKIP!",
+					server.getServerId(), server.getName(), serverRepositoryId);
+			return;
+		}
+
+		logger.info("triggerRedownCryptoMetaData: serverId='{}' serverName='{}' serverRepositoryId='{}'",
+				server.getServerId(), server.getName(), serverRepositoryId);
+
+		try (final LocalRepoManager localRepoManager = createLocalRepoManager(serverRepo);) {
+			final SsLocalRepoMetaData localRepoMetaData = (SsLocalRepoMetaData) localRepoManager.getLocalRepoMetaData();
+			localRepoMetaData.resetLastCryptoKeySyncFromRemoteRepoRemoteRepositoryRevisionSynced();
+		}
 	}
 
 	private UUID getLocalRepositoryId(final File localRoot, final UUID fallbackRepositoryId) {

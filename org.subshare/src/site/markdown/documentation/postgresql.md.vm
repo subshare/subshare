@@ -46,8 +46,8 @@ $H$H$H$H Optional name-prefix/-suffix
 You can <i>optionally</i> configure a prefix or a suffix (or both) for the database-names:
 
 <div><pre>
-jdbc.dbNamePrefix = CLOUDSTORE_
-#jdbc.dbNameSuffix = _CLOUDSTORE
+jdbc.dbNamePrefix = subshare_
+#jdbc.dbNameSuffix = _subshare
 </pre></div>
 
 
@@ -70,6 +70,9 @@ because of some wrong data, it falls back to Derby.
 In order to enforce the usage of PostgreSQL, you might want to add the following setting:
 
 <div><pre>databaseAdapter.name = postgresql</pre></div>
+
+**Note:** You do not need to restart any subshare-process. Changes to this configuration become visible to existing
+processes when you save the configuration-file.
 
 
 $H$H$H Migrate an existing repository-database

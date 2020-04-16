@@ -1,5 +1,6 @@
 org.subshare.local.SsLocalRepoSyncClassExtension
 org.subshare.local.SsLocalRepoMetaDataImplClassExtension
+org.subshare.local.db.SsDatabaseMigraterClassExtension
 #org.subshare.local.dto.SsDeleteModificationDtoConverterClassExtension
 org.subshare.local.dto.SsFileChunkDtoConverterClassExtension
 org.subshare.local.dto.SsRepoFileDtoConverterClassExtension

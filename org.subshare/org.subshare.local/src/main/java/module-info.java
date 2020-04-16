@@ -8,6 +8,7 @@ open module org.subshare.local {
 		with
 			org.subshare.local.SsLocalRepoSyncClassExtension,
 			org.subshare.local.SsLocalRepoMetaDataImplClassExtension,
+			org.subshare.local.db.SsDatabaseMigraterClassExtension,
 			org.subshare.local.dto.SsFileChunkDtoConverterClassExtension,
 			org.subshare.local.dto.SsRepoFileDtoConverterClassExtension,
 			org.subshare.local.persistence.SsDirectoryClassExtension,
