@@ -7,6 +7,7 @@ public enum PgpKeyAlgorithm {
 	ECDSA,
 	EL_GAMAL,
 	RSA,
-	DIFFIE_HELLMAN
+	DIFFIE_HELLMAN,
+	EDDSA
 
 }
