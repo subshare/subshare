@@ -90,13 +90,13 @@ public class MetaOnlyRepoManagerImpl implements MetaOnlyRepoManager {
 						syncStarted, now()));
 
 				if (ExceptionUtil.getCause(x, IOException.class) == null)
-					triggerRedownCryptoMetaData(server, serverRepo);
+					triggerRedownMetaData(server, serverRepo);
 			}
 		}
 		return repoSyncStates;
 	}
 
-	private void triggerRedownCryptoMetaData(Server server, ServerRepo serverRepo) {
+	private void triggerRedownMetaData(Server server, ServerRepo serverRepo) {
 		requireNonNull(server, "server");
 		requireNonNull(serverRepo, "serverRepo");
 		UUID serverRepositoryId = serverRepo.getRepositoryId();
@@ -117,7 +117,11 @@ public class MetaOnlyRepoManagerImpl implements MetaOnlyRepoManager {
 
 		try (final LocalRepoManager localRepoManager = createLocalRepoManager(serverRepo);) {
 			final SsLocalRepoMetaData localRepoMetaData = (SsLocalRepoMetaData) localRepoManager.getLocalRepoMetaData();
+
 			localRepoMetaData.resetLastCryptoKeySyncFromRemoteRepoRemoteRepositoryRevisionSynced();
+
+			// Do we need this, too? Seems like it's not needed -- repaired it successfully without.
+//			localRepoMetaData.resetLastSyncFromRemoteRepoRemoteRepositoryRevisionSynced();
 		}
 	}
 
