@@ -5,10 +5,41 @@
 	xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/jdo/orm http://xmlns.jcp.org/xml/ns/jdo/orm_3_0.xsd"
 	version="3.0">
 
-    <package name="org.subshare.local.persistence">
+	<package name="org.subshare.local.persistence">
+
+		<class name="Collision">
+			<field name="collisionPrivateDtoData">
+				<column jdbc-type="DEFAULT" />
+			</field>
+		</class>
+
 		<class name="CollisionPrivate">
 			<field name="comment">
 				<column jdbc-type="LONGVARCHAR" />
+			</field>
+		</class>
+
+		<class name="CryptoConfigPropSet">
+			<field name="configPropSetDtoData">
+				<column jdbc-type="DEFAULT" />
+			</field>
+		</class>
+
+		<class name="CryptoRepoFile">
+			<field name="repoFileDtoData">
+				<column jdbc-type="DEFAULT" />
+			</field>
+		</class>
+
+		<class name="FileChunkPayload">
+			<field name="fileData">
+				<column jdbc-type="DEFAULT" />
+			</field>
+		</class>
+
+		<class name="HistoCryptoRepoFile">
+			<field name="repoFileDtoData">
+				<column jdbc-type="DEFAULT" />
 			</field>
 		</class>
 
@@ -18,13 +49,29 @@
 			</field>
 		</class>
 
-<!-- Not yet clear how to do this. Keep this commented and keep workaround-java-code for now.
 		<class name="SignatureImpl">
 			<field name="signatureData">
-				<column jdbc-type="BINARY" />
+				<column jdbc-type="DEFAULT" />
 			</field>
 		</class>
--->
 
-    </package>
+		<class name="UserIdentity">
+			<field name="encryptedUserIdentityPayloadDtoData">
+				<column jdbc-type="DEFAULT" />
+			</field>
+		</class>
+
+		<class name="UserIdentityLink">
+			<field name="encryptedUserIdentityKeyData">
+				<column jdbc-type="DEFAULT" />
+			</field>
+		</class>
+
+		<class name="UserRepoKeyPublicKey">
+			<field name="publicKeyData">
+				<column jdbc-type="DEFAULT" />
+			</field>
+		</class>
+
+	</package>
 </orm>

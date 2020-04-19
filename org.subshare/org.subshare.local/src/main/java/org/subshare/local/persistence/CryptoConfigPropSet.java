@@ -1,6 +1,5 @@
 package org.subshare.local.persistence;
 
-import static org.subshare.local.persistence.NullMaskingWorkaround.*;
 import static co.codewizards.cloudstore.core.util.Util.*;
 import static java.util.Objects.*;
 
@@ -66,7 +65,7 @@ public class CryptoConfigPropSet extends Entity implements WriteProtected, AutoT
 	private CryptoKey cryptoKey;
 
 	@Column(jdbcType="BLOB")
-	private byte[] configPropSetDtoData = nullMaskingWorkaround(null);
+	private byte[] configPropSetDtoData;
 
 	@Persistent(nullValue = NullValue.EXCEPTION)
 	@Embedded(nullIndicatorColumn = "signatureCreated")
@@ -112,7 +111,7 @@ public class CryptoConfigPropSet extends Entity implements WriteProtected, AutoT
 	}
 	public void setConfigPropSetDtoData(byte[] configPropSetDtoData) {
 		if (! equal(this.configPropSetDtoData, configPropSetDtoData))
-			this.configPropSetDtoData = nullMaskingWorkaround(configPropSetDtoData);
+			this.configPropSetDtoData = configPropSetDtoData;
 	}
 
 	/**

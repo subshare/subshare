@@ -106,38 +106,4 @@ public class SignatureImpl implements Signature {
 		return copy;
 	}
 
-	/**
-	 * @deprecated TODO temporary workaround for https://github.com/datanucleus/datanucleus-rdbms/issues/234 
-	 */
-	@Deprecated
-	public static SignatureImpl createNullMaskingWorkaround() {
-		SignatureImpl signature = new SignatureImpl();
-		signature.setSignatureData(new byte[0]);
-		return signature;
-	}
-	
-	/**
-	 * @deprecated TODO temporary workaround for https://github.com/datanucleus/datanucleus-rdbms/issues/234 
-	 */
-	@Deprecated
-	public static SignatureImpl createNullMaskingWorkaround(SignatureImpl signature) {
-		if (signature == null)
-			return createNullMaskingWorkaround();
-		else
-			return signature;
-	}
-
-	/**
-	 * @deprecated TODO temporary workaround for https://github.com/datanucleus/datanucleus-rdbms/issues/234 
-	 */
-	@Deprecated
-	public static SignatureImpl unmaskNullMaskingWorkaround(SignatureImpl signature) {
-		if (signature == null)
-			return null;
-
-		if (signature.getSignatureCreated() == null) 
-			return null;
-		else
-			return signature;
-	}
 }

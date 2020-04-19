@@ -31,7 +31,7 @@ public class SsDirectory extends Directory implements SsRepoFile {
 
 //	@Persistent(nullValue=NullValue.EXCEPTION)
 	@Embedded(nullIndicatorColumn="signatureCreated")
-	private SignatureImpl signature = SignatureImpl.createNullMaskingWorkaround();
+	private SignatureImpl signature;
 
 	@Override
 	public String getSignedDataType() {
@@ -68,12 +68,12 @@ public class SsDirectory extends Directory implements SsRepoFile {
 
 	@Override
 	public Signature getSignature() {
-		return SignatureImpl.unmaskNullMaskingWorkaround(signature);
+		return signature;
 	}
 	@Override
 	public void setSignature(final Signature signature) {
 		if (!equal(this.getSignature(), signature))
-			this.signature = SignatureImpl.createNullMaskingWorkaround(SignatureImpl.copy(signature));
+			this.signature = SignatureImpl.copy(signature);
 	}
 
 	@Override
