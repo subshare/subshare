@@ -166,6 +166,9 @@ public class BcPgpKey {
 
 			case PublicKeyAlgorithmTags.DIFFIE_HELLMAN:
 				return PgpKeyAlgorithm.DIFFIE_HELLMAN;
+				
+			case PublicKeyAlgorithmTags.EDDSA:
+				return PgpKeyAlgorithm.EDDSA;
 
 			default:
 				throw new IllegalArgumentException("Unknown algorithm: " + algorithm);
