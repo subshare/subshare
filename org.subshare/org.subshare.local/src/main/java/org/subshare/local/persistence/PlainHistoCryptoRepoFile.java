@@ -20,6 +20,8 @@ import javax.jdo.listener.StoreCallback;
 import org.subshare.core.dto.PlainHistoCryptoRepoFileDto;
 import org.subshare.core.dto.jaxb.PlainHistoCryptoRepoFileDtoIo;
 
+import co.codewizards.cloudstore.local.db.DatabaseMigrater;
+import co.codewizards.cloudstore.local.db.IgnoreDatabaseMigraterComparison;
 import co.codewizards.cloudstore.local.persistence.Entity;
 
 @PersistenceCapable
@@ -53,6 +55,7 @@ public class PlainHistoCryptoRepoFile extends Entity implements StoreCallback {
 			this.histoCryptoRepoFile = histoCryptoRepoFile;
 	}
 
+	@IgnoreDatabaseMigraterComparison
 	public PlainHistoCryptoRepoFileDto getPlainHistoCryptoRepoFileDto() {
 		if (plainHistoCryptoRepoFileDtoData == null)
 			return null;
@@ -66,6 +69,15 @@ public class PlainHistoCryptoRepoFile extends Entity implements StoreCallback {
 	public void setPlainHistoCryptoRepoFileDto(final PlainHistoCryptoRepoFileDto dto) {
 		requireNonNull(dto, "dto");
 		plainHistoCryptoRepoFileDtoData = new PlainHistoCryptoRepoFileDtoIo().serializeWithGz(dto);
+	}
+	
+	/**
+	 * @deprecated Only needed for comparison! Do not invoke this method! Use {@link #getPlainHistoCryptoRepoFileDto()}
+	 * instead! This method exists only for the {@link DatabaseMigrater} -- to compare the source and the target.
+	 */
+	@Deprecated
+	public byte[] getPlainHistoCryptoRepoFileDtoData() {
+		return plainHistoCryptoRepoFileDtoData;
 	}
 
 	@Override
