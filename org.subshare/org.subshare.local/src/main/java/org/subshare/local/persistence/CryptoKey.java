@@ -200,6 +200,7 @@ public class CryptoKey extends Entity implements WriteProtected, AutoTrackLocalR
 	 * {@link CryptoLink#getToCryptoKey() toCryptoKey} property.
 	 * @return the incoming crypto-links. Never <code>null</code> and normally never empty, either.
 	 */
+	@IgnoreDatabaseMigraterComparison
 	public Set<CryptoLink> getInCryptoLinks() {
 		if (inCryptoLinks == null)
 			inCryptoLinks = new HashSet<CryptoLink>();
@@ -217,6 +218,7 @@ public class CryptoKey extends Entity implements WriteProtected, AutoTrackLocalR
 	 * {@link CryptoLink#getFromCryptoKey() fromCryptoKey} property.
 	 * @return the outgoing crypto-links. Never <code>null</code>, but maybe empty.
 	 */
+	@IgnoreDatabaseMigraterComparison
 	public Set<CryptoLink> getOutCryptoLinks() {
 		if (outCryptoLinks == null)
 			outCryptoLinks = new HashSet<CryptoLink>();
