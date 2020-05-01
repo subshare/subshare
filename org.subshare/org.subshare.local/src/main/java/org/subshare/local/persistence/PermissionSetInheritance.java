@@ -29,6 +29,7 @@ import org.subshare.core.sign.Signature;
 import org.subshare.core.sign.WriteProtected;
 
 import co.codewizards.cloudstore.core.Uid;
+import co.codewizards.cloudstore.local.db.IgnoreDatabaseMigraterComparison;
 import co.codewizards.cloudstore.local.persistence.AutoTrackLocalRevision;
 import co.codewizards.cloudstore.local.persistence.Entity;
 
@@ -174,6 +175,7 @@ public class PermissionSetInheritance extends Entity implements WriteProtected, 
 			this.signature = SignatureImpl.copy(signature);
 	}
 
+	@IgnoreDatabaseMigraterComparison
 	@Override
 	public Uid getCryptoRepoFileIdControllingPermissions() {
 		requireNonNull(permissionSet, "permissionSet");
@@ -181,6 +183,7 @@ public class PermissionSetInheritance extends Entity implements WriteProtected, 
 				"permissionSet.cryptoRepoFileIdControllingPermissions");
 	}
 
+	@IgnoreDatabaseMigraterComparison
 	@Override
 	public PermissionType getPermissionTypeRequiredForWrite() {
 		return PermissionType.grant;

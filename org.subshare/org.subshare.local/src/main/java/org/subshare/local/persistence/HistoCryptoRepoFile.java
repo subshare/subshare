@@ -40,6 +40,7 @@ import org.subshare.core.sign.WriteProtected;
 import co.codewizards.cloudstore.core.Uid;
 import co.codewizards.cloudstore.core.dto.RepoFileDto;
 import co.codewizards.cloudstore.core.dto.jaxb.RepoFileDtoIo;
+import co.codewizards.cloudstore.local.db.IgnoreDatabaseMigraterComparison;
 import co.codewizards.cloudstore.local.persistence.AutoTrackLocalRevision;
 import co.codewizards.cloudstore.local.persistence.Entity;
 
@@ -323,11 +324,13 @@ public class HistoCryptoRepoFile extends Entity implements WriteProtected, AutoT
 			this.signature = SignatureImpl.copy(signature);
 	}
 
+	@IgnoreDatabaseMigraterComparison
 	@Override
 	public Uid getCryptoRepoFileIdControllingPermissions() {
 		return requireNonNull(requireNonNull(cryptoRepoFile, "cryptoRepoFile").getCryptoRepoFileId(), "cryptoRepoFileId");
 	}
 
+	@IgnoreDatabaseMigraterComparison
 	@Override
 	public PermissionType getPermissionTypeRequiredForWrite() {
 		return PermissionType.write;

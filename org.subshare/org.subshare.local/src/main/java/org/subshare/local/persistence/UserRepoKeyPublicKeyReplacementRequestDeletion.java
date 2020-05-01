@@ -27,6 +27,7 @@ import org.subshare.core.sign.Signature;
 import org.subshare.core.sign.WriteProtected;
 
 import co.codewizards.cloudstore.core.Uid;
+import co.codewizards.cloudstore.local.db.IgnoreDatabaseMigraterComparison;
 import co.codewizards.cloudstore.local.persistence.AutoTrackLocalRevision;
 import co.codewizards.cloudstore.local.persistence.Entity;
 
@@ -134,11 +135,13 @@ public class UserRepoKeyPublicKeyReplacementRequestDeletion extends Entity imple
 			this.localRevision = localRevision;
 	}
 
+	@IgnoreDatabaseMigraterComparison
 	@Override
 	public Uid getCryptoRepoFileIdControllingPermissions() {
 		return null; // global
 	}
 
+	@IgnoreDatabaseMigraterComparison
 	@Override
 	public PermissionType getPermissionTypeRequiredForWrite() {
 		return PermissionType.grant;

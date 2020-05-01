@@ -34,6 +34,7 @@ import org.subshare.core.sign.WriteProtected;
 import org.subshare.core.user.UserRepoKey;
 
 import co.codewizards.cloudstore.core.Uid;
+import co.codewizards.cloudstore.local.db.IgnoreDatabaseMigraterComparison;
 import co.codewizards.cloudstore.local.persistence.AutoTrackLocalRevision;
 import co.codewizards.cloudstore.local.persistence.Entity;
 
@@ -299,12 +300,14 @@ public class CryptoLink extends Entity implements WriteProtected, AutoTrackLocal
 			this.signature = SignatureImpl.copy(signature);
 	}
 
+	@IgnoreDatabaseMigraterComparison
 	@Override
 	public Uid getCryptoRepoFileIdControllingPermissions() {
 		final CryptoRepoFile cryptoRepoFile = requireNonNull(toCryptoKey, "toCryptoKey").getCryptoRepoFile();
 		return requireNonNull(cryptoRepoFile, "cryptoRepoFile").getCryptoRepoFileId();
 	}
 
+	@IgnoreDatabaseMigraterComparison
 	@Override
 	public PermissionType getPermissionTypeRequiredForWrite() {
 		if (toCryptoKey == null)

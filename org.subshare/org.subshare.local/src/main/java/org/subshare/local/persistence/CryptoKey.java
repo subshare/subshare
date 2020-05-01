@@ -36,6 +36,7 @@ import org.subshare.core.sign.Signature;
 import org.subshare.core.sign.WriteProtected;
 
 import co.codewizards.cloudstore.core.Uid;
+import co.codewizards.cloudstore.local.db.IgnoreDatabaseMigraterComparison;
 import co.codewizards.cloudstore.local.persistence.AutoTrackLocalRevision;
 import co.codewizards.cloudstore.local.persistence.Entity;
 
@@ -289,6 +290,7 @@ public class CryptoKey extends Entity implements WriteProtected, AutoTrackLocalR
 			this.signature = SignatureImpl.copy(signature);
 	}
 
+	@IgnoreDatabaseMigraterComparison
 	@Override
 	public Uid getCryptoRepoFileIdControllingPermissions() {
 		return requireNonNull(requireNonNull(cryptoRepoFile, "cryptoRepoFile").getCryptoRepoFileId(),
@@ -303,6 +305,7 @@ public class CryptoKey extends Entity implements WriteProtected, AutoTrackLocalR
 //		}
 	}
 
+	@IgnoreDatabaseMigraterComparison
 	@Override
 	public PermissionType getPermissionTypeRequiredForWrite() {
 		if (cryptoKeyRole == null)

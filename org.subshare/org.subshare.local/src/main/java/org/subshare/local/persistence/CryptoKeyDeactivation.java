@@ -23,6 +23,7 @@ import org.subshare.core.sign.Signature;
 import org.subshare.core.sign.WriteProtected;
 
 import co.codewizards.cloudstore.core.Uid;
+import co.codewizards.cloudstore.local.db.IgnoreDatabaseMigraterComparison;
 import co.codewizards.cloudstore.local.persistence.Entity;
 
 @PersistenceCapable
@@ -86,6 +87,7 @@ public class CryptoKeyDeactivation extends Entity implements WriteProtected {
 			this.signature = SignatureImpl.copy(signature);
 	}
 
+	@IgnoreDatabaseMigraterComparison
 	@Override
 	public Uid getCryptoRepoFileIdControllingPermissions() {
 		final CryptoKey ck = requireNonNull(cryptoKey, "cryptoKey");
@@ -101,6 +103,7 @@ public class CryptoKeyDeactivation extends Entity implements WriteProtected {
 		}
 	}
 
+	@IgnoreDatabaseMigraterComparison
 	@Override
 	public PermissionType getPermissionTypeRequiredForWrite() {
 //		final CryptoKey ck = requireNonNull("cryptoKey", cryptoKey);

@@ -33,6 +33,7 @@ import org.subshare.core.sign.Signature;
 import org.subshare.core.sign.WriteProtected;
 
 import co.codewizards.cloudstore.core.Uid;
+import co.codewizards.cloudstore.local.db.IgnoreDatabaseMigraterComparison;
 import co.codewizards.cloudstore.local.persistence.AutoTrackLocalRevision;
 import co.codewizards.cloudstore.local.persistence.Entity;
 
@@ -187,11 +188,13 @@ public class CurrentHistoCryptoRepoFile extends Entity implements WriteProtected
 			this.lastSyncFromRepositoryId = repositoryId == null ? null : repositoryId.toString();
 	}
 
+	@IgnoreDatabaseMigraterComparison
 	@Override
 	public Uid getCryptoRepoFileIdControllingPermissions() {
 		return requireNonNull(requireNonNull(cryptoRepoFile, "cryptoRepoFile").getCryptoRepoFileId(), "cryptoRepoFileId");
 	}
 
+	@IgnoreDatabaseMigraterComparison
 	@Override
 	public PermissionType getPermissionTypeRequiredForWrite() {
 		return PermissionType.write;
