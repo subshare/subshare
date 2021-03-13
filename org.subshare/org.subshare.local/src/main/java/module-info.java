@@ -29,6 +29,10 @@ open module org.subshare.local {
 
 	provides co.codewizards.cloudstore.core.repo.transport.RepoTransportFactory
 		with org.subshare.local.transport.CryptreeFileRepoTransportFactoryImpl;
+
+	provides co.codewizards.cloudstore.local.dbupdate.DbUpdateStep
+	with
+		org.subshare.local.dbupdate.DbUpdateStep004;
 	
 	provides co.codewizards.cloudstore.local.persistence.CloudStorePersistenceCapableClassesProvider
 		with org.subshare.local.persistence.CloudStorePersistenceCapableClassesProviderImpl;
