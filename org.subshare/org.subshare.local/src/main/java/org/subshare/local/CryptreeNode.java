@@ -417,9 +417,11 @@ public class CryptreeNode {
 			final CryptoKey cryptoKey = requireNonNull(plainCryptoKey, "plainCryptoKey").getCryptoKey();
 			histoCryptoRepoFile.setCryptoKey(requireNonNull(cryptoKey, "plainCryptoKey.cryptoKey"));
 
-			if (! cryptoKey.equals(cryptoRepoFile.getCryptoKey())) // sanity check: the key should not have changed inbetween! otherwise we might need a new CryptoChangeSet-upload to the server!!!
-				throw new IllegalStateException(String.format("cryptoKey != cryptoRepoFile.cryptoKey :: %s != %s",
-						cryptoKey, cryptoRepoFile.getCryptoKey()));
+// This key actually might have changed! I just ran into this situation. I'm not sure, if we really need to re-upload the CryptoChangeSet now. But even if we don't
+// and it fails to upload, now, it should recover from this error with the next upload.
+//			if (! cryptoKey.equals(cryptoRepoFile.getCryptoKey())) // sanity check: the key should not have changed inbetween! otherwise we might need a new CryptoChangeSet-upload to the server!!!
+//				throw new IllegalStateException(String.format("cryptoKey != cryptoRepoFile.cryptoKey :: %s != %s",
+//						cryptoKey, cryptoRepoFile.getCryptoKey()));
 
 			final byte[] repoFileDtoData;
 			if (deleted != null)
